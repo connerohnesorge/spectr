@@ -1,0 +1,36 @@
+---
+title: Spectr
+description: Validatable spec-driven development.
+template: splash
+hero:
+  tagline: Validatable spec-driven development.
+  image:
+    file: ../../assets/houston.webp
+  actions:
+    - text: Get Started
+      link: /getting-started/installation/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/conneroisu/spectr
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Key Features
+
+<CardGrid stagger>
+	<Card title="Structured Workflow" icon="pencil">
+		Propose, validate, implement, and archive changes systematically.
+	</Card>
+	<Card title="Delta Specifications" icon="add-document">
+		Track proposed changes separately from current specs.
+	</Card>
+	<Card title="Strict Validation" icon="setting">
+		Enforce requirements format, scenarios, and spec consistency.
+	</Card>
+	<Card title="Archive Merging" icon="open-book">
+		Automatically merge change deltas into spec files.
+	</Card>
+</CardGrid>

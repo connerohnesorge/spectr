@@ -173,10 +173,6 @@ nix fmt
           # Linting
           golangci-lint
 
-          # Formatting
-          golines
-          goimports
-
           # Build
           goreleaser
         ];

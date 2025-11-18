@@ -411,7 +411,8 @@ func processOneMerge(
 			fmt.Errorf("parse delta spec %s: %w", update.Source, err)
 	}
 
-	if err := CheckDuplicatesAndConflicts(deltaPlan); err != nil {
+	err = CheckDuplicatesAndConflicts(deltaPlan)
+	if err != nil {
 		return "", OperationCounts{},
 			fmt.Errorf(
 				"delta validation failed for %s: %w",

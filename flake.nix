@@ -174,7 +174,6 @@ nix fmt
           golangci-lint
 
           # Formatting
-          gofmt
           golines
           goimports
 

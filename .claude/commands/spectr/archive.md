@@ -18,7 +18,7 @@ tags: [spectr, archive]
    - If you still cannot identify a single change ID, stop and tell the user you cannot archive anything yet.
 2. Validate the change ID by running `spectr list` (or `spectr show <id>`) and stop if the change is missing, already archived, or otherwise not ready to archive.
 3. Run `spectr archive <id> --yes` so the CLI moves the change and applies spec updates without prompts.
-4. Review the command output to confirm the target specs were updated and the change landed in `changes/archive/`.
+4. Review the command output to confirm the target specs were updated and the change landed in `spectr/changes/archive/`.
 5. Validate with `spectr validate --strict` and inspect with `spectr show <id>` if anything looks off.
 
 **Reference**

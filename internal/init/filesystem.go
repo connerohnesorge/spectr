@@ -114,7 +114,8 @@ func WriteFile(path string, content []byte) error {
 
 	// Ensure parent directory exists
 	dir := filepath.Dir(expandedPath)
-	if err := EnsureDir(dir); err != nil {
+	err = EnsureDir(dir)
+	if err != nil {
 		return fmt.Errorf("failed to create parent directory: %w", err)
 	}
 

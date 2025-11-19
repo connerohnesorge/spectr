@@ -269,6 +269,50 @@ func (e *InitExecutor) configureTools(
 		} else {
 			result.CreatedFiles = append(result.CreatedFiles, fileInfo...)
 		}
+
+		// Auto-install slash commands if this tool has a mapping
+		if slashToolID, hasMapping := GetSlashToolMapping(toolID); hasMapping {
+			slashConfigurator := e.getConfigurator(slashToolID)
+			if slashConfigurator == nil {
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf(
+						"no slash configurator found for: %s",
+						slashToolID,
+					),
+				)
+
+				continue
+			}
+
+			// Check if slash commands already configured
+			slashWasConfigured := slashConfigurator.IsConfigured(e.projectPath)
+
+			// Configure slash commands
+			if err := slashConfigurator.Configure(
+				e.projectPath,
+				spectrDir,
+			); err != nil {
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf(
+						"failed to configure slash commands for %s: %v",
+						tool.Name,
+						err,
+					),
+				)
+
+				continue
+			}
+
+			// Track slash command files
+			slashFileInfo := e.getSlashCommandFileInfo(slashToolID)
+			if slashWasConfigured {
+				result.UpdatedFiles = append(result.UpdatedFiles, slashFileInfo...)
+			} else {
+				result.CreatedFiles = append(result.CreatedFiles, slashFileInfo...)
+			}
+		}
 	}
 
 	return nil
@@ -294,6 +338,8 @@ func (_e *InitExecutor) getConfigurator(toolID string) Configurator {
 	// Slash command tools
 	case "claude":
 		return NewClaudeSlashConfigurator()
+	case "cline-slash":
+		return NewClineSlashConfigurator()
 	case "kilocode":
 		return NewKilocodeSlashConfigurator()
 	case "qoder-slash":
@@ -314,6 +360,12 @@ func (_e *InitExecutor) getConfigurator(toolID string) Configurator {
 		return NewSmolSlashConfigurator()
 	case "costrict-slash":
 		return NewCostrictSlashConfigurator()
+	case "windsurf":
+		return NewWindsurfSlashConfigurator()
+	case "codebuddy-slash":
+		return NewCodeBuddySlashConfigurator()
+	case "qwen-slash":
+		return NewQwenSlashConfigurator()
 
 	default:
 		return nil
@@ -343,6 +395,22 @@ func (e *InitExecutor) getToolFileInfo(tool *ToolDefinition) []string {
 	}
 
 	return make([]string, 0)
+}
+
+// getSlashCommandFileInfo returns the files for a slash command tool ID
+func (e *InitExecutor) getSlashCommandFileInfo(slashToolID string) []string {
+	configurator := e.getConfigurator(slashToolID)
+	slashConfig, ok := configurator.(*SlashCommandConfigurator)
+	if !ok {
+		return make([]string, 0)
+	}
+
+	files := make([]string, 0)
+	for _, path := range slashConfig.config.FilePaths {
+		files = append(files, path)
+	}
+
+	return files
 }
 
 // FormatNextStepsMessage returns a formatted next steps message for display after initialization

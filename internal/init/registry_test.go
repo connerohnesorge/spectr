@@ -12,10 +12,10 @@ func TestNewRegistry(t *testing.T) {
 		t.Fatal("NewRegistry() returned nil")
 	}
 
-	// Test that all 17 tools are registered
+	// Test that all 6 tools are registered (slash commands auto-installed)
 	allTools := registry.GetAllTools()
-	if len(allTools) != 17 {
-		t.Errorf("Expected 17 tools, got %d", len(allTools))
+	if len(allTools) != 6 {
+		t.Errorf("Expected 6 tools, got %d", len(allTools))
 	}
 
 	// Test that the tools map is not nil
@@ -38,18 +38,9 @@ func TestGetTool(t *testing.T) {
 		{"Get Qoder Config", "qoder-config", false},
 		{"Get CodeBuddy", "codebuddy", false},
 		{"Get Qwen", "qwen", false},
-		{"Get Claude", "claude", false},
-		{"Get Kilocode", "kilocode", false},
-		{"Get Qoder Slash", "qoder-slash", false},
-		{"Get Cursor", "cursor", false},
-		{"Get Aider", "aider", false},
-		{"Get Continue", "continue", false},
-		{"Get Copilot", "copilot", false},
-		{"Get Mentat", "mentat", false},
-		{"Get Tabnine", "tabnine", false},
-		{"Get Smol", "smol", false},
-		{"Get Costrict Slash", "costrict-slash", false},
 		{"Get Invalid Tool", "nonexistent", true},
+		{"Get Slash Tool (removed)", "claude", true},
+		{"Get Slash Tool (removed)", "cursor", true},
 	}
 
 	for _, tt := range tests {
@@ -128,20 +119,10 @@ func TestGetToolsByType(t *testing.T) {
 		}
 	}
 
-	// Test slash command tools
+	// Test slash command tools (should be 0 - auto-installed now)
 	slashTools := registry.GetToolsByType(ToolTypeSlash)
-	if len(slashTools) != 11 {
-		t.Errorf("Expected 11 slash tools, got %d", len(slashTools))
-	}
-
-	// Verify all slash tools have SlashCommand set
-	for _, tool := range slashTools {
-		if tool.SlashCommand == "" {
-			t.Errorf("Slash tool %s has empty SlashCommand", tool.ID)
-		}
-		if tool.Type != ToolTypeSlash {
-			t.Errorf("Slash tool %s has wrong type: %s", tool.ID, tool.Type)
-		}
+	if len(slashTools) != 0 {
+		t.Errorf("Expected 0 slash tools (auto-installed), got %d", len(slashTools))
 	}
 }
 
@@ -179,10 +160,11 @@ func TestConfigToolsHaveConfigPath(t *testing.T) {
 	}
 }
 
-func TestSlashToolsHaveSlashCommand(t *testing.T) {
+func TestSlashToolsNotInRegistry(t *testing.T) {
 	registry := NewRegistry()
 
-	expectedSlashTools := []string{
+	// Slash-only tools should no longer be in registry (auto-installed)
+	removedSlashTools := []string{
 		"claude",
 		"kilocode",
 		"qoder-slash",
@@ -196,24 +178,13 @@ func TestSlashToolsHaveSlashCommand(t *testing.T) {
 		"costrict-slash",
 	}
 
-	for _, id := range expectedSlashTools {
+	for _, id := range removedSlashTools {
 		tool, err := registry.GetTool(id)
-		if err != nil {
-			t.Errorf("Tool %s not found: %v", id, err)
-
-			continue
+		if err == nil {
+			t.Errorf("Slash-only tool %s should not be in registry (auto-installed now)", id)
 		}
-
-		if tool.SlashCommand != "/spectr" {
-			t.Errorf("Tool %s has SlashCommand %s, expected /spectr", id, tool.SlashCommand)
-		}
-
-		if tool.Type != ToolTypeSlash {
-			t.Errorf("Tool %s has Type %s, expected %s", id, tool.Type, ToolTypeSlash)
-		}
-
-		if tool.ConfigPath != "" {
-			t.Errorf("Slash tool %s should not have ConfigPath set", id)
+		if tool != nil {
+			t.Errorf("GetTool(%s) should return nil, got %v", id, tool)
 		}
 	}
 }
@@ -223,9 +194,9 @@ func TestListTools(t *testing.T) {
 
 	toolIDs := registry.ListTools()
 
-	// Test that we get 17 tool IDs
-	if len(toolIDs) != 17 {
-		t.Errorf("Expected 17 tool IDs, got %d", len(toolIDs))
+	// Test that we get 6 tool IDs (slash commands auto-installed)
+	if len(toolIDs) != 6 {
+		t.Errorf("Expected 6 tool IDs, got %d", len(toolIDs))
 	}
 
 	// Test that all tool IDs are unique
@@ -272,8 +243,8 @@ func TestAllToolsHaveRequiredFields(t *testing.T) {
 		if tool.Type != ToolTypeConfig && tool.Type != ToolTypeSlash {
 			t.Errorf("Tool %s has invalid Type: %s", tool.ID, tool.Type)
 		}
-		if tool.Priority < 1 || tool.Priority > 17 {
-			t.Errorf("Tool %s has invalid Priority: %d (should be 1-17)", tool.ID, tool.Priority)
+		if tool.Priority < 1 || tool.Priority > 6 {
+			t.Errorf("Tool %s has invalid Priority: %d (should be 1-6)", tool.ID, tool.Priority)
 		}
 		if tool.Configured {
 			t.Errorf("Tool %s should start with Configured=false", tool.ID)
@@ -297,5 +268,62 @@ func TestPrioritiesAreUnique(t *testing.T) {
 			)
 		}
 		priorities[tool.Priority] = tool.ID
+	}
+}
+
+func TestGetSlashToolMapping(t *testing.T) {
+	tests := []struct {
+		name           string
+		configToolID   string
+		expectedSlash  string
+		expectsMapping bool
+	}{
+		{"Claude Code maps to claude", "claude-code", "claude", true},
+		{"Cline maps to cline-slash", "cline", "cline-slash", true},
+		{"Costrict maps to costrict-slash", "costrict-config", "costrict-slash", true},
+		{"Qoder maps to qoder-slash", "qoder-config", "qoder-slash", true},
+		{"CodeBuddy maps to codebuddy-slash", "codebuddy", "codebuddy-slash", true},
+		{"Qwen maps to qwen-slash", "qwen", "qwen-slash", true},
+		{"Invalid tool has no mapping", "nonexistent", "", false},
+		{"Slash tool has no mapping", "cursor", "", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			slashID, exists := GetSlashToolMapping(tt.configToolID)
+			if exists != tt.expectsMapping {
+				t.Errorf("GetSlashToolMapping(%s) exists = %v, expected %v",
+					tt.configToolID, exists, tt.expectsMapping)
+			}
+			if slashID != tt.expectedSlash {
+				t.Errorf("GetSlashToolMapping(%s) = %s, expected %s",
+					tt.configToolID, slashID, tt.expectedSlash)
+			}
+		})
+	}
+}
+
+func TestAllConfigToolsHaveSlashMapping(t *testing.T) {
+	registry := NewRegistry()
+	configTools := registry.GetToolsByType(ToolTypeConfig)
+
+	for _, tool := range configTools {
+		slashID, exists := GetSlashToolMapping(tool.ID)
+		if !exists {
+			t.Errorf("Config tool %s has no slash command mapping", tool.ID)
+		}
+		if slashID == "" {
+			t.Errorf("Config tool %s maps to empty slash tool ID", tool.ID)
+		}
+	}
+}
+
+func TestSlashMappingCount(t *testing.T) {
+	// Should have exactly 6 mappings (one for each config tool)
+	expectedCount := 6
+	actualCount := len(configToSlashMapping)
+
+	if actualCount != expectedCount {
+		t.Errorf("Expected %d slash mappings, got %d", expectedCount, actualCount)
 	}
 }

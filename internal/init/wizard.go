@@ -114,7 +114,7 @@ func NewWizardModel(projectPath string) (*WizardModel, error) {
 }
 
 // Init is the Bubbletea Init function
-func (_m WizardModel) Init() tea.Cmd {
+func (WizardModel) Init() tea.Cmd {
 	return nil
 }
 
@@ -420,7 +420,7 @@ func (m WizardModel) renderCreationPlan(b *strings.Builder, count int) {
 	}
 }
 
-func (_m WizardModel) renderExecute() string {
+func (WizardModel) renderExecute() string {
 	var b strings.Builder
 
 	b.WriteString(titleStyle.Render("Initializing Spectr..."))

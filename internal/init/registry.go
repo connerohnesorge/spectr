@@ -8,13 +8,14 @@ type ToolRegistry struct {
 }
 
 // NewRegistry creates and initializes a new ToolRegistry with all
-// 17 AI tool definitions
+// 6 AI tool definitions (slash commands auto-installed)
 func NewRegistry() *ToolRegistry {
 	registry := &ToolRegistry{
 		tools: make(map[string]*ToolDefinition),
 	}
 
 	// Config-based tools (6 tools)
+	// Each tool auto-installs its corresponding slash commands
 	registry.registerTool(&ToolDefinition{
 		ID:         "claude-code",
 		Name:       "Claude Code",
@@ -69,106 +70,6 @@ func NewRegistry() *ToolRegistry {
 		Configured: false,
 	})
 
-	// Slash command tools (11 tools)
-	registry.registerTool(&ToolDefinition{
-		ID:           "claude",
-		Name:         "Claude",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     7,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "kilocode",
-		Name:         "Kilocode",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     8,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "qoder-slash",
-		Name:         "Qoder (Slash)",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     9,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "cursor",
-		Name:         "Cursor",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     10,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "aider",
-		Name:         "Aider",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     11,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "continue",
-		Name:         "Continue",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     12,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "copilot",
-		Name:         "Copilot",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     13,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "mentat",
-		Name:         "Mentat",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     14,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "tabnine",
-		Name:         "Tabnine",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     15,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "smol",
-		Name:         "Smol",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     16,
-		Configured:   false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:           "costrict-slash",
-		Name:         "Costrict (Slash)",
-		Type:         ToolTypeSlash,
-		SlashCommand: "/spectr",
-		Priority:     17,
-		Configured:   false,
-	})
-
 	return registry
 }
 
@@ -218,4 +119,24 @@ func (r *ToolRegistry) ListTools() []string {
 	}
 
 	return ids
+}
+
+// configToSlashMapping maps config-based tool IDs to their slash
+// command equivalents
+var configToSlashMapping = map[string]string{
+	"claude-code":     "claude",
+	"cline":           "cline-slash",
+	"costrict-config": "costrict-slash",
+	"qoder-config":    "qoder-slash",
+	"codebuddy":       "codebuddy-slash",
+	"qwen":            "qwen-slash",
+}
+
+// GetSlashToolMapping returns the slash command tool ID for a
+// config-based tool. Returns the slash tool ID and true if a mapping
+// exists, empty string and false otherwise
+func GetSlashToolMapping(configToolID string) (string, bool) {
+	slashID, exists := configToSlashMapping[configToolID]
+
+	return slashID, exists
 }

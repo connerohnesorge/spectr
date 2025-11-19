@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// ValidateSpecFile validates a spec file according to OpenSpec rules
+// ValidateSpecFile validates a spec file according to Spectr rules
 // Returns a ValidationReport containing all issues found, or an error
 // for filesystem issues
 //

@@ -110,11 +110,8 @@ func TestGetToolsByType(t *testing.T) {
 		t.Errorf("Expected 7 config tools, got %d", len(configTools))
 	}
 
-	// Verify all config tools have ConfigPath set
+	// Verify all config tools have correct type
 	for _, tool := range configTools {
-		if tool.ConfigPath == "" {
-			t.Errorf("Config tool %s has empty ConfigPath", tool.ID)
-		}
 		if tool.Type != ToolTypeConfig {
 			t.Errorf("Config tool %s has wrong type: %s", tool.ID, tool.Type)
 		}
@@ -124,41 +121,6 @@ func TestGetToolsByType(t *testing.T) {
 	slashTools := registry.GetToolsByType(ToolTypeSlash)
 	if len(slashTools) != 0 {
 		t.Errorf("Expected 0 slash tools (auto-installed), got %d", len(slashTools))
-	}
-}
-
-func TestConfigToolsHaveConfigPath(t *testing.T) {
-	registry := NewRegistry()
-
-	expectedConfigTools := map[string]string{
-		"claude-code":     ".claude/claude.json",
-		"cline":           ".cline/cline_mcp_settings.json",
-		"costrict-config": ".costrict/config.json",
-		"qoder-config":    ".qoder/config.json",
-		"codebuddy":       ".codebuddy/config.json",
-		"qwen":            ".qwen/config.json",
-		"antigravity":     ".antigravity/config.json",
-	}
-
-	for id, expectedPath := range expectedConfigTools {
-		tool, err := registry.GetTool(id)
-		if err != nil {
-			t.Errorf("Tool %s not found: %v", id, err)
-
-			continue
-		}
-
-		if tool.ConfigPath != expectedPath {
-			t.Errorf("Tool %s has ConfigPath %s, expected %s", id, tool.ConfigPath, expectedPath)
-		}
-
-		if tool.Type != ToolTypeConfig {
-			t.Errorf("Tool %s has Type %s, expected %s", id, tool.Type, ToolTypeConfig)
-		}
-
-		if tool.SlashCommand != "" {
-			t.Errorf("Config tool %s should not have SlashCommand set", id)
-		}
 	}
 }
 

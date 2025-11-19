@@ -381,7 +381,28 @@ func (e *InitExecutor) getToolFileInfo(tool *ToolDefinition) []string {
 	switch tool.Type {
 	case ToolTypeConfig:
 		// Config-based tools create a single instruction file
-		return []string{tool.ConfigPath}
+		// Get the actual file path from the tool ID mapping
+		var filePath string
+		switch tool.ID {
+		case "claude-code":
+			filePath = "CLAUDE.md"
+		case "cline":
+			filePath = "CLINE.md"
+		case "costrict-config":
+			filePath = "COSTRICT.md"
+		case "qoder-config":
+			filePath = "QODER.md"
+		case "codebuddy":
+			filePath = "CODEBUDDY.md"
+		case "qwen":
+			filePath = "QWEN.md"
+		case "antigravity":
+			filePath = "AGENTS.md"
+		default:
+			return make([]string, 0)
+		}
+
+		return []string{filePath}
 
 	case ToolTypeSlash:
 		// Slash command tools create 3 files

@@ -38,7 +38,6 @@ func TestToolDefinitionCreation(t *testing.T) {
 		ID:           "test-tool",
 		Name:         "Test Tool",
 		Type:         ToolTypeConfig,
-		ConfigPath:   "templates/tools/test.md",
 		SlashCommand: "",
 		Priority:     1,
 		Configured:   false,

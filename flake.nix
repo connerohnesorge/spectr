@@ -151,6 +151,7 @@ nix fmt
             gotools
             reftools
             goreleaser
+            vhs
           ]
           ++ builtins.attrValues scriptPackages;
       };

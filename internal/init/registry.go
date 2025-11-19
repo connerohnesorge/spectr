@@ -20,7 +20,6 @@ func NewRegistry() *ToolRegistry {
 		ID:         "claude-code",
 		Name:       "Claude Code",
 		Type:       ToolTypeConfig,
-		ConfigPath: ".claude/claude.json",
 		Priority:   1,
 		Configured: false,
 	})
@@ -29,7 +28,6 @@ func NewRegistry() *ToolRegistry {
 		ID:         "cline",
 		Name:       "Cline",
 		Type:       ToolTypeConfig,
-		ConfigPath: ".cline/cline_mcp_settings.json",
 		Priority:   2,
 		Configured: false,
 	})
@@ -38,7 +36,6 @@ func NewRegistry() *ToolRegistry {
 		ID:         "costrict-config",
 		Name:       "Costrict",
 		Type:       ToolTypeConfig,
-		ConfigPath: ".costrict/config.json",
 		Priority:   3,
 		Configured: false,
 	})
@@ -47,7 +44,6 @@ func NewRegistry() *ToolRegistry {
 		ID:         "qoder-config",
 		Name:       "Qoder",
 		Type:       ToolTypeConfig,
-		ConfigPath: ".qoder/config.json",
 		Priority:   4,
 		Configured: false,
 	})
@@ -56,7 +52,6 @@ func NewRegistry() *ToolRegistry {
 		ID:         "codebuddy",
 		Name:       "CodeBuddy",
 		Type:       ToolTypeConfig,
-		ConfigPath: ".codebuddy/config.json",
 		Priority:   5,
 		Configured: false,
 	})
@@ -65,7 +60,6 @@ func NewRegistry() *ToolRegistry {
 		ID:         "qwen",
 		Name:       "Qwen",
 		Type:       ToolTypeConfig,
-		ConfigPath: ".qwen/config.json",
 		Priority:   6,
 		Configured: false,
 	})
@@ -74,7 +68,6 @@ func NewRegistry() *ToolRegistry {
 		ID:         "antigravity",
 		Name:       "Antigravity",
 		Type:       ToolTypeConfig,
-		ConfigPath: ".antigravity/config.json",
 		Priority:   7,
 		Configured: false,
 	})

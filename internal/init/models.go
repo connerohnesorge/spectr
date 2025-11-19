@@ -20,8 +20,6 @@ type ToolDefinition struct {
 	Name string
 	// Type indicates whether this is a config or slash tool
 	Type ToolType
-	// ConfigPath is the path to the config file template
-	ConfigPath string
 	// SlashCommand is the slash command syntax (for slash-command based tools)
 	SlashCommand string
 	// Priority determines the display order (lower numbers first)

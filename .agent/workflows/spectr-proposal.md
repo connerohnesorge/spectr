@@ -1,8 +1,3 @@
----
-description: "Scaffold a new Spectr change and validate strictly."
-argument-hint: feature description or request
----
-
 <!-- spectr:START -->
 
 **Guardrails**

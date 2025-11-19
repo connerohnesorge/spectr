@@ -866,9 +866,9 @@ func NewAntigravitySlashConfigurator() *SlashCommandConfigurator {
 		ToolName:    "Antigravity Workflows",
 		Frontmatter: make(map[string]string), // No frontmatter for Antigravity
 		FilePaths: map[string]string{
-			"proposal": ".antigravity/workflows/spectr-proposal.md",
-			"apply":    ".antigravity/workflows/spectr-apply.md",
-			"archive":  ".antigravity/workflows/spectr-archive.md",
+			"proposal": ".agent/workflows/spectr-proposal.md",
+			"apply":    ".agent/workflows/spectr-apply.md",
+			"archive":  ".agent/workflows/spectr-archive.md",
 		},
 	})
 }

@@ -49,7 +49,7 @@
   - Run `spectr init` and verify Antigravity appears in tool list
   - Select Antigravity and verify files are created correctly
   - Verify `AGENTS.md` contains spectr instructions between markers
-  - Verify slash commands are auto-installed in `.antigravity/workflows/spectr-*`
+  - Verify slash commands are auto-installed in `.agent/workflows/spectr-*`
 
 ## Notes
 - Antigravity becomes the 7th config-based tool in the registry

@@ -764,3 +764,92 @@ func TestFindMarkerIndex(t *testing.T) {
 		t.Error("Should have skipped inline marker")
 	}
 }
+
+// Test AntigravityConfigurator
+func TestAntigravityConfigurator(t *testing.T) {
+	tmpDir := t.TempDir()
+	configurator := &AntigravityConfigurator{}
+
+	if configurator.GetName() != "Antigravity" {
+		t.Errorf("Expected name 'Antigravity', got '%s'", configurator.GetName())
+	}
+
+	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	if err != nil {
+		t.Fatalf("Configure failed: %v", err)
+	}
+
+	filePath := filepath.Join(tmpDir, "AGENTS.md")
+	if !FileExists(filePath) {
+		t.Error("AGENTS.md was not created")
+	}
+}
+
+// Test SlashCommandConfigurator - Antigravity
+//
+//nolint:revive // cognitive-complexity - comprehensive test coverage
+func TestAntigravitySlashConfigurator(t *testing.T) {
+	tmpDir := t.TempDir()
+	configurator := NewAntigravitySlashConfigurator()
+
+	// Test GetName
+	if configurator.GetName() != "Antigravity Workflows" {
+		t.Errorf("Expected name 'Antigravity Workflows', got '%s'", configurator.GetName())
+	}
+
+	// Test IsConfigured (should be false initially)
+	if configurator.IsConfigured(tmpDir) {
+		t.Error("Expected IsConfigured to return false initially")
+	}
+
+	// Test Configure
+	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	if err != nil {
+		t.Fatalf("Configure failed: %v", err)
+	}
+
+	// Test IsConfigured (should be true now)
+	if !configurator.IsConfigured(tmpDir) {
+		t.Error("Expected IsConfigured to return true after configuration")
+	}
+
+	// Verify all three command files exist
+	commands := []string{"proposal", "apply", "archive"}
+	for _, cmd := range commands {
+		relPath := configurator.config.FilePaths[cmd]
+		cmdPath := filepath.Join(tmpDir, relPath)
+		if !FileExists(cmdPath) {
+			t.Errorf("Command file %s was not created at %s", cmd, cmdPath)
+		}
+
+		// Verify file contains Spectr markers
+		content, err := os.ReadFile(cmdPath)
+		if err != nil {
+			t.Errorf("Failed to read %s: %v", cmdPath, err)
+
+			continue
+		}
+
+		contentStr := string(content)
+		if !strings.Contains(contentStr, SpectrStartMarker) {
+			t.Errorf("Command file %s missing start marker", cmd)
+		}
+		if !strings.Contains(contentStr, SpectrEndMarker) {
+			t.Errorf("Command file %s missing end marker", cmd)
+		}
+	}
+
+	// Test file paths
+	expectedPaths := map[string]string{
+		"proposal": ".agent/workflows/spectr-proposal.md",
+		"apply":    ".agent/workflows/spectr-apply.md",
+		"archive":  ".agent/workflows/spectr-archive.md",
+	}
+
+	for cmd, expectedPath := range expectedPaths {
+		actualPath := configurator.config.FilePaths[cmd]
+		if actualPath != expectedPath {
+			t.Errorf("Command %s: expected path %s, got %s", cmd, expectedPath, actualPath)
+		}
+	}
+}

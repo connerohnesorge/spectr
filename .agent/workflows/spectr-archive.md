@@ -1,8 +1,3 @@
----
-description: "Archive a deployed Spectr change and update specs."
-argument-hint: change-id
----
-
 <!-- spectr:START -->
 
 **Guardrails**

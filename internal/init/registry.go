@@ -8,13 +8,13 @@ type ToolRegistry struct {
 }
 
 // NewRegistry creates and initializes a new ToolRegistry with all
-// 6 AI tool definitions (slash commands auto-installed)
+// 7 AI tool definitions (slash commands auto-installed)
 func NewRegistry() *ToolRegistry {
 	registry := &ToolRegistry{
 		tools: make(map[string]*ToolDefinition),
 	}
 
-	// Config-based tools (6 tools)
+	// Config-based tools (7 tools)
 	// Each tool auto-installs its corresponding slash commands
 	registry.registerTool(&ToolDefinition{
 		ID:         "claude-code",
@@ -67,6 +67,15 @@ func NewRegistry() *ToolRegistry {
 		Type:       ToolTypeConfig,
 		ConfigPath: ".qwen/config.json",
 		Priority:   6,
+		Configured: false,
+	})
+
+	registry.registerTool(&ToolDefinition{
+		ID:         "antigravity",
+		Name:       "Antigravity",
+		Type:       ToolTypeConfig,
+		ConfigPath: ".antigravity/config.json",
+		Priority:   7,
 		Configured: false,
 	})
 
@@ -130,6 +139,7 @@ var configToSlashMapping = map[string]string{
 	"qoder-config":    "qoder-slash",
 	"codebuddy":       "codebuddy-slash",
 	"qwen":            "qwen-slash",
+	"antigravity":     "antigravity-slash",
 }
 
 // GetSlashToolMapping returns the slash command tool ID for a

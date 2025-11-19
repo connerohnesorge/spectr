@@ -12,10 +12,10 @@ func TestNewRegistry(t *testing.T) {
 		t.Fatal("NewRegistry() returned nil")
 	}
 
-	// Test that all 6 tools are registered (slash commands auto-installed)
+	// Test that all 7 tools are registered (slash commands auto-installed)
 	allTools := registry.GetAllTools()
-	if len(allTools) != 6 {
-		t.Errorf("Expected 6 tools, got %d", len(allTools))
+	if len(allTools) != 7 {
+		t.Errorf("Expected 7 tools, got %d", len(allTools))
 	}
 
 	// Test that the tools map is not nil
@@ -38,6 +38,7 @@ func TestGetTool(t *testing.T) {
 		{"Get Qoder Config", "qoder-config", false},
 		{"Get CodeBuddy", "codebuddy", false},
 		{"Get Qwen", "qwen", false},
+		{"Get Antigravity", "antigravity", false},
 		{"Get Invalid Tool", "nonexistent", true},
 		{"Get Slash Tool (removed)", "claude", true},
 		{"Get Slash Tool (removed)", "cursor", true},
@@ -105,8 +106,8 @@ func TestGetToolsByType(t *testing.T) {
 
 	// Test config-based tools
 	configTools := registry.GetToolsByType(ToolTypeConfig)
-	if len(configTools) != 6 {
-		t.Errorf("Expected 6 config tools, got %d", len(configTools))
+	if len(configTools) != 7 {
+		t.Errorf("Expected 7 config tools, got %d", len(configTools))
 	}
 
 	// Verify all config tools have ConfigPath set
@@ -136,6 +137,7 @@ func TestConfigToolsHaveConfigPath(t *testing.T) {
 		"qoder-config":    ".qoder/config.json",
 		"codebuddy":       ".codebuddy/config.json",
 		"qwen":            ".qwen/config.json",
+		"antigravity":     ".antigravity/config.json",
 	}
 
 	for id, expectedPath := range expectedConfigTools {
@@ -194,9 +196,9 @@ func TestListTools(t *testing.T) {
 
 	toolIDs := registry.ListTools()
 
-	// Test that we get 6 tool IDs (slash commands auto-installed)
-	if len(toolIDs) != 6 {
-		t.Errorf("Expected 6 tool IDs, got %d", len(toolIDs))
+	// Test that we get 7 tool IDs (slash commands auto-installed)
+	if len(toolIDs) != 7 {
+		t.Errorf("Expected 7 tool IDs, got %d", len(toolIDs))
 	}
 
 	// Test that all tool IDs are unique
@@ -243,8 +245,8 @@ func TestAllToolsHaveRequiredFields(t *testing.T) {
 		if tool.Type != ToolTypeConfig && tool.Type != ToolTypeSlash {
 			t.Errorf("Tool %s has invalid Type: %s", tool.ID, tool.Type)
 		}
-		if tool.Priority < 1 || tool.Priority > 6 {
-			t.Errorf("Tool %s has invalid Priority: %d (should be 1-6)", tool.ID, tool.Priority)
+		if tool.Priority < 1 || tool.Priority > 7 {
+			t.Errorf("Tool %s has invalid Priority: %d (should be 1-7)", tool.ID, tool.Priority)
 		}
 		if tool.Configured {
 			t.Errorf("Tool %s should start with Configured=false", tool.ID)
@@ -284,6 +286,7 @@ func TestGetSlashToolMapping(t *testing.T) {
 		{"Qoder maps to qoder-slash", "qoder-config", "qoder-slash", true},
 		{"CodeBuddy maps to codebuddy-slash", "codebuddy", "codebuddy-slash", true},
 		{"Qwen maps to qwen-slash", "qwen", "qwen-slash", true},
+		{"Antigravity maps to antigravity-slash", "antigravity", "antigravity-slash", true},
 		{"Invalid tool has no mapping", "nonexistent", "", false},
 		{"Slash tool has no mapping", "cursor", "", false},
 	}
@@ -319,8 +322,8 @@ func TestAllConfigToolsHaveSlashMapping(t *testing.T) {
 }
 
 func TestSlashMappingCount(t *testing.T) {
-	// Should have exactly 6 mappings (one for each config tool)
-	expectedCount := 6
+	// Should have exactly 7 mappings (one for each config tool)
+	expectedCount := 7
 	actualCount := len(configToSlashMapping)
 
 	if actualCount != expectedCount {

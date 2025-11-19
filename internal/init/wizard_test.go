@@ -32,9 +32,9 @@ func TestNewWizardModel(t *testing.T) {
 		t.Error("Expected allTools to be populated")
 	}
 
-	// Should have 6 tools (config tools with auto-installed slash commands)
-	if len(wizard.allTools) != 6 {
-		t.Errorf("Expected 6 tools, got %d", len(wizard.allTools))
+	// Should have 7 tools (config tools with auto-installed slash commands)
+	if len(wizard.allTools) != 7 {
+		t.Errorf("Expected 7 tools, got %d", len(wizard.allTools))
 	}
 }
 

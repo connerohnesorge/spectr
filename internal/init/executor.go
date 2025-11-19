@@ -334,6 +334,8 @@ func (_e *InitExecutor) getConfigurator(toolID string) Configurator {
 		return &CodeBuddyConfigurator{}
 	case "qwen":
 		return &QwenConfigurator{}
+	case "antigravity":
+		return &AntigravityConfigurator{}
 
 	// Slash command tools
 	case "claude":
@@ -366,6 +368,8 @@ func (_e *InitExecutor) getConfigurator(toolID string) Configurator {
 		return NewCodeBuddySlashConfigurator()
 	case "qwen-slash":
 		return NewQwenSlashConfigurator()
+	case "antigravity-slash":
+		return NewAntigravitySlashConfigurator()
 
 	default:
 		return nil

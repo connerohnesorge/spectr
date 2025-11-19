@@ -1,8 +1,3 @@
----
-description: "Implement an approved Spectr change and keep tasks in sync."
-argument-hint: change-id
----
-
 <!-- spectr:START -->
 
 **Guardrails**

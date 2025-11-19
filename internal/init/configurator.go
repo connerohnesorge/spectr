@@ -320,6 +320,35 @@ func (*QwenConfigurator) GetName() string {
 	return "Qwen Code"
 }
 
+// AntigravityConfigurator configures Antigravity
+type AntigravityConfigurator struct{}
+
+func (*AntigravityConfigurator) Configure(projectPath, _spectrDir string) error {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		return err
+	}
+
+	content, err := tm.RenderAgents()
+	if err != nil {
+		return err
+	}
+
+	filePath := filepath.Join(projectPath, "AGENTS.md")
+
+	return UpdateFileWithMarkers(filePath, content, SpectrStartMarker, SpectrEndMarker)
+}
+
+func (*AntigravityConfigurator) IsConfigured(projectPath string) bool {
+	filePath := filepath.Join(projectPath, "AGENTS.md")
+
+	return FileExists(filePath)
+}
+
+func (*AntigravityConfigurator) GetName() string {
+	return "Antigravity"
+}
+
 // ============================================================================
 // Slash Command Configurators
 // ============================================================================
@@ -826,6 +855,20 @@ description: Archive a deployed Spectr change and update specs.
 			"proposal": ".qwen/commands/spectr-proposal.md",
 			"apply":    ".qwen/commands/spectr-apply.md",
 			"archive":  ".qwen/commands/spectr-archive.md",
+		},
+	})
+}
+
+// NewAntigravitySlashConfigurator creates an Antigravity slash command configurator
+func NewAntigravitySlashConfigurator() *SlashCommandConfigurator {
+	return NewSlashCommandConfigurator(SlashCommandConfig{
+		ToolID:      "antigravity",
+		ToolName:    "Antigravity Workflows",
+		Frontmatter: make(map[string]string), // No frontmatter for Antigravity
+		FilePaths: map[string]string{
+			"proposal": ".agent/workflows/spectr-proposal.md",
+			"apply":    ".agent/workflows/spectr-apply.md",
+			"archive":  ".agent/workflows/spectr-archive.md",
 		},
 	})
 }

@@ -1,6 +1,6 @@
 # spectr
 
-![Logo](https://github.com/conneroisu/spectr/blob/main/assets/logo.png)
+<img src="https://github.com/conneroisu/spectr/blob/main/assets/logo.png" alt="Logo" width="95">
 
 **Validatable spec-driven development (inspired by openspec and kiro)**
 

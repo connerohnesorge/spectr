@@ -2,9 +2,12 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightSiteGraph from 'starlight-site-graph';
+import starlightLlmsTxt from 'starlight-llms-txt';
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://conneroisu.github.io',
+	base: 'spectr',
 	integrations: [
 		starlight({
 			title: 'Spectr',
@@ -46,7 +49,7 @@ export default defineConfig({
 					],
 				},
 			],
-			plugins: [starlightSiteGraph()],
+			plugins: [starlightSiteGraph(), starlightLlmsTxt()],
 		}),
 	],
 });

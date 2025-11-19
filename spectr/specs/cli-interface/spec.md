@@ -488,6 +488,16 @@ This automatic installation provides users with complete Spectr integration in a
 - **AND** all files are tracked in the execution result
 - **AND** the completion screen shows all 4 files created
 
+#### Scenario: Antigravity auto-installs slash commands
+
+- **WHEN** user selects `antigravity` in the init wizard
+- **THEN** the system creates `ANTIGRAVITY.md` in the project root
+- **AND** the system creates `.antigravity/commands/spectr/proposal.md`
+- **AND** the system creates `.antigravity/commands/spectr/apply.md`
+- **AND** the system creates `.antigravity/commands/spectr/archive.md`
+- **AND** all files are tracked in the execution result
+- **AND** the completion screen shows all 4 files created
+
 #### Scenario: Multiple tools with slash commands selected
 
 - **WHEN** user selects both `claude-code` and `cursor` in the init wizard
@@ -517,5 +527,5 @@ This automatic installation provides users with complete Spectr integration in a
 - **WHEN** a developer reviews the mapping logic
 - **THEN** they find a `configToSlashMapping` map in `internal/init/registry.go`
 - **AND** the map contains explicit entries for each tool pair
-- **AND** the mapping includes all 11 tools with slash command variants
+- **AND** the mapping includes Antigravity with slash command variants
 - **AND** the map can be extended for new tools

@@ -17,10 +17,11 @@
   - Follow exact pattern of existing 6 configurators (ClaudeCodeConfigurator, ClineConfigurator, etc.)
 - [ ] 2.2 Implement `Configure()` method
   - Renders AGENTS.md template using `NewTemplateManager()`
-  - Updates `ANTIGRAVITY.md` file using `UpdateFileWithMarkers()`
+  - Updates `AGENTS.md` file using `UpdateFileWithMarkers()`
   - Uses `SpectrStartMarker` and `SpectrEndMarker` markers
+  - Creates `.agent/workflows/spectr-*.md` slash command files
 - [ ] 2.3 Implement `IsConfigured()` method
-  - Checks for `ANTIGRAVITY.md` file in project path
+  - Checks for `AGENTS.md` file in project path
 - [ ] 2.4 Implement `GetName()` method
   - Returns `"Antigravity"`
 
@@ -34,7 +35,7 @@
   - Verify tool is found with `GetTool("antigravity")`
   - Verify mapping exists in `configToSlashMapping`
 - [ ] 4.2 Add test for AntigravityConfigurator in `internal/init/configurator_test.go`
-  - Test `Configure()` creates `ANTIGRAVITY.md` with markers
+  - Test `Configure()` creates `AGENTS.md` with markers
   - Test `IsConfigured()` returns true when file exists
   - Test `GetName()` returns correct name
   - Test file update behavior when markers already exist

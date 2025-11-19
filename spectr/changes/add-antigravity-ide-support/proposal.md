@@ -19,5 +19,5 @@ Antigravity IDE is an existing AI-powered IDE that should be supported by Spectr
   - Tests in `internal/init/registry_test.go` and `internal/init/configurator_test.go`
 - **User experience:**
   - Users selecting Antigravity during `spectr init` get AGENTS.md injected with spectr instructions
-  - Slash commands auto-installed for `/spectr:proposal`, `/spectr:apply`, `/spectr:archive`
+  - Slash commands auto-installed for `/spectr-proposal`, `/spectr-apply`, `/spectr-archive`
   - No changes to user workflows or slash command behavior

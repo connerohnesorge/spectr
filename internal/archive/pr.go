@@ -33,7 +33,8 @@ func createPR(ctx PRContext) error {
 	}
 
 	branchName := fmt.Sprintf("archive-%s", ctx.ChangeID)
-	if err := prepareBranchAndCommit(ctx, branchName); err != nil {
+	err = prepareBranchAndCommit(ctx, branchName)
+	if err != nil {
 		return err
 	}
 
@@ -136,7 +137,9 @@ func pushAndCreatePR(
 	return prURL, nil
 }
 
-// restoreOriginalBranch attempts to restore the original branch and working directory.
+// restoreOriginalBranch attempts to restore the original branch and working
+// directory.
+//
 // After PR creation, this function returns to the branch the user was on
 // before the archive and restores the changes directory (and optionally specs).
 // If it fails, a warning is printed but no error returned.
@@ -172,17 +175,19 @@ func restoreOriginalBranch(originalBranch, branchName string, ctx PRContext) {
 	}
 
 	// Restore specs directory if specs were updated
-	if !ctx.SkipSpecs {
-		specsPath := filepath.Join(ctx.SpectrRoot, "specs")
-		if err := git.RestorePath(specsPath); err != nil {
-			fmt.Fprintf(
-				os.Stderr,
-				"\nWarning: Failed to restore specs directory: %v\n",
-				err,
-			)
-		} else {
-			fmt.Println("Restored specs directory")
-		}
+	if ctx.SkipSpecs {
+		return
+	}
+
+	specsPath := filepath.Join(ctx.SpectrRoot, "specs")
+	if err := git.RestorePath(specsPath); err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"\nWarning: Failed to restore specs directory: %v\n",
+			err,
+		)
+	} else {
+		fmt.Println("Restored specs directory")
 	}
 }
 

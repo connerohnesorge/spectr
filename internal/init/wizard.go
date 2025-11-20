@@ -94,7 +94,13 @@ var (
 )
 
 // NewWizardModel creates a new wizard model
-func NewWizardModel(projectPath string) (*WizardModel, error) {
+func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
+	// Use the resolved path from InitCmd
+	projectPath := cmd.Path
+	if projectPath == "" {
+		return nil, fmt.Errorf("project path is required")
+	}
+
 	registry := NewRegistry()
 	allTools := registry.GetAllTools()
 
@@ -531,7 +537,11 @@ func (m WizardModel) getSelectedToolIDs() []string {
 // executeInit runs the initialization and sends result
 func executeInit(projectPath string, selectedTools []string) tea.Cmd {
 	return func() tea.Msg {
-		executor, err := NewInitExecutor(projectPath)
+		// Create a minimal InitCmd for the executor
+		cmd := &InitCmd{
+			Path: projectPath,
+		}
+		executor, err := NewInitExecutor(cmd)
 		if err != nil {
 			return ExecutionCompleteMsg{
 				result: nil,

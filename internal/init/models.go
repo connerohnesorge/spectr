@@ -63,3 +63,11 @@ type ProjectContext struct {
 	// Conventions are the project conventions (unused in template currently)
 	Conventions string
 }
+
+// InitCmd represents the init command with all its flags
+type InitCmd struct {
+	Path           string   `arg:"" optional:"" help:"Project path"`
+	PathFlag       string   `name:"path" short:"p" help:"Alt project path"`
+	Tools          []string `name:"tools" short:"t" help:"Tools list"`
+	NonInteractive bool     `name:"non-interactive" help:"Non-interactive"`
+}

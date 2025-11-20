@@ -476,7 +476,7 @@ When a config-based AI tool is selected during initialization, the system SHALL 
 
 Config-based tools include those that create instruction files (e.g., `claude-code` creates `CLAUDE.md`). Slash command files are the workflow command files (e.g., `.claude/commands/spectr/proposal.md`).
 
-The `ToolDefinition` model SHALL NOT include a `ConfigPath` field, as actual file paths are determined by individual configurators. The registry maintains tool metadata (ID, Name, Type, Priority) but delegates file path resolution to configurator implementations.
+The `ToolDefinition` model SHALL NOT include a `ConfigPath` field, as actual file paths are determined by individual configurators. The registry maintains tool metadata (ID, Name, Type, Priority) but delegates file path resolution to configurator implementations. Tool IDs SHALL use a type-safe constant approach to prevent typos and enable compile-time validation.
 
 This automatic installation provides users with complete Spectr integration in a single selection, eliminating the need for redundant tool entries in the wizard.
 
@@ -500,7 +500,7 @@ This automatic installation provides users with complete Spectr integration in a
 
 #### Scenario: Slash command files already exist
 
-- **WHEN** user runs init and selects `claude-code`
+- **WHEN** user run init and selects `claude-code`
 - **AND** `.claude/commands/spectr/proposal.md` already exists
 - **THEN** the existing file's content between `<!-- spectr:START -->` and `<!-- spectr:END -->` is updated
 - **AND** the file's YAML frontmatter is preserved
@@ -517,15 +517,14 @@ This automatic installation provides users with complete Spectr integration in a
 #### Scenario: Tool mapping is explicit and centralized
 
 - **WHEN** a developer reviews the mapping logic
-- **THEN** they find a `configToSlashMapping` map in `internal/init/registry.go`
-- **AND** the map contains explicit entries for each tool pair
-- **AND** the mapping includes all 11 tools with slash command variants
-- **AND** the map can be extended for new tools
+- **THEN** they find the tool mapping integrated into the tool registry configuration
+- **AND** the registry uses data-driven tool definitions with type-safe IDs
+- **AND** the mapping can be extended for new tools through configuration
 
 #### Scenario: ToolDefinition structure simplified
 
 - **WHEN** a developer reviews the ToolDefinition struct in `internal/init/models.go`
-- **THEN** the struct contains: ID, Name, Type, Priority, and Configured fields
+- **THEN** the struct contains: ID (type-safe ToolID), Name, Type, Priority, and Configured fields
 - **AND** the struct does NOT contain a ConfigPath field
 - **AND** file paths are determined by configurator implementations, not the registry
 - **AND** the `getToolFileInfo()` function queries configurators for actual file paths
@@ -593,3 +592,12 @@ The `spectr archive` command SHALL accept a `--pr` flag that triggers automated 
 - **THEN** the `--pr` flag is listed in the available flags
 - **AND** the description explains: "Create pull request after successful archive"
 - **AND** the help text notes the dependency on git and PR CLI tools (gh/glab/tea)
+- **AND** the configurator implementations use tool-specific configuration data
+
+#### Scenario: Type-safe tool ID usage
+
+- **WHEN** a developer references a tool ID in code
+- **THEN** they use a defined ToolID constant (e.g., `ToolClaudeCode`)
+- **AND** string literals for tool IDs trigger compiler warnings or errors
+- **AND** IDE autocomplete suggests available tool ID constants
+- **AND** typos in tool IDs are caught at compile time

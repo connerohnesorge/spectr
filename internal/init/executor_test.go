@@ -242,7 +242,7 @@ func TestExecuteIdempotency(t *testing.T) {
 	}
 }
 
-func TestGetConfigurator(t *testing.T) {
+func TestGetToolProvider(t *testing.T) {
 	tmpDir := t.TempDir()
 	executor, err := NewInitExecutor(tmpDir)
 	if err != nil {
@@ -254,21 +254,24 @@ func TestGetConfigurator(t *testing.T) {
 		expectNil   bool
 		description string
 	}{
-		{"claude-code", false, "Claude Code config"},
-		{"cline", false, "Cline config"},
-		{"claude", false, "Claude slash"},
-		{"cursor", false, "Cursor slash"},
+		{"claude-code", false, "Claude Code tool provider"},
+		{"cline", false, "Cline tool provider"},
+		{"costrict-config", false, "CoStrict tool provider"},
+		{"qoder-config", false, "Qoder tool provider"},
+		{"codebuddy", false, "CodeBuddy tool provider"},
+		{"qwen", false, "Qwen tool provider"},
+		{"antigravity", false, "Antigravity tool provider"},
 		{"invalid-tool", true, "Invalid tool ID"},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			configurator := executor.getConfigurator(tc.toolID)
-			if tc.expectNil && configurator != nil {
-				t.Errorf("Expected nil configurator for %s", tc.toolID)
+			provider := executor.getToolProvider(tc.toolID)
+			if tc.expectNil && provider != nil {
+				t.Errorf("Expected nil provider for %s", tc.toolID)
 			}
-			if !tc.expectNil && configurator == nil {
-				t.Errorf("Expected non-nil configurator for %s", tc.toolID)
+			if !tc.expectNil && provider == nil {
+				t.Errorf("Expected non-nil provider for %s", tc.toolID)
 			}
 		})
 	}

@@ -199,7 +199,7 @@ func (e *InitExecutor) createAgentsMd(
 	}
 
 	// Write file
-	if err := os.WriteFile(agentsFile, []byte(content), filePerm); err != nil {
+	if err := UpdateFileWithMarkers(agentsFile, content, SpectrStartMarker, SpectrEndMarker); err != nil {
 		return fmt.Errorf("failed to write AGENTS.md: %w", err)
 	}
 
@@ -208,10 +208,10 @@ func (e *InitExecutor) createAgentsMd(
 	return nil
 }
 
-// configureTools configures the selected tools
+// configureTools configures the selected tools using ToolProvider pattern
 func (e *InitExecutor) configureTools(
 	selectedToolIDs []string,
-	spectrDir string,
+	_spectrDir string,
 	result *ExecutionResult,
 ) error {
 	if len(selectedToolIDs) == 0 {
@@ -229,12 +229,12 @@ func (e *InitExecutor) configureTools(
 			continue
 		}
 
-		configurator := e.getConfigurator(toolID)
-		if configurator == nil {
+		provider := e.getToolProvider(toolID)
+		if provider == nil {
 			result.Errors = append(
 				result.Errors,
 				fmt.Sprintf(
-					"no configurator found for tool: %s",
+					"no provider found for tool: %s",
 					toolID,
 				),
 			)
@@ -242,57 +242,37 @@ func (e *InitExecutor) configureTools(
 			continue
 		}
 
-		// Check if already configured
-		wasConfigured := configurator.IsConfigured(e.projectPath)
+		// Configure memory file if provider supports it
+		if memProvider := provider.GetMemoryFileProvider(); memProvider != nil {
+			wasConfigured := memProvider.IsMemoryFileConfigured(e.projectPath)
 
-		// Configure the tool
-		if err := configurator.Configure(
-			e.projectPath,
-			spectrDir,
-		); err != nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"failed to configure %s: %v",
-					tool.Name,
-					err,
-				),
-			)
-
-			continue
-		}
-
-		// Track created/updated files
-		fileInfo := e.getToolFileInfo(tool)
-		if wasConfigured {
-			result.UpdatedFiles = append(result.UpdatedFiles, fileInfo...)
-		} else {
-			result.CreatedFiles = append(result.CreatedFiles, fileInfo...)
-		}
-
-		// Auto-install slash commands if this tool has a mapping
-		if slashToolID, hasMapping := GetSlashToolMapping(toolID); hasMapping {
-			slashConfigurator := e.getConfigurator(slashToolID)
-			if slashConfigurator == nil {
+			if err := memProvider.ConfigureMemoryFile(e.projectPath); err != nil {
 				result.Errors = append(
 					result.Errors,
 					fmt.Sprintf(
-						"no slash configurator found for: %s",
-						slashToolID,
+						"failed to configure memory file for %s: %v",
+						tool.Name,
+						err,
 					),
 				)
 
 				continue
 			}
 
-			// Check if slash commands already configured
-			slashWasConfigured := slashConfigurator.IsConfigured(e.projectPath)
+			// Track memory file
+			fileInfo := e.getMemoryFileInfo(tool)
+			if wasConfigured {
+				result.UpdatedFiles = append(result.UpdatedFiles, fileInfo...)
+			} else {
+				result.CreatedFiles = append(result.CreatedFiles, fileInfo...)
+			}
+		}
 
-			// Configure slash commands
-			if err := slashConfigurator.Configure(
-				e.projectPath,
-				spectrDir,
-			); err != nil {
+		// Configure slash commands if provider supports it
+		if slashProvider := provider.GetSlashCommandProvider(); slashProvider != nil {
+			wasConfigured := slashProvider.AreSlashCommandsConfigured(e.projectPath)
+
+			if err := slashProvider.ConfigureSlashCommands(e.projectPath); err != nil {
 				result.Errors = append(
 					result.Errors,
 					fmt.Sprintf(
@@ -306,11 +286,38 @@ func (e *InitExecutor) configureTools(
 			}
 
 			// Track slash command files
-			slashFileInfo := e.getSlashCommandFileInfo(slashToolID)
-			if slashWasConfigured {
+			slashFileInfo := e.getSlashCommandFileInfo(toolID)
+			if wasConfigured {
 				result.UpdatedFiles = append(result.UpdatedFiles, slashFileInfo...)
 			} else {
 				result.CreatedFiles = append(result.CreatedFiles, slashFileInfo...)
+			}
+		}
+
+		// Configure SpectrAgentsUpdater for memory file tools
+		// All composite providers with memory files also update spectr/AGENTS.md
+		if provider.GetMemoryFileProvider() != nil {
+			updater := &SpectrAgentsUpdater{}
+			wasConfigured := updater.IsMemoryFileConfigured(e.projectPath)
+
+			if err := updater.ConfigureMemoryFile(e.projectPath); err != nil {
+				result.Errors = append(
+					result.Errors,
+					fmt.Sprintf(
+						"failed to update spectr/AGENTS.md for %s: %v",
+						tool.Name,
+						err,
+					),
+				)
+				// Don't continue - this is non-fatal
+			} else {
+				// Track spectr/AGENTS.md
+				spectrAgentsFile := "spectr/AGENTS.md"
+				if wasConfigured {
+					result.UpdatedFiles = append(result.UpdatedFiles, spectrAgentsFile)
+				} else {
+					result.CreatedFiles = append(result.CreatedFiles, spectrAgentsFile)
+				}
 			}
 		}
 	}
@@ -318,120 +325,118 @@ func (e *InitExecutor) configureTools(
 	return nil
 }
 
-// getConfigurator returns the configurator for a tool ID
-func (_e *InitExecutor) getConfigurator(toolID string) Configurator {
+// getToolProvider returns the ToolProvider for a tool ID
+func (_e *InitExecutor) getToolProvider(toolID string) ToolProvider {
 	switch toolID {
-	// Config-based tools
+	// Config-based tools (composite providers with memory file + slash commands)
 	case "claude-code":
-		return &ClaudeCodeConfigurator{}
+		return NewClaudeCodeToolProvider()
 	case "cline":
-		return &ClineConfigurator{}
+		return NewClineToolProvider()
 	case "costrict-config":
-		return &CostrictConfigurator{}
+		return NewCostrictToolProvider()
 	case "qoder-config":
-		return &QoderConfigurator{}
+		return NewQoderToolProvider()
 	case "codebuddy":
-		return &CodeBuddyConfigurator{}
+		return NewCodeBuddyToolProvider()
 	case "qwen":
-		return &QwenConfigurator{}
+		return NewQwenToolProvider()
 	case "antigravity":
-		return &AntigravityConfigurator{}
-
-	// Slash command tools
-	case "claude":
-		return NewClaudeSlashConfigurator()
-	case "cline-slash":
-		return NewClineSlashConfigurator()
-	case "kilocode":
-		return NewKilocodeSlashConfigurator()
-	case "qoder-slash":
-		return NewQoderSlashConfigurator()
-	case "cursor":
-		return NewCursorSlashConfigurator()
-	case "aider":
-		return NewAiderSlashConfigurator()
-	case "continue":
-		return NewContinueSlashConfigurator()
-	case "copilot":
-		return NewCopilotSlashConfigurator()
-	case "mentat":
-		return NewMentatSlashConfigurator()
-	case "tabnine":
-		return NewTabnineSlashConfigurator()
-	case "smol":
-		return NewSmolSlashConfigurator()
-	case "costrict-slash":
-		return NewCostrictSlashConfigurator()
-	case "windsurf":
-		return NewWindsurfSlashConfigurator()
-	case "codebuddy-slash":
-		return NewCodeBuddySlashConfigurator()
-	case "qwen-slash":
-		return NewQwenSlashConfigurator()
-	case "antigravity-slash":
-		return NewAntigravitySlashConfigurator()
+		return NewAntigravityToolProvider()
 
 	default:
 		return nil
 	}
 }
 
-// getToolFileInfo returns the files that would be created/updated for a tool
-func (e *InitExecutor) getToolFileInfo(tool *ToolDefinition) []string {
-	switch tool.Type {
-	case ToolTypeConfig:
-		// Config-based tools create a single instruction file
-		// Get the actual file path from the tool ID mapping
-		var filePath string
-		switch tool.ID {
-		case "claude-code":
-			filePath = "CLAUDE.md"
-		case "cline":
-			filePath = "CLINE.md"
-		case "costrict-config":
-			filePath = "COSTRICT.md"
-		case "qoder-config":
-			filePath = "QODER.md"
-		case "codebuddy":
-			filePath = "CODEBUDDY.md"
-		case "qwen":
-			filePath = "QWEN.md"
-		case "antigravity":
-			filePath = "AGENTS.md"
+// getMemoryFileInfo returns the memory file that would be created/updated for a tool
+func (_e *InitExecutor) getMemoryFileInfo(tool *ToolDefinition) []string {
+	// Get the memory file path from the tool ID mapping
+	var filePath string
+	switch tool.ID {
+	case "claude-code":
+		filePath = "CLAUDE.md"
+	case "cline":
+		filePath = "CLINE.md"
+	case "costrict-config":
+		filePath = "COSTRICT.md"
+	case "qoder-config":
+		filePath = "QODER.md"
+	case "codebuddy":
+		filePath = "CODEBUDDY.md"
+	case "qwen":
+		filePath = "QWEN.md"
+	case "antigravity":
+		filePath = "AGENTS.md"
+	default:
+		return make([]string, 0)
+	}
+
+	return []string{filePath}
+}
+
+// getSlashCommandFileInfo returns the slash command files for a tool ID
+func (_e *InitExecutor) getSlashCommandFileInfo(toolID string) []string {
+	provider := _e.getToolProvider(toolID)
+	if provider == nil {
+		return make([]string, 0)
+	}
+
+	slashProvider := provider.GetSlashCommandProvider()
+	if slashProvider == nil {
+		return make([]string, 0)
+	}
+
+	// Get file paths from the provider
+	baseProvider, ok := slashProvider.(*BaseSlashCommandProvider)
+	if !ok {
+		// Try to extract from embedded BaseSlashCommandProvider
+		// This handles the case where slashProvider is a concrete type
+		// that embeds BaseSlashCommandProvider
+		switch p := slashProvider.(type) {
+		case *ClaudeSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *ClineSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *CursorSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *ContinueSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *WindsurfSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *AiderSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *KilocodeSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *QoderSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *CostrictSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *CopilotSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *MentatSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *TabnineSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *SmolSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *CodeBuddySlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *QwenSlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
+		case *AntigravitySlashCommandProvider:
+			baseProvider = p.BaseSlashCommandProvider
 		default:
 			return make([]string, 0)
 		}
-
-		return []string{filePath}
-
-	case ToolTypeSlash:
-		// Slash command tools create 3 files
-		configurator := e.getConfigurator(tool.ID)
-		slashConfig, ok := configurator.(*SlashCommandConfigurator)
-		if !ok {
-			return make([]string, 0)
-		}
-		files := make([]string, 0)
-		for _, path := range slashConfig.config.FilePaths {
-			files = append(files, path)
-		}
-
-		return files
 	}
 
-	return make([]string, 0)
-}
-
-// getSlashCommandFileInfo returns the files for a slash command tool ID
-func (e *InitExecutor) getSlashCommandFileInfo(slashToolID string) []string {
-	configurator := e.getConfigurator(slashToolID)
-	slashConfig, ok := configurator.(*SlashCommandConfigurator)
-	if !ok {
+	if baseProvider == nil {
 		return make([]string, 0)
 	}
 
 	files := make([]string, 0)
-	for _, path := range slashConfig.config.FilePaths {
+	for _, path := range baseProvider.config.FilePaths {
 		files = append(files, path)
 	}
 

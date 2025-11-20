@@ -163,30 +163,25 @@ func TestUpdateFileWithMarkers_InvalidMarkerState(t *testing.T) {
 	}
 }
 
-// Test ClaudeCodeConfigurator
-func TestClaudeCodeConfigurator(t *testing.T) {
+// Test ClaudeMemoryFileProvider
+func TestClaudeMemoryFileProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := &ClaudeCodeConfigurator{}
+	provider := &ClaudeMemoryFileProvider{}
 
-	// Test GetName
-	if configurator.GetName() != "Claude Code" {
-		t.Errorf("Expected name 'Claude Code', got '%s'", configurator.GetName())
+	// Test IsMemoryFileConfigured (should be false initially)
+	if provider.IsMemoryFileConfigured(tmpDir) {
+		t.Error("Expected IsMemoryFileConfigured to return false for unconfigured project")
 	}
 
-	// Test IsConfigured (should be false initially)
-	if configurator.IsConfigured(tmpDir) {
-		t.Error("Expected IsConfigured to return false for unconfigured project")
-	}
-
-	// Test Configure
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	// Test ConfigureMemoryFile
+	err := provider.ConfigureMemoryFile(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureMemoryFile failed: %v", err)
 	}
 
-	// Test IsConfigured (should be true now)
-	if !configurator.IsConfigured(tmpDir) {
-		t.Error("Expected IsConfigured to return true after configuration")
+	// Test IsMemoryFileConfigured (should be true now)
+	if !provider.IsMemoryFileConfigured(tmpDir) {
+		t.Error("Expected IsMemoryFileConfigured to return true after configuration")
 	}
 
 	// Verify file exists and has correct structure
@@ -208,26 +203,22 @@ func TestClaudeCodeConfigurator(t *testing.T) {
 	}
 }
 
-// Test ClineConfigurator
-func TestClineConfigurator(t *testing.T) {
+// Test ClineMemoryFileProvider
+func TestClineMemoryFileProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := &ClineConfigurator{}
+	provider := &ClineMemoryFileProvider{}
 
-	if configurator.GetName() != "Cline" {
-		t.Errorf("Expected name 'Cline', got '%s'", configurator.GetName())
+	if provider.IsMemoryFileConfigured(tmpDir) {
+		t.Error("Expected IsMemoryFileConfigured to return false initially")
 	}
 
-	if configurator.IsConfigured(tmpDir) {
-		t.Error("Expected IsConfigured to return false initially")
-	}
-
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureMemoryFile(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureMemoryFile failed: %v", err)
 	}
 
-	if !configurator.IsConfigured(tmpDir) {
-		t.Error("Expected IsConfigured to return true after configuration")
+	if !provider.IsMemoryFileConfigured(tmpDir) {
+		t.Error("Expected IsMemoryFileConfigured to return true after configuration")
 	}
 
 	filePath := filepath.Join(tmpDir, "CLINE.md")
@@ -236,18 +227,14 @@ func TestClineConfigurator(t *testing.T) {
 	}
 }
 
-// Test CostrictConfigurator
-func TestCostrictConfigurator(t *testing.T) {
+// Test CostrictMemoryFileProvider
+func TestCostrictMemoryFileProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := &CostrictConfigurator{}
+	provider := &CostrictMemoryFileProvider{}
 
-	if configurator.GetName() != "CoStrict" {
-		t.Errorf("Expected name 'CoStrict', got '%s'", configurator.GetName())
-	}
-
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureMemoryFile(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureMemoryFile failed: %v", err)
 	}
 
 	filePath := filepath.Join(tmpDir, "COSTRICT.md")
@@ -256,18 +243,14 @@ func TestCostrictConfigurator(t *testing.T) {
 	}
 }
 
-// Test QoderConfigurator
-func TestQoderConfigurator(t *testing.T) {
+// Test QoderMemoryFileProvider
+func TestQoderMemoryFileProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := &QoderConfigurator{}
+	provider := &QoderMemoryFileProvider{}
 
-	if configurator.GetName() != "Qoder" {
-		t.Errorf("Expected name 'Qoder', got '%s'", configurator.GetName())
-	}
-
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureMemoryFile(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureMemoryFile failed: %v", err)
 	}
 
 	filePath := filepath.Join(tmpDir, "QODER.md")
@@ -276,18 +259,14 @@ func TestQoderConfigurator(t *testing.T) {
 	}
 }
 
-// Test CodeBuddyConfigurator
-func TestCodeBuddyConfigurator(t *testing.T) {
+// Test CodeBuddyMemoryFileProvider
+func TestCodeBuddyMemoryFileProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := &CodeBuddyConfigurator{}
+	provider := &CodeBuddyMemoryFileProvider{}
 
-	if configurator.GetName() != "CodeBuddy" {
-		t.Errorf("Expected name 'CodeBuddy', got '%s'", configurator.GetName())
-	}
-
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureMemoryFile(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureMemoryFile failed: %v", err)
 	}
 
 	filePath := filepath.Join(tmpDir, "CODEBUDDY.md")
@@ -296,18 +275,14 @@ func TestCodeBuddyConfigurator(t *testing.T) {
 	}
 }
 
-// Test QwenConfigurator
-func TestQwenConfigurator(t *testing.T) {
+// Test QwenMemoryFileProvider
+func TestQwenMemoryFileProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := &QwenConfigurator{}
+	provider := &QwenMemoryFileProvider{}
 
-	if configurator.GetName() != "Qwen Code" {
-		t.Errorf("Expected name 'Qwen Code', got '%s'", configurator.GetName())
-	}
-
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureMemoryFile(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureMemoryFile failed: %v", err)
 	}
 
 	filePath := filepath.Join(tmpDir, "QWEN.md")
@@ -316,32 +291,27 @@ func TestQwenConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Claude
+// Test SlashCommandProvider - Claude
 //
 //nolint:revive // cognitive-complexity - comprehensive test coverage
-func TestClaudeSlashConfigurator(t *testing.T) {
+func TestClaudeSlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewClaudeSlashConfigurator()
+	provider := NewClaudeSlashCommandProvider()
 
-	// Test GetName
-	if configurator.GetName() != "Claude Slash Commands" {
-		t.Errorf("Expected name 'Claude Slash Commands', got '%s'", configurator.GetName())
+	// Test AreSlashCommandsConfigured (should be false initially)
+	if provider.AreSlashCommandsConfigured(tmpDir) {
+		t.Error("Expected AreSlashCommandsConfigured to return false initially")
 	}
 
-	// Test IsConfigured (should be false initially)
-	if configurator.IsConfigured(tmpDir) {
-		t.Error("Expected IsConfigured to return false initially")
-	}
-
-	// Test Configure
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	// Test ConfigureSlashCommands
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
-	// Test IsConfigured (should be true now)
-	if !configurator.IsConfigured(tmpDir) {
-		t.Error("Expected IsConfigured to return true after configuration")
+	// Test AreSlashCommandsConfigured (should be true now)
+	if !provider.AreSlashCommandsConfigured(tmpDir) {
+		t.Error("Expected AreSlashCommandsConfigured to return true after configuration")
 	}
 
 	// Verify all three command files exist
@@ -384,14 +354,14 @@ func TestClaudeSlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Kilocode
-func TestKilocodeSlashConfigurator(t *testing.T) {
+// Test SlashCommandProvider - Kilocode
+func TestKilocodeSlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewKilocodeSlashConfigurator()
+	provider := NewKilocodeSlashCommandProvider()
 
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
 	// Verify file paths
@@ -404,14 +374,14 @@ func TestKilocodeSlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Qoder
-func TestQoderSlashConfigurator(t *testing.T) {
+// Test SlashCommandProvider - Qoder
+func TestQoderSlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewQoderSlashConfigurator()
+	provider := NewQoderSlashCommandProvider()
 
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
 	// Verify file paths
@@ -424,14 +394,14 @@ func TestQoderSlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Cursor
-func TestCursorSlashConfigurator(t *testing.T) {
+// Test SlashCommandProvider - Cursor
+func TestCursorSlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewCursorSlashConfigurator()
+	provider := NewCursorSlashCommandProvider()
 
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
 	// Verify file paths
@@ -457,14 +427,14 @@ func TestCursorSlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Cline
-func TestClineSlashConfigurator(t *testing.T) {
+// Test SlashCommandProvider - Cline
+func TestClineSlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewClineSlashConfigurator()
+	provider := NewClineSlashCommandProvider()
 
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
 	// Verify file paths
@@ -490,14 +460,14 @@ func TestClineSlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Windsurf
-func TestWindsurfSlashConfigurator(t *testing.T) {
+// Test SlashCommandProvider - Windsurf
+func TestWindsurfSlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewWindsurfSlashConfigurator()
+	provider := NewWindsurfSlashCommandProvider()
 
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
 	// Verify file paths
@@ -523,14 +493,14 @@ func TestWindsurfSlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - CoStrict
-func TestCostrictSlashConfigurator(t *testing.T) {
+// Test SlashCommandProvider - CoStrict
+func TestCostrictSlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewCostrictSlashConfigurator()
+	provider := NewCostrictSlashCommandProvider()
 
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
 	// Verify file paths
@@ -556,14 +526,14 @@ func TestCostrictSlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - CodeBuddy
-func TestCodeBuddySlashConfigurator(t *testing.T) {
+// Test SlashCommandProvider - CodeBuddy
+func TestCodeBuddySlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewCodeBuddySlashConfigurator()
+	provider := NewCodeBuddySlashCommandProvider()
 
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
 	// Verify file paths
@@ -576,14 +546,14 @@ func TestCodeBuddySlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Qwen
-func TestQwenSlashConfigurator(t *testing.T) {
+// Test SlashCommandProvider - Qwen
+func TestQwenSlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewQwenSlashConfigurator()
+	provider := NewQwenSlashCommandProvider()
 
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
 	// Verify file paths
@@ -596,13 +566,13 @@ func TestQwenSlashConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Update existing files
-func TestSlashCommandConfigurator_UpdateExisting(t *testing.T) {
+// Test SlashCommandProvider - Update existing files
+func TestSlashCommandProvider_UpdateExisting(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewClaudeSlashConfigurator()
+	provider := NewClaudeSlashCommandProvider()
 
 	// First configuration
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
 		t.Fatalf("Initial configure failed: %v", err)
 	}
@@ -616,7 +586,7 @@ func TestSlashCommandConfigurator_UpdateExisting(t *testing.T) {
 	}
 
 	// Second configuration (should update only content between markers)
-	err = configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err = provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
 		t.Fatalf("Second configure failed: %v", err)
 	}
@@ -639,34 +609,34 @@ func TestSlashCommandConfigurator_UpdateExisting(t *testing.T) {
 	}
 }
 
-// Test all remaining slash configurators exist and work
+// Test all remaining slash command providers exist and work
 //
 //nolint:revive // cognitive-complexity - comprehensive test coverage
-func TestAllSlashConfigurators(t *testing.T) {
+func TestAllSlashCommandProviders(t *testing.T) {
 	tests := []struct {
-		name         string
-		configurator *SlashCommandConfigurator
-		basePath     string
+		name     string
+		provider SlashCommandProvider
+		basePath string
 	}{
-		{"Aider", NewAiderSlashConfigurator(), ".aider/commands"},
-		{"Continue", NewContinueSlashConfigurator(), ".continue/commands"},
-		{"Copilot", NewCopilotSlashConfigurator(), ".github/copilot"},
-		{"Mentat", NewMentatSlashConfigurator(), ".mentat/commands"},
-		{"Tabnine", NewTabnineSlashConfigurator(), ".tabnine/commands"},
-		{"Smol", NewSmolSlashConfigurator(), ".smol/commands"},
+		{"Aider", NewAiderSlashCommandProvider(), ".aider/commands"},
+		{"Continue", NewContinueSlashCommandProvider(), ".continue/commands"},
+		{"Copilot", NewCopilotSlashCommandProvider(), ".github/copilot"},
+		{"Mentat", NewMentatSlashCommandProvider(), ".mentat/commands"},
+		{"Tabnine", NewTabnineSlashCommandProvider(), ".tabnine/commands"},
+		{"Smol", NewSmolSlashCommandProvider(), ".smol/commands"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 
-			err := tt.configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+			err := tt.provider.ConfigureSlashCommands(tmpDir)
 			if err != nil {
-				t.Fatalf("Configure failed: %v", err)
+				t.Fatalf("ConfigureSlashCommands failed: %v", err)
 			}
 
-			if !tt.configurator.IsConfigured(tmpDir) {
-				t.Error("Expected IsConfigured to return true after configuration")
+			if !tt.provider.AreSlashCommandsConfigured(tmpDir) {
+				t.Error("Expected AreSlashCommandsConfigured to return true after configuration")
 			}
 
 			// Verify at least one command file exists
@@ -765,18 +735,14 @@ func TestFindMarkerIndex(t *testing.T) {
 	}
 }
 
-// Test AntigravityConfigurator
-func TestAntigravityConfigurator(t *testing.T) {
+// Test AgentsFileProvider (for Antigravity)
+func TestAgentsFileProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := &AntigravityConfigurator{}
+	provider := &AgentsFileProvider{}
 
-	if configurator.GetName() != "Antigravity" {
-		t.Errorf("Expected name 'Antigravity', got '%s'", configurator.GetName())
-	}
-
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	err := provider.ConfigureMemoryFile(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureMemoryFile failed: %v", err)
 	}
 
 	filePath := filepath.Join(tmpDir, "AGENTS.md")
@@ -785,38 +751,39 @@ func TestAntigravityConfigurator(t *testing.T) {
 	}
 }
 
-// Test SlashCommandConfigurator - Antigravity
+// Test SlashCommandProvider - Antigravity
 //
 //nolint:revive // cognitive-complexity - comprehensive test coverage
-func TestAntigravitySlashConfigurator(t *testing.T) {
+func TestAntigravitySlashCommandProvider(t *testing.T) {
 	tmpDir := t.TempDir()
-	configurator := NewAntigravitySlashConfigurator()
+	provider := NewAntigravitySlashCommandProvider()
 
-	// Test GetName
-	if configurator.GetName() != "Antigravity Workflows" {
-		t.Errorf("Expected name 'Antigravity Workflows', got '%s'", configurator.GetName())
+	// Test AreSlashCommandsConfigured (should be false initially)
+	if provider.AreSlashCommandsConfigured(tmpDir) {
+		t.Error("Expected AreSlashCommandsConfigured to return false initially")
 	}
 
-	// Test IsConfigured (should be false initially)
-	if configurator.IsConfigured(tmpDir) {
-		t.Error("Expected IsConfigured to return false initially")
-	}
-
-	// Test Configure
-	err := configurator.Configure(tmpDir, filepath.Join(tmpDir, "spectr"))
+	// Test ConfigureSlashCommands
+	err := provider.ConfigureSlashCommands(tmpDir)
 	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("ConfigureSlashCommands failed: %v", err)
 	}
 
-	// Test IsConfigured (should be true now)
-	if !configurator.IsConfigured(tmpDir) {
-		t.Error("Expected IsConfigured to return true after configuration")
+	// Test AreSlashCommandsConfigured (should be true now)
+	if !provider.AreSlashCommandsConfigured(tmpDir) {
+		t.Error("Expected AreSlashCommandsConfigured to return true after configuration")
 	}
 
 	// Verify all three command files exist
 	commands := []string{"proposal", "apply", "archive"}
+	expectedPaths := map[string]string{
+		"proposal": ".agent/workflows/spectr-proposal.md",
+		"apply":    ".agent/workflows/spectr-apply.md",
+		"archive":  ".agent/workflows/spectr-archive.md",
+	}
+
 	for _, cmd := range commands {
-		relPath := configurator.config.FilePaths[cmd]
+		relPath := expectedPaths[cmd]
 		cmdPath := filepath.Join(tmpDir, relPath)
 		if !FileExists(cmdPath) {
 			t.Errorf("Command file %s was not created at %s", cmd, cmdPath)
@@ -836,20 +803,6 @@ func TestAntigravitySlashConfigurator(t *testing.T) {
 		}
 		if !strings.Contains(contentStr, SpectrEndMarker) {
 			t.Errorf("Command file %s missing end marker", cmd)
-		}
-	}
-
-	// Test file paths
-	expectedPaths := map[string]string{
-		"proposal": ".agent/workflows/spectr-proposal.md",
-		"apply":    ".agent/workflows/spectr-apply.md",
-		"archive":  ".agent/workflows/spectr-archive.md",
-	}
-
-	for cmd, expectedPath := range expectedPaths {
-		actualPath := configurator.config.FilePaths[cmd]
-		if actualPath != expectedPath {
-			t.Errorf("Command %s: expected path %s, got %s", cmd, expectedPath, actualPath)
 		}
 	}
 }

@@ -187,6 +187,7 @@ func (g *GenericConfigurator) GetFilePaths() []string {
 // Returns the path and a boolean indicating if the command exists
 func (g *GenericConfigurator) GetSlashPath(cmd string) (string, bool) {
 	path, exists := g.config.SlashPaths[cmd]
+
 	return path, exists
 }
 

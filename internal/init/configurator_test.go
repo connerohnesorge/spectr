@@ -33,7 +33,7 @@ func TestUpdateFileWithMarkers_NewFile(t *testing.T) {
 
 	result := string(data)
 	expected := SpectrStartMarker +
-		"\n" + content + "\n" + SpectrEndMarker
+		"\n" + content + "\n" + SpectrEndMarker + "\n\n"
 
 	if result != expected {
 		t.Errorf("Content mismatch.\nExpected:\n%s\n\nGot:\n%s", expected, result)
@@ -955,7 +955,7 @@ func TestAntigravitySlashConfigurator(t *testing.T) {
 	// Verify all three command files exist
 	commands := []string{"proposal", "apply", "archive"}
 	for _, cmd := range commands {
-		relPath := configurator.Config().SlashPaths[cmd]
+		relPath, _ := configurator.GetSlashPath(cmd)
 		cmdPath := filepath.Join(tmpDir, relPath)
 		if !FileExists(cmdPath) {
 			t.Errorf("Command file %s was not created at %s", cmd, cmdPath)
@@ -986,7 +986,7 @@ func TestAntigravitySlashConfigurator(t *testing.T) {
 	}
 
 	for cmd, expectedPath := range expectedPaths {
-		actualPath := configurator.config.SlashPaths[cmd]
+		actualPath, _ := configurator.GetSlashPath(cmd)
 		if actualPath != expectedPath {
 			t.Errorf("Command %s: expected path %s, got %s", cmd, expectedPath, actualPath)
 		}

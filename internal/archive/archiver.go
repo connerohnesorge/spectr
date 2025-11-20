@@ -26,34 +26,11 @@ import (
 	"github.com/conneroisu/spectr/internal/parsers"
 )
 
-// Archiver manages the archive workflow for completed changes.
-// It coordinates validation, spec merging, and directory movement.
-type Archiver struct {
-	yes         bool // Skip confirmation prompts
-	skipSpecs   bool // Skip spec delta merging
-	noValidate  bool // Skip pre-archive validation
-	interactive bool // Use interactive table mode
-}
-
-// NewArchiver creates a new Archiver with the given flags.
-// The flags control which steps of the archive workflow are executed:
-// - yes: Auto-confirm all prompts (non-interactive mode)
-// - skipSpecs: Skip merging delta specs into main specs
-// - noValidate: Skip validation checks before archiving
-// - interactive: Use interactive table mode for change selection
-func NewArchiver(yes, skipSpecs, noValidate, interactive bool) (*Archiver, error) {
-	return &Archiver{
-		yes:         yes,
-		skipSpecs:   skipSpecs,
-		noValidate:  noValidate,
-		interactive: interactive,
-	}, nil
-}
-
 // Archive archives a change by validating, applying specs, and moving to archive directory
 //
-//nolint:revive // changeID parameter needs to be reassigned when empty
-func (a *Archiver) Archive(changeID string) error {
+//nolint:revive // cmd.ChangeID field needs to be reassigned when empty
+func Archive(cmd *ArchiveCmd) error {
+	changeID := cmd.ChangeID
 	// Get current working directory as project root
 	projectRoot, err := os.Getwd()
 	if err != nil {
@@ -68,7 +45,7 @@ func (a *Archiver) Archive(changeID string) error {
 
 	// If no change ID provided, use interactive selection
 	if changeID == "" {
-		selectedID, err := a.selectChange(projectRoot, spectrRoot)
+		selectedID, err := selectChange(cmd.Interactive, projectRoot, spectrRoot)
 		if err != nil {
 			return fmt.Errorf("select change: %w", err)
 		}
@@ -76,6 +53,7 @@ func (a *Archiver) Archive(changeID string) error {
 			return fmt.Errorf("no change selected")
 		}
 		changeID = selectedID
+		cmd.ChangeID = changeID
 	}
 
 	changeDir := filepath.Join(spectrRoot, "changes", changeID)
@@ -88,13 +66,13 @@ func (a *Archiver) Archive(changeID string) error {
 	fmt.Printf("Archiving change: %s\n\n", changeID)
 
 	// Validation workflow
-	if !a.noValidate {
-		if err := a.runValidation(changeDir); err != nil {
+	if !cmd.NoValidate {
+		if err := runValidation(changeDir); err != nil {
 			return fmt.Errorf("validation failed: %w", err)
 		}
 	} else {
-		if !a.yes {
-			if !a.confirm("Validation is disabled. Continue anyway?") {
+		if !cmd.Yes {
+			if !confirm("Validation is disabled. Continue anyway?") {
 				return errors.New("archive cancelled")
 			}
 		}
@@ -102,42 +80,67 @@ func (a *Archiver) Archive(changeID string) error {
 	}
 
 	// Task checking
-	if err := a.checkTasks(changeDir); err != nil {
+	if err := checkTasks(cmd.Yes, changeDir); err != nil {
 		return fmt.Errorf("task check failed: %w", err)
 	}
 
 	// Spec update workflow
-	if !a.skipSpecs {
-		if err := a.updateSpecs(changeDir, spectrRoot); err != nil {
+	var totalCounts OperationCounts
+	var capabilities []string
+	if !cmd.SkipSpecs {
+		counts, caps, err := updateSpecsWithTracking(cmd.Yes, changeDir, spectrRoot)
+		if err != nil {
 			return fmt.Errorf("spec update failed: %w", err)
 		}
+		totalCounts = counts
+		capabilities = caps
 	} else {
 		fmt.Println("⚠️  Skipping spec updates")
 	}
 
 	// Archive operation
-	if err := a.moveToArchive(changeDir, changeID, spectrRoot); err != nil {
+	archiveName, err := moveToArchive(changeDir, changeID, spectrRoot)
+	if err != nil {
 		return fmt.Errorf("move to archive failed: %w", err)
 	}
 
 	fmt.Printf("\n✓ Successfully archived: %s\n", changeID)
 
+	// PR creation workflow (only if --pr flag is set)
+	if cmd.PR {
+		ctx := PRContext{
+			ChangeID:     changeID,
+			ArchiveName:  archiveName,
+			SkipSpecs:    cmd.SkipSpecs,
+			OpCounts:     totalCounts,
+			Capabilities: capabilities,
+			SpectrRoot:   spectrRoot,
+		}
+
+		if err := createPR(ctx); err != nil {
+			// PR creation failure should not fail the entire archive
+			fmt.Printf("\n⚠️  PR creation failed: %v\n", err)
+
+			return nil
+		}
+	}
+
 	return nil
 }
 
 // selectChange prompts user to select a change interactively
-func (a *Archiver) selectChange(projectRoot, spectrRoot string) (string, error) {
+func selectChange(interactive bool, projectRoot, spectrRoot string) (string, error) {
 	// Use interactive table mode if enabled
-	if a.interactive {
-		return a.selectChangeInteractive(projectRoot)
+	if interactive {
+		return selectChangeInteractive(projectRoot)
 	}
 
 	// Fallback to numbered list selection
-	return a.selectChangeBasic(spectrRoot)
+	return selectChangeBasic(spectrRoot)
 }
 
 // selectChangeInteractive uses the interactive table for change selection
-func (*Archiver) selectChangeInteractive(projectRoot string) (string, error) {
+func selectChangeInteractive(projectRoot string) (string, error) {
 	// Import list package functions
 	// Note: This will be done at the package level
 	lister := newListerForArchive(projectRoot)
@@ -161,7 +164,7 @@ func (*Archiver) selectChangeInteractive(projectRoot string) (string, error) {
 }
 
 // selectChangeBasic uses basic numbered list for change selection
-func (*Archiver) selectChangeBasic(spectrRoot string) (string, error) {
+func selectChangeBasic(spectrRoot string) (string, error) {
 	changesDir := filepath.Join(spectrRoot, "changes")
 
 	entries, err := os.ReadDir(changesDir)
@@ -206,7 +209,7 @@ func (*Archiver) selectChangeBasic(spectrRoot string) (string, error) {
 }
 
 // runValidation validates the change before archiving
-func (*Archiver) runValidation(changeDir string) error {
+func runValidation(changeDir string) error {
 	fmt.Println("Validating change...")
 
 	report, err := ValidatePreArchive(changeDir, true)
@@ -243,7 +246,7 @@ func (*Archiver) runValidation(changeDir string) error {
 }
 
 // checkTasks checks task completion status
-func (a *Archiver) checkTasks(changeDir string) error {
+func checkTasks(yes bool, changeDir string) error {
 	tasksPath := filepath.Join(changeDir, "tasks.md")
 	status, err := parsers.CountTasks(tasksPath)
 	if err != nil {
@@ -260,8 +263,8 @@ func (a *Archiver) checkTasks(changeDir string) error {
 
 	if incomplete > 0 {
 		fmt.Printf(" (%d incomplete)\n", incomplete)
-		if !a.yes {
-			if !a.confirm("Archive with incomplete tasks?") {
+		if !yes {
+			if !confirm("Archive with incomplete tasks?") {
 				return errors.New("archive cancelled due to incomplete tasks")
 			}
 		}
@@ -272,47 +275,57 @@ func (a *Archiver) checkTasks(changeDir string) error {
 	return nil
 }
 
-// updateSpecs applies delta specs to main specs
-func (a *Archiver) updateSpecs(changeDir, spectrRoot string) error {
+// updateSpecsWithTracking applies delta specs and tracks operation counts and capabilities
+func updateSpecsWithTracking(
+	yes bool,
+	changeDir, spectrRoot string,
+) (OperationCounts, []string, error) {
 	specsDir := filepath.Join(changeDir, "specs")
-	deltaSpecs, err := a.findAndValidateDeltaSpecs(specsDir)
+	deltaSpecs, err := findAndValidateDeltaSpecs(specsDir)
 	if err != nil {
-		return err
+		return OperationCounts{}, nil, err
 	}
 
 	if len(deltaSpecs) == 0 {
 		fmt.Println("No spec deltas found")
 
-		return nil
+		return OperationCounts{}, nil, nil
 	}
 
-	updates, err := a.buildUpdatePlan(deltaSpecs, specsDir, spectrRoot)
+	updates, err := buildUpdatePlan(deltaSpecs, specsDir, spectrRoot)
 	if err != nil {
-		return err
+		return OperationCounts{}, nil, err
 	}
 
-	a.displayUpdatePlan(updates)
+	displayUpdatePlan(updates)
 
-	if !a.yes && !a.confirm("\nApply spec updates?") {
-		return errors.New("archive cancelled")
+	if !yes && !confirm("\nApply spec updates?") {
+		return OperationCounts{}, nil, errors.New("archive cancelled")
 	}
 
-	totalCounts, mergedSpecs, err := a.processMerges(updates)
+	totalCounts, mergedSpecs, err := processMerges(updates)
 	if err != nil {
-		return err
+		return OperationCounts{}, nil, err
 	}
 
-	if err := a.writeSpecs(mergedSpecs); err != nil {
-		return err
+	if err := writeSpecs(mergedSpecs); err != nil {
+		return OperationCounts{}, nil, err
 	}
 
-	a.displaySummary(totalCounts)
+	displaySummary(totalCounts)
 
-	return nil
+	// Extract capability names from update targets
+	capabilities := make([]string, 0, len(updates))
+	for _, update := range updates {
+		capability := filepath.Base(filepath.Dir(update.Target))
+		capabilities = append(capabilities, capability)
+	}
+
+	return totalCounts, capabilities, nil
 }
 
 // findAndValidateDeltaSpecs finds delta specs in the given directory
-func (a *Archiver) findAndValidateDeltaSpecs(
+func findAndValidateDeltaSpecs(
 	specsDir string,
 ) ([]string, error) {
 	if _, err := os.Stat(specsDir); os.IsNotExist(err) {
@@ -321,7 +334,7 @@ func (a *Archiver) findAndValidateDeltaSpecs(
 		return nil, nil
 	}
 
-	deltaSpecs, err := a.findDeltaSpecs(specsDir)
+	deltaSpecs, err := findDeltaSpecs(specsDir)
 	if err != nil {
 		return nil, fmt.Errorf("find delta specs: %w", err)
 	}
@@ -330,7 +343,7 @@ func (a *Archiver) findAndValidateDeltaSpecs(
 }
 
 // buildUpdatePlan creates spec update plan from delta specs
-func (*Archiver) buildUpdatePlan(
+func buildUpdatePlan(
 	deltaSpecs []string,
 	specsDir, spectrRoot string,
 ) ([]SpecUpdate, error) {
@@ -366,7 +379,7 @@ func (*Archiver) buildUpdatePlan(
 }
 
 // displayUpdatePlan prints the update plan to console
-func (*Archiver) displayUpdatePlan(updates []SpecUpdate) {
+func displayUpdatePlan(updates []SpecUpdate) {
 	fmt.Printf("\nSpec updates (%d):\n", len(updates))
 	for _, update := range updates {
 		capability := filepath.Base(filepath.Dir(update.Target))
@@ -379,7 +392,7 @@ func (*Archiver) displayUpdatePlan(updates []SpecUpdate) {
 }
 
 // processMerges validates and merges all spec updates
-func (*Archiver) processMerges(
+func processMerges(
 	updates []SpecUpdate,
 ) (OperationCounts, map[string]string, error) {
 	totalCounts := OperationCounts{}
@@ -454,7 +467,7 @@ func processOneMerge(
 }
 
 // writeSpecs writes all merged specs to disk
-func (*Archiver) writeSpecs(mergedSpecs map[string]string) error {
+func writeSpecs(mergedSpecs map[string]string) error {
 	for targetPath, content := range mergedSpecs {
 		if err := os.MkdirAll(
 			filepath.Dir(targetPath),
@@ -476,7 +489,7 @@ func (*Archiver) writeSpecs(mergedSpecs map[string]string) error {
 }
 
 // displaySummary prints operation summary to console
-func (*Archiver) displaySummary(totalCounts OperationCounts) {
+func displaySummary(totalCounts OperationCounts) {
 	fmt.Println("\nSpec operations applied:")
 	if totalCounts.Added > 0 {
 		fmt.Printf("  + %d added\n", totalCounts.Added)
@@ -494,7 +507,7 @@ func (*Archiver) displaySummary(totalCounts OperationCounts) {
 }
 
 // findDeltaSpecs recursively finds all spec.md files in a directory
-func (*Archiver) findDeltaSpecs(dir string) ([]string, error) {
+func findDeltaSpecs(dir string) ([]string, error) {
 	var specs []string
 
 	err := filepath.Walk(
@@ -515,13 +528,13 @@ func (*Archiver) findDeltaSpecs(dir string) ([]string, error) {
 }
 
 // moveToArchive moves the change directory to archive with date prefix
-func (*Archiver) moveToArchive(
+func moveToArchive(
 	changeDir, changeID, spectrRoot string,
-) error {
+) (string, error) {
 	// Create archive directory if it doesn't exist
 	archiveDir := filepath.Join(spectrRoot, "changes", "archive")
 	if err := os.MkdirAll(archiveDir, dirPerm); err != nil {
-		return fmt.Errorf("create archive directory: %w", err)
+		return "", fmt.Errorf("create archive directory: %w", err)
 	}
 
 	// Generate archive name with date
@@ -531,21 +544,21 @@ func (*Archiver) moveToArchive(
 
 	// Check if archive already exists
 	if _, err := os.Stat(archivePath); err == nil {
-		return fmt.Errorf("archive already exists: %s", archiveName)
+		return "", fmt.Errorf("archive already exists: %s", archiveName)
 	}
 
 	// Move change to archive
 	if err := os.Rename(changeDir, archivePath); err != nil {
-		return fmt.Errorf("move to archive: %w", err)
+		return "", fmt.Errorf("move to archive: %w", err)
 	}
 
 	fmt.Printf("\nMoved to: changes/archive/%s\n", archiveName)
 
-	return nil
+	return archiveName, nil
 }
 
 // confirm prompts user for yes/no confirmation
-func (*Archiver) confirm(message string) bool {
+func confirm(message string) bool {
 	fmt.Printf("%s [y/N]: ", message)
 	reader := bufio.NewReader(os.Stdin)
 	response, err := reader.ReadString('\n')

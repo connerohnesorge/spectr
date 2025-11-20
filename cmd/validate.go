@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/conneroisu/spectr/internal/validation"
+	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
 // ValidateCmd represents the validate command

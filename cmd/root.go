@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/conneroisu/spectr/internal/archive"
+	"github.com/connerohnesorge/spectr/internal/archive"
 )
 
 // CLI represents the root command structure for Kong

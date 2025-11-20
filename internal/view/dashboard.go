@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/conneroisu/spectr/internal/discovery"
-	"github.com/conneroisu/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 // CollectData gathers all dashboard information from the project,

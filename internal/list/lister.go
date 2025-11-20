@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/conneroisu/spectr/internal/discovery"
-	"github.com/conneroisu/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 // Lister handles listing operations for changes and specs

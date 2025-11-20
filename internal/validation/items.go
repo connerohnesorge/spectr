@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/conneroisu/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/discovery"
 )
 
 // ValidationItem represents an item to validate

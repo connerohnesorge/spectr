@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/conneroisu/spectr/internal/view"
+	"github.com/connerohnesorge/spectr/internal/view"
 )
 
 // TestViewCmd_Integration_TextOutput tests the view command with default text output

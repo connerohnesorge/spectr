@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/conneroisu/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 // Archive archives a change by validating, applying specs, and moving to archive directory

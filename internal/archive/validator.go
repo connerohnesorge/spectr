@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/conneroisu/spectr/internal/parsers"
-	"github.com/conneroisu/spectr/internal/validation"
+	"github.com/connerohnesorge/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
 // ValidatePreArchive performs all pre-archive validation checks

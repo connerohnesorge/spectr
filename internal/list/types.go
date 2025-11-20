@@ -1,6 +1,6 @@
 package list
 
-import "github.com/conneroisu/spectr/internal/parsers"
+import "github.com/connerohnesorge/spectr/internal/parsers"
 
 // ChangeInfo represents information about a change
 type ChangeInfo struct {

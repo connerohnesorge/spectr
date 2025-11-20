@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/conneroisu/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 func TestValidatePostMerge_Success(t *testing.T) {

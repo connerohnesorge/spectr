@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/conneroisu/spectr/internal/git"
+	"github.com/connerohnesorge/spectr/internal/git"
 )
 
 // PRContext holds the context needed for PR creation

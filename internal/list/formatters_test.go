@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/conneroisu/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 func TestFormatChangesText(t *testing.T) {

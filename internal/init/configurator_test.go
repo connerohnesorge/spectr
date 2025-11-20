@@ -955,7 +955,7 @@ func TestAntigravitySlashConfigurator(t *testing.T) {
 	// Verify all three command files exist
 	commands := []string{"proposal", "apply", "archive"}
 	for _, cmd := range commands {
-		relPath := configurator.config.SlashPaths[cmd]
+		relPath := configurator.Config().SlashPaths[cmd]
 		cmdPath := filepath.Join(tmpDir, relPath)
 		if !FileExists(cmdPath) {
 			t.Errorf("Command file %s was not created at %s", cmd, cmdPath)

@@ -40,6 +40,11 @@ func NewGenericConfigurator(config ToolConfig) (*GenericConfigurator, error) {
 	return &GenericConfigurator{config: config, tm: tm}, nil
 }
 
+// Config returns the tool configuration
+func (g *GenericConfigurator) Config() ToolConfig {
+	return g.config
+}
+
 // Configure configures the tool by creating/updating the appropriate files
 func (g *GenericConfigurator) Configure(projectPath, _spectrDir string) error {
 	switch g.config.Type {
@@ -176,6 +181,13 @@ func (g *GenericConfigurator) GetFilePaths() []string {
 	default:
 		return []string{}
 	}
+}
+
+// GetSlashPath returns the slash command path for the given command name
+// Returns the path and a boolean indicating if the command exists
+func (g *GenericConfigurator) GetSlashPath(cmd string) (string, bool) {
+	path, exists := g.config.SlashPaths[cmd]
+	return path, exists
 }
 
 // ============================================================================

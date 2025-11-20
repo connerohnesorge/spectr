@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// markerBlockSuffix enforces consistent spacing after marker blocks.
+const markerBlockSuffix = "\n\n"
+
 // UpdateFileWithMarkers updates a file with content between markers.
 // If the file doesn't exist, creates it with markers.
 // If the file exists, updates content between markers.
@@ -76,7 +79,7 @@ func UpdateFileWithMarkers(
 		case startIndex == -1 && endIndex == -1:
 			// No markers found - prepend with markers
 			newContent := startMarker + "\n" + content + "\n" +
-				endMarker + "\n\n" + existingContent
+				endMarker + markerBlockSuffix + existingContent
 			existingContent = newContent
 		default:
 			// Only one marker found - error
@@ -89,7 +92,8 @@ func UpdateFileWithMarkers(
 		}
 	} else {
 		// File doesn't exist - create with markers
-		existingContent = startMarker + "\n" + content + "\n" + endMarker
+		existingContent = startMarker + "\n" + content + "\n" +
+			endMarker + markerBlockSuffix
 	}
 
 	// Ensure parent directory exists

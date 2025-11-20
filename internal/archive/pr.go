@@ -44,7 +44,7 @@ func createPR(ctx PRContext) error {
 
 	fmt.Printf("\n✓ Pull request created: %s\n", prURL)
 
-	restoreOriginalBranch(originalBranch, branchName)
+	restoreOriginalBranch(originalBranch, branchName, ctx)
 
 	return nil
 }
@@ -136,10 +136,11 @@ func pushAndCreatePR(
 	return prURL, nil
 }
 
-// restoreOriginalBranch attempts to restore the original branch.
+// restoreOriginalBranch attempts to restore the original branch and working directory.
 // After PR creation, this function returns to the branch the user was on
-// before the archive. If it fails, a warning is printed but no error returned.
-func restoreOriginalBranch(originalBranch, branchName string) {
+// before the archive and restores the changes directory (and optionally specs).
+// If it fails, a warning is printed but no error returned.
+func restoreOriginalBranch(originalBranch, branchName string, ctx PRContext) {
 	if err := git.CheckoutBranch(originalBranch); err != nil {
 		msg := "\nWarning: Failed to restore original branch '%s': %v\n" +
 			"You are still on branch '%s'. " +
@@ -152,8 +153,36 @@ func restoreOriginalBranch(originalBranch, branchName string) {
 			branchName,
 			originalBranch,
 		)
+
+		return
+	}
+
+	fmt.Printf("Restored original branch: %s\n", originalBranch)
+
+	// Restore the changes directory
+	changesPath := filepath.Join(ctx.SpectrRoot, "changes")
+	if err := git.RestorePath(changesPath); err != nil {
+		fmt.Fprintf(
+			os.Stderr,
+			"\nWarning: Failed to restore changes directory: %v\n",
+			err,
+		)
 	} else {
-		fmt.Printf("Restored original branch: %s\n", originalBranch)
+		fmt.Println("Restored changes directory")
+	}
+
+	// Restore specs directory if specs were updated
+	if !ctx.SkipSpecs {
+		specsPath := filepath.Join(ctx.SpectrRoot, "specs")
+		if err := git.RestorePath(specsPath); err != nil {
+			fmt.Fprintf(
+				os.Stderr,
+				"\nWarning: Failed to restore specs directory: %v\n",
+				err,
+			)
+		} else {
+			fmt.Println("Restored specs directory")
+		}
 	}
 }
 

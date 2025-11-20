@@ -114,8 +114,8 @@ func createGiteaPR(tool string, opts PROptions) (string, error) {
 
 // extractURL extracts a URL from CLI tool output.
 func extractURL(output string) string {
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(output, "\n")
+	for line := range lines {
 		line = strings.TrimSpace(line)
 
 		// Check if line starts with URL
@@ -146,8 +146,8 @@ func findURLInLine(line string) string {
 		return ""
 	}
 
-	parts := strings.Fields(line)
-	for _, part := range parts {
+	parts := strings.FieldsSeq(line)
+	for part := range parts {
 		if isURLStart(part) {
 			return part
 		}

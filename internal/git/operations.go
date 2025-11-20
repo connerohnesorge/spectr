@@ -120,3 +120,14 @@ func BranchExists(branchName string) bool {
 
 	return err == nil
 }
+
+// RestorePath restores a file or directory from HEAD
+func RestorePath(path string) error {
+	cmd := exec.Command(gitCommand, "checkout", "HEAD", "--", path)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("restore path: %w\nOutput: %s", err, string(output))
+	}
+
+	return nil
+}

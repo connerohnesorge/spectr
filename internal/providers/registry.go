@@ -40,10 +40,9 @@ const (
 	PriorityTabnineSlash     = 110
 	PrioritySmolSlash        = 111
 	PriorityCostrictSlash    = 112
-	PriorityWindsurfSlash    = 113
-	PriorityCodeBuddySlash   = 114
-	PriorityQwenSlash        = 115
-	PriorityAntigravitySlash = 116
+	PriorityCodeBuddySlash   = 113
+	PriorityQwenSlash        = 114
+	PriorityAntigravitySlash = 115
 )
 
 // ProviderType represents the type of provider configuration

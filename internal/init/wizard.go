@@ -198,7 +198,7 @@ func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		// Toggle selection
 		if m.cursor < len(m.allTools) {
 			tool := m.allTools[m.cursor]
-			m.selectedTools[tool.ID] = !m.selectedTools[tool.ID]
+			m.selectedTools[string(tool.ID)] = !m.selectedTools[string(tool.ID)]
 		}
 	case "enter":
 		// Confirm and move to review
@@ -208,7 +208,7 @@ func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "a":
 		// Select all
 		for _, tool := range m.allTools {
-			m.selectedTools[tool.ID] = true
+			m.selectedTools[string(tool.ID)] = true
 		}
 	case "n":
 		// Deselect all
@@ -329,7 +329,7 @@ func (m WizardModel) renderToolGroup(tools []*ToolDefinition, offset int) string
 		}
 
 		checkbox := "[ ]"
-		if m.selectedTools[tool.ID] {
+		if m.selectedTools[string(tool.ID)] {
 			checkbox = selectedStyle.Render("[✓]")
 		}
 
@@ -338,7 +338,7 @@ func (m WizardModel) renderToolGroup(tools []*ToolDefinition, offset int) string
 		switch {
 		case m.cursor == actualIndex:
 			b.WriteString(cursorStyle.Render(line))
-		case m.selectedTools[tool.ID]:
+		case m.selectedTools[string(tool.ID)]:
 			b.WriteString(selectedStyle.Render(line))
 		default:
 			b.WriteString(dimmedStyle.Render(line))
@@ -393,7 +393,7 @@ func (m WizardModel) renderSelectedTools(
 		count)
 
 	for _, tool := range m.allTools {
-		if !m.selectedTools[tool.ID] {
+		if !m.selectedTools[string(tool.ID)] {
 			continue
 		}
 		b.WriteString(successStyle.Render("  ✓ "))

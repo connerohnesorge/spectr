@@ -14,8 +14,8 @@ const (
 
 // ToolDefinition defines the configuration for a tool integration
 type ToolDefinition struct {
-	// ID is the unique identifier for the tool
-	ID string
+	// ID is the unique type-safe identifier for the tool
+	ID ToolID
 	// Name is the human-readable name of the tool
 	Name string
 	// Type indicates whether this is a config or slash tool
@@ -62,16 +62,4 @@ type ProjectContext struct {
 	TechStack []string
 	// Conventions are the project conventions (unused in template currently)
 	Conventions string
-}
-
-// SpecContext holds template variables for rendering spec.md
-type SpecContext struct {
-	// CapabilityName is the name of the capability/spec
-	CapabilityName string
-}
-
-// ProposalContext holds template variables for rendering proposal.md
-type ProposalContext struct {
-	// ChangeName is the name of the change proposal
-	ChangeName string
 }

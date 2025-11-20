@@ -100,12 +100,16 @@ func runNonInteractiveInit(projectPath string, toolIDs []string) error {
 	// Handle "all" special case
 	selectedTools := toolIDs
 	if len(toolIDs) == 1 && toolIDs[0] == "all" {
-		selectedTools = registry.ListTools()
+		allToolIDs := registry.ListTools()
+		selectedTools = make([]string, len(allToolIDs))
+		for i, toolID := range allToolIDs {
+			selectedTools[i] = string(toolID)
+		}
 	}
 
 	// Validate tool IDs
 	for _, id := range selectedTools {
-		if _, err := registry.GetTool(id); err != nil {
+		if _, err := registry.GetTool(initpkg.ToolID(id)); err != nil {
 			return fmt.Errorf("invalid tool ID: %s", id)
 		}
 	}

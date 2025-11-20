@@ -16,7 +16,8 @@ type ArchiveCmd struct {
 
 // Run executes the archive command
 func (c *ArchiveCmd) Run() error {
-	err := Archive(c)
+	// Pass empty string to use current working directory
+	err := Archive(c, "")
 	if err != nil {
 		return fmt.Errorf("archive failed: %w", err)
 	}

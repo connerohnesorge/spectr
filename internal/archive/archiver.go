@@ -28,13 +28,22 @@ import (
 
 // Archive archives a change by validating, applying specs, and moving to archive directory
 //
+// The workingDir parameter allows operating in a different working directory (e.g., for git worktree operations).
+// If workingDir is empty, the current working directory is used as the project root.
+//
 //nolint:revive // cmd.ChangeID field needs to be reassigned when empty
-func Archive(cmd *ArchiveCmd) error {
+func Archive(cmd *ArchiveCmd, workingDir string) error {
 	changeID := cmd.ChangeID
-	// Get current working directory as project root
-	projectRoot, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("get working directory: %w", err)
+	// Get project root based on workingDir parameter
+	var projectRoot string
+	var err error
+	if workingDir == "" {
+		projectRoot, err = os.Getwd()
+		if err != nil {
+			return fmt.Errorf("get working directory: %w", err)
+		}
+	} else {
+		projectRoot = workingDir
 	}
 
 	// Check if spectr directory exists
@@ -88,7 +97,7 @@ func Archive(cmd *ArchiveCmd) error {
 	var totalCounts OperationCounts
 	var capabilities []string
 	if !cmd.SkipSpecs {
-		counts, caps, err := updateSpecsWithTracking(cmd.Yes, changeDir, spectrRoot)
+		counts, caps, err := updateSpecsWithTracking(cmd.Yes, changeDir, projectRoot)
 		if err != nil {
 			return fmt.Errorf("spec update failed: %w", err)
 		}
@@ -99,7 +108,7 @@ func Archive(cmd *ArchiveCmd) error {
 	}
 
 	// Archive operation
-	archiveName, err := moveToArchive(changeDir, changeID, spectrRoot)
+	archiveName, err := moveToArchive(changeDir, changeID, projectRoot)
 	if err != nil {
 		return fmt.Errorf("move to archive failed: %w", err)
 	}
@@ -278,7 +287,7 @@ func checkTasks(yes bool, changeDir string) error {
 // updateSpecsWithTracking applies delta specs and tracks operation counts and capabilities
 func updateSpecsWithTracking(
 	yes bool,
-	changeDir, spectrRoot string,
+	changeDir, workingDir string,
 ) (OperationCounts, []string, error) {
 	specsDir := filepath.Join(changeDir, "specs")
 	deltaSpecs, err := findAndValidateDeltaSpecs(specsDir)
@@ -292,6 +301,7 @@ func updateSpecsWithTracking(
 		return OperationCounts{}, nil, nil
 	}
 
+	spectrRoot := filepath.Join(workingDir, "spectr")
 	updates, err := buildUpdatePlan(deltaSpecs, specsDir, spectrRoot)
 	if err != nil {
 		return OperationCounts{}, nil, err
@@ -308,7 +318,7 @@ func updateSpecsWithTracking(
 		return OperationCounts{}, nil, err
 	}
 
-	if err := writeSpecs(mergedSpecs); err != nil {
+	if err := writeSpecs(mergedSpecs, workingDir); err != nil {
 		return OperationCounts{}, nil, err
 	}
 
@@ -467,7 +477,7 @@ func processOneMerge(
 }
 
 // writeSpecs writes all merged specs to disk
-func writeSpecs(mergedSpecs map[string]string) error {
+func writeSpecs(mergedSpecs map[string]string, workingDir string) error {
 	for targetPath, content := range mergedSpecs {
 		if err := os.MkdirAll(
 			filepath.Dir(targetPath),
@@ -529,10 +539,10 @@ func findDeltaSpecs(dir string) ([]string, error) {
 
 // moveToArchive moves the change directory to archive with date prefix
 func moveToArchive(
-	changeDir, changeID, spectrRoot string,
+	changeDir, changeID, workingDir string,
 ) (string, error) {
 	// Create archive directory if it doesn't exist
-	archiveDir := filepath.Join(spectrRoot, "changes", "archive")
+	archiveDir := filepath.Join(workingDir, "spectr", "changes", "archive")
 	if err := os.MkdirAll(archiveDir, dirPerm); err != nil {
 		return "", fmt.Errorf("create archive directory: %w", err)
 	}

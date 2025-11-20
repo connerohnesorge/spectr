@@ -3,7 +3,9 @@ package archive
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/conneroisu/spectr/internal/git"
 )
@@ -27,25 +29,55 @@ func createPR(ctx PRContext) error {
 		return err
 	}
 
-	originalBranch, err := git.GetCurrentBranch()
-	if err != nil {
-		return fmt.Errorf("get current branch: %w", err)
+	baseBranchName := fmt.Sprintf("archive-%s", ctx.ChangeID)
+	branchName := git.GenerateUniqueBranchName(baseBranchName)
+
+	// Create temporary worktree directory
+	tempPath := filepath.Join(
+		os.TempDir(),
+		fmt.Sprintf("spectr-archive-%s", ctx.ChangeID),
+	)
+
+	// Ensure cleanup on exit
+	defer func() {
+		if err := git.RemoveWorktree(tempPath); err != nil {
+			msg := "\nWarning: Failed to remove worktree: %v\n"
+			fmt.Fprintf(os.Stderr, msg, err)
+		}
+	}()
+
+	// Create worktree with new branch
+	if err := git.CreateWorktree(tempPath, branchName); err != nil {
+		return fmt.Errorf("create worktree: %w", err)
 	}
 
-	branchName := fmt.Sprintf("archive-%s", ctx.ChangeID)
-	err = prepareBranchAndCommit(ctx, branchName)
+	fmt.Printf("Created worktree at: %s\n", tempPath)
+
+	// Run archive operations in the worktree
+	archiveCmd := &ArchiveCmd{
+		ChangeID:  ctx.ChangeID,
+		SkipSpecs: ctx.SkipSpecs,
+		Yes:       true,  // Non-interactive mode for worktree operations
+		PR:        false, // Prevent recursive PR creation
+	}
+
+	if err := Archive(archiveCmd, tempPath); err != nil {
+		return fmt.Errorf("archive in worktree: %w", err)
+	}
+
+	// Stage and commit in worktree
+	err = prepareBranchAndCommit(ctx, tempPath)
 	if err != nil {
 		return err
 	}
 
-	prURL, err := pushAndCreatePR(ctx, platform, branchName)
+	// Push and create PR from worktree
+	prURL, err := pushAndCreatePR(ctx, platform, branchName, tempPath)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("\n✓ Pull request created: %s\n", prURL)
-
-	restoreOriginalBranch(originalBranch, branchName, ctx)
 
 	return nil
 }
@@ -82,20 +114,19 @@ func validateAndDetectPlatform() (git.Platform, error) {
 	return platform, nil
 }
 
-// prepareBranchAndCommit creates a branch, stages files, and commits.
-// It creates a new git branch, stages the archive files and specs,
-// then commits with an automatically generated message.
-func prepareBranchAndCommit(ctx PRContext, branchName string) error {
-	if err := createBranch(branchName); err != nil {
-		return err
-	}
-
-	if err := stageArchiveFiles(ctx); err != nil {
+// prepareBranchAndCommit stages files and commits in the worktree.
+// It stages the archive files and specs, then commits with an automatically
+// generated message. The branch is already created by CreateWorktree.
+func prepareBranchAndCommit(
+	ctx PRContext,
+	workingDir string,
+) error {
+	if err := stageArchiveFiles(ctx, workingDir); err != nil {
 		return err
 	}
 
 	commitMsg := buildCommitMessage(ctx)
-	if err := git.Commit(commitMsg); err != nil {
+	if err := commitInWorktree(commitMsg, workingDir); err != nil {
 		msg := "%v. Archive completed. Branch created. " +
 			"Commit manually and push"
 
@@ -111,9 +142,10 @@ func prepareBranchAndCommit(ctx PRContext, branchName string) error {
 func pushAndCreatePR(
 	ctx PRContext,
 	platform git.Platform,
-	branchName string,
+	branchName,
+	workingDir string,
 ) (string, error) {
-	if err := git.Push(branchName); err != nil {
+	if err := pushFromWorktree(branchName, workingDir); err != nil {
 		msg := "%v. Archive completed. Branch created and committed. " +
 			"Push manually"
 
@@ -137,60 +169,6 @@ func pushAndCreatePR(
 	return prURL, nil
 }
 
-// restoreOriginalBranch attempts to restore the original branch and working
-// directory.
-//
-// After PR creation, this function returns to the branch the user was on
-// before the archive and restores the changes directory (and optionally specs).
-// If it fails, a warning is printed but no error returned.
-func restoreOriginalBranch(originalBranch, branchName string, ctx PRContext) {
-	if err := git.CheckoutBranch(originalBranch); err != nil {
-		msg := "\nWarning: Failed to restore original branch '%s': %v\n" +
-			"You are still on branch '%s'. " +
-			"Checkout manually with: git checkout %s\n"
-		fmt.Fprintf(
-			os.Stderr,
-			msg,
-			originalBranch,
-			err,
-			branchName,
-			originalBranch,
-		)
-
-		return
-	}
-
-	fmt.Printf("Restored original branch: %s\n", originalBranch)
-
-	// Restore the changes directory
-	changesPath := filepath.Join(ctx.SpectrRoot, "changes")
-	if err := git.RestorePath(changesPath); err != nil {
-		fmt.Fprintf(
-			os.Stderr,
-			"\nWarning: Failed to restore changes directory: %v\n",
-			err,
-		)
-	} else {
-		fmt.Println("Restored changes directory")
-	}
-
-	// Restore specs directory if specs were updated
-	if ctx.SkipSpecs {
-		return
-	}
-
-	specsPath := filepath.Join(ctx.SpectrRoot, "specs")
-	if err := git.RestorePath(specsPath); err != nil {
-		fmt.Fprintf(
-			os.Stderr,
-			"\nWarning: Failed to restore specs directory: %v\n",
-			err,
-		)
-	} else {
-		fmt.Println("Restored specs directory")
-	}
-}
-
 // validateGitEnvironment checks if git is properly configured
 func validateGitEnvironment() error {
 	if err := git.IsGitRepository(); err != nil {
@@ -200,43 +178,79 @@ func validateGitEnvironment() error {
 	return git.HasOriginRemote()
 }
 
-// createBranch creates a new git branch for the archive.
-// It checks for existing branches with the same name and creates a new
-// branch with the pattern "archive-{change-id}".
-func createBranch(branchName string) error {
-	// Check if branch already exists
-	if git.BranchExists(branchName) {
-		msg := "branch '%s' already exists. " +
-			"Delete it first with: git branch -D %s"
-
-		return fmt.Errorf(msg, branchName, branchName)
-	}
-
-	if err := git.CreateBranch(branchName); err != nil {
-		return err
-	}
-
-	fmt.Printf("Created branch: %s\n", branchName)
-
-	return nil
-}
-
 // stageArchiveFiles stages the archived directory and updated specs
-func stageArchiveFiles(ctx PRContext) error {
+func stageArchiveFiles(ctx PRContext, workingDir string) error {
+	// Construct paths relative to the worktree's spectr root
+	worktreeSpectrRoot := filepath.Join(workingDir, "spectr")
+
 	paths := []string{
-		filepath.Join(ctx.SpectrRoot, "changes", "archive", ctx.ArchiveName),
+		filepath.Join(
+			worktreeSpectrRoot,
+			"changes",
+			"archive",
+			ctx.ArchiveName,
+		),
 	}
 
 	// Add specs directory if specs were updated
 	if !ctx.SkipSpecs {
-		paths = append(paths, filepath.Join(ctx.SpectrRoot, "specs"))
+		paths = append(paths, filepath.Join(worktreeSpectrRoot, "specs"))
 	}
 
-	if err := git.StageFiles(paths); err != nil {
+	if err := stageFilesInWorktree(paths, workingDir); err != nil {
 		return err
 	}
 
 	fmt.Println("Staged files for commit")
+
+	return nil
+}
+
+// stageFilesInWorktree stages files in the specified worktree directory
+func stageFilesInWorktree(paths []string, workingDir string) error {
+	args := append([]string{"-C", workingDir, "add"}, paths...)
+	cmd := exec.Command("git", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		msg := "stage files in worktree: %w\nOutput: %s"
+
+		return fmt.Errorf(msg, err, string(output))
+	}
+
+	return nil
+}
+
+// commitInWorktree creates a commit in the specified worktree directory
+func commitInWorktree(message, workingDir string) error {
+	cmd := exec.Command("git", "-C", workingDir, "commit", "-F", "-")
+	cmd.Stdin = strings.NewReader(message)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		msg := "commit in worktree: %w\nOutput: %s"
+
+		return fmt.Errorf(msg, err, string(output))
+	}
+
+	return nil
+}
+
+// pushFromWorktree pushes the branch from the specified worktree directory
+func pushFromWorktree(branchName, workingDir string) error {
+	cmd := exec.Command(
+		"git",
+		"-C",
+		workingDir,
+		"push",
+		"-u",
+		"origin",
+		branchName,
+	)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		msg := "push from worktree: %w\nOutput: %s"
+
+		return fmt.Errorf(msg, err, string(output))
+	}
 
 	return nil
 }

@@ -9,9 +9,14 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
-const gitCommand = "git"
+const (
+	gitCommand       = "git"
+	branchUUIDLength = 8 // Length of UUID suffix for branch names
+)
 
 // IsGitRepository checks if the current directory is a git repository
 func IsGitRepository() error {
@@ -130,4 +135,54 @@ func RestorePath(path string) error {
 	}
 
 	return nil
+}
+
+// CreateWorktree creates a git worktree at the specified path with a
+// new branch. This is useful for isolating changes in a separate working
+// directory. Example: CreateWorktree("/tmp/archive-xyz", "archive-my-change")
+func CreateWorktree(path, branch string) error {
+	cmd := exec.Command(gitCommand, "worktree", "add", "-b", branch, path)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf(
+			"create worktree: %w\nOutput: %s",
+			err,
+			string(output),
+		)
+	}
+
+	return nil
+}
+
+// RemoveWorktree removes the git worktree at the specified path.
+// This cleans up the worktree and associated branch references.
+// Example: RemoveWorktree("/tmp/archive-xyz")
+func RemoveWorktree(path string) error {
+	cmd := exec.Command(gitCommand, "worktree", "remove", path)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf(
+			"remove worktree: %w\nOutput: %s",
+			err,
+			string(output),
+		)
+	}
+
+	return nil
+}
+
+// GenerateUniqueBranchName generates a unique branch name by appending
+// a short UUID suffix to the base name. This is useful for creating
+// unique branch names when multiple archive operations might use the
+// same base name.
+//
+// Example: GenerateUniqueBranchName("archive-add-pr-flag")
+// Returns: "archive-add-pr-flag-a3f2c8d9" (hypothetical UUID)
+func GenerateUniqueBranchName(baseName string) string {
+	// Generate a new UUID v4
+	id := uuid.New()
+	// Take the first branchUUIDLength characters of the UUID hex string
+	shortUUID := id.String()[:branchUUIDLength]
+	// Return base name with UUID suffix
+	return fmt.Sprintf("%s-%s", baseName, shortUUID)
 }

@@ -18,16 +18,16 @@ type InitExecutor struct {
 }
 
 // NewInitExecutor creates a new initialization executor
-func NewInitExecutor(projectPath string) (*InitExecutor, error) {
-	// Expand and validate path
-	expandedPath, err := ExpandPath(projectPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to expand project path: %w", err)
+func NewInitExecutor(cmd *InitCmd) (*InitExecutor, error) {
+	// Use the resolved path from InitCmd
+	projectPath := cmd.Path
+	if projectPath == "" {
+		return nil, fmt.Errorf("project path is required")
 	}
 
 	// Check if path exists
-	if !FileExists(expandedPath) {
-		return nil, fmt.Errorf("project path does not exist: %s", expandedPath)
+	if !FileExists(projectPath) {
+		return nil, fmt.Errorf("project path does not exist: %s", projectPath)
 	}
 
 	// Initialize template manager
@@ -37,7 +37,7 @@ func NewInitExecutor(projectPath string) (*InitExecutor, error) {
 	}
 
 	return &InitExecutor{
-		projectPath: expandedPath,
+		projectPath: projectPath,
 		registry:    NewRegistry(),
 		tm:          tm,
 	}, nil

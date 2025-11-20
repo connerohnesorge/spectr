@@ -6,7 +6,8 @@ import (
 
 func TestNewWizardModel(t *testing.T) {
 	// Test creating a new wizard model
-	wizard, err := NewWizardModel("/tmp/test-project")
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create wizard model: %v", err)
 	}
@@ -39,7 +40,8 @@ func TestNewWizardModel(t *testing.T) {
 }
 
 func TestWizardStepTransitions(t *testing.T) {
-	wizard, err := NewWizardModel("/tmp/test-project")
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create wizard model: %v", err)
 	}
@@ -70,7 +72,8 @@ func TestWizardStepTransitions(t *testing.T) {
 
 //nolint:revive // cognitive-complexity - comprehensive test coverage
 func TestWizardRenderFunctions(t *testing.T) {
-	wizard, err := NewWizardModel("/tmp/test-project")
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create wizard model: %v", err)
 	}
@@ -138,7 +141,8 @@ func TestWizardRenderFunctions(t *testing.T) {
 }
 
 func TestGetSelectedToolIDs(t *testing.T) {
-	wizard, err := NewWizardModel("/tmp/test-project")
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create wizard model: %v", err)
 	}

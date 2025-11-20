@@ -4,20 +4,19 @@ import "fmt"
 
 // ToolRegistry manages the collection of available AI tool definitions
 type ToolRegistry struct {
-	tools map[string]*ToolDefinition
+	tools map[ToolID]*ToolDefinition
 }
 
 // NewRegistry creates and initializes a new ToolRegistry with all
 // 7 AI tool definitions (slash commands auto-installed)
 func NewRegistry() *ToolRegistry {
 	registry := &ToolRegistry{
-		tools: make(map[string]*ToolDefinition),
+		tools: make(map[ToolID]*ToolDefinition),
 	}
 
-	// Config-based tools (7 tools)
-	// Each tool auto-installs its corresponding slash commands
+	// Register all config-based tools from tool_definitions.go
 	registry.registerTool(&ToolDefinition{
-		ID:         "claude-code",
+		ID:         ToolClaudeCode,
 		Name:       "Claude Code",
 		Type:       ToolTypeConfig,
 		Priority:   1,
@@ -25,7 +24,7 @@ func NewRegistry() *ToolRegistry {
 	})
 
 	registry.registerTool(&ToolDefinition{
-		ID:         "cline",
+		ID:         ToolCline,
 		Name:       "Cline",
 		Type:       ToolTypeConfig,
 		Priority:   2,
@@ -33,7 +32,7 @@ func NewRegistry() *ToolRegistry {
 	})
 
 	registry.registerTool(&ToolDefinition{
-		ID:         "costrict-config",
+		ID:         ToolCostrictConfig,
 		Name:       "Costrict",
 		Type:       ToolTypeConfig,
 		Priority:   3,
@@ -41,7 +40,7 @@ func NewRegistry() *ToolRegistry {
 	})
 
 	registry.registerTool(&ToolDefinition{
-		ID:         "qoder-config",
+		ID:         ToolQoderConfig,
 		Name:       "Qoder",
 		Type:       ToolTypeConfig,
 		Priority:   4,
@@ -49,7 +48,7 @@ func NewRegistry() *ToolRegistry {
 	})
 
 	registry.registerTool(&ToolDefinition{
-		ID:         "codebuddy",
+		ID:         ToolCodeBuddy,
 		Name:       "CodeBuddy",
 		Type:       ToolTypeConfig,
 		Priority:   5,
@@ -57,7 +56,7 @@ func NewRegistry() *ToolRegistry {
 	})
 
 	registry.registerTool(&ToolDefinition{
-		ID:         "qwen",
+		ID:         ToolQwen,
 		Name:       "Qwen",
 		Type:       ToolTypeConfig,
 		Priority:   6,
@@ -65,7 +64,7 @@ func NewRegistry() *ToolRegistry {
 	})
 
 	registry.registerTool(&ToolDefinition{
-		ID:         "antigravity",
+		ID:         ToolAntigravity,
 		Name:       "Antigravity",
 		Type:       ToolTypeConfig,
 		Priority:   7,
@@ -82,13 +81,19 @@ func (r *ToolRegistry) registerTool(tool *ToolDefinition) {
 
 // GetTool retrieves a tool by its ID
 // Returns an error if the tool ID is not found
-func (r *ToolRegistry) GetTool(id string) (*ToolDefinition, error) {
+func (r *ToolRegistry) GetTool(id ToolID) (*ToolDefinition, error) {
 	tool, exists := r.tools[id]
 	if !exists {
 		return nil, fmt.Errorf("tool with ID '%s' not found", id)
 	}
 
 	return tool, nil
+}
+
+// GetToolByString retrieves a tool by its string ID
+// (for backward compatibility). Returns an error if not found.
+func (r *ToolRegistry) GetToolByString(id string) (*ToolDefinition, error) {
+	return r.GetTool(ToolID(id))
 }
 
 // GetAllTools returns all registered tools as a slice
@@ -114,8 +119,8 @@ func (r *ToolRegistry) GetToolsByType(toolType ToolType) []*ToolDefinition {
 }
 
 // ListTools returns a list of all tool IDs
-func (r *ToolRegistry) ListTools() []string {
-	ids := make([]string, 0, len(r.tools))
+func (r *ToolRegistry) ListTools() []ToolID {
+	ids := make([]ToolID, 0, len(r.tools))
 	for id := range r.tools {
 		ids = append(ids, id)
 	}
@@ -123,23 +128,18 @@ func (r *ToolRegistry) ListTools() []string {
 	return ids
 }
 
-// configToSlashMapping maps config-based tool IDs to their slash
-// command equivalents
-var configToSlashMapping = map[string]string{
-	"claude-code":     "claude",
-	"cline":           "cline-slash",
-	"costrict-config": "costrict-slash",
-	"qoder-config":    "qoder-slash",
-	"codebuddy":       "codebuddy-slash",
-	"qwen":            "qwen-slash",
-	"antigravity":     "antigravity-slash",
-}
-
 // GetSlashToolMapping returns the slash command tool ID for a
 // config-based tool. Returns the slash tool ID and true if a mapping
-// exists, empty string and false otherwise
-func GetSlashToolMapping(configToolID string) (string, bool) {
-	slashID, exists := configToSlashMapping[configToolID]
+// exists, zero value and false otherwise.
+// This delegates to the GetSlashToolForConfig function in tool_definitions.go
+func GetSlashToolMapping(configToolID ToolID) (ToolID, bool) {
+	return GetSlashToolForConfig(configToolID)
+}
 
-	return slashID, exists
+// GetSlashToolMappingString is a backward-compatible wrapper
+// that accepts strings instead of ToolID.
+func GetSlashToolMappingString(configToolID string) (string, bool) {
+	slashID, ok := GetSlashToolForConfig(ToolID(configToolID))
+
+	return string(slashID), ok
 }

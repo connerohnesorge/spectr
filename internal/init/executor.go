@@ -218,7 +218,8 @@ func (e *InitExecutor) configureTools(
 		return nil // No tools to configure
 	}
 
-	for _, toolID := range selectedToolIDs {
+	for _, toolIDStr := range selectedToolIDs {
+		toolID := ToolID(toolIDStr)
 		tool, err := e.registry.GetTool(toolID)
 		if err != nil {
 			result.Errors = append(
@@ -229,14 +230,11 @@ func (e *InitExecutor) configureTools(
 			continue
 		}
 
-		configurator := e.getConfigurator(toolID)
-		if configurator == nil {
+		configurator, err := e.getConfigurator(toolID)
+		if err != nil {
 			result.Errors = append(
 				result.Errors,
-				fmt.Sprintf(
-					"no configurator found for tool: %s",
-					toolID,
-				),
+				fmt.Sprintf("failed to get configurator for %s: %v", toolID, err),
 			)
 
 			continue
@@ -263,7 +261,7 @@ func (e *InitExecutor) configureTools(
 		}
 
 		// Track created/updated files
-		fileInfo := e.getToolFileInfo(tool)
+		fileInfo := e.getToolFileInfo(configurator)
 		if wasConfigured {
 			result.UpdatedFiles = append(result.UpdatedFiles, fileInfo...)
 		} else {
@@ -272,14 +270,11 @@ func (e *InitExecutor) configureTools(
 
 		// Auto-install slash commands if this tool has a mapping
 		if slashToolID, hasMapping := GetSlashToolMapping(toolID); hasMapping {
-			slashConfigurator := e.getConfigurator(slashToolID)
-			if slashConfigurator == nil {
+			slashConfigurator, err := e.getConfigurator(slashToolID)
+			if err != nil {
 				result.Errors = append(
 					result.Errors,
-					fmt.Sprintf(
-						"no slash configurator found for: %s",
-						slashToolID,
-					),
+					fmt.Sprintf("failed to get slash configurator for %s: %v", slashToolID, err),
 				)
 
 				continue
@@ -306,7 +301,7 @@ func (e *InitExecutor) configureTools(
 			}
 
 			// Track slash command files
-			slashFileInfo := e.getSlashCommandFileInfo(slashToolID)
+			slashFileInfo := e.getToolFileInfo(slashConfigurator)
 			if slashWasConfigured {
 				result.UpdatedFiles = append(result.UpdatedFiles, slashFileInfo...)
 			} else {
@@ -319,123 +314,32 @@ func (e *InitExecutor) configureTools(
 }
 
 // getConfigurator returns the configurator for a tool ID
-func (_e *InitExecutor) getConfigurator(toolID string) Configurator {
-	switch toolID {
-	// Config-based tools
-	case "claude-code":
-		return &ClaudeCodeConfigurator{}
-	case "cline":
-		return &ClineConfigurator{}
-	case "costrict-config":
-		return &CostrictConfigurator{}
-	case "qoder-config":
-		return &QoderConfigurator{}
-	case "codebuddy":
-		return &CodeBuddyConfigurator{}
-	case "qwen":
-		return &QwenConfigurator{}
-	case "antigravity":
-		return &AntigravityConfigurator{}
-
-	// Slash command tools
-	case "claude":
-		return NewClaudeSlashConfigurator()
-	case "cline-slash":
-		return NewClineSlashConfigurator()
-	case "kilocode":
-		return NewKilocodeSlashConfigurator()
-	case "qoder-slash":
-		return NewQoderSlashConfigurator()
-	case "cursor":
-		return NewCursorSlashConfigurator()
-	case "aider":
-		return NewAiderSlashConfigurator()
-	case "continue":
-		return NewContinueSlashConfigurator()
-	case "copilot":
-		return NewCopilotSlashConfigurator()
-	case "mentat":
-		return NewMentatSlashConfigurator()
-	case "tabnine":
-		return NewTabnineSlashConfigurator()
-	case "smol":
-		return NewSmolSlashConfigurator()
-	case "costrict-slash":
-		return NewCostrictSlashConfigurator()
-	case "windsurf":
-		return NewWindsurfSlashConfigurator()
-	case "codebuddy-slash":
-		return NewCodeBuddySlashConfigurator()
-	case "qwen-slash":
-		return NewQwenSlashConfigurator()
-	case "antigravity-slash":
-		return NewAntigravitySlashConfigurator()
-
-	default:
-		return nil
-	}
-}
-
-// getToolFileInfo returns the files that would be created/updated for a tool
-func (e *InitExecutor) getToolFileInfo(tool *ToolDefinition) []string {
-	switch tool.Type {
-	case ToolTypeConfig:
-		// Config-based tools create a single instruction file
-		// Get the actual file path from the tool ID mapping
-		var filePath string
-		switch tool.ID {
-		case "claude-code":
-			filePath = "CLAUDE.md"
-		case "cline":
-			filePath = "CLINE.md"
-		case "costrict-config":
-			filePath = "COSTRICT.md"
-		case "qoder-config":
-			filePath = "QODER.md"
-		case "codebuddy":
-			filePath = "CODEBUDDY.md"
-		case "qwen":
-			filePath = "QWEN.md"
-		case "antigravity":
-			filePath = "AGENTS.md"
-		default:
-			return make([]string, 0)
-		}
-
-		return []string{filePath}
-
-	case ToolTypeSlash:
-		// Slash command tools create 3 files
-		configurator := e.getConfigurator(tool.ID)
-		slashConfig, ok := configurator.(*SlashCommandConfigurator)
-		if !ok {
-			return make([]string, 0)
-		}
-		files := make([]string, 0)
-		for _, path := range slashConfig.config.FilePaths {
-			files = append(files, path)
-		}
-
-		return files
-	}
-
-	return make([]string, 0)
-}
-
-// getSlashCommandFileInfo returns the files for a slash command tool ID
-func (e *InitExecutor) getSlashCommandFileInfo(slashToolID string) []string {
-	configurator := e.getConfigurator(slashToolID)
-	slashConfig, ok := configurator.(*SlashCommandConfigurator)
+// Uses the data-driven ToolConfig registry instead of switch statements
+func (_e *InitExecutor) getConfigurator(toolID ToolID) (Configurator, error) {
+	// Look up tool configuration from registry
+	config, ok := GetToolConfig(toolID)
 	if !ok {
-		return make([]string, 0)
+		return nil, fmt.Errorf("no configuration found for tool ID: %s", toolID)
 	}
 
-	files := make([]string, 0)
-	for _, path := range slashConfig.config.FilePaths {
-		files = append(files, path)
+	// Create and return GenericConfigurator with the tool config
+	configurator, err := NewGenericConfigurator(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create configurator: %w", err)
 	}
 
-	return files
+	return configurator, nil
+}
+
+// getToolFileInfo returns the files that would be created/updated for a configurator
+func (e *InitExecutor) getToolFileInfo(configurator Configurator) []string {
+	// Use the GetFilePaths method if available (GenericConfigurator has it)
+	if gc, ok := configurator.(*GenericConfigurator); ok {
+		return gc.GetFilePaths()
+	}
+
+	// Fallback for legacy configurators
+	return []string{}
 }
 
 // FormatNextStepsMessage returns a formatted next steps message for display after initialization

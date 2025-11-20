@@ -46,7 +46,7 @@ func TestGetTool(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tool, err := registry.GetTool(tt.toolID)
+			tool, err := registry.GetTool(ToolID(tt.toolID))
 			if tt.wantErr {
 				verifyErrorCase(t, tt.toolID, tool, err)
 			} else {
@@ -92,7 +92,7 @@ func verifySuccessCase(
 
 		return
 	}
-	if tool.ID != toolID {
+	if string(tool.ID) != toolID {
 		t.Errorf(
 			"GetTool(%s) returned tool with ID %s",
 			toolID,
@@ -143,7 +143,7 @@ func TestSlashToolsNotInRegistry(t *testing.T) {
 	}
 
 	for _, id := range removedSlashTools {
-		tool, err := registry.GetTool(id)
+		tool, err := registry.GetTool(ToolID(id))
 		if err == nil {
 			t.Errorf("Slash-only tool %s should not be in registry (auto-installed now)", id)
 		}
@@ -166,10 +166,11 @@ func TestListTools(t *testing.T) {
 	// Test that all tool IDs are unique
 	seen := make(map[string]bool)
 	for _, id := range toolIDs {
-		if seen[id] {
-			t.Errorf("Duplicate tool ID found: %s", id)
+		idStr := string(id)
+		if seen[idStr] {
+			t.Errorf("Duplicate tool ID found: %s", idStr)
 		}
-		seen[id] = true
+		seen[idStr] = true
 	}
 }
 
@@ -231,15 +232,15 @@ func TestPrioritiesAreUnique(t *testing.T) {
 				tool.ID,
 			)
 		}
-		priorities[tool.Priority] = tool.ID
+		priorities[tool.Priority] = string(tool.ID)
 	}
 }
 
 func TestGetSlashToolMapping(t *testing.T) {
 	tests := []struct {
 		name           string
-		configToolID   string
-		expectedSlash  string
+		configToolID   ToolID
+		expectedSlash  ToolID
 		expectsMapping bool
 	}{
 		{"Claude Code maps to claude", "claude-code", "claude", true},

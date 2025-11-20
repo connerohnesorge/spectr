@@ -187,9 +187,9 @@ func TestExecuteWithMultipleTools(t *testing.T) {
 
 	// Verify slash command files were created
 	slashFiles := []string{
-		".claude/commands/spectr/proposal.md",
-		".claude/commands/spectr/apply.md",
-		".claude/commands/spectr/archive.md",
+		".claude/commands/spectr-proposal.md",
+		".claude/commands/spectr-apply.md",
+		".claude/commands/spectr-archive.md",
 	}
 
 	for _, file := range slashFiles {
@@ -263,9 +263,12 @@ func TestGetConfigurator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			configurator := executor.getConfigurator(tc.toolID)
-			if tc.expectNil && configurator != nil {
-				t.Errorf("Expected nil configurator for %s", tc.toolID)
+			configurator, err := executor.getConfigurator(ToolID(tc.toolID))
+			if tc.expectNil && err == nil {
+				t.Errorf("Expected error for %s", tc.toolID)
+			}
+			if !tc.expectNil && err != nil {
+				t.Errorf("Expected no error for %s, got: %v", tc.toolID, err)
 			}
 			if !tc.expectNil && configurator == nil {
 				t.Errorf("Expected non-nil configurator for %s", tc.toolID)
@@ -335,9 +338,9 @@ func TestAutoInstallSlashCommands(t *testing.T) {
 
 	// Verify slash command files were auto-installed
 	slashFiles := []string{
-		".claude/commands/spectr/proposal.md",
-		".claude/commands/spectr/apply.md",
-		".claude/commands/spectr/archive.md",
+		".claude/commands/spectr-proposal.md",
+		".claude/commands/spectr-apply.md",
+		".claude/commands/spectr-archive.md",
 	}
 
 	for _, relPath := range slashFiles {
@@ -398,9 +401,9 @@ func TestAutoInstallMultipleTools(t *testing.T) {
 	}
 
 	claudeSlashFiles := []string{
-		".claude/commands/spectr/proposal.md",
-		".claude/commands/spectr/apply.md",
-		".claude/commands/spectr/archive.md",
+		".claude/commands/spectr-proposal.md",
+		".claude/commands/spectr-apply.md",
+		".claude/commands/spectr-archive.md",
 	}
 
 	for _, relPath := range claudeSlashFiles {
@@ -417,9 +420,9 @@ func TestAutoInstallMultipleTools(t *testing.T) {
 	}
 
 	clineSlashFiles := []string{
-		".clinerules/spectr-proposal.md",
-		".clinerules/spectr-apply.md",
-		".clinerules/spectr-archive.md",
+		".clinerules/commands/spectr-proposal.md",
+		".clinerules/commands/spectr-apply.md",
+		".clinerules/commands/spectr-archive.md",
 	}
 
 	for _, relPath := range clineSlashFiles {

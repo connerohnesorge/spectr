@@ -6,7 +6,7 @@ import starlightLlmsTxt from 'starlight-llms-txt';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://conneroisu.github.io',
+	site: 'https://connerohnesorge.github.io',
 	base: 'spectr',
 	integrations: [
 		starlight({
@@ -14,7 +14,7 @@ export default defineConfig({
 			social: [
 				{
 					label: 'GitHub',
-					href: 'https://github.com/conneroisu/spectr',
+					href: 'https://github.com/connerohnesorge/spectr',
 					icon: 'github',
 				},
 			],

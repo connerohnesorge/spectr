@@ -1,6 +1,6 @@
 # spectr
 
-<img src="https://github.com/conneroisu/spectr/blob/main/assets/logo.png" alt="Logo" width="95">
+<img src="https://github.com/connerohnesorge/spectr/blob/main/assets/logo.png" alt="Logo" width="95">
 
 **Validatable spec-driven development (inspired by openspec and kiro)**
 
@@ -84,14 +84,14 @@ The recommended way to install Spectr is via Nix flakes:
 
 ```bash
 # Run directly without installing
-nix run github:conneroisu/spectr
+nix run github:connerohnesorge/spectr
 
 # Install to your profile
-nix profile install github:conneroisu/spectr
+nix profile install github:connerohnesorge/spectr
 
 # Add to your flake.nix inputs
 {
-  inputs.spectr.url = "github:conneroisu/spectr";
+  inputs.spectr.url = "github:connerohnesorge/spectr";
 }
 ```
 
@@ -101,7 +101,7 @@ If you prefer to build from source:
 
 ```bash
 # Clone the repository
-git clone https://github.com/conneroisu/spectr.git
+git clone https://github.com/connerohnesorge/spectr.git
 cd spectr
 
 # Build with Go
@@ -510,7 +510,7 @@ spectr/
 
 ```bash
 # Clone the repository
-git clone https://github.com/conneroisu/spectr.git
+git clone https://github.com/connerohnesorge/spectr.git
 cd spectr
 
 # Enter development shell (provides all tools)
@@ -532,7 +532,7 @@ nix develop
 # Download from https://go.dev/dl/
 
 # Clone repository
-git clone https://github.com/conneroisu/spectr.git
+git clone https://github.com/connerohnesorge/spectr.git
 cd spectr
 
 # Install dependencies
@@ -996,7 +996,7 @@ Periodically, you may:
 
 ## Links & Resources
 
-- **GitHub Repository**: [github.com/conneroisu/spectr](https://github.com/conneroisu/spectr)
+- **GitHub Repository**: [github.com/connerohnesorge/spectr](https://github.com/connerohnesorge/spectr)
 - **Specification Documentation**: See `spectr/specs/` for detailed capability specs
   - [CLI Interface](spectr/specs/cli-interface/spec.md)
   - [Validation Rules](spectr/specs/validation/spec.md)
@@ -1004,6 +1004,6 @@ Periodically, you may:
   - [CLI Framework](spectr/specs/cli-framework/spec.md)
 - **AI Agents Documentation**: See [spectr/AGENTS.md](spectr/AGENTS.md) for AI assistant instructions
 - **Project Conventions**: See [spectr/project.md](spectr/project.md)
-- **Issue Tracker**: [GitHub Issues](https://github.com/conneroisu/spectr/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/conneroisu/spectr/discussions)
+- **Issue Tracker**: [GitHub Issues](https://github.com/connerohnesorge/spectr/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/connerohnesorge/spectr/discussions)
 

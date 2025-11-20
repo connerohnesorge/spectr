@@ -12,6 +12,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/conneroisu/spectr/internal/providers"
 )
 
 const (
@@ -95,8 +96,23 @@ var (
 
 // NewWizardModel creates a new wizard model
 func NewWizardModel(projectPath string) (*WizardModel, error) {
-	registry := NewRegistry()
-	allTools := registry.GetAllTools()
+	// Get config providers from the global registry
+	configProviders := providers.ListProvidersByType(providers.TypeConfig)
+
+	// Convert to ToolDefinition format for wizard
+	registry := &ToolRegistry{tools: make(map[string]*ToolDefinition)}
+	allTools := make([]*ToolDefinition, 0, len(configProviders))
+	for _, p := range configProviders {
+		tool := &ToolDefinition{
+			ID:         p.ID,
+			Name:       p.Name,
+			Type:       ToolTypeConfig,
+			Priority:   p.Priority,
+			Configured: false,
+		}
+		registry.registerTool(tool)
+		allTools = append(allTools, tool)
+	}
 
 	// Sort tools by priority
 	sort.Slice(allTools, func(i, j int) bool {

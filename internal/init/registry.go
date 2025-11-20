@@ -1,76 +1,31 @@
 package init
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/conneroisu/spectr/internal/providers"
+)
 
 // ToolRegistry manages the collection of available AI tool definitions
 type ToolRegistry struct {
 	tools map[string]*ToolDefinition
 }
 
-// NewRegistry creates and initializes a new ToolRegistry with all
-// 7 AI tool definitions (slash commands auto-installed)
-func NewRegistry() *ToolRegistry {
-	registry := &ToolRegistry{
-		tools: make(map[string]*ToolDefinition),
+// NewRegistryFromProviders creates a ToolRegistry populated from the
+// provider registry. This replaces the old hardcoded NewRegistry() function.
+func NewRegistryFromProviders() *ToolRegistry {
+	configProviders := providers.ListProvidersByType(providers.TypeConfig)
+	registry := &ToolRegistry{tools: make(map[string]*ToolDefinition)}
+
+	for _, p := range configProviders {
+		registry.registerTool(&ToolDefinition{
+			ID:         p.ID,
+			Name:       p.Name,
+			Type:       ToolTypeConfig,
+			Priority:   p.Priority,
+			Configured: false,
+		})
 	}
-
-	// Config-based tools (7 tools)
-	// Each tool auto-installs its corresponding slash commands
-	registry.registerTool(&ToolDefinition{
-		ID:         "claude-code",
-		Name:       "Claude Code",
-		Type:       ToolTypeConfig,
-		Priority:   1,
-		Configured: false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:         "cline",
-		Name:       "Cline",
-		Type:       ToolTypeConfig,
-		Priority:   2,
-		Configured: false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:         "costrict-config",
-		Name:       "Costrict",
-		Type:       ToolTypeConfig,
-		Priority:   3,
-		Configured: false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:         "qoder-config",
-		Name:       "Qoder",
-		Type:       ToolTypeConfig,
-		Priority:   4,
-		Configured: false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:         "codebuddy",
-		Name:       "CodeBuddy",
-		Type:       ToolTypeConfig,
-		Priority:   5,
-		Configured: false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:         "qwen",
-		Name:       "Qwen",
-		Type:       ToolTypeConfig,
-		Priority:   6,
-		Configured: false,
-	})
-
-	registry.registerTool(&ToolDefinition{
-		ID:         "antigravity",
-		Name:       "Antigravity",
-		Type:       ToolTypeConfig,
-		Priority:   7,
-		Configured: false,
-	})
 
 	return registry
 }
@@ -121,25 +76,4 @@ func (r *ToolRegistry) ListTools() []string {
 	}
 
 	return ids
-}
-
-// configToSlashMapping maps config-based tool IDs to their slash
-// command equivalents
-var configToSlashMapping = map[string]string{
-	"claude-code":     "claude",
-	"cline":           "cline-slash",
-	"costrict-config": "costrict-slash",
-	"qoder-config":    "qoder-slash",
-	"codebuddy":       "codebuddy-slash",
-	"qwen":            "qwen-slash",
-	"antigravity":     "antigravity-slash",
-}
-
-// GetSlashToolMapping returns the slash command tool ID for a
-// config-based tool. Returns the slash tool ID and true if a mapping
-// exists, empty string and false otherwise
-func GetSlashToolMapping(configToolID string) (string, bool) {
-	slashID, exists := configToSlashMapping[configToolID]
-
-	return slashID, exists
 }

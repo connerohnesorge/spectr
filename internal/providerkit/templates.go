@@ -1,4 +1,4 @@
-package init
+package providerkit
 
 import (
 	"bytes"
@@ -27,6 +27,30 @@ func NewTemplateManager() (*TemplateManager, error) {
 	return &TemplateManager{
 		templates: tmpl,
 	}, nil
+}
+
+// ProjectContext holds template variables for rendering project.md
+type ProjectContext struct {
+	// ProjectName is the name of the project
+	ProjectName string
+	// Description is the project description/purpose
+	Description string
+	// TechStack is the list of technologies used
+	TechStack []string
+	// Conventions are the project conventions (unused in template currently)
+	Conventions string
+}
+
+// SpecContext holds template variables for rendering spec.md
+type SpecContext struct {
+	// CapabilityName is the name of the capability/spec
+	CapabilityName string
+}
+
+// ProposalContext holds template variables for rendering proposal.md
+type ProposalContext struct {
+	// ChangeName is the name of the change proposal
+	ChangeName string
 }
 
 // RenderProject renders the project.md template with the given context

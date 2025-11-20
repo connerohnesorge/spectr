@@ -4,12 +4,12 @@ import (
 	"testing"
 )
 
-func TestNewRegistry(t *testing.T) {
-	registry := NewRegistry()
+func TestNewRegistryFromProviders(t *testing.T) {
+	registry := NewRegistryFromProviders()
 
 	// Test that the registry is not nil
 	if registry == nil {
-		t.Fatal("NewRegistry() returned nil")
+		t.Fatal("NewRegistryFromProviders() returned nil")
 	}
 
 	// Test that all 7 tools are registered (slash commands auto-installed)
@@ -25,7 +25,7 @@ func TestNewRegistry(t *testing.T) {
 }
 
 func TestGetTool(t *testing.T) {
-	registry := NewRegistry()
+	registry := NewRegistryFromProviders()
 
 	tests := []struct {
 		name    string
@@ -102,7 +102,7 @@ func verifySuccessCase(
 }
 
 func TestGetToolsByType(t *testing.T) {
-	registry := NewRegistry()
+	registry := NewRegistryFromProviders()
 
 	// Test config-based tools
 	configTools := registry.GetToolsByType(ToolTypeConfig)
@@ -125,7 +125,7 @@ func TestGetToolsByType(t *testing.T) {
 }
 
 func TestSlashToolsNotInRegistry(t *testing.T) {
-	registry := NewRegistry()
+	registry := NewRegistryFromProviders()
 
 	// Slash-only tools should no longer be in registry (auto-installed)
 	removedSlashTools := []string{
@@ -154,7 +154,7 @@ func TestSlashToolsNotInRegistry(t *testing.T) {
 }
 
 func TestListTools(t *testing.T) {
-	registry := NewRegistry()
+	registry := NewRegistryFromProviders()
 
 	toolIDs := registry.ListTools()
 
@@ -174,7 +174,7 @@ func TestListTools(t *testing.T) {
 }
 
 func TestToolIDsAreKebabCase(t *testing.T) {
-	registry := NewRegistry()
+	registry := NewRegistryFromProviders()
 
 	allTools := registry.GetAllTools()
 
@@ -193,7 +193,7 @@ func TestToolIDsAreKebabCase(t *testing.T) {
 }
 
 func TestAllToolsHaveRequiredFields(t *testing.T) {
-	registry := NewRegistry()
+	registry := NewRegistryFromProviders()
 
 	allTools := registry.GetAllTools()
 
@@ -217,7 +217,7 @@ func TestAllToolsHaveRequiredFields(t *testing.T) {
 }
 
 func TestPrioritiesAreUnique(t *testing.T) {
-	registry := NewRegistry()
+	registry := NewRegistryFromProviders()
 
 	allTools := registry.GetAllTools()
 	priorities := make(map[int]string)
@@ -232,63 +232,5 @@ func TestPrioritiesAreUnique(t *testing.T) {
 			)
 		}
 		priorities[tool.Priority] = tool.ID
-	}
-}
-
-func TestGetSlashToolMapping(t *testing.T) {
-	tests := []struct {
-		name           string
-		configToolID   string
-		expectedSlash  string
-		expectsMapping bool
-	}{
-		{"Claude Code maps to claude", "claude-code", "claude", true},
-		{"Cline maps to cline-slash", "cline", "cline-slash", true},
-		{"Costrict maps to costrict-slash", "costrict-config", "costrict-slash", true},
-		{"Qoder maps to qoder-slash", "qoder-config", "qoder-slash", true},
-		{"CodeBuddy maps to codebuddy-slash", "codebuddy", "codebuddy-slash", true},
-		{"Qwen maps to qwen-slash", "qwen", "qwen-slash", true},
-		{"Antigravity maps to antigravity-slash", "antigravity", "antigravity-slash", true},
-		{"Invalid tool has no mapping", "nonexistent", "", false},
-		{"Slash tool has no mapping", "cursor", "", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			slashID, exists := GetSlashToolMapping(tt.configToolID)
-			if exists != tt.expectsMapping {
-				t.Errorf("GetSlashToolMapping(%s) exists = %v, expected %v",
-					tt.configToolID, exists, tt.expectsMapping)
-			}
-			if slashID != tt.expectedSlash {
-				t.Errorf("GetSlashToolMapping(%s) = %s, expected %s",
-					tt.configToolID, slashID, tt.expectedSlash)
-			}
-		})
-	}
-}
-
-func TestAllConfigToolsHaveSlashMapping(t *testing.T) {
-	registry := NewRegistry()
-	configTools := registry.GetToolsByType(ToolTypeConfig)
-
-	for _, tool := range configTools {
-		slashID, exists := GetSlashToolMapping(tool.ID)
-		if !exists {
-			t.Errorf("Config tool %s has no slash command mapping", tool.ID)
-		}
-		if slashID == "" {
-			t.Errorf("Config tool %s maps to empty slash tool ID", tool.ID)
-		}
-	}
-}
-
-func TestSlashMappingCount(t *testing.T) {
-	// Should have exactly 7 mappings (one for each config tool)
-	expectedCount := 7
-	actualCount := len(configToSlashMapping)
-
-	if actualCount != expectedCount {
-		t.Errorf("Expected %d slash mappings, got %d", expectedCount, actualCount)
 	}
 }

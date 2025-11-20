@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/conneroisu/spectr/internal/providerkit"
 )
 
 func TestNewInitExecutor(t *testing.T) {
@@ -150,10 +152,10 @@ func TestExecuteWithToolConfiguration(t *testing.T) {
 	}
 
 	contentStr := string(content)
-	if !contains(contentStr, SpectrStartMarker) {
+	if !contains(contentStr, providerkit.SpectrStartMarker) {
 		t.Error("Expected CLAUDE.md to contain Spectr start marker")
 	}
-	if !contains(contentStr, SpectrEndMarker) {
+	if !contains(contentStr, providerkit.SpectrEndMarker) {
 		t.Error("Expected CLAUDE.md to contain Spectr end marker")
 	}
 }

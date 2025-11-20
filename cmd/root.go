@@ -95,7 +95,7 @@ func runInteractiveInit(projectPath string) error {
 
 func runNonInteractiveInit(projectPath string, toolIDs []string) error {
 	// Get registry
-	registry := initpkg.NewRegistry()
+	registry := initpkg.NewRegistryFromProviders()
 
 	// Handle "all" special case
 	selectedTools := toolIDs

@@ -6,6 +6,9 @@ package main
 import (
 	"github.com/alecthomas/kong"
 	"github.com/conneroisu/spectr/cmd"
+
+	// Register all providers
+	_ "github.com/conneroisu/spectr/internal/providers"
 )
 
 func main() {

@@ -16,6 +16,7 @@ const (
 type ValidationIssue struct {
 	Level   ValidationLevel `json:"level"`
 	Path    string          `json:"path"`
+	Line    int             `json:"line,omitempty"`
 	Message string          `json:"message"`
 }
 

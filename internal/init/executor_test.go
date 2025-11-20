@@ -12,7 +12,8 @@ func TestNewInitExecutor(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Test creating executor with valid path
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -32,7 +33,8 @@ func TestNewInitExecutor(t *testing.T) {
 
 func TestNewInitExecutorInvalidPath(t *testing.T) {
 	// Test with non-existent path
-	_, err := NewInitExecutor("/this/path/does/not/exist/12345")
+	cmd := &InitCmd{Path: "/this/path/does/not/exist/12345"}
+	_, err := NewInitExecutor(cmd)
 	if err == nil {
 		t.Error("Expected error for non-existent path, got nil")
 	}
@@ -42,7 +44,8 @@ func TestExecuteBasicInitialization(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
 
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -114,7 +117,8 @@ func TestExecuteWithToolConfiguration(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
 
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -162,7 +166,8 @@ func TestExecuteWithMultipleTools(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
 
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -209,7 +214,8 @@ func TestExecuteIdempotency(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
 
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -244,7 +250,8 @@ func TestExecuteIdempotency(t *testing.T) {
 
 func TestGetConfigurator(t *testing.T) {
 	tmpDir := t.TempDir()
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -279,7 +286,8 @@ func TestGetConfigurator(t *testing.T) {
 
 func TestCreateDirectoryStructure(t *testing.T) {
 	tmpDir := t.TempDir()
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -319,7 +327,8 @@ func TestAutoInstallSlashCommands(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
 
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -383,7 +392,8 @@ func TestAutoInstallMultipleTools(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
 
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}
@@ -459,7 +469,8 @@ func TestAutoInstallPreservesExistingSlashCommands(t *testing.T) {
 		t.Fatalf("Failed to write custom slash command: %v", err)
 	}
 
-	executor, err := NewInitExecutor(tmpDir)
+	cmd := &InitCmd{Path: tmpDir}
+	executor, err := NewInitExecutor(cmd)
 	if err != nil {
 		t.Fatalf("Failed to create executor: %v", err)
 	}

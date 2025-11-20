@@ -184,7 +184,7 @@ nix fmt
           pname = "spectr";
           version = "0.0.1";
           src = self;
-          vendorHash = "sha256-YubnMxOudhQReg3WpxKMAn1SMO8WazQRheWytiBkQwQ=";
+          vendorHash = "sha256-6bE9HNbebJ4ivHF7YynZwL6mu+T3wEfESjQdyR8q59M=";
           meta = with pkgs.lib; {
             description = "A CLI tool for spec-driven development workflow with change proposals, validation, and archiving";
             homepage = "https://github.com/conneroisu/spectr";

@@ -150,130 +150,6 @@ func TestTemplateManager_RenderAgents(t *testing.T) {
 	}
 }
 
-func TestTemplateManager_RenderSpec(t *testing.T) {
-	tm, err := NewTemplateManager()
-	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
-	}
-
-	tests := []struct {
-		name    string
-		ctx     SpecContext
-		want    []string
-		wantErr bool
-	}{
-		{
-			name: "basic spec",
-			ctx: SpecContext{
-				CapabilityName: "User Authentication",
-			},
-			want: []string{
-				"# User Authentication Specification",
-				"## Requirements",
-				"### Requirement:",
-				"#### Scenario:",
-				"- **WHEN**",
-				"- **THEN**",
-			},
-			wantErr: false,
-		},
-		{
-			name: "spec with hyphenated name",
-			ctx: SpecContext{
-				CapabilityName: "Two-Factor-Auth",
-			},
-			want: []string{
-				"# Two-Factor-Auth Specification",
-			},
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tm.RenderSpec(tt.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("RenderSpec() error = %v, wantErr %v", err, tt.wantErr)
-
-				return
-			}
-			if err != nil {
-				return
-			}
-
-			for _, want := range tt.want {
-				if !strings.Contains(got, want) {
-					t.Errorf("RenderSpec() missing expected string %q in output:\n%s", want, got)
-				}
-			}
-		})
-	}
-}
-
-func TestTemplateManager_RenderProposal(t *testing.T) {
-	tm, err := NewTemplateManager()
-	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
-	}
-
-	tests := []struct {
-		name    string
-		ctx     ProposalContext
-		want    []string
-		wantErr bool
-	}{
-		{
-			name: "basic proposal",
-			ctx: ProposalContext{
-				ChangeName: "add-user-authentication",
-			},
-			want: []string{
-				"# Proposal: add-user-authentication",
-				"## Why",
-				"## What Changes",
-				"## Impact",
-				"**Affected Specs**",
-				"**Affected Code**",
-			},
-			wantErr: false,
-		},
-		{
-			name: "proposal with spaces",
-			ctx: ProposalContext{
-				ChangeName: "Update Payment System",
-			},
-			want: []string{
-				"# Proposal: Update Payment System",
-			},
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := tm.RenderProposal(tt.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("RenderProposal() error = %v, wantErr %v", err, tt.wantErr)
-
-				return
-			}
-			if err != nil {
-				return
-			}
-
-			for _, want := range tt.want {
-				if !strings.Contains(got, want) {
-					t.Errorf(
-						"RenderProposal() missing expected string %q in output:\n%s",
-						want,
-						got,
-					)
-				}
-			}
-		})
-	}
-}
-
 func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 	tm, err := NewTemplateManager()
 	if err != nil {
@@ -386,26 +262,6 @@ func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
 		}
 	})
 
-	t.Run("spec template", func(t *testing.T) {
-		ctx := SpecContext{
-			CapabilityName: "Test",
-		}
-		_, err := tm.RenderSpec(ctx)
-		if err != nil {
-			t.Errorf("Spec template failed to render: %v", err)
-		}
-	})
-
-	t.Run("proposal template", func(t *testing.T) {
-		ctx := ProposalContext{
-			ChangeName: "test-change",
-		}
-		_, err := tm.RenderProposal(ctx)
-		if err != nil {
-			t.Errorf("Proposal template failed to render: %v", err)
-		}
-	})
-
 	t.Run("slash commands", func(t *testing.T) {
 		commands := []string{"proposal", "apply", "archive"}
 		for _, cmd := range commands {
@@ -450,40 +306,6 @@ func TestTemplateManager_VariableSubstitution(t *testing.T) {
 		if !strings.Contains(got, "Go") || !strings.Contains(got, "React") ||
 			!strings.Contains(got, "PostgreSQL") {
 			t.Error("TechStack items not substituted")
-		}
-	})
-
-	t.Run("spec variables are substituted", func(t *testing.T) {
-		ctx := SpecContext{
-			CapabilityName: "Payment Processing",
-		}
-		got, err := tm.RenderSpec(ctx)
-		if err != nil {
-			t.Fatalf("RenderSpec() error = %v", err)
-		}
-
-		if strings.Contains(got, "{{") || strings.Contains(got, "}}") {
-			t.Error("Template contains unreplaced template syntax")
-		}
-		if !strings.Contains(got, "Payment Processing") {
-			t.Error("CapabilityName not substituted")
-		}
-	})
-
-	t.Run("proposal variables are substituted", func(t *testing.T) {
-		ctx := ProposalContext{
-			ChangeName: "add-payment-gateway",
-		}
-		got, err := tm.RenderProposal(ctx)
-		if err != nil {
-			t.Fatalf("RenderProposal() error = %v", err)
-		}
-
-		if strings.Contains(got, "{{") || strings.Contains(got, "}}") {
-			t.Error("Template contains unreplaced template syntax")
-		}
-		if !strings.Contains(got, "add-payment-gateway") {
-			t.Error("ChangeName not substituted")
 		}
 	})
 }

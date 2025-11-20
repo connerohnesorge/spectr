@@ -52,28 +52,6 @@ func (tm *TemplateManager) RenderAgents() (string, error) {
 	return buf.String(), nil
 }
 
-// RenderSpec renders a spec.md template with the given context
-func (tm *TemplateManager) RenderSpec(ctx SpecContext) (string, error) {
-	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(&buf, "spec.md.tmpl", ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to render spec template: %w", err)
-	}
-
-	return buf.String(), nil
-}
-
-// RenderProposal renders a proposal.md template with the given context
-func (tm *TemplateManager) RenderProposal(ctx ProposalContext) (string, error) {
-	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(&buf, "proposal.md.tmpl", ctx)
-	if err != nil {
-		return "", fmt.Errorf("failed to render proposal template: %w", err)
-	}
-
-	return buf.String(), nil
-}
-
 // RenderSlashCommand renders a slash command template
 // commandType must be one of: "proposal", "apply", "archive"
 func (tm *TemplateManager) RenderSlashCommand(

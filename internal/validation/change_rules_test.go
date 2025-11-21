@@ -883,21 +883,23 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(t *testing.T) {
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError &&
-			strings.Contains(issue.Message, "Duplicate TO requirement name") {
-			found = true
-			if issue.Line != 7 {
-				t.Fatalf("expected duplicate TO issue at line 7, got %d", issue.Line)
-			}
+		if issue.Level != LevelError ||
+			!strings.Contains(issue.Message, "Duplicate TO requirement name") {
+			continue
+		}
+		found = true
+		if issue.Line != 7 {
+			t.Fatalf("expected duplicate TO issue at line 7, got %d", issue.Line)
+		}
 
-			break
-		}
+		break
 	}
-	if !found {
-		t.Error("Expected error about duplicate TO names")
-		for _, issue := range report.Issues {
-			t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
-		}
+	if found {
+		return
+	}
+	t.Error("Expected error about duplicate TO names")
+	for _, issue := range report.Issues {
+		t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
 	}
 }
 
@@ -927,22 +929,24 @@ func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(t *testing.T) {
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError &&
-			strings.Contains(issue.Message, "renamed (TO) in multiple files") {
-			found = true
-			if issue.Line != 4 {
-				t.Fatalf("expected cross-file TO issue at line 4, got %d", issue.Line)
-			}
-
-			break
+		if issue.Level != LevelError ||
+			!strings.Contains(issue.Message, "renamed (TO) in multiple files") {
+			continue
 		}
+		found = true
+		if issue.Line != 4 {
+			t.Fatalf("expected cross-file TO issue at line 4, got %d", issue.Line)
+		}
+
+		break
 	}
 
-	if !found {
-		t.Error("Expected error about cross-file TO duplicates")
-		for _, issue := range report.Issues {
-			t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
-		}
+	if found {
+		return
+	}
+	t.Error("Expected error about cross-file TO duplicates")
+	for _, issue := range report.Issues {
+		t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
 	}
 }
 

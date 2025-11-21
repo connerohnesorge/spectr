@@ -9,3 +9,4 @@ dist/
 *.out
 spectr-bin
 .cache
+.tmp

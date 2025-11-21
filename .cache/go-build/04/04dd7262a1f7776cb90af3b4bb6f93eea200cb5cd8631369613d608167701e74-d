@@ -1,0 +1,17 @@
+./configurator.go
+./constants.go
+./executor.go
+./filesystem.go
+./marker_utils.go
+./models.go
+./registry.go
+./templates.go
+./tool_definitions.go
+./wizard.go
+./configurator_test.go
+./executor_test.go
+./filesystem_test.go
+./init_test.go
+./registry_test.go
+./templates_test.go
+./wizard_test.go

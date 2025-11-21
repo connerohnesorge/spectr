@@ -1,0 +1,6 @@
+./changes.go
+./doc.go
+./specs.go
+./test_helpers.go
+./changes_test.go
+./specs_test.go

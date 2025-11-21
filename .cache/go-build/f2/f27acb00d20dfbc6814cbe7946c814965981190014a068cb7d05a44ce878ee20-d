@@ -1,0 +1,12 @@
+./archiver.go
+./cmd.go
+./constants.go
+./interactive_bridge.go
+./pr.go
+./pr_format.go
+./spec_merger.go
+./types.go
+./validator.go
+./pr_test.go
+./spec_merger_test.go
+./validator_test.go

@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 // Helper function to create a change directory with spec files
@@ -894,5 +896,45 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(t *testing.T) {
 	t.Error("Expected error about duplicate TO names")
 	for _, issue := range report.Issues {
 		t.Logf("  %s: %s", issue.Level, issue.Message)
+	}
+}
+
+func TestFindRenamedPairLine_FindsBulletEntries(t *testing.T) {
+	lines := []string{
+		"## RENAMED Requirements",
+		"",
+		"- FROM: ### Requirement: Old Name",
+		"- TO: ### Requirement: New Name",
+		"",
+	}
+
+	line := findRenamedPairLine(lines, "Old Name", 1)
+	if line != 3 {
+		t.Fatalf("expected line 3 for FROM entry, got %d", line)
+	}
+
+	toLine := findRenamedPairLine(lines, "New Name", 1)
+	if toLine != 4 {
+		t.Fatalf("expected line 4 for TO entry, got %d", toLine)
+	}
+}
+
+func TestFindPreMergeErrorLine_UsesRenamedBulletLine(t *testing.T) {
+	lines := []string{
+		"## RENAMED Requirements",
+		"",
+		"- FROM: ### Requirement: Old Name",
+		"- TO: ### Requirement: New Name",
+		"",
+	}
+
+	fromErr := `RENAMED FROM requirement "Old Name" does not exist in base spec`
+	if line := findPreMergeErrorLine(lines, fromErr, &parsers.DeltaPlan{}); line != 3 {
+		t.Fatalf("expected FROM error to map to line 3, got %d", line)
+	}
+
+	toErr := `RENAMED TO requirement "New Name" already exists in base spec`
+	if line := findPreMergeErrorLine(lines, toErr, &parsers.DeltaPlan{}); line != 4 {
+		t.Fatalf("expected TO error to map to line 4, got %d", line)
 	}
 }

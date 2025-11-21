@@ -436,14 +436,22 @@ func findRenamedPairLine(lines []string, fromName string, startLine int) int {
 		searchStart = 0
 	}
 
-	fromPattern := "FROM: ### Requirement: " + fromName
 	for i := searchStart; i < len(lines); i++ {
-		if strings.HasPrefix(strings.TrimSpace(lines[i]), fromPattern) {
-			return i + 1 // Line numbers are 1-indexed
-		}
-		// Stop if we hit another section
-		if i > searchStart && strings.HasPrefix(strings.TrimSpace(lines[i]), "## ") {
+		trimmed := strings.TrimSpace(lines[i])
+		if i > searchStart && strings.HasPrefix(trimmed, "## ") {
 			break
+		}
+
+		withoutBullet := strings.TrimSpace(strings.TrimPrefix(trimmed, "-"))
+		withoutCode := strings.Trim(withoutBullet, "`")
+		if strings.HasPrefix(
+			withoutCode,
+			"FROM: ### Requirement: "+fromName,
+		) || strings.HasPrefix(
+			withoutCode,
+			"TO: ### Requirement: "+fromName,
+		) {
+			return i + 1 // Line numbers are 1-indexed
 		}
 	}
 

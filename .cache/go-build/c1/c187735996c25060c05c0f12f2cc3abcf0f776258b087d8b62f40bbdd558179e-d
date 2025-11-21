@@ -1,6 +1,0 @@
-./delta_parser.go
-./parsers.go
-./requirement_parser.go
-./delta_parser_test.go
-./parsers_test.go
-./requirement_parser_test.go

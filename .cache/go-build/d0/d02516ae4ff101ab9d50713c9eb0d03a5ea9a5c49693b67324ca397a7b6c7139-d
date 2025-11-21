@@ -1,8 +1,0 @@
-./init.go
-./list.go
-./root.go
-./validate.go
-./view.go
-./init_test.go
-./list_test.go
-./view_test.go

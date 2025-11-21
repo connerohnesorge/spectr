@@ -1,9 +1,0 @@
-./dashboard.go
-./formatters.go
-./progress.go
-./types.go
-./dashboard_test.go
-./formatters_demo_test.go
-./formatters_test.go
-./progress_demo_test.go
-./progress_test.go

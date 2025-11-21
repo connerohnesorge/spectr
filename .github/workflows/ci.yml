@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   spectr-validate:
-    name: Specr Validate
+    name: Spectr Validate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

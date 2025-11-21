@@ -886,16 +886,63 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(t *testing.T) {
 		if issue.Level == LevelError &&
 			strings.Contains(issue.Message, "Duplicate TO requirement name") {
 			found = true
+			if issue.Line != 7 {
+				t.Fatalf("expected duplicate TO issue at line 7, got %d", issue.Line)
+			}
 
 			break
 		}
 	}
-	if found {
-		return
+	if !found {
+		t.Error("Expected error about duplicate TO names")
+		for _, issue := range report.Issues {
+			t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+		}
 	}
-	t.Error("Expected error about duplicate TO names")
+}
+
+func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(t *testing.T) {
+	specs := map[string]string{
+		"alpha/spec.md": `## RENAMED Requirements
+
+- FROM: ### Requirement: Old Name Alpha
+- TO: ### Requirement: Shared Name
+`,
+		"beta/spec.md": `## RENAMED Requirements
+
+- FROM: ### Requirement: Old Name Beta
+- TO: ### Requirement: Shared Name
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(t, specs)
+	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	if err != nil {
+		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+	}
+
+	if report.Valid {
+		t.Error("Expected invalid report due to cross-file TO duplicates")
+	}
+
+	found := false
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		if issue.Level == LevelError &&
+			strings.Contains(issue.Message, "renamed (TO) in multiple files") {
+			found = true
+			if issue.Line != 4 {
+				t.Fatalf("expected cross-file TO issue at line 4, got %d", issue.Line)
+			}
+
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected error about cross-file TO duplicates")
+		for _, issue := range report.Issues {
+			t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+		}
 	}
 }
 

@@ -324,14 +324,15 @@ func validateRenamedRequirements(
 			rename.FromName,
 			rename.ToName,
 		)
-		reqLine := findRenamedPairLine(lines, rename.FromName, sectionLine)
+		reqFromLine := findRenamedPairLine(lines, rename.FromName, sectionLine)
+		reqToLine := findRenamedPairLine(lines, rename.ToName, reqFromLine)
 
 		// Check for duplicate FROM names within this file
 		if fileRenamedFromReqs[normalizedFrom] {
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
-				Line:  reqLine,
+				Line:  reqFromLine,
 				Message: fmt.Sprintf(
 					"Duplicate FROM requirement name in "+
 						"RENAMED section: '%s'",
@@ -346,7 +347,7 @@ func validateRenamedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
-				Line:  reqLine,
+				Line:  reqToLine,
 				Message: fmt.Sprintf(
 					"Duplicate TO requirement name in "+
 						"RENAMED section: '%s'",
@@ -361,7 +362,7 @@ func validateRenamedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
-				Line:  reqLine,
+				Line:  reqFromLine,
 				Message: fmt.Sprintf(
 					"Requirement '%s' is renamed (FROM) in "+
 						"multiple files: %s and %s",
@@ -379,7 +380,7 @@ func validateRenamedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
-				Line:  reqLine,
+				Line:  reqToLine,
 				Message: fmt.Sprintf(
 					"Requirement '%s' is renamed (TO) in "+
 						"multiple files: %s and %s",

@@ -5,10 +5,8 @@ import * as tc from "@actions/tool-cache";
 import { Octokit } from "@octokit/core";
 import { paginateRest } from "@octokit/plugin-paginate-rest";
 import { restEndpointMethods } from "@octokit/plugin-rest-endpoint-methods";
-import * as semver from "semver";
 import { OWNER, REPO, TOOL_CACHE_NAME } from "../utils/constants";
 import type { Architecture, Platform } from "../utils/platforms";
-import { validateChecksum } from "./checksum/checksum";
 
 const PaginatingOctokit = Octokit.plugin(paginateRest, restEndpointMethods);
 
@@ -31,7 +29,6 @@ export async function downloadVersion(
   platform: Platform,
   arch: Architecture,
   version: string,
-  checkSum: string | undefined,
   githubToken: string,
 ): Promise<{ version: string; cachedToolDir: string }> {
   const artifact = `spectr-${arch}-${platform}`;
@@ -48,7 +45,6 @@ export async function downloadVersion(
     githubToken,
   );
   core.debug(`Downloaded spectr to "${downloadPath}"`);
-  await validateChecksum(checkSum, downloadPath, arch, platform, version);
 
   const extractedDir = await extractDownloadedArtifact(
     version,
@@ -83,11 +79,11 @@ function constructDownloadUrl(
 }
 
 async function extractDownloadedArtifact(
-  version: string,
+  _version: string,
   downloadPath: string,
   extension: string,
   platform: Platform,
-  artifact: string,
+  _artifact: string,
 ): Promise<string> {
   let spectrDir: string;
   if (platform === "pc-windows-msvc") {

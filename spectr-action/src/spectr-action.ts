@@ -6,21 +6,10 @@ import {
   resolveVersion,
   tryGetFromToolCache,
 } from "./download/download-version";
-import type {
-  BulkResult,
-  ValidationIssue,
-  ValidationOutput,
-} from "./types/spectr";
+import type { ValidationOutput } from "./types/spectr";
 import { hasReport } from "./types/spectr";
 import type { Architecture, Platform } from "./utils/platforms";
 import { getArch, getPlatform } from "./utils/platforms";
-
-/**
- * Constants for spectr binary download
- */
-const OWNER = "conneroisu";
-const REPO = "spectr";
-const TOOL_CACHE_NAME = "spectr";
 
 /**
  * Main entry point for the GitHub Action
@@ -29,7 +18,6 @@ async function run(): Promise<void> {
   try {
     // 1. Get inputs
     const version = core.getInput("version");
-    const checksum = core.getInput("checksum");
     const githubToken = core.getInput("github-token");
     const strict = core.getBooleanInput("strict");
 
@@ -47,13 +35,7 @@ async function run(): Promise<void> {
     }
 
     // 3. Setup spectr binary
-    const spectrPath = await setupSpectr(
-      platform,
-      arch,
-      version,
-      checksum,
-      githubToken,
-    );
+    const spectrPath = await setupSpectr(platform, arch, version, githubToken);
     core.info(`Successfully installed spectr at ${spectrPath}`);
 
     // 4. Run spectr validation
@@ -81,7 +63,6 @@ async function setupSpectr(
   platform: Platform,
   arch: Architecture,
   versionInput: string,
-  checksum: string | undefined,
   githubToken: string,
 ): Promise<string> {
   // Resolve version (handle 'latest', semver ranges, etc.)
@@ -109,7 +90,6 @@ async function setupSpectr(
     platform,
     arch,
     resolvedVersion,
-    checksum,
     githubToken,
   );
 

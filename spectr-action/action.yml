@@ -1,16 +1,12 @@
 name: "spectr-action"
 description: "GitHub Action for spec-driven development validation using Spectr."
-author: "conneroisu"
+author: "connerohnesorge"
 
 inputs:
   version:
     description: "The version of Spectr to use, e.g., '0.1.0'. Defaults to 'latest'."
     required: false
     default: "latest"
-
-  checksum:
-    description: "The checksum of the spectr version to install"
-    required: false
 
   github-token:
     description: "Used to increase the rate limit when retrieving versions and downloading spectr."

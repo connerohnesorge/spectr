@@ -44,7 +44,6 @@ const core_1 = require("@octokit/core");
 const plugin_paginate_rest_1 = require("@octokit/plugin-paginate-rest");
 const plugin_rest_endpoint_methods_1 = require("@octokit/plugin-rest-endpoint-methods");
 const constants_1 = require("../utils/constants");
-const checksum_1 = require("./checksum/checksum");
 const PaginatingOctokit = core_1.Octokit.plugin(plugin_paginate_rest_1.paginateRest, plugin_rest_endpoint_methods_1.restEndpointMethods);
 function tryGetFromToolCache(arch, version) {
     core.debug(`Trying to get spectr from tool cache for ${version}...`);
@@ -57,7 +56,7 @@ function tryGetFromToolCache(arch, version) {
     const installedPath = tc.find(constants_1.TOOL_CACHE_NAME, resolvedVersion, arch);
     return { installedPath, version: resolvedVersion };
 }
-async function downloadVersion(platform, arch, version, checkSum, githubToken) {
+async function downloadVersion(platform, arch, version, githubToken) {
     const artifact = `spectr-${arch}-${platform}`;
     let extension = ".tar.gz";
     if (platform === "pc-windows-msvc") {
@@ -67,7 +66,6 @@ async function downloadVersion(platform, arch, version, checkSum, githubToken) {
     core.debug(`Downloading spectr from "${downloadUrl}" ...`);
     const downloadPath = await tc.downloadTool(downloadUrl, undefined, githubToken);
     core.debug(`Downloaded spectr to "${downloadPath}"`);
-    await (0, checksum_1.validateChecksum)(checkSum, downloadPath, arch, platform, version);
     const extractedDir = await extractDownloadedArtifact(version, downloadPath, extension, platform, artifact);
     const cachedToolDir = await tc.cacheDir(extractedDir, constants_1.TOOL_CACHE_NAME, version, arch);
     return { cachedToolDir, version: version };
@@ -82,7 +80,7 @@ function constructDownloadUrl(version, platform, arch) {
     // Spectr releases use the version tag directly
     return `https://github.com/${constants_1.OWNER}/${constants_1.REPO}/releases/download/${version}/${artifact}${extension}`;
 }
-async function extractDownloadedArtifact(version, downloadPath, extension, platform, artifact) {
+async function extractDownloadedArtifact(_version, downloadPath, extension, platform, _artifact) {
     let spectrDir;
     if (platform === "pc-windows-msvc") {
         const fullPathWithExtension = `${downloadPath}${extension}`;

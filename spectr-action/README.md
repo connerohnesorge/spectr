@@ -1,4 +1,7 @@
 # spectr-action
+A GitHub Action to run Spectr
+
+[![CI](https://github.com/connerohnesorge/spectr/actions/workflows/test.yml/badge.svg)](https://github.com/connerohnesorge/spectr/actions/workflows/test.yml)
 
 > GitHub Action for validating spec-driven development projects using Spectr
 
@@ -8,7 +11,7 @@ This action automatically validates your specification-driven codebase by runnin
 
 ### What is Spectr?
 
-[Spectr](https://github.com/conneroisu/spectr) is a spec-driven development tool that helps teams maintain consistency between specifications and implementations. It enforces that all changes are properly documented through proposals, specifications, and structured deltas.
+[Spectr](https://github.com/connerohnesorge/spectr) is a spec-driven development tool that helps teams maintain consistency between specifications and implementations. It enforces that all changes are properly documented through proposals, specifications, and structured deltas.
 
 ### What does this action do?
 
@@ -40,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: conneroisu/spectr-action@v1
+      - uses: connerohnesorge/spectr-action@v1
 ```
 
 That's it! The action will use the latest version of Spectr and run in strict mode by default.
@@ -51,11 +54,6 @@ That's it! The action will use the latest version of Spectr and run in strict mo
 **Description:** The version of Spectr to use (e.g., `0.1.0`).
 **Required:** No
 **Default:** `latest`
-
-### `checksum`
-**Description:** Optional checksum for verifying the downloaded Spectr binary.
-**Required:** No
-**Default:** None
 
 ### `github-token`
 **Description:** GitHub token used to increase rate limits when retrieving versions and downloading Spectr. Uses the default GitHub Actions token automatically.
@@ -74,7 +72,7 @@ That's it! The action will use the latest version of Spectr and run in strict mo
 
 **Example usage:**
 ```yaml
-- uses: conneroisu/spectr-action@v1
+- uses: connerohnesorge/spectr-action@v1
   id: spectr
 - name: Print version
   run: echo "Used Spectr version ${{ steps.spectr.outputs.spectr-version }}"
@@ -101,7 +99,9 @@ Annotations appear:
 
 ## Workflow Examples
 
-### Example 1: Basic Validation on All Branches
+### Example 1: Basic Usage
+
+The simplest way to get started - validates on every push and pull request:
 
 ```yaml
 name: Spectr Validation
@@ -112,10 +112,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: conneroisu/spectr-action@v1
+      - uses: connerohnesorge/spectr-action@v1
 ```
 
-### Example 2: Specific Version
+### Example 2: Strict Mode Disabled
+
+Allow warnings without failing the build:
 
 ```yaml
 name: Spectr Validation
@@ -126,28 +128,70 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: conneroisu/spectr-action@v1
-        with:
-          version: "0.1.0"
-```
-
-### Example 3: Non-Strict Mode (Warnings Don't Fail)
-
-```yaml
-name: Spectr Validation
-on: [push, pull_request]
-
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: conneroisu/spectr-action@v1
+      - uses: connerohnesorge/spectr-action@v1
         with:
           strict: "false"
 ```
 
-### Example 4: Pull Request Validation with Custom Token
+### Example 3: Specific Version
+
+Pin to a specific Spectr version for consistency:
+
+```yaml
+name: Spectr Validation
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: connerohnesorge/spectr-action@v1
+        with:
+          version: "0.1.0"
+```
+
+### Example 4: Complete CI Workflow
+
+Full production-ready workflow with proper triggers and permissions:
+
+```yaml
+name: Validate Spectr
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  validate:
+    name: Validate Specifications
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate specs with Spectr
+        uses: connerohnesorge/spectr-action@v1
+        id: spectr
+        with:
+          version: latest
+          strict: true
+
+      - name: Print validation summary
+        if: always()
+        run: |
+          echo "Spectr version used: ${{ steps.spectr.outputs.spectr-version }}"
+          echo "Validation complete"
+```
+
+### Example 5: Pull Request Validation Only
+
+Run validation only on pull requests to specific branches:
 
 ```yaml
 name: PR Validation
@@ -160,14 +204,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: conneroisu/spectr-action@v1
+      - uses: connerohnesorge/spectr-action@v1
         with:
           version: "0.1.0"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           strict: "true"
 ```
 
-### Example 5: Multiple Validation Jobs
+### Example 6: Multiple Validation Jobs
+
+Run both strict and non-strict validation in parallel:
 
 ```yaml
 name: Comprehensive Validation
@@ -179,7 +225,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Strict validation
-        uses: conneroisu/spectr-action@v1
+        uses: connerohnesorge/spectr-action@v1
         with:
           strict: "true"
 
@@ -188,10 +234,88 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Warning check (non-blocking)
-        uses: conneroisu/spectr-action@v1
+        uses: connerohnesorge/spectr-action@v1
         with:
           strict: "false"
         continue-on-error: true
+```
+
+### Example 7: Using Outputs
+
+Capture and use the Spectr version output:
+
+```yaml
+name: Validation with Outputs
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Spectr validation
+        uses: connerohnesorge/spectr-action@v1
+        id: spectr
+        with:
+          version: latest
+
+      - name: Display version info
+        run: echo "Used Spectr version ${{ steps.spectr.outputs.spectr-version }}"
+
+      - name: Conditional step based on validation
+        if: success()
+        run: echo "Validation passed, ready to merge!"
+```
+
+### Real-World Example
+
+A complete production workflow showing best practices:
+
+```yaml
+name: Validate Spectr
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: read
+
+jobs:
+  validate:
+    name: Validate Specifications
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Run Spectr validation
+        uses: connerohnesorge/spectr-action@v1
+        id: spectr-validate
+        with:
+          version: latest
+          strict: true
+          github-token: ${{ github.token }}
+
+      - name: Report validation results
+        if: always()
+        run: |
+          echo "Validation completed"
+          echo "Spectr version: ${{ steps.spectr-validate.outputs.spectr-version }}"
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "All specs are valid!"
+          else
+            echo "Validation failed - check annotations for details"
+            exit 1
+          fi
 ```
 
 ## Understanding Output
@@ -259,7 +383,7 @@ Warnings:
 4. Check if the `github-token` has sufficient permissions
 
 ```yaml
-- uses: conneroisu/spectr-action@v1
+- uses: connerohnesorge/spectr-action@v1
   with:
     version: "latest"
     github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -280,7 +404,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4  # Required!
-      - uses: conneroisu/spectr-action@v1
+      - uses: connerohnesorge/spectr-action@v1
 ```
 
 ### "JSON parse error"
@@ -293,7 +417,7 @@ jobs:
 3. Run `spectr validate --all --strict --json` locally to debug
 
 ```yaml
-- uses: conneroisu/spectr-action@v1  # Uses latest action
+- uses: connerohnesorge/spectr-action@v1  # Uses latest action
   with:
     version: "0.1.0"  # Use known good spectr version
 ```
@@ -348,7 +472,7 @@ repository-root/
 3. Split validation across multiple jobs if you have many specs
 
 ```yaml
-- uses: conneroisu/spectr-action@v1
+- uses: connerohnesorge/spectr-action@v1
   with:
     version: "0.1.0"  # Cached after first download
 ```
@@ -380,9 +504,9 @@ repository-root/
 
 ## Contributing
 
-Issues and pull requests are welcome at the [spectr-action repository](https://github.com/conneroisu/spectr-action).
+Issues and pull requests are welcome at the [spectr-action repository](https://github.com/connerohnesorge/spectr-action).
 
-For issues with the Spectr tool itself, see the [main Spectr repository](https://github.com/conneroisu/spectr).
+For issues with the Spectr tool itself, see the [main Spectr repository](https://github.com/connerohnesorge/spectr).
 
 ## License
 
@@ -390,5 +514,5 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## Related Projects
 
-- [Spectr](https://github.com/conneroisu/spectr) - The spec-driven development CLI tool
-- [Spectr Documentation](https://github.com/conneroisu/spectr#readme) - Full documentation and guides
+- [Spectr](https://github.com/connerohnesorge/spectr) - The spec-driven development CLI tool
+- [Spectr Documentation](https://github.com/connerohnesorge/spectr#readme) - Full documentation and guides

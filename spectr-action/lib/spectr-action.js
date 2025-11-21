@@ -40,19 +40,12 @@ const download_version_1 = require("./download/download-version");
 const spectr_1 = require("./types/spectr");
 const platforms_1 = require("./utils/platforms");
 /**
- * Constants for spectr binary download
- */
-const OWNER = "conneroisu";
-const REPO = "spectr";
-const TOOL_CACHE_NAME = "spectr";
-/**
  * Main entry point for the GitHub Action
  */
 async function run() {
     try {
         // 1. Get inputs
         const version = core.getInput("version");
-        const checksum = core.getInput("checksum");
         const githubToken = core.getInput("github-token");
         const strict = core.getBooleanInput("strict");
         core.info(`Starting spectr validation (strict: ${strict})`);
@@ -66,7 +59,7 @@ async function run() {
             throw new Error(`Unsupported architecture: ${process.arch}`);
         }
         // 3. Setup spectr binary
-        const spectrPath = await setupSpectr(platform, arch, version, checksum, githubToken);
+        const spectrPath = await setupSpectr(platform, arch, version, githubToken);
         core.info(`Successfully installed spectr at ${spectrPath}`);
         // 4. Run spectr validation
         const validationOutput = await runSpectrValidation(spectrPath, strict);
@@ -88,7 +81,7 @@ async function run() {
  * Setup spectr binary (download/cache)
  * @returns Path to spectr executable
  */
-async function setupSpectr(platform, arch, versionInput, checksum, githubToken) {
+async function setupSpectr(platform, arch, versionInput, githubToken) {
     // Resolve version (handle 'latest', semver ranges, etc.)
     const resolvedVersion = await (0, download_version_1.resolveVersion)(versionInput || "latest", githubToken);
     core.info(`Resolved version: ${resolvedVersion}`);
@@ -102,7 +95,7 @@ async function setupSpectr(platform, arch, versionInput, checksum, githubToken) 
     }
     // Download and cache the binary
     core.info(`Downloading spectr version ${resolvedVersion}...`);
-    const downloadResult = await (0, download_version_1.downloadVersion)(platform, arch, resolvedVersion, checksum, githubToken);
+    const downloadResult = await (0, download_version_1.downloadVersion)(platform, arch, resolvedVersion, githubToken);
     const executableName = platform === "pc-windows-msvc" ? "spectr.exe" : "spectr";
     return path.join(downloadResult.cachedToolDir, executableName);
 }

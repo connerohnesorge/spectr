@@ -1,0 +1,164 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-binaries:
+    name: Build ${{ matrix.platform }}-${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Linux builds
+          - platform: linux
+            arch: x86_64
+            goos: linux
+            goarch: amd64
+          - platform: linux
+            arch: aarch64
+            goos: linux
+            goarch: arm64
+
+          # macOS builds
+          - platform: darwin
+            arch: x86_64
+            goos: darwin
+            goarch: amd64
+          - platform: darwin
+            arch: aarch64
+            goos: darwin
+            goarch: arm64
+
+          # Windows builds
+          - platform: windows
+            arch: x86_64
+            goos: windows
+            goarch: amd64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            BINARY_NAME="spectr.exe"
+          else
+            BINARY_NAME="spectr"
+          fi
+
+          go build -o "${BINARY_NAME}" \
+            -ldflags="-s -w -X main.version=${{ github.ref_name }}" \
+            .
+
+          echo "Built ${BINARY_NAME} for ${{ matrix.platform }}-${{ matrix.arch }}"
+          ls -lh "${BINARY_NAME}"
+
+      - name: Create archive
+        run: |
+          ARCHIVE_NAME="spectr-${{ matrix.arch }}-${{ matrix.platform }}"
+
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            # Create zip for Windows
+            zip "${ARCHIVE_NAME}.zip" spectr.exe
+            ARCHIVE_FILE="${ARCHIVE_NAME}.zip"
+          else
+            # Create tar.gz for Linux/macOS
+            tar -czf "${ARCHIVE_NAME}.tar.gz" spectr
+            ARCHIVE_FILE="${ARCHIVE_NAME}.tar.gz"
+          fi
+
+          # Generate SHA256 checksum
+          sha256sum "${ARCHIVE_FILE}" > "${ARCHIVE_FILE}.sha256"
+
+          echo "Created archive: ${ARCHIVE_FILE}"
+          ls -lh "${ARCHIVE_FILE}"*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: spectr-${{ matrix.arch }}-${{ matrix.platform }}
+          path: |
+            spectr-${{ matrix.arch }}-${{ matrix.platform }}.*
+          retention-days: 1
+
+  create-release:
+    name: Create GitHub Release
+    needs: build-binaries
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: |
+          echo "Downloaded artifacts:"
+          ls -R artifacts/
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+
+          # Move all archives and checksums to release-assets directory
+          find artifacts -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.sha256" \) \
+            -exec mv {} release-assets/ \;
+
+          echo "Release assets:"
+          ls -lh release-assets/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-assets/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## Spectr ${{ github.ref_name }}
+
+            Binary releases for multiple platforms.
+
+            ### Installation
+
+            Download the appropriate archive for your platform:
+            - **Linux x86_64**: `spectr-x86_64-linux.tar.gz`
+            - **Linux ARM64**: `spectr-aarch64-linux.tar.gz`
+            - **macOS x86_64**: `spectr-x86_64-darwin.tar.gz`
+            - **macOS ARM64** (Apple Silicon): `spectr-aarch64-darwin.tar.gz`
+            - **Windows x86_64**: `spectr-x86_64-windows.zip`
+
+            Extract and add to your PATH:
+            ```bash
+            # Linux/macOS
+            tar -xzf spectr-<arch>-<platform>.tar.gz
+            sudo mv spectr /usr/local/bin/
+
+            # Windows (PowerShell)
+            Expand-Archive spectr-x86_64-windows.zip
+            # Add to PATH manually
+            ```
+
+            Verify SHA256 checksums:
+            ```bash
+            sha256sum -c spectr-<arch>-<platform>.<ext>.sha256
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

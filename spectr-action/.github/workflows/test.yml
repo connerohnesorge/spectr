@@ -1,10 +1,9 @@
 name: "test"
+
 on:
   workflow_dispatch:
   pull_request:
   push:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,395 +12,276 @@ concurrency:
 permissions: {}
 
 jobs:
-  lint:
+  lint-and-build:
+    name: Lint and Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-      - name: Actionlint
-        uses: eifinger/actionlint-action@03ff1f78c0670b71017616a37170f327df932030 # v1.9.2
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+
+      - name: Setup Node 20
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: "20"
-      - run: |
-          npm install
-      - run: |
-          npm run all
-      - name: Check all jobs are in all-tests-passed.needs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run check
+
+      - name: Build action
+        run: npm run build
+
+      - name: Package action
+        run: npm run package
+
+      - name: Check for uncommitted changes
         run: |
-          tsc check-all-tests-passed-needs.ts
-          node check-all-tests-passed-needs.js
-        working-directory: .github/scripts
-      - name: Make sure no changes from linters are detected
-        run: |
-          git diff --exit-code || (echo "::error::Please run 'npm run all' to fix the issues" && exit 1)
-  test-latest-version:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, macos-14, windows-latest]
+          git diff --exit-code || (echo "::error::Please run 'npm run build' and commit the changes" && exit 1)
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-build
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-      - name: Use latest version
+
+      - name: Setup Node 20
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+  test-valid-project:
+    name: Test Valid Project (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: lint-and-build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Copy valid fixture to root
+        shell: bash
+        run: |
+          cp -r __tests__/fixtures/valid-spectr-project/spectr ./spectr
+
+      - name: Run spectr-action
         uses: ./
         with:
-          src: __tests__/fixtures/python-project
           version: latest
-  test-specific-version:
+          strict: true
+
+  test-valid-with-changes:
+    name: Test Valid Project with Changes (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    needs: lint-and-build
     strategy:
       matrix:
-        ruff-version:
-          ["0.1.7", "0.1.8", "0.4.7", "0.4.10", "0.7", "0.7.x", ">=0.7.0"]
-        os:
-          [
-            ubuntu-latest,
-            ubuntu-24.04-arm,
-            macos-latest,
-            macos-14,
-            windows-latest,
-          ]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-      - name: Use version ${{ matrix.ruff-version }}
+
+      - name: Copy fixture with changes to root
+        shell: bash
+        run: |
+          cp -r __tests__/fixtures/valid-with-changes/spectr ./spectr
+
+      - name: Run spectr-action in strict mode
         uses: ./
         with:
-          version: ${{ matrix.ruff-version }}
-          src: __tests__/fixtures/python-project
-  test-unsupported-version:
+          version: latest
+          strict: true
+
+  test-multi-capability:
+    name: Test Multi-Capability Project
     runs-on: ubuntu-latest
+    needs: lint-and-build
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-      - name: Try install old version
-        id: install
+
+      - name: Copy multi-capability fixture to root
+        shell: bash
+        run: |
+          cp -r __tests__/fixtures/multi-capability/spectr ./spectr
+
+      - name: Run spectr-action
+        uses: ./
+        with:
+          version: latest
+          strict: true
+
+  test-invalid-project:
+    name: Test Invalid Project (Missing Scenarios)
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Copy invalid fixture to root
+        shell: bash
+        run: |
+          cp -r __tests__/fixtures/invalid-missing-scenarios/spectr ./spectr
+
+      - name: Run spectr-action (should fail gracefully)
+        id: spectr-validation
         continue-on-error: true
         uses: ./
         with:
-          version: 0.0.246
-          src: __tests__/fixtures/python-project
-      - name: Check if the action failed
+          version: latest
+          strict: true
+
+      - name: Verify validation failed
+        shell: bash
         run: |
-          if [ "${INSTALL_OUTCOME}" == "success" ]; then
+          if [ "${{ steps.spectr-validation.outcome }}" == "success" ]; then
+            echo "::error::Expected validation to fail for invalid project"
             exit 1
           fi
-        env:
-          INSTALL_OUTCOME: ${{ steps.install.outcome }}
-  test-version-from-version-file-pyproject:
+          echo "Validation correctly failed for invalid project"
+
+  test-invalid-malformed:
+    name: Test Invalid Project (Malformed Spec)
     runs-on: ubuntu-latest
+    needs: lint-and-build
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-      - name: Use version from pyproject.toml
-        id: ruff-action
-        uses: ./
-        with:
-          src: __tests__/fixtures/python-project
-          version-file: __tests__/fixtures/pyproject.toml
-      - name: Correct version gets installed
+
+      - name: Copy malformed fixture to root
+        shell: bash
         run: |
-          if [ "$RUFF_VERSION" != "0.9.3" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-default-version-from-pyproject:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use default version from pyproject.toml
-        id: ruff-action
-        uses: ./
-        with:
-          src: __tests__/fixtures/python-project
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.6.2" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-default-version-from-pyproject-dev-group:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use default version from pyproject.toml dev group
-        id: ruff-action
-        uses: ./
-        with:
-          src: __tests__/fixtures/pyproject-dependency-dev-project
-          version-file: __tests__/fixtures/pyproject-dependency-dev-project/pyproject.toml
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.8.3" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-default-version-from-pyproject-dependency-groups:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use default version from pyproject.toml dependency groups
-        id: ruff-action
-        uses: ./
-        with:
-          src: __tests__/fixtures/pyproject-dependency-groups-project
-          version-file: __tests__/fixtures/pyproject-dependency-groups-project/pyproject.toml
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.8.3" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-default-version-from-pyproject-poetry-groups:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use default version from pyproject.toml poetry group dependencies
-        id: ruff-action
-        uses: ./
-        with:
-          src: __tests__/fixtures/pyproject-dependency-poetry-grouped-project
-          version-file: __tests__/fixtures/pyproject-dependency-poetry-grouped-project/pyproject.toml
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.8.3" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-default-version-from-pyproject-poetry:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use default version from pyproject.toml poetry dependencies
-        id: ruff-action
-        uses: ./
-        with:
-          src: __tests__/fixtures/pyproject-dependency-poetry-project
-          version-file: __tests__/fixtures/pyproject-dependency-poetry-project/pyproject.toml
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.8.6" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-default-version-from-pyproject-optional-dependencies:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use default version from pyproject.toml optional dependencies
-        id: ruff-action
-        uses: ./
-        with:
-          src: __tests__/fixtures/pyproject-optional-dependencies-project
-          version-file: __tests__/fixtures/pyproject-optional-dependencies-project/pyproject.toml
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.8.3" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-default-version-from-requirements:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use default version from requirements.txt
-        id: ruff-action
-        uses: ./
-        with:
-          src: __tests__/fixtures/python-project
-          version-file: __tests__/fixtures/requirements.txt
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.9.0" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-semver-range:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use version 0.7
-        id: ruff-action
-        uses: ./
-        with:
-          version: "0.7"
-          src: __tests__/fixtures/python-project
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.7.4" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-pep440-version-specifier:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Install version 0.9.10
-        id: ruff-action
-        uses: ./
-        with:
-          version: ">=0.9.9,<0.10.0"
-          src: __tests__/fixtures/python-project
-      - name: Correct version gets installed
-        run: |
-          if [ "$RUFF_VERSION" != "0.9.10" ]; then
-            exit 1
-          fi
-        env:
-          RUFF_VERSION: ${{ steps.ruff-action.outputs.ruff-version }}
-  test-checksum:
-    runs-on: ${{ matrix.inputs.os }}
-    strategy:
-      matrix:
-        inputs:
-          - os: ubuntu-latest
-            checksum: "0de731c669b9ece77e799ac3f4a160c30849752714d9775c94cc4cfaf326860c"
-          - os: macos-latest
-            checksum: "af9583bff12afbca5d5670334e0187dd60c4d91bc71317d1b2dde70cb1200ba9"
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Checksum matches expected
-        uses: ./
-        with:
-          version: "0.7.4"
-          checksum: ${{ matrix.inputs.checksum }}
-          src: __tests__/fixtures/python-project
-  test-with-explicit-token:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use default version
-        uses: ./
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          src: __tests__/fixtures/python-project
-  test-args:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Use args
-        uses: ./
-        with:
-          args: format --check
-          src: __tests__/fixtures/python-project
-  test-failure:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
-      - name: Format should fail
-        id: format-should-fail
+          cp -r __tests__/fixtures/invalid-malformed-spec/spectr ./spectr
+
+      - name: Run spectr-action (should fail gracefully)
+        id: spectr-validation
         continue-on-error: true
         uses: ./
         with:
-          args: format --check
-          src: __tests__/fixtures/malformed-python-project
-      - name: Check if the action failed
+          version: latest
+          strict: true
+
+      - name: Verify validation failed
+        shell: bash
         run: |
-          if [ "${FORMAT_SHOULD_FAIL_OUTCOME}" == "success" ]; then
+          if [ "${{ steps.spectr-validation.outcome }}" == "success" ]; then
+            echo "::error::Expected validation to fail for malformed spec"
             exit 1
           fi
-        env:
-          FORMAT_SHOULD_FAIL_OUTCOME: ${{ steps.format-should-fail.outcome }}
-      - name: Check should fail
-        id: check-should-fail
-        continue-on-error: true
-        uses: ./
-        with:
-          src: __tests__/fixtures/malformed-python-project
-      - name: Check if the action failed
-        run: |
-          if [ "${CHECK_SHOULD_FAIL_OUTCOME}" == "success" ]; then
-            exit 1
-          fi
-        env:
-          CHECK_SHOULD_FAIL_OUTCOME: ${{ steps.check-should-fail.outcome }}
-  test-multiple-src:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
+          echo "Validation correctly failed for malformed spec"
+
+  test-strict-mode:
+    name: Test Strict Mode Toggle
+    runs-on: ubuntu-latest
+    needs: lint-and-build
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           persist-credentials: false
-      - name: Use args
+
+      - name: Copy invalid fixture to root
+        shell: bash
+        run: |
+          cp -r __tests__/fixtures/invalid-missing-scenarios/spectr ./spectr
+
+      - name: Run spectr-action with strict mode disabled
         uses: ./
         with:
-          args: format --check
-          src: >-
-            __tests__/fixtures/python-project/src/python_project/__init__.py
-            __tests__/fixtures/python-project/src/python_project/hello_world.py
+          version: latest
+          strict: false
+
+  test-empty-project:
+    name: Test Empty Spectr Project
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Copy empty fixture to root
+        shell: bash
+        run: |
+          cp -r __tests__/fixtures/empty-spectr-project/spectr ./spectr
+
+      - name: Run spectr-action on empty project
+        uses: ./
+        with:
+          version: latest
+          strict: true
+
+  test-version-resolution:
+    name: Test Version Resolution
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - name: Copy valid fixture to root
+        shell: bash
+        run: |
+          cp -r __tests__/fixtures/valid-spectr-project/spectr ./spectr
+
+      - name: Test with latest version
+        uses: ./
+        with:
+          version: latest
+          strict: true
 
   all-tests-passed:
+    name: All Tests Passed
     runs-on: ubuntu-latest
     needs:
-      - lint
-      - test-latest-version
-      - test-specific-version
-      - test-unsupported-version
-      - test-version-from-version-file-pyproject
-      - test-default-version-from-pyproject
-      - test-default-version-from-pyproject-dev-group
-      - test-default-version-from-pyproject-dependency-groups
-      - test-default-version-from-pyproject-poetry-groups
-      - test-default-version-from-pyproject-poetry
-      - test-default-version-from-pyproject-optional-dependencies
-      - test-default-version-from-requirements
-      - test-semver-range
-      - test-pep440-version-specifier
-      - test-checksum
-      - test-with-explicit-token
-      - test-args
-      - test-failure
-      - test-multiple-src
+      - lint-and-build
+      - unit-tests
+      - test-valid-project
+      - test-valid-with-changes
+      - test-multi-capability
+      - test-invalid-project
+      - test-invalid-malformed
+      - test-strict-mode
+      - test-empty-project
+      - test-version-resolution
     if: always()
     steps:
-      - name: All tests passed
+      - name: Check all jobs passed
         run: |
           echo "All jobs passed: ${{ !(contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) }}"
-          # shellcheck disable=SC2242
           exit ${{ (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')) && 1 || 0 }}

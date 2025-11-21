@@ -7,3 +7,7 @@ logs
 # Added by goreleaser init:
 dist/
 *.out
+spectr-bin
+.cache
+.tmp
+.gocache

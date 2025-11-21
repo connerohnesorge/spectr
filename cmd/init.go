@@ -6,7 +6,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	initpkg "github.com/conneroisu/spectr/internal/init"
+	initpkg "github.com/connerohnesorge/spectr/internal/init"
 )
 
 // InitCmd wraps the init package's InitCmd type to add Run method

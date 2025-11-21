@@ -1,7 +1,7 @@
 package archive
 
 import (
-	"github.com/conneroisu/spectr/internal/list"
+	"github.com/connerohnesorge/spectr/internal/list"
 )
 
 // newListerForArchive creates a lister for the archive package

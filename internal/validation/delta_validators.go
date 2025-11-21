@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/conneroisu/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 // validateAddedRequirements validates ADDED Requirements section
 func validateAddedRequirements(
 	addedContent, specPath string,
+	lines []string,
+	sectionLine int,
 	fileAddedReqs map[string]bool,
 	addedReqs map[string]string,
 ) []ValidationIssue {
@@ -21,6 +23,7 @@ func validateAddedRequirements(
 		issues = append(issues, ValidationIssue{
 			Level: LevelError,
 			Path:  specPath,
+			Line:  sectionLine,
 			Message: "ADDED Requirements section is empty " +
 				"(no requirements found)",
 		})
@@ -35,12 +38,14 @@ func validateAddedRequirements(
 			specPath,
 			req.Name,
 		)
+		reqLine := findRequirementLineInSection(lines, req.Name, sectionLine)
 
 		// Check for SHALL/MUST
 		if !ContainsShallOrMust(req.Content) {
 			issues = append(issues, ValidationIssue{
 				Level:   LevelError,
 				Path:    reqPath,
+				Line:    reqLine,
 				Message: "ADDED requirement must contain SHALL or MUST",
 			})
 		}
@@ -50,6 +55,7 @@ func validateAddedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level:   LevelError,
 				Path:    reqPath,
+				Line:    reqLine,
 				Message: "ADDED requirement must have at least one scenario",
 			})
 		}
@@ -59,6 +65,7 @@ func validateAddedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqLine,
 				Message: fmt.Sprintf(
 					"Duplicate requirement name in ADDED section: '%s'",
 					req.Name,
@@ -72,6 +79,7 @@ func validateAddedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqLine,
 				Message: fmt.Sprintf(
 					"Requirement '%s' is ADDED in multiple files: "+
 						"%s and %s",
@@ -86,9 +94,11 @@ func validateAddedRequirements(
 
 		// Check for malformed scenarios
 		if len(req.Scenarios) == 0 && hasMalformedScenarios(req.Content) {
+			malformedLine := findMalformedScenarioLineInDelta(lines, reqLine)
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  malformedLine,
 				Message: "Scenarios must use '#### Scenario:' format " +
 					"(4 hashtags followed by 'Scenario:')",
 			})
@@ -101,6 +111,8 @@ func validateAddedRequirements(
 // validateModifiedRequirements validates MODIFIED Requirements section
 func validateModifiedRequirements(
 	modifiedContent, specPath string,
+	lines []string,
+	sectionLine int,
 	fileModifiedReqs map[string]bool,
 	modifiedReqs map[string]string,
 ) []ValidationIssue {
@@ -111,6 +123,7 @@ func validateModifiedRequirements(
 		issues = append(issues, ValidationIssue{
 			Level: LevelError,
 			Path:  specPath,
+			Line:  sectionLine,
 			Message: "MODIFIED Requirements section is empty " +
 				"(no requirements found)",
 		})
@@ -125,12 +138,14 @@ func validateModifiedRequirements(
 			specPath,
 			req.Name,
 		)
+		reqLine := findRequirementLineInSection(lines, req.Name, sectionLine)
 
 		// Check for SHALL/MUST
 		if !ContainsShallOrMust(req.Content) {
 			issues = append(issues, ValidationIssue{
 				Level:   LevelError,
 				Path:    reqPath,
+				Line:    reqLine,
 				Message: "MODIFIED requirement must contain SHALL or MUST",
 			})
 		}
@@ -140,6 +155,7 @@ func validateModifiedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqLine,
 				Message: "MODIFIED requirement must have " +
 					"at least one scenario",
 			})
@@ -150,6 +166,7 @@ func validateModifiedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqLine,
 				Message: fmt.Sprintf(
 					"Duplicate requirement name in MODIFIED section: '%s'",
 					req.Name,
@@ -163,6 +180,7 @@ func validateModifiedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqLine,
 				Message: fmt.Sprintf(
 					"Requirement '%s' is MODIFIED in multiple files: "+
 						"%s and %s",
@@ -177,9 +195,11 @@ func validateModifiedRequirements(
 
 		// Check for malformed scenarios
 		if len(req.Scenarios) == 0 && hasMalformedScenarios(req.Content) {
+			malformedLine := findMalformedScenarioLineInDelta(lines, reqLine)
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  malformedLine,
 				Message: "Scenarios must use '#### Scenario:' format " +
 					"(4 hashtags followed by 'Scenario:')",
 			})
@@ -192,6 +212,8 @@ func validateModifiedRequirements(
 // validateRemovedRequirements validates REMOVED Requirements section
 func validateRemovedRequirements(
 	removedContent, specPath string,
+	lines []string,
+	sectionLine int,
 	fileRemovedReqs map[string]bool,
 	removedReqs map[string]string,
 ) []ValidationIssue {
@@ -202,6 +224,7 @@ func validateRemovedRequirements(
 		issues = append(issues, ValidationIssue{
 			Level: LevelError,
 			Path:  specPath,
+			Line:  sectionLine,
 			Message: "REMOVED Requirements section is empty " +
 				"(no requirements found)",
 		})
@@ -216,12 +239,14 @@ func validateRemovedRequirements(
 			specPath,
 			req.Name,
 		)
+		reqLine := findRequirementLineInSection(lines, req.Name, sectionLine)
 
 		// Check for duplicate within this file
 		if fileRemovedReqs[normalized] {
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqLine,
 				Message: fmt.Sprintf(
 					"Duplicate requirement name in REMOVED section: '%s'",
 					req.Name,
@@ -235,6 +260,7 @@ func validateRemovedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqLine,
 				Message: fmt.Sprintf(
 					"Requirement '%s' is REMOVED in multiple files: "+
 						"%s and %s",
@@ -254,6 +280,8 @@ func validateRemovedRequirements(
 // validateRenamedRequirements validates RENAMED Requirements section
 func validateRenamedRequirements(
 	renamedContent, specPath string,
+	lines []string,
+	sectionLine int,
 	fileRenamedFromReqs, fileRenamedToReqs map[string]bool,
 	renamedFromReqs, renamedToReqs map[string]string,
 ) []ValidationIssue {
@@ -264,6 +292,7 @@ func validateRenamedRequirements(
 		issues = append(issues, ValidationIssue{
 			Level: LevelError,
 			Path:  specPath,
+			Line:  sectionLine,
 			Message: "RENAMED Requirements section is empty " +
 				"(no rename pairs found)",
 		})
@@ -273,9 +302,12 @@ func validateRenamedRequirements(
 
 	for _, rename := range renames {
 		if rename.FromName == "" || rename.ToName == "" {
+			// Try to find the line with malformed rename
+			malformedLine := findMalformedRenamedLine(lines, sectionLine)
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  fmt.Sprintf("%s: RENAMED Requirements", specPath),
+				Line:  malformedLine,
 				Message: "Malformed RENAMED requirement " +
 					"(expected format: '- FROM: ### Requirement: " +
 					"OldName' followed by '- TO: ### Requirement: NewName')",
@@ -292,12 +324,15 @@ func validateRenamedRequirements(
 			rename.FromName,
 			rename.ToName,
 		)
+		reqFromLine := findRenamedPairLine(lines, rename.FromName, sectionLine)
+		reqToLine := findRenamedPairLine(lines, rename.ToName, reqFromLine)
 
 		// Check for duplicate FROM names within this file
 		if fileRenamedFromReqs[normalizedFrom] {
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqFromLine,
 				Message: fmt.Sprintf(
 					"Duplicate FROM requirement name in "+
 						"RENAMED section: '%s'",
@@ -312,6 +347,7 @@ func validateRenamedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqToLine,
 				Message: fmt.Sprintf(
 					"Duplicate TO requirement name in "+
 						"RENAMED section: '%s'",
@@ -326,6 +362,7 @@ func validateRenamedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqFromLine,
 				Message: fmt.Sprintf(
 					"Requirement '%s' is renamed (FROM) in "+
 						"multiple files: %s and %s",
@@ -343,6 +380,7 @@ func validateRenamedRequirements(
 			issues = append(issues, ValidationIssue{
 				Level: LevelError,
 				Path:  reqPath,
+				Line:  reqToLine,
 				Message: fmt.Sprintf(
 					"Requirement '%s' is renamed (TO) in "+
 						"multiple files: %s and %s",

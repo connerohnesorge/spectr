@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 // Helper function to create a change directory with spec files
@@ -881,18 +883,109 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(t *testing.T) {
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError &&
-			strings.Contains(issue.Message, "Duplicate TO requirement name") {
-			found = true
-
-			break
+		if issue.Level != LevelError ||
+			!strings.Contains(issue.Message, "Duplicate TO requirement name") {
+			continue
 		}
+		found = true
+		if issue.Line != 7 {
+			t.Fatalf("expected duplicate TO issue at line 7, got %d", issue.Line)
+		}
+
+		break
 	}
 	if found {
 		return
 	}
 	t.Error("Expected error about duplicate TO names")
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+	}
+}
+
+func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(t *testing.T) {
+	specs := map[string]string{
+		"alpha/spec.md": `## RENAMED Requirements
+
+- FROM: ### Requirement: Old Name Alpha
+- TO: ### Requirement: Shared Name
+`,
+		"beta/spec.md": `## RENAMED Requirements
+
+- FROM: ### Requirement: Old Name Beta
+- TO: ### Requirement: Shared Name
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(t, specs)
+	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	if err != nil {
+		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+	}
+
+	if report.Valid {
+		t.Error("Expected invalid report due to cross-file TO duplicates")
+	}
+
+	found := false
+	for _, issue := range report.Issues {
+		if issue.Level != LevelError ||
+			!strings.Contains(issue.Message, "renamed (TO) in multiple files") {
+			continue
+		}
+		found = true
+		if issue.Line != 4 {
+			t.Fatalf("expected cross-file TO issue at line 4, got %d", issue.Line)
+		}
+
+		break
+	}
+
+	if found {
+		return
+	}
+	t.Error("Expected error about cross-file TO duplicates")
+	for _, issue := range report.Issues {
+		t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+	}
+}
+
+func TestFindRenamedPairLine_FindsBulletEntries(t *testing.T) {
+	lines := []string{
+		"## RENAMED Requirements",
+		"",
+		"- FROM: ### Requirement: Old Name",
+		"- TO: ### Requirement: New Name",
+		"",
+	}
+
+	line := findRenamedPairLine(lines, "Old Name", 1)
+	if line != 3 {
+		t.Fatalf("expected line 3 for FROM entry, got %d", line)
+	}
+
+	toLine := findRenamedPairLine(lines, "New Name", 1)
+	if toLine != 4 {
+		t.Fatalf("expected line 4 for TO entry, got %d", toLine)
+	}
+}
+
+func TestFindPreMergeErrorLine_UsesRenamedBulletLine(t *testing.T) {
+	lines := []string{
+		"## RENAMED Requirements",
+		"",
+		"- FROM: ### Requirement: Old Name",
+		"- TO: ### Requirement: New Name",
+		"",
+	}
+
+	fromErr := `RENAMED FROM requirement "Old Name" does not exist in base spec`
+	if line := findPreMergeErrorLine(lines, fromErr, &parsers.DeltaPlan{}); line != 3 {
+		t.Fatalf("expected FROM error to map to line 3, got %d", line)
+	}
+
+	toErr := `RENAMED TO requirement "New Name" already exists in base spec`
+	if line := findPreMergeErrorLine(lines, toErr, &parsers.DeltaPlan{}); line != 4 {
+		t.Fatalf("expected TO error to map to line 4, got %d", line)
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/conneroisu/spectr/internal/list"
+	"github.com/connerohnesorge/spectr/internal/list"
 )
 
 // ListCmd represents the list command which displays changes or specs.

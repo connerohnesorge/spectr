@@ -23,7 +23,7 @@ live reloading, and testing utilities for productive Go development.
 ## Usage
 ```bash
 # Create new project from template
-nix flake init -t github:conneroisu/dotfiles#go-shell
+nix flake init -t github:connerohnesorge/dotfiles#go-shell
 
 # Enter development shell
 nix develop
@@ -187,7 +187,7 @@ nix fmt
           vendorHash = "sha256-6bE9HNbebJ4ivHF7YynZwL6mu+T3wEfESjQdyR8q59M=";
           meta = with pkgs.lib; {
             description = "A CLI tool for spec-driven development workflow with change proposals, validation, and archiving";
-            homepage = "https://github.com/conneroisu/spectr";
+            homepage = "https://github.com/connerohnesorge/spectr";
             license = licenses.asl20;
             maintainers = with maintainers; [connerohnesorge];
           };

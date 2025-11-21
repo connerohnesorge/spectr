@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/conneroisu/spectr/internal/view"
+	"github.com/connerohnesorge/spectr/internal/view"
 )
 
 // ViewCmd represents the view command which displays a comprehensive

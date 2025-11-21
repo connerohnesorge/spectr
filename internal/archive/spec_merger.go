@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/conneroisu/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 const (

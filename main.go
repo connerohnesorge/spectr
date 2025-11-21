@@ -5,7 +5,7 @@ package main
 
 import (
 	"github.com/alecthomas/kong"
-	"github.com/conneroisu/spectr/cmd"
+	"github.com/connerohnesorge/spectr/cmd"
 )
 
 func main() {

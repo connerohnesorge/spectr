@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/conneroisu/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/discovery"
 )
 
 const (

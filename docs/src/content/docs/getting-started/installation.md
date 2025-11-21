@@ -9,14 +9,14 @@ The recommended way to install Spectr is via Nix flakes:
 
 ```bash
 # Run directly without installing
-nix run github:conneroisu/spectr
+nix run github:connerohnesorge/spectr
 
 # Install to your profile
-nix profile install github:conneroisu/spectr
+nix profile install github:connerohnesorge/spectr
 
 # Add to your flake.nix inputs
 {
-  inputs.spectr.url = "github:conneroisu/spectr";
+  inputs.spectr.url = "github:connerohnesorge/spectr";
 }
 ```
 
@@ -26,7 +26,7 @@ If you prefer to build from source:
 
 ```bash
 # Clone the repository
-git clone https://github.com/conneroisu/spectr.git
+git clone https://github.com/connerohnesorge/spectr.git
 cd spectr
 
 # Build with Go

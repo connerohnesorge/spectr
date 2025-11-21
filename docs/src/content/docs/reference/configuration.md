@@ -216,7 +216,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Spectr
-        run: go install github.com/conneroisu/spectr@latest
+        run: go install github.com/connerohnesorge/spectr@latest
       - name: Validate
         run: spectr validate --strict --no-interactive
 ```

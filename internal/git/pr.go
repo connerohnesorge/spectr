@@ -90,9 +90,14 @@ func createGitLabPR(tool string, opts PROptions) (string, error) {
 
 // createGiteaPR creates a Gitea pull request using tea CLI
 func createGiteaPR(tool string, opts PROptions) (string, error) {
-	cmd := exec.Command(tool, "pr", "create",
-		"--title", opts.Title,
-		"--description", opts.Body,
+	cmd := exec.Command(
+		tool,
+		"pr",
+		"create",
+		"--title",
+		opts.Title,
+		"--description",
+		opts.Body,
 	)
 
 	output, err := cmd.CombinedOutput()

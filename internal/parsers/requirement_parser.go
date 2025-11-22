@@ -15,8 +15,9 @@ type RequirementBlock struct {
 	Raw        string // Full block content (header + scenarios + body text)
 }
 
-// ParseRequirements parses all requirement blocks from a spec file
-// Returns a slice of RequirementBlock with their names and full content
+// ParseRequirements parses all requirement blocks from a spec file.
+//
+// Returns a slice of RequirementBlock with their names and full content.
 //
 //nolint:revive // function-length - parser is clearest as single function
 func ParseRequirements(filePath string) ([]RequirementBlock, error) {
@@ -78,8 +79,9 @@ func ParseRequirements(filePath string) ([]RequirementBlock, error) {
 	return requirements, scanner.Err()
 }
 
-// ParseScenarios extracts scenario blocks from requirement content
-// Returns a slice of scenario names found in the requirement
+// ParseScenarios extracts scenario blocks from requirement content.
+//
+// Returns a slice of scenario names found in the requirement.
 func ParseScenarios(requirementContent string) []string {
 	var scenarios []string
 	scenarioPattern := regexp.MustCompile(`^####\s+Scenario:\s*(.+)$`)
@@ -99,7 +101,8 @@ func ParseScenarios(requirementContent string) []string {
 	return scenarios
 }
 
-// NormalizeRequirementName normalizes requirement names for matching
+// NormalizeRequirementName normalizes requirement names for matching.
+//
 // Trims whitespace and converts to lowercase for case-insensitive comparison
 func NormalizeRequirementName(name string) string {
 	return strings.ToLower(strings.TrimSpace(name))

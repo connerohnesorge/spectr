@@ -12,6 +12,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  spectr-validate:
+    name: Spectr Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: spectr-action
+        uses: connerohnesorge/spectr-action@v0.0.1
   lint:
     name: Lint
     runs-on: ubuntu-latest

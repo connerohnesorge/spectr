@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TODO: Add purpose description
+Automates Spectr validation in GitHub Actions to ensure specification compliance for all commits and pull requests.
 
 ## Requirements
 

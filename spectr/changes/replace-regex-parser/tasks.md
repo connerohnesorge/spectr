@@ -1,0 +1,10 @@
+- [ ] Define `Token` types and `Lexer` structure <!-- id: 0 -->
+- [ ] Implement `Lexer` state functions (Text, Header, CodeBlock) <!-- id: 1 -->
+- [ ] Define AST nodes (`Document`, `Header`, `Block`, etc.) <!-- id: 2 -->
+- [ ] Implement `Parser` to build AST from tokens <!-- id: 3 -->
+- [ ] Implement `Extractor` for Requirements and Scenarios <!-- id: 4 -->
+- [ ] Implement `Extractor` for Delta specs (ADDED, MODIFIED, etc.) <!-- id: 5 -->
+- [ ] Add unit tests for Lexer, Parser, and Extractor <!-- id: 6 -->
+- [ ] Replace usage in `internal/parsers/requirement_parser.go` <!-- id: 7 -->
+- [ ] Replace usage in `internal/parsers/delta_parser.go` <!-- id: 8 -->
+- [ ] Verify all tests pass and `spectr validate` works correctly <!-- id: 9 -->

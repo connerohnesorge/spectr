@@ -192,9 +192,9 @@ func TestExecuteWithMultipleTools(t *testing.T) {
 
 	// Verify slash command files were created
 	slashFiles := []string{
-		".claude/commands/spectr-proposal.md",
-		".claude/commands/spectr-apply.md",
-		".claude/commands/spectr-archive.md",
+		".claude/commands/spectr/proposal.md",
+		".claude/commands/spectr/apply.md",
+		".claude/commands/spectr/archive.md",
 	}
 
 	for _, file := range slashFiles {
@@ -347,9 +347,9 @@ func TestAutoInstallSlashCommands(t *testing.T) {
 
 	// Verify slash command files were auto-installed
 	slashFiles := []string{
-		".claude/commands/spectr-proposal.md",
-		".claude/commands/spectr-apply.md",
-		".claude/commands/spectr-archive.md",
+		".claude/commands/spectr/proposal.md",
+		".claude/commands/spectr/apply.md",
+		".claude/commands/spectr/archive.md",
 	}
 
 	for _, relPath := range slashFiles {
@@ -411,9 +411,9 @@ func TestAutoInstallMultipleTools(t *testing.T) {
 	}
 
 	claudeSlashFiles := []string{
-		".claude/commands/spectr-proposal.md",
-		".claude/commands/spectr-apply.md",
-		".claude/commands/spectr-archive.md",
+		".claude/commands/spectr/proposal.md",
+		".claude/commands/spectr/apply.md",
+		".claude/commands/spectr/archive.md",
 	}
 
 	for _, relPath := range claudeSlashFiles {

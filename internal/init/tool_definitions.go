@@ -117,9 +117,9 @@ var slashToolConfigs = map[ToolID]ToolConfig{
 		Name: "Claude",
 		Type: ToolTypeSlash,
 		SlashPaths: map[string]string{
-			"proposal": ".claude/commands/spectr-proposal.md",
-			"apply":    ".claude/commands/spectr-apply.md",
-			"archive":  ".claude/commands/spectr-archive.md",
+			"proposal": ".claude/commands/spectr/proposal.md",
+			"apply":    ".claude/commands/spectr/apply.md",
+			"archive":  ".claude/commands/spectr/archive.md",
 		},
 		Frontmatter: map[string]string{
 			"proposal": "---\ndescription: Scaffold a new Spectr change and validate strictly. (project)\n---",

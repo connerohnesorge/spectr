@@ -396,7 +396,7 @@ func TestClaudeSlashConfigurator(t *testing.T) {
 	// Verify all three command files exist
 	commands := []string{"proposal", "apply", "archive"}
 	for _, cmd := range commands {
-		filePath := filepath.Join(tmpDir, ".claude", "commands", "spectr-"+cmd+".md")
+		filePath := filepath.Join(tmpDir, ".claude", "commands", "spectr", cmd+".md")
 		if !FileExists(filePath) {
 			t.Errorf("Command file not created: %s", filePath)
 
@@ -724,7 +724,7 @@ func TestSlashCommandConfigurator_UpdateExisting(t *testing.T) {
 	}
 
 	// Modify a file manually (simulate user changes outside markers)
-	filePath := filepath.Join(tmpDir, ".claude", "commands", "spectr-proposal.md")
+	filePath := filepath.Join(tmpDir, ".claude", "commands", "spectr", "proposal.md")
 	data, _ := os.ReadFile(filePath)
 	modified := "# My Custom Header\n\n" + string(data) + "\n\n# My Custom Footer"
 	if err := os.WriteFile(filePath, []byte(modified), 0644); err != nil {

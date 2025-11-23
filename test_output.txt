@@ -1,0 +1,1493 @@
+?   	github.com/connerohnesorge/spectr	[no test files]
+=== RUN   TestCLIStructure
+--- PASS: TestCLIStructure (0.00s)
+=== RUN   TestInitCmdStructure
+--- PASS: TestInitCmdStructure (0.00s)
+=== RUN   TestInitCmdHasRunMethod
+--- PASS: TestInitCmdHasRunMethod (0.00s)
+=== RUN   TestListCmdStructure
+--- PASS: TestListCmdStructure (0.00s)
+=== RUN   TestCLIHasListCommand
+--- PASS: TestCLIHasListCommand (0.00s)
+=== RUN   TestViewCmd_Integration_TextOutput
+    view_test.go:77: Text output successfully generated (1902 bytes)
+--- PASS: TestViewCmd_Integration_TextOutput (0.00s)
+=== RUN   TestViewCmd_Integration_JSONOutput
+    view_test.go:151: JSON output successfully generated and parsed:
+    view_test.go:152:   Specs: 7 (with 103 requirements)
+    view_test.go:154:   Active Changes: 2
+    view_test.go:155:   Completed Changes: 2
+--- PASS: TestViewCmd_Integration_JSONOutput (0.00s)
+=== RUN   TestViewCmd_Integration_NOCOLOREnvironment
+    view_test.go:224: NO_COLOR environment variable respected (output: 1902 bytes)
+--- PASS: TestViewCmd_Integration_NOCOLOREnvironment (0.00s)
+=== RUN   TestViewCmd_Integration_MissingSpectrDirectory
+    view_test.go:282: Correctly handled missing spectr directory with empty dashboard
+--- PASS: TestViewCmd_Integration_MissingSpectrDirectory (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/cmd	0.006s
+=== RUN   TestBuildCommitMessage
+=== RUN   TestBuildCommitMessage/with_spec_updates
+=== RUN   TestBuildCommitMessage/with_skip_specs
+--- PASS: TestBuildCommitMessage (0.00s)
+    --- PASS: TestBuildCommitMessage/with_spec_updates (0.00s)
+    --- PASS: TestBuildCommitMessage/with_skip_specs (0.00s)
+=== RUN   TestBuildPRTitle
+=== RUN   TestBuildPRTitle/simple_change_ID
+=== RUN   TestBuildPRTitle/multi-word_change_ID
+--- PASS: TestBuildPRTitle (0.00s)
+    --- PASS: TestBuildPRTitle/simple_change_ID (0.00s)
+    --- PASS: TestBuildPRTitle/multi-word_change_ID (0.00s)
+=== RUN   TestBuildPRBody
+=== RUN   TestBuildPRBody/with_spec_updates_and_capabilities
+=== RUN   TestBuildPRBody/with_skip_specs
+=== RUN   TestBuildPRBody/no_spec_updates_found
+--- PASS: TestBuildPRBody (0.00s)
+    --- PASS: TestBuildPRBody/with_spec_updates_and_capabilities (0.00s)
+    --- PASS: TestBuildPRBody/with_skip_specs (0.00s)
+    --- PASS: TestBuildPRBody/no_spec_updates_found (0.00s)
+=== RUN   TestOperationCountsTotal
+=== RUN   TestOperationCountsTotal/all_operations
+=== RUN   TestOperationCountsTotal/zero_operations
+=== RUN   TestOperationCountsTotal/only_added
+--- PASS: TestOperationCountsTotal (0.00s)
+    --- PASS: TestOperationCountsTotal/all_operations (0.00s)
+    --- PASS: TestOperationCountsTotal/zero_operations (0.00s)
+    --- PASS: TestOperationCountsTotal/only_added (0.00s)
+=== RUN   TestMergeSpec_AddedOnly_NewSpec
+--- PASS: TestMergeSpec_AddedOnly_NewSpec (0.00s)
+=== RUN   TestMergeSpec_ModifiedOnly_ExistingSpec
+--- PASS: TestMergeSpec_ModifiedOnly_ExistingSpec (0.00s)
+=== RUN   TestMergeSpec_RemovedOnly
+--- PASS: TestMergeSpec_RemovedOnly (0.00s)
+=== RUN   TestMergeSpec_RenamedOnly
+--- PASS: TestMergeSpec_RenamedOnly (0.00s)
+=== RUN   TestMergeSpec_AllOperations
+--- PASS: TestMergeSpec_AllOperations (0.00s)
+=== RUN   TestMergeSpec_PreservesOrder
+--- PASS: TestMergeSpec_PreservesOrder (0.00s)
+=== RUN   TestMergeSpec_ErrorOnNewSpecWithModified
+--- PASS: TestMergeSpec_ErrorOnNewSpecWithModified (0.00s)
+=== RUN   TestMergeSpec_ErrorOnNoDeltas
+--- PASS: TestMergeSpec_ErrorOnNoDeltas (0.00s)
+=== RUN   TestFormatCapabilityName
+=== RUN   TestFormatCapabilityName/archive-workflow
+=== RUN   TestFormatCapabilityName/cli-framework
+=== RUN   TestFormatCapabilityName/single
+=== RUN   TestFormatCapabilityName/multi-word-name
+--- PASS: TestFormatCapabilityName (0.00s)
+    --- PASS: TestFormatCapabilityName/archive-workflow (0.00s)
+    --- PASS: TestFormatCapabilityName/cli-framework (0.00s)
+    --- PASS: TestFormatCapabilityName/single (0.00s)
+    --- PASS: TestFormatCapabilityName/multi-word-name (0.00s)
+=== RUN   TestValidatePostMerge_Success
+--- PASS: TestValidatePostMerge_Success (0.00s)
+=== RUN   TestValidatePostMerge_DuplicateRequirements
+--- PASS: TestValidatePostMerge_DuplicateRequirements (0.00s)
+=== RUN   TestValidatePostMerge_MissingScenario
+--- PASS: TestValidatePostMerge_MissingScenario (0.00s)
+=== RUN   TestValidatePreMerge_NewSpec_OnlyAddedAllowed
+--- PASS: TestValidatePreMerge_NewSpec_OnlyAddedAllowed (0.00s)
+=== RUN   TestValidatePreMerge_ModifiedRequirementExists
+--- PASS: TestValidatePreMerge_ModifiedRequirementExists (0.00s)
+=== RUN   TestValidatePreMerge_ModifiedRequirementDoesNotExist
+--- PASS: TestValidatePreMerge_ModifiedRequirementDoesNotExist (0.00s)
+=== RUN   TestValidatePreMerge_AddedRequirementAlreadyExists
+--- PASS: TestValidatePreMerge_AddedRequirementAlreadyExists (0.00s)
+=== RUN   TestValidatePreMerge_RenamedRequirements
+--- PASS: TestValidatePreMerge_RenamedRequirements (0.00s)
+=== RUN   TestCheckDuplicatesAndConflicts_NoDuplicates
+--- PASS: TestCheckDuplicatesAndConflicts_NoDuplicates (0.00s)
+=== RUN   TestCheckDuplicatesAndConflicts_DuplicateInAdded
+--- PASS: TestCheckDuplicatesAndConflicts_DuplicateInAdded (0.00s)
+=== RUN   TestCheckDuplicatesAndConflicts_CrossSectionConflict
+--- PASS: TestCheckDuplicatesAndConflicts_CrossSectionConflict (0.00s)
+=== RUN   TestCheckDuplicatesAndConflicts_ModifiedAndRemoved
+--- PASS: TestCheckDuplicatesAndConflicts_ModifiedAndRemoved (0.00s)
+=== RUN   TestCheckDuplicatesAndConflicts_AddedAndRenamedTo
+--- PASS: TestCheckDuplicatesAndConflicts_AddedAndRenamedTo (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/archive	(cached)
+=== RUN   TestGetActiveChanges
+--- PASS: TestGetActiveChanges (0.00s)
+=== RUN   TestGetActiveChanges_EmptyDirectory
+--- PASS: TestGetActiveChanges_EmptyDirectory (0.00s)
+=== RUN   TestGetActiveChangeIDs_EmptyDirectory
+--- PASS: TestGetActiveChangeIDs_EmptyDirectory (0.00s)
+=== RUN   TestGetActiveChangeIDs
+--- PASS: TestGetActiveChangeIDs (0.00s)
+=== RUN   TestGetSpecs
+--- PASS: TestGetSpecs (0.00s)
+=== RUN   TestGetSpecs_EmptyDirectory
+--- PASS: TestGetSpecs_EmptyDirectory (0.00s)
+=== RUN   TestGetSpecIDs
+--- PASS: TestGetSpecIDs (0.00s)
+=== RUN   TestGetSpecIDs_EmptyDirectory
+--- PASS: TestGetSpecIDs_EmptyDirectory (0.00s)
+=== RUN   TestGetActiveChangeIDs_MissingProposalMd
+--- PASS: TestGetActiveChangeIDs_MissingProposalMd (0.00s)
+=== RUN   TestGetSpecIDs_MissingSpecMd
+--- PASS: TestGetSpecIDs_MissingSpecMd (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/discovery	(cached)
+=== RUN   TestDetectPlatformFromURL
+=== RUN   TestDetectPlatformFromURL/GitHub_HTTPS
+=== RUN   TestDetectPlatformFromURL/GitHub_SSH
+=== RUN   TestDetectPlatformFromURL/GitLab_HTTPS
+=== RUN   TestDetectPlatformFromURL/GitLab_SSH
+=== RUN   TestDetectPlatformFromURL/Self-hosted_GitLab
+=== RUN   TestDetectPlatformFromURL/Gitea
+=== RUN   TestDetectPlatformFromURL/Forgejo
+=== RUN   TestDetectPlatformFromURL/Unknown_platform
+--- PASS: TestDetectPlatformFromURL (0.00s)
+    --- PASS: TestDetectPlatformFromURL/GitHub_HTTPS (0.00s)
+    --- PASS: TestDetectPlatformFromURL/GitHub_SSH (0.00s)
+    --- PASS: TestDetectPlatformFromURL/GitLab_HTTPS (0.00s)
+    --- PASS: TestDetectPlatformFromURL/GitLab_SSH (0.00s)
+    --- PASS: TestDetectPlatformFromURL/Self-hosted_GitLab (0.00s)
+    --- PASS: TestDetectPlatformFromURL/Gitea (0.00s)
+    --- PASS: TestDetectPlatformFromURL/Forgejo (0.00s)
+    --- PASS: TestDetectPlatformFromURL/Unknown_platform (0.00s)
+=== RUN   TestGetCLITool
+=== RUN   TestGetCLITool/GitHub
+=== RUN   TestGetCLITool/GitLab
+=== RUN   TestGetCLITool/Gitea
+=== RUN   TestGetCLITool/Unknown
+--- PASS: TestGetCLITool (0.00s)
+    --- PASS: TestGetCLITool/GitHub (0.00s)
+    --- PASS: TestGetCLITool/GitLab (0.00s)
+    --- PASS: TestGetCLITool/Gitea (0.00s)
+    --- PASS: TestGetCLITool/Unknown (0.00s)
+=== RUN   TestGetInstallURL
+=== RUN   TestGetInstallURL/GitHub
+=== RUN   TestGetInstallURL/GitLab
+=== RUN   TestGetInstallURL/Gitea
+=== RUN   TestGetInstallURL/Unknown
+--- PASS: TestGetInstallURL (0.00s)
+    --- PASS: TestGetInstallURL/GitHub (0.00s)
+    --- PASS: TestGetInstallURL/GitLab (0.00s)
+    --- PASS: TestGetInstallURL/Gitea (0.00s)
+    --- PASS: TestGetInstallURL/Unknown (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/git	(cached)
+=== RUN   TestUpdateFileWithMarkers_NewFile
+--- PASS: TestUpdateFileWithMarkers_NewFile (0.00s)
+=== RUN   TestUpdateFileWithMarkers_UpdateExisting
+--- PASS: TestUpdateFileWithMarkers_UpdateExisting (0.00s)
+=== RUN   TestUpdateFileWithMarkers_PreservesOutsideContent
+--- PASS: TestUpdateFileWithMarkers_PreservesOutsideContent (0.00s)
+=== RUN   TestUpdateFileWithMarkers_PrependToExisting
+--- PASS: TestUpdateFileWithMarkers_PrependToExisting (0.00s)
+=== RUN   TestUpdateFileWithMarkers_InvalidMarkerState
+--- PASS: TestUpdateFileWithMarkers_InvalidMarkerState (0.00s)
+=== RUN   TestClaudeCodeConfigurator
+--- PASS: TestClaudeCodeConfigurator (0.00s)
+=== RUN   TestClineConfigurator
+--- PASS: TestClineConfigurator (0.00s)
+=== RUN   TestCostrictConfigurator
+--- PASS: TestCostrictConfigurator (0.00s)
+=== RUN   TestQoderConfigurator
+--- PASS: TestQoderConfigurator (0.00s)
+=== RUN   TestCodeBuddyConfigurator
+--- PASS: TestCodeBuddyConfigurator (0.00s)
+=== RUN   TestQwenConfigurator
+--- PASS: TestQwenConfigurator (0.00s)
+=== RUN   TestClaudeSlashConfigurator
+--- PASS: TestClaudeSlashConfigurator (0.00s)
+=== RUN   TestKilocodeSlashConfigurator
+--- PASS: TestKilocodeSlashConfigurator (0.00s)
+=== RUN   TestQoderSlashConfigurator
+--- PASS: TestQoderSlashConfigurator (0.00s)
+=== RUN   TestCursorSlashConfigurator
+--- PASS: TestCursorSlashConfigurator (0.00s)
+=== RUN   TestClineSlashConfigurator
+--- PASS: TestClineSlashConfigurator (0.00s)
+=== RUN   TestWindsurfSlashConfigurator
+--- PASS: TestWindsurfSlashConfigurator (0.00s)
+=== RUN   TestCostrictSlashConfigurator
+--- PASS: TestCostrictSlashConfigurator (0.00s)
+=== RUN   TestCodeBuddySlashConfigurator
+--- PASS: TestCodeBuddySlashConfigurator (0.00s)
+=== RUN   TestQwenSlashConfigurator
+--- PASS: TestQwenSlashConfigurator (0.00s)
+=== RUN   TestSlashCommandConfigurator_UpdateExisting
+--- PASS: TestSlashCommandConfigurator_UpdateExisting (0.00s)
+=== RUN   TestAllSlashConfigurators
+=== RUN   TestAllSlashConfigurators/Aider
+=== RUN   TestAllSlashConfigurators/Continue
+=== RUN   TestAllSlashConfigurators/Copilot
+=== RUN   TestAllSlashConfigurators/Mentat
+=== RUN   TestAllSlashConfigurators/Tabnine
+=== RUN   TestAllSlashConfigurators/Smol
+--- PASS: TestAllSlashConfigurators (0.00s)
+    --- PASS: TestAllSlashConfigurators/Aider (0.00s)
+    --- PASS: TestAllSlashConfigurators/Continue (0.00s)
+    --- PASS: TestAllSlashConfigurators/Copilot (0.00s)
+    --- PASS: TestAllSlashConfigurators/Mentat (0.00s)
+    --- PASS: TestAllSlashConfigurators/Tabnine (0.00s)
+    --- PASS: TestAllSlashConfigurators/Smol (0.00s)
+=== RUN   TestIsMarkerOnOwnLine
+=== RUN   TestIsMarkerOnOwnLine/marker_on_own_line
+=== RUN   TestIsMarkerOnOwnLine/marker_with_text_before
+=== RUN   TestIsMarkerOnOwnLine/marker_with_text_after
+=== RUN   TestIsMarkerOnOwnLine/marker_with_whitespace
+--- PASS: TestIsMarkerOnOwnLine (0.00s)
+    --- PASS: TestIsMarkerOnOwnLine/marker_on_own_line (0.00s)
+    --- PASS: TestIsMarkerOnOwnLine/marker_with_text_before (0.00s)
+    --- PASS: TestIsMarkerOnOwnLine/marker_with_text_after (0.00s)
+    --- PASS: TestIsMarkerOnOwnLine/marker_with_whitespace (0.00s)
+=== RUN   TestFindMarkerIndex
+--- PASS: TestFindMarkerIndex (0.00s)
+=== RUN   TestAntigravityConfigurator
+--- PASS: TestAntigravityConfigurator (0.00s)
+=== RUN   TestAntigravitySlashConfigurator
+--- PASS: TestAntigravitySlashConfigurator (0.00s)
+=== RUN   TestNewInitExecutor
+--- PASS: TestNewInitExecutor (0.00s)
+=== RUN   TestNewInitExecutorInvalidPath
+--- PASS: TestNewInitExecutorInvalidPath (0.00s)
+=== RUN   TestExecuteBasicInitialization
+--- PASS: TestExecuteBasicInitialization (0.00s)
+=== RUN   TestExecuteWithToolConfiguration
+--- PASS: TestExecuteWithToolConfiguration (0.00s)
+=== RUN   TestExecuteWithMultipleTools
+--- PASS: TestExecuteWithMultipleTools (0.00s)
+=== RUN   TestExecuteIdempotency
+--- PASS: TestExecuteIdempotency (0.00s)
+=== RUN   TestGetConfigurator
+=== RUN   TestGetConfigurator/Claude_Code_config
+=== RUN   TestGetConfigurator/Cline_config
+=== RUN   TestGetConfigurator/Claude_slash
+=== RUN   TestGetConfigurator/Cursor_slash
+=== RUN   TestGetConfigurator/Invalid_tool_ID
+--- PASS: TestGetConfigurator (0.00s)
+    --- PASS: TestGetConfigurator/Claude_Code_config (0.00s)
+    --- PASS: TestGetConfigurator/Cline_config (0.00s)
+    --- PASS: TestGetConfigurator/Claude_slash (0.00s)
+    --- PASS: TestGetConfigurator/Cursor_slash (0.00s)
+    --- PASS: TestGetConfigurator/Invalid_tool_ID (0.00s)
+=== RUN   TestCreateDirectoryStructure
+--- PASS: TestCreateDirectoryStructure (0.00s)
+=== RUN   TestAutoInstallSlashCommands
+--- PASS: TestAutoInstallSlashCommands (0.00s)
+=== RUN   TestAutoInstallMultipleTools
+--- PASS: TestAutoInstallMultipleTools (0.00s)
+=== RUN   TestAutoInstallPreservesExistingSlashCommands
+--- PASS: TestAutoInstallPreservesExistingSlashCommands (0.00s)
+=== RUN   TestExpandPath
+=== RUN   TestExpandPath/expands_home_directory_path
+=== RUN   TestExpandPath/expands_tilde_alone_to_home_directory
+=== RUN   TestExpandPath/converts_relative_path_to_absolute
+=== RUN   TestExpandPath/returns_absolute_path_unchanged
+=== RUN   TestExpandPath/returns_error_for_empty_path
+--- PASS: TestExpandPath (0.00s)
+    --- PASS: TestExpandPath/expands_home_directory_path (0.00s)
+    --- PASS: TestExpandPath/expands_tilde_alone_to_home_directory (0.00s)
+    --- PASS: TestExpandPath/converts_relative_path_to_absolute (0.00s)
+    --- PASS: TestExpandPath/returns_absolute_path_unchanged (0.00s)
+    --- PASS: TestExpandPath/returns_error_for_empty_path (0.00s)
+=== RUN   TestEnsureDir
+=== RUN   TestEnsureDir/creates_directory
+=== RUN   TestEnsureDir/creates_parent_directories
+=== RUN   TestEnsureDir/is_idempotent_-_no_error_if_directory_exists
+=== RUN   TestEnsureDir/returns_error_for_empty_path
+--- PASS: TestEnsureDir (0.00s)
+    --- PASS: TestEnsureDir/creates_directory (0.00s)
+    --- PASS: TestEnsureDir/creates_parent_directories (0.00s)
+    --- PASS: TestEnsureDir/is_idempotent_-_no_error_if_directory_exists (0.00s)
+    --- PASS: TestEnsureDir/returns_error_for_empty_path (0.00s)
+=== RUN   TestWriteFile
+=== RUN   TestWriteFile/creates_file_with_content
+=== RUN   TestWriteFile/creates_parent_directories_if_needed
+=== RUN   TestWriteFile/returns_error_if_file_already_exists
+=== RUN   TestWriteFile/returns_error_for_empty_path
+--- PASS: TestWriteFile (0.00s)
+    --- PASS: TestWriteFile/creates_file_with_content (0.00s)
+    --- PASS: TestWriteFile/creates_parent_directories_if_needed (0.00s)
+    --- PASS: TestWriteFile/returns_error_if_file_already_exists (0.00s)
+    --- PASS: TestWriteFile/returns_error_for_empty_path (0.00s)
+=== RUN   TestFileExists
+=== RUN   TestFileExists/returns_true_for_existing_file
+=== RUN   TestFileExists/returns_true_for_existing_directory
+=== RUN   TestFileExists/returns_false_for_non-existent_path
+=== RUN   TestFileExists/returns_false_for_empty_path
+--- PASS: TestFileExists (0.00s)
+    --- PASS: TestFileExists/returns_true_for_existing_file (0.00s)
+    --- PASS: TestFileExists/returns_true_for_existing_directory (0.00s)
+    --- PASS: TestFileExists/returns_false_for_non-existent_path (0.00s)
+    --- PASS: TestFileExists/returns_false_for_empty_path (0.00s)
+=== RUN   TestIsSpectrInitialized
+=== RUN   TestIsSpectrInitialized/returns_true_when_spectr/project.md_exists
+=== RUN   TestIsSpectrInitialized/returns_false_when_spectr_directory_does_not_exist
+=== RUN   TestIsSpectrInitialized/returns_false_when_spectr_exists_but_project.md_does_not
+=== RUN   TestIsSpectrInitialized/returns_false_for_empty_path
+--- PASS: TestIsSpectrInitialized (0.00s)
+    --- PASS: TestIsSpectrInitialized/returns_true_when_spectr/project.md_exists (0.00s)
+    --- PASS: TestIsSpectrInitialized/returns_false_when_spectr_directory_does_not_exist (0.00s)
+    --- PASS: TestIsSpectrInitialized/returns_false_when_spectr_exists_but_project.md_does_not (0.00s)
+    --- PASS: TestIsSpectrInitialized/returns_false_for_empty_path (0.00s)
+=== RUN   TestBackupFile
+=== RUN   TestBackupFile/creates_backup_of_existing_file
+=== RUN   TestBackupFile/does_not_error_if_file_does_not_exist
+=== RUN   TestBackupFile/returns_error_for_empty_path
+=== RUN   TestBackupFile/creates_multiple_backups_with_different_timestamps
+--- PASS: TestBackupFile (0.00s)
+    --- PASS: TestBackupFile/creates_backup_of_existing_file (0.00s)
+    --- PASS: TestBackupFile/does_not_error_if_file_does_not_exist (0.00s)
+    --- PASS: TestBackupFile/returns_error_for_empty_path (0.00s)
+    --- PASS: TestBackupFile/creates_multiple_backups_with_different_timestamps (0.00s)
+=== RUN   TestToolTypeConstants
+=== RUN   TestToolTypeConstants/Config_tool_type
+=== RUN   TestToolTypeConstants/Slash_tool_type
+--- PASS: TestToolTypeConstants (0.00s)
+    --- PASS: TestToolTypeConstants/Config_tool_type (0.00s)
+    --- PASS: TestToolTypeConstants/Slash_tool_type (0.00s)
+=== RUN   TestToolDefinitionCreation
+--- PASS: TestToolDefinitionCreation (0.00s)
+=== RUN   TestProjectConfigCreation
+--- PASS: TestProjectConfigCreation (0.00s)
+=== RUN   TestInitStateConstants
+=== RUN   TestInitStateConstants/Select_tools_state
+=== RUN   TestInitStateConstants/Configure_tools_state
+=== RUN   TestInitStateConstants/Confirmation_state
+=== RUN   TestInitStateConstants/Complete_state
+--- PASS: TestInitStateConstants (0.00s)
+    --- PASS: TestInitStateConstants/Select_tools_state (0.00s)
+    --- PASS: TestInitStateConstants/Configure_tools_state (0.00s)
+    --- PASS: TestInitStateConstants/Confirmation_state (0.00s)
+    --- PASS: TestInitStateConstants/Complete_state (0.00s)
+=== RUN   TestNewRegistry
+--- PASS: TestNewRegistry (0.00s)
+=== RUN   TestGetTool
+=== RUN   TestGetTool/Get_Claude_Code
+=== RUN   TestGetTool/Get_Cline
+=== RUN   TestGetTool/Get_Costrict_Config
+=== RUN   TestGetTool/Get_Qoder_Config
+=== RUN   TestGetTool/Get_CodeBuddy
+=== RUN   TestGetTool/Get_Qwen
+=== RUN   TestGetTool/Get_Antigravity
+=== RUN   TestGetTool/Get_Invalid_Tool
+=== RUN   TestGetTool/Get_Slash_Tool_(removed)
+=== RUN   TestGetTool/Get_Slash_Tool_(removed)#01
+--- PASS: TestGetTool (0.00s)
+    --- PASS: TestGetTool/Get_Claude_Code (0.00s)
+    --- PASS: TestGetTool/Get_Cline (0.00s)
+    --- PASS: TestGetTool/Get_Costrict_Config (0.00s)
+    --- PASS: TestGetTool/Get_Qoder_Config (0.00s)
+    --- PASS: TestGetTool/Get_CodeBuddy (0.00s)
+    --- PASS: TestGetTool/Get_Qwen (0.00s)
+    --- PASS: TestGetTool/Get_Antigravity (0.00s)
+    --- PASS: TestGetTool/Get_Invalid_Tool (0.00s)
+    --- PASS: TestGetTool/Get_Slash_Tool_(removed) (0.00s)
+    --- PASS: TestGetTool/Get_Slash_Tool_(removed)#01 (0.00s)
+=== RUN   TestGetToolsByType
+--- PASS: TestGetToolsByType (0.00s)
+=== RUN   TestSlashToolsNotInRegistry
+--- PASS: TestSlashToolsNotInRegistry (0.00s)
+=== RUN   TestListTools
+--- PASS: TestListTools (0.00s)
+=== RUN   TestToolIDsAreKebabCase
+--- PASS: TestToolIDsAreKebabCase (0.00s)
+=== RUN   TestAllToolsHaveRequiredFields
+--- PASS: TestAllToolsHaveRequiredFields (0.00s)
+=== RUN   TestPrioritiesAreUnique
+--- PASS: TestPrioritiesAreUnique (0.00s)
+=== RUN   TestGetSlashToolMapping
+=== RUN   TestGetSlashToolMapping/Claude_Code_maps_to_claude
+=== RUN   TestGetSlashToolMapping/Cline_maps_to_cline-slash
+=== RUN   TestGetSlashToolMapping/Costrict_maps_to_costrict-slash
+=== RUN   TestGetSlashToolMapping/Qoder_maps_to_qoder-slash
+=== RUN   TestGetSlashToolMapping/CodeBuddy_maps_to_codebuddy-slash
+=== RUN   TestGetSlashToolMapping/Qwen_maps_to_qwen-slash
+=== RUN   TestGetSlashToolMapping/Antigravity_maps_to_antigravity-slash
+=== RUN   TestGetSlashToolMapping/Invalid_tool_has_no_mapping
+=== RUN   TestGetSlashToolMapping/Slash_tool_has_no_mapping
+--- PASS: TestGetSlashToolMapping (0.00s)
+    --- PASS: TestGetSlashToolMapping/Claude_Code_maps_to_claude (0.00s)
+    --- PASS: TestGetSlashToolMapping/Cline_maps_to_cline-slash (0.00s)
+    --- PASS: TestGetSlashToolMapping/Costrict_maps_to_costrict-slash (0.00s)
+    --- PASS: TestGetSlashToolMapping/Qoder_maps_to_qoder-slash (0.00s)
+    --- PASS: TestGetSlashToolMapping/CodeBuddy_maps_to_codebuddy-slash (0.00s)
+    --- PASS: TestGetSlashToolMapping/Qwen_maps_to_qwen-slash (0.00s)
+    --- PASS: TestGetSlashToolMapping/Antigravity_maps_to_antigravity-slash (0.00s)
+    --- PASS: TestGetSlashToolMapping/Invalid_tool_has_no_mapping (0.00s)
+    --- PASS: TestGetSlashToolMapping/Slash_tool_has_no_mapping (0.00s)
+=== RUN   TestAllConfigToolsHaveSlashMapping
+--- PASS: TestAllConfigToolsHaveSlashMapping (0.00s)
+=== RUN   TestSlashMappingCount
+--- PASS: TestSlashMappingCount (0.00s)
+=== RUN   TestNewTemplateManager
+--- PASS: TestNewTemplateManager (0.00s)
+=== RUN   TestTemplateManager_RenderProject
+=== RUN   TestTemplateManager_RenderProject/basic_project
+=== RUN   TestTemplateManager_RenderProject/empty_tech_stack
+=== RUN   TestTemplateManager_RenderProject/single_tech
+--- PASS: TestTemplateManager_RenderProject (0.00s)
+    --- PASS: TestTemplateManager_RenderProject/basic_project (0.00s)
+    --- PASS: TestTemplateManager_RenderProject/empty_tech_stack (0.00s)
+    --- PASS: TestTemplateManager_RenderProject/single_tech (0.00s)
+=== RUN   TestTemplateManager_RenderAgents
+--- PASS: TestTemplateManager_RenderAgents (0.00s)
+=== RUN   TestTemplateManager_RenderSlashCommand
+=== RUN   TestTemplateManager_RenderSlashCommand/proposal_command
+=== RUN   TestTemplateManager_RenderSlashCommand/apply_command
+=== RUN   TestTemplateManager_RenderSlashCommand/archive_command
+=== RUN   TestTemplateManager_RenderSlashCommand/invalid_command_type
+--- PASS: TestTemplateManager_RenderSlashCommand (0.00s)
+    --- PASS: TestTemplateManager_RenderSlashCommand/proposal_command (0.00s)
+    --- PASS: TestTemplateManager_RenderSlashCommand/apply_command (0.00s)
+    --- PASS: TestTemplateManager_RenderSlashCommand/archive_command (0.00s)
+    --- PASS: TestTemplateManager_RenderSlashCommand/invalid_command_type (0.00s)
+=== RUN   TestTemplateManager_AllTemplatesCompile
+=== RUN   TestTemplateManager_AllTemplatesCompile/project_template
+=== RUN   TestTemplateManager_AllTemplatesCompile/agents_template
+=== RUN   TestTemplateManager_AllTemplatesCompile/slash_commands
+--- PASS: TestTemplateManager_AllTemplatesCompile (0.00s)
+    --- PASS: TestTemplateManager_AllTemplatesCompile/project_template (0.00s)
+    --- PASS: TestTemplateManager_AllTemplatesCompile/agents_template (0.00s)
+    --- PASS: TestTemplateManager_AllTemplatesCompile/slash_commands (0.00s)
+=== RUN   TestTemplateManager_VariableSubstitution
+=== RUN   TestTemplateManager_VariableSubstitution/project_variables_are_substituted
+--- PASS: TestTemplateManager_VariableSubstitution (0.00s)
+    --- PASS: TestTemplateManager_VariableSubstitution/project_variables_are_substituted (0.00s)
+=== RUN   TestTemplateManager_EmptyTechStack
+--- PASS: TestTemplateManager_EmptyTechStack (0.00s)
+=== RUN   TestNewWizardModel
+--- PASS: TestNewWizardModel (0.00s)
+=== RUN   TestWizardStepTransitions
+--- PASS: TestWizardStepTransitions (0.00s)
+=== RUN   TestWizardRenderFunctions
+=== RUN   TestWizardRenderFunctions/RenderIntro
+=== RUN   TestWizardRenderFunctions/RenderSelect
+=== RUN   TestWizardRenderFunctions/RenderReview
+=== RUN   TestWizardRenderFunctions/RenderExecute
+=== RUN   TestWizardRenderFunctions/RenderComplete
+--- PASS: TestWizardRenderFunctions (0.00s)
+    --- PASS: TestWizardRenderFunctions/RenderIntro (0.00s)
+    --- PASS: TestWizardRenderFunctions/RenderSelect (0.00s)
+    --- PASS: TestWizardRenderFunctions/RenderReview (0.00s)
+    --- PASS: TestWizardRenderFunctions/RenderExecute (0.00s)
+    --- PASS: TestWizardRenderFunctions/RenderComplete (0.00s)
+=== RUN   TestGetSelectedToolIDs
+--- PASS: TestGetSelectedToolIDs (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/init	(cached)
+=== RUN   TestFormatChangesText
+=== RUN   TestFormatChangesText/Empty_list
+=== RUN   TestFormatChangesText/Single_change
+=== RUN   TestFormatChangesText/Multiple_changes_sorted
+--- PASS: TestFormatChangesText (0.00s)
+    --- PASS: TestFormatChangesText/Empty_list (0.00s)
+    --- PASS: TestFormatChangesText/Single_change (0.00s)
+    --- PASS: TestFormatChangesText/Multiple_changes_sorted (0.00s)
+=== RUN   TestFormatChangesLong
+--- PASS: TestFormatChangesLong (0.00s)
+=== RUN   TestFormatChangesJSON
+--- PASS: TestFormatChangesJSON (0.00s)
+=== RUN   TestFormatChangesJSON_Empty
+--- PASS: TestFormatChangesJSON_Empty (0.00s)
+=== RUN   TestFormatSpecsText
+=== RUN   TestFormatSpecsText/Empty_list
+=== RUN   TestFormatSpecsText/Single_spec
+=== RUN   TestFormatSpecsText/Multiple_specs_sorted
+--- PASS: TestFormatSpecsText (0.00s)
+    --- PASS: TestFormatSpecsText/Empty_list (0.00s)
+    --- PASS: TestFormatSpecsText/Single_spec (0.00s)
+    --- PASS: TestFormatSpecsText/Multiple_specs_sorted (0.00s)
+=== RUN   TestFormatSpecsLong
+--- PASS: TestFormatSpecsLong (0.00s)
+=== RUN   TestFormatSpecsJSON
+--- PASS: TestFormatSpecsJSON (0.00s)
+=== RUN   TestFormatSpecsJSON_Empty
+--- PASS: TestFormatSpecsJSON_Empty (0.00s)
+=== RUN   TestFormatAllText
+=== RUN   TestFormatAllText/Empty_list
+=== RUN   TestFormatAllText/Mixed_items_sorted
+--- PASS: TestFormatAllText (0.00s)
+    --- PASS: TestFormatAllText/Empty_list (0.00s)
+    --- PASS: TestFormatAllText/Mixed_items_sorted (0.00s)
+=== RUN   TestFormatAllLong
+--- PASS: TestFormatAllLong (0.00s)
+=== RUN   TestFormatAllJSON
+--- PASS: TestFormatAllJSON (0.00s)
+=== RUN   TestFormatAllJSON_Empty
+--- PASS: TestFormatAllJSON_Empty (0.00s)
+=== RUN   TestTruncateString
+=== RUN   TestTruncateString/string_shorter_than_maxLen
+=== RUN   TestTruncateString/string_equal_to_maxLen
+=== RUN   TestTruncateString/string_longer_than_maxLen
+=== RUN   TestTruncateString/maxLen_less_than_3
+=== RUN   TestTruncateString/empty_string
+--- PASS: TestTruncateString (0.00s)
+    --- PASS: TestTruncateString/string_shorter_than_maxLen (0.00s)
+    --- PASS: TestTruncateString/string_equal_to_maxLen (0.00s)
+    --- PASS: TestTruncateString/string_longer_than_maxLen (0.00s)
+    --- PASS: TestTruncateString/maxLen_less_than_3 (0.00s)
+    --- PASS: TestTruncateString/empty_string (0.00s)
+=== RUN   TestRunInteractiveChanges_EmptyList
+--- PASS: TestRunInteractiveChanges_EmptyList (0.00s)
+=== RUN   TestRunInteractiveSpecs_EmptyList
+--- PASS: TestRunInteractiveSpecs_EmptyList (0.00s)
+=== RUN   TestRunInteractiveChanges_ValidData
+--- PASS: TestRunInteractiveChanges_ValidData (0.00s)
+=== RUN   TestRunInteractiveSpecs_ValidData
+--- PASS: TestRunInteractiveSpecs_ValidData (0.00s)
+=== RUN   TestCopyToClipboard
+--- PASS: TestCopyToClipboard (0.14s)
+=== RUN   TestInteractiveModel_Init
+--- PASS: TestInteractiveModel_Init (0.00s)
+=== RUN   TestInteractiveModel_View_Quitting
+=== RUN   TestInteractiveModel_View_Quitting/quit_without_copy
+    interactive_test.go:185: View output: Cancelled.
+=== RUN   TestInteractiveModel_View_Quitting/quit_with_successful_copy
+    interactive_test.go:185: View output: ✓ Copied: test-id
+--- PASS: TestInteractiveModel_View_Quitting (0.00s)
+    --- PASS: TestInteractiveModel_View_Quitting/quit_without_copy (0.00s)
+    --- PASS: TestInteractiveModel_View_Quitting/quit_with_successful_copy (0.00s)
+=== RUN   TestInteractiveModel_HandleEdit
+=== RUN   TestInteractiveModel_HandleEdit/EDITOR_not_set
+=== RUN   TestInteractiveModel_HandleEdit/change_mode_opens_proposal
+=== RUN   TestInteractiveModel_HandleEdit/spec_file_not_found
+--- PASS: TestInteractiveModel_HandleEdit (0.00s)
+    --- PASS: TestInteractiveModel_HandleEdit/EDITOR_not_set (0.00s)
+    --- PASS: TestInteractiveModel_HandleEdit/change_mode_opens_proposal (0.00s)
+    --- PASS: TestInteractiveModel_HandleEdit/spec_file_not_found (0.00s)
+=== RUN   TestRunInteractiveAll_EmptyList
+--- PASS: TestRunInteractiveAll_EmptyList (0.00s)
+=== RUN   TestRunInteractiveAll_ValidData
+--- PASS: TestRunInteractiveAll_ValidData (0.00s)
+=== RUN   TestHandleToggleFilter
+--- PASS: TestHandleToggleFilter (0.00s)
+=== RUN   TestEditorOpensOnEKey
+--- PASS: TestEditorOpensOnEKey (1.10s)
+=== RUN   TestEditorOpensForChangeItems
+--- PASS: TestEditorOpensForChangeItems (1.10s)
+=== RUN   TestEditorOpensInUnifiedMode
+--- PASS: TestEditorOpensInUnifiedMode (1.20s)
+=== RUN   TestListChanges
+--- PASS: TestListChanges (0.00s)
+=== RUN   TestListChanges_NoChanges
+--- PASS: TestListChanges_NoChanges (0.00s)
+=== RUN   TestListChanges_FallbackTitle
+--- PASS: TestListChanges_FallbackTitle (0.00s)
+=== RUN   TestListSpecs
+--- PASS: TestListSpecs (0.00s)
+=== RUN   TestListSpecs_NoSpecs
+--- PASS: TestListSpecs_NoSpecs (0.00s)
+=== RUN   TestListSpecs_FallbackTitle
+--- PASS: TestListSpecs_FallbackTitle (0.00s)
+=== RUN   TestListAll
+--- PASS: TestListAll (0.00s)
+=== RUN   TestListAll_FilterByType
+--- PASS: TestListAll_FilterByType (0.00s)
+=== RUN   TestListAll_NoSorting
+--- PASS: TestListAll_NoSorting (0.00s)
+=== RUN   TestListAll_Empty
+--- PASS: TestListAll_Empty (0.00s)
+=== RUN   TestItemType_String
+=== RUN   TestItemType_String/Change_type
+=== RUN   TestItemType_String/Spec_type
+=== RUN   TestItemType_String/Unknown_type
+--- PASS: TestItemType_String (0.00s)
+    --- PASS: TestItemType_String/Change_type (0.00s)
+    --- PASS: TestItemType_String/Spec_type (0.00s)
+    --- PASS: TestItemType_String/Unknown_type (0.00s)
+=== RUN   TestNewChangeItem
+--- PASS: TestNewChangeItem (0.00s)
+=== RUN   TestNewSpecItem
+--- PASS: TestNewSpecItem (0.00s)
+=== RUN   TestItem_ID_EmptyWhenNil
+--- PASS: TestItem_ID_EmptyWhenNil (0.00s)
+=== RUN   TestItem_Title_EmptyWhenNil
+--- PASS: TestItem_Title_EmptyWhenNil (0.00s)
+=== RUN   TestItemList_FilterByType
+--- PASS: TestItemList_FilterByType (0.00s)
+=== RUN   TestItemList_Changes
+--- PASS: TestItemList_Changes (0.00s)
+=== RUN   TestItemList_Specs
+--- PASS: TestItemList_Specs (0.00s)
+=== RUN   TestItem_JSONMarshaling
+--- PASS: TestItem_JSONMarshaling (0.00s)
+=== RUN   TestItemList_EmptyLists
+--- PASS: TestItemList_EmptyLists (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/list	(cached)
+=== RUN   TestLexer_Headers
+=== RUN   TestLexer_Headers/single_hash_header
+=== RUN   TestLexer_Headers/multiple_hash_header
+=== RUN   TestLexer_Headers/header_with_newline
+=== RUN   TestLexer_Headers/multiple_headers
+--- PASS: TestLexer_Headers (0.00s)
+    --- PASS: TestLexer_Headers/single_hash_header (0.00s)
+    --- PASS: TestLexer_Headers/multiple_hash_header (0.00s)
+    --- PASS: TestLexer_Headers/header_with_newline (0.00s)
+    --- PASS: TestLexer_Headers/multiple_headers (0.00s)
+=== RUN   TestLexer_CodeBlocks
+=== RUN   TestLexer_CodeBlocks/simple_code_block
+=== RUN   TestLexer_CodeBlocks/code_block_with_language
+=== RUN   TestLexer_CodeBlocks/code_block_with_markdown_syntax_inside
+=== RUN   TestLexer_CodeBlocks/code_block_with_requirement_syntax
+--- PASS: TestLexer_CodeBlocks (0.00s)
+    --- PASS: TestLexer_CodeBlocks/simple_code_block (0.00s)
+    --- PASS: TestLexer_CodeBlocks/code_block_with_language (0.00s)
+    --- PASS: TestLexer_CodeBlocks/code_block_with_markdown_syntax_inside (0.00s)
+    --- PASS: TestLexer_CodeBlocks/code_block_with_requirement_syntax (0.00s)
+=== RUN   TestLexer_Lists
+=== RUN   TestLexer_Lists/unordered_list
+=== RUN   TestLexer_Lists/ordered_list
+=== RUN   TestLexer_Lists/list_with_asterisk
+--- PASS: TestLexer_Lists (0.00s)
+    --- PASS: TestLexer_Lists/unordered_list (0.00s)
+    --- PASS: TestLexer_Lists/ordered_list (0.00s)
+    --- PASS: TestLexer_Lists/list_with_asterisk (0.00s)
+=== RUN   TestLexer_BlankLines
+=== RUN   TestLexer_BlankLines/single_blank_line
+=== RUN   TestLexer_BlankLines/multiple_blank_lines
+--- PASS: TestLexer_BlankLines (0.00s)
+    --- PASS: TestLexer_BlankLines/single_blank_line (0.00s)
+    --- PASS: TestLexer_BlankLines/multiple_blank_lines (0.00s)
+=== RUN   TestLexer_StateTransitions
+=== RUN   TestLexer_StateTransitions/text_to_header
+=== RUN   TestLexer_StateTransitions/header_to_code_block
+=== RUN   TestLexer_StateTransitions/code_block_to_list
+=== RUN   TestLexer_StateTransitions/list_to_blank_to_text
+--- PASS: TestLexer_StateTransitions (0.00s)
+    --- PASS: TestLexer_StateTransitions/text_to_header (0.00s)
+    --- PASS: TestLexer_StateTransitions/header_to_code_block (0.00s)
+    --- PASS: TestLexer_StateTransitions/code_block_to_list (0.00s)
+    --- PASS: TestLexer_StateTransitions/list_to_blank_to_text (0.00s)
+=== RUN   TestLexer_EdgeCases
+=== RUN   TestLexer_EdgeCases/empty_input
+=== RUN   TestLexer_EdgeCases/only_whitespace
+=== RUN   TestLexer_EdgeCases/unclosed_code_block
+=== RUN   TestLexer_EdgeCases/hash_not_at_line_start
+=== RUN   TestLexer_EdgeCases/dash_not_followed_by_space
+--- PASS: TestLexer_EdgeCases (0.00s)
+    --- PASS: TestLexer_EdgeCases/empty_input (0.00s)
+    --- PASS: TestLexer_EdgeCases/only_whitespace (0.00s)
+    --- PASS: TestLexer_EdgeCases/unclosed_code_block (0.00s)
+    --- PASS: TestLexer_EdgeCases/hash_not_at_line_start (0.00s)
+    --- PASS: TestLexer_EdgeCases/dash_not_followed_by_space (0.00s)
+=== RUN   TestLexer_Position
+--- PASS: TestLexer_Position (0.00s)
+=== RUN   TestLexer_ComplexDocument
+--- PASS: TestLexer_ComplexDocument (0.00s)
+=== RUN   TestParser_Headers
+=== RUN   TestParser_Headers/single_header
+=== RUN   TestParser_Headers/level_3_header
+=== RUN   TestParser_Headers/level_4_header
+=== RUN   TestParser_Headers/multiple_headers
+--- PASS: TestParser_Headers (0.00s)
+    --- PASS: TestParser_Headers/single_header (0.00s)
+    --- PASS: TestParser_Headers/level_3_header (0.00s)
+    --- PASS: TestParser_Headers/level_4_header (0.00s)
+    --- PASS: TestParser_Headers/multiple_headers (0.00s)
+=== RUN   TestParser_Paragraphs
+=== RUN   TestParser_Paragraphs/single_line_paragraph
+=== RUN   TestParser_Paragraphs/multi-line_paragraph
+--- PASS: TestParser_Paragraphs (0.00s)
+    --- PASS: TestParser_Paragraphs/single_line_paragraph (0.00s)
+    --- PASS: TestParser_Paragraphs/multi-line_paragraph (0.00s)
+=== RUN   TestParser_CodeBlocks
+=== RUN   TestParser_CodeBlocks/simple_code_block
+=== RUN   TestParser_CodeBlocks/code_block_with_language
+=== RUN   TestParser_CodeBlocks/code_block_with_multiple_lines
+--- PASS: TestParser_CodeBlocks (0.00s)
+    --- PASS: TestParser_CodeBlocks/simple_code_block (0.00s)
+    --- PASS: TestParser_CodeBlocks/code_block_with_language (0.00s)
+    --- PASS: TestParser_CodeBlocks/code_block_with_multiple_lines (0.00s)
+=== RUN   TestParser_CodeBlocksWithMarkdown
+--- PASS: TestParser_CodeBlocksWithMarkdown (0.00s)
+=== RUN   TestParser_Lists
+=== RUN   TestParser_Lists/unordered_list
+=== RUN   TestParser_Lists/ordered_list
+=== RUN   TestParser_Lists/asterisk_list
+--- PASS: TestParser_Lists (0.00s)
+    --- PASS: TestParser_Lists/unordered_list (0.00s)
+    --- PASS: TestParser_Lists/ordered_list (0.00s)
+    --- PASS: TestParser_Lists/asterisk_list (0.00s)
+=== RUN   TestParser_BlankLines
+--- PASS: TestParser_BlankLines (0.00s)
+=== RUN   TestParser_MixedContent
+--- PASS: TestParser_MixedContent (0.00s)
+=== RUN   TestParser_ErrorRecovery
+=== RUN   TestParser_ErrorRecovery/unclosed_code_block
+=== RUN   TestParser_ErrorRecovery/empty_input
+=== RUN   TestParser_ErrorRecovery/only_whitespace
+--- PASS: TestParser_ErrorRecovery (0.00s)
+    --- PASS: TestParser_ErrorRecovery/unclosed_code_block (0.00s)
+    --- PASS: TestParser_ErrorRecovery/empty_input (0.00s)
+    --- PASS: TestParser_ErrorRecovery/only_whitespace (0.00s)
+=== RUN   TestParser_NestedStructures
+--- PASS: TestParser_NestedStructures (0.00s)
+=== RUN   TestParser_SpectrFormat
+--- PASS: TestParser_SpectrFormat (0.00s)
+=== RUN   TestParser_EmptyDocument
+--- PASS: TestParser_EmptyDocument (0.00s)
+=== RUN   TestParser_ListItemText
+--- PASS: TestParser_ListItemText (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/mdparser	(cached)
+=== RUN   TestRequirementParserCorrectness_Small
+--- PASS: TestRequirementParserCorrectness_Small (0.00s)
+=== RUN   TestRequirementParserCorrectness_Medium
+--- PASS: TestRequirementParserCorrectness_Medium (0.00s)
+=== RUN   TestRequirementParserCorrectness_Pathological
+    benchmark_test.go:520: Pathological case: Regex found 27 requirements, Lexer found 25 requirements
+--- PASS: TestRequirementParserCorrectness_Pathological (0.00s)
+=== RUN   TestDeltaParserCorrectness_Small
+--- PASS: TestDeltaParserCorrectness_Small (0.00s)
+=== RUN   TestParseDeltaSpec_Added
+--- PASS: TestParseDeltaSpec_Added (0.00s)
+=== RUN   TestParseDeltaSpec_Modified
+--- PASS: TestParseDeltaSpec_Modified (0.00s)
+=== RUN   TestParseDeltaSpec_Removed
+--- PASS: TestParseDeltaSpec_Removed (0.00s)
+=== RUN   TestParseDeltaSpec_Renamed
+--- PASS: TestParseDeltaSpec_Renamed (0.00s)
+=== RUN   TestParseDeltaSpec_AllOperations
+--- PASS: TestParseDeltaSpec_AllOperations (0.00s)
+=== RUN   TestParseDeltaSpec_NoDeltas
+--- PASS: TestParseDeltaSpec_NoDeltas (0.00s)
+=== RUN   TestParseDeltaSpec_EmptySections
+--- PASS: TestParseDeltaSpec_EmptySections (0.00s)
+=== RUN   TestParseDeltaSpec_MissingFile
+--- PASS: TestParseDeltaSpec_MissingFile (0.00s)
+=== RUN   TestExtractRequirements_SingleRequirement
+--- PASS: TestExtractRequirements_SingleRequirement (0.00s)
+=== RUN   TestExtractRequirements_MultipleRequirements
+--- PASS: TestExtractRequirements_MultipleRequirements (0.00s)
+=== RUN   TestExtractRequirements_NoScenarios_Error
+--- PASS: TestExtractRequirements_NoScenarios_Error (0.00s)
+=== RUN   TestExtractRequirements_CodeBlockIgnored
+--- PASS: TestExtractRequirements_CodeBlockIgnored (0.00s)
+=== RUN   TestExtractScenarios_SingleScenario
+--- PASS: TestExtractScenarios_SingleScenario (0.00s)
+=== RUN   TestExtractScenarios_MultipleScenarios
+--- PASS: TestExtractScenarios_MultipleScenarios (0.00s)
+=== RUN   TestExtractDeltaSections_AllOperations
+--- PASS: TestExtractDeltaSections_AllOperations (0.00s)
+=== RUN   TestExtractDeltaSections_EmptySections
+--- PASS: TestExtractDeltaSections_EmptySections (0.00s)
+=== RUN   TestExtractDeltaSections_NoSections
+--- PASS: TestExtractDeltaSections_NoSections (0.00s)
+=== RUN   TestExtractRenamedRequirements_SingleRename
+--- PASS: TestExtractRenamedRequirements_SingleRename (0.00s)
+=== RUN   TestExtractRenamedRequirements_MultipleRenames
+--- PASS: TestExtractRenamedRequirements_MultipleRenames (0.00s)
+=== RUN   TestExtractRenamedRequirements_NoRenamedSection
+--- PASS: TestExtractRenamedRequirements_NoRenamedSection (0.00s)
+=== RUN   TestExtractRenamedRequirements_EmptyRenamedSection
+--- PASS: TestExtractRenamedRequirements_EmptyRenamedSection (0.00s)
+=== RUN   TestExtractRequirements_MalformedHeaders
+--- PASS: TestExtractRequirements_MalformedHeaders (0.00s)
+=== RUN   TestExtractScenarios_MalformedScenarioHeaders
+--- PASS: TestExtractScenarios_MalformedScenarioHeaders (0.00s)
+=== RUN   TestExtractRequirements_MultipleScenarios
+--- PASS: TestExtractRequirements_MultipleScenarios (0.00s)
+=== RUN   TestExtractTitle
+=== RUN   TestExtractTitle/Change_with_prefix
+=== RUN   TestExtractTitle/Spec_with_prefix
+=== RUN   TestExtractTitle/No_prefix
+=== RUN   TestExtractTitle/Multiple_headings
+=== RUN   TestExtractTitle/Extra_whitespace
+--- PASS: TestExtractTitle (0.00s)
+    --- PASS: TestExtractTitle/Change_with_prefix (0.00s)
+    --- PASS: TestExtractTitle/Spec_with_prefix (0.00s)
+    --- PASS: TestExtractTitle/No_prefix (0.00s)
+    --- PASS: TestExtractTitle/Multiple_headings (0.00s)
+    --- PASS: TestExtractTitle/Extra_whitespace (0.00s)
+=== RUN   TestExtractTitle_NoHeading
+--- PASS: TestExtractTitle_NoHeading (0.00s)
+=== RUN   TestCountTasks
+=== RUN   TestCountTasks/Mixed_tasks
+=== RUN   TestCountTasks/All_completed
+=== RUN   TestCountTasks/All_incomplete
+=== RUN   TestCountTasks/With_indentation
+=== RUN   TestCountTasks/Mixed_content
+--- PASS: TestCountTasks (0.00s)
+    --- PASS: TestCountTasks/Mixed_tasks (0.00s)
+    --- PASS: TestCountTasks/All_completed (0.00s)
+    --- PASS: TestCountTasks/All_incomplete (0.00s)
+    --- PASS: TestCountTasks/With_indentation (0.00s)
+    --- PASS: TestCountTasks/Mixed_content (0.00s)
+=== RUN   TestCountTasks_MissingFile
+--- PASS: TestCountTasks_MissingFile (0.00s)
+=== RUN   TestCountDeltas
+--- PASS: TestCountDeltas (0.00s)
+=== RUN   TestCountDeltas_NoSpecs
+--- PASS: TestCountDeltas_NoSpecs (0.00s)
+=== RUN   TestCountRequirements
+--- PASS: TestCountRequirements (0.00s)
+=== RUN   TestCountRequirements_NoRequirements
+--- PASS: TestCountRequirements_NoRequirements (0.00s)
+=== RUN   TestParseRequirements
+=== RUN   TestParseRequirements/Single_requirement_with_scenario
+=== RUN   TestParseRequirements/Multiple_requirements
+=== RUN   TestParseRequirements/Requirements_with_multiple_scenarios
+=== RUN   TestParseRequirements/No_requirements
+--- PASS: TestParseRequirements (0.00s)
+    --- PASS: TestParseRequirements/Single_requirement_with_scenario (0.00s)
+    --- PASS: TestParseRequirements/Multiple_requirements (0.00s)
+    --- PASS: TestParseRequirements/Requirements_with_multiple_scenarios (0.00s)
+    --- PASS: TestParseRequirements/No_requirements (0.00s)
+=== RUN   TestParseRequirements_MultipleH2Sections
+--- PASS: TestParseRequirements_MultipleH2Sections (0.00s)
+=== RUN   TestParseScenarios
+=== RUN   TestParseScenarios/Single_scenario
+=== RUN   TestParseScenarios/Multiple_scenarios
+=== RUN   TestParseScenarios/No_scenarios
+=== RUN   TestParseScenarios/Scenario_with_extra_whitespace
+--- PASS: TestParseScenarios (0.00s)
+    --- PASS: TestParseScenarios/Single_scenario (0.00s)
+    --- PASS: TestParseScenarios/Multiple_scenarios (0.00s)
+    --- PASS: TestParseScenarios/No_scenarios (0.00s)
+    --- PASS: TestParseScenarios/Scenario_with_extra_whitespace (0.00s)
+=== RUN   TestNormalizeRequirementName
+=== RUN   TestNormalizeRequirementName/Feature_One
+=== RUN   TestNormalizeRequirementName/__Feature_One__
+=== RUN   TestNormalizeRequirementName/FEATURE_ONE
+=== RUN   TestNormalizeRequirementName/feature_one
+=== RUN   TestNormalizeRequirementName/_Feature_One_
+--- PASS: TestNormalizeRequirementName (0.00s)
+    --- PASS: TestNormalizeRequirementName/Feature_One (0.00s)
+    --- PASS: TestNormalizeRequirementName/__Feature_One__ (0.00s)
+    --- PASS: TestNormalizeRequirementName/FEATURE_ONE (0.00s)
+    --- PASS: TestNormalizeRequirementName/feature_one (0.00s)
+    --- PASS: TestNormalizeRequirementName/_Feature_One_ (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/parsers	(cached)
+=== RUN   TestValidateChangeDeltaSpecs_ValidAddedRequirements
+--- PASS: TestValidateChangeDeltaSpecs_ValidAddedRequirements (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_ValidModifiedRequirements
+--- PASS: TestValidateChangeDeltaSpecs_ValidModifiedRequirements (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_ValidRemovedRequirements
+--- PASS: TestValidateChangeDeltaSpecs_ValidRemovedRequirements (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_ValidRenamedRequirements
+--- PASS: TestValidateChangeDeltaSpecs_ValidRenamedRequirements (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_MultipleSpecFiles
+--- PASS: TestValidateChangeDeltaSpecs_MultipleSpecFiles (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_NoDeltas
+--- PASS: TestValidateChangeDeltaSpecs_NoDeltas (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_EmptyDeltaSections
+--- PASS: TestValidateChangeDeltaSpecs_EmptyDeltaSections (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_AddedWithoutShallMust
+--- PASS: TestValidateChangeDeltaSpecs_AddedWithoutShallMust (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_AddedWithoutScenarios
+--- PASS: TestValidateChangeDeltaSpecs_AddedWithoutScenarios (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_ModifiedWithoutShallMust
+--- PASS: TestValidateChangeDeltaSpecs_ModifiedWithoutShallMust (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_ModifiedWithoutScenarios
+--- PASS: TestValidateChangeDeltaSpecs_ModifiedWithoutScenarios (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_DuplicateRequirementNames
+--- PASS: TestValidateChangeDeltaSpecs_DuplicateRequirementNames (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_CrossSectionConflicts
+--- PASS: TestValidateChangeDeltaSpecs_CrossSectionConflicts (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_MalformedRenamedFormat
+--- PASS: TestValidateChangeDeltaSpecs_MalformedRenamedFormat (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_MissingSpecsDirectory
+--- PASS: TestValidateChangeDeltaSpecs_MissingSpecsDirectory (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_NoSpecFiles
+--- PASS: TestValidateChangeDeltaSpecs_NoSpecFiles (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_MultipleFilesWithConflicts
+--- PASS: TestValidateChangeDeltaSpecs_MultipleFilesWithConflicts (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_MalformedScenarios
+--- PASS: TestValidateChangeDeltaSpecs_MalformedScenarios (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_StrictMode
+--- PASS: TestValidateChangeDeltaSpecs_StrictMode (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_AllDeltaTypes
+--- PASS: TestValidateChangeDeltaSpecs_AllDeltaTypes (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_DuplicateRenamedFromNames
+--- PASS: TestValidateChangeDeltaSpecs_DuplicateRenamedFromNames (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_DuplicateRenamedToNames
+--- PASS: TestValidateChangeDeltaSpecs_DuplicateRenamedToNames (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber
+--- PASS: TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber (0.00s)
+=== RUN   TestFindRenamedPairLine_FindsBulletEntries
+--- PASS: TestFindRenamedPairLine_FindsBulletEntries (0.00s)
+=== RUN   TestFindPreMergeErrorLine_UsesRenamedBulletLine
+--- PASS: TestFindPreMergeErrorLine_UsesRenamedBulletLine (0.00s)
+=== RUN   TestPrintJSONReport_ValidReport
+--- PASS: TestPrintJSONReport_ValidReport (0.00s)
+=== RUN   TestPrintJSONReport_InvalidReport
+--- PASS: TestPrintJSONReport_InvalidReport (0.00s)
+=== RUN   TestPrintJSONReport_NilReport
+--- PASS: TestPrintJSONReport_NilReport (0.00s)
+=== RUN   TestPrintHumanReport_ValidReport
+--- PASS: TestPrintHumanReport_ValidReport (0.00s)
+=== RUN   TestPrintHumanReport_InvalidReport
+--- PASS: TestPrintHumanReport_InvalidReport (0.00s)
+=== RUN   TestPrintHumanReport_WithWarnings
+--- PASS: TestPrintHumanReport_WithWarnings (0.00s)
+=== RUN   TestPrintBulkJSONResults_ValidResults
+--- PASS: TestPrintBulkJSONResults_ValidResults (0.00s)
+=== RUN   TestPrintBulkJSONResults_MixedResults
+--- PASS: TestPrintBulkJSONResults_MixedResults (0.00s)
+=== RUN   TestPrintBulkJSONResults_EmptyResults
+--- PASS: TestPrintBulkJSONResults_EmptyResults (0.00s)
+=== RUN   TestPrintBulkHumanResults_AllValid
+--- PASS: TestPrintBulkHumanResults_AllValid (0.00s)
+=== RUN   TestPrintBulkHumanResults_AllInvalid
+--- PASS: TestPrintBulkHumanResults_AllInvalid (0.00s)
+=== RUN   TestPrintBulkHumanResults_MixedResults
+--- PASS: TestPrintBulkHumanResults_MixedResults (0.00s)
+=== RUN   TestPrintBulkHumanResults_EmptyResults
+--- PASS: TestPrintBulkHumanResults_EmptyResults (0.00s)
+=== RUN   TestPrintBulkHumanResults_DetailedIssues
+--- PASS: TestPrintBulkHumanResults_DetailedIssues (0.00s)
+=== RUN   TestPrintBulkHumanResults_ErrorOnly
+--- PASS: TestPrintBulkHumanResults_ErrorOnly (0.00s)
+=== RUN   TestBulkResult_JSONSerialization
+--- PASS: TestBulkResult_JSONSerialization (0.00s)
+=== RUN   TestBulkResult_JSONOmitEmpty
+--- PASS: TestBulkResult_JSONOmitEmpty (0.00s)
+=== RUN   TestPrintHumanReport_SpecialCharacters
+--- PASS: TestPrintHumanReport_SpecialCharacters (0.00s)
+=== RUN   TestPrintBulkHumanResults_LargeNumberOfResults
+--- PASS: TestPrintBulkHumanResults_LargeNumberOfResults (0.00s)
+=== RUN   TestDetermineItemType_ChangeOnly
+--- PASS: TestDetermineItemType_ChangeOnly (0.00s)
+=== RUN   TestDetermineItemType_SpecOnly
+--- PASS: TestDetermineItemType_SpecOnly (0.00s)
+=== RUN   TestDetermineItemType_BothExists
+--- PASS: TestDetermineItemType_BothExists (0.00s)
+=== RUN   TestDetermineItemType_NotFound
+--- PASS: TestDetermineItemType_NotFound (0.00s)
+=== RUN   TestDetermineItemType_ExplicitTypeChange
+--- PASS: TestDetermineItemType_ExplicitTypeChange (0.00s)
+=== RUN   TestDetermineItemType_ExplicitTypeSpec
+--- PASS: TestDetermineItemType_ExplicitTypeSpec (0.00s)
+=== RUN   TestDetermineItemType_ExplicitTypeOverridesBoth
+--- PASS: TestDetermineItemType_ExplicitTypeOverridesBoth (0.00s)
+=== RUN   TestDetermineItemType_ExplicitTypeNotFound
+--- PASS: TestDetermineItemType_ExplicitTypeNotFound (0.00s)
+=== RUN   TestDetermineItemType_ExplicitTypeWrongType
+--- PASS: TestDetermineItemType_ExplicitTypeWrongType (0.00s)
+=== RUN   TestDetermineItemType_DiscoveryFailure
+--- PASS: TestDetermineItemType_DiscoveryFailure (0.00s)
+=== RUN   TestValidateItemByType_Change
+--- PASS: TestValidateItemByType_Change (0.00s)
+=== RUN   TestValidateItemByType_Spec
+--- PASS: TestValidateItemByType_Spec (0.00s)
+=== RUN   TestValidateItemByType_InvalidChange
+--- PASS: TestValidateItemByType_InvalidChange (0.00s)
+=== RUN   TestValidateSingleItem_Change
+--- PASS: TestValidateSingleItem_Change (0.00s)
+=== RUN   TestValidateSingleItem_Spec
+--- PASS: TestValidateSingleItem_Spec (0.00s)
+=== RUN   TestValidateSingleItem_ValidationError
+--- PASS: TestValidateSingleItem_ValidationError (0.00s)
+=== RUN   TestValidateSingleItem_InvalidContent
+--- PASS: TestValidateSingleItem_InvalidContent (0.00s)
+=== RUN   TestContainsString
+=== RUN   TestContainsString/found_at_start
+=== RUN   TestContainsString/found_in_middle
+=== RUN   TestContainsString/found_at_end
+=== RUN   TestContainsString/not_found
+=== RUN   TestContainsString/empty_string
+=== RUN   TestContainsString/empty_slice
+--- PASS: TestContainsString (0.00s)
+    --- PASS: TestContainsString/found_at_start (0.00s)
+    --- PASS: TestContainsString/found_in_middle (0.00s)
+    --- PASS: TestContainsString/found_at_end (0.00s)
+    --- PASS: TestContainsString/not_found (0.00s)
+    --- PASS: TestContainsString/empty_string (0.00s)
+    --- PASS: TestContainsString/empty_slice (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_AddedRequirementAlreadyExistsInBase
+--- PASS: TestValidateChangeDeltaSpecs_AddedRequirementAlreadyExistsInBase (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_ModifiedRequirementDoesNotExistInBase
+--- PASS: TestValidateChangeDeltaSpecs_ModifiedRequirementDoesNotExistInBase (0.00s)
+=== RUN   TestValidateChangeDeltaSpecs_ValidBaseSpecValidation
+--- PASS: TestValidateChangeDeltaSpecs_ValidBaseSpecValidation (0.00s)
+=== RUN   TestMenuModel_Init
+--- PASS: TestMenuModel_Init (0.00s)
+=== RUN   TestMenuModel_Update_Quit
+=== RUN   TestMenuModel_Update_Quit/quit_with_q
+=== RUN   TestMenuModel_Update_Quit/quit_with_ctrl+c
+=== RUN   TestMenuModel_Update_Quit/quit_with_esc
+--- PASS: TestMenuModel_Update_Quit (0.00s)
+    --- PASS: TestMenuModel_Update_Quit/quit_with_q (0.00s)
+    --- PASS: TestMenuModel_Update_Quit/quit_with_ctrl+c (0.00s)
+    --- PASS: TestMenuModel_Update_Quit/quit_with_esc (0.00s)
+=== RUN   TestMenuModel_Update_Navigation
+--- PASS: TestMenuModel_Update_Navigation (0.00s)
+=== RUN   TestMenuModel_Update_NavigationBounds
+--- PASS: TestMenuModel_Update_NavigationBounds (0.00s)
+=== RUN   TestMenuModel_View
+--- PASS: TestMenuModel_View (0.00s)
+=== RUN   TestMenuModel_View_Quitting
+--- PASS: TestMenuModel_View_Quitting (0.00s)
+=== RUN   TestMenuModel_View_Cursor
+--- PASS: TestMenuModel_View_Cursor (0.00s)
+=== RUN   TestItemPickerModel_Init
+--- PASS: TestItemPickerModel_Init (0.00s)
+=== RUN   TestItemPickerModel_Update_Quit
+=== RUN   TestItemPickerModel_Update_Quit/quit_with_q
+=== RUN   TestItemPickerModel_Update_Quit/quit_with_ctrl+c
+=== RUN   TestItemPickerModel_Update_Quit/quit_with_esc
+--- PASS: TestItemPickerModel_Update_Quit (0.00s)
+    --- PASS: TestItemPickerModel_Update_Quit/quit_with_q (0.00s)
+    --- PASS: TestItemPickerModel_Update_Quit/quit_with_ctrl+c (0.00s)
+    --- PASS: TestItemPickerModel_Update_Quit/quit_with_esc (0.00s)
+=== RUN   TestItemPickerModel_View
+--- PASS: TestItemPickerModel_View (0.00s)
+=== RUN   TestItemPickerModel_View_Quitting
+--- PASS: TestItemPickerModel_View_Quitting (0.00s)
+=== RUN   TestRunInteractiveValidation_NotTTY
+--- PASS: TestRunInteractiveValidation_NotTTY (0.00s)
+=== RUN   TestValidateItems
+--- PASS: TestValidateItems (0.00s)
+=== RUN   TestValidateItems_MultipleItems
+--- PASS: TestValidateItems_MultipleItems (0.00s)
+=== RUN   TestValidateItems_WithFailures
+--- PASS: TestValidateItems_WithFailures (0.00s)
+=== RUN   TestValidateItems_EmptyList
+--- PASS: TestValidateItems_EmptyList (0.00s)
+=== RUN   TestTruncateString
+=== RUN   TestTruncateString/shorter_than_max
+=== RUN   TestTruncateString/equal_to_max
+=== RUN   TestTruncateString/longer_than_max
+=== RUN   TestTruncateString/maxLen_less_than_ellipsis_length
+=== RUN   TestTruncateString/empty_string
+=== RUN   TestTruncateString/path_truncation
+--- PASS: TestTruncateString (0.00s)
+    --- PASS: TestTruncateString/shorter_than_max (0.00s)
+    --- PASS: TestTruncateString/equal_to_max (0.00s)
+    --- PASS: TestTruncateString/longer_than_max (0.00s)
+    --- PASS: TestTruncateString/maxLen_less_than_ellipsis_length (0.00s)
+    --- PASS: TestTruncateString/empty_string (0.00s)
+    --- PASS: TestTruncateString/path_truncation (0.00s)
+=== RUN   TestApplyTableStyles
+--- PASS: TestApplyTableStyles (0.00s)
+=== RUN   TestValidationResultMsg
+--- PASS: TestValidationResultMsg (0.00s)
+=== RUN   TestValidationResultMsg_WithError
+--- PASS: TestValidationResultMsg_WithError (0.00s)
+=== RUN   TestMenuModel_Update_ValidationResult
+✓ test (spec)
+
+1 passed, 0 failed, 1 total
+--- PASS: TestMenuModel_Update_ValidationResult (0.00s)
+=== RUN   TestMenuModel_Update_ValidationResultWithError
+Validation error: test error
+--- PASS: TestMenuModel_Update_ValidationResultWithError (0.00s)
+=== RUN   TestItemPickerModel_Update_ValidationResult
+✓ test (spec)
+
+1 passed, 0 failed, 1 total
+--- PASS: TestItemPickerModel_Update_ValidationResult (0.00s)
+=== RUN   TestMenuModel_HandleSelection_PickItem
+--- PASS: TestMenuModel_HandleSelection_PickItem (0.00s)
+=== RUN   TestMenuModel_HandleSelection_NoItems
+No items to validate
+--- PASS: TestMenuModel_HandleSelection_NoItems (0.00s)
+=== RUN   TestConstants
+--- PASS: TestConstants (0.00s)
+=== RUN   TestMenuModel_View_AllChoices
+--- PASS: TestMenuModel_View_AllChoices (0.00s)
+=== RUN   TestTruncateString_ExactBoundary
+--- PASS: TestTruncateString_ExactBoundary (0.00s)
+=== RUN   TestCreateValidationItems_Changes
+--- PASS: TestCreateValidationItems_Changes (0.00s)
+=== RUN   TestCreateValidationItems_Specs
+--- PASS: TestCreateValidationItems_Specs (0.00s)
+=== RUN   TestCreateValidationItems_EmptyList
+--- PASS: TestCreateValidationItems_EmptyList (0.00s)
+=== RUN   TestCreateValidationItems_PathConstruction
+=== RUN   TestCreateValidationItems_PathConstruction/change_path
+=== RUN   TestCreateValidationItems_PathConstruction/spec_path
+=== RUN   TestCreateValidationItems_PathConstruction/change_with_complex_id
+--- PASS: TestCreateValidationItems_PathConstruction (0.00s)
+    --- PASS: TestCreateValidationItems_PathConstruction/change_path (0.00s)
+    --- PASS: TestCreateValidationItems_PathConstruction/spec_path (0.00s)
+    --- PASS: TestCreateValidationItems_PathConstruction/change_with_complex_id (0.00s)
+=== RUN   TestGetAllItems
+--- PASS: TestGetAllItems (0.00s)
+=== RUN   TestGetAllItems_EmptyProject
+--- PASS: TestGetAllItems_EmptyProject (0.00s)
+=== RUN   TestGetAllItems_OnlyChanges
+--- PASS: TestGetAllItems_OnlyChanges (0.00s)
+=== RUN   TestGetAllItems_OnlySpecs
+--- PASS: TestGetAllItems_OnlySpecs (0.00s)
+=== RUN   TestGetAllItems_DiscoveryError
+--- PASS: TestGetAllItems_DiscoveryError (0.00s)
+=== RUN   TestGetChangeItems
+--- PASS: TestGetChangeItems (0.00s)
+=== RUN   TestGetChangeItems_Empty
+--- PASS: TestGetChangeItems_Empty (0.00s)
+=== RUN   TestGetChangeItems_PathConstruction
+--- PASS: TestGetChangeItems_PathConstruction (0.00s)
+=== RUN   TestGetSpecItems
+--- PASS: TestGetSpecItems (0.00s)
+=== RUN   TestGetSpecItems_Empty
+--- PASS: TestGetSpecItems_Empty (0.00s)
+=== RUN   TestGetSpecItems_PathConstruction
+--- PASS: TestGetSpecItems_PathConstruction (0.00s)
+=== RUN   TestValidationItem_Structure
+--- PASS: TestValidationItem_Structure (0.00s)
+=== RUN   TestGetChangeItems_DiscoveryFailure
+--- PASS: TestGetChangeItems_DiscoveryFailure (0.00s)
+=== RUN   TestGetSpecItems_DiscoveryFailure
+--- PASS: TestGetSpecItems_DiscoveryFailure (0.00s)
+=== RUN   TestGetAllItems_OrderConsistency
+--- PASS: TestGetAllItems_OrderConsistency (0.00s)
+=== RUN   TestCreateValidationItems_PreservesOrder
+--- PASS: TestCreateValidationItems_PreservesOrder (0.00s)
+=== RUN   TestGetChangeItems_WithArchive
+--- PASS: TestGetChangeItems_WithArchive (0.00s)
+=== RUN   TestGetChangeItems_WithHidden
+--- PASS: TestGetChangeItems_WithHidden (0.00s)
+=== RUN   TestGetSpecItems_WithHidden
+--- PASS: TestGetSpecItems_WithHidden (0.00s)
+=== RUN   TestExtractSections
+=== RUN   TestExtractSections/valid_markdown_with_multiple_sections
+=== RUN   TestExtractSections/single_section
+=== RUN   TestExtractSections/empty_content
+=== RUN   TestExtractSections/no_sections
+=== RUN   TestExtractSections/section_with_trailing_whitespace
+=== RUN   TestExtractSections/section_stops_at_next_section
+--- PASS: TestExtractSections (0.00s)
+    --- PASS: TestExtractSections/valid_markdown_with_multiple_sections (0.00s)
+    --- PASS: TestExtractSections/single_section (0.00s)
+    --- PASS: TestExtractSections/empty_content (0.00s)
+    --- PASS: TestExtractSections/no_sections (0.00s)
+    --- PASS: TestExtractSections/section_with_trailing_whitespace (0.00s)
+    --- PASS: TestExtractSections/section_stops_at_next_section (0.00s)
+=== RUN   TestExtractRequirements
+=== RUN   TestExtractRequirements/single_requirement_with_scenario
+=== RUN   TestExtractRequirements/multiple_requirements
+=== RUN   TestExtractRequirements/requirement_without_scenario
+=== RUN   TestExtractRequirements/empty_content
+=== RUN   TestExtractRequirements/requirement_with_multiple_scenarios
+=== RUN   TestExtractRequirements/requirement_stops_at_section_boundary
+=== RUN   TestExtractRequirements/malformed_requirement_header_ignored
+--- PASS: TestExtractRequirements (0.00s)
+    --- PASS: TestExtractRequirements/single_requirement_with_scenario (0.00s)
+    --- PASS: TestExtractRequirements/multiple_requirements (0.00s)
+    --- PASS: TestExtractRequirements/requirement_without_scenario (0.00s)
+    --- PASS: TestExtractRequirements/empty_content (0.00s)
+    --- PASS: TestExtractRequirements/requirement_with_multiple_scenarios (0.00s)
+    --- PASS: TestExtractRequirements/requirement_stops_at_section_boundary (0.00s)
+    --- PASS: TestExtractRequirements/malformed_requirement_header_ignored (0.00s)
+=== RUN   TestExtractScenarios
+=== RUN   TestExtractScenarios/single_scenario
+=== RUN   TestExtractScenarios/multiple_scenarios
+=== RUN   TestExtractScenarios/no_scenarios
+=== RUN   TestExtractScenarios/empty_content
+=== RUN   TestExtractScenarios/scenario_with_complex_content
+=== RUN   TestExtractScenarios/scenario_stops_at_requirement_boundary
+=== RUN   TestExtractScenarios/scenario_with_trailing_whitespace
+--- PASS: TestExtractScenarios (0.00s)
+    --- PASS: TestExtractScenarios/single_scenario (0.00s)
+    --- PASS: TestExtractScenarios/multiple_scenarios (0.00s)
+    --- PASS: TestExtractScenarios/no_scenarios (0.00s)
+    --- PASS: TestExtractScenarios/empty_content (0.00s)
+    --- PASS: TestExtractScenarios/scenario_with_complex_content (0.00s)
+    --- PASS: TestExtractScenarios/scenario_stops_at_requirement_boundary (0.00s)
+    --- PASS: TestExtractScenarios/scenario_with_trailing_whitespace (0.00s)
+=== RUN   TestContainsShallOrMust
+=== RUN   TestContainsShallOrMust/contains_SHALL
+=== RUN   TestContainsShallOrMust/contains_MUST
+=== RUN   TestContainsShallOrMust/contains_shall_lowercase
+=== RUN   TestContainsShallOrMust/contains_must_lowercase
+=== RUN   TestContainsShallOrMust/contains_SHALL_mixed_case
+=== RUN   TestContainsShallOrMust/contains_neither
+=== RUN   TestContainsShallOrMust/empty_text
+=== RUN   TestContainsShallOrMust/partial_match_not_counted
+=== RUN   TestContainsShallOrMust/word_boundary_respected
+=== RUN   TestContainsShallOrMust/multiple_occurrences
+--- PASS: TestContainsShallOrMust (0.00s)
+    --- PASS: TestContainsShallOrMust/contains_SHALL (0.00s)
+    --- PASS: TestContainsShallOrMust/contains_MUST (0.00s)
+    --- PASS: TestContainsShallOrMust/contains_shall_lowercase (0.00s)
+    --- PASS: TestContainsShallOrMust/contains_must_lowercase (0.00s)
+    --- PASS: TestContainsShallOrMust/contains_SHALL_mixed_case (0.00s)
+    --- PASS: TestContainsShallOrMust/contains_neither (0.00s)
+    --- PASS: TestContainsShallOrMust/empty_text (0.00s)
+    --- PASS: TestContainsShallOrMust/partial_match_not_counted (0.00s)
+    --- PASS: TestContainsShallOrMust/word_boundary_respected (0.00s)
+    --- PASS: TestContainsShallOrMust/multiple_occurrences (0.00s)
+=== RUN   TestNormalizeRequirementName
+=== RUN   TestNormalizeRequirementName/basic_normalization
+=== RUN   TestNormalizeRequirementName/leading_whitespace
+=== RUN   TestNormalizeRequirementName/trailing_whitespace
+=== RUN   TestNormalizeRequirementName/multiple_spaces
+=== RUN   TestNormalizeRequirementName/mixed_whitespace
+=== RUN   TestNormalizeRequirementName/already_normalized
+=== RUN   TestNormalizeRequirementName/empty_string
+=== RUN   TestNormalizeRequirementName/only_whitespace
+=== RUN   TestNormalizeRequirementName/special_characters_preserved
+=== RUN   TestNormalizeRequirementName/tabs_and_newlines
+--- PASS: TestNormalizeRequirementName (0.00s)
+    --- PASS: TestNormalizeRequirementName/basic_normalization (0.00s)
+    --- PASS: TestNormalizeRequirementName/leading_whitespace (0.00s)
+    --- PASS: TestNormalizeRequirementName/trailing_whitespace (0.00s)
+    --- PASS: TestNormalizeRequirementName/multiple_spaces (0.00s)
+    --- PASS: TestNormalizeRequirementName/mixed_whitespace (0.00s)
+    --- PASS: TestNormalizeRequirementName/already_normalized (0.00s)
+    --- PASS: TestNormalizeRequirementName/empty_string (0.00s)
+    --- PASS: TestNormalizeRequirementName/only_whitespace (0.00s)
+    --- PASS: TestNormalizeRequirementName/special_characters_preserved (0.00s)
+    --- PASS: TestNormalizeRequirementName/tabs_and_newlines (0.00s)
+=== RUN   TestFullSpecParsing
+--- PASS: TestFullSpecParsing (0.00s)
+=== RUN   TestDuplicateDetectionViaNormalization
+--- PASS: TestDuplicateDetectionViaNormalization (0.00s)
+=== RUN   TestMalformedMarkdownGracefulHandling
+--- PASS: TestMalformedMarkdownGracefulHandling (0.00s)
+=== RUN   TestValidateSpecFile_ValidSpec
+--- PASS: TestValidateSpecFile_ValidSpec (0.00s)
+=== RUN   TestValidateSpecFile_MissingPurpose
+--- PASS: TestValidateSpecFile_MissingPurpose (0.00s)
+=== RUN   TestValidateSpecFile_MissingRequirements
+--- PASS: TestValidateSpecFile_MissingRequirements (0.00s)
+=== RUN   TestValidateSpecFile_PurposeTooShort
+--- PASS: TestValidateSpecFile_PurposeTooShort (0.00s)
+=== RUN   TestValidateSpecFile_RequirementWithoutShallOrMust
+--- PASS: TestValidateSpecFile_RequirementWithoutShallOrMust (0.00s)
+=== RUN   TestValidateSpecFile_RequirementWithoutScenarios
+--- PASS: TestValidateSpecFile_RequirementWithoutScenarios (0.00s)
+=== RUN   TestValidateSpecFile_InvalidScenarioFormat
+--- PASS: TestValidateSpecFile_InvalidScenarioFormat (0.00s)
+=== RUN   TestValidateSpecFile_StrictMode
+--- PASS: TestValidateSpecFile_StrictMode (0.00s)
+=== RUN   TestValidateSpecFile_FileNotFound
+--- PASS: TestValidateSpecFile_FileNotFound (0.00s)
+=== RUN   TestValidateSpecFile_MultipleIssues
+--- PASS: TestValidateSpecFile_MultipleIssues (0.00s)
+=== RUN   TestValidateSpecFile_BoldScenarioFormat
+--- PASS: TestValidateSpecFile_BoldScenarioFormat (0.00s)
+=== RUN   TestValidateSpecFile_BulletScenarioFormat
+--- PASS: TestValidateSpecFile_BulletScenarioFormat (0.00s)
+=== RUN   TestLineNumbersAreTracked
+    test_line_numbers_test.go:58: Issue at line 3: ERROR - ADDED requirement must contain SHALL or MUST
+    test_line_numbers_test.go:58: Issue at line 3: ERROR - ADDED requirement must have at least one scenario
+    test_line_numbers_test.go:58: Issue at line 6: ERROR - Scenarios must use '#### Scenario:' format (4 hashtags followed by 'Scenario:')
+--- PASS: TestLineNumbersAreTracked (0.00s)
+=== RUN   TestValidationLevel_Constants
+=== RUN   TestValidationLevel_Constants/Error_level
+=== RUN   TestValidationLevel_Constants/Warning_level
+=== RUN   TestValidationLevel_Constants/Info_level
+--- PASS: TestValidationLevel_Constants (0.00s)
+    --- PASS: TestValidationLevel_Constants/Error_level (0.00s)
+    --- PASS: TestValidationLevel_Constants/Warning_level (0.00s)
+    --- PASS: TestValidationLevel_Constants/Info_level (0.00s)
+=== RUN   TestValidationIssue_JSONMarshaling
+--- PASS: TestValidationIssue_JSONMarshaling (0.00s)
+=== RUN   TestValidationIssue_JSONStructure
+--- PASS: TestValidationIssue_JSONStructure (0.00s)
+=== RUN   TestValidationSummary_JSONMarshaling
+--- PASS: TestValidationSummary_JSONMarshaling (0.00s)
+=== RUN   TestValidationReport_JSONMarshaling
+--- PASS: TestValidationReport_JSONMarshaling (0.00s)
+=== RUN   TestValidationReport_CompleteJSONRoundTrip
+--- PASS: TestValidationReport_CompleteJSONRoundTrip (0.00s)
+=== RUN   TestNewValidationReport_EmptyIssues
+--- PASS: TestNewValidationReport_EmptyIssues (0.00s)
+=== RUN   TestNewValidationReport_WithErrors
+--- PASS: TestNewValidationReport_WithErrors (0.00s)
+=== RUN   TestNewValidationReport_OnlyWarnings
+--- PASS: TestNewValidationReport_OnlyWarnings (0.00s)
+=== RUN   TestNewValidationReport_MixedIssues
+--- PASS: TestNewValidationReport_MixedIssues (0.00s)
+=== RUN   TestValidationReport_NilIssues
+--- PASS: TestValidationReport_NilIssues (0.00s)
+=== RUN   TestValidationReport_JSONWithNilIssues
+--- PASS: TestValidationReport_JSONWithNilIssues (0.00s)
+=== RUN   TestNewValidator
+=== RUN   TestNewValidator/strict_mode_enabled
+=== RUN   TestNewValidator/strict_mode_disabled
+--- PASS: TestNewValidator (0.00s)
+    --- PASS: TestNewValidator/strict_mode_enabled (0.00s)
+    --- PASS: TestNewValidator/strict_mode_disabled (0.00s)
+=== RUN   TestValidator_ValidateSpec_ValidSpec
+=== RUN   TestValidator_ValidateSpec_ValidSpec/non-strict_mode
+=== RUN   TestValidator_ValidateSpec_ValidSpec/strict_mode
+--- PASS: TestValidator_ValidateSpec_ValidSpec (0.00s)
+    --- PASS: TestValidator_ValidateSpec_ValidSpec/non-strict_mode (0.00s)
+    --- PASS: TestValidator_ValidateSpec_ValidSpec/strict_mode (0.00s)
+=== RUN   TestValidator_ValidateSpec_InvalidSpec
+=== RUN   TestValidator_ValidateSpec_InvalidSpec/non-strict_mode
+=== RUN   TestValidator_ValidateSpec_InvalidSpec/strict_mode
+--- PASS: TestValidator_ValidateSpec_InvalidSpec (0.00s)
+    --- PASS: TestValidator_ValidateSpec_InvalidSpec/non-strict_mode (0.00s)
+    --- PASS: TestValidator_ValidateSpec_InvalidSpec/strict_mode (0.00s)
+=== RUN   TestValidator_ValidateSpec_WarningsInStrictMode
+=== RUN   TestValidator_ValidateSpec_WarningsInStrictMode/non-strict_mode_allows_warnings
+=== RUN   TestValidator_ValidateSpec_WarningsInStrictMode/strict_mode_treats_warnings_as_errors
+--- PASS: TestValidator_ValidateSpec_WarningsInStrictMode (0.00s)
+    --- PASS: TestValidator_ValidateSpec_WarningsInStrictMode/non-strict_mode_allows_warnings (0.00s)
+    --- PASS: TestValidator_ValidateSpec_WarningsInStrictMode/strict_mode_treats_warnings_as_errors (0.00s)
+=== RUN   TestValidator_ValidateChange_ValidChange
+=== RUN   TestValidator_ValidateChange_ValidChange/non-strict_mode
+=== RUN   TestValidator_ValidateChange_ValidChange/strict_mode
+--- PASS: TestValidator_ValidateChange_ValidChange (0.00s)
+    --- PASS: TestValidator_ValidateChange_ValidChange/non-strict_mode (0.00s)
+    --- PASS: TestValidator_ValidateChange_ValidChange/strict_mode (0.00s)
+=== RUN   TestValidator_ValidateChange_InvalidChange
+=== RUN   TestValidator_ValidateChange_InvalidChange/non-strict_mode
+=== RUN   TestValidator_ValidateChange_InvalidChange/strict_mode
+--- PASS: TestValidator_ValidateChange_InvalidChange (0.00s)
+    --- PASS: TestValidator_ValidateChange_InvalidChange/non-strict_mode (0.00s)
+    --- PASS: TestValidator_ValidateChange_InvalidChange/strict_mode (0.00s)
+=== RUN   TestValidator_ValidateChange_MissingSpecsDir
+--- PASS: TestValidator_ValidateChange_MissingSpecsDir (0.00s)
+=== RUN   TestValidator_ValidateSpec_NonexistentFile
+--- PASS: TestValidator_ValidateSpec_NonexistentFile (0.00s)
+=== RUN   TestValidator_CreateReport
+=== RUN   TestValidator_CreateReport/no_issues
+=== RUN   TestValidator_CreateReport/errors_present
+=== RUN   TestValidator_CreateReport/warnings_in_non-strict_mode
+=== RUN   TestValidator_CreateReport/mixed_issues
+--- PASS: TestValidator_CreateReport (0.00s)
+    --- PASS: TestValidator_CreateReport/no_issues (0.00s)
+    --- PASS: TestValidator_CreateReport/errors_present (0.00s)
+    --- PASS: TestValidator_CreateReport/warnings_in_non-strict_mode (0.00s)
+    --- PASS: TestValidator_CreateReport/mixed_issues (0.00s)
+=== RUN   TestValidator_IntegrationWithMultipleCapabilities
+--- PASS: TestValidator_IntegrationWithMultipleCapabilities (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/validation	(cached)
+=== RUN   TestCollectData
+    dashboard_test.go:87: Dashboard data collected successfully:
+    dashboard_test.go:88:   Specs: 7 (with 103 requirements)
+    dashboard_test.go:93:   Active Changes: 2
+    dashboard_test.go:95:     - add-version-subcommand: 0/27 tasks (0%)
+    dashboard_test.go:95:     - replace-regex-parser: 24/53 tasks (45%)
+    dashboard_test.go:103:   Completed Changes: 2
+    dashboard_test.go:105:     - add-naming-philosophy-note
+    dashboard_test.go:105:     - add-spectr-action-link
+    dashboard_test.go:107:   Tasks: 24/80 completed
+--- PASS: TestCollectData (0.00s)
+=== RUN   TestCalculatePercentage
+=== RUN   TestCalculatePercentage/Zero_total
+=== RUN   TestCalculatePercentage/Zero_completed
+=== RUN   TestCalculatePercentage/Half_completed
+=== RUN   TestCalculatePercentage/All_completed
+=== RUN   TestCalculatePercentage/One_third
+=== RUN   TestCalculatePercentage/Two_thirds
+--- PASS: TestCalculatePercentage (0.00s)
+    --- PASS: TestCalculatePercentage/Zero_total (0.00s)
+    --- PASS: TestCalculatePercentage/Zero_completed (0.00s)
+    --- PASS: TestCalculatePercentage/Half_completed (0.00s)
+    --- PASS: TestCalculatePercentage/All_completed (0.00s)
+    --- PASS: TestCalculatePercentage/One_third (0.00s)
+    --- PASS: TestCalculatePercentage/Two_thirds (0.00s)
+=== RUN   TestCollectData_EmptyProject
+    dashboard_test.go:190: Empty project correctly handled with all zero metrics
+--- PASS: TestCollectData_EmptyProject (0.00s)
+=== RUN   TestCollectData_OnlyActiveChanges
+    dashboard_test.go:261: Project with only active changes correctly handled
+--- PASS: TestCollectData_OnlyActiveChanges (0.00s)
+=== RUN   TestCollectData_OnlyCompletedChanges
+    dashboard_test.go:334: Project with only completed changes correctly handled
+--- PASS: TestCollectData_OnlyCompletedChanges (0.00s)
+=== RUN   TestCollectData_ChangeWithZeroTasks
+    dashboard_test.go:401: Change with zero tasks correctly categorized as completed
+--- PASS: TestCollectData_ChangeWithZeroTasks (0.00s)
+=== RUN   TestFormatDashboardText_VisualDemo
+
+================================================================================
+DASHBOARD OUTPUT DEMO
+================================================================================
+Spectr Dashboard
+
+════════════════════════════════════════════════════════════════
+
+Summary:
+   ● Specifications: 5 specs, 42 requirements
+   ● Active Changes: 2 in progress
+   ● Completed Changes: 1
+   ● Task Progress: 8/15 (53% complete)
+
+Active Changes
+────────────────────────────────────────────────────────────────
+   ◉ add-view-command             [████████░░░░░░░░░░░░] 38%
+   ◉ add-validate-command         [████████████░░░░░░░░] 60%
+
+Completed Changes
+────────────────────────────────────────────────────────────────
+   ✓ add-list-command
+
+Specifications
+────────────────────────────────────────────────────────────────
+   ▪ cli-framework                15 requirements
+   ▪ validation                   12 requirements
+
+════════════════════════════════════════════════════════════════
+
+Use spectr list --changes or spectr list --specs for detailed views
+================================================================================
+--- PASS: TestFormatDashboardText_VisualDemo (0.00s)
+=== RUN   TestFormatDashboardText_FullDashboard
+--- PASS: TestFormatDashboardText_FullDashboard (0.00s)
+=== RUN   TestFormatDashboardText_EmptyDashboard
+--- PASS: TestFormatDashboardText_EmptyDashboard (0.00s)
+=== RUN   TestFormatDashboardText_OnlyActiveChanges
+--- PASS: TestFormatDashboardText_OnlyActiveChanges (0.00s)
+=== RUN   TestFormatDashboardText_OnlyCompletedChanges
+--- PASS: TestFormatDashboardText_OnlyCompletedChanges (0.00s)
+=== RUN   TestFormatDashboardText_OnlySpecs
+--- PASS: TestFormatDashboardText_OnlySpecs (0.00s)
+=== RUN   TestFormatSummarySection
+--- PASS: TestFormatSummarySection (0.00s)
+=== RUN   TestFormatActiveChangesSection
+--- PASS: TestFormatActiveChangesSection (0.00s)
+=== RUN   TestFormatCompletedChangesSection
+--- PASS: TestFormatCompletedChangesSection (0.00s)
+=== RUN   TestFormatSpecsSection
+--- PASS: TestFormatSpecsSection (0.00s)
+=== RUN   TestFormatDashboardJSON_FullDashboard
+--- PASS: TestFormatDashboardJSON_FullDashboard (0.00s)
+=== RUN   TestFormatDashboardJSON_EmptyDashboard
+--- PASS: TestFormatDashboardJSON_EmptyDashboard (0.00s)
+=== RUN   TestFormatDashboardJSON_ValidJSON
+--- PASS: TestFormatDashboardJSON_ValidJSON (0.00s)
+=== RUN   TestRenderBarVisualDemo
+
+Progress Bar Examples:
+=====================
+
+0% Complete:                        [░░░░░░░░░░░░░░░░░░░░] 0%
+25% Complete:                       [█████░░░░░░░░░░░░░░░] 25%
+37% Complete (Design Example):      [███████░░░░░░░░░░░░░] 37%
+50% Complete:                       [██████████░░░░░░░░░░] 50%
+60% Complete (Design Example):      [████████████░░░░░░░░] 60%
+75% Complete:                       [███████████████░░░░░] 75%
+100% Complete:                      [████████████████████] 100%
+Zero Total Edge Case:               [░░░░░░░░░░░░░░░░░░░░] 0%
+3 of 8 Tasks (38%):                 [████████░░░░░░░░░░░░] 38%
+
+--- PASS: TestRenderBarVisualDemo (0.00s)
+=== RUN   TestRenderBar
+=== RUN   TestRenderBar/0%_complete
+=== RUN   TestRenderBar/25%_complete
+=== RUN   TestRenderBar/50%_complete
+=== RUN   TestRenderBar/75%_complete
+=== RUN   TestRenderBar/100%_complete
+=== RUN   TestRenderBar/37%_complete_(example_from_design)
+=== RUN   TestRenderBar/60%_complete_(example_from_design)
+=== RUN   TestRenderBar/zero_total_edge_case
+=== RUN   TestRenderBar/rounding_test_-_3/8_=_37.5%_rounds_to_38%
+--- PASS: TestRenderBar (0.00s)
+    --- PASS: TestRenderBar/0%_complete (0.00s)
+    --- PASS: TestRenderBar/25%_complete (0.00s)
+    --- PASS: TestRenderBar/50%_complete (0.00s)
+    --- PASS: TestRenderBar/75%_complete (0.00s)
+    --- PASS: TestRenderBar/100%_complete (0.00s)
+    --- PASS: TestRenderBar/37%_complete_(example_from_design) (0.00s)
+    --- PASS: TestRenderBar/60%_complete_(example_from_design) (0.00s)
+    --- PASS: TestRenderBar/zero_total_edge_case (0.00s)
+    --- PASS: TestRenderBar/rounding_test_-_3/8_=_37.5%_rounds_to_38% (0.00s)
+=== RUN   TestRenderBarEdgeCases
+=== RUN   TestRenderBarEdgeCases/negative_completed
+=== RUN   TestRenderBarEdgeCases/completed_exceeds_total
+=== RUN   TestRenderBarEdgeCases/both_zero
+=== RUN   TestRenderBarEdgeCases/large_numbers
+--- PASS: TestRenderBarEdgeCases (0.00s)
+    --- PASS: TestRenderBarEdgeCases/negative_completed (0.00s)
+    --- PASS: TestRenderBarEdgeCases/completed_exceeds_total (0.00s)
+    --- PASS: TestRenderBarEdgeCases/both_zero (0.00s)
+    --- PASS: TestRenderBarEdgeCases/large_numbers (0.00s)
+PASS
+ok  	github.com/connerohnesorge/spectr/internal/view	0.006s

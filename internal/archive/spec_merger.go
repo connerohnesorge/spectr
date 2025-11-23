@@ -191,12 +191,21 @@ func reconstructSpec(
 
 	// Find Requirements section index and extract ordering
 	reqsSectionIdx, orderedReqs := extractRequirementsSection(doc, reqMap)
+	missingRequirementsSection := reqsSectionIdx == -1
+	if missingRequirementsSection {
+		orderedReqs = collectRequirementsWithoutSection(doc, reqMap)
+	}
 
 	// Rebuild document with updated requirements
 	var result strings.Builder
 
+	preambleEnd := reqsSectionIdx
+	if missingRequirementsSection {
+		preambleEnd = len(doc.Children)
+	}
+
 	// Write everything before Requirements section
-	for i := 0; i < reqsSectionIdx && i < len(doc.Children); i++ {
+	for i := 0; i < preambleEnd && i < len(doc.Children); i++ {
 		renderNode(&result, doc.Children[i])
 	}
 
@@ -312,6 +321,42 @@ func extractRequirementsSection(
 	}
 
 	return reqsSectionIdx, ordered
+}
+
+// collectRequirementsWithoutSection orders requirements using document order when the
+// Requirements section is missing, allowing us to still merge updated requirement blocks.
+func collectRequirementsWithoutSection(
+	doc *mdparser.Document,
+	reqMap map[string]parsers.RequirementBlock,
+) []parsers.RequirementBlock {
+	var ordered []parsers.RequirementBlock
+
+	for _, node := range doc.Children {
+		header, ok := node.(*mdparser.Header)
+		if !ok || header.Level != 3 {
+			continue
+		}
+		if !strings.HasPrefix(header.Text, "Requirement: ") {
+			continue
+		}
+
+		name := strings.TrimSpace(strings.TrimPrefix(header.Text, "Requirement: "))
+		normalized := parsers.NormalizeRequirementName(name)
+
+		req, exists := reqMap[normalized]
+		if !exists {
+			continue
+		}
+
+		ordered = append(ordered, req)
+		delete(reqMap, normalized)
+	}
+
+	for _, req := range reqMap {
+		ordered = append(ordered, req)
+	}
+
+	return ordered
 }
 
 // findNextSectionAfterRequirements finds the index of the next H2 section after Requirements

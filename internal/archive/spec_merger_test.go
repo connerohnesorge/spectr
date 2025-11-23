@@ -49,6 +49,68 @@ The system SHALL support new functionality.
 	}
 }
 
+func TestMergeSpec_PreservesContentWhenNoRequirementsSection(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create base spec without a Requirements section
+	baseContent := `# Test Spec
+
+## Purpose
+Original purpose text.
+
+## Notes
+Additional notes.
+`
+	basePath := filepath.Join(tmpDir, "base.md")
+	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create delta spec with ADDED requirements
+	deltaContent := `# Delta Spec
+
+## ADDED Requirements
+
+### Requirement: Added Feature
+The system SHALL add a new capability.
+
+#### Scenario: Added behavior
+- **WHEN** a new action occurs
+- **THEN** the new capability responds
+`
+	deltaPath := filepath.Join(tmpDir, "delta.md")
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	merged, _, err := MergeSpec(basePath, deltaPath, true)
+	if err != nil {
+		t.Fatalf("MergeSpec failed: %v", err)
+	}
+
+	if !strings.Contains(merged, "## Purpose\nOriginal purpose text.") {
+		t.Error("Merged spec should preserve purpose section when missing requirements")
+	}
+	if !strings.Contains(merged, "## Notes\nAdditional notes.") {
+		t.Error("Merged spec should preserve following sections when missing requirements")
+	}
+	if !strings.Contains(merged, "### Requirement: Added Feature") {
+		t.Error("Merged spec should include added requirement")
+	}
+
+	purposeIdx := strings.Index(merged, "## Purpose")
+	notesIdx := strings.Index(merged, "## Notes")
+	reqIdx := strings.Index(merged, "## Requirements")
+
+	if purposeIdx == -1 || notesIdx == -1 || reqIdx == -1 {
+		t.Fatal("Merged spec missing expected sections")
+	}
+
+	if !(purposeIdx < notesIdx && notesIdx < reqIdx) {
+		t.Error("Requirements section should be appended after original content when missing")
+	}
+}
+
 func TestMergeSpec_ModifiedOnly_ExistingSpec(t *testing.T) {
 	tmpDir := t.TempDir()
 

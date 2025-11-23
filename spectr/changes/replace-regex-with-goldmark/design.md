@@ -57,7 +57,7 @@ Current parsing implementation uses line-by-line regex matching in three core fi
 
 ### Line Number Tracking
 
-**Decision:** Convert goldmark segment offsets to line numbers using source text
+**Decision:** Convert goldmark segment offsets to line/column/byte location using source text
 
 **Implementation:**
 ```go
@@ -71,12 +71,27 @@ func segmentToLineNumber(source []byte, segment text.Segment) int {
     // Count newlines in source[0:segment.Start]
     return bytes.Count(source[0:segment.Start], []byte("\n")) + 1
 }
+
+func segmentToColumn(source []byte, segment text.Segment) int {
+    // Find the last newline before segment.Start, then offset into the current line
+    lastNewline := bytes.LastIndex(source[:segment.Start], []byte("\n"))
+    return segment.Start - lastNewline
+}
+
+func segmentToLocation(source []byte, segment text.Segment) SourceLocation {
+    return SourceLocation{
+        LineNumber: segmentToLineNumber(source, segment),
+        Column:     segmentToColumn(source, segment),
+        ByteOffset: segment.Start,
+    }
+}
 ```
 
 **Rationale:**
 - Goldmark provides `text.Segment` with byte offsets
 - Validation errors need human-readable line numbers
 - One-time conversion cost is acceptable for error reporting
+- Column and byte offsets improve precision for error pointers in validators
 
 **Trade-off:** Small performance cost to calculate line numbers, but only needed for error cases.
 
@@ -154,18 +169,18 @@ type SourceLocation struct {
 
 ## Migration Plan
 
-### Phase 1: Foundation (Tasks 1.1-1.2)
+### Phase 1: Foundation (Tasks 1.1-1.3)
 **Deliverables:**
 - Add `github.com/yuin/goldmark` to go.mod
 - Create `internal/parsers/ast_utils.go` with utilities:
   - `ParseMarkdown(content []byte) ast.Node`
   - `FindHeading(node ast.Node, level int, text string) ast.Node`
-  - `SegmentToLineNumber(source []byte, segment text.Segment) int`
+  - `SegmentToLocation(source []byte, segment text.Segment) SourceLocation` (line, column, byte offset helpers)
   - `ExtractTextContent(node ast.Node) string`
 
 **Testing:** Unit tests for each utility function.
 
-### Phase 2: Simple Parsers (Tasks 1.3-1.4)
+### Phase 2: Simple Parsers (Tasks 2.1-2.6)
 **Deliverables:**
 - Migrate `ExtractTitle()` to AST-based implementation
 - Migrate `CountRequirements()`, `CountDeltas()`, `CountTasks()` to AST
@@ -174,7 +189,7 @@ type SourceLocation struct {
 - Run parallel tests (regex vs goldmark) to validate equivalence
 - Use existing test fixtures in parsers_test.go
 
-### Phase 3: Requirements (Tasks 1.5-1.6)
+### Phase 3: Requirements (Tasks 3.1-3.5)
 **Deliverables:**
 - Migrate `ParseRequirements()` to AST-based (update RequirementBlock)
 - Migrate `ParseScenarios()` to AST-based
@@ -183,7 +198,7 @@ type SourceLocation struct {
 - requirement_parser_test.go must pass
 - Verify line numbers in RequirementBlock.Location
 
-### Phase 4: Delta Sections (Tasks 1.7-1.9)
+### Phase 4: Delta Sections (Tasks 4.1-4.8)
 **Deliverables:**
 - Implement AST-based delta section detection
 - Parse ADDED/MODIFIED/REMOVED sections
@@ -193,7 +208,7 @@ type SourceLocation struct {
 - delta_parser_test.go must pass
 - Add tests for edge cases (code blocks with "## ADDED" inside)
 
-### Phase 5: Integration (Tasks 1.10-1.13)
+### Phase 5: Integration (Tasks 5.1-5.10)
 **Deliverables:**
 - Update consumers: archive/spec_merger.go, validation/*.go, list/lister.go, view/dashboard.go
 - Update all test files

@@ -45,6 +45,11 @@ The system SHALL count tasks in `tasks.md` files by parsing the markdown documen
 - **AND** count tasks at all nesting levels
 - **AND** correctly identify completion status for each task
 
+#### Scenario: Ignore checkbox-like text in code blocks
+- **WHEN** `tasks.md` contains fenced code blocks with lines that look like tasks (e.g., "- [x] not a task")
+- **THEN** the AST walker SHALL treat the checkbox-like text as code content
+- **AND** SHALL NOT count those lines toward total or completed task counts
+
 ### Requirement: Data Reuse from Discovery and Parsers
 The view command SHALL reuse existing discovery and parsing infrastructure to avoid code duplication, utilizing goldmark AST-based parsers with enhanced internal data structures.
 

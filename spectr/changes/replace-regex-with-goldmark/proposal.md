@@ -21,9 +21,9 @@ Current regex-based line-by-line parsing is brittle for edge cases (code blocks,
   - internal/parsers/*_test.go (3 test files)
   - internal/archive/spec_merger.go (requirement matching)
   - internal/validation/change_rules.go (delta validation)
-  - internal/validation/delta_validators.go (scenario validation)
-  - internal/list/lister.go (requirement counting)
-  - internal/view/dashboard.go (spec display)
+- internal/validation/delta_validators.go (scenario validation)
+- internal/list/lister.go (requirement counting)
+- internal/view/dashboard.go (spec display)
 - Dependencies: Add github.com/yuin/goldmark to go.mod
-- Testing: All 6 existing parser test suites must pass with goldmark implementation
+- Testing: All existing parser tests (parsers_test.go, requirement_parser_test.go, delta_parser_test.go) must pass with goldmark implementation
 - Performance: AST parsing may have different performance characteristics (measure before/after)

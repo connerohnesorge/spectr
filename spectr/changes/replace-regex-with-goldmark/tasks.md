@@ -2,13 +2,13 @@
 
 ## 1. Foundation
 - [ ] 1.1 Add goldmark dependency to go.mod
-- [ ] 1.2 Create internal/parsers/ast_utils.go with utilities: ParseMarkdown(), FindHeading(), SegmentToLineNumber(), ExtractTextContent()
-- [ ] 1.3 Write tests for AST utility functions
+- [ ] 1.2 Create internal/parsers/ast_utils.go with utilities: ParseMarkdown(), FindHeading(), SegmentToLineNumber(), SegmentToLocation() (line/column/byte offset), ExtractTextContent()
+- [ ] 1.3 Write tests for AST utility functions, covering line/column/byte offset calculations
 
 ## 2. Simple Parsers
-- [ ] 2.1 Migrate ExtractTitle() to use goldmark AST (find first H1 node)
-- [ ] 2.2 Migrate CountRequirements(), CountDeltas(), CountTasks() to AST traversal
-- [ ] 2.3 Update parsers_test.go to test goldmark implementations
+- [x] 2.1 Migrate ExtractTitle() to use goldmark AST (find first H1 node)
+- [x] 2.2 Migrate CountRequirements(), CountDeltas(), CountTasks() to AST traversal
+- [x] 2.3 Update parsers_test.go to test goldmark implementations
 - [ ] 2.4 Run parallel tests comparing regex vs goldmark output
 - [ ] 2.5 Test title extraction with code blocks containing heading-like text
 - [ ] 2.6 Test task counting with code blocks containing checkbox-like text
@@ -28,13 +28,13 @@
 - [ ] 4.5 Update DeltaPlan struct with SourceLocation metadata (line/column/byte offset)
 - [ ] 4.6 Update delta_parser_test.go for goldmark
 - [ ] 4.7 Add tests for malformed markdown detection (unclosed code blocks, malformed headers)
-- [ ] 4.8 Implement error reporting with line numbers from AST node SourceLocation
+- [ ] 4.8 Implement error reporting with line/column numbers from AST node SourceLocation
 
 ## 5. Integration and Testing
 - [ ] 5.1 Update internal/archive/spec_merger.go to use new parser structures
 - [ ] 5.2 Update internal/validation/change_rules.go to use goldmark parsers
 - [ ] 5.3 Update internal/validation/delta_validators.go for new structures
-- [ ] 5.4 Update validation error messages to include line numbers from SourceLocation
+- [ ] 5.4 Update validation error messages to include line/column context from SourceLocation
 - [ ] 5.5 Update internal/list/lister.go and internal/view/dashboard.go
 - [ ] 5.6 Add integration tests for malformed markdown error reporting with line numbers
 - [ ] 5.7 Run full test suite (go test ./...)

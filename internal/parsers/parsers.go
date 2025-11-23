@@ -4,40 +4,50 @@
 package parsers
 
 import (
-	"bufio"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/yuin/goldmark/ast"
+	extast "github.com/yuin/goldmark/extension/ast"
 )
 
 // ExtractTitle extracts the title from a markdown file by finding
 // the first H1 heading and removing "Change:" or "Spec:" prefix if present
 func ExtractTitle(filePath string) (string, error) {
-	file, err := os.Open(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", err
 	}
-	defer func() { _ = file.Close() }()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		// Look for H1 heading (# Title)
-		if !strings.HasPrefix(line, "# ") {
-			continue
+	// Parse markdown into AST
+	doc := ParseMarkdown(content)
+
+	// Find first H1 heading
+	var title string
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
 		}
-		title := strings.TrimPrefix(line, "# ")
-		title = strings.TrimSpace(title)
 
-		// Remove "Change:" or "Spec:" prefix
-		title = strings.TrimPrefix(title, "Change:")
-		title = strings.TrimPrefix(title, "Spec:")
-		title = strings.TrimSpace(title)
+		// Check if this is an H1 heading
+		if heading, ok := n.(*ast.Heading); ok && heading.Level == 1 {
+			title = ExtractTextContent(heading)
+			return ast.WalkStop, nil
+		}
 
-		return title, nil
+		return ast.WalkContinue, nil
+	})
+
+	if title == "" {
+		return "", nil
 	}
 
-	return "", scanner.Err()
+	// Remove "Change:" or "Spec:" prefix
+	title = strings.TrimPrefix(title, "Change:")
+	title = strings.TrimPrefix(title, "Spec:")
+	title = strings.TrimSpace(title)
+
+	return title, nil
 }
 
 // TaskStatus represents task completion status
@@ -50,31 +60,33 @@ type TaskStatus struct {
 func CountTasks(filePath string) (TaskStatus, error) {
 	status := TaskStatus{Total: 0, Completed: 0}
 
-	file, err := os.Open(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		// Return zero status if file doesn't exist or can't be read
 		return status, nil
 	}
-	defer func() { _ = file.Close() }()
 
-	// Regex to match task lines: - [ ] or - [x] (case-insensitive)
-	taskPattern := regexp.MustCompile(`^\s*-\s*\[([xX ])\]`)
+	// Parse markdown into AST (with GFM extension for task lists)
+	doc := ParseMarkdown(content)
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		matches := taskPattern.FindStringSubmatch(line)
-		if len(matches) <= 1 {
-			continue
+	// Walk the AST looking for TaskCheckBox nodes (from GFM extension)
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
 		}
-		status.Total++
-		marker := strings.ToLower(strings.TrimSpace(matches[1]))
-		if marker == "x" {
-			status.Completed++
-		}
-	}
 
-	return status, scanner.Err()
+		// Check if this is a TaskCheckBox node
+		if taskBox, ok := n.(*extast.TaskCheckBox); ok {
+			status.Total++
+			if taskBox.IsChecked {
+				status.Completed++
+			}
+		}
+
+		return ast.WalkContinue, nil
+	})
+
+	return status, nil
 }
 
 // CountDeltas counts the number of delta sections
@@ -90,26 +102,40 @@ func CountDeltas(changeDir string) (int, error) {
 
 	// Walk through all spec files in the specs directory
 	err := walkSpecFiles(specsDir, func(filePath string) error {
-		file, err := os.Open(filePath)
+		content, err := os.ReadFile(filePath)
 		if err != nil {
 			return err
 		}
-		defer func() { _ = file.Close() }()
 
-		// Match delta section headers
-		deltaPattern := regexp.MustCompile(
-			`^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements`,
-		)
+		// Parse markdown into AST
+		doc := ParseMarkdown(content)
 
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if deltaPattern.MatchString(line) {
-				count++
+		// Walk the AST looking for H2 delta section headers
+		ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+			if !entering {
+				return ast.WalkContinue, nil
 			}
-		}
 
-		return scanner.Err()
+			// Check if this is an H2 heading
+			if heading, ok := n.(*ast.Heading); ok && heading.Level == 2 {
+				headingText := ExtractTextContent(heading)
+				headingText = strings.TrimSpace(headingText)
+
+				// Check if it matches delta operation pattern
+				if strings.HasSuffix(headingText, " Requirements") {
+					prefix := strings.TrimSuffix(headingText, " Requirements")
+					prefix = strings.TrimSpace(prefix)
+					if prefix == "ADDED" || prefix == "MODIFIED" ||
+					   prefix == "REMOVED" || prefix == "RENAMED" {
+						count++
+					}
+				}
+			}
+
+			return ast.WalkContinue, nil
+		})
+
+		return nil
 	})
 
 	return count, err
@@ -117,24 +143,37 @@ func CountDeltas(changeDir string) (int, error) {
 
 // CountRequirements counts the number of requirements in a spec.md file
 func CountRequirements(specPath string) (int, error) {
-	file, err := os.Open(specPath)
+	content, err := os.ReadFile(specPath)
 	if err != nil {
 		return 0, err
 	}
-	defer func() { _ = file.Close() }()
+
+	// Parse markdown into AST
+	doc := ParseMarkdown(content)
 
 	count := 0
-	reqPattern := regexp.MustCompile(`^###\s+Requirement:`)
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if reqPattern.MatchString(line) {
-			count++
+	// Walk the AST looking for H3 requirement headers
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
 		}
-	}
 
-	return count, scanner.Err()
+		// Check if this is an H3 heading
+		if heading, ok := n.(*ast.Heading); ok && heading.Level == 3 {
+			headingText := ExtractTextContent(heading)
+			headingText = strings.TrimSpace(headingText)
+
+			// Check if it starts with "Requirement:"
+			if strings.HasPrefix(headingText, "Requirement:") {
+				count++
+			}
+		}
+
+		return ast.WalkContinue, nil
+	})
+
+	return count, nil
 }
 
 // walkSpecFiles walks through all spec.md files in a directory tree

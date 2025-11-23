@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/parser"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -261,56 +261,90 @@ type RenamedRequirement struct {
 // - FROM: ### Requirement: OldName
 // - TO: ### Requirement: NewName
 func parseRenamedRequirements(content string) []RenamedRequirement {
+	// The content passed in doesn't include the section header,
+	// but the parser needs it to identify the RENAMED section.
+	// Wrap the content in a RENAMED Requirements section header.
+	fullContent := "## RENAMED Requirements\n\n" + content
+
+	// Use the new parser to extract RENAMED requirements
+	doc, err := parser.Parse(fullContent)
+	if err != nil {
+		// On parse error, return empty list (matching previous behavior)
+		return []RenamedRequirement{}
+	}
+
+	deltas, err := parser.ExtractDeltas(doc)
+	if err != nil {
+		// On extraction error, return empty list (matching previous behavior)
+		return []RenamedRequirement{}
+	}
+
+	// Convert parser.RenamedRequirement to validation.RenamedRequirement
 	var renames []RenamedRequirement
+	for _, renamed := range deltas.Renamed {
+		renames = append(renames, RenamedRequirement{
+			FromName: renamed.From,
+			ToName:   renamed.To,
+		})
+	}
+
+	// Check for incomplete pairs (FROM without TO) by parsing list items manually
+	// This matches the old regex behavior that detected malformed pairs
 	lines := strings.Split(content, "\n")
-
-	fromRegex := regexp.MustCompile(
-		`^\s*-\s*FROM:\s*###\s*Requirement:\s*(.+)$`,
-	)
-	toRegex := regexp.MustCompile(
-		`^\s*-\s*TO:\s*###\s*Requirement:\s*(.+)$`,
-	)
-
 	var currentFrom string
-
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
 			continue
 		}
 
 		// Check for FROM line
-		if matches := fromRegex.FindStringSubmatch(line); matches != nil {
-			currentFrom = strings.TrimSpace(matches[1])
+		if strings.HasPrefix(trimmed, "-") {
+			withoutBullet := strings.TrimSpace(strings.TrimPrefix(trimmed, "-"))
+			if strings.HasPrefix(withoutBullet, "FROM:") {
+				// If we already have a FROM, it means it wasn't paired with a TO
+				if currentFrom != "" {
+					renames = append(renames, RenamedRequirement{
+						FromName: currentFrom,
+						ToName:   "",
+					})
+				}
+				// Extract the FROM name
+				fromPart := strings.TrimPrefix(withoutBullet, "FROM:")
+				fromPart = strings.TrimSpace(fromPart)
+				fromPart = strings.Trim(fromPart, "`")
+				fromPart = strings.TrimPrefix(fromPart, "###")
+				fromPart = strings.TrimSpace(fromPart)
+				fromPart = strings.TrimPrefix(fromPart, "Requirement:")
+				currentFrom = strings.TrimSpace(fromPart)
 
-			continue
-		}
+				continue
+			}
 
-		// Check for TO line
-		matches := toRegex.FindStringSubmatch(line)
-		if matches == nil {
-			continue
-		}
-
-		toName := strings.TrimSpace(matches[1])
-
-		// If we have a FROM, pair it with this TO
-		if currentFrom != "" {
-			renames = append(renames, RenamedRequirement{
-				FromName: currentFrom,
-				ToName:   toName,
-			})
-			currentFrom = "" // Reset for next pair
-		} else {
-			// TO without FROM - add as malformed
-			renames = append(renames, RenamedRequirement{
-				FromName: "",
-				ToName:   toName,
-			})
+			// Check for TO line
+			if strings.HasPrefix(withoutBullet, "TO:") {
+				// If we have a FROM, this completes the pair (already in deltas.Renamed)
+				if currentFrom != "" {
+					currentFrom = ""
+				} else {
+					// TO without FROM - malformed
+					toPart := strings.TrimPrefix(withoutBullet, "TO:")
+					toPart = strings.TrimSpace(toPart)
+					toPart = strings.Trim(toPart, "`")
+					toPart = strings.TrimPrefix(toPart, "###")
+					toPart = strings.TrimSpace(toPart)
+					toPart = strings.TrimPrefix(toPart, "Requirement:")
+					toName := strings.TrimSpace(toPart)
+					renames = append(renames, RenamedRequirement{
+						FromName: "",
+						ToName:   toName,
+					})
+				}
+			}
 		}
 	}
 
-	// If we have a FROM without a TO, add as malformed
+	// If we have a FROM at the end without a TO
 	if currentFrom != "" {
 		renames = append(renames, RenamedRequirement{
 			FromName: currentFrom,

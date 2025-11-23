@@ -5,6 +5,8 @@ import (
 	"bufio"
 	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/parser"
 )
 
 // Requirement represents a parsed requirement with its content and scenarios
@@ -237,24 +239,102 @@ func closeScenario(scenario *strings.Builder, scenarios *[]string) {
 }
 
 // ContainsShallOrMust checks if text contains SHALL or MUST (case-insensitive)
+// Uses the parser to skip code blocks and only check actual content
 func ContainsShallOrMust(text string) bool {
-	shallMustRegex := regexp.MustCompile(`(?i)\b(shall|must)\b`)
+	// Parse the document using the new parser
+	doc, err := parser.Parse(text)
+	if err != nil {
+		// If parsing fails, fall back to simple string search
+		// This maintains backward compatibility
+		upper := strings.ToUpper(text)
 
-	return shallMustRegex.MatchString(text)
+		return containsWord(upper, "SHALL") || containsWord(upper, "MUST")
+	}
+
+	// Walk the AST and check only content nodes (skip code blocks)
+	found := false
+	parser.Walk(doc, func(node parser.Node) bool {
+		switch n := node.(type) {
+		case *parser.Paragraph:
+			// Check paragraph text for SHALL/MUST
+			upper := strings.ToUpper(n.Text)
+			if containsWord(upper, "SHALL") || containsWord(upper, "MUST") {
+				found = true
+
+				return false // stop walking
+			}
+		case *parser.List:
+			// Check list items for SHALL/MUST
+			for _, item := range n.Items {
+				upper := strings.ToUpper(item)
+				if containsWord(upper, "SHALL") || containsWord(upper, "MUST") {
+					found = true
+
+					return false // stop walking
+				}
+			}
+		case *parser.Header:
+			// Also check headers (requirements can be stated in headers)
+			upper := strings.ToUpper(n.Text)
+			if containsWord(upper, "SHALL") || containsWord(upper, "MUST") {
+				found = true
+
+				return false // stop walking
+			}
+		}
+
+		return true // continue walking
+	})
+
+	return found
+}
+
+// containsWord checks if a word exists as a whole word in text
+// Both text and word should be uppercase for case-insensitive matching
+func containsWord(text, word string) bool {
+	// Simple word boundary check: the word must be surrounded by non-letter characters
+	// or be at the start/end of the string
+	start := 0
+	for {
+		idx := strings.Index(text[start:], word)
+		if idx == -1 {
+			return false
+		}
+		idx += start
+
+		// Check left boundary
+		leftOK := idx == 0 || !isLetter(rune(text[idx-1]))
+
+		// Check right boundary
+		rightIdx := idx + len(word)
+		rightOK := rightIdx >= len(text) || !isLetter(rune(text[rightIdx]))
+
+		if leftOK && rightOK {
+			return true
+		}
+
+		// Continue searching after this match
+		start = idx + 1
+		if start >= len(text) {
+			return false
+		}
+	}
+}
+
+// isLetter checks if a rune is a letter (simplified ASCII version)
+func isLetter(r rune) bool {
+	return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')
 }
 
 // NormalizeRequirementName normalizes requirement names for duplicate detection
 // Trims whitespace, converts to lowercase, and removes extra spaces
 func NormalizeRequirementName(name string) string {
-	// Trim leading/trailing whitespace
-	normalized := strings.TrimSpace(name)
+	// Convert to lowercase first
+	normalized := strings.ToLower(name)
 
-	// Convert to lowercase
-	normalized = strings.ToLower(normalized)
+	// Split on any whitespace (spaces, tabs, newlines) and filter out empty strings
+	// Then rejoin with single spaces - this handles all whitespace normalization
+	fields := strings.Fields(normalized)
 
-	// Replace multiple spaces with single space
-	spaceRegex := regexp.MustCompile(`\s+`)
-	normalized = spaceRegex.ReplaceAllString(normalized, " ")
-
-	return normalized
+	return strings.Join(fields, " ")
 }

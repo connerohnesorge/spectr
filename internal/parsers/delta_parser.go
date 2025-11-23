@@ -5,11 +5,11 @@
 package parsers
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/parser"
 )
 
 // DeltaPlan represents all delta operations for a spec
@@ -29,249 +29,89 @@ type RenameOp struct {
 // ParseDeltaSpec parses a delta spec file and extracts operations
 // Returns a DeltaPlan with ADDED, MODIFIED, REMOVED, and RENAMED reqs
 func ParseDeltaSpec(filePath string) (*DeltaPlan, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = file.Close() }()
-
-	plan := &DeltaPlan{
-		Added:    make([]RequirementBlock, 0),
-		Modified: make([]RequirementBlock, 0),
-		Removed:  make([]string, 0),
-		Renamed:  make([]RenameOp, 0),
-	}
-
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	// Parse each section
-	plan.Added = parseDeltaSection(string(content), "ADDED")
-	plan.Modified = parseDeltaSection(string(content), "MODIFIED")
-	plan.Removed = parseRemovedSection(string(content))
-	plan.Renamed = parseRenamedSection(string(content))
+	// Parse the document using the new parser
+	doc, err := parser.Parse(string(content))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse delta spec: %w", err)
+	}
 
-	return plan, nil
+	// Extract delta operations
+	deltas, err := parser.ExtractDeltas(doc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract deltas: %w", err)
+	}
+
+	// Convert to DeltaPlan format
+	return convertToDeltaPlan(deltas), nil
 }
 
-// parseDeltaSection extracts requirements from a delta section
-func parseDeltaSection(content, sectionType string) []RequirementBlock {
-	sectionContent := extractSectionContent(content, sectionType)
-	if sectionContent == "" {
-		return nil
+// convertToDeltaPlan converts parser.DeltaSpec to DeltaPlan format
+func convertToDeltaPlan(deltas *parser.DeltaSpec) *DeltaPlan {
+	plan := &DeltaPlan{
+		Added:    convertRequirements(deltas.Added),
+		Modified: convertRequirements(deltas.Modified),
+		Removed:  extractRemovedNames(deltas.Removed),
+		Renamed:  convertRenamedOps(deltas.Renamed),
 	}
 
-	return parseRequirementsFromSection(sectionContent)
+	return plan
 }
 
-// extractSectionContent extracts content from a section header
-func extractSectionContent(content, sectionType string) string {
-	pattern := fmt.Sprintf(`(?m)^##\s+%s\s+Requirements\s*$`, sectionType)
-	sectionPattern := regexp.MustCompile(pattern)
-	matches := sectionPattern.FindStringIndex(content)
-	if matches == nil {
-		return ""
-	}
-
-	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(`(?m)^##\s+`)
-	nextMatches := nextSectionPattern.FindStringIndex(
-		content[sectionStart:],
-	)
-
-	if nextMatches != nil {
-		return content[sectionStart : sectionStart+nextMatches[0]]
-	}
-
-	return content[sectionStart:]
-}
-
-// parseRequirementsFromSection parses requirement blocks from content
-func parseRequirementsFromSection(
-	sectionContent string,
-) []RequirementBlock {
-	var requirements []RequirementBlock
-	var currentReq *RequirementBlock
-
-	reqPattern := regexp.MustCompile(`^###\s+Requirement:\s*(.+)$`)
-	h3Pattern := regexp.MustCompile(`^###\s+`)
-
-	scanner := bufio.NewScanner(strings.NewReader(sectionContent))
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if matches := reqPattern.FindStringSubmatch(line); len(matches) > 1 {
-			currentReq = saveAndStartNewRequirement(
-				&requirements,
-				currentReq,
-				line,
-				matches[1],
-			)
-
-			continue
-		}
-
-		if isNonRequirementH3(line, h3Pattern, reqPattern) {
-			currentReq = saveCurrentRequirement(
-				&requirements,
-				currentReq,
-			)
-
-			continue
-		}
-
-		appendLineToRequirement(currentReq, line)
-	}
-
-	// Save the last requirement
-	saveCurrentRequirement(&requirements, currentReq)
-
-	return requirements
-}
-
-// saveAndStartNewRequirement saves current req and starts a new one
-func saveAndStartNewRequirement(
-	requirements *[]RequirementBlock,
-	currentReq *RequirementBlock,
-	line, name string,
-) *RequirementBlock {
-	if currentReq != nil {
-		*requirements = append(*requirements, *currentReq)
-	}
-
-	return &RequirementBlock{
-		HeaderLine: line,
-		Name:       strings.TrimSpace(name),
-		Raw:        line + "\n",
-	}
-}
-
-// saveCurrentRequirement saves the current requirement if it exists
-func saveCurrentRequirement(
-	requirements *[]RequirementBlock,
-	currentReq *RequirementBlock,
-) *RequirementBlock {
-	if currentReq != nil {
-		*requirements = append(*requirements, *currentReq)
-	}
-
-	return nil
-}
-
-// isNonRequirementH3 checks if line is an H3 but not a requirement
-func isNonRequirementH3(
-	line string,
-	h3Pattern, reqPattern *regexp.Regexp,
-) bool {
-	return h3Pattern.MatchString(line) && !reqPattern.MatchString(line)
-}
-
-// appendLineToRequirement appends a line to the current requirement
-func appendLineToRequirement(currentReq *RequirementBlock, line string) {
-	if currentReq != nil {
-		currentReq.Raw += line + "\n"
-	}
-}
-
-// parseRemovedSection extracts requirement names from REMOVED section
-func parseRemovedSection(content string) []string {
-	var removed []string
-
-	// Find the REMOVED section header
-	sectionPattern := regexp.MustCompile(`(?m)^##\s+REMOVED\s+Requirements\s*$`)
-	matches := sectionPattern.FindStringIndex(content)
-	if matches == nil {
-		return removed
-	}
-
-	// Extract content from this section until next ## header or end of file
-	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(`(?m)^##\s+`)
-	nextMatches := nextSectionPattern.FindStringIndex(content[sectionStart:])
-
-	var sectionContent string
-	if nextMatches != nil {
-		sectionContent = content[sectionStart : sectionStart+nextMatches[0]]
-	} else {
-		sectionContent = content[sectionStart:]
-	}
-
-	// Parse requirement headers within this section
-	reqPattern := regexp.MustCompile(`^###\s+Requirement:\s*(.+)$`)
-
-	scanner := bufio.NewScanner(strings.NewReader(sectionContent))
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if matches := reqPattern.FindStringSubmatch(line); len(matches) > 1 {
-			removed = append(removed, strings.TrimSpace(matches[1]))
-		}
-	}
-
-	return removed
-}
-
-// parseRenamedSection extracts FROM/TO pairs from RENAMED section
-func parseRenamedSection(content string) []RenameOp {
-	var renamed []RenameOp
-
-	// Find the RENAMED section header
-	sectionPattern := regexp.MustCompile(`(?m)^##\s+RENAMED\s+Requirements\s*$`)
-	matches := sectionPattern.FindStringIndex(content)
-	if matches == nil {
-		return renamed
-	}
-
-	// Extract content from this section until next ## header or end of file
-	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(`(?m)^##\s+`)
-	nextMatches := nextSectionPattern.FindStringIndex(content[sectionStart:])
-
-	var sectionContent string
-	if nextMatches != nil {
-		sectionContent = content[sectionStart : sectionStart+nextMatches[0]]
-	} else {
-		sectionContent = content[sectionStart:]
-	}
-
-	// Parse FROM/TO pairs
-	// Expected format:
-	// - FROM: `### Requirement: Old Name`
-	// - TO: `### Requirement: New Name`
-	fromPattern := regexp.MustCompile(
-		`^-\s*FROM:\s*` + "`" + `###\s+Requirement:\s*(.+?)` + "`" + `\s*$`,
-	)
-	toPattern := regexp.MustCompile(
-		`^-\s*TO:\s*` + "`" + `###\s+Requirement:\s*(.+?)` + "`" + `\s*$`,
-	)
-
-	var currentFrom string
-	scanner := bufio.NewScanner(strings.NewReader(sectionContent))
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		// Check for FROM line
-		if matches := fromPattern.FindStringSubmatch(line); len(matches) > 1 {
-			currentFrom = strings.TrimSpace(matches[1])
-
-			continue
-		}
-
-		// Check for TO line
-		matches := toPattern.FindStringSubmatch(line)
-		if len(matches) <= 1 || currentFrom == "" {
-			continue
-		}
-
-		renamed = append(renamed, RenameOp{
-			From: currentFrom,
-			To:   strings.TrimSpace(matches[1]),
+// convertRequirements converts parser.Requirement to RequirementBlock
+func convertRequirements(reqs []parser.Requirement) []RequirementBlock {
+	blocks := make([]RequirementBlock, 0, len(reqs))
+	for _, req := range reqs {
+		blocks = append(blocks, RequirementBlock{
+			HeaderLine: "### Requirement: " + req.Name,
+			Name:       req.Name,
+			Raw:        buildRawContent(req),
 		})
-		currentFrom = ""
 	}
 
-	return renamed
+	return blocks
+}
+
+// buildRawContent reconstructs the raw markdown from a parser.Requirement
+func buildRawContent(req parser.Requirement) string {
+	var parts []string
+
+	// Add header line
+	parts = append(parts, "### Requirement: "+req.Name)
+
+	// Add content (which includes scenarios)
+	if req.Content != "" {
+		parts = append(parts, req.Content)
+	}
+
+	return strings.Join(parts, "\n") + "\n"
+}
+
+// extractRemovedNames extracts requirement names from removed requirements
+func extractRemovedNames(removed []parser.Requirement) []string {
+	names := make([]string, 0, len(removed))
+	for _, req := range removed {
+		names = append(names, req.Name)
+	}
+
+	return names
+}
+
+// convertRenamedOps converts parser.RenamedRequirement to RenameOp
+func convertRenamedOps(renamed []parser.RenamedRequirement) []RenameOp {
+	ops := make([]RenameOp, 0, len(renamed))
+	for _, r := range renamed {
+		ops = append(ops, RenameOp{
+			From: r.From,
+			To:   r.To,
+		})
+	}
+
+	return ops
 }
 
 // HasDeltas returns true if the DeltaPlan has at least one operation

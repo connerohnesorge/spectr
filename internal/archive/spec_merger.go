@@ -4,9 +4,9 @@ package archive
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/parser"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -214,35 +214,91 @@ func reconstructSpec(
 	result.WriteString(after)
 
 	// Normalize blank lines (collapse 3+ newlines to 2)
-	output := result.String()
-	multiNewline := regexp.MustCompile(`\n{3,}`)
-	output = multiNewline.ReplaceAllString(output, "\n\n")
+	output := normalizeBlankLines(result.String())
 
 	return output
 }
 
+// normalizeBlankLines collapses 3+ consecutive newlines into 2.
+//
+// This normalization ensures consistent spacing throughout the spec
+// without using regex. It iterates through the string and tracks
+// consecutive newlines, outputting at most 2 in a row.
+func normalizeBlankLines(content string) string {
+	if content == "" {
+		return content
+	}
+
+	var result strings.Builder
+	result.Grow(len(content)) // Pre-allocate for efficiency
+
+	consecutiveNewlines := 0
+
+	//nolint:intrange // Keep compatible with Go <1.22
+	for i := 0; i < len(content); i++ {
+		if content[i] == '\n' {
+			consecutiveNewlines++
+			// Only write newlines if we haven't exceeded the limit
+			if consecutiveNewlines <= 2 {
+				result.WriteByte('\n')
+			}
+		} else {
+			consecutiveNewlines = 0
+			result.WriteByte(content[i])
+		}
+	}
+
+	return result.String()
+}
+
 // splitSpec splits spec into preamble, requirements section content, and after
 func splitSpec(content string) (preamble, requirements, after string) {
-	// Find ## Requirements header
-	reqHeaderPattern := regexp.MustCompile(`(?m)^##\s+Requirements\s*$`)
-	match := reqHeaderPattern.FindStringIndex(content)
-	if match == nil {
+	// Parse the document
+	doc, err := parser.Parse(content)
+	if err != nil {
+		// On parse error, return everything as preamble
+		return content, "", ""
+	}
+
+	// Find the "## Requirements" header
+	reqHeaders := parser.FindHeaders(doc, func(h *parser.Header) bool {
+		return h.Level == 2 && strings.TrimSpace(h.Text) == "Requirements"
+	})
+
+	if len(reqHeaders) == 0 {
 		// No requirements section, return everything as preamble
 		return content, "", ""
 	}
 
-	preamble = content[:match[1]] + "\n\n"
+	reqHeader := reqHeaders[0]
+	reqHeaderPos := reqHeader.Pos()
 
-	// Find next ## header after Requirements
-	nextHeaderPattern := regexp.MustCompile(`(?m)^##\s+`)
-	remainingContent := content[match[1]:]
-	nextMatch := nextHeaderPattern.FindStringIndex(remainingContent)
+	// Find the next level-2 header after Requirements
+	nextHeaders := parser.FindHeaders(doc, func(h *parser.Header) bool {
+		return h.Level == 2 && h.Pos().Offset > reqHeaderPos.Offset
+	})
 
-	if nextMatch != nil {
-		requirements = remainingContent[:nextMatch[0]]
-		after = remainingContent[nextMatch[0]:]
+	// Extract preamble (everything up to and including "## Requirements\n\n")
+	preambleEndOffset := reqHeaderPos.Offset + len("## Requirements")
+	// Find the end of the requirements header line
+	for i := preambleEndOffset; i < len(content); i++ {
+		if content[i] == '\n' {
+			preambleEndOffset = i + 1
+
+			break
+		}
+	}
+	preamble = content[:preambleEndOffset] + "\n"
+
+	// Extract requirements section and after
+	if len(nextHeaders) > 0 {
+		// There's a section after Requirements
+		nextHeaderPos := nextHeaders[0].Pos()
+		requirements = content[preambleEndOffset:nextHeaderPos.Offset]
+		after = content[nextHeaderPos.Offset:]
 	} else {
-		requirements = remainingContent
+		// Requirements section goes to end of document
+		requirements = content[preambleEndOffset:]
 		after = ""
 	}
 
@@ -257,17 +313,28 @@ func extractOrderedRequirements(
 ) []parsers.RequirementBlock {
 	var ordered []parsers.RequirementBlock
 
-	// Find requirement headers in order
-	reqPattern := regexp.MustCompile(`(?m)^###\s+Requirement:\s*(.+)$`)
-	matches := reqPattern.FindAllStringSubmatch(reqsContent, -1)
-
-	for _, match := range matches {
-		if len(match) <= 1 {
-			continue
+	// Parse the requirements content
+	doc, err := parser.Parse(reqsContent)
+	if err != nil {
+		// On parse error, return requirements from map in arbitrary order
+		for _, req := range reqMap {
+			ordered = append(ordered, req)
 		}
 
-		name := strings.TrimSpace(match[1])
+		return ordered
+	}
+
+	// Find requirement headers in order
+	reqHeaders := parser.FindHeaders(doc, func(h *parser.Header) bool {
+		return h.Level == 3 && strings.HasPrefix(strings.TrimSpace(h.Text), "Requirement:")
+	})
+
+	for _, header := range reqHeaders {
+		// Extract requirement name
+		name := strings.TrimPrefix(strings.TrimSpace(header.Text), "Requirement:")
+		name = strings.TrimSpace(name)
 		normalized := parsers.NormalizeRequirementName(name)
+
 		req, exists := reqMap[normalized]
 		if !exists {
 			continue

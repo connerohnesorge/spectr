@@ -444,6 +444,74 @@ Just a regular spec.
 	}
 }
 
+func TestNormalizeBlankLines(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "no newlines",
+			input:    "hello world",
+			expected: "hello world",
+		},
+		{
+			name:     "single newline",
+			input:    "hello\nworld",
+			expected: "hello\nworld",
+		},
+		{
+			name:     "two newlines",
+			input:    "hello\n\nworld",
+			expected: "hello\n\nworld",
+		},
+		{
+			name:     "three newlines collapsed to two",
+			input:    "hello\n\n\nworld",
+			expected: "hello\n\nworld",
+		},
+		{
+			name:     "four newlines collapsed to two",
+			input:    "hello\n\n\n\nworld",
+			expected: "hello\n\nworld",
+		},
+		{
+			name:     "many newlines collapsed to two",
+			input:    "hello\n\n\n\n\n\n\nworld",
+			expected: "hello\n\nworld",
+		},
+		{
+			name:     "multiple sections with excess newlines",
+			input:    "section1\n\n\nsection2\n\n\n\nsection3",
+			expected: "section1\n\nsection2\n\nsection3",
+		},
+		{
+			name:     "newlines at start",
+			input:    "\n\n\nhello",
+			expected: "\n\nhello",
+		},
+		{
+			name:     "newlines at end",
+			input:    "hello\n\n\n",
+			expected: "hello\n\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := normalizeBlankLines(tt.input)
+			if result != tt.expected {
+				t.Errorf("Expected %q, got %q", tt.expected, result)
+			}
+		})
+	}
+}
+
 func TestFormatCapabilityName(t *testing.T) {
 	tests := []struct {
 		input    string

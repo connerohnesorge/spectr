@@ -4,9 +4,9 @@ package archive
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/mdparser"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -182,92 +182,120 @@ func reconstructSpec(
 	reqMap map[string]parsers.RequirementBlock,
 	added []parsers.RequirementBlock,
 ) string {
-	// Split spec into: preamble, requirements section, after
-	preamble, reqsContent, after := splitSpec(baseContent)
+	// Parse the base content into AST
+	doc, err := mdparser.Parse(baseContent)
+	if err != nil {
+		// Fallback to empty doc on parse error
+		doc = &mdparser.Document{Children: []mdparser.Node{}}
+	}
 
-	// Extract original requirement order from base content
-	orderedReqs := extractOrderedRequirements(reqsContent, reqMap)
+	// Find Requirements section index and extract ordering
+	reqsSectionIdx, orderedReqs := extractRequirementsSection(doc, reqMap)
 
-	// Build requirements section
-	var reqsBuilder strings.Builder
-	for i := range orderedReqs {
-		if i > 0 {
-			reqsBuilder.WriteString(newlineChar)
+	// Rebuild document with updated requirements
+	var result strings.Builder
+
+	// Write everything before Requirements section
+	for i := 0; i < reqsSectionIdx && i < len(doc.Children); i++ {
+		renderNode(&result, doc.Children[i])
+	}
+
+	// Write Requirements header if we found one
+	if reqsSectionIdx >= 0 && reqsSectionIdx < len(doc.Children) {
+		if header, ok := doc.Children[reqsSectionIdx].(*mdparser.Header); ok {
+			result.WriteString(strings.Repeat("#", header.Level))
+			result.WriteString(" ")
+			result.WriteString(header.Text)
+			result.WriteString("\n\n")
 		}
-		reqsBuilder.WriteString(
-			strings.TrimRight(orderedReqs[i].Raw, newlineChar),
-		)
-		reqsBuilder.WriteString(newlineChar)
+	} else {
+		// No Requirements section found, add one
+		result.WriteString("## Requirements\n\n")
+	}
+
+	// Write ordered requirements
+	for i, req := range orderedReqs {
+		if i > 0 {
+			result.WriteString("\n")
+		}
+		result.WriteString(strings.TrimRight(req.Raw, newlineChar))
+		result.WriteString("\n")
 	}
 
 	// Add new requirements at the end
 	for _, req := range added {
-		reqsBuilder.WriteString(newlineChar)
-		reqsBuilder.WriteString(strings.TrimRight(req.Raw, newlineChar))
-		reqsBuilder.WriteString(newlineChar)
+		result.WriteString("\n")
+		result.WriteString(strings.TrimRight(req.Raw, newlineChar))
+		result.WriteString("\n")
 	}
 
-	// Combine all parts
-	var result strings.Builder
-	result.WriteString(preamble)
-	result.WriteString(reqsBuilder.String())
-	result.WriteString(after)
+	// Write everything after Requirements section
+	afterReqsIdx := findNextSectionAfterRequirements(doc, reqsSectionIdx)
+	if afterReqsIdx >= 0 {
+		result.WriteString("\n")
+		for i := afterReqsIdx; i < len(doc.Children); i++ {
+			renderNode(&result, doc.Children[i])
+		}
+	}
 
-	// Normalize blank lines (collapse 3+ newlines to 2)
-	output := result.String()
-	multiNewline := regexp.MustCompile(`\n{3,}`)
-	output = multiNewline.ReplaceAllString(output, "\n\n")
-
-	return output
+	// Normalize blank lines using AST-aware approach
+	return normalizeBlankLines(result.String())
 }
 
-// splitSpec splits spec into preamble, requirements section content, and after
-func splitSpec(content string) (preamble, requirements, after string) {
-	// Find ## Requirements header
-	reqHeaderPattern := regexp.MustCompile(`(?m)^##\s+Requirements\s*$`)
-	match := reqHeaderPattern.FindStringIndex(content)
-	if match == nil {
-		// No requirements section, return everything as preamble
-		return content, "", ""
-	}
-
-	preamble = content[:match[1]] + "\n\n"
-
-	// Find next ## header after Requirements
-	nextHeaderPattern := regexp.MustCompile(`(?m)^##\s+`)
-	remainingContent := content[match[1]:]
-	nextMatch := nextHeaderPattern.FindStringIndex(remainingContent)
-
-	if nextMatch != nil {
-		requirements = remainingContent[:nextMatch[0]]
-		after = remainingContent[nextMatch[0]:]
-	} else {
-		requirements = remainingContent
-		after = ""
-	}
-
-	return preamble, requirements, after
-}
-
-// extractOrderedRequirements preserves requirement ordering
-// from original content
-func extractOrderedRequirements(
-	reqsContent string,
+// extractRequirementsSection finds the Requirements section and extracts requirements in order
+// Returns: (sectionIndex, orderedRequirements)
+func extractRequirementsSection(
+	doc *mdparser.Document,
 	reqMap map[string]parsers.RequirementBlock,
-) []parsers.RequirementBlock {
+) (int, []parsers.RequirementBlock) {
+	// Find Requirements section header (H2)
+	reqsSectionIdx := -1
+	for i, node := range doc.Children {
+		header, ok := node.(*mdparser.Header)
+		if !ok || header.Level != 2 {
+			continue
+		}
+		if strings.TrimSpace(header.Text) == "Requirements" {
+			reqsSectionIdx = i
+
+			break
+		}
+	}
+
+	if reqsSectionIdx == -1 {
+		// No Requirements section found
+		return -1, nil
+	}
+
+	// Find the end of the Requirements section (next H2 or end of document)
+	endIdx := len(doc.Children)
+	for i := reqsSectionIdx + 1; i < len(doc.Children); i++ {
+		if header, ok := doc.Children[i].(*mdparser.Header); ok && header.Level == 2 {
+			endIdx = i
+
+			break
+		}
+	}
+
+	// Extract requirements in order from the section
 	var ordered []parsers.RequirementBlock
-
-	// Find requirement headers in order
-	reqPattern := regexp.MustCompile(`(?m)^###\s+Requirement:\s*(.+)$`)
-	matches := reqPattern.FindAllStringSubmatch(reqsContent, -1)
-
-	for _, match := range matches {
-		if len(match) <= 1 {
+	for i := reqsSectionIdx + 1; i < endIdx; i++ {
+		header, ok := doc.Children[i].(*mdparser.Header)
+		if !ok || header.Level != 3 {
 			continue
 		}
 
-		name := strings.TrimSpace(match[1])
+		// Check if this is a requirement header
+		if !strings.HasPrefix(header.Text, "Requirement: ") {
+			continue
+		}
+
+		// Extract requirement name
+		name := strings.TrimPrefix(header.Text, "Requirement: ")
+		name = strings.TrimSpace(name)
 		normalized := parsers.NormalizeRequirementName(name)
+
+		// Look up in reqMap
 		req, exists := reqMap[normalized]
 		if !exists {
 			continue
@@ -283,7 +311,105 @@ func extractOrderedRequirements(
 		ordered = append(ordered, req)
 	}
 
-	return ordered
+	return reqsSectionIdx, ordered
+}
+
+// findNextSectionAfterRequirements finds the index of the next H2 section after Requirements
+func findNextSectionAfterRequirements(doc *mdparser.Document, reqsSectionIdx int) int {
+	if reqsSectionIdx < 0 {
+		return -1
+	}
+
+	for i := reqsSectionIdx + 1; i < len(doc.Children); i++ {
+		if header, ok := doc.Children[i].(*mdparser.Header); ok && header.Level == 2 {
+			return i
+		}
+	}
+
+	return -1
+}
+
+// renderNode converts an AST node back to markdown text
+func renderNode(sb *strings.Builder, node mdparser.Node) {
+	switch n := node.(type) {
+	case *mdparser.Header:
+		sb.WriteString(strings.Repeat("#", n.Level))
+		sb.WriteString(" ")
+		sb.WriteString(n.Text)
+		sb.WriteString("\n")
+
+	case *mdparser.Paragraph:
+		for _, line := range n.Lines {
+			sb.WriteString(line)
+			sb.WriteString("\n")
+		}
+
+	case *mdparser.CodeBlock:
+		sb.WriteString("```")
+		sb.WriteString(n.Language)
+		sb.WriteString("\n")
+		for _, line := range n.Lines {
+			sb.WriteString(line)
+			sb.WriteString("\n")
+		}
+		sb.WriteString("```\n")
+
+	case *mdparser.List:
+		for _, item := range n.Items {
+			if n.Ordered {
+				sb.WriteString("1. ")
+			} else {
+				sb.WriteString("- ")
+			}
+			sb.WriteString(item.Text)
+			sb.WriteString("\n")
+		}
+
+	case *mdparser.BlankLine:
+		// Render blank lines but cap at 2 consecutive
+		count := n.Count
+		if count > 2 {
+			count = 2
+		}
+
+		for range count {
+			sb.WriteString("\n")
+		}
+	}
+}
+
+// normalizeBlankLines collapses 3+ consecutive newlines to 2
+func normalizeBlankLines(content string) string {
+	// Parse to understand structure
+	doc, err := mdparser.Parse(content)
+	if err != nil {
+		// If parsing fails, use simple string replacement
+		lines := strings.Split(content, "\n")
+		var result []string
+		blankCount := 0
+
+		for _, line := range lines {
+			if strings.TrimSpace(line) == "" {
+				blankCount++
+				if blankCount <= 2 {
+					result = append(result, line)
+				}
+			} else {
+				blankCount = 0
+				result = append(result, line)
+			}
+		}
+
+		return strings.Join(result, "\n")
+	}
+
+	// Render with normalized blank lines
+	var sb strings.Builder
+	for _, node := range doc.Children {
+		renderNode(&sb, node)
+	}
+
+	return sb.String()
 }
 
 // generateSpecSkeleton creates a new spec skeleton for a capability

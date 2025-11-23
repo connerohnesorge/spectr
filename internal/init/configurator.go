@@ -96,15 +96,16 @@ func (g *GenericConfigurator) configureSlashCommand(projectPath, cmd string) err
 	}
 
 	if FileExists(filePath) {
-		return g.updateExistingSlashCommand(filePath, body)
+		frontmatter := g.config.Frontmatter[cmd]
+		return g.updateExistingSlashCommand(filePath, body, frontmatter)
 	}
 
 	return g.createNewSlashCommand(filePath, cmd, body)
 }
 
 // updateExistingSlashCommand updates an existing slash command file
-func (g *GenericConfigurator) updateExistingSlashCommand(filePath, body string) error {
-	if err := updateSlashCommandBody(filePath, body); err != nil {
+func (g *GenericConfigurator) updateExistingSlashCommand(filePath, body, frontmatter string) error {
+	if err := updateSlashCommandBody(filePath, body, frontmatter); err != nil {
 		return fmt.Errorf("failed to update slash command file %s: %w", filePath, err)
 	}
 
@@ -250,15 +251,16 @@ func (s *SlashCommandConfigurator) configureCommand(
 	}
 
 	if FileExists(filePath) {
-		return s.updateExistingCommand(filePath, body)
+		frontmatter := s.config.Frontmatter[cmd]
+		return s.updateExistingCommand(filePath, body, frontmatter)
 	}
 
 	return s.createNewCommand(filePath, cmd, body)
 }
 
 // updateExistingCommand updates an existing slash command file
-func (s *SlashCommandConfigurator) updateExistingCommand(filePath, body string) error {
-	if err := updateSlashCommandBody(filePath, body); err != nil {
+func (s *SlashCommandConfigurator) updateExistingCommand(filePath, body, frontmatter string) error {
+	if err := updateSlashCommandBody(filePath, body, frontmatter); err != nil {
 		return fmt.Errorf("failed to update slash command file %s: %w", filePath, err)
 	}
 
@@ -311,7 +313,7 @@ func (s *SlashCommandConfigurator) GetName() string {
 }
 
 // updateSlashCommandBody updates the body of a slash command file between markers
-func updateSlashCommandBody(filePath, body string) error {
+func updateSlashCommandBody(filePath, body, frontmatter string) error {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
@@ -335,6 +337,11 @@ func updateSlashCommandBody(filePath, body string) error {
 
 	before := contentStr[:startIndex]
 	after := contentStr[endIndex+len(SpectrEndMarker):]
+
+	if frontmatter != "" && !strings.HasPrefix(strings.TrimSpace(before), "---") {
+		before = strings.TrimSpace(frontmatter) + "\n\n" + strings.TrimLeft(before, "\n\r")
+	}
+
 	newContent := before + SpectrStartMarker + "\n" + body + "\n" + SpectrEndMarker + after
 
 	if err := os.WriteFile(filePath, []byte(newContent), filePerm); err != nil {

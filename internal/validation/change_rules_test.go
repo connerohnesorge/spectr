@@ -186,6 +186,14 @@ func TestValidateChangeDeltaSpecs_ValidRenamedRequirements(t *testing.T) {
 	}
 
 	changeDir, spectrRoot := createChangeDir(t, specs)
+
+	// Create base spec with the requirement that will be renamed
+	createBaseSpec(t, spectrRoot, "auth", `## Requirements
+
+### Requirement: Login
+The system SHALL provide login.
+`)
+
 	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
 	if err != nil {
 		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)

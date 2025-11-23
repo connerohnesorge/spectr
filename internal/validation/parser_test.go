@@ -218,7 +218,7 @@ This is valid.`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ExtractRequirements(tt.content)
-			if !reflect.DeepEqual(result, tt.expected) {
+			if !requirementsEqual(result, tt.expected) {
 				t.Errorf("ExtractRequirements() = %v, want %v", result, tt.expected)
 			}
 		})
@@ -302,7 +302,7 @@ Content`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ExtractScenarios(tt.content)
-			if !reflect.DeepEqual(result, tt.expected) {
+			if !scenariosEqual(result, tt.expected) {
 				t.Errorf("ExtractScenarios() = %v, want %v", result, tt.expected)
 			}
 		})
@@ -554,4 +554,33 @@ More content`
 			len(requirements),
 		)
 	}
+}
+
+// Helper functions for comparing slices that might be nil vs empty
+
+func requirementsEqual(a, b []Requirement) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].Name != b[i].Name || a[i].Content != b[i].Content {
+			return false
+		}
+		if !scenariosEqual(a[i].Scenarios, b[i].Scenarios) {
+			return false
+		}
+	}
+	return true
+}
+
+func scenariosEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

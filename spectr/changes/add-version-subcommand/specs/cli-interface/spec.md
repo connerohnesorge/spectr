@@ -62,8 +62,6 @@ The version command SHALL be integrated into the root CLI structure following th
 - **AND** the file includes comprehensive doc comments
 - **AND** the code follows the same patterns as other cmd files
 
-## MODIFIED Requirements
-
 ### Requirement: Version Metadata from Embedded File
 The version command SHALL read version metadata from an embedded VERSION file in JSON format using Go's embed package, supporting both Nix builds and GoReleaser builds.
 

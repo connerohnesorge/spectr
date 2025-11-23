@@ -21,6 +21,7 @@ Built with Go
   - [Using Nix Flakes](#using-nix-flakes)
   - [Building from Source](#building-from-source)
   - [Requirements](#requirements)
+- [CI Integration](#ci-integration)
 - [Quick Start](#quick-start)
   - [Initialize a Project](#initialize-a-project)
   - [Create Your First Change](#create-your-first-change)
@@ -143,6 +144,47 @@ mv spectr /usr/local/bin/  # or any directory in your PATH
 - **Go 1.25+** (if building from source)
 - **Nix with flakes enabled** (optional, for Nix installation)
 - **Git** (for project version control)
+
+---
+
+## CI Integration
+
+Spectr can be integrated into your GitHub Actions workflows using [spectr-action](https://github.com/connerohnesorge/spectr-action) to automatically validate specifications and changes on every push or pull request.
+
+### GitHub Actions Example
+
+Add the following to your workflow file (e.g., `.github/workflows/ci.yml`):
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  spectr-validate:
+    name: Validate Specs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate with Spectr
+        uses: connerohnesorge/spectr-action@v1
+```
+
+This workflow will:
+- Run on every push and pull request
+- Check out your repository with full git history
+- Validate all specifications and active changes
+- Fail the build if validation errors are found
+
+For strict validation mode and additional options, see the [spectr-action documentation](https://github.com/connerohnesorge/spectr-action).
 
 ---
 
@@ -1021,6 +1063,7 @@ Periodically, you may:
 ## Links & Resources
 
 - **GitHub Repository**: [github.com/connerohnesorge/spectr](https://github.com/connerohnesorge/spectr)
+- **GitHub Action for CI/CD**: [connerohnesorge/spectr-action](https://github.com/connerohnesorge/spectr-action)
 - **Specification Documentation**: See `spectr/specs/` for detailed capability specs
   - [CLI Interface](spectr/specs/cli-interface/spec.md)
   - [Validation Rules](spectr/specs/validation/spec.md)

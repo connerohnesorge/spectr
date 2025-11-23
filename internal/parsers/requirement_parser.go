@@ -1,11 +1,11 @@
-//nolint:revive // line-length-limit - regex patterns and parsing logic need clarity
+//nolint:revive // line-length-limit - parsing logic prioritizes clarity
 package parsers
 
 import (
-	"bufio"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/mdparser"
 )
 
 // RequirementBlock represents a requirement with its header and content
@@ -18,83 +18,88 @@ type RequirementBlock struct {
 // ParseRequirements parses all requirement blocks from a spec file.
 //
 // Returns a slice of RequirementBlock with their names and full content.
-//
-//nolint:revive // function-length - parser is clearest as single function
+// Uses mdparser and ExtractRequirements to parse the file.
 func ParseRequirements(filePath string) ([]RequirementBlock, error) {
-	file, err := os.Open(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = file.Close() }()
 
+	doc, err := mdparser.Parse(string(content))
+	if err != nil {
+		return nil, err
+	}
+
+	// ExtractRequirements validates that each requirement has scenarios
+	// But ParseRequirements doesn't enforce this, so we catch and ignore that error
+	requirements, err := ExtractRequirements(doc)
+	if err != nil {
+		// For backward compatibility, ParseRequirements allows requirements without scenarios
+		// So we manually extract them without the validation
+		requirements = extractRequirementsWithoutValidation(doc)
+	}
+
+	return requirements, nil
+}
+
+// extractRequirementsWithoutValidation extracts requirements without enforcing scenario validation
+func extractRequirementsWithoutValidation(doc *mdparser.Document) []RequirementBlock {
 	var requirements []RequirementBlock
-	var currentReq *RequirementBlock
-	reqPattern := regexp.MustCompile(`^###\s+Requirement:\s*(.+)$`)
-	h2Pattern := regexp.MustCompile(`^##\s+`)
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Check if this is a new requirement header
-		matches := reqPattern.FindStringSubmatch(line)
-		if len(matches) > 1 {
-			// Save previous requirement if exists
-			if currentReq != nil {
-				requirements = append(requirements, *currentReq)
-			}
-
-			// Start new requirement
-			name := strings.TrimSpace(matches[1])
-			currentReq = &RequirementBlock{
-				HeaderLine: line,
-				Name:       name,
-				Raw:        line + "\n",
-			}
-
+	for i, node := range doc.Children {
+		header, ok := node.(*mdparser.Header)
+		if !ok || header.Level != 3 {
 			continue
 		}
 
-		// Check if we hit a new section (## header) - ends current requirement
-		if h2Pattern.MatchString(line) {
-			if currentReq != nil {
-				requirements = append(requirements, *currentReq)
-				currentReq = nil
-			}
-
+		// Check if this is a requirement header
+		if !strings.HasPrefix(header.Text, "Requirement: ") {
 			continue
 		}
 
-		// Append line to current requirement if we're in one
-		if currentReq != nil {
-			currentReq.Raw += line + "\n"
-		}
+		// Extract requirement name
+		name := strings.TrimPrefix(header.Text, "Requirement: ")
+		name = strings.TrimSpace(name)
+
+		// Get siblings (nodes after this header until next H3 or H2)
+		siblings := getSiblingsUntilNextHeader(doc.Children, i+1, 3)
+
+		// Build raw content
+		raw := buildRawContent(header, siblings)
+
+		requirements = append(requirements, RequirementBlock{
+			HeaderLine: "### Requirement: " + name,
+			Name:       name,
+			Raw:        raw,
+		})
 	}
 
-	// Don't forget the last requirement
-	if currentReq != nil {
-		requirements = append(requirements, *currentReq)
-	}
-
-	return requirements, scanner.Err()
+	return requirements
 }
 
 // ParseScenarios extracts scenario blocks from requirement content.
 //
 // Returns a slice of scenario names found in the requirement.
+// Uses mdparser to parse the content and extract scenario headers.
 func ParseScenarios(requirementContent string) []string {
-	var scenarios []string
-	scenarioPattern := regexp.MustCompile(`^####\s+Scenario:\s*(.+)$`)
+	doc, err := mdparser.Parse(requirementContent)
+	if err != nil {
+		return nil
+	}
 
-	scanner := bufio.NewScanner(strings.NewReader(requirementContent))
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		matches := scenarioPattern.FindStringSubmatch(line)
-		if len(matches) > 1 {
-			scenarios = append(
-				scenarios,
-				strings.TrimSpace(matches[1]),
-			)
+	var scenarios []string
+
+	// Traverse all nodes looking for H4 headers with "Scenario: " prefix
+	for _, node := range doc.Children {
+		header, ok := node.(*mdparser.Header)
+		if !ok || header.Level != 4 {
+			continue
+		}
+
+		if strings.HasPrefix(header.Text, "Scenario: ") {
+			name := strings.TrimPrefix(header.Text, "Scenario: ")
+			name = strings.TrimSpace(name)
+			scenarios = append(scenarios, name)
 		}
 	}
 

@@ -357,9 +357,9 @@ var slashToolConfigs = map[ToolID]ToolConfig{
 		Name: "Antigravity",
 		Type: ToolTypeSlash,
 		SlashPaths: map[string]string{
-			"proposal": ".antigravity/commands/spectr-proposal.md",
-			"apply":    ".antigravity/commands/spectr-apply.md",
-			"archive":  ".antigravity/commands/spectr-archive.md",
+			"proposal": ".agent/workflows/spectr-proposal.md",
+			"apply":    ".agent/workflows/spectr-apply.md",
+			"archive":  ".agent/workflows/spectr-archive.md",
 		},
 		Frontmatter: map[string]string{
 			"proposal": "---\ndescription: Scaffold a new Spectr change and validate strictly.\n---",

@@ -976,13 +976,18 @@ func TestAntigravitySlashConfigurator(t *testing.T) {
 		if !strings.Contains(contentStr, SpectrEndMarker) {
 			t.Errorf("Command file %s missing end marker", cmd)
 		}
+
+		// Verify frontmatter description
+		if !strings.Contains(contentStr, "description:") {
+			t.Errorf("Command file %s missing frontmatter description", cmd)
+		}
 	}
 
 	// Test file paths
 	expectedPaths := map[string]string{
-		"proposal": ".antigravity/commands/spectr-proposal.md",
-		"apply":    ".antigravity/commands/spectr-apply.md",
-		"archive":  ".antigravity/commands/spectr-archive.md",
+		"proposal": ".agent/workflows/spectr-proposal.md",
+		"apply":    ".agent/workflows/spectr-apply.md",
+		"archive":  ".agent/workflows/spectr-archive.md",
 	}
 
 	for cmd, expectedPath := range expectedPaths {

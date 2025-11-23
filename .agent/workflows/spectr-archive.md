@@ -1,5 +1,8 @@
-<!-- spectr:START -->
+---
+description: Archive a deployed Spectr change and update specs.
+---
 
+<!-- spectr:START -->
 **Guardrails**
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
@@ -19,7 +22,6 @@
 **Reference**
 - Use `spectr list` to confirm change IDs before archiving.
 - Inspect refreshed specs with `spectr list --specs` and address any validation issues before handing off.
-
 
 <!-- spectr:END -->
 

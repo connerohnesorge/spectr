@@ -23,7 +23,8 @@ The system SHALL support new functionality.
 - **THEN** feature responds
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	err := os.WriteFile(deltaPath, []byte(deltaContent), 0644)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -106,7 +107,7 @@ The system SHALL add a new capability.
 		t.Fatal("Merged spec missing expected sections")
 	}
 
-	if !(purposeIdx < notesIdx && notesIdx < reqIdx) {
+	if purposeIdx >= notesIdx || notesIdx >= reqIdx {
 		t.Error("Requirements section should be appended after original content when missing")
 	}
 }

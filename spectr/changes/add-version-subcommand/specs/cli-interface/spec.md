@@ -46,38 +46,6 @@ The version command SHALL support a `--json` flag that outputs version informati
 - **AND** the goVersion field contains the Go version (e.g., "go1.25.0")
 - **AND** the os and arch fields contain runtime.GOOS and runtime.GOARCH values
 
-### Requirement: Build-Time Version Injection
-The version command SHALL support version metadata injection at build time via Go linker flags (ldflags), integrated with GoReleaser for release builds.
-
-#### Scenario: GoReleaser injects version metadata
-- **WHEN** Spectr is built via GoReleaser
-- **THEN** the version variable is set to the git tag (e.g., "v1.2.3")
-- **AND** the commit variable is set to the short git commit hash
-- **AND** the date variable is set to the build date in ISO 8601 format
-- **AND** all values are displayed in the version output
-
-#### Scenario: Manual build with ldflags
-- **WHEN** developer builds with `go build -ldflags "-X main.version=v1.0.0"`
-- **THEN** the version command displays the injected version number
-- **AND** other fields display their default or injected values
-
-### Requirement: Development Build Handling
-The version command SHALL gracefully handle cases where version metadata is not injected, displaying "dev" or appropriate defaults.
-
-#### Scenario: Build without ldflags injection
-- **WHEN** user builds Spectr with `go build` without ldflags
-- **THEN** the version command displays "dev" as the version
-- **AND** commit displays "unknown" or empty string
-- **AND** date displays "unknown" or empty string
-- **AND** goVersion displays the runtime Go version
-- **AND** os and arch display the current platform values
-
-#### Scenario: Development build identification
-- **WHEN** user runs version command on a development build
-- **THEN** the output clearly indicates this is a development build
-- **AND** the user understands this is not an official release
-- **AND** the command still exits successfully with code 0
-
 ### Requirement: Version Command Integration
 The version command SHALL be integrated into the root CLI structure following the established Kong command pattern used by other subcommands.
 
@@ -93,3 +61,52 @@ The version command SHALL be integrated into the root CLI structure following th
 - **AND** VersionCmd has a Run() error method
 - **AND** the file includes comprehensive doc comments
 - **AND** the code follows the same patterns as other cmd files
+
+## MODIFIED Requirements
+
+### Requirement: Version Metadata from Embedded File
+The version command SHALL read version metadata from an embedded VERSION file in JSON format using Go's embed package, supporting both Nix builds and GoReleaser builds.
+
+#### Scenario: VERSION file embedded and parsed correctly
+- **WHEN** Spectr is built via any build system (GoReleaser, Nix, or go build)
+- **THEN** the VERSION file is embedded in the binary at compile time
+- **AND** the version command reads and parses the JSON file at runtime
+- **AND** the JSON contains "version", "commit", and "date" fields as strings
+- **AND** all values from the file are displayed in the version output
+
+#### Scenario: Custom VERSION file support
+- **WHEN** developer creates a custom VERSION file with specific values before build
+- **THEN** `go build` embeds the custom file into the binary
+- **AND** the version command displays the custom version, commit, and date values
+- **AND** the JSON format is validated during parsing
+
+#### Scenario: VERSION file format validation
+- **WHEN** the embedded VERSION file is parsed
+- **THEN** the system validates it contains valid JSON
+- **AND** the system checks for required fields: version, commit, date
+- **AND** if parsing fails, the system falls back to development defaults
+- **AND** the command still exits successfully with code 0
+
+### Requirement: Development Build Handling
+The version command SHALL gracefully handle cases where the VERSION file is missing or contains empty values, displaying "dev" or appropriate defaults.
+
+#### Scenario: Build without VERSION file
+- **WHEN** user builds Spectr with `go build` without a VERSION file
+- **THEN** the version command displays "dev" as the version
+- **AND** commit displays "unknown"
+- **AND** date displays "unknown"
+- **AND** goVersion displays the runtime Go version
+- **AND** os and arch display the current platform values
+
+#### Scenario: VERSION file with empty values
+- **WHEN** the VERSION file exists but contains empty strings for fields
+- **THEN** empty version field defaults to "dev"
+- **AND** empty commit field defaults to "unknown"
+- **AND** empty date field defaults to "unknown"
+- **AND** the version command still operates normally
+
+#### Scenario: Development build identification
+- **WHEN** user runs version command on a development build
+- **THEN** the output clearly indicates this is a development build (shows "dev")
+- **AND** the user understands this is not an official release
+- **AND** the command still exits successfully with code 0

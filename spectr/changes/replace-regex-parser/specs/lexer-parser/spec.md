@@ -28,6 +28,16 @@ WHEN the extractor encounters "### Requirement: Foo" inside a code block
 THEN it ignores it
 AND does NOT create a Requirement entity
 
+#### Scenario: Extracting delta sections
+WHEN the extractor traverses an AST with "## ADDED Requirements", "## MODIFIED Requirements", "## REMOVED Requirements", or "## RENAMED Requirements" headers
+THEN it identifies the appropriate delta operation type
+AND extracts requirements within each delta section
+
+#### Scenario: Extracting RENAMED requirements
+WHEN the extractor encounters a RENAMED section with "- FROM: ### Requirement: OldName" and "- TO: ### Requirement: NewName"
+THEN it captures both the old and new requirement names
+AND associates them as a rename operation
+
 ### Requirement: Report Parsing Errors
 The system SHALL report parsing errors with precise line and column information.
 

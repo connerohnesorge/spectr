@@ -2,9 +2,10 @@
 package validation
 
 import (
-	"bufio"
-	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/mdparser"
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 // Requirement represents a parsed requirement with its content and scenarios
@@ -18,32 +19,35 @@ type Requirement struct {
 // Example: "## Purpose" -> "This is the purpose..."
 func ExtractSections(content string) map[string]string {
 	sections := make(map[string]string)
-	scanner := bufio.NewScanner(strings.NewReader(content))
+
+	doc, err := mdparser.Parse(content)
+	if err != nil {
+		// Return empty map on parse error (graceful degradation)
+		return sections
+	}
 
 	var currentSection string
 	var currentContent strings.Builder
-	sectionHeaderRegex := regexp.MustCompile(`^##\s+(.+)$`)
 
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Check if this is a section header (## header)
-		matches := sectionHeaderRegex.FindStringSubmatch(line)
-		if matches != nil {
+	for _, node := range doc.Children {
+		// Check if this is an H2 header (section boundary)
+		if header, ok := node.(*mdparser.Header); ok && header.Level == 2 {
 			// Save previous section if exists
 			if currentSection != "" {
-				sections[currentSection] = strings.TrimSpace(
-					currentContent.String(),
-				)
+				sections[currentSection] = strings.TrimSpace(currentContent.String())
 			}
 
 			// Start new section
-			currentSection = strings.TrimSpace(matches[1])
+			currentSection = strings.TrimSpace(header.Text)
 			currentContent.Reset()
-		} else if currentSection != "" {
-			// Add line to current section content
-			currentContent.WriteString(line)
-			currentContent.WriteString("\n")
+
+			continue
+		}
+
+		// Add node content to current section if we're in one
+		if currentSection != "" {
+			nodeContent := renderNodeToString(node)
+			currentContent.WriteString(nodeContent)
 		}
 	}
 
@@ -55,192 +59,293 @@ func ExtractSections(content string) map[string]string {
 	return sections
 }
 
+// renderNodeToString renders an AST node back to markdown text
+func renderNodeToString(node mdparser.Node) string {
+	var sb strings.Builder
+
+	switch n := node.(type) {
+	case *mdparser.Header:
+		sb.WriteString(strings.Repeat("#", n.Level))
+		sb.WriteString(" ")
+		sb.WriteString(n.Text)
+		sb.WriteString("\n")
+
+	case *mdparser.Paragraph:
+		for _, line := range n.Lines {
+			sb.WriteString(line)
+			sb.WriteString("\n")
+		}
+
+	case *mdparser.CodeBlock:
+		sb.WriteString("```")
+		sb.WriteString(n.Language)
+		sb.WriteString("\n")
+		for _, line := range n.Lines {
+			sb.WriteString(line)
+			sb.WriteString("\n")
+		}
+		sb.WriteString("```\n")
+
+	case *mdparser.List:
+		for _, item := range n.Items {
+			if n.Ordered {
+				sb.WriteString("1. ")
+			} else {
+				sb.WriteString("- ")
+			}
+			sb.WriteString(item.Text)
+			sb.WriteString("\n")
+		}
+
+	case *mdparser.BlankLine:
+		for range n.Count {
+			sb.WriteString("\n")
+		}
+	}
+
+	return sb.String()
+}
+
 // ExtractRequirements returns all requirements found in content
 // Looks for ### Requirement: headers
+// Uses the shared parsers.ExtractRequirements function but allows requirements without scenarios
 func ExtractRequirements(content string) []Requirement {
 	// Initialize to empty slice instead of nil
 	requirements := make([]Requirement, 0)
-	scanner := bufio.NewScanner(strings.NewReader(content))
 
-	requirementHeaderRegex := regexp.MustCompile(`^###\s+Requirement:\s*(.+)$`)
-	var currentRequirement *Requirement
-	var currentContent strings.Builder
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Check if this is a requirement header
-		matches := requirementHeaderRegex.FindStringSubmatch(line)
-		if matches != nil {
-			saveCurrentRequirement(
-				currentRequirement,
-				&currentContent,
-				&requirements,
-			)
-
-			// Start new requirement
-			currentRequirement = &Requirement{
-				Name: strings.TrimSpace(matches[1]),
-			}
-			currentContent.Reset()
-
-			continue
-		}
-
-		if currentRequirement == nil {
-			continue
-		}
-
-		// Check if we should stop collecting
-		if shouldStopRequirement(line) {
-			closeRequirement(currentRequirement, &currentContent, &requirements)
-			currentRequirement = nil
-
-			continue
-		}
-
-		// Add line to current requirement content
-		currentContent.WriteString(line)
-		currentContent.WriteString(newline)
+	doc, err := mdparser.Parse(content)
+	if err != nil {
+		// Return empty slice on parse error (graceful degradation)
+		return requirements
 	}
 
-	// Save last requirement
-	saveCurrentRequirement(currentRequirement, &currentContent, &requirements)
+	// Extract requirements manually from the document
+	// We don't use parsers.ParseRequirements because it's file-based
+	// and we need content-based extraction here
+	parsedReqs := extractRequirementsManually(doc)
+
+	// Convert from parsers.RequirementBlock to validation.Requirement
+	for _, req := range parsedReqs {
+		// Extract scenarios from the raw content
+		scenarios := ExtractScenarios(req.Raw)
+
+		requirements = append(requirements, Requirement{
+			Name:      req.Name,
+			Content:   strings.TrimSpace(req.Raw[len(req.HeaderLine)+1:]), // Skip header line
+			Scenarios: scenarios,
+		})
+	}
 
 	return requirements
 }
 
-// saveCurrentRequirement saves the current requirement if it exists
-func saveCurrentRequirement(
-	req *Requirement,
-	content *strings.Builder,
-	requirements *[]Requirement,
-) {
-	if req == nil {
-		return
+// extractRequirementsManually extracts requirements without enforcing scenario validation
+// This is used for backward compatibility with validation code
+func extractRequirementsManually(doc *mdparser.Document) []parsers.RequirementBlock {
+	var requirements []parsers.RequirementBlock
+
+	for i, node := range doc.Children {
+		header, ok := node.(*mdparser.Header)
+		if !ok || header.Level != 3 {
+			continue
+		}
+
+		// Check if this is a requirement header
+		if !strings.HasPrefix(header.Text, "Requirement: ") {
+			continue
+		}
+
+		// Extract requirement name
+		name := strings.TrimPrefix(header.Text, "Requirement: ")
+		name = strings.TrimSpace(name)
+
+		// Get siblings (nodes after this header until next H3 or H2)
+		siblings := getSiblingsUntilNextHeader(doc.Children, i+1, 3)
+
+		// Build raw content
+		raw := buildRawContent(header, siblings)
+
+		requirements = append(requirements, parsers.RequirementBlock{
+			HeaderLine: "### Requirement: " + name,
+			Name:       name,
+			Raw:        raw,
+		})
 	}
-	req.Content = strings.TrimSpace(content.String())
-	req.Scenarios = ExtractScenarios(req.Content)
-	*requirements = append(*requirements, *req)
+
+	return requirements
 }
 
-// shouldStopRequirement checks if we should stop collecting requirement content
-func shouldStopRequirement(line string) bool {
-	// Stop if we hit another ### header (non-requirement)
-	// But allow #### headers (scenarios) to pass through
-	if strings.HasPrefix(line, "###") && !strings.HasPrefix(line, "####") {
-		return true
+// Helper functions copied from parsers/extractor.go
+
+// getSiblingsUntilNextHeader returns nodes from start index until next header of given level or higher.
+func getSiblingsUntilNextHeader(nodes []mdparser.Node, startIdx, maxLevel int) []mdparser.Node {
+	if startIdx >= len(nodes) {
+		return nil
 	}
 
-	// Stop if we hit a ## header (section boundary)
-	// But make sure it's not a ### or #### header
-	if strings.HasPrefix(line, "##") && !strings.HasPrefix(line, "###") {
-		return true
+	var siblings []mdparser.Node
+	for i := startIdx; i < len(nodes); i++ {
+		node := nodes[i]
+
+		// Check if we've hit a header of the specified level or higher
+		if header, ok := node.(*mdparser.Header); ok && header.Level <= maxLevel {
+			break
+		}
+
+		siblings = append(siblings, node)
 	}
 
-	return false
+	return siblings
 }
 
-// closeRequirement finalizes and appends a requirement
-func closeRequirement(
-	req *Requirement,
-	content *strings.Builder,
-	requirements *[]Requirement,
-) {
-	req.Content = strings.TrimSpace(content.String())
-	req.Scenarios = ExtractScenarios(req.Content)
-	*requirements = append(*requirements, *req)
-	content.Reset()
+// buildRawContent constructs the raw markdown text from a header and its siblings.
+func buildRawContent(header *mdparser.Header, siblings []mdparser.Node) string {
+	var sb strings.Builder
+
+	// Add header line
+	sb.WriteString("### Requirement: ")
+	sb.WriteString(strings.TrimPrefix(header.Text, "Requirement: "))
+	sb.WriteString("\n")
+
+	// Add sibling content
+	for _, node := range siblings {
+		switch n := node.(type) {
+		case *mdparser.Header:
+			sb.WriteString(strings.Repeat("#", n.Level))
+			sb.WriteString(" ")
+			sb.WriteString(n.Text)
+			sb.WriteString("\n")
+
+		case *mdparser.Paragraph:
+			for _, line := range n.Lines {
+				sb.WriteString(line)
+				sb.WriteString("\n")
+			}
+
+		case *mdparser.CodeBlock:
+			sb.WriteString("```")
+			sb.WriteString(n.Language)
+			sb.WriteString("\n")
+			for _, line := range n.Lines {
+				sb.WriteString(line)
+				sb.WriteString("\n")
+			}
+			sb.WriteString("```\n")
+
+		case *mdparser.List:
+			for _, item := range n.Items {
+				if n.Ordered {
+					sb.WriteString("1. ")
+				} else {
+					sb.WriteString("- ")
+				}
+				sb.WriteString(item.Text)
+				sb.WriteString("\n")
+			}
+
+		case *mdparser.BlankLine:
+			for range n.Count {
+				sb.WriteString("\n")
+			}
+		}
+	}
+
+	return sb.String()
 }
 
 // ExtractScenarios finds all #### Scenario: blocks in a requirement
+// Uses mdparser to parse scenario structure
 func ExtractScenarios(requirementBlock string) []string {
 	// Initialize to empty slice instead of nil
 	scenarios := make([]string, 0)
-	scanner := bufio.NewScanner(strings.NewReader(requirementBlock))
 
-	scenarioHeaderRegex := regexp.MustCompile(
-		`^####\s+Scenario:\s*(.+)$`,
-	)
-	var currentScenario strings.Builder
-	var inScenario bool
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Check if this is a scenario header (#### Scenario:)
-		matches := scenarioHeaderRegex.FindStringSubmatch(line)
-		if matches != nil {
-			// Save previous scenario if exists
-			if inScenario {
-				scenarios = append(scenarios,
-					strings.TrimSpace(currentScenario.String()))
-			}
-
-			// Start new scenario with the header line
-			currentScenario.Reset()
-			currentScenario.WriteString(line)
-			currentScenario.WriteString(newline)
-			inScenario = true
-
-			continue
-		}
-
-		// Process lines when we're inside a scenario
-		if !inScenario {
-			continue
-		}
-
-		// Check if we should stop collecting (hit header boundary)
-		if shouldStopScenario(line) {
-			closeScenario(&currentScenario, &scenarios)
-			inScenario = false
-
-			continue
-		}
-
-		// Add line to current scenario
-		currentScenario.WriteString(line)
-		currentScenario.WriteString(newline)
+	doc, err := mdparser.Parse(requirementBlock)
+	if err != nil {
+		// Return empty slice on parse error (graceful degradation)
+		return scenarios
 	}
 
-	// Save last scenario
-	if inScenario {
-		scenarios = append(
-			scenarios,
-			strings.TrimSpace(currentScenario.String()),
-		)
+	// Traverse the AST to find scenario headers
+	for i, node := range doc.Children {
+		header, ok := node.(*mdparser.Header)
+		if !ok || header.Level != 4 {
+			continue
+		}
+
+		// Check if this is a scenario header
+		if !strings.HasPrefix(header.Text, "Scenario: ") {
+			continue
+		}
+
+		// Get siblings until next H4 or higher
+		siblings := getSiblingsUntilNextHeader(doc.Children, i+1, 4)
+
+		// Build full scenario text (header + content)
+		var sb strings.Builder
+		sb.WriteString("#### Scenario: ")
+		sb.WriteString(strings.TrimPrefix(header.Text, "Scenario: "))
+		sb.WriteString("\n")
+
+		// Add sibling content
+		for _, sibling := range siblings {
+			sb.WriteString(renderNodeToString(sibling))
+		}
+
+		scenarios = append(scenarios, strings.TrimSpace(sb.String()))
 	}
 
 	return scenarios
 }
 
-// shouldStopScenario checks if we should stop collecting scenario content
-func shouldStopScenario(line string) bool {
-	// Stop if we hit another #### header (next scenario or other)
-	if strings.HasPrefix(line, "####") {
+// ContainsShallOrMust checks if text contains SHALL or MUST (case-insensitive)
+// Uses word boundary checking without regex
+func ContainsShallOrMust(text string) bool {
+	textLower := strings.ToLower(text)
+
+	// Check for "shall" with word boundaries
+	if containsWord(textLower, "shall") {
 		return true
 	}
 
-	// Stop if we hit a ### header (next requirement)
-	if strings.HasPrefix(line, "###") {
+	// Check for "must" with word boundaries
+	if containsWord(textLower, "must") {
 		return true
 	}
 
 	return false
 }
 
-// closeScenario finalizes and appends a scenario
-func closeScenario(scenario *strings.Builder, scenarios *[]string) {
-	*scenarios = append(*scenarios, strings.TrimSpace(scenario.String()))
-	scenario.Reset()
+// containsWord checks if text contains word with word boundaries
+// A word boundary is defined as space, punctuation, or string start/end
+func containsWord(text, word string) bool {
+	idx := strings.Index(text, word)
+	for idx != -1 {
+		// Check if this is a word boundary (not part of a larger word)
+		wordLen := len(word)
+
+		// Check character before
+		beforeOK := idx == 0 || !isAlphanumeric(rune(text[idx-1]))
+
+		// Check character after
+		afterOK := idx+wordLen >= len(text) || !isAlphanumeric(rune(text[idx+wordLen]))
+
+		if beforeOK && afterOK {
+			return true
+		}
+
+		// Continue searching
+		idx = strings.Index(text[idx+1:], word)
+		if idx != -1 {
+			idx += idx + 1
+		}
+	}
+
+	return false
 }
 
-// ContainsShallOrMust checks if text contains SHALL or MUST (case-insensitive)
-func ContainsShallOrMust(text string) bool {
-	shallMustRegex := regexp.MustCompile(`(?i)\b(shall|must)\b`)
-
-	return shallMustRegex.MatchString(text)
+// isAlphanumeric checks if a character is alphanumeric
+func isAlphanumeric(r rune) bool {
+	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
 }
 
 // NormalizeRequirementName normalizes requirement names for duplicate detection
@@ -252,9 +357,30 @@ func NormalizeRequirementName(name string) string {
 	// Convert to lowercase
 	normalized = strings.ToLower(normalized)
 
-	// Replace multiple spaces with single space
-	spaceRegex := regexp.MustCompile(`\s+`)
-	normalized = spaceRegex.ReplaceAllString(normalized, " ")
+	// Replace multiple spaces with single space (without regex)
+	normalized = collapseSpaces(normalized)
 
 	return normalized
+}
+
+// collapseSpaces replaces multiple consecutive spaces with a single space
+func collapseSpaces(s string) string {
+	var result strings.Builder
+	prevSpace := false
+
+	for _, r := range s {
+		isSpace := r == ' ' || r == '\t' || r == '\n' || r == '\r'
+
+		if isSpace {
+			if !prevSpace {
+				result.WriteRune(' ')
+				prevSpace = true
+			}
+		} else {
+			result.WriteRune(r)
+			prevSpace = false
+		}
+	}
+
+	return result.String()
 }

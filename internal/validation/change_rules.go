@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/mdparser"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -258,63 +258,34 @@ type RenamedRequirement struct {
 
 // parseRenamedRequirements parses the RENAMED Requirements section
 // Expected format:
-// - FROM: ### Requirement: OldName
-// - TO: ### Requirement: NewName
+// - FROM: `### Requirement: OldName` (or without backticks)
+// - TO: `### Requirement: NewName` (or without backticks)
+// Uses the shared parsers.ExtractRenamedRequirements function
 func parseRenamedRequirements(content string) []RenamedRequirement {
-	var renames []RenamedRequirement
-	lines := strings.Split(content, "\n")
+	// The content comes without the section header, so we need to add it
+	// for the extractor to work properly
+	fullContent := "## RENAMED Requirements\n\n" + content
 
-	fromRegex := regexp.MustCompile(
-		`^\s*-\s*FROM:\s*###\s*Requirement:\s*(.+)$`,
-	)
-	toRegex := regexp.MustCompile(
-		`^\s*-\s*TO:\s*###\s*Requirement:\s*(.+)$`,
-	)
-
-	var currentFrom string
-
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-
-		// Check for FROM line
-		if matches := fromRegex.FindStringSubmatch(line); matches != nil {
-			currentFrom = strings.TrimSpace(matches[1])
-
-			continue
-		}
-
-		// Check for TO line
-		matches := toRegex.FindStringSubmatch(line)
-		if matches == nil {
-			continue
-		}
-
-		toName := strings.TrimSpace(matches[1])
-
-		// If we have a FROM, pair it with this TO
-		if currentFrom != "" {
-			renames = append(renames, RenamedRequirement{
-				FromName: currentFrom,
-				ToName:   toName,
-			})
-			currentFrom = "" // Reset for next pair
-		} else {
-			// TO without FROM - add as malformed
-			renames = append(renames, RenamedRequirement{
-				FromName: "",
-				ToName:   toName,
-			})
-		}
+	// Parse the content into a document
+	doc, err := mdparser.Parse(fullContent)
+	if err != nil {
+		// Return empty slice on parse error
+		return nil
 	}
 
-	// If we have a FROM without a TO, add as malformed
-	if currentFrom != "" {
+	// Use the shared extractor from parsers
+	parsedRenames, err := parsers.ExtractRenamedRequirements(doc)
+	if err != nil {
+		// Return empty slice on extraction error
+		return nil
+	}
+
+	// Convert from parsers.RenamedRequirement to validation.RenamedRequirement
+	var renames []RenamedRequirement
+	for _, r := range parsedRenames {
 		renames = append(renames, RenamedRequirement{
-			FromName: currentFrom,
-			ToName:   "",
+			FromName: r.From,
+			ToName:   r.To,
 		})
 	}
 

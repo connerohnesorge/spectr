@@ -1,6 +1,5 @@
 package validation
 
-const (
-	// Markdown formatting constants
-	newline = "\n"
-)
+// This file is reserved for validation-specific constants.
+// Currently no constants are needed, but the file is kept for
+// future use.

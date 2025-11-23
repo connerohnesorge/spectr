@@ -97,6 +97,7 @@ func (g *GenericConfigurator) configureSlashCommand(projectPath, cmd string) err
 
 	if FileExists(filePath) {
 		frontmatter := g.config.Frontmatter[cmd]
+
 		return g.updateExistingSlashCommand(filePath, body, frontmatter)
 	}
 
@@ -252,6 +253,7 @@ func (s *SlashCommandConfigurator) configureCommand(
 
 	if FileExists(filePath) {
 		frontmatter := s.config.Frontmatter[cmd]
+
 		return s.updateExistingCommand(filePath, body, frontmatter)
 	}
 

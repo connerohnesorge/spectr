@@ -180,11 +180,21 @@ nix fmt
       };
 
       packages = {
-        default = pkgs.buildGoModule {
+        default = pkgs.buildGoModule rec {
           pname = "spectr";
           version = "0.0.1";
           src = self;
           vendorHash = "sha256-6bE9HNbebJ4ivHF7YynZwL6mu+T3wEfESjQdyR8q59M=";
+
+          # Generate VERSION file before build with Nix-specific metadata
+          preBuild = ''
+            cat > VERSION <<EOF
+            {"version":"${version}","commit":"${self.rev or "unknown"}","date":"${self.lastModifiedDate or "unknown"}"}
+            EOF
+            # Copy VERSION file to internal/version for embedding
+            cp VERSION internal/version/VERSION
+          '';
+
           meta = with pkgs.lib; {
             description = "A CLI tool for spec-driven development workflow with change proposals, validation, and archiving";
             homepage = "https://github.com/connerohnesorge/spectr";

@@ -12,6 +12,10 @@ before:
   hooks:
     # You may remove this if you don't use go modules.
     - go mod tidy
+    # Generate VERSION file with build metadata for embedding
+    - sh -c 'printf "{\"version\":\"%s\",\"commit\":\"%s\",\"date\":\"%s\"}\n" "{{ .Version }}" "{{ .ShortCommit }}" "{{ .Date }}" > VERSION'
+    # Copy VERSION file to internal/version for embedding
+    - cp VERSION internal/version/VERSION
 
 builds:
   - env:

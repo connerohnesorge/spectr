@@ -566,11 +566,16 @@ func renderCodeBlock(sb *strings.Builder, cb *mdparser.CodeBlock) {
 // renderList renders a list node.
 func renderList(sb *strings.Builder, l *mdparser.List) {
 	for _, item := range l.Items {
-		if l.Ordered {
-			sb.WriteString("1. ")
-		} else {
-			sb.WriteString("- ")
+		marker := item.Marker
+		if marker == "" {
+			if l.Ordered {
+				marker = "1. "
+			} else {
+				marker = "- "
+			}
 		}
+
+		sb.WriteString(marker)
 
 		sb.WriteString(item.Text)
 		sb.WriteString("\n")

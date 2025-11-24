@@ -356,6 +356,11 @@ func TestContainsShallOrMust(t *testing.T) {
 			expected: false,
 		},
 		{
+			name:     "ignores partial match but catches later whole word",
+			text:     "mustard MUST comply",
+			expected: true,
+		},
+		{
 			name:     "word boundary respected",
 			text:     "The system SHALL do something",
 			expected: true,

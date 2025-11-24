@@ -114,6 +114,54 @@ This requirement has no scenarios.
 	}
 }
 
+func TestExtractRequirements_PreservesListMarkers(t *testing.T) {
+	content := `# Test Spec
+
+## Requirements
+
+### Requirement: List Formatting
+1. First item
+4. Fourth item
+
+* Star bullet
+- Dash bullet
+
+#### Scenario: Example
+- **WHEN** something happens
+- **THEN** result
+`
+
+	doc, err := mdparser.Parse(content)
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+
+	reqs, err := ExtractRequirements(doc)
+	if err != nil {
+		t.Fatalf("ExtractRequirements failed: %v", err)
+	}
+
+	if len(reqs) != 1 {
+		t.Fatalf("Expected 1 requirement, got %d", len(reqs))
+	}
+
+	expected := `### Requirement: List Formatting
+1. First item
+4. Fourth item
+
+* Star bullet
+- Dash bullet
+
+#### Scenario: Example
+- **WHEN** something happens
+- **THEN** result
+`
+
+	if reqs[0].Raw != expected {
+		t.Fatalf("Raw requirement did not preserve list markers.\nExpected:\n%s\nGot:\n%s", expected, reqs[0].Raw)
+	}
+}
+
 func TestExtractRequirements_CodeBlockIgnored(t *testing.T) {
 	content := `# Test Spec
 

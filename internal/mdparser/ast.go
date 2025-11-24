@@ -153,6 +153,7 @@ type ListItem struct {
 	StartPos Position
 	EndPos   Position
 	Text     string // Item text without the bullet/number
+	Marker   string // Original list marker (e.g., "- ", "1. ")
 	Children []Node // Nested content (paragraphs, sublists, etc.)
 }
 

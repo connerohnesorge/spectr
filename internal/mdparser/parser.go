@@ -225,19 +225,7 @@ func (p *Parser) parseList() (*List, error) {
 // parseListItem parses a single list item.
 func (p *Parser) parseListItem() (*ListItem, error) {
 	startPos := p.current.Pos
-	text := p.current.Value
-
-	// Remove bullet/number prefix
-	text = strings.TrimSpace(text)
-	if strings.HasPrefix(text, "- ") || strings.HasPrefix(text, "* ") {
-		text = text[2:]
-	} else if len(text) > 0 && text[0] >= '0' && text[0] <= '9' {
-		// Remove number and period
-		dotIdx := strings.Index(text, ". ")
-		if dotIdx >= 0 {
-			text = text[dotIdx+2:]
-		}
-	}
+	marker, text := parseListItemMarker(p.current.Value)
 
 	p.advance()
 
@@ -248,8 +236,31 @@ func (p *Parser) parseListItem() (*ListItem, error) {
 		StartPos: startPos,
 		EndPos:   p.current.Pos,
 		Text:     text,
+		Marker:   marker,
 		Children: nil,
 	}, nil
+}
+
+// parseListItemMarker extracts the list marker and item text.
+// For example, "- text" returns ("- ", "text").
+func parseListItemMarker(raw string) (marker, text string) {
+	trimmed := strings.TrimSpace(raw)
+
+	switch {
+	case strings.HasPrefix(trimmed, "- "):
+		return "- ", trimmed[2:]
+	case strings.HasPrefix(trimmed, "* "):
+		return "* ", trimmed[2:]
+	case len(trimmed) > 0 && trimmed[0] >= '0' && trimmed[0] <= '9':
+		dotIdx := strings.Index(trimmed, ". ")
+		if dotIdx >= 0 {
+			marker := trimmed[:dotIdx+2]
+
+			return marker, trimmed[dotIdx+2:]
+		}
+	}
+
+	return "", trimmed
 }
 
 // parseBlankLine parses a blank line token into a BlankLine node.

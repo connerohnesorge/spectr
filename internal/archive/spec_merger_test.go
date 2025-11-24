@@ -112,6 +112,73 @@ The system SHALL add a new capability.
 	}
 }
 
+func TestMergeSpec_RewritesRequirementsWhenSectionMissing(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	baseContent := `# Test Spec
+
+## Purpose
+Purpose content.
+
+### Requirement: Existing Feature
+The system SHALL have old behavior.
+
+#### Scenario: Old scenario
+- **WHEN** old action
+- **THEN** old result
+
+## Notes
+Keep me intact.
+`
+	basePath := filepath.Join(tmpDir, "base.md")
+	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	deltaContent := `# Delta Spec
+
+## MODIFIED Requirements
+
+### Requirement: Existing Feature
+The system SHALL have updated behavior.
+
+#### Scenario: Updated scenario
+- **WHEN** updated action
+- **THEN** updated result
+`
+	deltaPath := filepath.Join(tmpDir, "delta.md")
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	merged, _, err := MergeSpec(basePath, deltaPath, true)
+	if err != nil {
+		t.Fatalf("MergeSpec failed: %v", err)
+	}
+
+	if strings.Count(merged, "### Requirement: Existing Feature") != 1 {
+		t.Fatalf("Expected requirement to be rewritten once, got:\n%s", merged)
+	}
+
+	if strings.Contains(merged, "old behavior") {
+		t.Fatalf("Old requirement content should be removed, got:\n%s", merged)
+	}
+
+	if !strings.Contains(merged, "updated behavior") {
+		t.Fatalf("Updated requirement content missing, got:\n%s", merged)
+	}
+
+	reqIdx := strings.Index(merged, "## Requirements")
+	notesIdx := strings.Index(merged, "## Notes")
+	if reqIdx == -1 || notesIdx == -1 {
+		t.Fatalf("Merged spec missing expected sections, got:\n%s", merged)
+	}
+
+	if reqIdx > notesIdx {
+		t.Fatalf("Requirements section should precede later sections when reconstructing, got:\n%s", merged)
+	}
+}
+
 func TestMergeSpec_ModifiedOnly_ExistingSpec(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -456,6 +523,82 @@ Updated content B.
 	}
 }
 
+func TestMergeSpec_PreservesListFormattingOutsideRequirements(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	baseContent := `# Test Spec
+
+## Purpose
+1. First step  
+2. Second step  
+3. Third step  
+
+- Star bullet  
+* Dash bullet  
+
+## Requirements
+
+### Requirement: Existing Feature
+The system SHALL have original behavior.
+
+#### Scenario: Original scenario
+- **WHEN** original action
+- **THEN** original result
+
+## Notes
+1. Alpha  
+2. Beta  
+`
+	basePath := filepath.Join(tmpDir, "base.md")
+	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	deltaContent := `# Delta Spec
+
+## ADDED Requirements
+
+### Requirement: Added Feature
+The system SHALL add a new capability.
+
+#### Scenario: Added behavior
+- **WHEN** a new action occurs
+- **THEN** the new capability responds
+`
+	deltaPath := filepath.Join(tmpDir, "delta.md")
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	merged, _, err := MergeSpec(basePath, deltaPath, true)
+	if err != nil {
+		t.Fatalf("MergeSpec failed: %v", err)
+	}
+
+	expectedPreamble := `## Purpose
+1. First step  
+2. Second step  
+3. Third step  
+
+- Star bullet  
+* Dash bullet  
+
+## Requirements`
+
+	if !strings.Contains(merged, expectedPreamble) {
+		t.Fatalf("Preamble lists should be preserved with spacing and markers, got:\n%s", merged)
+	}
+
+	expectedNotes := `## Notes
+1. Alpha  
+2. Beta  
+`
+
+	if !strings.Contains(merged, expectedNotes) {
+		t.Fatalf("Trailing list markers in epilogue should be preserved, got:\n%s", merged)
+	}
+}
+
 func TestMergeSpec_ErrorOnNewSpecWithModified(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -504,6 +647,62 @@ Just a regular spec.
 	_, _, err := MergeSpec(basePath, deltaPath, false)
 	if err == nil {
 		t.Error("Expected error for spec with no deltas")
+	}
+}
+
+func TestMergeSpec_PreservesOrderedListNumbering(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	baseContent := `# Test Spec
+
+Preamble intro with numbered steps:
+1. First step
+4. Second step
+7. Third step
+
+## Requirements
+
+### Requirement: Existing Feature
+The system SHALL keep content.
+
+#### Scenario: Original scenario
+- **WHEN** original action
+- **THEN** original result
+`
+	basePath := filepath.Join(tmpDir, "base.md")
+	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	deltaContent := `# Delta Spec
+
+## MODIFIED Requirements
+
+### Requirement: Existing Feature
+The system SHALL have updated behavior.
+
+#### Scenario: Updated scenario
+- **WHEN** updated action
+- **THEN** updated result
+`
+	deltaPath := filepath.Join(tmpDir, "delta.md")
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	merged, _, err := MergeSpec(basePath, deltaPath, true)
+	if err != nil {
+		t.Fatalf("MergeSpec failed: %v", err)
+	}
+
+	if !strings.Contains(merged, "1. First step") {
+		t.Fatalf("Merged spec missing first list item: %s", merged)
+	}
+	if strings.Contains(merged, "1. Second step") || strings.Contains(merged, "1. Third step") {
+		t.Fatalf("Ordered list numbering was rewritten: %s", merged)
+	}
+	if !strings.Contains(merged, "4. Second step") || !strings.Contains(merged, "7. Third step") {
+		t.Fatalf("Ordered list numbering was not preserved: %s", merged)
 	}
 }
 

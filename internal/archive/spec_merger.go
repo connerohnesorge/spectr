@@ -196,31 +196,54 @@ func reconstructSpec(
 		orderedReqs = collectRequirementsWithoutSection(doc, reqMap)
 	}
 
+	reqStartOffset := len(baseContent)
+	headerLevel := 2
+	headerText := "Requirements"
+	afterReqsIdx := -1
+	if reqsSectionIdx >= 0 && reqsSectionIdx < len(doc.Children) {
+		reqStartOffset = doc.Children[reqsSectionIdx].Pos().Offset
+
+		if header, ok := doc.Children[reqsSectionIdx].(*mdparser.Header); ok {
+			headerLevel = header.Level
+			headerText = header.Text
+		}
+
+		afterReqsIdx = findNextSectionAfterRequirements(doc, reqsSectionIdx)
+	} else {
+		firstReqIdx := findFirstRequirementHeaderIndex(doc)
+		if firstReqIdx >= 0 && firstReqIdx < len(doc.Children) {
+			reqStartOffset = doc.Children[firstReqIdx].Pos().Offset
+			afterReqsIdx = findNextSectionAfterRequirements(doc, firstReqIdx)
+		}
+	}
+	reqEndOffset := len(baseContent)
+	if afterReqsIdx >= 0 && afterReqsIdx < len(doc.Children) {
+		reqEndOffset = doc.Children[afterReqsIdx].Pos().Offset
+	}
+
+	preamble := baseContent[:reqStartOffset]
+	epilogue := ""
+	if reqEndOffset >= 0 && reqEndOffset <= len(baseContent) {
+		epilogue = baseContent[reqEndOffset:]
+	}
+
 	// Rebuild document with updated requirements
 	var result strings.Builder
+	result.WriteString(preamble)
 
-	preambleEnd := reqsSectionIdx
-	if missingRequirementsSection {
-		preambleEnd = len(doc.Children)
-	}
-
-	// Write everything before Requirements section
-	for i := 0; i < preambleEnd && i < len(doc.Children); i++ {
-		renderNode(&result, doc.Children[i])
-	}
-
-	// Write Requirements header if we found one
-	if reqsSectionIdx >= 0 && reqsSectionIdx < len(doc.Children) {
-		if header, ok := doc.Children[reqsSectionIdx].(*mdparser.Header); ok {
-			result.WriteString(strings.Repeat("#", header.Level))
-			result.WriteString(" ")
-			result.WriteString(header.Text)
-			result.WriteString("\n\n")
+	if missingRequirementsSection && len(strings.TrimSpace(preamble)) > 0 {
+		if !strings.HasSuffix(result.String(), "\n") {
+			result.WriteString("\n")
 		}
-	} else {
-		// No Requirements section found, add one
-		result.WriteString("## Requirements\n\n")
+		if !strings.HasSuffix(result.String(), "\n\n") {
+			result.WriteString("\n")
+		}
 	}
+
+	result.WriteString(strings.Repeat("#", headerLevel))
+	result.WriteString(" ")
+	result.WriteString(headerText)
+	result.WriteString("\n\n")
 
 	// Write ordered requirements
 	for i, req := range orderedReqs {
@@ -238,16 +261,17 @@ func reconstructSpec(
 		result.WriteString("\n")
 	}
 
-	// Write everything after Requirements section
-	afterReqsIdx := findNextSectionAfterRequirements(doc, reqsSectionIdx)
-	if afterReqsIdx >= 0 {
-		result.WriteString("\n")
-		for i := afterReqsIdx; i < len(doc.Children); i++ {
-			renderNode(&result, doc.Children[i])
+	if epilogue != "" {
+		if !strings.HasSuffix(result.String(), "\n") {
+			result.WriteString("\n")
 		}
+		if !strings.HasSuffix(result.String(), "\n\n") {
+			result.WriteString("\n")
+		}
+		result.WriteString(epilogue)
 	}
 
-	// Normalize blank lines using AST-aware approach
+	// Normalize blank lines while preserving original formatting
 	return normalizeBlankLines(result.String())
 }
 
@@ -374,6 +398,22 @@ func findNextSectionAfterRequirements(doc *mdparser.Document, reqsSectionIdx int
 	return -1
 }
 
+// findFirstRequirementHeaderIndex returns the index of the first H3 requirement header in the document.
+func findFirstRequirementHeaderIndex(doc *mdparser.Document) int {
+	for i, node := range doc.Children {
+		header, ok := node.(*mdparser.Header)
+		if !ok || header.Level != 3 {
+			continue
+		}
+
+		if strings.HasPrefix(header.Text, "Requirement: ") {
+			return i
+		}
+	}
+
+	return -1
+}
+
 // renderNode converts an AST node back to markdown text
 func renderNode(sb *strings.Builder, node mdparser.Node) {
 	switch n := node.(type) {
@@ -401,11 +441,14 @@ func renderNode(sb *strings.Builder, node mdparser.Node) {
 
 	case *mdparser.List:
 		for _, item := range n.Items {
+			marker := "- "
 			if n.Ordered {
-				sb.WriteString("1. ")
-			} else {
-				sb.WriteString("- ")
+				marker = "1. "
 			}
+			if item != nil && item.Marker != "" {
+				marker = item.Marker
+			}
+			sb.WriteString(marker)
 			sb.WriteString(item.Text)
 			sb.WriteString("\n")
 		}
@@ -425,36 +468,23 @@ func renderNode(sb *strings.Builder, node mdparser.Node) {
 
 // normalizeBlankLines collapses 3+ consecutive newlines to 2
 func normalizeBlankLines(content string) string {
-	// Parse to understand structure
-	doc, err := mdparser.Parse(content)
-	if err != nil {
-		// If parsing fails, use simple string replacement
-		lines := strings.Split(content, "\n")
-		var result []string
-		blankCount := 0
+	lines := strings.Split(content, "\n")
+	var result []string
+	blankCount := 0
 
-		for _, line := range lines {
-			if strings.TrimSpace(line) == "" {
-				blankCount++
-				if blankCount <= 2 {
-					result = append(result, line)
-				}
-			} else {
-				blankCount = 0
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			blankCount++
+			if blankCount <= 2 {
 				result = append(result, line)
 			}
+		} else {
+			blankCount = 0
+			result = append(result, line)
 		}
-
-		return strings.Join(result, "\n")
 	}
 
-	// Render with normalized blank lines
-	var sb strings.Builder
-	for _, node := range doc.Children {
-		renderNode(&sb, node)
-	}
-
-	return sb.String()
+	return strings.Join(result, "\n")
 }
 
 // generateSpecSkeleton creates a new spec skeleton for a capability

@@ -334,10 +334,14 @@ func containsWord(text, word string) bool {
 		}
 
 		// Continue searching
-		idx = strings.Index(text[idx+1:], word)
-		if idx != -1 {
-			idx += idx + 1
+		nextSearchStart := idx + 1
+		nextIdx := strings.Index(text[nextSearchStart:], word)
+		if nextIdx == -1 {
+			break
 		}
+
+		// Convert relative index to absolute index within the original text
+		idx = nextSearchStart + nextIdx
 	}
 
 	return false

@@ -9,7 +9,7 @@ The current `internal/init/` tool registry is tightly coupled with hardcoded too
 - **Provider interface**: Define a `Provider` interface that all CLI/IDE integrations implement
 - **Per-provider files**: Each provider (Claude, Gemini, Cline, Cursor, etc.) gets its own Go file containing its configuration
 - **Registration pattern**: Use a registry pattern with `Register()` functions called from `init()` in each provider file
-- **Support TOML-based commands**: Add support for Gemini-style TOML command definitions alongside markdown
+- **Support TOML-based commands**: Add support for Gemini-style TOML command definitions alongside Markdown
 - **Remove global maps**: Replace `toolConfigs` and `slashToolConfigs` maps with the interface-driven registry
 
 ## Impact

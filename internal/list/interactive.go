@@ -40,16 +40,17 @@ const (
 
 // interactiveModel represents the bubbletea model for interactive table
 type interactiveModel struct {
-	table       table.Model
-	selectedID  string
-	copied      bool
-	quitting    bool
-	err         error
-	helpText    string
-	itemType    string    // "spec", "change", or "all"
-	projectPath string    // root directory of the project
-	allItems    ItemList  // all items when in unified mode
-	filterType  *ItemType // current filter when in unified mode (nil = show all)
+	table            table.Model
+	selectedID       string
+	copied           bool
+	quitting         bool
+	archiveRequested bool
+	err              error
+	helpText         string
+	itemType         string    // "spec", "change", or "all"
+	projectPath      string    // root directory of the project
+	allItems         ItemList  // all items when in unified mode
+	filterType       *ItemType // current filter when in unified mode (nil = show all)
 }
 
 // Init initializes the model
@@ -84,6 +85,9 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				return m, nil
 			}
+
+		case "a":
+			return m.handleArchive()
 		}
 
 	case editorFinishedMsg:
@@ -220,6 +224,44 @@ func (m interactiveModel) handleToggleFilter() interactiveModel {
 	return m
 }
 
+// handleArchive handles the 'a' key press for archiving a change
+func (m interactiveModel) handleArchive() (interactiveModel, tea.Cmd) {
+	cursor := m.table.Cursor()
+	if cursor < 0 || cursor >= len(m.table.Rows()) {
+		return m, nil
+	}
+
+	row := m.table.Rows()[cursor]
+	if len(row) == 0 {
+		return m, nil
+	}
+
+	// Determine if item is a change based on mode
+	switch m.itemType {
+	case "spec":
+		// Can't archive specs
+		return m, nil
+	case "change":
+		// In change mode, all items are changes
+		m.selectedID = row[0]
+		m.archiveRequested = true
+
+		return m, tea.Quit
+	case "all":
+		// In unified mode, check the type column
+		if len(row) > 1 && row[1] == "CHANGE" {
+			m.selectedID = row[0]
+			m.archiveRequested = true
+
+			return m, tea.Quit
+		}
+		// Not a change, do nothing
+		return m, nil
+	}
+
+	return m, nil
+}
+
 // rebuildUnifiedTable rebuilds the table based on current filter
 func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 	var items ItemList
@@ -280,7 +322,7 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 		filterDesc = m.filterType.String() + "s"
 	}
 	m.helpText = fmt.Sprintf(
-		"↑/↓ or j/k: navigate | Enter: copy ID | e: edit spec | t: toggle filter (%s) | q: quit | showing: %d | project: %s",
+		"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter (%s) | q: quit\nshowing: %d | project: %s",
 		filterDesc,
 		len(rows),
 		m.projectPath,
@@ -297,6 +339,10 @@ type editorFinishedMsg struct {
 // View renders the model
 func (m interactiveModel) View() string {
 	if m.quitting {
+		if m.archiveRequested && m.selectedID != "" {
+			return fmt.Sprintf("Archiving: %s\n", m.selectedID)
+		}
+
 		if m.copied && m.err == nil {
 			return fmt.Sprintf("✓ Copied: %s\n", m.selectedID)
 		} else if m.err != nil {
@@ -319,10 +365,11 @@ func (m interactiveModel) View() string {
 	return view
 }
 
-// RunInteractiveChanges runs the interactive table for changes
-func RunInteractiveChanges(changes []ChangeInfo, projectPath string) error {
+// RunInteractiveChanges runs the interactive table for changes.
+// Returns the change ID if archive was requested, empty string otherwise.
+func RunInteractiveChanges(changes []ChangeInfo, projectPath string) (string, error) {
 	if len(changes) == 0 {
-		return nil
+		return "", nil
 	}
 
 	columns := []table.Column{
@@ -360,7 +407,7 @@ func RunInteractiveChanges(changes []ChangeInfo, projectPath string) error {
 		itemType:    "change",
 		projectPath: projectPath,
 		helpText: fmt.Sprintf(
-			"↑/↓ or j/k: navigate | Enter: copy ID | e: edit proposal | q: quit | showing: %d | project: %s",
+			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit\nshowing: %d | project: %s",
 			len(rows),
 			projectPath,
 		),
@@ -369,21 +416,28 @@ func RunInteractiveChanges(changes []ChangeInfo, projectPath string) error {
 	p := tea.NewProgram(m)
 	finalModel, err := p.Run()
 	if err != nil {
-		return fmt.Errorf("error running interactive mode: %w", err)
+		return "", fmt.Errorf("error running interactive mode: %w", err)
 	}
 
 	// Check if there was an error during execution
-	if fm, ok := finalModel.(interactiveModel); ok && fm.err != nil {
-		// Don't return error, just warn - clipboard failure shouldn't
-		// stop the command
-		fmt.Fprintf(
-			os.Stderr,
-			"Warning: clipboard operation failed: %v\n",
-			fm.err,
-		)
+	if fm, ok := finalModel.(interactiveModel); ok {
+		if fm.err != nil {
+			// Don't return error, just warn - clipboard failure shouldn't
+			// stop the command
+			fmt.Fprintf(
+				os.Stderr,
+				"Warning: clipboard operation failed: %v\n",
+				fm.err,
+			)
+		}
+
+		// Return archive ID if archive was requested
+		if fm.archiveRequested && fm.selectedID != "" {
+			return fm.selectedID, nil
+		}
 	}
 
-	return nil
+	return "", nil
 }
 
 // RunInteractiveArchive runs the interactive table for archive selection
@@ -427,7 +481,7 @@ func RunInteractiveArchive(changes []ChangeInfo, projectPath string) (string, er
 		table:       t,
 		projectPath: projectPath,
 		helpText: fmt.Sprintf(
-			"↑/↓ or j/k: navigate | Enter: select | q: quit | showing: %d | project: %s",
+			"↑/↓/j/k: navigate | Enter: select | q: quit\nshowing: %d | project: %s",
 			len(rows),
 			projectPath,
 		),
@@ -487,7 +541,7 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 		itemType:    "spec",
 		projectPath: projectPath,
 		helpText: fmt.Sprintf(
-			"↑/↓ or j/k: navigate | Enter: copy ID | e: edit spec | q: quit | showing: %d | project: %s",
+			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit\nshowing: %d | project: %s",
 			len(specs),
 			projectPath,
 		),
@@ -572,7 +626,7 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 		allItems:    items,
 		filterType:  nil, // Start with all items visible
 		helpText: fmt.Sprintf(
-			"↑/↓ or j/k: navigate | Enter: copy ID | e: edit spec | t: toggle filter (all) | q: quit | showing: %d | project: %s",
+			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter (all) | q: quit\nshowing: %d | project: %s",
 			len(rows),
 			projectPath,
 		),

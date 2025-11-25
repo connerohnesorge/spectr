@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+// MinPurposeLength is the minimum recommended length for the Purpose section.
+const MinPurposeLength = 50
+
 // ValidateSpecFile validates a spec file according to Spectr rules
 // Returns a ValidationReport containing all issues found, or an error
 // for filesystem issues
@@ -47,8 +50,8 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 		})
 	}
 
-	// Rule 3: Check Purpose section length (WARNING if < 50 chars)
-	if hasPurpose && len(purposeContent) < 50 {
+	// Rule 3: Check Purpose section length (WARNING if < MinPurposeLength chars)
+	if hasPurpose && len(purposeContent) < MinPurposeLength {
 		purposeLine := findSectionLine(lines, "Purpose")
 		issues = append(issues, ValidationIssue{
 			Level: LevelWarning,
@@ -56,8 +59,9 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 			Line:  purposeLine,
 			Message: fmt.Sprintf(
 				"Purpose section is too short "+
-					"(%d characters, minimum 50 recommended)",
+					"(%d characters, minimum %d recommended)",
 				len(purposeContent),
+				MinPurposeLength,
 			),
 		})
 	}

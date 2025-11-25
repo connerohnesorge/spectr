@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	initpkg "github.com/connerohnesorge/spectr/internal/init"
+	"github.com/connerohnesorge/spectr/internal/init/providers"
 )
 
 // InitCmd wraps the init package's InitCmd type to add Run method
@@ -84,23 +85,16 @@ func runInteractiveInit(c *InitCmd) error {
 }
 
 func runNonInteractiveInit(c *InitCmd) error {
-	// Get registry
-	registry := initpkg.NewRegistry()
-
 	// Handle "all" special case
-	selectedTools := c.Tools
+	selectedProviders := c.Tools
 	if len(c.Tools) == 1 && c.Tools[0] == "all" {
-		allToolIDs := registry.ListTools()
-		selectedTools = make([]string, len(allToolIDs))
-		for i, toolID := range allToolIDs {
-			selectedTools[i] = string(toolID)
-		}
+		selectedProviders = providers.IDs()
 	}
 
-	// Validate tool IDs
-	for _, id := range selectedTools {
-		if _, err := registry.GetTool(initpkg.ToolID(id)); err != nil {
-			return fmt.Errorf("invalid tool ID: %s", id)
+	// Validate provider IDs
+	for _, id := range selectedProviders {
+		if providers.Get(id) == nil {
+			return fmt.Errorf("invalid provider ID: %s", id)
 		}
 	}
 
@@ -110,7 +104,7 @@ func runNonInteractiveInit(c *InitCmd) error {
 		return fmt.Errorf("failed to create executor: %w", err)
 	}
 
-	result, err := executor.Execute(selectedTools)
+	result, err := executor.Execute(selectedProviders)
 	if err != nil {
 		return fmt.Errorf("initialization failed: %w", err)
 	}

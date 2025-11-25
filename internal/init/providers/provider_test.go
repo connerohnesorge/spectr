@@ -1,0 +1,286 @@
+package providers
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+// mockTemplateRenderer implements TemplateRenderer for testing
+type mockTemplateRenderer struct {
+	agentsContent string
+	slashContent  map[string]string
+}
+
+func newMockRenderer() *mockTemplateRenderer {
+	return &mockTemplateRenderer{
+		agentsContent: "# Test AGENTS content",
+		slashContent: map[string]string{
+			"proposal": "Proposal command content",
+			"apply":    "Apply command content",
+			"archive":  "Archive command content",
+		},
+	}
+}
+
+func (m *mockTemplateRenderer) RenderAgents() (string, error) {
+	return m.agentsContent, nil
+}
+
+func (m *mockTemplateRenderer) RenderSlashCommand(command string) (string, error) {
+	return m.slashContent[command], nil
+}
+
+func TestClaudeProvider(t *testing.T) {
+	p := NewClaudeProvider()
+
+	if p.ID() != "claude-code" {
+		t.Errorf("ID() = %s, want claude-code", p.ID())
+	}
+	if p.Name() != "Claude Code" {
+		t.Errorf("Name() = %s, want Claude Code", p.Name())
+	}
+	if p.Priority() != PriorityClaudeCode {
+		t.Errorf("Priority() = %d, want %d", p.Priority(), PriorityClaudeCode)
+	}
+	if p.ConfigFile() != "CLAUDE.md" {
+		t.Errorf("ConfigFile() = %s, want CLAUDE.md", p.ConfigFile())
+	}
+	if p.SlashDir() != ".claude/commands" {
+		t.Errorf("SlashDir() = %s, want .claude/commands", p.SlashDir())
+	}
+	if p.CommandFormat() != FormatMarkdown {
+		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
+	}
+	if !p.HasConfigFile() {
+		t.Error("HasConfigFile() = false, want true")
+	}
+	if !p.HasSlashCommands() {
+		t.Error("HasSlashCommands() = false, want true")
+	}
+}
+
+func TestGeminiProvider(t *testing.T) {
+	p := NewGeminiProvider()
+
+	if p.ID() != "gemini" {
+		t.Errorf("ID() = %s, want gemini", p.ID())
+	}
+	if p.Name() != "Gemini CLI" {
+		t.Errorf("Name() = %s, want Gemini CLI", p.Name())
+	}
+	if p.ConfigFile() != "" {
+		t.Errorf("ConfigFile() = %s, want empty", p.ConfigFile())
+	}
+	if p.SlashDir() != ".gemini/commands" {
+		t.Errorf("SlashDir() = %s, want .gemini/commands", p.SlashDir())
+	}
+	if p.CommandFormat() != FormatTOML {
+		t.Errorf("CommandFormat() = %d, want FormatTOML", p.CommandFormat())
+	}
+	if p.HasConfigFile() {
+		t.Error("HasConfigFile() = true, want false")
+	}
+	if !p.HasSlashCommands() {
+		t.Error("HasSlashCommands() = false, want true")
+	}
+}
+
+func TestCursorProvider(t *testing.T) {
+	p := NewCursorProvider()
+
+	if p.ID() != "cursor" {
+		t.Errorf("ID() = %s, want cursor", p.ID())
+	}
+	if p.ConfigFile() != "" {
+		t.Errorf("ConfigFile() should be empty for cursor, got %s", p.ConfigFile())
+	}
+	if !p.HasSlashCommands() {
+		t.Error("Cursor should have slash commands")
+	}
+	if p.HasConfigFile() {
+		t.Error("Cursor should not have config file")
+	}
+}
+
+func TestBaseProviderConfigure(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "spectr-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	p := NewClaudeProvider()
+	tm := newMockRenderer()
+
+	err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	if err != nil {
+		t.Fatalf("Configure failed: %v", err)
+	}
+
+	// Check config file was created
+	configPath := filepath.Join(tmpDir, "CLAUDE.md")
+	if !FileExists(configPath) {
+		t.Error("Config file was not created")
+	}
+
+	// Check slash command files were created
+	commands := []string{"proposal", "apply", "archive"}
+	for _, cmd := range commands {
+		cmdPath := filepath.Join(tmpDir, ".claude/commands", "spectr-"+cmd+".md")
+		if !FileExists(cmdPath) {
+			t.Errorf("Slash command file not created: %s", cmdPath)
+		}
+	}
+}
+
+func TestBaseProviderIsConfigured(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "spectr-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	p := NewClaudeProvider()
+
+	// Should not be configured initially
+	if p.IsConfigured(tmpDir) {
+		t.Error("Should not be configured initially")
+	}
+
+	// Configure it
+	tm := newMockRenderer()
+	err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	if err != nil {
+		t.Fatalf("Configure failed: %v", err)
+	}
+
+	// Should be configured now
+	if !p.IsConfigured(tmpDir) {
+		t.Error("Should be configured after Configure()")
+	}
+}
+
+func TestBaseProviderGetFilePaths(t *testing.T) {
+	p := NewClaudeProvider()
+	paths := p.GetFilePaths()
+
+	// Should have config file + 3 slash command files
+	expectedPaths := []string{
+		"CLAUDE.md",
+		".claude/commands/spectr-proposal.md",
+		".claude/commands/spectr-apply.md",
+		".claude/commands/spectr-archive.md",
+	}
+
+	if len(paths) != len(expectedPaths) {
+		t.Errorf("Expected %d paths, got %d", len(expectedPaths), len(paths))
+	}
+
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if path == expected {
+				found = true
+
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected path %s not found in GetFilePaths()", expected)
+		}
+	}
+}
+
+func TestGeminiProviderConfigure(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "spectr-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	p := NewGeminiProvider()
+	tm := newMockRenderer()
+
+	err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	if err != nil {
+		t.Fatalf("Configure failed: %v", err)
+	}
+
+	// Check TOML files were created
+	commands := []string{"proposal", "apply", "archive"}
+	for _, cmd := range commands {
+		cmdPath := filepath.Join(tmpDir, ".gemini/commands", "spectr-"+cmd+".toml")
+		if !FileExists(cmdPath) {
+			t.Errorf("TOML command file not created: %s", cmdPath)
+		}
+
+		// Verify content is TOML format
+		content, err := os.ReadFile(cmdPath)
+		if err != nil {
+			t.Errorf("Failed to read %s: %v", cmdPath, err)
+
+			continue
+		}
+		if !strings.Contains(string(content), "description =") {
+			t.Errorf("File %s doesn't look like TOML", cmdPath)
+		}
+		if !strings.Contains(string(content), "prompt =") {
+			t.Errorf("File %s missing prompt field", cmdPath)
+		}
+	}
+}
+
+func TestSlashOnlyProviderGetFilePaths(t *testing.T) {
+	p := NewCursorProvider()
+	paths := p.GetFilePaths()
+
+	// Should have only slash command files (no config file)
+	expectedPaths := []string{
+		".cursorrules/commands/spectr-proposal.md",
+		".cursorrules/commands/spectr-apply.md",
+		".cursorrules/commands/spectr-archive.md",
+	}
+
+	if len(paths) != len(expectedPaths) {
+		t.Errorf("Expected %d paths, got %d", len(expectedPaths), len(paths))
+	}
+}
+
+func TestAllProvidersHaveRequiredFields(t *testing.T) {
+	allProviders := All()
+
+	for _, p := range allProviders {
+		if p.ID() == "" {
+			t.Error("Found provider with empty ID")
+		}
+		if p.Name() == "" {
+			t.Errorf("Provider %s has empty Name", p.ID())
+		}
+		if p.Priority() < 1 {
+			t.Errorf("Provider %s has invalid priority: %d", p.ID(), p.Priority())
+		}
+
+		// All providers should have slash commands
+		if !p.HasSlashCommands() {
+			t.Errorf("Provider %s has no slash commands", p.ID())
+		}
+		if p.SlashDir() == "" {
+			t.Errorf("Provider %s has empty SlashDir", p.ID())
+		}
+	}
+}
+
+func TestPrioritiesAreUnique(t *testing.T) {
+	allProviders := All()
+	priorities := make(map[int]string)
+
+	for _, p := range allProviders {
+		if existingID, exists := priorities[p.Priority()]; exists {
+			t.Errorf("Duplicate priority %d for providers %s and %s",
+				p.Priority(), existingID, p.ID())
+		}
+		priorities[p.Priority()] = p.ID()
+	}
+}

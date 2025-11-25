@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/connerohnesorge/spectr/internal/init/providers"
 )
 
 // InitExecutor handles the actual initialization process
 type InitExecutor struct {
 	projectPath string
-	registry    *ToolRegistry
 	tm          *TemplateManager
 }
 
@@ -38,14 +39,13 @@ func NewInitExecutor(cmd *InitCmd) (*InitExecutor, error) {
 
 	return &InitExecutor{
 		projectPath: projectPath,
-		registry:    NewRegistry(),
 		tm:          tm,
 	}, nil
 }
 
 // Execute runs the initialization process
 func (e *InitExecutor) Execute(
-	selectedToolIDs []string,
+	selectedProviderIDs []string,
 ) (*ExecutionResult, error) {
 	result := &ExecutionResult{
 		CreatedFiles: make([]string, 0),
@@ -87,8 +87,8 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 5. Configure selected tools
-	if err := e.configureTools(selectedToolIDs, spectrDir, result); err != nil {
+	// 5. Configure selected providers
+	if err := e.configureProviders(selectedProviderIDs, spectrDir, result); err != nil {
 		result.Errors = append(
 			result.Errors,
 			fmt.Sprintf("failed to configure tools: %v", err),
@@ -108,7 +108,7 @@ func (e *InitExecutor) Execute(
 
 // createDirectoryStructure creates the spectr/ directory
 // and subdirectories
-func (_e *InitExecutor) createDirectoryStructure(
+func (*InitExecutor) createDirectoryStructure(
 	spectrDir string,
 	result *ExecutionResult,
 ) error {
@@ -208,138 +208,51 @@ func (e *InitExecutor) createAgentsMd(
 	return nil
 }
 
-// configureTools configures the selected tools
-func (e *InitExecutor) configureTools(
-	selectedToolIDs []string,
+// configureProviders configures the selected providers using the new interface-driven architecture.
+// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+func (e *InitExecutor) configureProviders(
+	selectedProviderIDs []string,
 	spectrDir string,
 	result *ExecutionResult,
 ) error {
-	if len(selectedToolIDs) == 0 {
-		return nil // No tools to configure
+	if len(selectedProviderIDs) == 0 {
+		return nil // No providers to configure
 	}
 
-	for _, toolIDStr := range selectedToolIDs {
-		toolID := ToolID(toolIDStr)
-		tool, err := e.registry.GetTool(toolID)
-		if err != nil {
+	for _, providerID := range selectedProviderIDs {
+		provider := providers.Get(providerID)
+		if provider == nil {
 			result.Errors = append(
 				result.Errors,
-				fmt.Sprintf("tool %s not found: %v", toolID, err),
-			)
-
-			continue
-		}
-
-		configurator, err := e.getConfigurator(toolID)
-		if err != nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf("failed to get configurator for %s: %v", toolID, err),
+				fmt.Sprintf("provider %s not found", providerID),
 			)
 
 			continue
 		}
 
 		// Check if already configured
-		wasConfigured := configurator.IsConfigured(e.projectPath)
+		wasConfigured := provider.IsConfigured(e.projectPath)
 
-		// Configure the tool
-		if err := configurator.Configure(
-			e.projectPath,
-			spectrDir,
-		); err != nil {
+		// Configure the provider (handles both instruction file + slash commands)
+		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
 			result.Errors = append(
 				result.Errors,
-				fmt.Sprintf(
-					"failed to configure %s: %v",
-					tool.Name,
-					err,
-				),
+				fmt.Sprintf("failed to configure %s: %v", provider.Name(), err),
 			)
 
 			continue
 		}
 
 		// Track created/updated files
-		fileInfo := e.getToolFileInfo(configurator)
+		filePaths := provider.GetFilePaths()
 		if wasConfigured {
-			result.UpdatedFiles = append(result.UpdatedFiles, fileInfo...)
+			result.UpdatedFiles = append(result.UpdatedFiles, filePaths...)
 		} else {
-			result.CreatedFiles = append(result.CreatedFiles, fileInfo...)
-		}
-
-		// Auto-install slash commands if this tool has a mapping
-		if slashToolID, hasMapping := GetSlashToolMapping(toolID); hasMapping {
-			slashConfigurator, err := e.getConfigurator(slashToolID)
-			if err != nil {
-				result.Errors = append(
-					result.Errors,
-					fmt.Sprintf("failed to get slash configurator for %s: %v", slashToolID, err),
-				)
-
-				continue
-			}
-
-			// Check if slash commands already configured
-			slashWasConfigured := slashConfigurator.IsConfigured(e.projectPath)
-
-			// Configure slash commands
-			if err := slashConfigurator.Configure(
-				e.projectPath,
-				spectrDir,
-			); err != nil {
-				result.Errors = append(
-					result.Errors,
-					fmt.Sprintf(
-						"failed to configure slash commands for %s: %v",
-						tool.Name,
-						err,
-					),
-				)
-
-				continue
-			}
-
-			// Track slash command files
-			slashFileInfo := e.getToolFileInfo(slashConfigurator)
-			if slashWasConfigured {
-				result.UpdatedFiles = append(result.UpdatedFiles, slashFileInfo...)
-			} else {
-				result.CreatedFiles = append(result.CreatedFiles, slashFileInfo...)
-			}
+			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
 		}
 	}
 
 	return nil
-}
-
-// getConfigurator returns the configurator for a tool ID
-// Uses the data-driven ToolConfig registry instead of switch statements
-func (_e *InitExecutor) getConfigurator(toolID ToolID) (Configurator, error) {
-	// Look up tool configuration from registry
-	config, ok := GetToolConfig(toolID)
-	if !ok {
-		return nil, fmt.Errorf("no configuration found for tool ID: %s", toolID)
-	}
-
-	// Create and return GenericConfigurator with the tool config
-	configurator, err := NewGenericConfigurator(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create configurator: %w", err)
-	}
-
-	return configurator, nil
-}
-
-// getToolFileInfo returns the files that would be created/updated for a configurator
-func (e *InitExecutor) getToolFileInfo(configurator Configurator) []string {
-	// Use the GetFilePaths method if available (GenericConfigurator has it)
-	if gc, ok := configurator.(*GenericConfigurator); ok {
-		return gc.GetFilePaths()
-	}
-
-	// Fallback for legacy configurators
-	return []string{}
 }
 
 // FormatNextStepsMessage returns a formatted next steps message for display after initialization

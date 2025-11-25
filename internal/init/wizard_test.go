@@ -25,17 +25,13 @@ func TestNewWizardModel(t *testing.T) {
 		t.Errorf("Expected cursor to start at 0, got %d", wizard.cursor)
 	}
 
-	if wizard.registry == nil {
-		t.Error("Expected registry to be initialized")
+	if len(wizard.allProviders) == 0 {
+		t.Error("Expected allProviders to be populated")
 	}
 
-	if len(wizard.allTools) == 0 {
-		t.Error("Expected allTools to be populated")
-	}
-
-	// Should have 7 tools (config tools with auto-installed slash commands)
-	if len(wizard.allTools) != 7 {
-		t.Errorf("Expected 7 tools, got %d", len(wizard.allTools))
+	// Should have 17 providers
+	if len(wizard.allProviders) != 17 {
+		t.Errorf("Expected 17 providers, got %d", len(wizard.allProviders))
 	}
 }
 
@@ -57,16 +53,16 @@ func TestWizardStepTransitions(t *testing.T) {
 		t.Error("Expected step to transition to StepSelect")
 	}
 
-	// Test tool selection
-	wizard.selectedTools["claude-code"] = true
-	if !wizard.selectedTools["claude-code"] {
+	// Test provider selection
+	wizard.selectedProviders["claude-code"] = true
+	if !wizard.selectedProviders["claude-code"] {
 		t.Error("Expected claude-code to be selected")
 	}
 
-	// Test getting selected tool IDs
-	selectedIDs := wizard.getSelectedToolIDs()
+	// Test getting selected provider IDs
+	selectedIDs := wizard.getSelectedProviderIDs()
 	if len(selectedIDs) != 1 {
-		t.Errorf("Expected 1 selected tool, got %d", len(selectedIDs))
+		t.Errorf("Expected 1 selected provider, got %d", len(selectedIDs))
 	}
 }
 
@@ -102,7 +98,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 
 	t.Run("RenderReview", func(t *testing.T) {
 		wizard.step = StepReview
-		wizard.selectedTools["claude-code"] = true
+		wizard.selectedProviders["claude-code"] = true
 		output := wizard.renderReview()
 		if output == "" {
 			t.Error("Expected non-empty review output")
@@ -140,7 +136,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 	})
 }
 
-func TestGetSelectedToolIDs(t *testing.T) {
+func TestGetSelectedProviderIDs(t *testing.T) {
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -148,38 +144,38 @@ func TestGetSelectedToolIDs(t *testing.T) {
 	}
 
 	// Test with no selections
-	ids := wizard.getSelectedToolIDs()
+	ids := wizard.getSelectedProviderIDs()
 	if len(ids) != 0 {
-		t.Errorf("Expected 0 selected tools, got %d", len(ids))
+		t.Errorf("Expected 0 selected providers, got %d", len(ids))
 	}
 
 	// Test with some selections
-	wizard.selectedTools["claude-code"] = true
-	wizard.selectedTools["cline"] = true
-	wizard.selectedTools["claude"] = true
+	wizard.selectedProviders["claude-code"] = true
+	wizard.selectedProviders["cline"] = true
+	wizard.selectedProviders["cursor"] = true
 
-	ids = wizard.getSelectedToolIDs()
+	ids = wizard.getSelectedProviderIDs()
 	if len(ids) != 3 {
-		t.Errorf("Expected 3 selected tools, got %d", len(ids))
+		t.Errorf("Expected 3 selected providers, got %d", len(ids))
 	}
 
 	// Verify all selected IDs are present
 	hasClaudeCode := false
 	hasCline := false
-	hasClaude := false
+	hasCursor := false
 	for _, id := range ids {
 		switch id {
 		case "claude-code":
 			hasClaudeCode = true
 		case "cline":
 			hasCline = true
-		case "claude":
-			hasClaude = true
+		case "cursor":
+			hasCursor = true
 		}
 	}
 
-	if !hasClaudeCode || !hasCline || !hasClaude {
-		t.Error("Not all selected tool IDs were returned")
+	if !hasClaudeCode || !hasCline || !hasCursor {
+		t.Error("Not all selected provider IDs were returned")
 	}
 }
 

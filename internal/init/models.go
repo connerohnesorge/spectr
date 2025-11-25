@@ -1,32 +1,4 @@
-//nolint:revive // line-length-limit - comments need clarity
-
 package init
-
-// ToolType represents the type of tool configuration
-type ToolType string
-
-const (
-	// ToolTypeConfig represents tools using config files
-	ToolTypeConfig ToolType = "config"
-	// ToolTypeSlash represents tools using slash commands
-	ToolTypeSlash ToolType = "slash"
-)
-
-// ToolDefinition defines the configuration for a tool integration
-type ToolDefinition struct {
-	// ID is the unique type-safe identifier for the tool
-	ID ToolID
-	// Name is the human-readable name of the tool
-	Name string
-	// Type indicates whether this is a config or slash tool
-	Type ToolType
-	// SlashCommand is the slash command syntax (for slash-command based tools)
-	SlashCommand string
-	// Priority determines the display order (lower numbers first)
-	Priority int
-	// Configured indicates whether the tool has been configured by the user
-	Configured bool
-}
 
 // ProjectConfig holds the overall project configuration during init
 type ProjectConfig struct {

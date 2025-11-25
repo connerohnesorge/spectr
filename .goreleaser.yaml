@@ -23,6 +23,11 @@ builds:
     goarch:
       - amd64
       - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/connerohnesorge/spectr/internal/version.Version={{.Version}}
+      - -X github.com/connerohnesorge/spectr/internal/version.Commit={{.Commit}}
+      - -X github.com/connerohnesorge/spectr/internal/version.Date={{.Date}}
 
 archives:
   - formats: [tar.gz]

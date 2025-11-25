@@ -152,6 +152,9 @@ nix fmt
             reftools
             goreleaser
             vhs
+
+            # For docs site
+            biome
           ]
           ++ builtins.attrValues scriptPackages;
       };
@@ -180,11 +183,16 @@ nix fmt
       };
 
       packages = {
-        default = pkgs.buildGoModule {
+        default = pkgs.buildGoModule rec {
           pname = "spectr";
           version = "0.0.1";
           src = self;
           vendorHash = "sha256-6bE9HNbebJ4ivHF7YynZwL6mu+T3wEfESjQdyR8q59M=";
+          ldflags = [
+            "-s"
+            "-w"
+            "-X github.com/connerohnesorge/spectr/internal/version.Version=${version}"
+          ];
           meta = with pkgs.lib; {
             description = "A CLI tool for spec-driven development workflow with change proposals, validation, and archiving";
             homepage = "https://github.com/connerohnesorge/spectr";

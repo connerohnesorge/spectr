@@ -119,11 +119,12 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 }
 
 // runArchiveWorkflow executes the archive workflow for a change.
-func (c *ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
+func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
 	// Create archive command with the selected change ID
 	archiveCmd := &archive.ArchiveCmd{
 		ChangeID: changeID,
-		Yes:      true, // Skip confirmation since user already selected in interactive mode
+		// Skip confirmation since user already selected in interactive mode
+		Yes: true,
 	}
 
 	// Run the archive workflow

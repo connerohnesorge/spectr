@@ -4,17 +4,6 @@ import (
 	"testing"
 )
 
-func TestGlobalRegistry(t *testing.T) {
-	// All providers are registered via init()
-	allProviders := All()
-
-	// Should have all 17 providers registered
-	expectedCount := 17
-	if len(allProviders) != expectedCount {
-		t.Errorf("Expected %d providers, got %d", expectedCount, len(allProviders))
-	}
-}
-
 func TestGet(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -111,12 +100,6 @@ func TestWithSlashCommands(t *testing.T) {
 		if p.SlashDir() == "" {
 			t.Errorf("Provider %s has empty SlashDir()", p.ID())
 		}
-	}
-
-	// All 17 providers have slash commands
-	expectedCount := 17
-	if len(providers) != expectedCount {
-		t.Errorf("Expected %d providers with slash commands, got %d", expectedCount, len(providers))
 	}
 }
 

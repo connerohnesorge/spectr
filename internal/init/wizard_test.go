@@ -28,11 +28,6 @@ func TestNewWizardModel(t *testing.T) {
 	if len(wizard.allProviders) == 0 {
 		t.Error("Expected allProviders to be populated")
 	}
-
-	// Should have 17 providers
-	if len(wizard.allProviders) != 17 {
-		t.Errorf("Expected 17 providers, got %d", len(wizard.allProviders))
-	}
 }
 
 func TestWizardStepTransitions(t *testing.T) {

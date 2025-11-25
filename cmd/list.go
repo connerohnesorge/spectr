@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/list"
 )
 
@@ -80,7 +81,17 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		return list.RunInteractiveChanges(changes, projectPath)
+		archiveID, err := list.RunInteractiveChanges(changes, projectPath)
+		if err != nil {
+			return err
+		}
+
+		// If an archive was requested, run the archive workflow
+		if archiveID != "" {
+			return c.runArchiveWorkflow(archiveID, projectPath)
+		}
+
+		return nil
 	}
 
 	// Format output based on flags
@@ -103,6 +114,22 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 
 	// Display the formatted output
 	fmt.Println(output)
+
+	return nil
+}
+
+// runArchiveWorkflow executes the archive workflow for a change.
+func (c *ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
+	// Create archive command with the selected change ID
+	archiveCmd := &archive.ArchiveCmd{
+		ChangeID: changeID,
+		Yes:      true, // Skip confirmation since user already selected in interactive mode
+	}
+
+	// Run the archive workflow
+	if err := archive.Archive(archiveCmd, projectPath); err != nil {
+		return fmt.Errorf("archive workflow failed: %w", err)
+	}
 
 	return nil
 }

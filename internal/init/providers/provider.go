@@ -38,9 +38,12 @@
 //				slashDir:      ".mytool/commands",
 //				commandFormat: FormatMarkdown,
 //				frontmatter: map[string]string{
-//					"proposal": "---\ndescription: Scaffold a new Spectr change.\n---",
-//					"apply":    "---\ndescription: Implement an approved Spectr change.\n---",
-//					"archive":  "---\ndescription: Archive a deployed Spectr change.\n---",
+//					"proposal":
+//					"---\ndescription: Scaffold a new Spectr change.\n---",
+//					"apply":
+//					"---\ndescription: Implement an \n---",
+//					"archive":
+//					"---\ndescription: Archive a deployed .\n---",
 //				},
 //			},
 //		}

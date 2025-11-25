@@ -64,9 +64,12 @@ func TestTruncateString(t *testing.T) {
 
 func TestRunInteractiveChanges_EmptyList(t *testing.T) {
 	var changes []ChangeInfo
-	err := RunInteractiveChanges(changes, "/tmp/test-project")
+	archiveID, err := RunInteractiveChanges(changes, "/tmp/test-project")
 	if err != nil {
 		t.Errorf("RunInteractiveChanges with empty list should not error, got: %v", err)
+	}
+	if archiveID != "" {
+		t.Errorf("RunInteractiveChanges with empty list should return empty archive ID, got: %s", archiveID)
 	}
 }
 
@@ -706,4 +709,163 @@ func waitForString(t *testing.T, tm *teatest.TestModel, s string) {
 		teatest.WithCheckInterval(time.Millisecond*100),
 		teatest.WithDuration(time.Second*10),
 	)
+}
+
+func TestHandleArchive_ChangeMode(t *testing.T) {
+	// Create a model in change mode with a valid change
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"test-change-1", "Test Change 1", "2", "3/5"},
+		{"test-change-2", "Test Change 2", "1", "2/2"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "change",
+		projectPath: "/tmp/test",
+		table:       tbl,
+	}
+
+	// Call handleArchive
+	updatedModel, cmd := model.handleArchive()
+
+	// Should set archiveRequested and selectedID
+	if !updatedModel.archiveRequested {
+		t.Error("Expected archiveRequested to be true in change mode")
+	}
+	if updatedModel.selectedID != "test-change-1" {
+		t.Errorf("Expected selectedID to be 'test-change-1', got '%s'", updatedModel.selectedID)
+	}
+	// Should return tea.Quit
+	if cmd == nil {
+		t.Error("Expected command to be returned (tea.Quit)")
+	}
+}
+
+func TestHandleArchive_SpecMode(t *testing.T) {
+	// Create a model in spec mode
+	columns := []table.Column{
+		{Title: "ID", Width: specIDWidth},
+		{Title: "Title", Width: specTitleWidth},
+		{Title: "Requirements", Width: specRequirementsWidth},
+	}
+	rows := []table.Row{
+		{"test-spec", "Test Spec", "5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "spec",
+		projectPath: "/tmp/test",
+		table:       tbl,
+	}
+
+	// Call handleArchive
+	updatedModel, cmd := model.handleArchive()
+
+	// Should NOT set archiveRequested in spec mode
+	if updatedModel.archiveRequested {
+		t.Error("Expected archiveRequested to be false in spec mode")
+	}
+	if updatedModel.selectedID != "" {
+		t.Errorf("Expected selectedID to be empty in spec mode, got '%s'", updatedModel.selectedID)
+	}
+	// Should not return tea.Quit
+	if cmd != nil {
+		t.Error("Expected no command in spec mode")
+	}
+}
+
+func TestHandleArchive_UnifiedMode_Change(t *testing.T) {
+	// Create a model in unified mode with a change selected
+	columns := []table.Column{
+		{Title: "ID", Width: unifiedIDWidth},
+		{Title: "Type", Width: unifiedTypeWidth},
+		{Title: "Title", Width: unifiedTitleWidth},
+		{Title: "Details", Width: unifiedDetailsWidth},
+	}
+	rows := []table.Row{
+		{"test-change", "CHANGE", "Test Change", "Tasks: 3/5"},
+		{"test-spec", "SPEC", "Test Spec", "Reqs: 5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "all",
+		projectPath: "/tmp/test",
+		table:       tbl,
+	}
+
+	// Call handleArchive (cursor is on first row which is CHANGE)
+	updatedModel, cmd := model.handleArchive()
+
+	// Should set archiveRequested and selectedID for CHANGE
+	if !updatedModel.archiveRequested {
+		t.Error("Expected archiveRequested to be true for CHANGE in unified mode")
+	}
+	if updatedModel.selectedID != "test-change" {
+		t.Errorf("Expected selectedID to be 'test-change', got '%s'", updatedModel.selectedID)
+	}
+	if cmd == nil {
+		t.Error("Expected command to be returned (tea.Quit)")
+	}
+}
+
+func TestHandleArchive_UnifiedMode_Spec(t *testing.T) {
+	// Create a model in unified mode with cursor on spec
+	columns := []table.Column{
+		{Title: "ID", Width: unifiedIDWidth},
+		{Title: "Type", Width: unifiedTypeWidth},
+		{Title: "Title", Width: unifiedTitleWidth},
+		{Title: "Details", Width: unifiedDetailsWidth},
+	}
+	rows := []table.Row{
+		{"test-spec", "SPEC", "Test Spec", "Reqs: 5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "all",
+		projectPath: "/tmp/test",
+		table:       tbl,
+	}
+
+	// Call handleArchive (cursor is on SPEC)
+	updatedModel, cmd := model.handleArchive()
+
+	// Should NOT set archiveRequested for SPEC in unified mode
+	if updatedModel.archiveRequested {
+		t.Error("Expected archiveRequested to be false for SPEC in unified mode")
+	}
+	if updatedModel.selectedID != "" {
+		t.Errorf("Expected selectedID to be empty for SPEC, got '%s'", updatedModel.selectedID)
+	}
+	if cmd != nil {
+		t.Error("Expected no command for SPEC in unified mode")
+	}
 }

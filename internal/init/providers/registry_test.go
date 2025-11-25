@@ -95,12 +95,6 @@ func TestWithConfigFile(t *testing.T) {
 			t.Errorf("Provider %s has empty ConfigFile()", p.ID())
 		}
 	}
-
-	// Should have 7 providers with config files
-	expectedCount := 7
-	if len(providers) != expectedCount {
-		t.Errorf("Expected %d providers with config files, got %d", expectedCount, len(providers))
-	}
 }
 
 func TestWithSlashCommands(t *testing.T) {

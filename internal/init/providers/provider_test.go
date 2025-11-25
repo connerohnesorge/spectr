@@ -47,21 +47,21 @@ func TestClaudeProvider(t *testing.T) {
 	if p.ConfigFile() != "CLAUDE.md" {
 		t.Errorf("ConfigFile() = %s, want CLAUDE.md", p.ConfigFile())
 	}
-	if p.GetProposalCommandPath() != ".claude/commands/spectr-proposal.md" {
+	if p.GetProposalCommandPath() != ".claude/commands/spectr/proposal.md" {
 		t.Errorf(
-			"GetProposalCommandPath() = %s, want .claude/commands/spectr-proposal.md",
+			"GetProposalCommandPath() = %s, want .claude/commands/spectr/proposal.md",
 			p.GetProposalCommandPath(),
 		)
 	}
-	if p.GetSyncCommandPath() != ".claude/commands/spectr-sync.md" {
+	if p.GetSyncCommandPath() != ".claude/commands/spectr/sync.md" {
 		t.Errorf(
-			"GetSyncCommandPath() = %s, want .claude/commands/spectr-sync.md",
+			"GetSyncCommandPath() = %s, want .claude/commands/spectr/sync.md",
 			p.GetSyncCommandPath(),
 		)
 	}
-	if p.GetApplyCommandPath() != ".claude/commands/spectr-apply.md" {
+	if p.GetApplyCommandPath() != ".claude/commands/spectr/apply.md" {
 		t.Errorf(
-			"GetApplyCommandPath() = %s, want .claude/commands/spectr-apply.md",
+			"GetApplyCommandPath() = %s, want .claude/commands/spectr/apply.md",
 			p.GetApplyCommandPath(),
 		)
 	}
@@ -88,21 +88,21 @@ func TestGeminiProvider(t *testing.T) {
 	if p.ConfigFile() != "" {
 		t.Errorf("ConfigFile() = %s, want empty", p.ConfigFile())
 	}
-	if p.GetProposalCommandPath() != ".gemini/commands/spectr-proposal.toml" {
+	if p.GetProposalCommandPath() != ".gemini/commands/spectr/proposal.toml" {
 		t.Errorf(
-			"GetProposalCommandPath() = %s, want .gemini/commands/spectr-proposal.toml",
+			"GetProposalCommandPath() = %s, want .gemini/commands/spectr/proposal.toml",
 			p.GetProposalCommandPath(),
 		)
 	}
-	if p.GetSyncCommandPath() != ".gemini/commands/spectr-sync.toml" {
+	if p.GetSyncCommandPath() != ".gemini/commands/spectr/sync.toml" {
 		t.Errorf(
-			"GetSyncCommandPath() = %s, want .gemini/commands/spectr-sync.toml",
+			"GetSyncCommandPath() = %s, want .gemini/commands/spectr/sync.toml",
 			p.GetSyncCommandPath(),
 		)
 	}
-	if p.GetApplyCommandPath() != ".gemini/commands/spectr-apply.toml" {
+	if p.GetApplyCommandPath() != ".gemini/commands/spectr/apply.toml" {
 		t.Errorf(
-			"GetApplyCommandPath() = %s, want .gemini/commands/spectr-apply.toml",
+			"GetApplyCommandPath() = %s, want .gemini/commands/spectr/apply.toml",
 			p.GetApplyCommandPath(),
 		)
 	}
@@ -158,7 +158,7 @@ func TestBaseProviderConfigure(t *testing.T) {
 	// Check slash command files were created
 	commands := []string{"proposal", "apply", "sync"}
 	for _, cmd := range commands {
-		cmdPath := filepath.Join(tmpDir, ".claude/commands", "spectr-"+cmd+".md")
+		cmdPath := filepath.Join(tmpDir, ".claude/commands/spectr", cmd+".md")
 		if !FileExists(cmdPath) {
 			t.Errorf("Slash command file not created: %s", cmdPath)
 		}
@@ -199,9 +199,9 @@ func TestBaseProviderGetFilePaths(t *testing.T) {
 	// Should have config file + 3 slash command files
 	expectedPaths := []string{
 		"CLAUDE.md",
-		".claude/commands/spectr-proposal.md",
-		".claude/commands/spectr-apply.md",
-		".claude/commands/spectr-sync.md",
+		".claude/commands/spectr/proposal.md",
+		".claude/commands/spectr/apply.md",
+		".claude/commands/spectr/sync.md",
 	}
 
 	if len(paths) != len(expectedPaths) {
@@ -241,7 +241,7 @@ func TestGeminiProviderConfigure(t *testing.T) {
 	// Check TOML files were created
 	commands := []string{"proposal", "apply", "sync"}
 	for _, cmd := range commands {
-		cmdPath := filepath.Join(tmpDir, ".gemini/commands", "spectr-"+cmd+".toml")
+		cmdPath := filepath.Join(tmpDir, ".gemini/commands/spectr", cmd+".toml")
 		if !FileExists(cmdPath) {
 			t.Errorf("TOML command file not created: %s", cmdPath)
 		}
@@ -268,9 +268,9 @@ func TestSlashOnlyProviderGetFilePaths(t *testing.T) {
 
 	// Should have only slash command files (no config file)
 	expectedPaths := []string{
-		".cursorrules/commands/spectr-proposal.md",
-		".cursorrules/commands/spectr-apply.md",
-		".cursorrules/commands/spectr-sync.md",
+		".cursorrules/commands/spectr/proposal.md",
+		".cursorrules/commands/spectr/apply.md",
+		".cursorrules/commands/spectr/sync.md",
 	}
 
 	if len(paths) != len(expectedPaths) {

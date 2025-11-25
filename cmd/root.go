@@ -11,4 +11,5 @@ type CLI struct {
 	Validate ValidateCmd        `cmd:"" help:"Validate changes or specs"`
 	Archive  archive.ArchiveCmd `cmd:"" help:"Archive a completed change"`
 	View     ViewCmd            `cmd:"" help:"Display project dashboard"`
+	Version  VersionCmd         `cmd:"" help:"Show version and build info"`
 }

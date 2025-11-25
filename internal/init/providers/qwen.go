@@ -12,13 +12,19 @@ type QwenProvider struct {
 
 // NewQwenProvider creates a new Qwen Code provider.
 func NewQwenProvider() *QwenProvider {
+	proposalPath, archivePath, applyPath := StandardCommandPaths(
+		".qwen/commands", ".md",
+	)
+
 	return &QwenProvider{
 		BaseProvider: BaseProvider{
 			id:            "qwen",
 			name:          "Qwen Code",
 			priority:      PriorityQwen,
 			configFile:    "QWEN.md",
-			slashDir:      ".qwen/commands",
+			proposalPath:  proposalPath,
+			archivePath:   archivePath,
+			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),
 		},

@@ -12,13 +12,19 @@ type KilocodeProvider struct {
 
 // NewKilocodeProvider creates a new Kilocode provider.
 func NewKilocodeProvider() *KilocodeProvider {
+	proposalPath, archivePath, applyPath := StandardCommandPaths(
+		".kilocode/commands", ".md",
+	)
+
 	return &KilocodeProvider{
 		BaseProvider: BaseProvider{
 			id:            "kilocode",
 			name:          "Kilocode",
 			priority:      PriorityKilocode,
 			configFile:    "",
-			slashDir:      ".kilocode/commands",
+			proposalPath:  proposalPath,
+			archivePath:   archivePath,
+			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),
 		},

@@ -1,6 +1,6 @@
 package providers
 
-import "path/filepath"
+import "path"
 
 // Priority constants for all providers.
 // Lower numbers = higher priority (displayed first).
@@ -57,9 +57,9 @@ func StandardFrontmatter() map[string]string {
 func StandardCommandPaths(
 	dir, ext string,
 ) (proposalPath, archivePath, applyPath string) {
-	proposalPath = filepath.Join(dir, "spectr-proposal"+ext)
-	archivePath = filepath.Join(dir, "spectr-archive"+ext)
-	applyPath = filepath.Join(dir, "spectr-apply"+ext)
+	proposalPath = path.Join(dir, "spectr-proposal"+ext)
+	archivePath = path.Join(dir, "spectr-archive"+ext)
+	applyPath = path.Join(dir, "spectr-apply"+ext)
 
 	return proposalPath, archivePath, applyPath
 }

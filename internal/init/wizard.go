@@ -57,11 +57,6 @@ type ExecutionCompleteMsg struct {
 
 // Lipgloss styles
 var (
-	headerStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("205")).
-			MarginBottom(1)
-
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("99")).
@@ -254,7 +249,7 @@ func (m WizardModel) renderIntro() string {
 	var b strings.Builder
 
 	// ASCII art banner
-	b.WriteString(headerStyle.Render(asciiArt))
+	b.WriteString(applyGradient(asciiArt, lipgloss.Color("99"), lipgloss.Color("205")))
 	b.WriteString(newlineDouble)
 
 	// Welcome message

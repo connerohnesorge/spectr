@@ -7,11 +7,11 @@ package init
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/connerohnesorge/spectr/internal/init/providers"
 )
 
 const (
@@ -32,15 +32,14 @@ const (
 
 // WizardModel is the Bubbletea model for the init wizard
 type WizardModel struct {
-	step            WizardStep
-	projectPath     string
-	registry        *ToolRegistry
-	selectedTools   map[string]bool // tool ID -> selected
-	cursor          int             // cursor position in list
-	executing       bool
-	executionResult *ExecutionResult
-	err             error
-	allTools        []*ToolDefinition // sorted tools for display
+	step              WizardStep
+	projectPath       string
+	selectedProviders map[string]bool // provider ID -> selected
+	cursor            int             // cursor position in list
+	executing         bool
+	executionResult   *ExecutionResult
+	err               error
+	allProviders      []providers.Provider // sorted providers for display
 }
 
 // ExecutionResult holds the result of initialization
@@ -101,21 +100,15 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 		return nil, fmt.Errorf("project path is required")
 	}
 
-	registry := NewRegistry()
-	allTools := registry.GetAllTools()
-
-	// Sort tools by priority
-	sort.Slice(allTools, func(i, j int) bool {
-		return allTools[i].Priority < allTools[j].Priority
-	})
+	// Get all providers from the new registry, sorted by priority
+	allProviders := providers.All()
 
 	return &WizardModel{
-		step:          StepIntro,
-		projectPath:   projectPath,
-		registry:      registry,
-		selectedTools: make(map[string]bool),
-		cursor:        0,
-		allTools:      allTools,
+		step:              StepIntro,
+		projectPath:       projectPath,
+		selectedProviders: make(map[string]bool),
+		cursor:            0,
+		allProviders:      allProviders,
 	}, nil
 }
 
@@ -197,14 +190,14 @@ func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursor--
 		}
 	case "down", "j":
-		if m.cursor < len(m.allTools)-1 {
+		if m.cursor < len(m.allProviders)-1 {
 			m.cursor++
 		}
 	case " ":
 		// Toggle selection
-		if m.cursor < len(m.allTools) {
-			tool := m.allTools[m.cursor]
-			m.selectedTools[string(tool.ID)] = !m.selectedTools[string(tool.ID)]
+		if m.cursor < len(m.allProviders) {
+			provider := m.allProviders[m.cursor]
+			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
 		}
 	case "enter":
 		// Confirm and move to review
@@ -213,12 +206,12 @@ func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case "a":
 		// Select all
-		for _, tool := range m.allTools {
-			m.selectedTools[string(tool.ID)] = true
+		for _, provider := range m.allProviders {
+			m.selectedProviders[provider.ID()] = true
 		}
 	case "n":
 		// Deselect all
-		m.selectedTools = make(map[string]bool)
+		m.selectedProviders = make(map[string]bool)
 	}
 
 	return m, nil
@@ -238,7 +231,7 @@ func (m WizardModel) handleReviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.step = StepExecute
 		m.executing = true
 
-		return m, executeInit(m.projectPath, m.getSelectedToolIDs())
+		return m, executeInit(m.projectPath, m.getSelectedProviderIDs())
 	}
 
 	return m, nil
@@ -309,8 +302,8 @@ func (m WizardModel) renderSelect() string {
 	)
 	b.WriteString("You can come back later to add more tools.\n\n")
 
-	// Render all tools in a single flat list
-	b.WriteString(m.renderToolGroup(m.allTools, 0))
+	// Render all providers in a single flat list
+	b.WriteString(m.renderProviderGroup(m.allProviders, 0))
 
 	// Instructions
 	b.WriteString(doubleNewline)
@@ -324,10 +317,10 @@ func (m WizardModel) renderSelect() string {
 	return b.String()
 }
 
-func (m WizardModel) renderToolGroup(tools []*ToolDefinition, offset int) string {
+func (m WizardModel) renderProviderGroup(providersList []providers.Provider, offset int) string {
 	var b strings.Builder
 
-	for i, tool := range tools {
+	for i, provider := range providersList {
 		actualIndex := offset + i
 		cursor := " "
 		if m.cursor == actualIndex {
@@ -335,16 +328,16 @@ func (m WizardModel) renderToolGroup(tools []*ToolDefinition, offset int) string
 		}
 
 		checkbox := "[ ]"
-		if m.selectedTools[string(tool.ID)] {
+		if m.selectedProviders[provider.ID()] {
 			checkbox = selectedStyle.Render("[✓]")
 		}
 
-		line := fmt.Sprintf("  %s %s %s", cursor, checkbox, tool.Name)
+		line := fmt.Sprintf("  %s %s %s", cursor, checkbox, provider.Name())
 
 		switch {
 		case m.cursor == actualIndex:
 			b.WriteString(cursorStyle.Render(line))
-		case m.selectedTools[string(tool.ID)]:
+		case m.selectedProviders[provider.ID()]:
 			b.WriteString(selectedStyle.Render(line))
 		default:
 			b.WriteString(dimmedStyle.Render(line))
@@ -362,8 +355,8 @@ func (m WizardModel) renderReview() string {
 	b.WriteString(titleStyle.Render("Review Your Selections"))
 	b.WriteString("\n\n")
 
-	selectedCount := len(m.getSelectedToolIDs())
-	m.renderSelectedTools(&b, selectedCount)
+	selectedCount := len(m.getSelectedProviderIDs())
+	m.renderSelectedProviders(&b, selectedCount)
 	m.renderCreationPlan(&b, selectedCount)
 
 	b.WriteString(newline)
@@ -377,8 +370,8 @@ func (m WizardModel) renderReview() string {
 	return b.String()
 }
 
-// renderSelectedTools displays the selected tools or warning if none
-func (m WizardModel) renderSelectedTools(
+// renderSelectedProviders displays the selected providers or warning if none
+func (m WizardModel) renderSelectedProviders(
 	b *strings.Builder,
 	count int,
 ) {
@@ -398,12 +391,12 @@ func (m WizardModel) renderSelectedTools(
 		"You have selected %d tool(s) to configure:\n\n",
 		count)
 
-	for _, tool := range m.allTools {
-		if !m.selectedTools[string(tool.ID)] {
+	for _, provider := range m.allProviders {
+		if !m.selectedProviders[provider.ID()] {
 			continue
 		}
 		b.WriteString(successStyle.Render("  ✓ "))
-		b.WriteString(tool.Name)
+		b.WriteString(provider.Name())
 		b.WriteString("\n")
 	}
 	b.WriteString("\n")
@@ -523,9 +516,9 @@ func (m WizardModel) renderExecutionResults(b *strings.Builder) {
 // Helper functions
 // ============================================================================
 
-func (m WizardModel) getSelectedToolIDs() []string {
+func (m WizardModel) getSelectedProviderIDs() []string {
 	var selected []string
-	for id, isSelected := range m.selectedTools {
+	for id, isSelected := range m.selectedProviders {
 		if isSelected {
 			selected = append(selected, id)
 		}
@@ -535,7 +528,7 @@ func (m WizardModel) getSelectedToolIDs() []string {
 }
 
 // executeInit runs the initialization and sends result
-func executeInit(projectPath string, selectedTools []string) tea.Cmd {
+func executeInit(projectPath string, selectedProviders []string) tea.Cmd {
 	return func() tea.Msg {
 		// Create a minimal InitCmd for the executor
 		cmd := &InitCmd{
@@ -549,7 +542,7 @@ func executeInit(projectPath string, selectedTools []string) tea.Cmd {
 			}
 		}
 
-		result, err := executor.Execute(selectedTools)
+		result, err := executor.Execute(selectedProviders)
 
 		return ExecutionCompleteMsg{
 			result: result,

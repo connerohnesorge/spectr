@@ -1,31 +1,11 @@
-//nolint:revive // line-length-limit - comments need clarity
-
 package init
 
-// ToolType represents the type of tool configuration
-type ToolType string
-
-const (
-	// ToolTypeConfig represents tools using config files
-	ToolTypeConfig ToolType = "config"
-	// ToolTypeSlash represents tools using slash commands
-	ToolTypeSlash ToolType = "slash"
-)
-
-// ToolDefinition defines the configuration for a tool integration
-type ToolDefinition struct {
-	// ID is the unique type-safe identifier for the tool
-	ID ToolID
-	// Name is the human-readable name of the tool
-	Name string
-	// Type indicates whether this is a config or slash tool
-	Type ToolType
-	// SlashCommand is the slash command syntax (for slash-command based tools)
-	SlashCommand string
-	// Priority determines the display order (lower numbers first)
-	Priority int
-	// Configured indicates whether the tool has been configured by the user
-	Configured bool
+// InitCmd represents the init command with all its flags
+type InitCmd struct {
+	Path           string   `arg:"" optional:"" help:"Project path"`
+	PathFlag       string   `name:"path" short:"p" help:"Alt project path"`
+	Tools          []string `name:"tools" short:"t" help:"Tools list"`
+	NonInteractive bool     `name:"non-interactive" help:"Non-interactive"`
 }
 
 // ProjectConfig holds the overall project configuration during init
@@ -62,12 +42,4 @@ type ProjectContext struct {
 	TechStack []string
 	// Conventions are the project conventions (unused in template currently)
 	Conventions string
-}
-
-// InitCmd represents the init command with all its flags
-type InitCmd struct {
-	Path           string   `arg:"" optional:"" help:"Project path"`
-	PathFlag       string   `name:"path" short:"p" help:"Alt project path"`
-	Tools          []string `name:"tools" short:"t" help:"Tools list"`
-	NonInteractive bool     `name:"non-interactive" help:"Non-interactive"`
 }

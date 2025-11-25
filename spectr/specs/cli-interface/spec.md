@@ -44,6 +44,25 @@ The system displays either changes OR specs in interactive mode based on the `--
 - **WHEN** user presses 'e' on a spec row in unified mode
 - **THEN** the spec opens in the editor as usual
 
+#### Scenario: Help text uses condensed two-line format
+- **WHEN** interactive mode is displayed in any mode (changes, specs, or unified)
+- **THEN** the help text is formatted across two lines
+- **AND** line 1 shows controls: navigation, actions, and item count
+- **AND** line 2 shows project path
+- **AND** navigation hint uses condensed format `↑/↓/j/k` instead of `↑/↓ or j/k`
+- **AND** edit action uses short label `e: edit` instead of `e: edit proposal` or `e: edit spec`
+
+#### Scenario: Help text format for changes mode
+- **WHEN** user runs `spectr list -I` (changes mode)
+- **THEN** line 1 shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
+- **AND** line 2 shows: `project: <path>`
+
+#### Scenario: Help text format for specs mode
+- **WHEN** user runs `spectr list --specs -I` (specs mode)
+- **THEN** line 1 shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit`
+- **AND** line 2 shows: `project: <path>`
+- **AND** archive hotkey is NOT shown (specs cannot be archived)
+
 ### Requirement: Clipboard Copy on Selection
 When a user presses Enter on a selected row in interactive mode, the item's ID SHALL be copied to the system clipboard.
 
@@ -601,3 +620,38 @@ The `spectr archive` command SHALL accept a `--pr` flag that triggers automated 
 - **AND** string literals for tool IDs trigger compiler warnings or errors
 - **AND** IDE autocomplete suggests available tool ID constants
 - **AND** typos in tool IDs are caught at compile time
+
+### Requirement: Archive Hotkey in Interactive Changes Mode
+The interactive changes list mode SHALL provide an 'a' hotkey that archives the currently selected change, invoking the same workflow as `spectr archive <change-id>`.
+
+#### Scenario: User presses 'a' to archive a change
+- **WHEN** user is in interactive changes mode (`spectr list -I`)
+- **AND** user presses the 'a' key on a selected change
+- **THEN** the interactive mode exits
+- **AND** the archive workflow begins for the selected change ID
+- **AND** validation, task checking, and spec updates proceed as if the ID was provided as an argument
+- **AND** all confirmation prompts and flags work normally
+
+#### Scenario: Archive hotkey not available in specs mode
+- **WHEN** user is in interactive specs mode (`spectr list --specs -I`)
+- **AND** user presses 'a' key
+- **THEN** the key press is ignored (no action taken)
+- **AND** the help text does NOT show 'a: archive' option
+
+#### Scenario: Archive hotkey not available in unified mode
+- **WHEN** user is in unified interactive mode (`spectr list --all -I`)
+- **AND** user presses 'a' key
+- **THEN** the key press is ignored (no action taken)
+- **AND** the help text does NOT show 'a: archive' option
+- **AND** this avoids confusion when a spec row is selected
+
+#### Scenario: Archive workflow integration
+- **WHEN** the archive hotkey triggers the archive workflow
+- **THEN** the workflow uses the same code path as `spectr archive <id>`
+- **AND** the selected change ID is passed to the archive workflow
+- **AND** success or failure is reported after the workflow completes
+
+#### Scenario: Help text shows archive hotkey in changes mode
+- **WHEN** interactive changes mode is displayed
+- **THEN** the help text includes `a: archive` in the controls line
+- **AND** the hotkey appears after `e: edit` and before `q: quit`

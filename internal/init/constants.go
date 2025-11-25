@@ -2,10 +2,7 @@ package init
 
 const (
 	// File and directory permission constants
-	// Consolidated from filesystem.go and configurator.go
-	dirPerm         = 0o755
-	filePerm        = 0o644
-	defaultFilePerm = 0o644
+	filePerm = 0o644
 
 	// UI control keys
 	keyQuit  = "q"

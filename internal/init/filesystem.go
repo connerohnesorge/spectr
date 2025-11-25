@@ -40,7 +40,11 @@ func ExpandPath(path string) (string, error) {
 	if path == "~" || strings.HasPrefix(path, "~/") {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
-			return "", fmt.Errorf("failed to get user home directory: %w", err)
+			return "",
+				fmt.Errorf(
+					"failed to get user home directory: %w",
+					err,
+				)
 		}
 
 		if path == "~" {
@@ -54,7 +58,11 @@ func ExpandPath(path string) (string, error) {
 	// Convert to absolute path
 	absPath, err := filepath.Abs(expandedPath)
 	if err != nil {
-		return "", fmt.Errorf("failed to get absolute path: %w", err)
+		return "",
+			fmt.Errorf(
+				"failed to get absolute path: %w",
+				err,
+			)
 	}
 
 	return absPath, nil
@@ -116,13 +124,20 @@ func WriteFile(path string, content []byte) error {
 	dir := filepath.Dir(expandedPath)
 	err = EnsureDir(dir)
 	if err != nil {
-		return fmt.Errorf("failed to create parent directory: %w", err)
+		return fmt.Errorf(
+			"failed to create parent directory: %w",
+			err,
+		)
 	}
 
 	// Write file
 	err = os.WriteFile(expandedPath, content, filePerms)
 	if err != nil {
-		return fmt.Errorf("failed to write file %s: %w", expandedPath, err)
+		return fmt.Errorf(
+			"failed to write file %s: %w",
+			expandedPath,
+			err,
+		)
 	}
 
 	return nil

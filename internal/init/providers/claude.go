@@ -12,7 +12,7 @@ type ClaudeProvider struct {
 
 // NewClaudeProvider creates a new Claude Code provider.
 func NewClaudeProvider() *ClaudeProvider {
-	proposalPath, archivePath, applyPath := StandardCommandPaths(
+	proposalPath, syncPath, applyPath := StandardCommandPaths(
 		".claude/commands", ".md",
 	)
 
@@ -23,7 +23,7 @@ func NewClaudeProvider() *ClaudeProvider {
 			priority:      PriorityClaudeCode,
 			configFile:    "CLAUDE.md",
 			proposalPath:  proposalPath,
-			archivePath:   archivePath,
+			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

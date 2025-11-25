@@ -12,7 +12,7 @@ type AiderProvider struct {
 
 // NewAiderProvider creates a new Aider provider.
 func NewAiderProvider() *AiderProvider {
-	proposalPath, archivePath, applyPath := StandardCommandPaths(
+	proposalPath, syncPath, applyPath := StandardCommandPaths(
 		".aider/commands", ".md",
 	)
 
@@ -23,7 +23,7 @@ func NewAiderProvider() *AiderProvider {
 			priority:      PriorityAider,
 			configFile:    "",
 			proposalPath:  proposalPath,
-			archivePath:   archivePath,
+			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

@@ -36,9 +36,9 @@ description: Scaffold a new Spectr change and validate strictly.
 description: Implement an approved Spectr change and keep tasks in sync.
 ---`
 
-	// FrontmatterArchive is the YAML frontmatter for archive commands.
-	FrontmatterArchive = `---
-description: Archive a deployed Spectr change and update specs.
+	// FrontmatterSync is the YAML frontmatter for sync commands.
+	FrontmatterSync = `---
+description: Detect spec drift from code and update specs interactively.
 ---`
 )
 
@@ -47,19 +47,19 @@ func StandardFrontmatter() map[string]string {
 	return map[string]string{
 		"proposal": FrontmatterProposal,
 		"apply":    FrontmatterApply,
-		"archive":  FrontmatterArchive,
+		"sync":     FrontmatterSync,
 	}
 }
 
 // StandardCommandPaths returns the standard command paths for a given
 // directory and extension.
-// Returns proposalPath, archivePath, applyPath.
+// Returns proposalPath, syncPath, applyPath.
 func StandardCommandPaths(
 	dir, ext string,
-) (proposalPath, archivePath, applyPath string) {
+) (proposalPath, syncPath, applyPath string) {
 	proposalPath = filepath.Join(dir, "spectr-proposal"+ext)
-	archivePath = filepath.Join(dir, "spectr-archive"+ext)
+	syncPath = filepath.Join(dir, "spectr-sync"+ext)
 	applyPath = filepath.Join(dir, "spectr-apply"+ext)
 
-	return proposalPath, archivePath, applyPath
+	return proposalPath, syncPath, applyPath
 }

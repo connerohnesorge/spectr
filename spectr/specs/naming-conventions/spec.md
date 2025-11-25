@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TODO: Add purpose description
+Defines the naming conventions and rationale for the spectr project, including the choice of "spectr" as the project name and directory structure.
 
 ## Requirements
 

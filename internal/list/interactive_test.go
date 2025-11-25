@@ -69,7 +69,10 @@ func TestRunInteractiveChanges_EmptyList(t *testing.T) {
 		t.Errorf("RunInteractiveChanges with empty list should not error, got: %v", err)
 	}
 	if archiveID != "" {
-		t.Errorf("RunInteractiveChanges with empty list should return empty archive ID, got: %s", archiveID)
+		t.Errorf(
+			"RunInteractiveChanges with empty list should return empty archive ID, got: %s",
+			archiveID,
+		)
 	}
 }
 

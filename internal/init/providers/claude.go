@@ -20,7 +20,7 @@ func NewClaudeProvider() *ClaudeProvider {
 			configFile:    "CLAUDE.md",
 			slashDir:      ".claude/commands",
 			commandFormat: FormatMarkdown,
-			frontmatter:   ProjectFrontmatter(),
+			frontmatter:   StandardFrontmatter(),
 		},
 	}
 }

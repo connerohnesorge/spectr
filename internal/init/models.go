@@ -1,5 +1,13 @@
 package init
 
+// InitCmd represents the init command with all its flags
+type InitCmd struct {
+	Path           string   `arg:"" optional:"" help:"Project path"`
+	PathFlag       string   `name:"path" short:"p" help:"Alt project path"`
+	Tools          []string `name:"tools" short:"t" help:"Tools list"`
+	NonInteractive bool     `name:"non-interactive" help:"Non-interactive"`
+}
+
 // ProjectConfig holds the overall project configuration during init
 type ProjectConfig struct {
 	// ProjectPath is the absolute path to the project directory
@@ -34,12 +42,4 @@ type ProjectContext struct {
 	TechStack []string
 	// Conventions are the project conventions (unused in template currently)
 	Conventions string
-}
-
-// InitCmd represents the init command with all its flags
-type InitCmd struct {
-	Path           string   `arg:"" optional:"" help:"Project path"`
-	PathFlag       string   `name:"path" short:"p" help:"Alt project path"`
-	Tools          []string `name:"tools" short:"t" help:"Tools list"`
-	NonInteractive bool     `name:"non-interactive" help:"Non-interactive"`
 }

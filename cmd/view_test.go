@@ -19,19 +19,22 @@ func TestViewCmd_Integration_TextOutput(t *testing.T) {
 		t.Fatalf("Failed to get working directory: %v", err)
 	}
 	defer func() {
-		if err := os.Chdir(originalWd); err != nil {
+		cErr := os.Chdir(originalWd)
+		if cErr != nil {
 			t.Logf("Warning: Failed to restore working directory: %v", err)
 		}
 	}()
 
 	// Change to project root (where spectr directory exists)
 	projectRoot := filepath.Join(originalWd, "..")
-	if err := os.Chdir(projectRoot); err != nil {
+	err = os.Chdir(projectRoot)
+	if err != nil {
 		t.Fatalf("Failed to change to project root: %v", err)
 	}
 
 	// Verify spectr directory exists
-	if _, err := os.Stat("spectr"); err != nil {
+	_, err = os.Stat("spectr")
+	if err != nil {
 		t.Skipf("Skipping integration test: spectr directory not found at %s", projectRoot)
 	}
 
@@ -85,19 +88,22 @@ func TestViewCmd_Integration_JSONOutput(t *testing.T) {
 		t.Fatalf("Failed to get working directory: %v", err)
 	}
 	defer func() {
-		if err := os.Chdir(originalWd); err != nil {
+		cErr := os.Chdir(originalWd)
+		if cErr != nil {
 			t.Logf("Warning: Failed to restore working directory: %v", err)
 		}
 	}()
 
 	// Change to project root (where spectr directory exists)
 	projectRoot := filepath.Join(originalWd, "..")
-	if err := os.Chdir(projectRoot); err != nil {
+	err = os.Chdir(projectRoot)
+	if err != nil {
 		t.Fatalf("Failed to change to project root: %v", err)
 	}
 
 	// Verify spectr directory exists
-	if _, err := os.Stat("spectr"); err != nil {
+	_, err = os.Stat("spectr")
+	if err != nil {
 		t.Skipf("Skipping integration test: spectr directory not found at %s", projectRoot)
 	}
 
@@ -179,12 +185,14 @@ func TestViewCmd_Integration_NOCOLOREnvironment(t *testing.T) {
 
 	// Change to project root
 	projectRoot := filepath.Join(originalWd, "..")
-	if err := os.Chdir(projectRoot); err != nil {
+	err = os.Chdir(projectRoot)
+	if err != nil {
 		t.Fatalf("Failed to change to project root: %v", err)
 	}
 
 	// Verify spectr directory exists
-	if _, err := os.Stat("spectr"); err != nil {
+	_, err = os.Stat("spectr")
+	if err != nil {
 		t.Skipf("Skipping integration test: spectr directory not found at %s", projectRoot)
 	}
 
@@ -235,13 +243,15 @@ func TestViewCmd_Integration_MissingSpectrDirectory(t *testing.T) {
 		t.Fatalf("Failed to get working directory: %v", err)
 	}
 	defer func() {
-		if err := os.Chdir(originalWd); err != nil {
+		cErr := os.Chdir(originalWd)
+		if cErr != nil {
 			t.Logf("Warning: Failed to restore working directory: %v", err)
 		}
 	}()
 
 	// Change to temp directory (no spectr directory)
-	if err := os.Chdir(tempDir); err != nil {
+	err = os.Chdir(tempDir)
+	if err != nil {
 		t.Fatalf("Failed to change to temp directory: %v", err)
 	}
 

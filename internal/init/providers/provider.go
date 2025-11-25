@@ -1,43 +1,49 @@
-// Package providers implements the interface-driven provider architecture for AI CLI tools.
+// Package providers implements the interface-driven provider architecture for
+// AI CLI/IDE/Orchestrator tools.
 //
 // # Overview
 //
-// This package defines the Provider interface that all AI CLI tools (Claude Code, Gemini CLI,
-// Cline, Cursor, etc.) must implement. Each provider handles both its instruction file
-// (e.g., CLAUDE.md) and slash commands (e.g., .claude/commands/) in a single implementation.
+// This package defines the Provider interface that all AI CLI tools
+// (Claude Code, Gemini CLI, Cline, Cursor, etc.) must implement.
+//
+// Each provider handles both its instruction file (e.g., CLAUDE.md) and slash
+// commands (e.g., .claude/commands/) in a single implementation.
 //
 // # Adding a New Provider
 //
-// To add a new AI CLI provider, create a new file (e.g., providers/mytools.go) with:
+// To add a new AI CLI provider, create a new file
+// (e.g., providers/mytools.go) with:
 //
 // Example:
 //
 //	package providers
 //
 //	func init() {
-//	    Register(&MyToolProvider{})
+//		Register(&MyToolProvider{})
 //	}
 //
 //	type MyToolProvider struct {
-//	    BaseProvider
+//		BaseProvider
 //	}
 //
 //	func NewMyToolProvider() *MyToolProvider {
-//	    return &MyToolProvider{
-//	        BaseProvider: BaseProvider{
-//	            id:            "mytool",
-//	            name:          "MyTool",
-//	            priority:      100,
-//	            configFile:    "MYTOOL.md",       // Empty if no instruction file
-//	            slashDir:      ".mytool/commands", // Empty if no slash commands
-//	            commandFormat: FormatMarkdown,
-//	            frontmatter: map[string]string{
-//	                "proposal": "---\ndescription: Scaffold a new Spectr change.\n---",
-//	                "apply":    "---\ndescription: Implement an approved Spectr change.\n---",
-//	                "archive":  "---\ndescription: Archive a deployed Spectr change.\n---",
-//	            },
-//	        },
-//	    }
+//		return &MyToolProvider{
+//			BaseProvider: BaseProvider{
+//				id:            "mytool",
+//				name:          "MyTool",
+//				priority:      100,
+//				// Empty if no instruction file
+//				configFile:    "MYTOOL.md",
+//				// Empty if no slash commands
+//				slashDir:      ".mytool/commands",
+//				commandFormat: FormatMarkdown,
+//				frontmatter: map[string]string{
+//					"proposal": "---\ndescription: Scaffold a new Spectr change.\n---",
+//					"apply":    "---\ndescription: Implement an approved Spectr change.\n---",
+//					"archive":  "---\ndescription: Archive a deployed Spectr change.\n---",
+//				},
+//			},
+//		}
 //	}
 //
 // The BaseProvider handles all common logic.
@@ -55,7 +61,8 @@ import (
 type CommandFormat int
 
 const (
-	// FormatMarkdown uses markdown files with YAML frontmatter (Claude, Cline, etc.)
+	// FormatMarkdown uses markdown files with
+	// YAML frontmatter (Claude, Cline, etc.)
 	FormatMarkdown CommandFormat = iota
 	// FormatTOML uses TOML files (Gemini CLI)
 	FormatTOML
@@ -171,7 +178,10 @@ func (p *BaseProvider) HasSlashCommands() bool {
 }
 
 // Configure applies all configuration for the provider.
-func (p *BaseProvider) Configure(projectPath, _ string, tm TemplateRenderer) error {
+func (p *BaseProvider) Configure(
+	projectPath, _ string,
+	tm TemplateRenderer,
+) error {
 	// Configure instruction file if provider has one
 	if p.HasConfigFile() {
 		if err := p.configureConfigFile(projectPath, tm); err != nil {
@@ -190,7 +200,10 @@ func (p *BaseProvider) Configure(projectPath, _ string, tm TemplateRenderer) err
 }
 
 // configureConfigFile creates or updates the instruction file.
-func (p *BaseProvider) configureConfigFile(projectPath string, tm TemplateRenderer) error {
+func (p *BaseProvider) configureConfigFile(
+	projectPath string,
+	tm TemplateRenderer,
+) error {
 	content, err := tm.RenderAgents()
 	if err != nil {
 		return fmt.Errorf("failed to render agents template: %w", err)
@@ -198,11 +211,19 @@ func (p *BaseProvider) configureConfigFile(projectPath string, tm TemplateRender
 
 	filePath := filepath.Join(projectPath, p.configFile)
 
-	return UpdateFileWithMarkers(filePath, content, SpectrStartMarker, SpectrEndMarker)
+	return UpdateFileWithMarkers(
+		filePath,
+		content,
+		SpectrStartMarker,
+		SpectrEndMarker,
+	)
 }
 
 // configureSlashCommands creates or updates the slash command files.
-func (p *BaseProvider) configureSlashCommands(projectPath string, tm TemplateRenderer) error {
+func (p *BaseProvider) configureSlashCommands(
+	projectPath string,
+	tm TemplateRenderer,
+) error {
 	commands := []string{"proposal", "apply", "archive"}
 	for _, cmd := range commands {
 		if err := p.configureSlashCommand(projectPath, cmd, tm); err != nil {
@@ -214,7 +235,10 @@ func (p *BaseProvider) configureSlashCommands(projectPath string, tm TemplateRen
 }
 
 // configureSlashCommand configures a single slash command file.
-func (p *BaseProvider) configureSlashCommand(projectPath, cmd string, tm TemplateRenderer) error {
+func (p *BaseProvider) configureSlashCommand(
+	projectPath, cmd string,
+	tm TemplateRenderer,
+) error {
 	filePath := p.getSlashCommandPath(projectPath, cmd)
 
 	body, err := tm.RenderSlashCommand(cmd)
@@ -237,10 +261,17 @@ func (p *BaseProvider) getSlashCommandPath(projectPath, cmd string) string {
 }
 
 // updateExistingSlashCommand updates an existing slash command file.
-func (p *BaseProvider) updateExistingSlashCommand(filePath, body, cmd string) error {
+func (p *BaseProvider) updateExistingSlashCommand(
+	filePath, body, cmd string,
+) error {
 	frontmatter := p.frontmatter[cmd]
-	if err := updateSlashCommandBody(filePath, body, frontmatter); err != nil {
-		return fmt.Errorf("failed to update slash command file %s: %w", filePath, err)
+	err := updateSlashCommandBody(filePath, body, frontmatter)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to update slash command file %s: %w",
+			filePath,
+			err,
+		)
 	}
 
 	return nil
@@ -261,12 +292,22 @@ func (p *BaseProvider) createNewSlashCommand(filePath, cmd, body string) error {
 	content := strings.Join(sections, newlineDouble) + newlineDouble
 
 	dir := filepath.Dir(filePath)
-	if err := EnsureDir(dir); err != nil {
-		return fmt.Errorf("failed to create directory for %s: %w", filePath, err)
+	err := EnsureDir(dir)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to create directory for %s: %w",
+			filePath,
+			err,
+		)
 	}
 
-	if err := os.WriteFile(filePath, []byte(content), filePerm); err != nil {
-		return fmt.Errorf("failed to write slash command file %s: %w", filePath, err)
+	err = os.WriteFile(filePath, []byte(content), filePerm)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to write slash command file %s: %w",
+			filePath,
+			err,
+		)
 	}
 
 	return nil

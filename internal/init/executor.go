@@ -28,13 +28,21 @@ func NewInitExecutor(cmd *InitCmd) (*InitExecutor, error) {
 
 	// Check if path exists
 	if !FileExists(projectPath) {
-		return nil, fmt.Errorf("project path does not exist: %s", projectPath)
+		return nil,
+			fmt.Errorf(
+				"project path does not exist: %s",
+				projectPath,
+			)
 	}
 
 	// Initialize template manager
 	tm, err := NewTemplateManager()
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize template manager: %w", err)
+		return nil,
+			fmt.Errorf(
+				"failed to initialize template manager: %w",
+				err,
+			)
 	}
 
 	return &InitExecutor{

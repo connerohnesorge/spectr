@@ -12,7 +12,8 @@ func init() {
 }
 
 // GeminiProvider implements the Provider interface for Gemini CLI.
-// Gemini uses ~/.gemini/commands/ for TOML-based slash commands (no instruction file).
+// Gemini uses ~/.gemini/commands/ for TOML-based slash commands
+// (no instruction file).
 type GeminiProvider struct {
 	BaseProvider
 }
@@ -32,10 +33,15 @@ func NewGeminiProvider() *GeminiProvider {
 	}
 }
 
-// Configure overrides BaseProvider.Configure to generate TOML files instead of markdown.
-func (p *GeminiProvider) Configure(projectPath, spectrDir string, tm TemplateRenderer) error {
+// Configure overrides BaseProvider.Configure to generate TOML files instead of
+// markdown.
+func (p *GeminiProvider) Configure(
+	projectPath, _ string,
+	tm TemplateRenderer,
+) error {
 	if p.HasSlashCommands() {
-		if err := p.configureSlashCommands(projectPath, tm); err != nil {
+		err := p.configureSlashCommands(projectPath, tm)
+		if err != nil {
 			return fmt.Errorf("failed to configure slash commands: %w", err)
 		}
 	}
@@ -44,18 +50,32 @@ func (p *GeminiProvider) Configure(projectPath, spectrDir string, tm TemplateRen
 }
 
 // configureSlashCommands creates or updates TOML slash command files.
-func (p *GeminiProvider) configureSlashCommands(projectPath string, tm TemplateRenderer) error {
+func (p *GeminiProvider) configureSlashCommands(
+	projectPath string,
+	tm TemplateRenderer,
+) error {
 	commands := []struct {
 		name        string
 		description string
 	}{
-		{"proposal", "Scaffold a new Spectr change and validate strictly."},
-		{"apply", "Implement an approved Spectr change and keep tasks in sync."},
-		{"archive", "Archive a deployed Spectr change and update specs."},
+		{
+			"proposal",
+			"Scaffold a new Spectr change and validate strictly.",
+		},
+		{
+			"apply",
+			"Implement an approved Spectr change and keep tasks in sync.",
+		},
+		{
+			"archive",
+			"Archive a deployed Spectr change and update specs.",
+		},
 	}
 
+	var err error
 	for _, cmd := range commands {
-		if err := p.configureTOMLCommand(projectPath, cmd.name, cmd.description, tm); err != nil {
+		err = p.configureTOMLCommand(projectPath, cmd.name, cmd.description, tm)
+		if err != nil {
 			return err
 		}
 	}
@@ -78,12 +98,22 @@ func (p *GeminiProvider) configureTOMLCommand(
 	content := p.generateTOMLContent(description, prompt)
 
 	dir := filepath.Dir(filePath)
-	if err := EnsureDir(dir); err != nil {
-		return fmt.Errorf("failed to create directory for %s: %w", filePath, err)
+	err = EnsureDir(dir)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to create directory for %s: %w",
+			filePath,
+			err,
+		)
 	}
 
-	if err := os.WriteFile(filePath, []byte(content), filePerm); err != nil {
-		return fmt.Errorf("failed to write TOML command file %s: %w", filePath, err)
+	err = os.WriteFile(filePath, []byte(content), filePerm)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to write TOML command file %s: %w",
+			filePath,
+			err,
+		)
 	}
 
 	return nil
@@ -97,7 +127,9 @@ func (p *GeminiProvider) getTOMLCommandPath(projectPath, cmd string) string {
 }
 
 // generateTOMLContent creates TOML content for a Gemini command.
-func (p *GeminiProvider) generateTOMLContent(description, prompt string) string {
+func (*GeminiProvider) generateTOMLContent(
+	description, prompt string,
+) string {
 	// Escape the prompt for TOML multiline string
 	escapedPrompt := strings.ReplaceAll(prompt, `\`, `\\`)
 	escapedPrompt = strings.ReplaceAll(escapedPrompt, `"`, `\"`)

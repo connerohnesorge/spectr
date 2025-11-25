@@ -47,8 +47,23 @@ func TestClaudeProvider(t *testing.T) {
 	if p.ConfigFile() != "CLAUDE.md" {
 		t.Errorf("ConfigFile() = %s, want CLAUDE.md", p.ConfigFile())
 	}
-	if p.SlashDir() != ".claude/commands" {
-		t.Errorf("SlashDir() = %s, want .claude/commands", p.SlashDir())
+	if p.GetProposalCommandPath() != ".claude/commands/spectr-proposal.md" {
+		t.Errorf(
+			"GetProposalCommandPath() = %s, want .claude/commands/spectr-proposal.md",
+			p.GetProposalCommandPath(),
+		)
+	}
+	if p.GetArchiveCommandPath() != ".claude/commands/spectr-archive.md" {
+		t.Errorf(
+			"GetArchiveCommandPath() = %s, want .claude/commands/spectr-archive.md",
+			p.GetArchiveCommandPath(),
+		)
+	}
+	if p.GetApplyCommandPath() != ".claude/commands/spectr-apply.md" {
+		t.Errorf(
+			"GetApplyCommandPath() = %s, want .claude/commands/spectr-apply.md",
+			p.GetApplyCommandPath(),
+		)
 	}
 	if p.CommandFormat() != FormatMarkdown {
 		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
@@ -73,8 +88,23 @@ func TestGeminiProvider(t *testing.T) {
 	if p.ConfigFile() != "" {
 		t.Errorf("ConfigFile() = %s, want empty", p.ConfigFile())
 	}
-	if p.SlashDir() != ".gemini/commands" {
-		t.Errorf("SlashDir() = %s, want .gemini/commands", p.SlashDir())
+	if p.GetProposalCommandPath() != ".gemini/commands/spectr-proposal.toml" {
+		t.Errorf(
+			"GetProposalCommandPath() = %s, want .gemini/commands/spectr-proposal.toml",
+			p.GetProposalCommandPath(),
+		)
+	}
+	if p.GetArchiveCommandPath() != ".gemini/commands/spectr-archive.toml" {
+		t.Errorf(
+			"GetArchiveCommandPath() = %s, want .gemini/commands/spectr-archive.toml",
+			p.GetArchiveCommandPath(),
+		)
+	}
+	if p.GetApplyCommandPath() != ".gemini/commands/spectr-apply.toml" {
+		t.Errorf(
+			"GetApplyCommandPath() = %s, want .gemini/commands/spectr-apply.toml",
+			p.GetApplyCommandPath(),
+		)
 	}
 	if p.CommandFormat() != FormatTOML {
 		t.Errorf("CommandFormat() = %d, want FormatTOML", p.CommandFormat())
@@ -266,8 +296,10 @@ func TestAllProvidersHaveRequiredFields(t *testing.T) {
 		if !p.HasSlashCommands() {
 			t.Errorf("Provider %s has no slash commands", p.ID())
 		}
-		if p.SlashDir() == "" {
-			t.Errorf("Provider %s has empty SlashDir", p.ID())
+		// Check that at least one command path is set
+		if p.GetProposalCommandPath() == "" && p.GetArchiveCommandPath() == "" &&
+			p.GetApplyCommandPath() == "" {
+			t.Errorf("Provider %s has no command paths set", p.ID())
 		}
 	}
 }

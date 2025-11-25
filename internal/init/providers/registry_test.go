@@ -97,8 +97,10 @@ func TestWithSlashCommands(t *testing.T) {
 				p.ID(),
 			)
 		}
-		if p.SlashDir() == "" {
-			t.Errorf("Provider %s has empty SlashDir()", p.ID())
+		// Check that at least one command path is set
+		if p.GetProposalCommandPath() == "" && p.GetArchiveCommandPath() == "" &&
+			p.GetApplyCommandPath() == "" {
+			t.Errorf("Provider %s has no command paths set", p.ID())
 		}
 	}
 }

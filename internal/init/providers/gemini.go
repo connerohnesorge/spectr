@@ -20,13 +20,19 @@ type GeminiProvider struct {
 
 // NewGeminiProvider creates a new Gemini CLI provider.
 func NewGeminiProvider() *GeminiProvider {
+	proposalPath, archivePath, applyPath := StandardCommandPaths(
+		".gemini/commands", ".toml",
+	)
+
 	return &GeminiProvider{
 		BaseProvider: BaseProvider{
 			id:            "gemini",
 			name:          "Gemini CLI",
 			priority:      PriorityGemini,
 			configFile:    "",
-			slashDir:      ".gemini/commands",
+			proposalPath:  proposalPath,
+			archivePath:   archivePath,
+			applyPath:     applyPath,
 			commandFormat: FormatTOML,
 			frontmatter:   nil,
 		},
@@ -121,9 +127,17 @@ func (p *GeminiProvider) configureTOMLCommand(
 
 // getTOMLCommandPath returns the full path for a TOML command file.
 func (p *GeminiProvider) getTOMLCommandPath(projectPath, cmd string) string {
-	filename := fmt.Sprintf("spectr-%s.toml", cmd)
+	var relPath string
+	switch cmd {
+	case "proposal":
+		relPath = p.proposalPath
+	case "archive":
+		relPath = p.archivePath
+	case "apply":
+		relPath = p.applyPath
+	}
 
-	return filepath.Join(projectPath, p.slashDir, filename)
+	return filepath.Join(projectPath, relPath)
 }
 
 // generateTOMLContent creates TOML content for a Gemini command.
@@ -140,41 +154,4 @@ prompt = """
 %s
 """
 `, description, escapedPrompt)
-}
-
-// getSlashCommandPath returns paths with .toml extension for TOML format.
-func (p *GeminiProvider) getSlashCommandPath(projectPath, cmd string) string {
-	filename := fmt.Sprintf("spectr-%s.toml", cmd)
-
-	return filepath.Join(projectPath, p.slashDir, filename)
-}
-
-// IsConfigured checks if all TOML command files exist.
-func (p *GeminiProvider) IsConfigured(projectPath string) bool {
-	if p.HasSlashCommands() {
-		commands := []string{"proposal", "apply", "archive"}
-		for _, cmd := range commands {
-			filePath := p.getSlashCommandPath(projectPath, cmd)
-			if !FileExists(filePath) {
-				return false
-			}
-		}
-	}
-
-	return true
-}
-
-// GetFilePaths returns the TOML file paths for Gemini.
-func (p *GeminiProvider) GetFilePaths() []string {
-	var paths []string
-
-	if p.HasSlashCommands() {
-		commands := []string{"proposal", "apply", "archive"}
-		for _, cmd := range commands {
-			filename := fmt.Sprintf("spectr-%s.toml", cmd)
-			paths = append(paths, filepath.Join(p.slashDir, filename))
-		}
-	}
-
-	return paths
 }

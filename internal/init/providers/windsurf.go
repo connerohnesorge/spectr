@@ -12,13 +12,19 @@ type WindsurfProvider struct {
 
 // NewWindsurfProvider creates a new Windsurf provider.
 func NewWindsurfProvider() *WindsurfProvider {
+	proposalPath, archivePath, applyPath := StandardCommandPaths(
+		".windsurf/commands", ".md",
+	)
+
 	return &WindsurfProvider{
 		BaseProvider: BaseProvider{
 			id:            "windsurf",
 			name:          "Windsurf",
 			priority:      PriorityWindsurf,
 			configFile:    "",
-			slashDir:      ".windsurf/commands",
+			proposalPath:  proposalPath,
+			archivePath:   archivePath,
+			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),
 		},

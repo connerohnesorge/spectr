@@ -12,13 +12,19 @@ type CodeBuddyProvider struct {
 
 // NewCodeBuddyProvider creates a new CodeBuddy provider.
 func NewCodeBuddyProvider() *CodeBuddyProvider {
+	proposalPath, archivePath, applyPath := StandardCommandPaths(
+		".codebuddy/commands", ".md",
+	)
+
 	return &CodeBuddyProvider{
 		BaseProvider: BaseProvider{
 			id:            "codebuddy",
 			name:          "CodeBuddy",
 			priority:      PriorityCodeBuddy,
 			configFile:    "CODEBUDDY.md",
-			slashDir:      ".codebuddy/commands",
+			proposalPath:  proposalPath,
+			archivePath:   archivePath,
+			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),
 		},

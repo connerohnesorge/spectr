@@ -27,6 +27,10 @@
 //	}
 //
 //	func NewMyToolProvider() *MyToolProvider {
+//		proposalPath, archivePath, applyPath := StandardCommandPaths(
+//			".mytool/commands", ".md",
+//		)
+//
 //		return &MyToolProvider{
 //			BaseProvider: BaseProvider{
 //				id:            "mytool",
@@ -35,7 +39,9 @@
 //				// Empty if no instruction file
 //				configFile:    "MYTOOL.md",
 //				// Empty if no slash commands
-//				slashDir:      ".mytool/commands",
+//				proposalPath:  proposalPath,
+//				archivePath:   archivePath,
+//				applyPath:     applyPath,
 //				commandFormat: FormatMarkdown,
 //				frontmatter: map[string]string{
 //					"proposal":
@@ -51,6 +57,8 @@
 //
 // The BaseProvider handles all common logic.
 // Override Configure() only for special formats.
+//
+//nolint:revive // File length acceptable for provider interface definition
 package providers
 
 import (
@@ -90,9 +98,21 @@ type Provider interface {
 	// Returns empty string if the provider has no instruction file.
 	ConfigFile() string
 
-	// SlashDir returns the slash commands directory (e.g., ".claude/commands").
-	// Returns empty string if the provider has no slash commands.
-	SlashDir() string
+	// GetProposalCommandPath returns the relative path for the
+	// proposal command.
+	// Example: ".claude/commands/spectr-proposal.md"
+	// Returns empty string if the provider has no proposal command.
+	GetProposalCommandPath() string
+
+	// GetArchiveCommandPath returns the relative path for the archive command.
+	// Example: ".claude/commands/spectr-archive.md"
+	// Returns empty string if the provider has no archive command.
+	GetArchiveCommandPath() string
+
+	// GetApplyCommandPath returns the relative path for the apply command.
+	// Example: ".claude/commands/spectr-apply.md"
+	// Returns empty string if the provider has no apply command.
+	GetApplyCommandPath() string
 
 	// CommandFormat returns Markdown or TOML for slash command files.
 	CommandFormat() CommandFormat
@@ -128,14 +148,16 @@ type TemplateRenderer interface {
 	RenderSlashCommand(command string) (string, error)
 }
 
-// BaseProvider provides a default implementation of the Provider interface.
-// Embed this in your provider struct for common functionality.
+// BaseProvider provides a default implementation of the Provider
+// interface. Embed this in your provider struct for common functionality.
 type BaseProvider struct {
 	id            string
 	name          string
 	priority      int
 	configFile    string // Empty if no instruction file
-	slashDir      string // Empty if no slash commands
+	proposalPath  string // e.g., ".claude/commands/spectr-proposal.md"
+	archivePath   string // e.g., ".claude/commands/spectr-archive.md"
+	applyPath     string // e.g., ".claude/commands/spectr-apply.md"
 	commandFormat CommandFormat
 	frontmatter   map[string]string // Command name -> frontmatter content
 }
@@ -160,9 +182,19 @@ func (p *BaseProvider) ConfigFile() string {
 	return p.configFile
 }
 
-// SlashDir returns the slash commands directory.
-func (p *BaseProvider) SlashDir() string {
-	return p.slashDir
+// GetProposalCommandPath returns the relative path for the proposal command.
+func (p *BaseProvider) GetProposalCommandPath() string {
+	return p.proposalPath
+}
+
+// GetArchiveCommandPath returns the relative path for the archive command.
+func (p *BaseProvider) GetArchiveCommandPath() string {
+	return p.archivePath
+}
+
+// GetApplyCommandPath returns the relative path for the apply command.
+func (p *BaseProvider) GetApplyCommandPath() string {
+	return p.applyPath
 }
 
 // CommandFormat returns the command file format.
@@ -177,7 +209,7 @@ func (p *BaseProvider) HasConfigFile() bool {
 
 // HasSlashCommands returns true if this provider has slash commands.
 func (p *BaseProvider) HasSlashCommands() bool {
-	return p.slashDir != ""
+	return p.proposalPath != "" || p.archivePath != "" || p.applyPath != ""
 }
 
 // Configure applies all configuration for the provider.
@@ -227,9 +259,18 @@ func (p *BaseProvider) configureSlashCommands(
 	projectPath string,
 	tm TemplateRenderer,
 ) error {
-	commands := []string{"proposal", "apply", "archive"}
-	for _, cmd := range commands {
-		if err := p.configureSlashCommand(projectPath, cmd, tm); err != nil {
+	paths := map[string]string{
+		"proposal": p.proposalPath,
+		"apply":    p.applyPath,
+		"archive":  p.archivePath,
+	}
+
+	for cmd, relPath := range paths {
+		if relPath == "" {
+			continue
+		}
+		fullPath := filepath.Join(projectPath, relPath)
+		if err := p.configureSlashCommand(fullPath, cmd, tm); err != nil {
 			return err
 		}
 	}
@@ -239,11 +280,9 @@ func (p *BaseProvider) configureSlashCommands(
 
 // configureSlashCommand configures a single slash command file.
 func (p *BaseProvider) configureSlashCommand(
-	projectPath, cmd string,
+	filePath, cmd string,
 	tm TemplateRenderer,
 ) error {
-	filePath := p.getSlashCommandPath(projectPath, cmd)
-
 	body, err := tm.RenderSlashCommand(cmd)
 	if err != nil {
 		return fmt.Errorf("failed to render slash command %s: %w", cmd, err)
@@ -254,13 +293,6 @@ func (p *BaseProvider) configureSlashCommand(
 	}
 
 	return p.createNewSlashCommand(filePath, cmd, body)
-}
-
-// getSlashCommandPath returns the full path for a slash command file.
-func (p *BaseProvider) getSlashCommandPath(projectPath, cmd string) string {
-	filename := fmt.Sprintf("spectr-%s.md", cmd)
-
-	return filepath.Join(projectPath, p.slashDir, filename)
 }
 
 // updateExistingSlashCommand updates an existing slash command file.
@@ -326,14 +358,15 @@ func (p *BaseProvider) IsConfigured(projectPath string) bool {
 		}
 	}
 
-	// Check slash commands if provider has them
-	if p.HasSlashCommands() {
-		commands := []string{"proposal", "apply", "archive"}
-		for _, cmd := range commands {
-			filePath := p.getSlashCommandPath(projectPath, cmd)
-			if !FileExists(filePath) {
-				return false
-			}
+	// Check slash commands using path methods
+	paths := []string{p.proposalPath, p.archivePath, p.applyPath}
+	for _, relPath := range paths {
+		if relPath == "" {
+			continue
+		}
+		filePath := filepath.Join(projectPath, relPath)
+		if !FileExists(filePath) {
+			return false
 		}
 	}
 
@@ -348,11 +381,12 @@ func (p *BaseProvider) GetFilePaths() []string {
 		paths = append(paths, p.configFile)
 	}
 
-	if p.HasSlashCommands() {
-		commands := []string{"proposal", "apply", "archive"}
-		for _, cmd := range commands {
-			filename := fmt.Sprintf("spectr-%s.md", cmd)
-			paths = append(paths, filepath.Join(p.slashDir, filename))
+	// Add command paths that are non-empty
+	for _, relPath := range []string{
+		p.proposalPath, p.archivePath, p.applyPath,
+	} {
+		if relPath != "" {
+			paths = append(paths, relPath)
 		}
 	}
 

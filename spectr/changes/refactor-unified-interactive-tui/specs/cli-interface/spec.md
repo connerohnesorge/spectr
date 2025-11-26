@@ -59,3 +59,41 @@ The interactive table SHALL use clear visual styling to distinguish headers, sel
 - **THEN** all tables SHALL use identical styling
 - **AND** colors, borders, and highlights SHALL match exactly
 - **AND** the shared `tui.ApplyTableStyles()` function SHALL be the single source of truth
+
+## MODIFIED Requirements
+
+### Requirement: Interactive Archive Mode
+The archive command SHALL provide an interactive table interface when no change ID argument is provided, displaying available changes in a navigable table format identical to the list command's interactive mode with project path information. The `-I`/`--interactive` flag has been removed as TUI is now the default behavior when no change ID is provided.
+
+#### Scenario: User runs archive with no arguments
+- **WHEN** user runs `spectr archive` with no change ID argument
+- **THEN** an interactive table is displayed with columns: ID, Title, Deltas, Tasks
+- **AND** the table supports arrow key navigation (↑/↓, j/k)
+- **AND** the first row is selected by default
+- **AND** the table uses the same visual styling as list -I
+- **AND** the project path is displayed in the interface
+
+#### Scenario: User selects change for archiving
+- **WHEN** user presses Enter on a selected row in archive interactive mode
+- **THEN** the change ID is captured (not copied to clipboard)
+- **AND** the interactive mode exits
+- **AND** the archive workflow proceeds with the selected change ID
+- **AND** validation, task checking, and spec updates proceed as normal
+
+#### Scenario: User cancels archive selection
+- **WHEN** user presses 'q' or Ctrl+C in archive interactive mode
+- **THEN** interactive mode exits
+- **AND** archive command returns successfully without archiving anything
+- **AND** a "Cancelled" message is displayed
+
+#### Scenario: No changes available for archiving
+- **WHEN** user runs `spectr archive` and no changes exist in changes/ directory
+- **THEN** display "No changes available to archive" message
+- **AND** exit cleanly without entering interactive mode
+- **AND** command returns successfully
+
+#### Scenario: Archive with explicit change ID bypasses interactive mode
+- **WHEN** user runs `spectr archive <change-id>`
+- **THEN** interactive mode is NOT triggered
+- **AND** archive proceeds directly with the specified change ID
+- **AND** behavior is unchanged from current implementation

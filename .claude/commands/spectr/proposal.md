@@ -21,7 +21,8 @@ tags: [spectr, change]
 7. Validate with `spectr validate <id> --strict` and resolve every issue before sharing the proposal.
 
 **Reference**
-- Use `spectr show <id> --json --deltas-only` or `spectr show <spec> --type spec` to inspect details when validation fails.
+- Read delta specs directly at `spectr/changes/<id>/specs/<capability>/spec.md` when validation fails.
+- Read existing specs at `spectr/specs/<capability>/spec.md` to understand current state.
 - Search existing requirements with `rg -n "Requirement:|Scenario:" spectr/specs` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so proposals align with current implementation realities.
 

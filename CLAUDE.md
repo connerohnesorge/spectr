@@ -281,15 +281,15 @@ After deployment, archive completed changes:
 **Before Creating Specs:**
 - Always check if capability already exists
 - Prefer modifying existing specs over creating duplicates
-- Use `spectr show [spec]` to review current state
+- Read `spectr/specs/<capability>/spec.md` directly to review current state
 - If request is ambiguous, ask 1–2 clarifying questions before scaffolding
 
 ### Search Guidance
 - Enumerate specs: `spectr spec list --long` (or `--json` for scripts)
 - Enumerate changes: `spectr list` (or `spectr change list --json` - deprecated but available)
-- Show details:
-  - Spec: `spectr show <spec-id> --type spec` (use `--json` for filters)
-  - Change: `spectr show <change-id> --json --deltas-only`
+- Read details directly:
+  - Spec: Read `spectr/specs/<capability>/spec.md`
+  - Change: Read `spectr/changes/<change-id>/proposal.md`
 - Full-text search (use ripgrep): `rg -n "Requirement:|Scenario:" spectr/specs`
 
 ## Quick Start
@@ -300,7 +300,6 @@ After deployment, archive completed changes:
 # Essential commands
 spectr list                  # List active changes
 spectr list --specs          # List specifications
-spectr show [item]           # Display change or spec
 spectr validate [item]       # Validate changes or specs
 spectr archive <change-id> [--yes|-y]   # Archive after deployment (add --yes for non-interactive runs)
 
@@ -309,13 +308,16 @@ spectr init [path]           # Initialize Spectr
 spectr update [path]         # Update instruction files
 
 # Interactive mode
-spectr show                  # Prompts for selection
 spectr validate              # Bulk validation mode
 
 # Debugging
-spectr show [change] --json --deltas-only
 spectr validate [change] --strict
 ```
+
+**Reading Specs and Changes (for AI agents):**
+- Specs: Read `spectr/specs/<capability>/spec.md` directly
+- Changes: Read `spectr/changes/<change-id>/proposal.md` directly
+- Tasks: Read `spectr/changes/<change-id>/tasks.md` directly
 
 ### Command Flags
 
@@ -506,20 +508,18 @@ Example for RENAMED:
 
 **Silent scenario parsing failures**
 - Exact format required: `#### Scenario: Name`
-- Debug with: `spectr show [change] --json --deltas-only`
+- Debug by reading the delta spec file directly: `spectr/changes/<change-id>/specs/<capability>/spec.md`
 
 ### Validation Tips
 
 ```bash
 # Always use strict mode for comprehensive checks
 spectr validate [change] --strict
-
-# Debug delta parsing
-spectr show [change] --json | jq '.deltas'
-
-# Check specific requirement
-spectr show [spec] --json -r 1
 ```
+
+**For AI agents debugging:**
+- Read delta specs directly: `spectr/changes/<change-id>/specs/<capability>/spec.md`
+- Check spec content by reading: `spectr/specs/<capability>/spec.md`
 
 ## Happy Path Script
 
@@ -654,10 +654,13 @@ Only add complexity with:
 ### CLI Essentials
 ```bash
 spectr list              # What's in progress?
-spectr show [item]       # View details
 spectr validate --strict # Is it correct?
 spectr archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
 ```
+
+**Reading Details (for AI agents):**
+- Read `spectr/specs/<capability>/spec.md` for spec details
+- Read `spectr/changes/<change-id>/proposal.md` for change details
 
 Remember: Specs are truth. Changes are proposals. Keep them in sync.
 

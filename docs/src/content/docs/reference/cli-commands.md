@@ -27,29 +27,29 @@ spectr spec list --long
 - `--long` - Show detailed information
 - `--json` - Machine-readable JSON output
 
-### Show Details
+### View Details
 
 Display details about a specific change or spec:
 
 ```bash
-spectr show <change-id>
-spectr show <spec-id> --type spec
+spectr view <change-id>
+spectr view <spec-id> --type spec
 ```
 
 **Examples:**
 ```bash
-# Show change details
-spectr show add-two-factor-auth
+# View change details
+spectr view add-two-factor-auth
 
-# Show spec details
-spectr show auth --type spec
+# View spec details
+spectr view auth --type spec
 
 # JSON output with delta details
-spectr show add-two-factor-auth --json --deltas-only
+spectr view add-two-factor-auth --json --deltas-only
 ```
 
 **Options:**
-- `--type change|spec` - Specify what to show (required if ambiguous)
+- `--type change|spec` - Specify what to view (required if ambiguous)
 - `--json` - Machine-readable JSON output
 - `--deltas-only` - Show only spec deltas
 
@@ -152,7 +152,7 @@ Some commands support interactive mode:
 
 ```bash
 # Interactive spec selection
-spectr show
+spectr view
 
 # Interactive validation
 spectr validate
@@ -225,7 +225,7 @@ spectr validate add-feature --strict
 
 ```bash
 # 1. Check change details
-spectr show add-feature
+spectr view add-feature
 
 # 2. Implement according to tasks.md
 
@@ -250,11 +250,11 @@ spectr list
 # 2. List all specs
 spectr list --specs
 
-# 3. Show details of a change
-spectr show add-feature
+# 3. View details of a change
+spectr view add-feature
 
-# 4. Show details of a spec
-spectr show auth --type spec
+# 4. View details of a spec
+spectr view auth --type spec
 
 # 5. Validate everything
 spectr validate --strict
@@ -279,10 +279,10 @@ If you get "ambiguous item" error, specify the type:
 
 ```bash
 # Error: Could be change or spec
-spectr show auth
+spectr view auth
 
 # Solution: Specify type
-spectr show auth --type spec
+spectr view auth --type spec
 ```
 
 ### Permission denied
@@ -308,7 +308,7 @@ Use JSON output with `jq` for filtering:
 spectr list --json | jq '.changes[].id'
 
 # Get specific change details
-spectr show add-feature --json | jq '.proposal'
+spectr view add-feature --json | jq '.proposal'
 ```
 
 ### Quick Validation Loop

@@ -38,7 +38,7 @@ tags: [spectr, sync]
    - Show summary of changes made.
 
 **Reference**
-- Use `spectr show <spec> --type spec` to view current spec content.
+- Read `spectr/specs/<capability>/spec.md` to view current spec content.
 - Search code with `rg` to find implementations.
 - Validate after edits with `spectr validate --strict`.
 

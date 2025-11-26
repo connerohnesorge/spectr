@@ -354,7 +354,7 @@ Active Changes:
   add-two-factor-auth    Add 2FA authentication support
   refactor-validation    Improve validation error messages
 
-Run 'spectr show <change>' for details
+Run 'spectr view <change>' for details
 ```
 
 ### spectr validate

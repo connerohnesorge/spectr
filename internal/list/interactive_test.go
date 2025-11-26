@@ -810,7 +810,7 @@ func TestHandleArchive_UnifiedMode_Spec(t *testing.T) {
 	}
 }
 
-// TestSearchRowFiltering tests row filtering by ID and title
+// TestSearchRowFiltering tests row filtering by all columns (ID, title, deltas, tasks)
 func TestSearchRowFiltering(t *testing.T) {
 	columns := []table.Column{
 		{Title: "ID", Width: changeIDWidth},
@@ -862,6 +862,18 @@ func TestSearchRowFiltering(t *testing.T) {
 			searchQuery:     "update",
 			expectedRowsLen: 1,
 			expectedIDs:     []string{"update-docs"},
+		},
+		{
+			name:            "Search by deltas column",
+			searchQuery:     "2",
+			expectedRowsLen: 2,
+			expectedIDs:     []string{"add-feature", "fix-bug"},
+		},
+		{
+			name:            "Search by tasks column",
+			searchQuery:     "3/5",
+			expectedRowsLen: 1,
+			expectedIDs:     []string{"add-feature"},
 		},
 		{
 			name:            "No matches",

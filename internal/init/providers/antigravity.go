@@ -12,19 +12,15 @@ type AntigravityProvider struct {
 
 // NewAntigravityProvider creates a new Antigravity provider.
 func NewAntigravityProvider() *AntigravityProvider {
-	proposalPath, syncPath, applyPath := StandardCommandPaths(
-		".agent/workflows", ".md",
-	)
-
 	return &AntigravityProvider{
 		BaseProvider: BaseProvider{
 			id:            "antigravity",
 			name:          "Antigravity",
 			priority:      PriorityAntigravity,
 			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			syncPath:      syncPath,
-			applyPath:     applyPath,
+			proposalPath:  ".agent/workflows/spectr-proposal.md",
+			syncPath:      ".agent/workflows/spectr-sync.md",
+			applyPath:     ".agent/workflows/spectr-apply.md",
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),
 		},

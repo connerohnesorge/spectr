@@ -37,18 +37,18 @@ The provider SHALL create and maintain an `AGENTS.md` instruction file in the pr
 - **AND** preserves content outside the markers
 
 ### Requirement: Antigravity Slash Commands
-The provider SHALL create slash commands in `.agent/workflows/spectr/` directory.
+The provider SHALL create slash commands in `.agent/workflows/` directory.
 
 #### Scenario: Command directory structure
 - **WHEN** the provider configures slash commands
 - **THEN** it uses `.agent/workflows/` as base directory (not `.agent/commands/`)
-- **AND** all Spectr commands reside in `.agent/workflows/spectr/` subdirectory
+- **AND** all Spectr commands reside in `.agent/workflows/` subdirectory
 
 #### Scenario: Command file paths
 - **WHEN** the provider creates slash command files
-- **THEN** it creates `.agent/workflows/spectr/proposal.md`
-- **AND** it creates `.agent/workflows/spectr/sync.md`
-- **AND** it creates `.agent/workflows/spectr/apply.md`
+- **THEN** it creates `.agent/workflows/spectr-proposal.md`
+- **AND** it creates `.agent/workflows/spectr-sync.md`
+- **AND** it creates `.agent/workflows/spectr-apply.md`
 
 #### Scenario: Command file format
 - **WHEN** slash command files are created

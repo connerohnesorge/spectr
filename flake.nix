@@ -1,49 +1,3 @@
-/**
-# Go Development Shell Template
-
-## Description
-Complete Go development environment with modern tooling for building, testing,
-and maintaining Go applications. Includes the Go toolchain, linting, formatting,
-live reloading, and testing utilities for productive Go development.
-
-## Platform Support
-- ✅ x86_64-linux
-- ✅ aarch64-linux (ARM64 Linux)
-- ✅ x86_64-darwin (Intel macOS)
-- ✅ aarch64-darwin (Apple Silicon macOS)
-
-## What This Provides
-- **Go Toolchain**: Go 1.25 compiler and runtime
-- **Development Tools**: air (live reload), delve (debugger), gopls (language server)
-- **Code Quality**: golangci-lint, revive, gofmt, goimports
-- **Testing**: gotestfmt for enhanced test output
-- **Documentation**: gomarkdoc for generating markdown from Go code
-- **Formatting**: gofumpt for stricter Go formatting
-
-## Usage
-```bash
-# Create new project from template
-nix flake init -t github:connerohnesorge/dotfiles#go-shell
-
-# Enter development shell
-nix develop
-
-# Start live reload development
-air
-
-# Run tests with formatting
-go test ./... | gotestfmt
-
-# Format code
-nix fmt
-```
-
-## Development Workflow
-- Use air for automatic recompilation during development
-- golangci-lint provides comprehensive linting
-- gopls enables rich IDE integration
-- All tools configured for optimal Go development experience
-*/
 {
   description = "A development shell for go";
 
@@ -102,6 +56,41 @@ nix fmt
             gotestsum --format testname -- -race "$REPO_ROOT"/... -timeout=2m
           '';
           description = "Run tests";
+        };
+        generate-gif = {
+          exec = rooted ''
+            cd "$REPO_ROOT"
+            DEMOS="init list validate archive workflow"
+
+            if [[ "''${1:-}" == "-h" ]] || [[ "''${1:-}" == "--help" ]]; then
+              echo "Usage: generate-gif [demo]"
+              echo "  generate-gif        # Generate all GIFs"
+              echo "  generate-gif init   # Generate single GIF"
+              echo "Available demos: $DEMOS"
+              exit 0
+            fi
+
+            mkdir -p "$REPO_ROOT/assets/gifs"
+
+            if [[ -n "''${1:-}" ]]; then
+              if [[ ! -f "$REPO_ROOT/assets/vhs/$1.tape" ]]; then
+                echo "Error: Unknown demo '$1'. Available: $DEMOS" >&2
+                exit 1
+              fi
+              echo "==> Generating $1.gif..."
+              vhs "$REPO_ROOT/assets/vhs/$1.tape"
+            else
+              echo "==> Generating all demo GIFs..."
+              for demo in $DEMOS; do
+                echo "==> Generating $demo.gif..."
+                vhs "$REPO_ROOT/assets/vhs/$demo.tape"
+              done
+              echo "==> All GIFs generated successfully!"
+            fi
+
+            rm -rf "$REPO_ROOT"/_demo
+          '';
+          description = "Generate VHS demo GIFs";
         };
       };
 

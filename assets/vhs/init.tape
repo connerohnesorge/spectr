@@ -22,15 +22,13 @@ Type "clear"
 Enter
 Sleep 500ms
 
-# Show we're in a test directory
+# Show we're in a fresh directory
 Type "# Starting in a fresh directory"
-Enter
-Type "mkdir spectr-demo && cd spectr-demo"
 Enter
 Sleep 500ms
 
-# Run spectr init
-Type "spectr init"
+# Run spectr init with _demo directory
+Type "spectr init _demo"
 Enter
 Sleep 1s
 
@@ -54,7 +52,7 @@ Type "echo ''"
 Enter
 Type "echo 'Generated project structure:'"
 Enter
-Type "tree spectr -L 2"
+Type "tree _demo -L 2"
 Enter
 Sleep 2s
 
@@ -63,9 +61,17 @@ Type "echo ''"
 Enter
 Type "echo 'Project configuration:'"
 Enter
-Type "head -n 10 spectr/project.md"
+Type "head -n 10 _demo/project.md"
 Enter
 Sleep 2s
+
+# Cleanup
+Type "echo ''"
+Enter
+Sleep 500ms
+Type "rm -rf _demo"
+Enter
+Sleep 500ms
 
 # Final pause to let viewers see the result
 Sleep 1s

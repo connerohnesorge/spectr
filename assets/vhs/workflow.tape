@@ -29,104 +29,14 @@ Type "echo ''"
 Enter
 Sleep 500ms
 
-# STAGE 1: Create change proposal
-Type "echo '=== STAGE 1: Creating Change Proposal ==='"
+# STAGE 1: Set up the change proposal (from pre-made example)
+Type "echo '=== STAGE 1: Setting Up Change Proposal ==='"
 Enter
 Sleep 500ms
 
-Type "mkdir -p spectr/changes/add-user-notifications/specs/notifications"
+Type "# Using pre-made example project"
 Enter
-Sleep 300ms
-
-# Create proposal
-Type "cat > spectr/changes/add-user-notifications/proposal.md << 'EOF'"
-Enter
-Type "# Change: Add User Notifications"
-Enter
-Type ""
-Enter
-Type "## Why"
-Enter
-Type "Users need to be notified of important system events."
-Enter
-Type ""
-Enter
-Type "## What Changes"
-Enter
-Type "- Add notification capability"
-Enter
-Type "- Support email and in-app notifications"
-Enter
-Type ""
-Enter
-Type "## Impact"
-Enter
-Type "- Affected specs: notifications"
-Enter
-Type "- New feature, no breaking changes"
-Enter
-Type "EOF"
-Enter
-Sleep 500ms
-
-# Create spec delta
-Type "cat > spectr/changes/add-user-notifications/specs/notifications/spec.md << 'EOF'"
-Enter
-Type "## ADDED Requirements"
-Enter
-Type "### Requirement: Email Notifications"
-Enter
-Type "The system SHALL send email notifications for critical events."
-Enter
-Type ""
-Enter
-Type "#### Scenario: Critical event notification"
-Enter
-Type "- **WHEN** critical event occurs"
-Enter
-Type "- **THEN** email is sent to user"
-Enter
-Type "- **AND** notification is logged"
-Enter
-Type ""
-Enter
-Type "### Requirement: In-App Notifications"
-Enter
-Type "The system SHALL display in-app notifications."
-Enter
-Type ""
-Enter
-Type "#### Scenario: Real-time notification"
-Enter
-Type "- **WHEN** user is online"
-Enter
-Type "- **THEN** notification appears in real-time"
-Enter
-Type "EOF"
-Enter
-Sleep 500ms
-
-# Create tasks file
-Type "cat > spectr/changes/add-user-notifications/tasks.md << 'EOF'"
-Enter
-Type "## 1. Implementation"
-Enter
-Type "- [ ] 1.1 Create notification service"
-Enter
-Type "- [ ] 1.2 Implement email delivery"
-Enter
-Type "- [ ] 1.3 Add in-app notification UI"
-Enter
-Type "- [ ] 1.4 Write tests"
-Enter
-Type "EOF"
-Enter
-Sleep 500ms
-
-# Create base spec
-Type "mkdir -p spectr/specs/notifications"
-Enter
-Type "touch spectr/specs/notifications/spec.md"
+Type "cp -r examples/workflow/spectr _demo"
 Enter
 Sleep 500ms
 
@@ -138,7 +48,7 @@ Sleep 500ms
 Type "echo '=== STAGE 2: Validating Proposal ==='"
 Enter
 Sleep 500ms
-Type "spectr validate add-user-notifications --strict"
+Type "cd _demo && spectr validate add-user-notifications --strict"
 Enter
 Sleep 2s
 
@@ -150,7 +60,7 @@ Sleep 500ms
 Type "echo '=== STAGE 3: Viewing Active Changes ==='"
 Enter
 Sleep 500ms
-Type "spectr list"
+Type "cd _demo && spectr list"
 Enter
 Sleep 1.5s
 
@@ -162,7 +72,7 @@ Sleep 500ms
 Type "echo '=== Change Details ==='"
 Enter
 Sleep 500ms
-Type "spectr show add-user-notifications"
+Type "cd _demo && spectr show add-user-notifications"
 Enter
 Sleep 2s
 
@@ -177,7 +87,7 @@ Sleep 500ms
 Type "echo '(After implementation is complete and deployed)'"
 Enter
 Sleep 1s
-Type "spectr archive add-user-notifications --yes"
+Type "cd _demo && spectr archive add-user-notifications --yes"
 Enter
 Sleep 2s
 
@@ -189,7 +99,7 @@ Sleep 500ms
 Type "echo '=== Verification: Change Archived ==='"
 Enter
 Sleep 500ms
-Type "spectr list | grep -q add-user-notifications && echo 'Still active' || echo 'Successfully archived'"
+Type "cd _demo && spectr list | grep -q add-user-notifications && echo 'Still active' || echo 'Successfully archived'"
 Enter
 Sleep 1.5s
 
@@ -197,9 +107,7 @@ Sleep 1.5s
 Type "echo ''"
 Enter
 Sleep 500ms
-Type "rm -rf spectr/changes/archive/*/add-user-notifications"
-Enter
-Type "rm -rf spectr/specs/notifications"
+Type "rm -rf _demo"
 Enter
 Sleep 500ms
 

@@ -51,6 +51,8 @@ func StandardFrontmatter() map[string]string {
 
 // StandardCommandPaths returns the standard command paths for a given
 // directory and extension.
+// Uses subdirectory structure: {dir}/spectr/{command}{ext}
+// Example: ".claude/commands", ".md" -> ".claude/commands/spectr/proposal.md"
 // Returns proposalPath, syncPath, applyPath.
 func StandardCommandPaths(
 	dir, ext string,
@@ -59,6 +61,20 @@ func StandardCommandPaths(
 	proposalPath = filepath.Join(spectrDir, "proposal"+ext)
 	syncPath = filepath.Join(spectrDir, "sync"+ext)
 	applyPath = filepath.Join(spectrDir, "apply"+ext)
+
+	return proposalPath, syncPath, applyPath
+}
+
+// PrefixedCommandPaths returns command paths using a flat prefix pattern.
+// Uses flat structure: {dir}/spectr-{command}{ext}
+// Example: ".agent/workflows", ".md" -> ".agent/workflows/spectr-proposal.md"
+// Returns proposalPath, syncPath, applyPath.
+func PrefixedCommandPaths(
+	dir, ext string,
+) (proposalPath, syncPath, applyPath string) {
+	proposalPath = filepath.Join(dir, "spectr-proposal"+ext)
+	syncPath = filepath.Join(dir, "spectr-sync"+ext)
+	applyPath = filepath.Join(dir, "spectr-apply"+ext)
 
 	return proposalPath, syncPath, applyPath
 }

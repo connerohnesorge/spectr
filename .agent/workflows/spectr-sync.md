@@ -3,7 +3,6 @@ description: Detect spec drift from code and update specs interactively.
 ---
 
 <!-- spectr:START -->
-
 **Guardrails**
 - Code is the source of truth—specs should reflect actual implementation.
 - Only update specs after user confirms each change.
@@ -40,7 +39,6 @@ description: Detect spec drift from code and update specs interactively.
 - Use `spectr show <spec> --type spec` to view current spec content.
 - Search code with `rg` to find implementations.
 - Validate after edits with `spectr validate --strict`.
-
 
 <!-- spectr:END -->
 

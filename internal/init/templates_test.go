@@ -194,9 +194,9 @@ func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 			name:        "sync command",
 			commandType: "sync",
 			want: []string{
-				"**Guardrails**",
-				"**Steps**",
-				"**Reference**",
+				"### Guardrails",
+				"### Steps",
+				"### Reference",
 				"Code is the source of truth",
 				"spectr list --specs",
 				"spectr validate --strict",

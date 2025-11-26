@@ -24,7 +24,7 @@ description: Detect spec drift from code and update specs interactively.
 
 4. Detect drift:
    - Compare code behavior against spec requirements and scenarios.
-   - Identify: new features (needs ADDED), changed behavior (needs MODIFIED), removed features (needs REMOVED).
+   - Identify: new features (to be ADDED), changed behavior (to be MODIFIED), removed features (to be REMOVED).
 
 5. Interactive review:
    - For each drift item, present: the requirement, what code does, and proposed spec change.

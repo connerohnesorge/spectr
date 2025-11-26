@@ -2,6 +2,7 @@
 package tui
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -87,22 +88,22 @@ func TestTablePicker_generateHelpText(t *testing.T) {
 	helpText := picker.helpText
 
 	// Check that help text contains expected elements
-	if !contains(helpText, "navigate") {
+	if !strings.Contains(helpText, "navigate") {
 		t.Error("Help text should contain 'navigate'")
 	}
-	if !contains(helpText, "e: edit") {
+	if !strings.Contains(helpText, "e: edit") {
 		t.Error("Help text should contain 'e: edit'")
 	}
-	if !contains(helpText, "a: archive") {
+	if !strings.Contains(helpText, "a: archive") {
 		t.Error("Help text should contain 'a: archive'")
 	}
-	if !contains(helpText, "q: quit") {
+	if !strings.Contains(helpText, "q: quit") {
 		t.Error("Help text should contain 'q: quit'")
 	}
-	if !contains(helpText, "showing: 3") {
+	if !strings.Contains(helpText, "showing: 3") {
 		t.Error("Help text should contain 'showing: 3'")
 	}
-	if !contains(helpText, "project: /test") {
+	if !strings.Contains(helpText, "project: /test") {
 		t.Error("Help text should contain 'project: /test'")
 	}
 }
@@ -119,7 +120,7 @@ func TestTablePicker_SetRows(t *testing.T) {
 	picker := NewTablePicker(config)
 
 	// Verify initial state
-	if !contains(picker.helpText, "showing: 1") {
+	if !strings.Contains(picker.helpText, "showing: 1") {
 		t.Error("Initial help text should show 1 row")
 	}
 
@@ -128,7 +129,7 @@ func TestTablePicker_SetRows(t *testing.T) {
 	picker.SetRows(newRows)
 
 	// Verify help text updated
-	if !contains(picker.helpText, "showing: 4") {
+	if !strings.Contains(picker.helpText, "showing: 4") {
 		t.Errorf("Help text should show 4 rows after update, got: %s", picker.helpText)
 	}
 }
@@ -213,10 +214,10 @@ func TestTablePicker_View(t *testing.T) {
 	view := picker.View()
 
 	// View should contain table and help
-	if !contains(view, "ID") {
+	if !strings.Contains(view, "ID") {
 		t.Error("View should contain column header")
 	}
-	if !contains(view, "navigate") {
+	if !strings.Contains(view, "navigate") {
 		t.Error("View should contain help text")
 	}
 }
@@ -259,18 +260,4 @@ func TestTablePicker_QuitView(t *testing.T) {
 			}
 		})
 	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
-}
-
-func containsHelper(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-
-	return false
 }

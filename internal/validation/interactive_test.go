@@ -3,11 +3,9 @@ package validation
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
-	"github.com/charmbracelet/bubbles/table"
 )
 
 // TestRunInteractiveValidation_NotTTY tests error when not in a TTY
@@ -137,103 +135,28 @@ func TestValidateItems_EmptyList(t *testing.T) {
 	assert.False(t, hasFailures)
 }
 
-// TestTruncateString tests the truncateString helper
-func TestTruncateString(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		maxLen   int
-		expected string
-	}{
-		{
-			name:     "shorter than max",
-			input:    "short",
-			maxLen:   10,
-			expected: "short",
-		},
-		{
-			name:     "equal to max",
-			input:    "exact",
-			maxLen:   5,
-			expected: "exact",
-		},
-		{
-			name:     "longer than max",
-			input:    "this is a very long string",
-			maxLen:   10,
-			expected: "this is...",
-		},
-		{
-			name:     "maxLen less than ellipsis length",
-			input:    "test",
-			maxLen:   2,
-			expected: "te",
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			maxLen:   5,
-			expected: "",
-		},
-		{
-			name:     "path truncation",
-			input:    "/very/long/path/to/some/file.md",
-			maxLen:   20,
-			expected: "/very/long/path/t...",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := truncateString(tt.input, tt.maxLen)
-			assert.Equal(t, tt.expected, result)
-			assert.True(t, len(result) <= tt.maxLen)
-		})
-	}
-}
-
-// TestApplyTableStyles tests the applyTableStyles helper
-func TestApplyTableStyles(t *testing.T) {
-	columns := []table.Column{{Title: "Name", Width: 20}}
-	rows := []table.Row{{"test"}}
-	tbl := table.New(table.WithColumns(columns), table.WithRows(rows))
-
-	// This should not panic
-	assert.NotPanics(t, func() {
-		applyTableStyles(&tbl)
-	})
-}
-
 // TestConstants tests that constants are defined correctly
 func TestConstants(t *testing.T) {
 	assert.Equal(t, 35, validationIDWidth)
 	assert.Equal(t, 10, validationTypeWidth)
 	assert.Equal(t, 55, validationPathWidth)
 	assert.Equal(t, 53, validationPathTruncate)
-	assert.Equal(t, 3, ellipsisMinLength)
 	assert.Equal(t, 10, tableHeight)
-}
-
-// TestTruncateString_ExactBoundary tests truncation at exact boundary
-func TestTruncateString_ExactBoundary(t *testing.T) {
-	// String exactly at truncation point
-	input := strings.Repeat("a", validationPathTruncate)
-	result := truncateString(input, validationPathTruncate)
-	assert.Equal(t, input, result)
-
-	// String one character over
-	input = strings.Repeat("a", validationPathTruncate+1)
-	result = truncateString(input, validationPathTruncate)
-	assert.Equal(t, validationPathTruncate, len(result))
-	assert.True(t, strings.HasSuffix(result, "..."))
 }
 
 // TestMenuSelectionConstants tests menu selection indices
 func TestMenuSelectionConstants(t *testing.T) {
-	assert.Equal(t, 0, menuSelectionAll)
-	assert.Equal(t, 1, menuSelectionChanges)
-	assert.Equal(t, 2, menuSelectionSpecs)
-	assert.Equal(t, 3, menuSelectionPickItem)
+	assert.Equal(t, menuSelection(0), menuSelectionAll)
+	assert.Equal(t, menuSelection(1), menuSelectionChanges)
+	assert.Equal(t, menuSelection(2), menuSelectionSpecs)
+	assert.Equal(t, menuSelection(3), menuSelectionPickItem)
+}
+
+// TestMenuChoicesLength ensures menuChoices matches the number of menu selections
+func TestMenuChoicesLength(t *testing.T) {
+	// menuSelectionPickItem is the last constant, so +1 gives us the count
+	expectedLen := int(menuSelectionPickItem) + 1
+	assert.Equal(t, expectedLen, len(menuChoices))
 }
 
 // TestHandleMenuSelection_All tests handling "All" selection
@@ -243,7 +166,7 @@ func TestHandleMenuSelection_All(t *testing.T) {
 	createValidSpec(t, tmpDir, "test-spec")
 
 	// This should not error
-	err := handleMenuSelection(menuSelectionAll, tmpDir, false, false)
+	err := handleMenuSelection(int(menuSelectionAll), tmpDir, false, false)
 	assert.NoError(t, err)
 }
 
@@ -253,7 +176,7 @@ func TestHandleMenuSelection_Changes(t *testing.T) {
 	setupTestProject(t, tmpDir, []string{"test-change"}, nil)
 
 	// This should not error (even with empty changes)
-	err := handleMenuSelection(menuSelectionChanges, tmpDir, false, false)
+	err := handleMenuSelection(int(menuSelectionChanges), tmpDir, false, false)
 	assert.NoError(t, err)
 }
 
@@ -264,7 +187,7 @@ func TestHandleMenuSelection_Specs(t *testing.T) {
 	createValidSpec(t, tmpDir, "test-spec")
 
 	// This should not error
-	err := handleMenuSelection(menuSelectionSpecs, tmpDir, false, false)
+	err := handleMenuSelection(int(menuSelectionSpecs), tmpDir, false, false)
 	assert.NoError(t, err)
 }
 

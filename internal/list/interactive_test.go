@@ -12,56 +12,6 @@ import (
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
-func TestTruncateString(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		maxLen   int
-		expected string
-	}{
-		{
-			name:     "string shorter than maxLen",
-			input:    "short",
-			maxLen:   10,
-			expected: "short",
-		},
-		{
-			name:     "string equal to maxLen",
-			input:    "exactly10!",
-			maxLen:   10,
-			expected: "exactly10!",
-		},
-		{
-			name:     "string longer than maxLen",
-			input:    "this is a very long string",
-			maxLen:   10,
-			expected: "this is...",
-		},
-		{
-			name:     "maxLen less than 3",
-			input:    "test",
-			maxLen:   2,
-			expected: "te",
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			maxLen:   5,
-			expected: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := truncateString(tt.input, tt.maxLen)
-			if result != tt.expected {
-				t.Errorf("truncateString(%q, %d) = %q; want %q",
-					tt.input, tt.maxLen, result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestRunInteractiveChanges_EmptyList(t *testing.T) {
 	var changes []ChangeInfo
 	archiveID, err := RunInteractiveChanges(changes, "/tmp/test-project")

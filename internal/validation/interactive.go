@@ -22,16 +22,27 @@ const (
 
 	// Table height
 	tableHeight = 10
-
-	// Menu selection indices
-	menuSelectionAll      = 0
-	menuSelectionChanges  = 1
-	menuSelectionSpecs    = 2
-	menuSelectionPickItem = 3
 )
 
-// ellipsisMinLength is exported from tui package for backward compatibility.
-const ellipsisMinLength = tui.EllipsisMinLength
+// menuSelection represents a validation menu option.
+// Using iota ensures indices stay in sync with menuChoices order.
+type menuSelection int
+
+const (
+	menuSelectionAll menuSelection = iota
+	menuSelectionChanges
+	menuSelectionSpecs
+	menuSelectionPickItem
+)
+
+// menuChoices defines the validation menu options.
+// IMPORTANT: Order must match the menuSelection constants above.
+var menuChoices = []string{
+	"All (changes and specs)", // menuSelectionAll
+	"All changes",             // menuSelectionChanges
+	"All specs",               // menuSelectionSpecs
+	"Pick specific item",      // menuSelectionPickItem
+}
 
 // RunInteractiveValidation runs the interactive validation TUI
 func RunInteractiveValidation(projectPath string, strict bool, jsonOutput bool) error {
@@ -58,13 +69,8 @@ func RunInteractiveValidation(projectPath string, strict bool, jsonOutput bool) 
 // showValidationMenu displays the validation menu and returns the selection
 func showValidationMenu() (int, error) {
 	menu := tui.NewMenuPicker(tui.MenuConfig{
-		Title: "Validation Menu",
-		Choices: []string{
-			"All (changes and specs)",
-			"All changes",
-			"All specs",
-			"Pick specific item",
-		},
+		Title:   "Validation Menu",
+		Choices: menuChoices,
 	})
 
 	return menu.Run()
@@ -75,7 +81,7 @@ func handleMenuSelection(selection int, projectPath string, strict, jsonOutput b
 	var items []ValidationItem
 	var err error
 
-	switch selection {
+	switch menuSelection(selection) {
 	case menuSelectionAll:
 		items, err = GetAllItems(projectPath)
 	case menuSelectionChanges:
@@ -116,12 +122,15 @@ func runItemPicker(projectPath string, strict, jsonOutput bool) error {
 	}
 
 	rows := make([]table.Row, len(items))
+	// Build name-to-index map for O(1) lookup in handler
+	nameToIndex := make(map[string]int, len(items))
 	for i, item := range items {
 		rows[i] = table.Row{
 			item.Name,
 			item.ItemType,
 			tui.TruncateString(item.Path, validationPathTruncate),
 		}
+		nameToIndex[item.Name] = i
 	}
 
 	// Create picker with enter action for selection
@@ -139,13 +148,9 @@ func runItemPicker(projectPath string, strict, jsonOutput bool) error {
 					if len(row) == 0 {
 						return nil, nil
 					}
-					// Find the index by matching the name
-					for i, item := range items {
-						if item.Name == row[0] {
-							selectedIdx = i
-
-							break
-						}
+					// Use map lookup for O(1) performance
+					if idx, ok := nameToIndex[row[0]]; ok {
+						selectedIdx = idx
 					}
 
 					return tea.Quit, &tui.ActionResult{
@@ -211,16 +216,4 @@ func validateItems(
 	}
 
 	return results, hasFailures
-}
-
-// truncateString truncates a string and adds ellipsis if needed.
-// This is a thin wrapper around tui.TruncateString for backward compatibility.
-func truncateString(s string, maxLen int) string {
-	return tui.TruncateString(s, maxLen)
-}
-
-// applyTableStyles applies default styling to a table.
-// This is a thin wrapper around tui.ApplyTableStyles for backward compatibility.
-func applyTableStyles(t *table.Model) {
-	tui.ApplyTableStyles(t)
 }

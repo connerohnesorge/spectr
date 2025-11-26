@@ -25,12 +25,21 @@ type MenuPicker struct {
 }
 
 // NewMenuPicker creates a new MenuPicker with the given configuration.
+//
+// Selection behavior:
+//   - If config.SelectHandler is provided, it will be called on selection
+//   - If config.SelectHandler is nil, the menu will quit on selection (default)
+//
+// This default allows callers to create simple menus without specifying a handler
+// when they only need to retrieve the selected index via Run().
 func NewMenuPicker(config MenuConfig) *MenuPicker {
 	return &MenuPicker{
 		title:   config.Title,
 		choices: config.Choices,
 		cursor:  0,
 		selectHandler: func(index int) (tea.Model, tea.Cmd) {
+			// Default: call custom handler if provided, otherwise just quit.
+			// This enables simple usage patterns where caller only needs the index.
 			if config.SelectHandler != nil {
 				return nil, config.SelectHandler(index)
 			}

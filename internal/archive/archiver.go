@@ -62,11 +62,11 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	// If no change ID provided, use interactive selection
 	if changeID == "" {
 		selectedID, err = selectChangeInteractive(projectRoot)
+		if errors.Is(err, ErrUserCancelled) {
+			return nil // User cancelled, exit gracefully
+		}
 		if err != nil {
 			return fmt.Errorf("select change: %w", err)
-		}
-		if selectedID == "" {
-			return fmt.Errorf("no change selected")
 		}
 		changeID = selectedID
 		cmd.ChangeID = changeID
@@ -143,7 +143,8 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	return nil
 }
 
-// selectChangeInteractive uses the interactive table for change selection
+// selectChangeInteractive uses the interactive table for change selection.
+// Returns ErrUserCancelled if the user cancels the selection.
 func selectChangeInteractive(projectRoot string) (string, error) {
 	// Import list package functions
 	// Note: This will be done at the package level
@@ -156,12 +157,16 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 	if len(changes) == 0 {
 		fmt.Println("No changes found.")
 
-		return "", nil
+		return "", ErrUserCancelled
 	}
 
 	selectedID, err := runInteractiveArchiveForArchiver(changes, projectRoot)
 	if err != nil {
 		return "", fmt.Errorf("interactive selection: %w", err)
+	}
+
+	if selectedID == "" {
+		return "", ErrUserCancelled
 	}
 
 	return selectedID, nil

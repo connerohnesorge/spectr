@@ -2,6 +2,7 @@
 package tui
 
 import (
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -195,23 +196,23 @@ func TestMenuPicker_View(t *testing.T) {
 	view := menu.View()
 
 	// Check title
-	if !contains(view, "My Menu") {
+	if !strings.Contains(view, "My Menu") {
 		t.Error("View should contain title")
 	}
 
 	// Check choices
-	if !contains(view, "Option A") {
+	if !strings.Contains(view, "Option A") {
 		t.Error("View should contain first choice")
 	}
-	if !contains(view, "Option B") {
+	if !strings.Contains(view, "Option B") {
 		t.Error("View should contain second choice")
 	}
 
 	// Check help text
-	if !contains(view, "navigate") {
+	if !strings.Contains(view, "navigate") {
 		t.Error("View should contain navigation help")
 	}
-	if !contains(view, "Enter") {
+	if !strings.Contains(view, "Enter") {
 		t.Error("View should contain Enter help")
 	}
 }

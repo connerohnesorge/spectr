@@ -35,8 +35,14 @@ import (
 func Archive(cmd *ArchiveCmd, workingDir string) error {
 	changeID := cmd.ChangeID
 	// Get project root based on workingDir parameter
-	var projectRoot string
-	var err error
+	var (
+		projectRoot string
+		err         error
+		selectedID  string
+
+		totalCounts  OperationCounts
+		capabilities []string
+	)
 	if workingDir == "" {
 		projectRoot, err = os.Getwd()
 		if err != nil {
@@ -48,18 +54,19 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 
 	// Check if spectr directory exists
 	spectrRoot := filepath.Join(projectRoot, "spectr")
-	if _, err := os.Stat(spectrRoot); os.IsNotExist(err) {
+	_, err = os.Stat(spectrRoot)
+	if os.IsNotExist(err) {
 		return fmt.Errorf("spectr directory not found in %s", projectRoot)
 	}
 
 	// If no change ID provided, use interactive selection
 	if changeID == "" {
-		selectedID, err := selectChange(cmd.Interactive, projectRoot, spectrRoot)
+		selectedID, err = selectChangeInteractive(projectRoot)
+		if errors.Is(err, ErrUserCancelled) {
+			return nil // User cancelled, exit gracefully
+		}
 		if err != nil {
 			return fmt.Errorf("select change: %w", err)
-		}
-		if selectedID == "" {
-			return fmt.Errorf("no change selected")
 		}
 		changeID = selectedID
 		cmd.ChangeID = changeID
@@ -68,7 +75,8 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	changeDir := filepath.Join(spectrRoot, "changes", changeID)
 
 	// Check if change exists
-	if _, err := os.Stat(changeDir); os.IsNotExist(err) {
+	_, err = os.Stat(changeDir)
+	if os.IsNotExist(err) {
 		return fmt.Errorf("change not found: %s", changeID)
 	}
 
@@ -76,7 +84,8 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 
 	// Validation workflow
 	if !cmd.NoValidate {
-		if err := runValidation(changeDir); err != nil {
+		err = runValidation(changeDir)
+		if err != nil {
 			return fmt.Errorf("validation failed: %w", err)
 		}
 	} else {
@@ -89,20 +98,17 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	}
 
 	// Task checking
-	if err := checkTasks(cmd.Yes, changeDir); err != nil {
+	err = checkTasks(cmd.Yes, changeDir)
+	if err != nil {
 		return fmt.Errorf("task check failed: %w", err)
 	}
 
 	// Spec update workflow
-	var totalCounts OperationCounts
-	var capabilities []string
 	if !cmd.SkipSpecs {
-		counts, caps, err := updateSpecsWithTracking(cmd.Yes, changeDir, projectRoot)
+		totalCounts, capabilities, err = updateSpecsWithTracking(cmd.Yes, changeDir, projectRoot)
 		if err != nil {
 			return fmt.Errorf("spec update failed: %w", err)
 		}
-		totalCounts = counts
-		capabilities = caps
 	} else {
 		fmt.Println("⚠️  Skipping spec updates")
 	}
@@ -137,18 +143,8 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	return nil
 }
 
-// selectChange prompts user to select a change interactively
-func selectChange(interactive bool, projectRoot, spectrRoot string) (string, error) {
-	// Use interactive table mode if enabled
-	if interactive {
-		return selectChangeInteractive(projectRoot)
-	}
-
-	// Fallback to numbered list selection
-	return selectChangeBasic(spectrRoot)
-}
-
-// selectChangeInteractive uses the interactive table for change selection
+// selectChangeInteractive uses the interactive table for change selection.
+// Returns ErrUserCancelled if the user cancels the selection.
 func selectChangeInteractive(projectRoot string) (string, error) {
 	// Import list package functions
 	// Note: This will be done at the package level
@@ -161,7 +157,7 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 	if len(changes) == 0 {
 		fmt.Println("No changes found.")
 
-		return "", nil
+		return "", ErrUserCancelled
 	}
 
 	selectedID, err := runInteractiveArchiveForArchiver(changes, projectRoot)
@@ -169,52 +165,11 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 		return "", fmt.Errorf("interactive selection: %w", err)
 	}
 
+	if selectedID == "" {
+		return "", ErrUserCancelled
+	}
+
 	return selectedID, nil
-}
-
-// selectChangeBasic uses basic numbered list for change selection
-func selectChangeBasic(spectrRoot string) (string, error) {
-	changesDir := filepath.Join(spectrRoot, "changes")
-
-	entries, err := os.ReadDir(changesDir)
-	if err != nil {
-		return "", fmt.Errorf("read changes directory: %w", err)
-	}
-
-	var changes []string
-	for _, entry := range entries {
-		if entry.IsDir() && entry.Name() != "archive" {
-			changes = append(changes, entry.Name())
-		}
-	}
-
-	if len(changes) == 0 {
-		return "", errors.New("no changes found")
-	}
-
-	fmt.Println("Available changes:")
-	for i, change := range changes {
-		fmt.Printf("  %d. %s\n", i+1, change)
-	}
-
-	fmt.Print("\nSelect change number: ")
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		return "", fmt.Errorf("read input: %w", err)
-	}
-
-	var selection int
-	trimmed := strings.TrimSpace(input)
-	if _, err := fmt.Sscanf(trimmed, "%d", &selection); err != nil {
-		return "", fmt.Errorf("invalid selection: %w", err)
-	}
-
-	if selection < 1 || selection > len(changes) {
-		return "", errors.New("selection out of range")
-	}
-
-	return changes[selection-1], nil
 }
 
 // runValidation validates the change before archiving

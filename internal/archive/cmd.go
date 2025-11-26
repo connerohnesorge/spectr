@@ -6,12 +6,11 @@ import "fmt"
 
 // ArchiveCmd represents the archive command configuration
 type ArchiveCmd struct {
-	ChangeID    string `arg:"" optional:"" help:"Change ID to archive"`
-	Yes         bool   `name:"yes" short:"y" help:"Skip confirmation"`
-	SkipSpecs   bool   `name:"skip-specs" help:"Skip spec updates"`
-	NoValidate  bool   `name:"no-validate" help:"Skip validation"`
-	Interactive bool   `short:"I" name:"interactive" help:"Interactive mode"`
-	PR          bool   `name:"pr" help:"Create PR after archive"`
+	ChangeID   string `arg:"" optional:"" help:"Change ID to archive"`
+	Yes        bool   `name:"yes" short:"y" help:"Skip confirmation"`
+	SkipSpecs  bool   `name:"skip-specs" help:"Skip spec updates"`
+	NoValidate bool   `name:"no-validate" help:"Skip validation"`
+	PR         bool   `name:"pr" help:"Create PR after archive"`
 }
 
 // Run executes the archive command

@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/connerohnesorge/spectr/internal/tui"
 )
 
 const (
@@ -32,7 +33,6 @@ const (
 	changeTitleTruncate  = 38
 	specTitleTruncate    = 43
 	unifiedTitleTruncate = 38
-	ellipsisMinLength    = 3
 
 	// Table height
 	tableHeight = 10
@@ -123,8 +123,8 @@ func (m interactiveModel) handleEnter() interactiveModel {
 	m.selectedID = row[0]
 	m.copied = true
 
-	// Copy to clipboard
-	err := copyToClipboard(m.selectedID)
+	// Copy to clipboard using shared helper
+	err := tui.CopyToClipboard(m.selectedID)
 	if err != nil {
 		m.err = err
 	}
@@ -301,7 +301,7 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 		rows[i] = table.Row{
 			item.ID(),
 			typeStr,
-			truncateString(item.Title(), unifiedTitleTruncate),
+			tui.TruncateString(item.Title(), unifiedTitleTruncate),
 			details,
 		}
 	}
@@ -312,7 +312,7 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 		table.WithFocused(true),
 		table.WithHeight(tableHeight),
 	)
-	applyTableStyles(&t)
+	tui.ApplyTableStyles(&t)
 
 	m.table = t
 
@@ -387,7 +387,7 @@ func RunInteractiveChanges(changes []ChangeInfo, projectPath string) (string, er
 
 		rows[i] = table.Row{
 			change.ID,
-			truncateString(change.Title, changeTitleTruncate),
+			tui.TruncateString(change.Title, changeTitleTruncate),
 			fmt.Sprintf("%d", change.DeltaCount),
 			tasksStatus,
 		}
@@ -400,7 +400,7 @@ func RunInteractiveChanges(changes []ChangeInfo, projectPath string) (string, er
 		table.WithHeight(tableHeight),
 	)
 
-	applyTableStyles(&t)
+	tui.ApplyTableStyles(&t)
 
 	m := interactiveModel{
 		table:       t,
@@ -462,48 +462,46 @@ func RunInteractiveArchive(changes []ChangeInfo, projectPath string) (string, er
 
 		rows[i] = table.Row{
 			change.ID,
-			truncateString(change.Title, changeTitleTruncate),
+			tui.TruncateString(change.Title, changeTitleTruncate),
 			fmt.Sprintf("%d", change.DeltaCount),
 			tasksStatus,
 		}
 	}
 
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(tableHeight),
-	)
+	// Create picker with enter action for selection
+	picker := tui.NewTablePicker(tui.TableConfig{
+		Columns:     columns,
+		Rows:        rows,
+		Height:      tableHeight,
+		ProjectPath: projectPath,
+		Actions: map[string]tui.Action{
+			"enter": {
+				Key:         "enter",
+				Description: "select",
+				Handler: func(row table.Row) (tea.Cmd, *tui.ActionResult) {
+					if len(row) == 0 {
+						return nil, nil
+					}
 
-	applyTableStyles(&t)
+					return tea.Quit, &tui.ActionResult{
+						ID:   row[0],
+						Quit: true,
+					}
+				},
+			},
+		},
+	})
 
-	m := interactiveModel{
-		table:       t,
-		projectPath: projectPath,
-		helpText: fmt.Sprintf(
-			"↑/↓/j/k: navigate | Enter: select | q: quit\nshowing: %d | project: %s",
-			len(rows),
-			projectPath,
-		),
-	}
-
-	p := tea.NewProgram(m)
-	finalModel, err := p.Run()
+	result, err := picker.Run()
 	if err != nil {
-		return "", fmt.Errorf("error running interactive mode: %w", err)
+		return "", err
 	}
 
-	// Return selected ID without clipboard operation
-	if fm, ok := finalModel.(interactiveModel); ok {
-		if fm.quitting && !fm.copied {
-			// User quit without selecting
-			return "", nil
-		}
-
-		return fm.selectedID, nil
+	if result == nil || result.Cancelled {
+		return "", nil
 	}
 
-	return "", nil
+	return result.ID, nil
 }
 
 // RunInteractiveSpecs runs the interactive table for specs
@@ -522,7 +520,7 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 	for i, spec := range specs {
 		rows[i] = table.Row{
 			spec.ID,
-			truncateString(spec.Title, specTitleTruncate),
+			tui.TruncateString(spec.Title, specTitleTruncate),
 			fmt.Sprintf("%d", spec.RequirementCount),
 		}
 	}
@@ -534,7 +532,7 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 		table.WithHeight(len(rows)),
 	)
 
-	applyTableStyles(&t)
+	tui.ApplyTableStyles(&t)
 
 	m := interactiveModel{
 		table:       t,
@@ -605,7 +603,7 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 		rows[i] = table.Row{
 			item.ID(),
 			typeStr,
-			truncateString(item.Title(), unifiedTitleTruncate),
+			tui.TruncateString(item.Title(), unifiedTitleTruncate),
 			details,
 		}
 	}
@@ -617,7 +615,7 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 		table.WithHeight(tableHeight),
 	)
 
-	applyTableStyles(&t)
+	tui.ApplyTableStyles(&t)
 
 	m := interactiveModel{
 		table:       t,

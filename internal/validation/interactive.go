@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/connerohnesorge/spectr/internal/tui"
 	"github.com/mattn/go-isatty"
 )
 
@@ -17,350 +17,31 @@ const (
 	validationTypeWidth = 10
 	validationPathWidth = 55
 
-	// Menu dimensions
-	menuWidth  = 50
-	menuHeight = 8
-
 	// Truncation settings
 	validationPathTruncate = 53
-	ellipsisMinLength      = 3
 
 	// Table height
 	tableHeight = 10
 )
 
-// menuModel represents the bubbletea model for the menu screen
-type menuModel struct {
-	choices     []string
-	cursor      int
-	selected    int
-	quitting    bool
-	projectPath string
-	strict      bool
-	jsonOutput  bool
-}
-
-// itemPickerModel represents the bubbletea model for item selection
-type itemPickerModel struct {
-	table       table.Model
-	items       []ValidationItem
-	selectedID  string
-	quitting    bool
-	projectPath string
-	strict      bool
-	jsonOutput  bool
-}
-
-// validationResultMsg is sent when validation completes
-type validationResultMsg struct {
-	results     []BulkResult
-	hasFailures bool
-	err         error
-}
-
-// Init initializes the menu model
-func (m menuModel) Init() tea.Cmd {
-	return nil
-}
-
-// Update handles messages for the menu
-func (m menuModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "ctrl+c", "esc":
-			m.quitting = true
-
-			return m, tea.Quit
-
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-
-		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-
-		case "enter":
-			m.selected = m.cursor
-
-			return m.handleSelection()
-		}
-
-	case validationResultMsg:
-		// Handle validation result
-		m.quitting = true
-		if msg.err != nil {
-			fmt.Fprintf(os.Stderr, "Validation error: %v\n", msg.err)
-
-			return m, tea.Quit
-		}
-
-		// Print results
-		if m.jsonOutput {
-			PrintBulkJSONResults(msg.results)
-		} else {
-			PrintBulkHumanResults(msg.results)
-		}
-
-		return m, tea.Quit
-	}
-
-	return m, nil
-}
-
-// handleSelection processes the menu selection
-func (m menuModel) handleSelection() (tea.Model, tea.Cmd) {
-	switch m.selected {
-	case 0: // All (changes and specs)
-		return m, m.validateAll()
-	case 1: // All changes
-		return m, m.validateChanges()
-	case 2: // All specs
-		return m, m.validateSpecs()
-	case 3: // Pick specific item
-		return m.showItemPicker()
-	}
-
-	return m, tea.Quit
-}
-
-// validateAll validates all items
-func (m menuModel) validateAll() tea.Cmd {
-	return func() tea.Msg {
-		items, err := GetAllItems(m.projectPath)
-		if err != nil {
-			return validationResultMsg{err: err}
-		}
-
-		validator := NewValidator(m.strict)
-		results, hasFailures := validateItems(validator, items)
-
-		return validationResultMsg{
-			results:     results,
-			hasFailures: hasFailures,
-		}
-	}
-}
-
-// validateChanges validates all changes
-func (m menuModel) validateChanges() tea.Cmd {
-	return func() tea.Msg {
-		items, err := GetChangeItems(m.projectPath)
-		if err != nil {
-			return validationResultMsg{err: err}
-		}
-
-		validator := NewValidator(m.strict)
-		results, hasFailures := validateItems(validator, items)
-
-		return validationResultMsg{
-			results:     results,
-			hasFailures: hasFailures,
-		}
-	}
-}
-
-// validateSpecs validates all specs
-func (m menuModel) validateSpecs() tea.Cmd {
-	return func() tea.Msg {
-		items, err := GetSpecItems(m.projectPath)
-		if err != nil {
-			return validationResultMsg{err: err}
-		}
-
-		validator := NewValidator(m.strict)
-		results, hasFailures := validateItems(validator, items)
-
-		return validationResultMsg{
-			results:     results,
-			hasFailures: hasFailures,
-		}
-	}
-}
-
-// showItemPicker transitions to the item picker screen
-func (m menuModel) showItemPicker() (tea.Model, tea.Cmd) {
-	items, err := GetAllItems(m.projectPath)
-	if err != nil {
-		m.quitting = true
-		fmt.Fprintf(os.Stderr, "Error loading items: %v\n", err)
-
-		return m, tea.Quit
-	}
-
-	if len(items) == 0 {
-		m.quitting = true
-		fmt.Println("No items to validate")
-
-		return m, tea.Quit
-	}
-
-	// Build table
-	columns := []table.Column{
-		{Title: "Name", Width: validationIDWidth},
-		{Title: "Type", Width: validationTypeWidth},
-		{Title: "Path", Width: validationPathWidth},
-	}
-
-	rows := make([]table.Row, len(items))
-	for i, item := range items {
-		rows[i] = table.Row{
-			item.Name,
-			item.ItemType,
-			truncateString(item.Path, validationPathTruncate),
-		}
-	}
-
-	t := table.New(
-		table.WithColumns(columns),
-		table.WithRows(rows),
-		table.WithFocused(true),
-		table.WithHeight(tableHeight),
-	)
-
-	applyTableStyles(&t)
-
-	picker := itemPickerModel{
-		table:       t,
-		items:       items,
-		projectPath: m.projectPath,
-		strict:      m.strict,
-		jsonOutput:  m.jsonOutput,
-	}
-
-	return picker, nil
-}
-
-// View renders the menu
-func (m menuModel) View() string {
-	if m.quitting {
-		return ""
-	}
-
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("99")).
-		MarginBottom(1)
-
-	choiceStyle := lipgloss.NewStyle().
-		PaddingLeft(2)
-
-	selectedStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
-		Bold(true).
-		PaddingLeft(2)
-
-	helpStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("240")).
-		MarginTop(1)
-
-	s := titleStyle.Render("Validation Menu") + "\n\n"
-
-	for i, choice := range m.choices {
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
-		}
-
-		if m.cursor == i {
-			s += selectedStyle.Render(fmt.Sprintf("%s %s", cursor, choice)) + "\n"
-		} else {
-			s += choiceStyle.Render(fmt.Sprintf("%s %s", cursor, choice)) + "\n"
-		}
-	}
-
-	s += "\n" + helpStyle.Render("↑/↓ or j/k: navigate | Enter: select | q: quit")
-
-	return s
-}
-
-// Init initializes the item picker model
-func (m itemPickerModel) Init() tea.Cmd {
-	return nil
-}
-
-// Update handles messages for the item picker
-func (m itemPickerModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmd tea.Cmd
-
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "ctrl+c", "esc":
-			m.quitting = true
-
-			return m, tea.Quit
-
-		case "enter":
-			return m.handleSelection()
-		}
-
-	case validationResultMsg:
-		// Handle validation result
-		m.quitting = true
-		if msg.err != nil {
-			fmt.Fprintf(os.Stderr, "Validation error: %v\n", msg.err)
-
-			return m, tea.Quit
-		}
-
-		// Print results
-		if m.jsonOutput {
-			PrintBulkJSONResults(msg.results)
-		} else {
-			PrintBulkHumanResults(msg.results)
-		}
-
-		return m, tea.Quit
-	}
-
-	// Update table with key events
-	m.table, cmd = m.table.Update(msg)
-
-	return m, cmd
-}
-
-// handleSelection validates the selected item
-func (m itemPickerModel) handleSelection() (tea.Model, tea.Cmd) {
-	cursor := m.table.Cursor()
-	if cursor < 0 || cursor >= len(m.items) {
-		return m, nil
-	}
-
-	item := m.items[cursor]
-	m.selectedID = item.Name
-
-	// Validate the selected item
-	return m, func() tea.Msg {
-		validator := NewValidator(m.strict)
-		result, err := ValidateSingleItem(validator, item)
-
-		return validationResultMsg{
-			results:     []BulkResult{result},
-			hasFailures: err != nil || !result.Valid,
-			err:         err,
-		}
-	}
-}
-
-// View renders the item picker
-func (m itemPickerModel) View() string {
-	if m.quitting {
-		return ""
-	}
-
-	helpStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("240")).
-		MarginTop(1)
-
-	view := m.table.View() + "\n"
-	view += helpStyle.Render("↑/↓ or j/k: navigate | Enter: validate | q: back/quit") + "\n"
-
-	return view
+// menuSelection represents a validation menu option.
+// Using iota ensures indices stay in sync with menuChoices order.
+type menuSelection int
+
+const (
+	menuSelectionAll menuSelection = iota
+	menuSelectionChanges
+	menuSelectionSpecs
+	menuSelectionPickItem
+)
+
+// menuChoices defines the validation menu options.
+// IMPORTANT: Order must match the menuSelection constants above.
+var menuChoices = []string{
+	"All (changes and specs)", // menuSelectionAll
+	"All changes",             // menuSelectionChanges
+	"All specs",               // menuSelectionSpecs
+	"Pick specific item",      // menuSelectionPickItem
 }
 
 // RunInteractiveValidation runs the interactive validation TUI
@@ -370,32 +51,148 @@ func RunInteractiveValidation(projectPath string, strict bool, jsonOutput bool) 
 		return fmt.Errorf("interactive mode requires a TTY")
 	}
 
-	choices := []string{
-		"All (changes and specs)",
-		"All changes",
-		"All specs",
-		"Pick specific item",
-	}
-
-	m := menuModel{
-		choices:     choices,
-		cursor:      0,
-		projectPath: projectPath,
-		strict:      strict,
-		jsonOutput:  jsonOutput,
-	}
-
-	p := tea.NewProgram(m)
-	finalModel, err := p.Run()
+	// Show menu and get selection
+	selection, err := showValidationMenu()
 	if err != nil {
-		return fmt.Errorf("error running interactive mode: %w", err)
+		return err
 	}
 
-	// Check if we got a validation result
-	if fm, ok := finalModel.(menuModel); ok {
-		if fm.quitting {
-			return nil
+	if selection < 0 {
+		// User cancelled
+		return nil
+	}
+
+	// Handle selection
+	return handleMenuSelection(selection, projectPath, strict, jsonOutput)
+}
+
+// showValidationMenu displays the validation menu and returns the selection
+func showValidationMenu() (int, error) {
+	menu := tui.NewMenuPicker(tui.MenuConfig{
+		Title:   "Validation Menu",
+		Choices: menuChoices,
+	})
+
+	return menu.Run()
+}
+
+// handleMenuSelection processes the menu selection
+func handleMenuSelection(selection int, projectPath string, strict, jsonOutput bool) error {
+	var items []ValidationItem
+	var err error
+
+	switch menuSelection(selection) {
+	case menuSelectionAll:
+		items, err = GetAllItems(projectPath)
+	case menuSelectionChanges:
+		items, err = GetChangeItems(projectPath)
+	case menuSelectionSpecs:
+		items, err = GetSpecItems(projectPath)
+	case menuSelectionPickItem:
+		return runItemPicker(projectPath, strict, jsonOutput)
+	default:
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error loading items: %w", err)
+	}
+
+	return runValidationAndPrint(items, strict, jsonOutput)
+}
+
+// runItemPicker shows the item picker and validates the selected item
+func runItemPicker(projectPath string, strict, jsonOutput bool) error {
+	items, err := GetAllItems(projectPath)
+	if err != nil {
+		return fmt.Errorf("error loading items: %w", err)
+	}
+
+	if len(items) == 0 {
+		fmt.Println("No items to validate")
+
+		return nil
+	}
+
+	// Build table rows
+	columns := []table.Column{
+		{Title: "Name", Width: validationIDWidth},
+		{Title: "Type", Width: validationTypeWidth},
+		{Title: "Path", Width: validationPathWidth},
+	}
+
+	rows := make([]table.Row, len(items))
+	// Build name-to-index map for O(1) lookup in handler
+	nameToIndex := make(map[string]int, len(items))
+	for i, item := range items {
+		rows[i] = table.Row{
+			item.Name,
+			item.ItemType,
+			tui.TruncateString(item.Path, validationPathTruncate),
 		}
+		nameToIndex[item.Name] = i
+	}
+
+	// Create picker with enter action for selection
+	var selectedIdx = -1
+	picker := tui.NewTablePicker(tui.TableConfig{
+		Columns:     columns,
+		Rows:        rows,
+		Height:      tableHeight,
+		ProjectPath: projectPath,
+		Actions: map[string]tui.Action{
+			"enter": {
+				Key:         "enter",
+				Description: "validate",
+				Handler: func(row table.Row) (tea.Cmd, *tui.ActionResult) {
+					if len(row) == 0 {
+						return nil, nil
+					}
+					// Use map lookup for O(1) performance
+					if idx, ok := nameToIndex[row[0]]; ok {
+						selectedIdx = idx
+					}
+
+					return tea.Quit, &tui.ActionResult{
+						ID:   row[0],
+						Quit: true,
+					}
+				},
+			},
+		},
+	})
+
+	result, err := picker.Run()
+	if err != nil {
+		return fmt.Errorf("error running item picker: %w", err)
+	}
+
+	if result == nil || result.Cancelled || selectedIdx < 0 {
+
+		return nil
+	}
+
+	// Validate the selected item
+	selectedItem := items[selectedIdx]
+
+	return runValidationAndPrint([]ValidationItem{selectedItem}, strict, jsonOutput)
+}
+
+// runValidationAndPrint validates items and prints results
+func runValidationAndPrint(items []ValidationItem, strict, jsonOutput bool) error {
+	if len(items) == 0 {
+		fmt.Println("No items to validate")
+
+		return nil
+	}
+
+	validator := NewValidator(strict)
+	results, _ := validateItems(validator, items)
+
+	if jsonOutput {
+		PrintBulkJSONResults(results)
+	} else {
+		PrintBulkHumanResults(results)
 	}
 
 	return nil
@@ -419,33 +216,4 @@ func validateItems(
 	}
 
 	return results, hasFailures
-}
-
-// truncateString truncates a string and adds ellipsis if needed
-func truncateString(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	if maxLen <= ellipsisMinLength {
-		return s[:maxLen]
-	}
-
-	return s[:maxLen-ellipsisMinLength] + "..."
-}
-
-// applyTableStyles applies default styling to a table
-func applyTableStyles(t *table.Model) {
-	s := table.DefaultStyles()
-	s.Header = s.Header.
-		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color("240")).
-		BorderBottom(true).
-		Bold(true).
-		Foreground(lipgloss.Color("99"))
-	s.Selected = s.Selected.
-		Foreground(lipgloss.Color("229")).
-		Background(lipgloss.Color("57")).
-		Bold(true)
-
-	t.SetStyles(s)
 }

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TODO: Add purpose description
+Specifies how Spectr integrates with Codex CLI using global prompt files in the user's home directory.
 
 ## Requirements
 

@@ -72,6 +72,7 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		// Handle search mode input
 		if m.searchMode {
+			//nolint:exhaustive // Only handling specific keys, default handles the rest
 			switch msg.Type {
 			case tea.KeyEsc:
 				// Exit search mode, clear query and restore all rows

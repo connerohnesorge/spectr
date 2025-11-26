@@ -867,7 +867,7 @@ func TestSearchRowFiltering(t *testing.T) {
 			name:            "No matches",
 			searchQuery:     "xyz",
 			expectedRowsLen: 0,
-			expectedIDs:     []string{},
+			expectedIDs:     nil,
 		},
 		{
 			name:            "Empty search shows all",
@@ -934,7 +934,10 @@ func TestSearchExitWithEscape(t *testing.T) {
 
 	// Simulate pressing Escape
 	updatedModel, _ := model.Update(tea.KeyMsg{Type: tea.KeyEsc})
-	m := updatedModel.(interactiveModel)
+	m, ok := updatedModel.(interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
 
 	// Should exit search mode and clear query
 	if m.searchMode {

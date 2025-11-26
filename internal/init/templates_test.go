@@ -123,7 +123,7 @@ func TestTemplateManager_RenderAgents(t *testing.T) {
 		"## Three-Stage Workflow",
 		"### Stage 1: Creating Changes",
 		"### Stage 2: Implementing Changes",
-		"### Stage 3: Archiving Changes",
+		"### Stage 3: Syncing & Archiving",
 		"## Directory Structure",
 		"## Creating Change Proposals",
 		"## Spec File Format",
@@ -191,15 +191,15 @@ func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:        "archive command",
-			commandType: "archive",
+			name:        "sync command",
+			commandType: "sync",
 			want: []string{
-				"**Guardrails**",
-				"**Steps**",
-				"**Reference**",
-				"spectr archive",
-				"change ID",
-				"--yes",
+				"### Guardrails",
+				"### Steps",
+				"### Reference",
+				"Code is the source of truth",
+				"spectr list --specs",
+				"spectr validate --strict",
 			},
 			wantErr: false,
 		},
@@ -263,7 +263,7 @@ func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
 	})
 
 	t.Run("slash commands", func(t *testing.T) {
-		commands := []string{"proposal", "apply", "archive"}
+		commands := []string{"proposal", "apply", "sync"}
 		for _, cmd := range commands {
 			_, err := tm.RenderSlashCommand(cmd)
 			if err != nil {

@@ -12,7 +12,7 @@ type CostrictProvider struct {
 
 // NewCostrictProvider creates a new CoStrict provider.
 func NewCostrictProvider() *CostrictProvider {
-	proposalPath, archivePath, applyPath := StandardCommandPaths(
+	proposalPath, syncPath, applyPath := StandardCommandPaths(
 		".costrict/commands", ".md",
 	)
 
@@ -23,7 +23,7 @@ func NewCostrictProvider() *CostrictProvider {
 			priority:      PriorityCostrict,
 			configFile:    "COSTRICT.md",
 			proposalPath:  proposalPath,
-			archivePath:   archivePath,
+			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

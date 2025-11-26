@@ -6,25 +6,23 @@ import "path/filepath"
 // Lower numbers = higher priority (displayed first).
 const (
 	PriorityClaudeCode  = 1
-	PriorityCline       = 2
+	PriorityGemini      = 2
 	PriorityCostrict    = 3
 	PriorityQoder       = 4
 	PriorityCodeBuddy   = 5
 	PriorityQwen        = 6
 	PriorityAntigravity = 7
-	PriorityGemini      = 8
-	PriorityCursor      = 10
-	PriorityCopilot     = 11
-	PriorityAider       = 12
-	PriorityContinue    = 13
-	PriorityMentat      = 14
-	PriorityTabnine     = 15
-	PrioritySmol        = 16
-	PriorityWindsurf    = 17
-	PriorityKilocode    = 18
+	PriorityCline       = 8
+	PriorityCursor      = 9
+	PriorityCodex       = 10
+	PriorityAider       = 11
+	PriorityTabnine     = 12
+	PriorityWindsurf    = 13
+	PriorityKilocode    = 14
+	PriorityContinue    = 15
 )
 
-// Frontmatter templates for slash commands.
+// default frontmatter templates for slash commands.
 var (
 	// FrontmatterProposal is the YAML frontmatter for proposal commands.
 	FrontmatterProposal = `---
@@ -36,9 +34,9 @@ description: Scaffold a new Spectr change and validate strictly.
 description: Implement an approved Spectr change and keep tasks in sync.
 ---`
 
-	// FrontmatterArchive is the YAML frontmatter for archive commands.
-	FrontmatterArchive = `---
-description: Archive a deployed Spectr change and update specs.
+	// FrontmatterSync is the YAML frontmatter for sync commands.
+	FrontmatterSync = `---
+description: Detect spec drift from code and update specs interactively.
 ---`
 )
 
@@ -47,19 +45,36 @@ func StandardFrontmatter() map[string]string {
 	return map[string]string{
 		"proposal": FrontmatterProposal,
 		"apply":    FrontmatterApply,
-		"archive":  FrontmatterArchive,
+		"sync":     FrontmatterSync,
 	}
 }
 
 // StandardCommandPaths returns the standard command paths for a given
 // directory and extension.
-// Returns proposalPath, archivePath, applyPath.
+// Uses subdirectory structure: {dir}/spectr/{command}{ext}
+// Example: ".claude/commands", ".md" -> ".claude/commands/spectr/proposal.md"
+// Returns proposalPath, syncPath, applyPath.
 func StandardCommandPaths(
 	dir, ext string,
-) (proposalPath, archivePath, applyPath string) {
+) (proposalPath, syncPath, applyPath string) {
+	spectrDir := filepath.Join(dir, "spectr")
+	proposalPath = filepath.Join(spectrDir, "proposal"+ext)
+	syncPath = filepath.Join(spectrDir, "sync"+ext)
+	applyPath = filepath.Join(spectrDir, "apply"+ext)
+
+	return proposalPath, syncPath, applyPath
+}
+
+// PrefixedCommandPaths returns command paths using a flat prefix pattern.
+// Uses flat structure: {dir}/spectr-{command}{ext}
+// Example: ".agent/workflows", ".md" -> ".agent/workflows/spectr-proposal.md"
+// Returns proposalPath, syncPath, applyPath.
+func PrefixedCommandPaths(
+	dir, ext string,
+) (proposalPath, syncPath, applyPath string) {
 	proposalPath = filepath.Join(dir, "spectr-proposal"+ext)
-	archivePath = filepath.Join(dir, "spectr-archive"+ext)
+	syncPath = filepath.Join(dir, "spectr-sync"+ext)
 	applyPath = filepath.Join(dir, "spectr-apply"+ext)
 
-	return proposalPath, archivePath, applyPath
+	return proposalPath, syncPath, applyPath
 }

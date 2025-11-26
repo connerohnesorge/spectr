@@ -27,7 +27,7 @@
 //	}
 //
 //	func NewMyToolProvider() *MyToolProvider {
-//		proposalPath, archivePath, applyPath := StandardCommandPaths(
+//		proposalPath, syncPath, applyPath := StandardCommandPaths(
 //			".mytool/commands", ".md",
 //		)
 //
@@ -40,7 +40,7 @@
 //				configFile:    "MYTOOL.md",
 //				// Empty if no slash commands
 //				proposalPath:  proposalPath,
-//				archivePath:   archivePath,
+//				syncPath:      syncPath,
 //				applyPath:     applyPath,
 //				commandFormat: FormatMarkdown,
 //				frontmatter: map[string]string{
@@ -48,8 +48,8 @@
 //					"---\ndescription: Scaffold a new Spectr change.\n---",
 //					"apply":
 //					"---\ndescription: Implement an \n---",
-//					"archive":
-//					"---\ndescription: Archive a deployed .\n---",
+//					"sync":
+//					"---\ndescription: Sync a deployed .\n---",
 //				},
 //			},
 //		}
@@ -104,10 +104,10 @@ type Provider interface {
 	// Returns empty string if the provider has no proposal command.
 	GetProposalCommandPath() string
 
-	// GetArchiveCommandPath returns the relative path for the archive command.
-	// Example: ".claude/commands/spectr-archive.md"
-	// Returns empty string if the provider has no archive command.
-	GetArchiveCommandPath() string
+	// GetSyncCommandPath returns the relative path for the sync command.
+	// Example: ".claude/commands/spectr-sync.md"
+	// Returns empty string if the provider has no sync command.
+	GetSyncCommandPath() string
 
 	// GetApplyCommandPath returns the relative path for the apply command.
 	// Example: ".claude/commands/spectr-apply.md"
@@ -144,7 +144,7 @@ type TemplateRenderer interface {
 	// RenderAgents renders the AGENTS.md template content.
 	RenderAgents() (string, error)
 	// RenderSlashCommand renders a slash command template
-	// IE. proposal, apply, or archive.
+	// IE. proposal, apply, or sync.
 	RenderSlashCommand(command string) (string, error)
 }
 
@@ -156,7 +156,7 @@ type BaseProvider struct {
 	priority      int
 	configFile    string // Empty if no instruction file
 	proposalPath  string // e.g., ".claude/commands/spectr-proposal.md"
-	archivePath   string // e.g., ".claude/commands/spectr-archive.md"
+	syncPath      string // e.g., ".claude/commands/spectr-sync.md"
 	applyPath     string // e.g., ".claude/commands/spectr-apply.md"
 	commandFormat CommandFormat
 	frontmatter   map[string]string // Command name -> frontmatter content
@@ -187,9 +187,9 @@ func (p *BaseProvider) GetProposalCommandPath() string {
 	return p.proposalPath
 }
 
-// GetArchiveCommandPath returns the relative path for the archive command.
-func (p *BaseProvider) GetArchiveCommandPath() string {
-	return p.archivePath
+// GetSyncCommandPath returns the relative path for the sync command.
+func (p *BaseProvider) GetSyncCommandPath() string {
+	return p.syncPath
 }
 
 // GetApplyCommandPath returns the relative path for the apply command.
@@ -209,7 +209,7 @@ func (p *BaseProvider) HasConfigFile() bool {
 
 // HasSlashCommands returns true if this provider has slash commands.
 func (p *BaseProvider) HasSlashCommands() bool {
-	return p.proposalPath != "" || p.archivePath != "" || p.applyPath != ""
+	return p.proposalPath != "" || p.syncPath != "" || p.applyPath != ""
 }
 
 // Configure applies all configuration for the provider.
@@ -262,14 +262,19 @@ func (p *BaseProvider) configureSlashCommands(
 	paths := map[string]string{
 		"proposal": p.proposalPath,
 		"apply":    p.applyPath,
-		"archive":  p.archivePath,
+		"sync":     p.syncPath,
 	}
 
 	for cmd, relPath := range paths {
 		if relPath == "" {
 			continue
 		}
-		fullPath := filepath.Join(projectPath, relPath)
+		var fullPath string
+		if isGlobalPath(relPath) {
+			fullPath = expandPath(relPath)
+		} else {
+			fullPath = filepath.Join(projectPath, relPath)
+		}
 		if err := p.configureSlashCommand(fullPath, cmd, tm); err != nil {
 			return err
 		}
@@ -359,12 +364,17 @@ func (p *BaseProvider) IsConfigured(projectPath string) bool {
 	}
 
 	// Check slash commands using path methods
-	paths := []string{p.proposalPath, p.archivePath, p.applyPath}
+	paths := []string{p.proposalPath, p.syncPath, p.applyPath}
 	for _, relPath := range paths {
 		if relPath == "" {
 			continue
 		}
-		filePath := filepath.Join(projectPath, relPath)
+		var filePath string
+		if isGlobalPath(relPath) {
+			filePath = expandPath(relPath)
+		} else {
+			filePath = filepath.Join(projectPath, relPath)
+		}
 		if !FileExists(filePath) {
 			return false
 		}
@@ -383,7 +393,7 @@ func (p *BaseProvider) GetFilePaths() []string {
 
 	// Add command paths that are non-empty
 	for _, relPath := range []string{
-		p.proposalPath, p.archivePath, p.applyPath,
+		p.proposalPath, p.syncPath, p.applyPath,
 	} {
 		if relPath != "" {
 			paths = append(paths, relPath)

@@ -19,7 +19,7 @@ func newMockRenderer() *mockTemplateRenderer {
 		slashContent: map[string]string{
 			"proposal": "Proposal command content",
 			"apply":    "Apply command content",
-			"archive":  "Archive command content",
+			"sync":     "Sync command content",
 		},
 	}
 }
@@ -47,21 +47,21 @@ func TestClaudeProvider(t *testing.T) {
 	if p.ConfigFile() != "CLAUDE.md" {
 		t.Errorf("ConfigFile() = %s, want CLAUDE.md", p.ConfigFile())
 	}
-	if p.GetProposalCommandPath() != ".claude/commands/spectr-proposal.md" {
+	if p.GetProposalCommandPath() != ".claude/commands/spectr/proposal.md" {
 		t.Errorf(
-			"GetProposalCommandPath() = %s, want .claude/commands/spectr-proposal.md",
+			"GetProposalCommandPath() = %s, want .claude/commands/spectr/proposal.md",
 			p.GetProposalCommandPath(),
 		)
 	}
-	if p.GetArchiveCommandPath() != ".claude/commands/spectr-archive.md" {
+	if p.GetSyncCommandPath() != ".claude/commands/spectr/sync.md" {
 		t.Errorf(
-			"GetArchiveCommandPath() = %s, want .claude/commands/spectr-archive.md",
-			p.GetArchiveCommandPath(),
+			"GetSyncCommandPath() = %s, want .claude/commands/spectr/sync.md",
+			p.GetSyncCommandPath(),
 		)
 	}
-	if p.GetApplyCommandPath() != ".claude/commands/spectr-apply.md" {
+	if p.GetApplyCommandPath() != ".claude/commands/spectr/apply.md" {
 		t.Errorf(
-			"GetApplyCommandPath() = %s, want .claude/commands/spectr-apply.md",
+			"GetApplyCommandPath() = %s, want .claude/commands/spectr/apply.md",
 			p.GetApplyCommandPath(),
 		)
 	}
@@ -88,21 +88,21 @@ func TestGeminiProvider(t *testing.T) {
 	if p.ConfigFile() != "" {
 		t.Errorf("ConfigFile() = %s, want empty", p.ConfigFile())
 	}
-	if p.GetProposalCommandPath() != ".gemini/commands/spectr-proposal.toml" {
+	if p.GetProposalCommandPath() != ".gemini/commands/spectr/proposal.toml" {
 		t.Errorf(
-			"GetProposalCommandPath() = %s, want .gemini/commands/spectr-proposal.toml",
+			"GetProposalCommandPath() = %s, want .gemini/commands/spectr/proposal.toml",
 			p.GetProposalCommandPath(),
 		)
 	}
-	if p.GetArchiveCommandPath() != ".gemini/commands/spectr-archive.toml" {
+	if p.GetSyncCommandPath() != ".gemini/commands/spectr/sync.toml" {
 		t.Errorf(
-			"GetArchiveCommandPath() = %s, want .gemini/commands/spectr-archive.toml",
-			p.GetArchiveCommandPath(),
+			"GetSyncCommandPath() = %s, want .gemini/commands/spectr/sync.toml",
+			p.GetSyncCommandPath(),
 		)
 	}
-	if p.GetApplyCommandPath() != ".gemini/commands/spectr-apply.toml" {
+	if p.GetApplyCommandPath() != ".gemini/commands/spectr/apply.toml" {
 		t.Errorf(
-			"GetApplyCommandPath() = %s, want .gemini/commands/spectr-apply.toml",
+			"GetApplyCommandPath() = %s, want .gemini/commands/spectr/apply.toml",
 			p.GetApplyCommandPath(),
 		)
 	}
@@ -156,9 +156,9 @@ func TestBaseProviderConfigure(t *testing.T) {
 	}
 
 	// Check slash command files were created
-	commands := []string{"proposal", "apply", "archive"}
+	commands := []string{"proposal", "apply", "sync"}
 	for _, cmd := range commands {
-		cmdPath := filepath.Join(tmpDir, ".claude/commands", "spectr-"+cmd+".md")
+		cmdPath := filepath.Join(tmpDir, ".claude/commands/spectr", cmd+".md")
 		if !FileExists(cmdPath) {
 			t.Errorf("Slash command file not created: %s", cmdPath)
 		}
@@ -199,9 +199,9 @@ func TestBaseProviderGetFilePaths(t *testing.T) {
 	// Should have config file + 3 slash command files
 	expectedPaths := []string{
 		"CLAUDE.md",
-		".claude/commands/spectr-proposal.md",
-		".claude/commands/spectr-apply.md",
-		".claude/commands/spectr-archive.md",
+		".claude/commands/spectr/proposal.md",
+		".claude/commands/spectr/apply.md",
+		".claude/commands/spectr/sync.md",
 	}
 
 	if len(paths) != len(expectedPaths) {
@@ -239,9 +239,9 @@ func TestGeminiProviderConfigure(t *testing.T) {
 	}
 
 	// Check TOML files were created
-	commands := []string{"proposal", "apply", "archive"}
+	commands := []string{"proposal", "apply", "sync"}
 	for _, cmd := range commands {
-		cmdPath := filepath.Join(tmpDir, ".gemini/commands", "spectr-"+cmd+".toml")
+		cmdPath := filepath.Join(tmpDir, ".gemini/commands/spectr", cmd+".toml")
 		if !FileExists(cmdPath) {
 			t.Errorf("TOML command file not created: %s", cmdPath)
 		}
@@ -268,9 +268,9 @@ func TestSlashOnlyProviderGetFilePaths(t *testing.T) {
 
 	// Should have only slash command files (no config file)
 	expectedPaths := []string{
-		".cursorrules/commands/spectr-proposal.md",
-		".cursorrules/commands/spectr-apply.md",
-		".cursorrules/commands/spectr-archive.md",
+		".cursorrules/commands/spectr/proposal.md",
+		".cursorrules/commands/spectr/apply.md",
+		".cursorrules/commands/spectr/sync.md",
 	}
 
 	if len(paths) != len(expectedPaths) {
@@ -297,7 +297,7 @@ func TestAllProvidersHaveRequiredFields(t *testing.T) {
 			t.Errorf("Provider %s has no slash commands", p.ID())
 		}
 		// Check that at least one command path is set
-		if p.GetProposalCommandPath() == "" && p.GetArchiveCommandPath() == "" &&
+		if p.GetProposalCommandPath() == "" && p.GetSyncCommandPath() == "" &&
 			p.GetApplyCommandPath() == "" {
 			t.Errorf("Provider %s has no command paths set", p.ID())
 		}
@@ -314,5 +314,122 @@ func TestPrioritiesAreUnique(t *testing.T) {
 				p.Priority(), existingID, p.ID())
 		}
 		priorities[p.Priority()] = p.ID()
+	}
+}
+
+func TestExpandPath(t *testing.T) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatalf("Failed to get home directory: %v", err)
+	}
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Path not starting with tilde",
+			input:    ".config/test",
+			expected: ".config/test",
+		},
+		{
+			name:     "Path starting with tilde slash",
+			input:    "~/.config/test",
+			expected: filepath.Join(homeDir, ".config/test"),
+		},
+		{
+			name:     "Absolute path",
+			input:    "/absolute/path",
+			expected: "/absolute/path",
+		},
+		{
+			name:     "Tilde only without slash",
+			input:    "~",
+			expected: "~",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := expandPath(tt.input)
+			if result != tt.expected {
+				t.Errorf("expandPath(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestIsGlobalPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "Path starting with tilde slash",
+			input:    "~/.config/test",
+			expected: true,
+		},
+		{
+			name:     "Path starting with absolute slash",
+			input:    "/absolute/path",
+			expected: true,
+		},
+		{
+			name:     "Relative path with dot",
+			input:    ".foo/bar",
+			expected: false,
+		},
+		{
+			name:     "Simple relative path",
+			input:    "foo/bar",
+			expected: false,
+		},
+		{
+			name:     "Current directory dot",
+			input:    "./foo",
+			expected: false,
+		},
+		{
+			name:     "Parent directory",
+			input:    "../foo",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isGlobalPath(tt.input)
+			if result != tt.expected {
+				t.Errorf("isGlobalPath(%q) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestCodexProvider(t *testing.T) {
+	p := NewCodexProvider()
+
+	if p.ID() != "codex" {
+		t.Errorf("ID() = %s, want codex", p.ID())
+	}
+	if p.Name() != "Codex CLI" {
+		t.Errorf("Name() = %s, want Codex CLI", p.Name())
+	}
+	if p.Priority() != PriorityCodex {
+		t.Errorf("Priority() = %d, want %d", p.Priority(), PriorityCodex)
+	}
+	if p.ConfigFile() != "AGENTS.md" {
+		t.Errorf("ConfigFile() = %s, want AGENTS.md", p.ConfigFile())
+	}
+	if !p.HasConfigFile() {
+		t.Error("HasConfigFile() = false, want true")
+	}
+	if !p.HasSlashCommands() {
+		t.Error("HasSlashCommands() = false, want true")
+	}
+	if p.CommandFormat() != FormatMarkdown {
+		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
 	}
 }

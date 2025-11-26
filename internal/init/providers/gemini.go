@@ -20,7 +20,7 @@ type GeminiProvider struct {
 
 // NewGeminiProvider creates a new Gemini CLI provider.
 func NewGeminiProvider() *GeminiProvider {
-	proposalPath, archivePath, applyPath := StandardCommandPaths(
+	proposalPath, syncPath, applyPath := StandardCommandPaths(
 		".gemini/commands", ".toml",
 	)
 
@@ -31,7 +31,7 @@ func NewGeminiProvider() *GeminiProvider {
 			priority:      PriorityGemini,
 			configFile:    "",
 			proposalPath:  proposalPath,
-			archivePath:   archivePath,
+			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatTOML,
 			frontmatter:   nil,
@@ -73,8 +73,8 @@ func (p *GeminiProvider) configureSlashCommands(
 			"Implement an approved Spectr change and keep tasks in sync.",
 		},
 		{
-			"archive",
-			"Archive a deployed Spectr change and update specs.",
+			"sync",
+			"Sync a deployed Spectr change and update specs.",
 		},
 	}
 
@@ -131,8 +131,8 @@ func (p *GeminiProvider) getTOMLCommandPath(projectPath, cmd string) string {
 	switch cmd {
 	case "proposal":
 		relPath = p.proposalPath
-	case "archive":
-		relPath = p.archivePath
+	case "sync":
+		relPath = p.syncPath
 	case "apply":
 		relPath = p.applyPath
 	}

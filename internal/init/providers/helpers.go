@@ -140,3 +140,26 @@ func updateSlashCommandBody(filePath, body, frontmatter string) error {
 
 	return nil
 }
+
+// expandPath expands ~ to the user's home directory.
+// If path starts with ~/, replace ~ with the result of os.UserHomeDir().
+// If UserHomeDir returns an error, return the original path unchanged.
+// For paths not starting with ~/, return unchanged.
+func expandPath(path string) string {
+	if !strings.HasPrefix(path, "~/") {
+		return path
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return path
+	}
+
+	return filepath.Join(homeDir, path[2:])
+}
+
+// isGlobalPath returns true if the path is a global path
+// (starts with ~/ or /).
+func isGlobalPath(path string) bool {
+	return strings.HasPrefix(path, "~/") || strings.HasPrefix(path, "/")
+}

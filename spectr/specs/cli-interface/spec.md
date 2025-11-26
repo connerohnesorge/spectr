@@ -505,7 +505,7 @@ This automatic installation provides users with complete Spectr integration in a
 - **THEN** the system creates `CLAUDE.md` in the project root
 - **AND** the system creates `.claude/commands/spectr/proposal.md`
 - **AND** the system creates `.claude/commands/spectr/apply.md`
-- **AND** the system creates `.claude/commands/spectr/archive.md`
+- **AND** the system creates `.claude/commands/spectr/sync.md`
 - **AND** all files are tracked in the execution result
 - **AND** the completion screen shows all 4 files created
 
@@ -513,7 +513,7 @@ This automatic installation provides users with complete Spectr integration in a
 
 - **WHEN** user selects both `claude-code` and `cursor` in the init wizard
 - **THEN** the system creates `CLAUDE.md` and both config + slash commands for Claude
-- **AND** the system creates `.cursor/commands/spectr-proposal.md` and slash commands for Cursor
+- **AND** the system creates `.cursor/commands/spectr/proposal.md` and slash commands for Cursor
 - **AND** all files from both tools are created and tracked separately
 - **AND** the completion screen lists all created files grouped by tool
 

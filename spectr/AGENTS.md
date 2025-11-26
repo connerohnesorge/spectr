@@ -56,12 +56,15 @@ Track these steps as TODOs and complete them one by one.
 6. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
 7. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
 
-### Stage 3: Archiving Changes
-After deployment, create separate PR to:
-- Move `changes/[name]/` → `changes/archive/YYYY-MM-DD-[name]/`
-- Update `specs/` if capabilities changed
-- Use `spectr archive <change-id> --skip-specs --yes` for tooling-only changes (always pass the change ID explicitly)
-- Run `spectr validate --strict` to confirm the archived change passes checks
+### Stage 3: Syncing Specs
+
+**Syncing Specs (detect drift):**
+When code implementation diverges from specs, sync to update specs:
+1. Compare code behavior against spec requirements
+2. Identify drift: new features (ADDED), changed behavior (MODIFIED), removed features (REMOVED)
+3. Review each change interactively before applying
+4. Edit specs directly with confirmed changes
+5. Run `spectr validate --strict` to ensure validity
 
 ## Before Any Task
 
@@ -96,7 +99,6 @@ spectr list                  # List active changes
 spectr list --specs          # List specifications
 spectr show [item]           # Display change or spec
 spectr validate [item]       # Validate changes or specs
-spectr archive <change-id> [--yes|-y]   # Archive after deployment (add --yes for non-interactive runs)
 
 # Project management
 spectr init [path]           # Initialize Spectr
@@ -117,8 +119,6 @@ spectr validate [change] --strict
 - `--type change|spec` - Disambiguate items
 - `--strict` - Comprehensive validation
 - `--no-interactive` - Disable prompts
-- `--skip-specs` - Archive without spec updates
-- `--yes`/`-y` - Skip confirmation prompts (non-interactive archive)
 
 ## Directory Structure
 
@@ -130,14 +130,13 @@ spectr/
 │       ├── spec.md         # Requirements and scenarios
 │       └── design.md       # Technical patterns
 ├── changes/                # Proposals - what SHOULD change
-│   ├── [change-name]/
-│   │   ├── proposal.md     # Why, what, impact
-│   │   ├── tasks.md        # Implementation checklist
-│   │   ├── design.md       # Technical decisions (optional; see criteria)
-│   │   └── specs/          # Delta changes
-│   │       └── [capability]/
-│   │           └── spec.md # ADDED/MODIFIED/REMOVED
-│   └── archive/            # Completed changes
+│   └── [change-name]/
+│       ├── proposal.md     # Why, what, impact
+│       ├── tasks.md        # Implementation checklist
+│       ├── design.md       # Technical decisions (optional; see criteria)
+│       └── specs/          # Delta changes
+│           └── [capability]/
+│               └── spec.md # ADDED/MODIFIED/REMOVED
 ```
 
 ## Creating Change Proposals
@@ -268,10 +267,10 @@ Headers matched with `trim(header)` - whitespace ignored.
 
 #### When to use ADDED vs MODIFIED
 - ADDED: Introduces a new capability or sub-capability that can stand alone as a requirement. Prefer ADDED when the change is orthogonal (e.g., adding "Slash Command Configuration") rather than altering the semantics of an existing requirement.
-- MODIFIED: Changes the behavior, scope, or acceptance criteria of an existing requirement. Always paste the full, updated requirement content (header + all scenarios). The archiver will replace the entire requirement with what you provide here; partial deltas will drop previous details.
+- MODIFIED: Changes the behavior, scope, or acceptance criteria of an existing requirement. Always paste the full, updated requirement content (header + all scenarios). The sync process will replace the entire requirement with what you provide here; partial deltas will drop previous details.
 - RENAMED: Use when only the name changes. If you also change behavior, use RENAMED (name) plus MODIFIED (content) referencing the new name.
 
-Common pitfall: Using MODIFIED to add a new concern without including the previous text. This causes loss of detail at archive time. If you aren't explicitly changing the existing requirement, add a new requirement under ADDED instead.
+Common pitfall: Using MODIFIED to add a new concern without including the previous text. This causes loss of detail when syncing. If you aren't explicitly changing the existing requirement, add a new requirement under ADDED instead.
 
 Authoring a MODIFIED requirement correctly:
 1) Locate the existing requirement in `spectr/specs/<capability>/spec.md`.
@@ -429,15 +428,13 @@ Only add complexity with:
 ### Missing Context
 1. Read project.md first
 2. Check related specs
-3. Review recent archives
-4. Ask for clarification
+3. Ask for clarification
 
 ## Quick Reference
 
 ### Stage Indicators
 - `changes/` - Proposed, not yet built
 - `specs/` - Built and deployed
-- `archive/` - Completed changes
 
 ### File Purposes
 - `proposal.md` - Why and what
@@ -450,7 +447,6 @@ Only add complexity with:
 spectr list              # What's in progress?
 spectr show [item]       # View details
 spectr validate --strict # Is it correct?
-spectr archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
 ```
 
 Remember: Specs are truth. Changes are proposals. Keep them in sync.

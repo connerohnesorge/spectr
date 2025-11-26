@@ -12,7 +12,7 @@ type QoderProvider struct {
 
 // NewQoderProvider creates a new Qoder provider.
 func NewQoderProvider() *QoderProvider {
-	proposalPath, archivePath, applyPath := StandardCommandPaths(
+	proposalPath, syncPath, applyPath := StandardCommandPaths(
 		".qoder/commands", ".md",
 	)
 
@@ -23,7 +23,7 @@ func NewQoderProvider() *QoderProvider {
 			priority:      PriorityQoder,
 			configFile:    "QODER.md",
 			proposalPath:  proposalPath,
-			archivePath:   archivePath,
+			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

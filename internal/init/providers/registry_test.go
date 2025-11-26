@@ -98,7 +98,7 @@ func TestWithSlashCommands(t *testing.T) {
 			)
 		}
 		// Check that at least one command path is set
-		if p.GetProposalCommandPath() == "" && p.GetArchiveCommandPath() == "" &&
+		if p.GetProposalCommandPath() == "" && p.GetSyncCommandPath() == "" &&
 			p.GetApplyCommandPath() == "" {
 			t.Errorf("Provider %s has no command paths set", p.ID())
 		}

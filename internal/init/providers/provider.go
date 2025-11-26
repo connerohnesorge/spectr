@@ -269,7 +269,12 @@ func (p *BaseProvider) configureSlashCommands(
 		if relPath == "" {
 			continue
 		}
-		fullPath := filepath.Join(projectPath, relPath)
+		var fullPath string
+		if isGlobalPath(relPath) {
+			fullPath = expandPath(relPath)
+		} else {
+			fullPath = filepath.Join(projectPath, relPath)
+		}
 		if err := p.configureSlashCommand(fullPath, cmd, tm); err != nil {
 			return err
 		}
@@ -364,7 +369,12 @@ func (p *BaseProvider) IsConfigured(projectPath string) bool {
 		if relPath == "" {
 			continue
 		}
-		filePath := filepath.Join(projectPath, relPath)
+		var filePath string
+		if isGlobalPath(relPath) {
+			filePath = expandPath(relPath)
+		} else {
+			filePath = filepath.Join(projectPath, relPath)
+		}
 		if !FileExists(filePath) {
 			return false
 		}

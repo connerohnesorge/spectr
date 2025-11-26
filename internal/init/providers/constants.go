@@ -6,25 +6,23 @@ import "path/filepath"
 // Lower numbers = higher priority (displayed first).
 const (
 	PriorityClaudeCode  = 1
-	PriorityCline       = 2
+	PriorityGemini      = 2
 	PriorityCostrict    = 3
 	PriorityQoder       = 4
 	PriorityCodeBuddy   = 5
 	PriorityQwen        = 6
 	PriorityAntigravity = 7
-	PriorityGemini      = 8
-	PriorityCursor      = 10
-	PriorityCopilot     = 11
-	PriorityAider       = 12
-	PriorityContinue    = 13
-	PriorityMentat      = 14
-	PriorityTabnine     = 15
-	PrioritySmol        = 16
-	PriorityWindsurf    = 17
-	PriorityKilocode    = 18
+	PriorityCline       = 8
+	PriorityCursor      = 9
+	PriorityCodex       = 10
+	PriorityAider       = 11
+	PriorityTabnine     = 12
+	PriorityWindsurf    = 13
+	PriorityKilocode    = 14
+	PriorityContinue    = 15
 )
 
-// Frontmatter templates for slash commands.
+// default frontmatter templates for slash commands.
 var (
 	// FrontmatterProposal is the YAML frontmatter for proposal commands.
 	FrontmatterProposal = `---

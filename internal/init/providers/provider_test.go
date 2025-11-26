@@ -316,3 +316,120 @@ func TestPrioritiesAreUnique(t *testing.T) {
 		priorities[p.Priority()] = p.ID()
 	}
 }
+
+func TestExpandPath(t *testing.T) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatalf("Failed to get home directory: %v", err)
+	}
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Path not starting with tilde",
+			input:    ".config/test",
+			expected: ".config/test",
+		},
+		{
+			name:     "Path starting with tilde slash",
+			input:    "~/.config/test",
+			expected: filepath.Join(homeDir, ".config/test"),
+		},
+		{
+			name:     "Absolute path",
+			input:    "/absolute/path",
+			expected: "/absolute/path",
+		},
+		{
+			name:     "Tilde only without slash",
+			input:    "~",
+			expected: "~",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := expandPath(tt.input)
+			if result != tt.expected {
+				t.Errorf("expandPath(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestIsGlobalPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "Path starting with tilde slash",
+			input:    "~/.config/test",
+			expected: true,
+		},
+		{
+			name:     "Path starting with absolute slash",
+			input:    "/absolute/path",
+			expected: true,
+		},
+		{
+			name:     "Relative path with dot",
+			input:    ".foo/bar",
+			expected: false,
+		},
+		{
+			name:     "Simple relative path",
+			input:    "foo/bar",
+			expected: false,
+		},
+		{
+			name:     "Current directory dot",
+			input:    "./foo",
+			expected: false,
+		},
+		{
+			name:     "Parent directory",
+			input:    "../foo",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isGlobalPath(tt.input)
+			if result != tt.expected {
+				t.Errorf("isGlobalPath(%q) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestCodexProvider(t *testing.T) {
+	p := NewCodexProvider()
+
+	if p.ID() != "codex" {
+		t.Errorf("ID() = %s, want codex", p.ID())
+	}
+	if p.Name() != "Codex CLI" {
+		t.Errorf("Name() = %s, want Codex CLI", p.Name())
+	}
+	if p.Priority() != PriorityCodex {
+		t.Errorf("Priority() = %d, want %d", p.Priority(), PriorityCodex)
+	}
+	if p.ConfigFile() != "AGENTS.md" {
+		t.Errorf("ConfigFile() = %s, want AGENTS.md", p.ConfigFile())
+	}
+	if !p.HasConfigFile() {
+		t.Error("HasConfigFile() = false, want true")
+	}
+	if !p.HasSlashCommands() {
+		t.Error("HasSlashCommands() = false, want true")
+	}
+	if p.CommandFormat() != FormatMarkdown {
+		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
+	}
+}

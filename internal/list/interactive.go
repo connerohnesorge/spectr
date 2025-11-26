@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/connerohnesorge/spectr/internal/tui"
 )
@@ -51,6 +53,10 @@ type interactiveModel struct {
 	projectPath      string    // root directory of the project
 	allItems         ItemList  // all items when in unified mode
 	filterType       *ItemType // current filter when in unified mode (nil = show all)
+	searchMode       bool      // whether search mode is active
+	searchQuery      string    // current search query
+	searchInput      textinput.Model
+	allRows          []table.Row // stores all rows for filtering
 }
 
 // Init initializes the model
@@ -64,6 +70,32 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// Handle search mode input
+		if m.searchMode {
+			switch msg.Type {
+			case tea.KeyEsc:
+				// Exit search mode, clear query and restore all rows
+				m.searchMode = false
+				m.searchQuery = ""
+				m.searchInput.SetValue("")
+				m = m.applyFilter()
+
+				return m, nil
+			case tea.KeyEnter:
+				// Exit search mode but keep filter applied
+				m.searchMode = false
+
+				return m, nil
+			default:
+				// Update text input and filter
+				m.searchInput, cmd = m.searchInput.Update(msg)
+				m.searchQuery = m.searchInput.Value()
+				m = m.applyFilter()
+
+				return m, cmd
+			}
+		}
+
 		switch msg.String() {
 		case "q", "ctrl+c":
 			m.quitting = true
@@ -88,6 +120,33 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "a":
 			return m.handleArchive()
+
+		case "/":
+			// Toggle search mode
+			if m.searchMode {
+				// Exit search mode if already active
+				m.searchMode = false
+				m.searchQuery = ""
+				m.searchInput.SetValue("")
+				m = m.applyFilter()
+			} else {
+				// Enter search mode
+				m.searchMode = true
+				m.searchInput.Focus()
+			}
+
+			return m, nil
+
+		case "esc":
+			// Exit search mode if active
+			if m.searchMode {
+				m.searchMode = false
+				m.searchQuery = ""
+				m.searchInput.SetValue("")
+				m = m.applyFilter()
+
+				return m, nil
+			}
 		}
 
 	case editorFinishedMsg:
@@ -315,6 +374,7 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 	tui.ApplyTableStyles(&t)
 
 	m.table = t
+	m.allRows = rows // Update allRows for search filtering
 
 	// Update help text
 	filterDesc := "all"
@@ -322,13 +382,58 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 		filterDesc = m.filterType.String() + "s"
 	}
 	m.helpText = fmt.Sprintf(
-		"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter (%s) | q: quit\nshowing: %d | project: %s",
+		"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter (%s) | /: search | q: quit\nshowing: %d | project: %s",
 		filterDesc,
 		len(rows),
 		m.projectPath,
 	)
 
 	return m
+}
+
+// applyFilter filters the table rows based on the search query
+func (m interactiveModel) applyFilter() interactiveModel {
+	if len(m.allRows) == 0 {
+		return m
+	}
+
+	var filteredRows []table.Row
+	query := strings.ToLower(m.searchQuery)
+
+	if query == "" {
+		filteredRows = m.allRows
+	} else {
+		for _, row := range m.allRows {
+			// Match against ID (first column) and title (second or third column depending on mode)
+			if len(row) > 0 {
+				id := strings.ToLower(row[0])
+				var title string
+				if m.itemType == "all" && len(row) > 2 {
+					title = strings.ToLower(row[2]) // Title is third column in unified mode
+				} else if len(row) > 1 {
+					title = strings.ToLower(row[1]) // Title is second column otherwise
+				}
+
+				if strings.Contains(id, query) || strings.Contains(title, query) {
+					filteredRows = append(filteredRows, row)
+				}
+			}
+		}
+	}
+
+	m.table.SetRows(filteredRows)
+
+	return m
+}
+
+// newTextInput creates a new text input for search
+func newTextInput() textinput.Model {
+	ti := textinput.New()
+	ti.Placeholder = "Type to search..."
+	ti.CharLimit = 50
+	ti.Width = 30
+
+	return ti
 }
 
 // editorFinishedMsg is sent when the editor finishes
@@ -356,8 +461,15 @@ func (m interactiveModel) View() string {
 		return "Cancelled.\n"
 	}
 
+	// Display search input if search mode is active
+	var view string
+	if m.searchMode {
+		view = fmt.Sprintf("Search: %s\n\n", m.searchInput.View())
+	}
+
+	view += m.table.View() + "\n" + m.helpText + "\n"
+
 	// Display error message if present, but keep TUI active
-	view := m.table.View() + "\n" + m.helpText + "\n"
 	if m.err != nil {
 		view += fmt.Sprintf("\nError: %v\n", m.err)
 	}
@@ -406,8 +518,10 @@ func RunInteractiveChanges(changes []ChangeInfo, projectPath string) (string, er
 		table:       t,
 		itemType:    "change",
 		projectPath: projectPath,
+		searchInput: newTextInput(),
+		allRows:     rows,
 		helpText: fmt.Sprintf(
-			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit\nshowing: %d | project: %s",
+			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | /: search | q: quit\nshowing: %d | project: %s",
 			len(rows),
 			projectPath,
 		),
@@ -538,8 +652,10 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 		table:       t,
 		itemType:    "spec",
 		projectPath: projectPath,
+		searchInput: newTextInput(),
+		allRows:     rows,
 		helpText: fmt.Sprintf(
-			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit\nshowing: %d | project: %s",
+			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | /: search | q: quit\nshowing: %d | project: %s",
 			len(specs),
 			projectPath,
 		),
@@ -623,8 +739,10 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 		projectPath: projectPath,
 		allItems:    items,
 		filterType:  nil, // Start with all items visible
+		searchInput: newTextInput(),
+		allRows:     rows,
 		helpText: fmt.Sprintf(
-			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter (all) | q: quit\nshowing: %d | project: %s",
+			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter (all) | /: search | q: quit\nshowing: %d | project: %s",
 			len(rows),
 			projectPath,
 		),

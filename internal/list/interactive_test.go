@@ -809,3 +809,243 @@ func TestHandleArchive_UnifiedMode_Spec(t *testing.T) {
 		t.Error("Expected no command for SPEC in unified mode")
 	}
 }
+
+// TestSearchRowFiltering tests row filtering by ID and title
+func TestSearchRowFiltering(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"add-feature", "Add new feature", "2", "3/5"},
+		{"fix-bug", "Fix bug in parser", "1", "2/2"},
+		{"update-docs", "Update documentation", "1", "1/1"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "change",
+		projectPath: "/tmp/test",
+		table:       tbl,
+		searchInput: newTextInput(),
+		allRows:     rows,
+		searchMode:  true,
+	}
+
+	tests := []struct {
+		name            string
+		searchQuery     string
+		expectedRowsLen int
+		expectedIDs     []string
+	}{
+		{
+			name:            "Search by ID prefix",
+			searchQuery:     "add",
+			expectedRowsLen: 1,
+			expectedIDs:     []string{"add-feature"},
+		},
+		{
+			name:            "Search by title word",
+			searchQuery:     "bug",
+			expectedRowsLen: 1,
+			expectedIDs:     []string{"fix-bug"},
+		},
+		{
+			name:            "Search matches multiple rows",
+			searchQuery:     "update",
+			expectedRowsLen: 1,
+			expectedIDs:     []string{"update-docs"},
+		},
+		{
+			name:            "No matches",
+			searchQuery:     "xyz",
+			expectedRowsLen: 0,
+			expectedIDs:     []string{},
+		},
+		{
+			name:            "Empty search shows all",
+			searchQuery:     "",
+			expectedRowsLen: 3,
+			expectedIDs:     []string{"add-feature", "fix-bug", "update-docs"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model.searchQuery = tt.searchQuery
+			model.searchInput.SetValue(tt.searchQuery)
+			model = model.applyFilter()
+
+			filteredRows := model.table.Rows()
+			if len(filteredRows) != tt.expectedRowsLen {
+				t.Errorf("Expected %d rows, got %d for query '%s'",
+					tt.expectedRowsLen, len(filteredRows), tt.searchQuery)
+			}
+
+			for i, expectedID := range tt.expectedIDs {
+				if i < len(filteredRows) && filteredRows[i][0] != expectedID {
+					t.Errorf("Expected ID %s at index %d, got %s",
+						expectedID, i, filteredRows[i][0])
+				}
+			}
+		})
+	}
+}
+
+// TestSearchExitWithEscape tests exiting search mode with Escape key
+func TestSearchExitWithEscape(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"add-feature", "Add new feature", "2", "3/5"},
+		{"fix-bug", "Fix bug in parser", "1", "2/2"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "change",
+		projectPath: "/tmp/test",
+		table:       tbl,
+		searchInput: newTextInput(),
+		allRows:     rows,
+		searchMode:  true,
+	}
+
+	// Set a search query and then exit with Escape
+	model.searchQuery = "add"
+	model.searchInput.SetValue("add")
+	model = model.applyFilter()
+
+	// Simulate pressing Escape
+	updatedModel, _ := model.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	m := updatedModel.(interactiveModel)
+
+	// Should exit search mode and clear query
+	if m.searchMode {
+		t.Error("Expected searchMode to be false after Escape")
+	}
+	if m.searchQuery != "" {
+		t.Errorf("Expected searchQuery to be empty after Escape, got '%s'", m.searchQuery)
+	}
+	// Should restore all rows
+	if len(m.table.Rows()) != len(rows) {
+		t.Errorf("Expected %d rows after clearing search, got %d", len(rows), len(m.table.Rows()))
+	}
+}
+
+// TestSearchUnifiedMode tests search in unified mode (changes and specs)
+func TestSearchUnifiedMode(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: unifiedIDWidth},
+		{Title: "Type", Width: unifiedTypeWidth},
+		{Title: "Title", Width: unifiedTitleWidth},
+		{Title: "Details", Width: unifiedDetailsWidth},
+	}
+	rows := []table.Row{
+		{"add-auth", "CHANGE", "Add authentication", "Tasks: 2/5"},
+		{"auth-system", "SPEC", "Authentication System", "Reqs: 8"},
+		{"add-cache", "CHANGE", "Add caching layer", "Tasks: 1/3"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "all",
+		projectPath: "/tmp/test",
+		table:       tbl,
+		searchInput: newTextInput(),
+		allRows:     rows,
+		searchMode:  true,
+	}
+
+	// Search for "auth" - should find both auth-related items
+	model.searchQuery = "auth"
+	model.searchInput.SetValue("auth")
+	model = model.applyFilter()
+
+	filteredRows := model.table.Rows()
+	if len(filteredRows) != 2 {
+		t.Errorf("Expected 2 rows matching 'auth', got %d", len(filteredRows))
+	}
+
+	// Verify the matches
+	expectedIDs := []string{"add-auth", "auth-system"}
+	for i, expectedID := range expectedIDs {
+		if i < len(filteredRows) && filteredRows[i][0] != expectedID {
+			t.Errorf("Expected ID %s at index %d, got %s",
+				expectedID, i, filteredRows[i][0])
+		}
+	}
+}
+
+// TestSearchCaseInsensitive tests that search is case insensitive
+func TestSearchCaseInsensitive(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: specIDWidth},
+		{Title: "Title", Width: specTitleWidth},
+		{Title: "Requirements", Width: specRequirementsWidth},
+	}
+	rows := []table.Row{
+		{"user-auth", "User Authentication System", "5"},
+		{"payment", "Payment Processing", "8"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "spec",
+		projectPath: "/tmp/test",
+		table:       tbl,
+		searchInput: newTextInput(),
+		allRows:     rows,
+		searchMode:  true,
+	}
+
+	tests := []struct {
+		query           string
+		expectedRowsLen int
+	}{
+		{"USER", 1},
+		{"user", 1},
+		{"User", 1},
+		{"AUTH", 1},
+		{"PAYMENT", 1},
+		{"payment", 1},
+	}
+
+	for _, tt := range tests {
+		model.searchQuery = tt.query
+		model.searchInput.SetValue(tt.query)
+		model = model.applyFilter()
+
+		filteredRows := model.table.Rows()
+		if len(filteredRows) != tt.expectedRowsLen {
+			t.Errorf("Query '%s': expected %d rows, got %d",
+				tt.query, tt.expectedRowsLen, len(filteredRows))
+		}
+	}
+}

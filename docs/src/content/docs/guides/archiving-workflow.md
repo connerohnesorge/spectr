@@ -65,7 +65,7 @@ Before archiving, verify:
 
 ```bash
 # See what's in your change
-spectr show <change-id> --json
+spectr view <change-id> --json
 
 # Validate the change passes strict checks
 spectr validate <change-id> --strict
@@ -206,7 +206,7 @@ spectr/
 
 ```bash
 # View current spec requirements
-spectr show auth --json | jq '.requirements[].title'
+spectr view auth --json | jq '.requirements[].title'
 
 # Verify your modified requirement name matches
 ```

@@ -3,13 +3,13 @@ description: Detect spec drift from code and update specs interactively.
 ---
 
 <!-- spectr:START -->
-**Guardrails**
+### Guardrails
 - Code is the source of truth—specs should reflect actual implementation.
 - Only update specs after user confirms each change.
 - Keep spec updates minimal and focused on actual drift.
 - Refer to `spectr/AGENTS.md` for Spectr conventions.
 
-**Steps**
+### Steps
 1. Determine scope:
    - If arguments specify capabilities (e.g., `<Capabilities>auth, cli</Capabilities>`), focus on those.
    - Otherwise, ask the user which capabilities to sync, or analyze recent git changes to suggest candidates.
@@ -35,7 +35,7 @@ description: Detect spec drift from code and update specs interactively.
    - Run `spectr validate --strict` to ensure validity.
    - Show summary of changes made.
 
-**Reference**
+### Reference
 - Use `spectr show <spec> --type spec` to view current spec content.
 - Search code with `rg` to find implementations.
 - Validate after edits with `spectr validate --strict`.

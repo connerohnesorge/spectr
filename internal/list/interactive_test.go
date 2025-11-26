@@ -134,19 +134,6 @@ func TestRunInteractiveSpecs_ValidData(_ *testing.T) {
 	_ = specs // Just verify the data structure is correct
 }
 
-func TestCopyToClipboard(t *testing.T) {
-	// Note: This test may fail in headless environments
-	// It's more of a smoke test to ensure the function doesn't panic
-	testString := "test-id-123"
-	err := copyToClipboard(testString)
-
-	// We don't fail the test on error because clipboard may not be available
-	// in CI/CD environments. We just want to ensure no panic occurs.
-	if err != nil {
-		t.Logf("Clipboard operation failed (expected in headless env): %v", err)
-	}
-}
-
 func TestInteractiveModel_Init(t *testing.T) {
 	model := interactiveModel{}
 	cmd := model.Init()

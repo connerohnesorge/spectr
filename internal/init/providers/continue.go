@@ -12,7 +12,7 @@ type ContinueProvider struct {
 
 // NewContinueProvider creates a new Continue provider.
 func NewContinueProvider() *ContinueProvider {
-	proposalPath, archivePath, applyPath := StandardCommandPaths(
+	proposalPath, syncPath, applyPath := StandardCommandPaths(
 		".continue/commands", ".md",
 	)
 
@@ -23,7 +23,7 @@ func NewContinueProvider() *ContinueProvider {
 			priority:      PriorityContinue,
 			configFile:    "",
 			proposalPath:  proposalPath,
-			archivePath:   archivePath,
+			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

@@ -56,11 +56,21 @@ Track these steps as TODOs and complete them one by one.
 6. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
 7. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
 
-### Stage 3: Archiving Changes
-After deployment, create separate PR to:
+### Stage 3: Syncing & Archiving
+
+**Syncing Specs (detect drift):**
+When code implementation diverges from specs, sync to update specs:
+1. Compare code behavior against spec requirements
+2. Identify drift: new features (ADDED), changed behavior (MODIFIED), removed features (REMOVED)
+3. Review each change interactively before applying
+4. Edit specs directly with confirmed changes
+5. Run `spectr validate --strict` to ensure validity
+
+**Archiving Changes (after deployment):**
+After deployment, archive completed changes:
 - Move `changes/[name]/` → `changes/archive/YYYY-MM-DD-[name]/`
 - Update `specs/` if capabilities changed
-- Use `spectr archive <change-id> --skip-specs --yes` for tooling-only changes (always pass the change ID explicitly)
+- Use `spectr archive <change-id> --skip-specs --yes` for tooling-only changes
 - Run `spectr validate --strict` to confirm the archived change passes checks
 
 ## Before Any Task

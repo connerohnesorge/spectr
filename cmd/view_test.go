@@ -169,8 +169,9 @@ func TestViewCmd_Integration_NOCOLOREnvironment(t *testing.T) {
 		t.Fatalf("Failed to get working directory: %v", err)
 	}
 	defer func() {
-		if err := os.Chdir(originalWd); err != nil {
-			t.Logf("Warning: Failed to restore working directory: %v", err)
+		cErr := os.Chdir(originalWd)
+		if cErr != nil {
+			t.Logf("Warning: Failed to restore working directory: %v", cErr)
 		}
 	}()
 

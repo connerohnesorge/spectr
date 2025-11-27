@@ -23,44 +23,16 @@ Type "clear"
 Enter
 Sleep 500ms
 
-# Create a test change with intentional errors
-Type "# Create a test change proposal with errors"
+# Copy base project and broken change
+Type "# Set up demo with a broken change proposal"
 Enter
-Type "mkdir -p spectr/changes/test-validation/specs/test-feature"
+Type "cp -r examples/validate/spectr _demo"
 Enter
-Sleep 500ms
-
-# Create a spec with missing scenarios
-Type "cat > spectr/changes/test-validation/specs/test-feature/spec.md << 'EOF'"
+Type "mkdir -p _demo/changes/test-validation/specs/test-feature"
 Enter
-Type "## ADDED Requirements"
+Type "cp examples/validate/broken/proposal.md _demo/changes/test-validation/"
 Enter
-Type "### Requirement: User Authentication"
-Enter
-Type "The system SHALL provide secure authentication."
-Enter
-Type ""
-Enter
-Type "### Requirement: Missing Scenario Example"
-Enter
-Type "This requirement is missing a scenario."
-Enter
-Type "EOF"
-Enter
-Sleep 500ms
-
-# Create minimal proposal
-Type "cat > spectr/changes/test-validation/proposal.md << 'EOF'"
-Enter
-Type "# Change: Test Validation"
-Enter
-Type ""
-Enter
-Type "## Why"
-Enter
-Type "Testing validation workflow."
-Enter
-Type "EOF"
+Type "cp examples/validate/broken/specs/test-feature/spec.md _demo/changes/test-validation/specs/test-feature/"
 Enter
 Sleep 500ms
 
@@ -72,7 +44,7 @@ Sleep 500ms
 Type "echo '=== Running validation (will show errors) ==='"
 Enter
 Sleep 500ms
-Type "spectr validate test-validation --strict"
+Type "cd _demo && spectr validate test-validation --strict"
 Enter
 Sleep 2s
 
@@ -80,41 +52,11 @@ Type "echo ''"
 Enter
 Sleep 1s
 
-# Fix the error by adding scenarios
-Type "echo '=== Fixing the spec by adding missing scenario ==='"
+# Fix the error by copying the fixed version
+Type "echo '=== Fixing the spec by using corrected version ==='"
 Enter
 Sleep 500ms
-Type "cat > spectr/changes/test-validation/specs/test-feature/spec.md << 'EOF'"
-Enter
-Type "## ADDED Requirements"
-Enter
-Type "### Requirement: User Authentication"
-Enter
-Type "The system SHALL provide secure authentication."
-Enter
-Type ""
-Enter
-Type "#### Scenario: Successful login"
-Enter
-Type "- **WHEN** user provides valid credentials"
-Enter
-Type "- **THEN** system grants access token"
-Enter
-Type ""
-Enter
-Type "### Requirement: Missing Scenario Example"
-Enter
-Type "This requirement now has a scenario."
-Enter
-Type ""
-Enter
-Type "#### Scenario: Example scenario"
-Enter
-Type "- **WHEN** condition occurs"
-Enter
-Type "- **THEN** expected result happens"
-Enter
-Type "EOF"
+Type "cp examples/validate/fixed/specs/test-feature/spec.md _demo/changes/test-validation/specs/test-feature/"
 Enter
 Sleep 500ms
 
@@ -126,7 +68,7 @@ Sleep 500ms
 Type "echo '=== Re-running validation (should pass) ==='"
 Enter
 Sleep 500ms
-Type "spectr validate test-validation --strict"
+Type "cd _demo && spectr validate test-validation --strict"
 Enter
 Sleep 2s
 
@@ -134,7 +76,7 @@ Sleep 2s
 Type "echo ''"
 Enter
 Sleep 500ms
-Type "rm -rf spectr/changes/test-validation"
+Type "rm -rf _demo"
 Enter
 Sleep 500ms
 

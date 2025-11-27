@@ -22,10 +22,10 @@ Type "clear"
 Enter
 Sleep 500ms
 
-# Show we're in a spectr project
-Type "# Navigate to spectr project"
+# Set up demo environment
+Type "# Set up demo environment from pre-made example"
 Enter
-Type "cd ~/Documents/001Repos/spectr"
+Type "cp -r examples/list/spectr _demo"
 Enter
 Sleep 500ms
 
@@ -36,7 +36,7 @@ Enter
 Type "echo '=== Active Changes (What is being proposed) ==='"
 Enter
 Sleep 500ms
-Type "spectr list"
+Type "cd _demo && spectr list"
 Enter
 Sleep 2s
 
@@ -48,7 +48,7 @@ Sleep 500ms
 Type "echo '=== Specifications (What is built) ==='"
 Enter
 Sleep 500ms
-Type "spectr list --specs"
+Type "cd _demo && spectr list --specs"
 Enter
 Sleep 2s
 
@@ -60,9 +60,17 @@ Sleep 500ms
 Type "echo '=== Detailed Spec View ==='"
 Enter
 Sleep 500ms
-Type "spectr list --specs --long"
+Type "cd _demo && spectr list --specs --long"
 Enter
 Sleep 2.5s
+
+# Cleanup
+Type "echo ''"
+Enter
+Sleep 500ms
+Type "rm -rf _demo"
+Enter
+Sleep 500ms
 
 # Final pause
 Sleep 1s

@@ -23,59 +23,10 @@ Type "clear"
 Enter
 Sleep 500ms
 
-# Create a test change to archive
-Type "# Create a completed change ready to archive"
+# Copy example project to temp workspace
+Type "# Set up demo environment from pre-made example"
 Enter
-Type "mkdir -p spectr/changes/test-archive/specs/sample-feature"
-Enter
-Sleep 500ms
-
-# Create proposal
-Type "cat > spectr/changes/test-archive/proposal.md << 'EOF'"
-Enter
-Type "# Change: Test Archive"
-Enter
-Type ""
-Enter
-Type "## Why"
-Enter
-Type "Demonstrating archive workflow."
-Enter
-Type ""
-Enter
-Type "## What Changes"
-Enter
-Type "- Add sample feature capability"
-Enter
-Type "EOF"
-Enter
-Sleep 500ms
-
-# Create spec delta
-Type "cat > spectr/changes/test-archive/specs/sample-feature/spec.md << 'EOF'"
-Enter
-Type "## ADDED Requirements"
-Enter
-Type "### Requirement: Sample Feature"
-Enter
-Type "The system SHALL provide sample functionality."
-Enter
-Type ""
-Enter
-Type "#### Scenario: Basic usage"
-Enter
-Type "- **WHEN** user invokes feature"
-Enter
-Type "- **THEN** system responds correctly"
-Enter
-Type "EOF"
-Enter
-Sleep 500ms
-
-# Create base spec directory
-Type "mkdir -p spectr/specs/sample-feature"
-Enter
-Type "touch spectr/specs/sample-feature/spec.md"
+Type "cp -r examples/archive/spectr _demo"
 Enter
 Sleep 500ms
 
@@ -87,7 +38,7 @@ Sleep 500ms
 Type "echo '=== Current active changes ==='"
 Enter
 Sleep 500ms
-Type "spectr list"
+Type "cd _demo && spectr list"
 Enter
 Sleep 1.5s
 
@@ -99,7 +50,7 @@ Sleep 500ms
 Type "echo '=== Archiving the completed change ==='"
 Enter
 Sleep 500ms
-Type "spectr archive test-archive --yes"
+Type "cd _demo && spectr archive test-archive --yes"
 Enter
 Sleep 2s
 
@@ -111,7 +62,7 @@ Sleep 500ms
 Type "echo '=== Verifying archive ==='"
 Enter
 Sleep 500ms
-Type "ls -la spectr/changes/archive/ | tail -5"
+Type "ls -la _demo/changes/archive/ | tail -5"
 Enter
 Sleep 1.5s
 
@@ -123,7 +74,7 @@ Sleep 500ms
 Type "echo '=== Active changes (should not include test-archive) ==='"
 Enter
 Sleep 500ms
-Type "spectr list"
+Type "cd _demo && spectr list"
 Enter
 Sleep 1.5s
 
@@ -131,9 +82,7 @@ Sleep 1.5s
 Type "echo ''"
 Enter
 Sleep 500ms
-Type "rm -rf spectr/changes/archive/*/test-archive"
-Enter
-Type "rm -rf spectr/specs/sample-feature"
+Type "rm -rf _demo"
 Enter
 Sleep 500ms
 

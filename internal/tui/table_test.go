@@ -213,12 +213,22 @@ func TestTablePicker_View(t *testing.T) {
 	picker := NewTablePicker(config)
 	view := picker.View()
 
-	// View should contain table and help
+	// View should contain table and minimal footer (showHelp=false by default)
 	if !strings.Contains(view, "ID") {
 		t.Error("View should contain column header")
 	}
-	if !strings.Contains(view, "navigate") {
-		t.Error("View should contain help text")
+	if !strings.Contains(view, "?: help") {
+		t.Error("View should contain minimal footer with help hint")
+	}
+	if strings.Contains(view, "navigate") {
+		t.Error("View should not contain full help by default")
+	}
+
+	// When showHelp is toggled, should show full help
+	picker.showHelp = true
+	viewWithHelp := picker.View()
+	if !strings.Contains(viewWithHelp, "navigate") {
+		t.Error("View should contain full help when showHelp is true")
 	}
 }
 

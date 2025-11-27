@@ -91,6 +91,8 @@ type interactiveModel struct {
 	archiveRequested bool
 	err              error
 	helpText         string
+	minimalFooter    string
+	showHelp         bool
 	itemType         string    // "spec", "change", or "all"
 	projectPath      string    // root directory of the project
 	allItems         ItemList  // all items when in unified mode
@@ -152,6 +154,16 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m = m.toggleSearchMode()
 
 			return m, nil
+
+		case "?":
+			// Toggle help display
+			m.showHelp = !m.showHelp
+
+			return m, nil
+
+		case "up", "down", "j", "k":
+			// Auto-hide help on navigation keys
+			m.showHelp = false
 		}
 
 	case editorFinishedMsg:
@@ -387,19 +399,22 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 	m.table = t
 	m.allRows = rows // Update allRows for search filtering
 
-	// Update help text
+	// Update help text and minimal footer
 	filterDesc := "all"
 	if m.filterType != nil {
 		filterDesc = m.filterType.String() + "s"
 	}
 	m.helpText = fmt.Sprintf(
 		"↑/↓/j/k: navigate | Enter: copy ID | e: edit | "+
-			"a: archive | t: filter (%s) | /: search | q: quit\n"+
-			"showing: %d | project: %s",
+			"a: archive | t: filter (%s) | /: search | q: quit",
 		filterDesc,
+	)
+	m.minimalFooter = fmt.Sprintf(
+		"showing: %d | project: %s | ?: help",
 		len(rows),
 		m.projectPath,
 	)
+	// Preserve showHelp state (no reset needed here)
 
 	return m
 }
@@ -564,7 +579,13 @@ func (m interactiveModel) View() string {
 		view = fmt.Sprintf("Search: %s\n\n", m.searchInput.View())
 	}
 
-	view += m.table.View() + "\n" + m.helpText + "\n"
+	// Choose which footer to display based on showHelp state
+	footer := m.minimalFooter
+	if m.showHelp {
+		footer = m.helpText
+	}
+
+	view += m.table.View() + "\n" + footer + "\n"
 
 	// Display error message if present, but keep TUI active
 	if m.err != nil {
@@ -621,10 +642,10 @@ func RunInteractiveChanges(
 		projectPath: projectPath,
 		searchInput: newTextInput(),
 		allRows:     rows,
-		helpText: fmt.Sprintf(
-			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | "+
-				"a: archive | /: search | q: quit\n"+
-				"showing: %d | project: %s",
+		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
+			"a: archive | /: search | q: quit",
+		minimalFooter: fmt.Sprintf(
+			"showing: %d | project: %s | ?: help",
 			len(rows),
 			projectPath,
 		),
@@ -705,9 +726,9 @@ func RunInteractiveArchive(
 		searchInput:   newTextInput(),
 		allRows:       rows,
 		selectionMode: true, // Enter selects without copying
-		helpText: fmt.Sprintf(
-			"↑/↓/j/k: navigate | Enter: select | /: search | "+
-				"q: quit\nshowing: %d | project: %s",
+		helpText:      "↑/↓/j/k: navigate | Enter: select | /: search | q: quit",
+		minimalFooter: fmt.Sprintf(
+			"showing: %d | project: %s | ?: help",
 			len(rows),
 			projectPath,
 		),
@@ -776,9 +797,10 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 		projectPath: projectPath,
 		searchInput: newTextInput(),
 		allRows:     rows,
-		helpText: fmt.Sprintf(
-			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | "+
-				"/: search | q: quit\nshowing: %d | project: %s",
+		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
+			"/: search | q: quit",
+		minimalFooter: fmt.Sprintf(
+			"showing: %d | project: %s | ?: help",
 			len(specs),
 			projectPath,
 		),
@@ -865,10 +887,10 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 		filterType:  nil, // Start with all items visible
 		searchInput: newTextInput(),
 		allRows:     rows,
-		helpText: fmt.Sprintf(
-			"↑/↓/j/k: navigate | Enter: copy ID | e: edit | "+
-				"a: archive | t: filter (all) | /: search | q: quit\n"+
-				"showing: %d | project: %s",
+		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
+			"a: archive | t: filter (all) | /: search | q: quit",
+		minimalFooter: fmt.Sprintf(
+			"showing: %d | project: %s | ?: help",
 			len(rows),
 			projectPath,
 		),

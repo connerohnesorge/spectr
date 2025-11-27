@@ -1064,3 +1064,286 @@ func TestSearchCaseInsensitive(t *testing.T) {
 		}
 	}
 }
+
+// TestHelpToggleDefaultView tests that default view shows minimal footer
+func TestHelpToggleDefaultView(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"add-feature", "Add new feature", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:      "change",
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		showHelp:      false, // Default: help not shown
+		helpText:      "↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | /: search | q: quit",
+		minimalFooter: "showing: 1 | project: /tmp/test | ?: help",
+	}
+
+	view := model.View()
+
+	// Should show minimal footer by default
+	if !strings.Contains(view, "showing: 1 | project: /tmp/test | ?: help") {
+		t.Error("Expected view to contain minimal footer by default")
+	}
+
+	// Should NOT show full help text by default
+	if strings.Contains(view, "↑/↓/j/k: navigate | Enter: copy ID") {
+		t.Error("Expected view to NOT contain full help text by default")
+	}
+}
+
+// TestHelpToggleShowsHelp tests that pressing '?' toggles help visibility
+func TestHelpToggleShowsHelp(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"add-feature", "Add new feature", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:      "change",
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		showHelp:      false,
+		helpText:      "↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | /: search | q: quit",
+		minimalFooter: "showing: 1 | project: /tmp/test | ?: help",
+	}
+
+	// Press '?' to show help
+	updatedModel, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	m, ok := updatedModel.(interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
+
+	// showHelp should now be true
+	if !m.showHelp {
+		t.Error("Expected showHelp to be true after pressing '?'")
+	}
+
+	// View should now show full help text
+	view := m.View()
+	if !strings.Contains(view, "↑/↓/j/k: navigate | Enter: copy ID") {
+		t.Error("Expected view to contain full help text after pressing '?'")
+	}
+
+	// View should NOT show minimal footer
+	if strings.Contains(view, "showing: 1 | project: /tmp/test | ?: help") {
+		t.Error("Expected view to NOT contain minimal footer when help is shown")
+	}
+}
+
+// TestHelpToggleHidesHelp tests that pressing '?' again hides help
+func TestHelpToggleHidesHelp(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"add-feature", "Add new feature", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:      "change",
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		showHelp:      true, // Start with help shown
+		helpText:      "↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | /: search | q: quit",
+		minimalFooter: "showing: 1 | project: /tmp/test | ?: help",
+	}
+
+	// Press '?' to hide help
+	updatedModel, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	m, ok := updatedModel.(interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
+
+	// showHelp should now be false
+	if m.showHelp {
+		t.Error("Expected showHelp to be false after pressing '?' again")
+	}
+
+	// View should now show minimal footer
+	view := m.View()
+	if !strings.Contains(view, "showing: 1 | project: /tmp/test | ?: help") {
+		t.Error("Expected view to contain minimal footer after hiding help")
+	}
+
+	// View should NOT show full help text
+	if strings.Contains(view, "↑/↓/j/k: navigate | Enter: copy ID") {
+		t.Error("Expected view to NOT contain full help text after hiding help")
+	}
+}
+
+// TestNavigationKeysAutoHideHelp tests that navigation keys auto-hide help
+func TestNavigationKeysAutoHideHelp(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"add-feature", "Add new feature", "2", "3/5"},
+		{"fix-bug", "Fix bug", "1", "2/2"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	// Test each navigation key
+	navigationKeys := []tea.KeyMsg{
+		{Type: tea.KeyUp},
+		{Type: tea.KeyDown},
+		{Type: tea.KeyRunes, Runes: []rune{'j'}},
+		{Type: tea.KeyRunes, Runes: []rune{'k'}},
+	}
+
+	for _, key := range navigationKeys {
+		t.Run(key.String(), func(t *testing.T) {
+			model := interactiveModel{
+				itemType:      "change",
+				projectPath:   "/tmp/test",
+				table:         tbl,
+				showHelp:      true, // Start with help shown
+				helpText:      "↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | /: search | q: quit",
+				minimalFooter: "showing: 2 | project: /tmp/test | ?: help",
+			}
+
+			// Press navigation key
+			updatedModel, _ := model.Update(key)
+			m, ok := updatedModel.(interactiveModel)
+			if !ok {
+				t.Fatal("Expected interactiveModel type")
+			}
+
+			// showHelp should now be false
+			if m.showHelp {
+				t.Errorf("Expected showHelp to be false after pressing %s", key.String())
+			}
+		})
+	}
+}
+
+// TestHelpToggleInSpecMode tests help toggle works in spec mode
+func TestHelpToggleInSpecMode(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: specIDWidth},
+		{Title: "Title", Width: specTitleWidth},
+		{Title: "Requirements", Width: specRequirementsWidth},
+	}
+	rows := []table.Row{
+		{"auth", "Authentication System", "5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:      "spec",
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		showHelp:      false,
+		helpText:      "↑/↓/j/k: navigate | Enter: copy ID | e: edit | /: search | q: quit",
+		minimalFooter: "showing: 1 | project: /tmp/test | ?: help",
+	}
+
+	// Toggle help on
+	updatedModel, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	m, ok := updatedModel.(interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
+
+	if !m.showHelp {
+		t.Error("Expected showHelp to be true in spec mode")
+	}
+
+	view := m.View()
+	if !strings.Contains(view, "↑/↓/j/k: navigate") {
+		t.Error("Expected view to show full help text in spec mode")
+	}
+}
+
+// TestHelpToggleInUnifiedMode tests help toggle works in unified mode
+func TestHelpToggleInUnifiedMode(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: unifiedIDWidth},
+		{Title: "Type", Width: unifiedTypeWidth},
+		{Title: "Title", Width: unifiedTitleWidth},
+		{Title: "Details", Width: unifiedDetailsWidth},
+	}
+	rows := []table.Row{
+		{"add-auth", "CHANGE", "Add authentication", "Tasks: 2/5"},
+		{"auth-system", "SPEC", "Authentication System", "Reqs: 8"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:      "all",
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		showHelp:      false,
+		helpText:      "↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter (all) | /: search | q: quit",
+		minimalFooter: "showing: 2 | project: /tmp/test | ?: help",
+	}
+
+	// Toggle help on
+	updatedModel, _ := model.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'?'}})
+	m, ok := updatedModel.(interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
+
+	if !m.showHelp {
+		t.Error("Expected showHelp to be true in unified mode")
+	}
+
+	view := m.View()
+	if !strings.Contains(view, "t: filter") {
+		t.Error("Expected view to show full help text with filter option in unified mode")
+	}
+}

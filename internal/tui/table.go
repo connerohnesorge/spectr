@@ -27,6 +27,7 @@ type TablePicker struct {
 	projectPath string
 	footerExtra string
 	err         error
+	showHelp    bool
 }
 
 // NewTablePicker creates a new TablePicker with the given configuration.
@@ -151,6 +152,21 @@ func (p *TablePicker) generateHelpText(rowCount int) string {
 	return helpLine + "\n" + strings.Join(footerParts, " | ")
 }
 
+// generateMinimalFooter generates minimal footer with item count, project path, and help hint.
+func (p *TablePicker) generateMinimalFooter(rowCount int) string {
+	var parts []string
+	parts = append(parts, fmt.Sprintf("showing: %d", rowCount))
+	if p.projectPath != "" {
+		parts = append(parts, fmt.Sprintf("project: %s", p.projectPath))
+	}
+	if p.footerExtra != "" {
+		parts = append(parts, p.footerExtra)
+	}
+	parts = append(parts, "?: help")
+
+	return strings.Join(parts, " | ")
+}
+
 // UpdateHelpText regenerates the help text with the current row count.
 func (p *TablePicker) UpdateHelpText() {
 	p.helpText = p.generateHelpText(len(p.table.Rows()))
@@ -179,6 +195,18 @@ func (p *TablePicker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
 		keyStr := keyMsg.String()
+
+		// Handle help toggle
+		if keyStr == "?" {
+			p.showHelp = !p.showHelp
+
+			return p, nil
+		}
+
+		// Auto-hide help on navigation keys
+		if keyStr == "up" || keyStr == "down" || keyStr == "j" || keyStr == "k" {
+			p.showHelp = false
+		}
 
 		// Check if we have a handler for this key
 		if action, exists := p.actions[keyStr]; exists {
@@ -227,8 +255,15 @@ func (p *TablePicker) View() string {
 		return p.renderQuitView()
 	}
 
-	// Display table with help text
-	view := p.table.View() + "\n" + p.helpText + "\n"
+	// Display table with footer (minimal or full help based on showHelp state)
+	var footer string
+	if p.showHelp {
+		footer = p.helpText
+	} else {
+		footer = p.generateMinimalFooter(len(p.table.Rows()))
+	}
+
+	view := p.table.View() + "\n" + footer + "\n"
 	if p.err != nil {
 		view += fmt.Sprintf("\nError: %v\n", p.err)
 	}

@@ -44,23 +44,19 @@ The system displays either changes OR specs in interactive mode based on the `--
 - **WHEN** user presses 'e' on a spec row in unified mode
 - **THEN** the spec opens in the editor as usual
 
-#### Scenario: Help text uses condensed two-line format
+#### Scenario: Help text uses minimal footer by default
 - **WHEN** interactive mode is displayed in any mode (changes, specs, or unified)
-- **THEN** the help text is formatted across two lines
-- **AND** line 1 shows controls: navigation, actions, and item count
-- **AND** line 2 shows project path
-- **AND** navigation hint uses condensed format `↑/↓/j/k` instead of `↑/↓ or j/k`
-- **AND** edit action uses short label `e: edit` instead of `e: edit proposal` or `e: edit spec`
+- **THEN** the footer shows: item count, project path, and `?: help`
+- **AND** the full hotkey reference is hidden until `?` is pressed
 
 #### Scenario: Help text format for changes mode
-- **WHEN** user runs `spectr list -I` (changes mode)
-- **THEN** line 1 shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
-- **AND** line 2 shows: `project: <path>`
+- **WHEN** user presses `?` in changes mode (`spectr list -I`)
+- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
+- **AND** pressing `?` again or navigating hides the help
 
 #### Scenario: Help text format for specs mode
-- **WHEN** user runs `spectr list --specs -I` (specs mode)
-- **THEN** line 1 shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit`
-- **AND** line 2 shows: `project: <path>`
+- **WHEN** user presses `?` in specs mode (`spectr list --specs -I`)
+- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit`
 - **AND** archive hotkey is NOT shown (specs cannot be archived)
 
 ### Requirement: Clipboard Copy on Selection
@@ -765,3 +761,37 @@ The interactive list modes SHALL provide a '/' hotkey that activates a text sear
 - **THEN** the search input field is visually distinct
 - **AND** the current search query is visible
 - **AND** the help text updates to show 'Esc: exit search'
+
+### Requirement: Help Toggle Hotkey
+The interactive TUI modes SHALL hide hotkey hints by default and reveal them only when the user presses `?`, reducing visual clutter while maintaining discoverability.
+
+#### Scenario: Default view shows minimal footer
+- **WHEN** user enters any interactive TUI mode (list, archive, validate)
+- **THEN** the footer displays only: item count, project path, and `?: help`
+- **AND** the full hotkey reference is NOT shown
+- **AND** navigation and all other hotkeys remain functional
+
+#### Scenario: User presses '?' to reveal help
+- **WHEN** user presses `?` while in interactive mode
+- **THEN** the full hotkey reference is displayed in the footer area
+- **AND** the reference includes all available hotkeys for the current mode
+- **AND** the view updates immediately
+
+#### Scenario: User dismisses help by pressing '?' again
+- **WHEN** user presses `?` while help is visible
+- **THEN** the help is hidden
+- **AND** the minimal footer is restored
+
+#### Scenario: Help auto-hides on navigation
+- **WHEN** user presses a navigation key (↑/↓/j/k) while help is visible
+- **THEN** the help is automatically hidden
+- **AND** the navigation action is performed
+- **AND** the minimal footer is restored
+
+#### Scenario: Help content matches mode
+- **WHEN** help is displayed in changes mode
+- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
+- **WHEN** help is displayed in specs mode
+- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit`
+- **WHEN** help is displayed in unified mode
+- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter | q: quit`

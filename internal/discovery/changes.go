@@ -63,7 +63,8 @@ func GetActiveChangeIDs(projectRoot string) ([]string, error) {
 	return GetActiveChanges(projectRoot)
 }
 
-// ResolveResult contains the resolved change ID and whether it was a partial match
+// ResolveResult contains the resolved change ID and whether it was a partial
+// match.
 type ResolveResult struct {
 	ChangeID     string
 	PartialMatch bool
@@ -71,21 +72,25 @@ type ResolveResult struct {
 
 // ResolveChangeID resolves a partial change ID to a full change ID.
 // The resolution algorithm:
-// 1. Exact match: returns immediately if partialID exactly matches a change ID
-// 2. Prefix match: finds all change IDs that start with partialID (case-insensitive)
-// 3. Substring match: if no prefix matches, finds all change IDs containing partialID (case-insensitive)
+//  1. Exact match: returns immediately if partialID exactly matches a change ID
+//  2. Prefix match: finds all change IDs that start with partialID
+//     (case-insensitive)
+//  3. Substring match: if no prefix matches, finds all change IDs containing
+//     partialID (case-insensitive)
 //
 // Returns an error if:
 // - No changes match the partial ID
 // - Multiple changes match the partial ID (ambiguous)
-func ResolveChangeID(partialID string, projectRoot string) (ResolveResult, error) {
+func ResolveChangeID(partialID, projectRoot string) (ResolveResult, error) {
 	changes, err := GetActiveChangeIDs(projectRoot)
 	if err != nil {
-		return ResolveResult{}, fmt.Errorf("get active changes: %w", err)
+		return ResolveResult{},
+			fmt.Errorf("get active changes: %w", err)
 	}
 
 	if len(changes) == 0 {
-		return ResolveResult{}, fmt.Errorf("no change found matching '%s'", partialID)
+		return ResolveResult{},
+			fmt.Errorf("no change found matching '%s'", partialID)
 	}
 
 	partialLower := strings.ToLower(partialID)
@@ -93,7 +98,10 @@ func ResolveChangeID(partialID string, projectRoot string) (ResolveResult, error
 	// Check for exact match first
 	for _, change := range changes {
 		if change == partialID {
-			return ResolveResult{ChangeID: change, PartialMatch: false}, nil
+			return ResolveResult{
+				ChangeID:     change,
+				PartialMatch: false,
+			}, nil
 		}
 	}
 
@@ -106,7 +114,10 @@ func ResolveChangeID(partialID string, projectRoot string) (ResolveResult, error
 	}
 
 	if len(prefixMatches) == 1 {
-		return ResolveResult{ChangeID: prefixMatches[0], PartialMatch: true}, nil
+		return ResolveResult{
+			ChangeID:     prefixMatches[0],
+			PartialMatch: true,
+		}, nil
 	}
 
 	if len(prefixMatches) > 1 {
@@ -126,7 +137,10 @@ func ResolveChangeID(partialID string, projectRoot string) (ResolveResult, error
 	}
 
 	if len(substringMatches) == 1 {
-		return ResolveResult{ChangeID: substringMatches[0], PartialMatch: true}, nil
+		return ResolveResult{
+			ChangeID:     substringMatches[0],
+			PartialMatch: true,
+		}, nil
 	}
 
 	if len(substringMatches) > 1 {
@@ -137,5 +151,9 @@ func ResolveChangeID(partialID string, projectRoot string) (ResolveResult, error
 		)
 	}
 
-	return ResolveResult{}, fmt.Errorf("no change found matching '%s'", partialID)
+	return ResolveResult{},
+		fmt.Errorf(
+			"no change found matching '%s'",
+			partialID,
+		)
 }

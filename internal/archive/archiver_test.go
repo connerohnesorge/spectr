@@ -23,16 +23,19 @@ func setupTestProject(t *testing.T, tmpDir string, changes []string) {
 	changesDir := filepath.Join(spectrDir, "changes")
 	specsDir := filepath.Join(spectrDir, "specs")
 
-	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+	err := os.MkdirAll(changesDir, testDirPerm)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(specsDir, testDirPerm); err != nil {
+	err = os.MkdirAll(specsDir, testDirPerm)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Create project.md
 	projectContent := "# Test Project\n"
-	if err := os.WriteFile(filepath.Join(spectrDir, "project.md"), []byte(projectContent), testFilePerm); err != nil {
+	err = os.WriteFile(filepath.Join(spectrDir, "project.md"), []byte(projectContent), testFilePerm)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -41,19 +44,22 @@ func setupTestProject(t *testing.T, tmpDir string, changes []string) {
 		changeDir := filepath.Join(changesDir, changeName)
 		changeSpecsDir := filepath.Join(changeDir, "specs", "test-feature")
 
-		if err := os.MkdirAll(changeSpecsDir, testDirPerm); err != nil {
+		err = os.MkdirAll(changeSpecsDir, testDirPerm)
+		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Create proposal.md
 		proposalContent := "# Change: " + changeName + "\n\n## Why\nTest change.\n\n## What Changes\n- Test\n\n## Impact\n- specs: test-feature\n"
-		if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), testFilePerm); err != nil {
+		err = os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), testFilePerm)
+		if err != nil {
 			t.Fatal(err)
 		}
 
 		// Create tasks.md with completed tasks
 		tasksContent := "## Tasks\n- [x] Task 1\n"
-		if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), testFilePerm); err != nil {
+		err = os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), testFilePerm)
+		if err != nil {
 			t.Fatal(err)
 		}
 
@@ -67,7 +73,8 @@ The system SHALL provide test functionality.
 - **WHEN** test is run
 - **THEN** it passes
 `
-		if err := os.WriteFile(filepath.Join(changeSpecsDir, "spec.md"), []byte(deltaSpec), testFilePerm); err != nil {
+		err = os.WriteFile(filepath.Join(changeSpecsDir, "spec.md"), []byte(deltaSpec), testFilePerm)
+		if err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -90,12 +97,21 @@ func TestArchive_PartialIDPrefix(t *testing.T) {
 	}
 
 	err := Archive(cmd, tmpDir)
+	if err != nil {
+		t.Fatalf("Archive failed: %v", err)
+	}
 
 	// Restore stdout and read captured output
-	w.Close()
+	err = w.Close()
+	if err != nil {
+		t.Fatalf("Failed to close pipe: %v", err)
+	}
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, err = io.Copy(&buf, r)
+	if err != nil {
+		t.Fatalf("Failed to read pipe: %v", err)
+	}
 	output := buf.String()
 
 	if err != nil {
@@ -143,10 +159,19 @@ func TestArchive_PartialIDSubstring(t *testing.T) {
 
 	err := Archive(cmd, tmpDir)
 
-	w.Close()
+	if err != nil {
+		t.Fatalf("Archive failed: %v", err)
+	}
+	err = w.Close()
+	if err != nil {
+		t.Fatalf("Failed to close pipe: %v", err)
+	}
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, err = io.Copy(&buf, r)
+	if err != nil {
+		t.Fatalf("Failed to read pipe: %v", err)
+	}
 	output := buf.String()
 
 	if err != nil {
@@ -221,11 +246,20 @@ func TestArchive_ExactIDNoResolutionMessage(t *testing.T) {
 	}
 
 	err := Archive(cmd, tmpDir)
+	if err != nil {
+		t.Fatalf("Archive failed: %v", err)
+	}
 
-	w.Close()
+	err = w.Close()
+	if err != nil {
+		t.Fatalf("Failed to close pipe: %v", err)
+	}
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, err = io.Copy(&buf, r)
+	if err != nil {
+		t.Fatalf("Failed to read pipe: %v", err)
+	}
 	output := buf.String()
 
 	if err != nil {
@@ -254,11 +288,21 @@ func TestArchive_CaseInsensitiveMatch(t *testing.T) {
 	}
 
 	err := Archive(cmd, tmpDir)
+	if err != nil {
+		t.Fatalf("Archive failed: %v", err)
+	}
 
-	w.Close()
+	err = w.Close()
+	if err != nil {
+		t.Fatalf("Failed to close pipe: %v", err)
+	}
 	os.Stdout = oldStdout
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+
+	_, err = io.Copy(&buf, r)
+	if err != nil {
+		t.Fatalf("Failed to read pipe: %v", err)
+	}
 	output := buf.String()
 
 	if err != nil {

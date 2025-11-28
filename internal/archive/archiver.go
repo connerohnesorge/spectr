@@ -23,46 +23,33 @@ import (
 	"strings"
 	"time"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
-// Archive archives a change by validating, applying specs, and moving to archive directory
-//
-// The workingDir parameter allows operating in a different working directory (e.g., for git worktree operations).
-// If workingDir is empty, the current working directory is used as the project root.
+// ArchiveWithConfig archives a change using the provided config
 //
 //nolint:revive // cmd.ChangeID field needs to be reassigned when empty
-func Archive(cmd *ArchiveCmd, workingDir string) error {
+func ArchiveWithConfig(cmd *ArchiveCmd, cfg *config.Config) error {
 	changeID := cmd.ChangeID
-	// Get project root based on workingDir parameter
 	var (
-		projectRoot string
-		err         error
-		selectedID  string
-
+		err          error
+		selectedID   string
 		totalCounts  OperationCounts
 		capabilities []string
 	)
-	if workingDir == "" {
-		projectRoot, err = os.Getwd()
-		if err != nil {
-			return fmt.Errorf("get working directory: %w", err)
-		}
-	} else {
-		projectRoot = workingDir
-	}
 
 	// Check if spectr directory exists
-	spectrRoot := filepath.Join(projectRoot, "spectr")
+	spectrRoot := cfg.SpectrRoot()
 	_, err = os.Stat(spectrRoot)
 	if os.IsNotExist(err) {
-		return fmt.Errorf("spectr directory not found in %s", projectRoot)
+		return fmt.Errorf("spectr directory not found in %s", cfg.ProjectRoot)
 	}
 
 	// If no change ID provided, use interactive selection
 	if changeID == "" {
-		selectedID, err = selectChangeInteractive(projectRoot)
+		selectedID, err = selectChangeInteractiveWithConfig(cfg)
 		if errors.Is(err, ErrUserCancelled) {
 			return nil // User cancelled, exit gracefully
 		}
@@ -73,7 +60,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 		cmd.ChangeID = changeID
 	} else {
 		// Resolve partial ID to full change ID
-		result, err := discovery.ResolveChangeID(changeID, projectRoot)
+		result, err := discovery.ResolveChangeIDWithConfig(changeID, cfg)
 		if err != nil {
 			return err
 		}
@@ -84,7 +71,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 		cmd.ChangeID = changeID
 	}
 
-	changeDir := filepath.Join(spectrRoot, "changes", changeID)
+	changeDir := filepath.Join(cfg.ChangesDir(), changeID)
 
 	fmt.Printf("Archiving change: %s\n\n", changeID)
 
@@ -111,7 +98,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 
 	// Spec update workflow
 	if !cmd.SkipSpecs {
-		totalCounts, capabilities, err = updateSpecsWithTracking(cmd.Yes, changeDir, projectRoot)
+		totalCounts, capabilities, err = updateSpecsWithTrackingWithConfig(cmd.Yes, changeDir, cfg)
 		if err != nil {
 			return fmt.Errorf("spec update failed: %w", err)
 		}
@@ -120,7 +107,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	}
 
 	// Archive operation
-	archiveName, err := moveToArchive(changeDir, changeID, projectRoot)
+	archiveName, err := moveToArchiveWithConfig(changeDir, changeID, cfg)
 	if err != nil {
 		return fmt.Errorf("move to archive failed: %w", err)
 	}
@@ -149,12 +136,39 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	return nil
 }
 
-// selectChangeInteractive uses the interactive table for change selection.
+// Archive archives a change by validating, applying specs, and moving to archive directory
+//
+// The workingDir parameter allows operating in a different working directory (e.g., for git worktree operations).
+// If workingDir is empty, the current working directory is used as the project root.
+//
+// Deprecated: Use ArchiveWithConfig for projects with custom root directories.
+//
+//nolint:revive // cmd.ChangeID field needs to be reassigned when empty
+func Archive(cmd *ArchiveCmd, workingDir string) error {
+	// Get project root based on workingDir parameter
+	var projectRoot string
+	var err error
+	if workingDir == "" {
+		projectRoot, err = os.Getwd()
+		if err != nil {
+			return fmt.Errorf("get working directory: %w", err)
+		}
+	} else {
+		projectRoot = workingDir
+	}
+
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectRoot,
+	}
+
+	return ArchiveWithConfig(cmd, cfg)
+}
+
+// selectChangeInteractiveWithConfig uses the interactive table for change selection.
 // Returns ErrUserCancelled if the user cancels the selection.
-func selectChangeInteractive(projectRoot string) (string, error) {
-	// Import list package functions
-	// Note: This will be done at the package level
-	lister := newListerForArchive(projectRoot)
+func selectChangeInteractiveWithConfig(cfg *config.Config) (string, error) {
+	lister := newListerForArchiveWithConfig(cfg)
 	changes, err := lister.ListChanges()
 	if err != nil {
 		return "", fmt.Errorf("list changes: %w", err)
@@ -166,7 +180,7 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 		return "", ErrUserCancelled
 	}
 
-	selectedID, err := runInteractiveArchiveForArchiver(changes, projectRoot)
+	selectedID, err := runInteractiveArchiveForArchiverWithConfig(changes, cfg)
 	if err != nil {
 		return "", fmt.Errorf("interactive selection: %w", err)
 	}
@@ -245,10 +259,11 @@ func checkTasks(yes bool, changeDir string) error {
 	return nil
 }
 
-// updateSpecsWithTracking applies delta specs and tracks operation counts and capabilities
-func updateSpecsWithTracking(
+// updateSpecsWithTrackingWithConfig applies delta specs and tracks operation counts and capabilities
+func updateSpecsWithTrackingWithConfig(
 	yes bool,
-	changeDir, workingDir string,
+	changeDir string,
+	cfg *config.Config,
 ) (OperationCounts, []string, error) {
 	specsDir := filepath.Join(changeDir, "specs")
 	deltaSpecs, err := findAndValidateDeltaSpecs(specsDir)
@@ -262,8 +277,7 @@ func updateSpecsWithTracking(
 		return OperationCounts{}, nil, nil
 	}
 
-	spectrRoot := filepath.Join(workingDir, "spectr")
-	updates, err := buildUpdatePlan(deltaSpecs, specsDir, spectrRoot)
+	updates, err := buildUpdatePlanWithConfig(deltaSpecs, specsDir, cfg)
 	if err != nil {
 		return OperationCounts{}, nil, err
 	}
@@ -279,7 +293,7 @@ func updateSpecsWithTracking(
 		return OperationCounts{}, nil, err
 	}
 
-	if err := writeSpecs(mergedSpecs, workingDir); err != nil {
+	if err := writeSpecs(mergedSpecs); err != nil {
 		return OperationCounts{}, nil, err
 	}
 
@@ -313,10 +327,11 @@ func findAndValidateDeltaSpecs(
 	return deltaSpecs, nil
 }
 
-// buildUpdatePlan creates spec update plan from delta specs
-func buildUpdatePlan(
+// buildUpdatePlanWithConfig creates spec update plan from delta specs using config
+func buildUpdatePlanWithConfig(
 	deltaSpecs []string,
-	specsDir, spectrRoot string,
+	specsDir string,
+	cfg *config.Config,
 ) ([]SpecUpdate, error) {
 	updates := make([]SpecUpdate, 0, len(deltaSpecs))
 
@@ -328,8 +343,7 @@ func buildUpdatePlan(
 
 		capabilityDir := filepath.Dir(relPath)
 		targetPath := filepath.Join(
-			spectrRoot,
-			"specs",
+			cfg.SpecsDir(),
 			capabilityDir,
 			"spec.md",
 		)
@@ -438,7 +452,7 @@ func processOneMerge(
 }
 
 // writeSpecs writes all merged specs to disk
-func writeSpecs(mergedSpecs map[string]string, workingDir string) error {
+func writeSpecs(mergedSpecs map[string]string) error {
 	for targetPath, content := range mergedSpecs {
 		if err := os.MkdirAll(
 			filepath.Dir(targetPath),
@@ -498,12 +512,13 @@ func findDeltaSpecs(dir string) ([]string, error) {
 	return specs, err
 }
 
-// moveToArchive moves the change directory to archive with date prefix
-func moveToArchive(
-	changeDir, changeID, workingDir string,
+// moveToArchiveWithConfig moves the change directory to archive with date prefix using config
+func moveToArchiveWithConfig(
+	changeDir, changeID string,
+	cfg *config.Config,
 ) (string, error) {
 	// Create archive directory if it doesn't exist
-	archiveDir := filepath.Join(workingDir, "spectr", "changes", "archive")
+	archiveDir := cfg.ArchiveDir()
 	if err := os.MkdirAll(archiveDir, dirPerm); err != nil {
 		return "", fmt.Errorf("create archive directory: %w", err)
 	}

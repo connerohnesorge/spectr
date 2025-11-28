@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 )
 
@@ -41,16 +42,17 @@ func CreateValidationItems(
 	return items
 }
 
-// GetAllItems returns all changes and specs from the project path.
-func GetAllItems(
-	projectPath string,
+// GetAllItemsWithConfig returns all changes and specs using the provided
+// config.
+func GetAllItemsWithConfig(
+	cfg *config.Config,
 ) ([]ValidationItem, error) {
-	changes, err := GetChangeItems(projectPath)
+	changes, err := GetChangeItemsWithConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	specs, err := GetSpecItems(projectPath)
+	specs, err := GetSpecItemsWithConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +60,25 @@ func GetAllItems(
 	return append(changes, specs...), nil
 }
 
-// GetChangeItems returns all changes from the project path.
-func GetChangeItems(
+// GetAllItems returns all changes and specs from the project path.
+// Deprecated: Use GetAllItemsWithConfig for projects with custom root
+// directories.
+func GetAllItems(
 	projectPath string,
 ) ([]ValidationItem, error) {
-	changeIDs, err := discovery.GetActiveChangeIDs(projectPath)
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return GetAllItemsWithConfig(cfg)
+}
+
+// GetChangeItemsWithConfig returns all changes using the provided config.
+func GetChangeItemsWithConfig(
+	cfg *config.Config,
+) ([]ValidationItem, error) {
+	changeIDs, err := discovery.GetActiveChangesWithConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to discover changes: %w",
@@ -70,31 +86,55 @@ func GetChangeItems(
 		)
 	}
 
-	basePath := filepath.Join(projectPath, DefaultSpectrDir, "changes")
-
 	return CreateValidationItems(
-		projectPath,
+		cfg.ProjectRoot,
 		changeIDs,
 		ItemTypeChange,
-		basePath,
+		cfg.ChangesDir(),
 	), nil
 }
 
-// GetSpecItems returns all specs from the project path.
-func GetSpecItems(
+// GetChangeItems returns all changes from the project path.
+// Deprecated: Use GetChangeItemsWithConfig for projects with custom root
+// directories.
+func GetChangeItems(
 	projectPath string,
 ) ([]ValidationItem, error) {
-	specIDs, err := discovery.GetSpecIDs(projectPath)
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return GetChangeItemsWithConfig(cfg)
+}
+
+// GetSpecItemsWithConfig returns all specs using the provided config.
+func GetSpecItemsWithConfig(
+	cfg *config.Config,
+) ([]ValidationItem, error) {
+	specIDs, err := discovery.GetSpecIDsWithConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover specs: %w", err)
 	}
 
-	basePath := filepath.Join(projectPath, DefaultSpectrDir, "specs")
-
 	return CreateValidationItems(
-		projectPath,
+		cfg.ProjectRoot,
 		specIDs,
 		ItemTypeSpec,
-		basePath,
+		cfg.SpecsDir(),
 	), nil
+}
+
+// GetSpecItems returns all specs from the project path.
+// Deprecated: Use GetSpecItemsWithConfig for projects with custom root
+// directories.
+func GetSpecItems(
+	projectPath string,
+) ([]ValidationItem, error) {
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return GetSpecItemsWithConfig(cfg)
 }

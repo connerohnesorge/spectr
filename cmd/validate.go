@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
@@ -29,9 +30,15 @@ func (c *ValidateCmd) Run() error {
 		return fmt.Errorf("failed to get current directory: %w", err)
 	}
 
+	// Load configuration (walks up directory tree looking for spectr.yaml)
+	cfg, err := config.Load(projectPath)
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+
 	// Check if bulk validation flags are set
 	if c.All || c.Changes || c.Specs {
-		return c.runBulkValidation(projectPath)
+		return c.runBulkValidation(cfg)
 	}
 
 	// If no item name provided
@@ -40,30 +47,30 @@ func (c *ValidateCmd) Run() error {
 			return getUsageError()
 		}
 		// Launch interactive mode
-		return validation.RunInteractiveValidation(
-			projectPath, c.Strict, c.JSON,
+		return validation.RunInteractiveValidationWithConfig(
+			cfg, c.Strict, c.JSON,
 		)
 	}
 
 	// Direct validation
-	return c.runDirectValidation(projectPath, *c.ItemName)
+	return c.runDirectValidation(cfg, *c.ItemName)
 }
 
 // runDirectValidation validates a single item (change or spec)
 func (c *ValidateCmd) runDirectValidation(
-	projectPath, itemName string,
+	cfg *config.Config, itemName string,
 ) error {
 	// Determine item type
-	info, err := validation.DetermineItemType(projectPath, itemName, c.Type)
+	info, err := validation.DetermineItemTypeWithConfig(cfg, itemName, c.Type)
 	if err != nil {
 		return err
 	}
 
 	// Create validator and validate
 	validator := validation.NewValidator(c.Strict)
-	report, err := validation.ValidateItemByType(
+	report, err := validation.ValidateItemByTypeWithConfig(
 		validator,
-		projectPath,
+		cfg,
 		itemName,
 		info.ItemType,
 	)
@@ -87,11 +94,11 @@ func (c *ValidateCmd) runDirectValidation(
 }
 
 // runBulkValidation validates multiple items based on flags
-func (c *ValidateCmd) runBulkValidation(projectPath string) error {
+func (c *ValidateCmd) runBulkValidation(cfg *config.Config) error {
 	validator := validation.NewValidator(c.Strict)
 
 	// Determine what to validate
-	items, err := c.getItemsToValidate(projectPath)
+	items, err := c.getItemsToValidate(cfg)
 	if err != nil {
 		return err
 	}
@@ -119,15 +126,15 @@ func (c *ValidateCmd) runBulkValidation(projectPath string) error {
 
 // getItemsToValidate returns the items to validate based on flags
 func (c *ValidateCmd) getItemsToValidate(
-	projectPath string,
+	cfg *config.Config,
 ) ([]validation.ValidationItem, error) {
 	switch {
 	case c.All:
-		return validation.GetAllItems(projectPath)
+		return validation.GetAllItemsWithConfig(cfg)
 	case c.Changes:
-		return validation.GetChangeItems(projectPath)
+		return validation.GetChangeItemsWithConfig(cfg)
 	case c.Specs:
-		return validation.GetSpecItems(projectPath)
+		return validation.GetSpecItemsWithConfig(cfg)
 	default:
 		return nil, nil
 	}

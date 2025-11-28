@@ -47,10 +47,12 @@ func (c *InitCmd) Run() error {
 
 	// Check if already initialized
 	if c.NonInteractive {
-		cfg := &config.Config{
-			RootDir:     config.DefaultRootDir,
-			ProjectRoot: expandedPath,
+		// Load config to check for existing spectr.yaml or default directory
+		cfg, err := config.Load(expandedPath)
+		if err != nil {
+			return fmt.Errorf("failed to load configuration: %w", err)
 		}
+
 		if initpkg.IsSpectrInitializedWithConfig(cfg) {
 			return fmt.Errorf(
 				"init failed: Spectr is already initialized in %s",

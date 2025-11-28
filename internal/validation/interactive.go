@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/tui"
 	"github.com/mattn/go-isatty"
 )
@@ -44,8 +45,13 @@ var menuChoices = []string{
 	"Pick specific item",      // menuSelectionPickItem
 }
 
-// RunInteractiveValidation runs the interactive validation TUI
-func RunInteractiveValidation(projectPath string, strict bool, jsonOutput bool) error {
+// RunInteractiveValidationWithConfig runs the interactive validation TUI
+// using the provided config.
+func RunInteractiveValidationWithConfig(
+	cfg *config.Config,
+	strict bool,
+	jsonOutput bool,
+) error {
 	// Check if running in a TTY
 	if !isatty.IsTerminal(os.Stdout.Fd()) {
 		return fmt.Errorf("interactive mode requires a TTY")
@@ -63,7 +69,23 @@ func RunInteractiveValidation(projectPath string, strict bool, jsonOutput bool) 
 	}
 
 	// Handle selection
-	return handleMenuSelection(selection, projectPath, strict, jsonOutput)
+	return handleMenuSelectionWithConfig(selection, cfg, strict, jsonOutput)
+}
+
+// RunInteractiveValidation runs the interactive validation TUI.
+// Deprecated: Use RunInteractiveValidationWithConfig for projects with custom
+// root directories.
+func RunInteractiveValidation(
+	projectPath string,
+	strict bool,
+	jsonOutput bool,
+) error {
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return RunInteractiveValidationWithConfig(cfg, strict, jsonOutput)
 }
 
 // showValidationMenu displays the validation menu and returns the selection
@@ -76,20 +98,25 @@ func showValidationMenu() (int, error) {
 	return menu.Run()
 }
 
-// handleMenuSelection processes the menu selection
-func handleMenuSelection(selection int, projectPath string, strict, jsonOutput bool) error {
+// handleMenuSelectionWithConfig processes the menu selection using the
+// provided config.
+func handleMenuSelectionWithConfig(
+	selection int,
+	cfg *config.Config,
+	strict, jsonOutput bool,
+) error {
 	var items []ValidationItem
 	var err error
 
 	switch menuSelection(selection) {
 	case menuSelectionAll:
-		items, err = GetAllItems(projectPath)
+		items, err = GetAllItemsWithConfig(cfg)
 	case menuSelectionChanges:
-		items, err = GetChangeItems(projectPath)
+		items, err = GetChangeItemsWithConfig(cfg)
 	case menuSelectionSpecs:
-		items, err = GetSpecItems(projectPath)
+		items, err = GetSpecItemsWithConfig(cfg)
 	case menuSelectionPickItem:
-		return runItemPicker(projectPath, strict, jsonOutput)
+		return runItemPickerWithConfig(cfg, strict, jsonOutput)
 	default:
 		return nil
 	}
@@ -101,9 +128,29 @@ func handleMenuSelection(selection int, projectPath string, strict, jsonOutput b
 	return runValidationAndPrint(items, strict, jsonOutput)
 }
 
-// runItemPicker shows the item picker and validates the selected item
-func runItemPicker(projectPath string, strict, jsonOutput bool) error {
-	items, err := GetAllItems(projectPath)
+// handleMenuSelection processes the menu selection.
+// Deprecated: Use handleMenuSelectionWithConfig for projects with custom root
+// directories.
+func handleMenuSelection(
+	selection int,
+	projectPath string,
+	strict, jsonOutput bool,
+) error {
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return handleMenuSelectionWithConfig(selection, cfg, strict, jsonOutput)
+}
+
+// runItemPickerWithConfig shows the item picker and validates the selected
+// item using the provided config.
+func runItemPickerWithConfig(
+	cfg *config.Config,
+	strict, jsonOutput bool,
+) error {
+	items, err := GetAllItemsWithConfig(cfg)
 	if err != nil {
 		return fmt.Errorf("error loading items: %w", err)
 	}
@@ -139,7 +186,7 @@ func runItemPicker(projectPath string, strict, jsonOutput bool) error {
 		Columns:     columns,
 		Rows:        rows,
 		Height:      tableHeight,
-		ProjectPath: projectPath,
+		ProjectPath: cfg.ProjectRoot,
 		Actions: map[string]tui.Action{
 			"enter": {
 				Key:         "enter",
@@ -168,7 +215,6 @@ func runItemPicker(projectPath string, strict, jsonOutput bool) error {
 	}
 
 	if result == nil || result.Cancelled || selectedIdx < 0 {
-
 		return nil
 	}
 

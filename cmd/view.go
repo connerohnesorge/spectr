@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/view"
 )
 
@@ -48,8 +49,14 @@ func (c *ViewCmd) Run() error {
 		)
 	}
 
-	// Collect dashboard data from the project
-	data, err := view.CollectData(projectPath)
+	// Load configuration (walks up directory tree looking for spectr.yaml)
+	cfg, err := config.Load(projectPath)
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	// Collect dashboard data from the project using the loaded config
+	data, err := view.CollectDataWithConfig(cfg)
 	if err != nil {
 		// Handle missing spectr directory error
 		if os.IsNotExist(err) {

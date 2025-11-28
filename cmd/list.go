@@ -51,23 +51,29 @@ func (c *ListCmd) Run() error {
 		)
 	}
 
-	// Create lister instance for the project
-	lister := list.NewLister(projectPath)
+	// Load configuration (walks up directory tree looking for spectr.yaml)
+	cfg, err := config.Load(projectPath)
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	// Create lister instance using the loaded config
+	lister := list.NewListerWithConfig(cfg)
 
 	// Route to appropriate listing function
 	if c.All {
-		return c.listAll(lister, projectPath)
+		return c.listAll(lister, cfg)
 	}
 	if c.Specs {
-		return c.listSpecs(lister, projectPath)
+		return c.listSpecs(lister, cfg)
 	}
 
-	return c.listChanges(lister, projectPath)
+	return c.listChanges(lister, cfg)
 }
 
 // listChanges retrieves and displays changes in the requested format.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
+func (c *ListCmd) listChanges(lister *list.Lister, cfg *config.Config) error {
 	// Retrieve all changes from the project
 	changes, err := lister.ListChanges()
 	if err != nil {
@@ -82,14 +88,14 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		archiveID, err := list.RunInteractiveChanges(changes, projectPath)
+		archiveID, err := list.RunInteractiveChanges(changes, cfg.ProjectRoot)
 		if err != nil {
 			return err
 		}
 
 		// If an archive was requested, run the archive workflow
 		if archiveID != "" {
-			return c.runArchiveWorkflow(archiveID, projectPath)
+			return c.runArchiveWorkflow(archiveID, cfg)
 		}
 
 		return nil
@@ -120,7 +126,7 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 }
 
 // runArchiveWorkflow executes the archive workflow for a change.
-func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
+func (*ListCmd) runArchiveWorkflow(changeID string, cfg *config.Config) error {
 	// Create archive command with the selected change ID
 	archiveCmd := &archive.ArchiveCmd{
 		ChangeID: changeID,
@@ -128,13 +134,7 @@ func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
 		Yes: true,
 	}
 
-	// Create config for the project
-	cfg := &config.Config{
-		RootDir:     config.DefaultRootDir,
-		ProjectRoot: projectPath,
-	}
-
-	// Run the archive workflow
+	// Run the archive workflow using the loaded config
 	if err := archive.ArchiveWithConfig(archiveCmd, cfg); err != nil {
 		return fmt.Errorf("archive workflow failed: %w", err)
 	}
@@ -144,7 +144,7 @@ func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
 
 // listSpecs retrieves and displays specifications in the requested format.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listSpecs(lister *list.Lister, projectPath string) error {
+func (c *ListCmd) listSpecs(lister *list.Lister, cfg *config.Config) error {
 	// Retrieve all specifications from the project
 	specs, err := lister.ListSpecs()
 	if err != nil {
@@ -159,7 +159,7 @@ func (c *ListCmd) listSpecs(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		return list.RunInteractiveSpecs(specs, projectPath)
+		return list.RunInteractiveSpecs(specs, cfg.ProjectRoot)
 	}
 
 	// Format output based on flags
@@ -188,7 +188,7 @@ func (c *ListCmd) listSpecs(lister *list.Lister, projectPath string) error {
 
 // listAll retrieves and displays both changes and specs in unified format.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listAll(lister *list.Lister, projectPath string) error {
+func (c *ListCmd) listAll(lister *list.Lister, cfg *config.Config) error {
 	// Retrieve all items (changes and specs) from the project
 	items, err := lister.ListAll(nil)
 	if err != nil {
@@ -203,7 +203,7 @@ func (c *ListCmd) listAll(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		return list.RunInteractiveAll(items, projectPath)
+		return list.RunInteractiveAll(items, cfg.ProjectRoot)
 	}
 
 	// Format output based on flags

@@ -12,6 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/connerohnesorge/spectr/internal/init/providers"
+	"github.com/connerohnesorge/spectr/internal/theme"
 )
 
 const (
@@ -55,37 +56,38 @@ type ExecutionCompleteMsg struct {
 	err    error
 }
 
-// Lipgloss styles
-var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("99")).
-			MarginBottom(1)
+// Lipgloss styles - dynamic functions that use the current theme
+func titleStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Bold(true).Foreground(theme.Current().Primary).MarginBottom(1)
+}
 
-	selectedStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("170")).
-			Bold(true)
+func selectedStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Secondary).Bold(true)
+}
 
-	dimmedStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("240"))
+func dimmedStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Muted)
+}
 
-	cursorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("212"))
+func cursorStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Highlight)
+}
 
-	errorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("196")).
-			Bold(true)
+func errorStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Error).Bold(true)
+}
 
-	successStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("42")).
-			Bold(true)
+func successStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Success).Bold(true)
+}
 
-	infoStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("86"))
+func infoStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Primary)
+}
 
-	subtleStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241"))
-)
+func subtleStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Muted)
+}
 
 // NewWizardModel creates a new wizard model
 func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
@@ -249,11 +251,12 @@ func (m WizardModel) renderIntro() string {
 	var b strings.Builder
 
 	// ASCII art banner
-	b.WriteString(applyGradient(asciiArt, lipgloss.Color("99"), lipgloss.Color("205")))
+	th := theme.Current()
+	b.WriteString(applyGradient(asciiArt, th.GradientStart, th.GradientEnd))
 	b.WriteString(newlineDouble)
 
 	// Welcome message
-	b.WriteString(titleStyle.Render("Welcome to Spectr Initialization"))
+	b.WriteString(titleStyle().Render("Welcome to Spectr Initialization"))
 	b.WriteString(newlineDouble)
 
 	b.WriteString(
@@ -269,7 +272,7 @@ func (m WizardModel) renderIntro() string {
 	b.WriteString("  • Integrating with AI coding assistants\n\n")
 
 	b.WriteString(
-		infoStyle.Render(
+		infoStyle().Render(
 			fmt.Sprintf("Project path: %s", m.projectPath),
 		),
 	)
@@ -277,7 +280,7 @@ func (m WizardModel) renderIntro() string {
 
 	// Instructions
 	b.WriteString(
-		subtleStyle.Render(
+		subtleStyle().Render(
 			"Press Enter to continue, or 'q' to quit" + newline,
 		),
 	)
@@ -288,7 +291,7 @@ func (m WizardModel) renderIntro() string {
 func (m WizardModel) renderSelect() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("Select AI Tools to Configure"))
+	b.WriteString(titleStyle().Render("Select AI Tools to Configure"))
 	b.WriteString(newlineDouble)
 
 	b.WriteString(
@@ -303,7 +306,7 @@ func (m WizardModel) renderSelect() string {
 	// Instructions
 	b.WriteString(doubleNewline)
 	b.WriteString(
-		subtleStyle.Render(
+		subtleStyle().Render(
 			"↑/↓: Navigate  Space: Toggle  a: All  n: None  " +
 				"Enter: Continue  q: Quit\n",
 		),
@@ -319,23 +322,23 @@ func (m WizardModel) renderProviderGroup(providersList []providers.Provider, off
 		actualIndex := offset + i
 		cursor := " "
 		if m.cursor == actualIndex {
-			cursor = cursorStyle.Render("▸")
+			cursor = cursorStyle().Render("▸")
 		}
 
 		checkbox := "[ ]"
 		if m.selectedProviders[provider.ID()] {
-			checkbox = selectedStyle.Render("[✓]")
+			checkbox = selectedStyle().Render("[✓]")
 		}
 
 		line := fmt.Sprintf("  %s %s %s", cursor, checkbox, provider.Name())
 
 		switch {
 		case m.cursor == actualIndex:
-			b.WriteString(cursorStyle.Render(line))
+			b.WriteString(cursorStyle().Render(line))
 		case m.selectedProviders[provider.ID()]:
-			b.WriteString(selectedStyle.Render(line))
+			b.WriteString(selectedStyle().Render(line))
 		default:
-			b.WriteString(dimmedStyle.Render(line))
+			b.WriteString(dimmedStyle().Render(line))
 		}
 
 		b.WriteString("\n")
@@ -347,7 +350,7 @@ func (m WizardModel) renderProviderGroup(providersList []providers.Provider, off
 func (m WizardModel) renderReview() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("Review Your Selections"))
+	b.WriteString(titleStyle().Render("Review Your Selections"))
 	b.WriteString("\n\n")
 
 	selectedCount := len(m.getSelectedProviderIDs())
@@ -356,7 +359,7 @@ func (m WizardModel) renderReview() string {
 
 	b.WriteString(newline)
 	b.WriteString(
-		subtleStyle.Render(
+		subtleStyle().Render(
 			"Press Enter to initialize, Backspace to go back, " +
 				"or 'q' to quit\n",
 		),
@@ -371,7 +374,7 @@ func (m WizardModel) renderSelectedProviders(
 	count int,
 ) {
 	if count == 0 {
-		b.WriteString(errorStyle.Render("⚠ No tools selected"))
+		b.WriteString(errorStyle().Render("⚠ No tools selected"))
 		b.WriteString(doubleNewline)
 		b.WriteString("You haven't selected any tools to configure.\n")
 		b.WriteString(
@@ -390,7 +393,7 @@ func (m WizardModel) renderSelectedProviders(
 		if !m.selectedProviders[provider.ID()] {
 			continue
 		}
-		b.WriteString(successStyle.Render("  ✓ "))
+		b.WriteString(successStyle().Render("  ✓ "))
 		b.WriteString(provider.Name())
 		b.WriteString("\n")
 	}
@@ -400,13 +403,13 @@ func (m WizardModel) renderSelectedProviders(
 // renderCreationPlan displays what files will be created
 func (m WizardModel) renderCreationPlan(b *strings.Builder, count int) {
 	b.WriteString("The following will be created:\n")
-	b.WriteString(infoStyle.Render("  • spectr/project.md"))
+	b.WriteString(infoStyle().Render("  • spectr/project.md"))
 	b.WriteString(" - Project documentation template" + newline)
-	b.WriteString(infoStyle.Render("  • spectr/AGENTS.md"))
+	b.WriteString(infoStyle().Render("  • spectr/AGENTS.md"))
 	b.WriteString(" - AI agent instructions" + newline)
 
 	if count > 0 {
-		b.WriteString(infoStyle.Render(fmt.Sprintf(
+		b.WriteString(infoStyle().Render(fmt.Sprintf(
 			"  • Tool configurations for %d selected tools",
 			count,
 		)))
@@ -417,10 +420,10 @@ func (m WizardModel) renderCreationPlan(b *strings.Builder, count int) {
 func (WizardModel) renderExecute() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("Initializing Spectr..."))
+	b.WriteString(titleStyle().Render("Initializing Spectr..."))
 	b.WriteString(doubleNewline)
 
-	b.WriteString(infoStyle.Render("⏳ Setting up your project..."))
+	b.WriteString(infoStyle().Render("⏳ Setting up your project..."))
 	b.WriteString(doubleNewline)
 
 	b.WriteString("This will only take a moment." + newline)
@@ -437,7 +440,7 @@ func (m WizardModel) renderComplete() string {
 		return b.String()
 	}
 
-	b.WriteString(successStyle.Render("✓ Spectr Initialized Successfully!"))
+	b.WriteString(successStyle().Render("✓ Spectr Initialized Successfully!"))
 	b.WriteString("\n\n")
 
 	if m.executionResult != nil {
@@ -446,38 +449,38 @@ func (m WizardModel) renderComplete() string {
 
 	b.WriteString(FormatNextStepsMessage())
 	b.WriteString(newline)
-	b.WriteString(subtleStyle.Render("Press 'q' to quit" + newline))
+	b.WriteString(subtleStyle().Render("Press 'q' to quit" + newline))
 
 	return b.String()
 }
 
 // renderError displays initialization errors
 func (m WizardModel) renderError(b *strings.Builder) {
-	b.WriteString(errorStyle.Render("✗ Initialization Failed"))
+	b.WriteString(errorStyle().Render("✗ Initialization Failed"))
 	b.WriteString(doubleNewline)
-	b.WriteString(errorStyle.Render(m.err.Error()))
+	b.WriteString(errorStyle().Render(m.err.Error()))
 	b.WriteString(doubleNewline)
 
 	if m.executionResult != nil && len(m.executionResult.Errors) > 0 {
 		b.WriteString("Errors:" + newline)
 		for _, err := range m.executionResult.Errors {
-			b.WriteString(errorStyle.Render("  • "))
+			b.WriteString(errorStyle().Render("  • "))
 			b.WriteString(err)
 			b.WriteString(newline)
 		}
 		b.WriteString(newline)
 	}
 
-	b.WriteString(subtleStyle.Render("Press 'q' to quit\n"))
+	b.WriteString(subtleStyle().Render("Press 'q' to quit\n"))
 }
 
 // renderExecutionResults displays created/updated files and warnings
 func (m WizardModel) renderExecutionResults(b *strings.Builder) {
 	if len(m.executionResult.CreatedFiles) > 0 {
-		b.WriteString(successStyle.Render("Created files:"))
+		b.WriteString(successStyle().Render("Created files:"))
 		b.WriteString(newline)
 		for _, file := range m.executionResult.CreatedFiles {
-			b.WriteString(infoStyle.Render("  ✓ "))
+			b.WriteString(infoStyle().Render("  ✓ "))
 			b.WriteString(file)
 			b.WriteString(newline)
 		}
@@ -485,10 +488,10 @@ func (m WizardModel) renderExecutionResults(b *strings.Builder) {
 	}
 
 	if len(m.executionResult.UpdatedFiles) > 0 {
-		b.WriteString(successStyle.Render("Updated files:"))
+		b.WriteString(successStyle().Render("Updated files:"))
 		b.WriteString(newline)
 		for _, file := range m.executionResult.UpdatedFiles {
-			b.WriteString(infoStyle.Render("  ↻ "))
+			b.WriteString(infoStyle().Render("  ↻ "))
 			b.WriteString(file)
 			b.WriteString(newline)
 		}
@@ -496,10 +499,10 @@ func (m WizardModel) renderExecutionResults(b *strings.Builder) {
 	}
 
 	if len(m.executionResult.Errors) > 0 {
-		b.WriteString(errorStyle.Render("Warnings:"))
+		b.WriteString(errorStyle().Render("Warnings:"))
 		b.WriteString(newline)
 		for _, err := range m.executionResult.Errors {
-			b.WriteString(errorStyle.Render("  ⚠ "))
+			b.WriteString(errorStyle().Render("  ⚠ "))
 			b.WriteString(err)
 			b.WriteString(newline)
 		}

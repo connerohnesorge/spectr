@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/init/providers"
 )
 
@@ -70,8 +71,14 @@ func (e *InitExecutor) Execute(
 		// Don't return error - allow updating tool configurations
 	}
 
-	// 2. Create spectr/ directory structure
-	spectrDir := filepath.Join(e.projectPath, "spectr")
+	// 2. Load config to determine root directory (defaults to "spectr" if no config exists)
+	cfg, err := config.LoadFromPath(e.projectPath)
+	if err != nil {
+		return result, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// 3. Create directory structure using config-based paths
+	spectrDir := cfg.RootPath()
 	if err := e.createDirectoryStructure(spectrDir, result); err != nil {
 		return result, fmt.Errorf(
 			"failed to create directory structure: %w",
@@ -79,7 +86,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 3. Create project.md
+	// 4. Create project.md
 	if err := e.createProjectMd(spectrDir, result); err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -87,7 +94,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 4. Create AGENTS.md
+	// 5. Create AGENTS.md
 	if err := e.createAgentsMd(spectrDir, result); err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -95,7 +102,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 5. Configure selected providers
+	// 6. Configure selected providers
 	if err := e.configureProviders(selectedProviderIDs, spectrDir, result); err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -103,7 +110,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 6. Create README if it doesn't exist
+	// 7. Create README if it doesn't exist
 	if err := e.createReadmeIfMissing(result); err != nil {
 		result.Errors = append(
 			result.Errors,

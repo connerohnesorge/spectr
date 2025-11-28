@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 const (
@@ -162,7 +164,8 @@ func FileExists(path string) bool {
 }
 
 // IsSpectrInitialized checks if Spectr is already initialized in the project.
-// It looks for the "spectr/project.md" file in the project directory.
+// It loads the config to determine the root directory and checks for
+// project.md.
 //
 // Returns true if the project is already initialized, false otherwise.
 func IsSpectrInitialized(projectPath string) bool {
@@ -176,8 +179,14 @@ func IsSpectrInitialized(projectPath string) bool {
 		return false
 	}
 
-	// Check for spectr/project.md
-	projectFile := filepath.Join(expandedPath, "spectr", "project.md")
+	// Load config to get the root directory (supports custom root_dir)
+	cfg, err := config.LoadFromPath(expandedPath)
+	if err != nil {
+		return false
+	}
+
+	// Check for project.md in the configured root directory
+	projectFile := filepath.Join(cfg.RootPath(), "project.md")
 
 	return FileExists(projectFile)
 }

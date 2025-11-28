@@ -141,6 +141,22 @@ spectr/
 │               └── spec.md # ADDED/MODIFIED/REMOVED
 ```
 
+## Configuration (Optional)
+
+Spectr supports optional project configuration via `spectr.yaml` at the project root:
+
+```yaml
+# spectr.yaml
+root_dir: my-specs  # Custom root directory (default: "spectr")
+```
+
+**When to use:**
+- If project uses a custom root directory name (e.g., `specs/`, `.spectr/`)
+- Configuration is auto-discovered from any subdirectory
+- No config file = uses default `spectr/` directory
+
+**AI agents:** Check for `spectr.yaml` at project root to determine the correct root directory path before constructing file paths.
+
 ## Creating Change Proposals
 
 ### Decision Tree

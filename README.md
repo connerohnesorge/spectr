@@ -26,6 +26,7 @@ Built with Go
   - [Initialize a Project](#initialize-a-project)
   - [Create Your First Change](#create-your-first-change)
   - [File Structure](#file-structure)
+- [Configuration](#configuration)
 - [Command Reference](#command-reference)
   - [spectr init](#spectr-init)
   - [spectr list](#spectr-list)
@@ -278,6 +279,66 @@ spectr/
 - **changes/**: Proposed modifications, kept separate until approved
 - **archive/**: Historical record of all changes with timestamps
 - **Delta Specs**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED Requirements` headers
+
+---
+
+## Configuration
+
+Spectr supports optional project configuration via a `spectr.yaml` file at your project root. This allows customizing Spectr's behavior, particularly the root directory name.
+
+### spectr.yaml
+
+Create a `spectr.yaml` file at your project root to customize settings:
+
+```yaml
+# spectr.yaml
+root_dir: specs  # Custom root directory (default: "spectr")
+```
+
+**Configuration Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `root_dir` | string | `"spectr"` | Name of the Spectr root directory |
+
+**Example Project Structures:**
+
+Default (no config file):
+```
+your-project/
+└── spectr/            # Default root directory
+    ├── specs/
+    ├── changes/
+    └── project.md
+```
+
+With custom configuration (`root_dir: specs`):
+```
+your-project/
+├── spectr.yaml        # Configuration file
+└── specs/             # Custom root directory
+    ├── specs/
+    ├── changes/
+    └── project.md
+```
+
+### Configuration Discovery
+
+Spectr automatically discovers `spectr.yaml` by walking up the directory tree from your current working directory. This means you can run Spectr commands from any subdirectory within your project.
+
+**Discovery Rules:**
+1. Search starts from current working directory
+2. Walks up parent directories until `spectr.yaml` is found
+3. If no config file exists, uses default `spectr/` directory
+4. Nearest config file wins (if multiple exist in hierarchy)
+
+### When to Use Configuration
+
+- **Renaming root directory**: If you prefer `specs/`, `.spectr/`, or `openspec/` instead of `spectr/`
+- **Organizational standards**: When your team has specific naming conventions
+- **Migration from other tools**: When integrating with existing directory structures
+
+**Note:** Configuration is completely optional. Projects without `spectr.yaml` continue to work exactly as before using the default `spectr/` directory.
 
 ---
 

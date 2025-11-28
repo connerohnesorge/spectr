@@ -6,20 +6,20 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
-// CollectData gathers all dashboard information from the project,
-// including active changes, completed changes, specifications,
-// and summary metrics.
+// CollectDataWithConfig gathers all dashboard information using the provided config.
+// It includes active changes, completed changes, specifications, and summary metrics.
 //
 // The function performs the following steps:
-//  1. Discovers all changes in spectr/changes/ directory
+//  1. Discovers all changes in the configured changes directory
 //  2. Parses each change's proposal.md for title
 //  3. Parses each change's tasks.md for task completion status
 //  4. Categorizes changes as active (incomplete) or completed
-//  5. Discovers all specs in spectr/specs/ directory
+//  5. Discovers all specs in the configured specs directory
 //  6. Parses each spec's spec.md for title and requirement count
 //  7. Sorts results per design specification (active changes by
 //     completion ascending, specs by requirement count descending)
@@ -27,7 +27,7 @@ import (
 // Returns DashboardData structure or error if discovery fails.
 //
 //nolint:revive // cognitive-complexity justified for data collection
-func CollectData(projectPath string) (*DashboardData, error) {
+func CollectDataWithConfig(cfg *config.Config) (*DashboardData, error) {
 	data := &DashboardData{
 		Summary:          SummaryMetrics{},
 		ActiveChanges:    []ChangeProgress{},
@@ -36,14 +36,14 @@ func CollectData(projectPath string) (*DashboardData, error) {
 	}
 
 	// Discover all changes
-	changeIDs, err := discovery.GetActiveChanges(projectPath)
+	changeIDs, err := discovery.GetActiveChangesWithConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// Process each change
 	for _, changeID := range changeIDs {
-		changeDir := filepath.Join(projectPath, "spectr", "changes", changeID)
+		changeDir := filepath.Join(cfg.ChangesDir(), changeID)
 
 		// Parse title from proposal.md
 		proposalPath := filepath.Join(changeDir, "proposal.md")
@@ -94,14 +94,14 @@ func CollectData(projectPath string) (*DashboardData, error) {
 	}
 
 	// Discover all specs
-	specIDs, err := discovery.GetSpecs(projectPath)
+	specIDs, err := discovery.GetSpecsWithConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// Process each spec
 	for _, specID := range specIDs {
-		specPath := filepath.Join(projectPath, "spectr", "specs", specID, "spec.md")
+		specPath := filepath.Join(cfg.SpecsDir(), specID, "spec.md")
 
 		// Parse title from spec.md
 		title, err := parsers.ExtractTitle(specPath)
@@ -155,6 +155,20 @@ func CollectData(projectPath string) (*DashboardData, error) {
 	})
 
 	return data, nil
+}
+
+// CollectData gathers all dashboard information from the project,
+// including active changes, completed changes, specifications,
+// and summary metrics.
+// Deprecated: Use CollectDataWithConfig for projects with custom root
+// directories.
+func CollectData(projectPath string) (*DashboardData, error) {
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return CollectDataWithConfig(cfg)
 }
 
 // calculatePercentage calculates completion percentage (0-100).

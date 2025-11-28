@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 //nolint:revive // cognitive-complexity justified for comprehensive testing
@@ -399,4 +401,162 @@ func TestCollectData_ChangeWithZeroTasks(t *testing.T) {
 	}
 
 	t.Log("Change with zero tasks correctly categorized as completed")
+}
+
+// TestCollectDataWithConfig tests the new config-based API
+func TestCollectDataWithConfig(t *testing.T) {
+	// Create a temporary directory with custom root directory
+	tempDir := t.TempDir()
+	customRoot := "my-spectr"
+
+	// Create directory structure with custom root
+	spectrDir := filepath.Join(tempDir, customRoot)
+	changesDir := filepath.Join(spectrDir, "changes")
+	specsDir := filepath.Join(spectrDir, "specs")
+
+	if err := os.MkdirAll(changesDir, 0755); err != nil {
+		t.Fatalf("Failed to create changes directory: %v", err)
+	}
+	if err := os.MkdirAll(specsDir, 0755); err != nil {
+		t.Fatalf("Failed to create specs directory: %v", err)
+	}
+
+	// Create a test change
+	changeDir := filepath.Join(changesDir, "test-change")
+	if err := os.MkdirAll(changeDir, 0755); err != nil {
+		t.Fatalf("Failed to create change directory: %v", err)
+	}
+
+	proposalContent := "# Test Change\n\n## Why\nTest\n\n## What Changes\n- Test\n"
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+		t.Fatalf("Failed to write proposal.md: %v", err)
+	}
+
+	tasksContent := "## 1. Implementation\n- [x] 1.1 Task one\n- [ ] 1.2 Task two\n"
+	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
+		t.Fatalf("Failed to write tasks.md: %v", err)
+	}
+
+	// Create a test spec
+	specDir := filepath.Join(specsDir, "test-spec")
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatalf("Failed to create spec directory: %v", err)
+	}
+
+	specContent := `# Test Spec
+
+## Requirements
+
+### Requirement: Feature One
+Test requirement one
+
+### Requirement: Feature Two
+Test requirement two
+`
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0644); err != nil {
+		t.Fatalf("Failed to write spec.md: %v", err)
+	}
+
+	// Create config with custom root
+	cfg := &config.Config{
+		RootDir:     customRoot,
+		ProjectRoot: tempDir,
+	}
+
+	// Collect data using the new API
+	data, err := CollectDataWithConfig(cfg)
+	if err != nil {
+		t.Fatalf("CollectDataWithConfig failed: %v", err)
+	}
+
+	// Verify data was collected correctly
+	if data == nil {
+		t.Fatal("CollectDataWithConfig returned nil data")
+	}
+
+	// Verify change was found
+	if data.Summary.ActiveChanges != 1 {
+		t.Errorf("Expected 1 active change, got %d", data.Summary.ActiveChanges)
+	}
+	if len(data.ActiveChanges) != 1 {
+		t.Fatalf("Expected 1 active change in slice, got %d", len(data.ActiveChanges))
+	}
+	if data.ActiveChanges[0].ID != "test-change" {
+		t.Errorf("Expected change ID 'test-change', got '%s'", data.ActiveChanges[0].ID)
+	}
+	if data.ActiveChanges[0].Progress.Total != 2 {
+		t.Errorf("Expected 2 total tasks, got %d", data.ActiveChanges[0].Progress.Total)
+	}
+	if data.ActiveChanges[0].Progress.Completed != 1 {
+		t.Errorf("Expected 1 completed task, got %d", data.ActiveChanges[0].Progress.Completed)
+	}
+
+	// Verify spec was found
+	if data.Summary.TotalSpecs != 1 {
+		t.Errorf("Expected 1 spec, got %d", data.Summary.TotalSpecs)
+	}
+	if len(data.Specs) != 1 {
+		t.Fatalf("Expected 1 spec in slice, got %d", len(data.Specs))
+	}
+	if data.Specs[0].ID != "test-spec" {
+		t.Errorf("Expected spec ID 'test-spec', got '%s'", data.Specs[0].ID)
+	}
+	if data.Specs[0].RequirementCount != 2 {
+		t.Errorf("Expected 2 requirements, got %d", data.Specs[0].RequirementCount)
+	}
+
+	t.Log("CollectDataWithConfig correctly uses custom root directory")
+}
+
+// TestCollectData_BackwardCompatibility verifies that the deprecated CollectData
+// function still works and delegates to CollectDataWithConfig correctly
+func TestCollectData_BackwardCompatibility(t *testing.T) {
+	// Create a temporary directory with standard "spectr" root
+	tempDir := t.TempDir()
+	spectrDir := filepath.Join(tempDir, "spectr")
+	changesDir := filepath.Join(spectrDir, "changes")
+	specsDir := filepath.Join(spectrDir, "specs")
+
+	if err := os.MkdirAll(changesDir, 0755); err != nil {
+		t.Fatalf("Failed to create changes directory: %v", err)
+	}
+	if err := os.MkdirAll(specsDir, 0755); err != nil {
+		t.Fatalf("Failed to create specs directory: %v", err)
+	}
+
+	// Create a test change
+	changeDir := filepath.Join(changesDir, "compat-test")
+	if err := os.MkdirAll(changeDir, 0755); err != nil {
+		t.Fatalf("Failed to create change directory: %v", err)
+	}
+
+	proposalContent := "# Compat Test\n\n## Why\nTest\n\n## What Changes\n- Test\n"
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+		t.Fatalf("Failed to write proposal.md: %v", err)
+	}
+
+	tasksContent := "## 1. Implementation\n- [x] 1.1 Done\n"
+	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
+		t.Fatalf("Failed to write tasks.md: %v", err)
+	}
+
+	// Use the deprecated API
+	data, err := CollectData(tempDir)
+	if err != nil {
+		t.Fatalf("CollectData failed: %v", err)
+	}
+
+	// Verify it still works
+	if data == nil {
+		t.Fatal("CollectData returned nil data")
+	}
+
+	if len(data.CompletedChanges) != 1 {
+		t.Errorf("Expected 1 completed change, got %d", len(data.CompletedChanges))
+	}
+	if len(data.CompletedChanges) > 0 && data.CompletedChanges[0].ID != "compat-test" {
+		t.Errorf("Expected change ID 'compat-test', got '%s'", data.CompletedChanges[0].ID)
+	}
+
+	t.Log("Deprecated CollectData function maintains backward compatibility")
 }

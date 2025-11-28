@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 func TestListChanges(t *testing.T) {
@@ -397,5 +399,160 @@ func TestListAll_Empty(t *testing.T) {
 
 	if len(items) != 0 {
 		t.Errorf("Expected empty list, got %d items", len(items))
+	}
+}
+
+func TestNewListerWithConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	cfg := &config.Config{
+		RootDir:     "spectr",
+		ProjectRoot: tmpDir,
+	}
+
+	lister := NewListerWithConfig(cfg)
+
+	if lister.projectPath != tmpDir {
+		t.Errorf("Expected projectPath to be %q, got %q", tmpDir, lister.projectPath)
+	}
+
+	if lister.cfg != cfg {
+		t.Error("Expected lister.cfg to match the provided config")
+	}
+}
+
+func TestNewListerWithConfig_CustomRootDir(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Set up custom root directory structure
+	customRoot := "custom-specs"
+	changesDir := filepath.Join(tmpDir, customRoot, "changes")
+	specsDir := filepath.Join(tmpDir, customRoot, "specs")
+
+	if err := os.MkdirAll(changesDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(specsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a change in custom directory
+	changeDir := filepath.Join(changesDir, "test-change")
+	if err := os.MkdirAll(changeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	proposalContent := `# Change: Test Custom Root`
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a spec in custom directory
+	specDir := filepath.Join(specsDir, "test-spec")
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	specContent := `# Test Spec
+
+### Requirement: Test Requirement`
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create lister with custom config
+	cfg := &config.Config{
+		RootDir:     customRoot,
+		ProjectRoot: tmpDir,
+	}
+
+	lister := NewListerWithConfig(cfg)
+
+	// Test listing changes
+	changes, err := lister.ListChanges()
+	if err != nil {
+		t.Fatalf("ListChanges failed: %v", err)
+	}
+
+	if len(changes) != 1 {
+		t.Fatalf("Expected 1 change, got %d", len(changes))
+	}
+
+	if changes[0].ID != "test-change" {
+		t.Errorf("Expected change ID 'test-change', got %q", changes[0].ID)
+	}
+
+	if changes[0].Title != "Test Custom Root" {
+		t.Errorf("Expected title 'Test Custom Root', got %q", changes[0].Title)
+	}
+
+	// Test listing specs
+	specs, err := lister.ListSpecs()
+	if err != nil {
+		t.Fatalf("ListSpecs failed: %v", err)
+	}
+
+	if len(specs) != 1 {
+		t.Fatalf("Expected 1 spec, got %d", len(specs))
+	}
+
+	if specs[0].ID != "test-spec" {
+		t.Errorf("Expected spec ID 'test-spec', got %q", specs[0].ID)
+	}
+
+	if specs[0].Title != "Test Spec" {
+		t.Errorf("Expected title 'Test Spec', got %q", specs[0].Title)
+	}
+
+	// Test listing all
+	items, err := lister.ListAll(nil)
+	if err != nil {
+		t.Fatalf("ListAll failed: %v", err)
+	}
+
+	if len(items) != 2 {
+		t.Fatalf("Expected 2 items, got %d", len(items))
+	}
+}
+
+func TestNewLister_BackwardCompatibility(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create standard spectr directory structure
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	changeDir := filepath.Join(changesDir, "test-change")
+	if err := os.MkdirAll(changeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	proposalContent := `# Change: Test Backward Compatibility`
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Use deprecated NewLister function
+	lister := NewLister(tmpDir)
+
+	// Should still work with default "spectr" directory
+	changes, err := lister.ListChanges()
+	if err != nil {
+		t.Fatalf("ListChanges failed: %v", err)
+	}
+
+	if len(changes) != 1 {
+		t.Fatalf("Expected 1 change, got %d", len(changes))
+	}
+
+	if changes[0].ID != "test-change" {
+		t.Errorf("Expected change ID 'test-change', got %q", changes[0].ID)
+	}
+
+	// Verify internal config uses defaults
+	if lister.cfg.RootDir != config.DefaultRootDir {
+		t.Errorf("Expected RootDir to be %q, got %q", config.DefaultRootDir, lister.cfg.RootDir)
 	}
 }

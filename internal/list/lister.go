@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
@@ -12,23 +13,39 @@ import (
 // Lister handles listing operations for changes and specs
 type Lister struct {
 	projectPath string
+	cfg         *config.Config
 }
 
-// NewLister creates a new Lister for the given project path
+// NewListerWithConfig creates a new Lister using the provided config
+func NewListerWithConfig(cfg *config.Config) *Lister {
+	return &Lister{
+		projectPath: cfg.ProjectRoot,
+		cfg:         cfg,
+	}
+}
+
+// NewLister creates a new Lister for the given project path.
+// Deprecated: Use NewListerWithConfig for projects with custom root
+// directories.
 func NewLister(projectPath string) *Lister {
-	return &Lister{projectPath: projectPath}
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return NewListerWithConfig(cfg)
 }
 
 // ListChanges retrieves information about all active changes
 func (l *Lister) ListChanges() ([]ChangeInfo, error) {
-	changeIDs, err := discovery.GetActiveChanges(l.projectPath)
+	changeIDs, err := discovery.GetActiveChangesWithConfig(l.cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover changes: %w", err)
 	}
 
 	var changes []ChangeInfo
 	for _, id := range changeIDs {
-		changeDir := filepath.Join(l.projectPath, "spectr", "changes", id)
+		changeDir := filepath.Join(l.cfg.ChangesDir(), id)
 		proposalPath := filepath.Join(changeDir, "proposal.md")
 		tasksPath := filepath.Join(changeDir, "tasks.md")
 
@@ -65,20 +82,14 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 
 // ListSpecs retrieves information about all specs
 func (l *Lister) ListSpecs() ([]SpecInfo, error) {
-	specIDs, err := discovery.GetSpecs(l.projectPath)
+	specIDs, err := discovery.GetSpecsWithConfig(l.cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover specs: %w", err)
 	}
 
 	var specs []SpecInfo
 	for _, id := range specIDs {
-		specPath := filepath.Join(
-			l.projectPath,
-			"spectr",
-			"specs",
-			id,
-			"spec.md",
-		)
+		specPath := filepath.Join(l.cfg.SpecsDir(), id, "spec.md")
 
 		// Extract title
 		title, err := parsers.ExtractTitle(specPath)

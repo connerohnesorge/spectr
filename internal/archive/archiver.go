@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -52,11 +53,17 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 		projectRoot = workingDir
 	}
 
+	// Load configuration
+	cfg, err := config.LoadFromPath(projectRoot)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	// Check if spectr directory exists
-	spectrRoot := filepath.Join(projectRoot, "spectr")
+	spectrRoot := cfg.RootPath()
 	_, err = os.Stat(spectrRoot)
 	if os.IsNotExist(err) {
-		return fmt.Errorf("spectr directory not found in %s", projectRoot)
+		return fmt.Errorf("%s directory not found in %s", cfg.RootDir, projectRoot)
 	}
 
 	// If no change ID provided, use interactive selection
@@ -72,7 +79,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 		cmd.ChangeID = changeID
 	}
 
-	changeDir := filepath.Join(spectrRoot, "changes", changeID)
+	changeDir := filepath.Join(cfg.ChangesPath(), changeID)
 
 	// Check if change exists
 	_, err = os.Stat(changeDir)
@@ -105,7 +112,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 
 	// Spec update workflow
 	if !cmd.SkipSpecs {
-		totalCounts, capabilities, err = updateSpecsWithTracking(cmd.Yes, changeDir, projectRoot)
+		totalCounts, capabilities, err = updateSpecsWithTracking(cmd.Yes, changeDir, cfg)
 		if err != nil {
 			return fmt.Errorf("spec update failed: %w", err)
 		}
@@ -114,7 +121,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	}
 
 	// Archive operation
-	archiveName, err := moveToArchive(changeDir, changeID, projectRoot)
+	archiveName, err := moveToArchive(changeDir, changeID, cfg)
 	if err != nil {
 		return fmt.Errorf("move to archive failed: %w", err)
 	}
@@ -148,7 +155,10 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 func selectChangeInteractive(projectRoot string) (string, error) {
 	// Import list package functions
 	// Note: This will be done at the package level
-	lister := newListerForArchive(projectRoot)
+	lister, err := newListerForArchive(projectRoot)
+	if err != nil {
+		return "", fmt.Errorf("create lister: %w", err)
+	}
 	changes, err := lister.ListChanges()
 	if err != nil {
 		return "", fmt.Errorf("list changes: %w", err)
@@ -242,7 +252,8 @@ func checkTasks(yes bool, changeDir string) error {
 // updateSpecsWithTracking applies delta specs and tracks operation counts and capabilities
 func updateSpecsWithTracking(
 	yes bool,
-	changeDir, workingDir string,
+	changeDir string,
+	cfg *config.Config,
 ) (OperationCounts, []string, error) {
 	specsDir := filepath.Join(changeDir, "specs")
 	deltaSpecs, err := findAndValidateDeltaSpecs(specsDir)
@@ -256,8 +267,7 @@ func updateSpecsWithTracking(
 		return OperationCounts{}, nil, nil
 	}
 
-	spectrRoot := filepath.Join(workingDir, "spectr")
-	updates, err := buildUpdatePlan(deltaSpecs, specsDir, spectrRoot)
+	updates, err := buildUpdatePlan(deltaSpecs, specsDir, cfg)
 	if err != nil {
 		return OperationCounts{}, nil, err
 	}
@@ -273,7 +283,7 @@ func updateSpecsWithTracking(
 		return OperationCounts{}, nil, err
 	}
 
-	if err := writeSpecs(mergedSpecs, workingDir); err != nil {
+	if err := writeSpecs(mergedSpecs); err != nil {
 		return OperationCounts{}, nil, err
 	}
 
@@ -310,7 +320,8 @@ func findAndValidateDeltaSpecs(
 // buildUpdatePlan creates spec update plan from delta specs
 func buildUpdatePlan(
 	deltaSpecs []string,
-	specsDir, spectrRoot string,
+	specsDir string,
+	cfg *config.Config,
 ) ([]SpecUpdate, error) {
 	updates := make([]SpecUpdate, 0, len(deltaSpecs))
 
@@ -322,8 +333,7 @@ func buildUpdatePlan(
 
 		capabilityDir := filepath.Dir(relPath)
 		targetPath := filepath.Join(
-			spectrRoot,
-			"specs",
+			cfg.SpecsPath(),
 			capabilityDir,
 			"spec.md",
 		)
@@ -432,7 +442,7 @@ func processOneMerge(
 }
 
 // writeSpecs writes all merged specs to disk
-func writeSpecs(mergedSpecs map[string]string, workingDir string) error {
+func writeSpecs(mergedSpecs map[string]string) error {
 	for targetPath, content := range mergedSpecs {
 		if err := os.MkdirAll(
 			filepath.Dir(targetPath),
@@ -494,10 +504,11 @@ func findDeltaSpecs(dir string) ([]string, error) {
 
 // moveToArchive moves the change directory to archive with date prefix
 func moveToArchive(
-	changeDir, changeID, workingDir string,
+	changeDir, changeID string,
+	cfg *config.Config,
 ) (string, error) {
 	// Create archive directory if it doesn't exist
-	archiveDir := filepath.Join(workingDir, "spectr", "changes", "archive")
+	archiveDir := filepath.Join(cfg.ChangesPath(), "archive")
 	if err := os.MkdirAll(archiveDir, dirPerm); err != nil {
 		return "", fmt.Errorf("create archive directory: %w", err)
 	}

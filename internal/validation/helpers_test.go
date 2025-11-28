@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert/v2"
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 const (
@@ -253,7 +254,7 @@ func TestValidateSingleItem_InvalidContent(t *testing.T) {
 	setupTestProject(t, tmpDir, nil, []string{"bad-spec"})
 
 	// Create invalid spec
-	specDir := filepath.Join(tmpDir, SpectrDir, "specs", "bad-spec")
+	specDir := filepath.Join(tmpDir, config.DefaultRootDir, "specs", "bad-spec")
 	specPath := filepath.Join(specDir, "spec.md")
 	err := os.WriteFile(specPath, []byte("# Bad Spec\nNo proper content"), testFilePerm)
 	assert.NoError(t, err)
@@ -299,6 +300,69 @@ func TestContainsString(t *testing.T) {
 	}
 }
 
+// TestWithCustomRootDir tests that validation respects custom root_dir from config
+func TestWithCustomRootDir(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create custom root dir "specs-custom" instead of "spectr"
+	customRootDir := "specs-custom"
+
+	// Create config file
+	configContent := "root_dir: " + customRootDir + "\n"
+	configPath := filepath.Join(tmpDir, "spectr.yaml")
+	err := os.WriteFile(configPath, []byte(configContent), testFilePerm)
+	assert.NoError(t, err)
+
+	// Create project structure with custom root
+	changesDir := filepath.Join(tmpDir, customRootDir, "changes", "test-change")
+	err = os.MkdirAll(changesDir, testDirPerm)
+	assert.NoError(t, err)
+
+	proposalPath := filepath.Join(changesDir, "proposal.md")
+	err = os.WriteFile(proposalPath, []byte("# Test Proposal"), testFilePerm)
+	assert.NoError(t, err)
+
+	specsDir := filepath.Join(tmpDir, customRootDir, "specs", "test-spec")
+	err = os.MkdirAll(specsDir, testDirPerm)
+	assert.NoError(t, err)
+
+	specPath := filepath.Join(specsDir, "spec.md")
+	specContent := `# Test Specification
+
+## Purpose
+This specification describes test functionality.
+
+## Requirements
+
+### Requirement: Test Feature
+The system SHALL provide test functionality.
+
+#### Scenario: Feature works
+- **WHEN** user activates feature
+- **THEN** feature is enabled
+`
+	err = os.WriteFile(specPath, []byte(specContent), testFilePerm)
+	assert.NoError(t, err)
+
+	// Test DetermineItemType with custom root
+	info, err := DetermineItemType(tmpDir, "test-change", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, ItemTypeChange, info.ItemType)
+	assert.True(t, info.IsChange)
+
+	info, err = DetermineItemType(tmpDir, "test-spec", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, ItemTypeSpec, info.ItemType)
+	assert.True(t, info.IsSpec)
+
+	// Test ValidateItemByType with custom root
+	validator := NewValidator(false)
+	report, err := ValidateItemByType(validator, tmpDir, "test-spec", ItemTypeSpec)
+	assert.NoError(t, err)
+	assert.NotZero(t, report)
+	assert.True(t, report.Valid)
+}
+
 // Helper functions for test setup
 
 // setupTestProject creates a basic spectr project structure
@@ -306,7 +370,7 @@ func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
 	t.Helper()
 
 	// Create changes directory
-	changesDir := filepath.Join(tmpDir, SpectrDir, "changes")
+	changesDir := filepath.Join(tmpDir, config.DefaultRootDir, "changes")
 	err := os.MkdirAll(changesDir, testDirPerm)
 	assert.NoError(t, err)
 
@@ -322,7 +386,7 @@ func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
 	}
 
 	// Create specs directory
-	specsDir := filepath.Join(tmpDir, SpectrDir, "specs")
+	specsDir := filepath.Join(tmpDir, config.DefaultRootDir, "specs")
 	err = os.MkdirAll(specsDir, testDirPerm)
 	assert.NoError(t, err)
 
@@ -342,7 +406,7 @@ func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
 func createValidChange(t *testing.T, tmpDir, changeName string) string {
 	t.Helper()
 
-	changeDir := filepath.Join(tmpDir, SpectrDir, "changes", changeName)
+	changeDir := filepath.Join(tmpDir, config.DefaultRootDir, "changes", changeName)
 
 	// Create proposal.md
 	proposalContent := `# Change: Add Feature
@@ -396,7 +460,7 @@ The system SHALL provide the new feature.
 func createInvalidChange(t *testing.T, tmpDir, changeName string) string {
 	t.Helper()
 
-	changeDir := filepath.Join(tmpDir, SpectrDir, "changes", changeName)
+	changeDir := filepath.Join(tmpDir, config.DefaultRootDir, "changes", changeName)
 
 	// Create minimal proposal.md that might fail validation
 	proposalPath := filepath.Join(changeDir, "proposal.md")
@@ -410,7 +474,7 @@ func createInvalidChange(t *testing.T, tmpDir, changeName string) string {
 func createValidSpec(t *testing.T, tmpDir, specName string) string {
 	t.Helper()
 
-	specDir := filepath.Join(tmpDir, SpectrDir, "specs", specName)
+	specDir := filepath.Join(tmpDir, config.DefaultRootDir, "specs", specName)
 	err := os.MkdirAll(specDir, testDirPerm)
 	assert.NoError(t, err)
 

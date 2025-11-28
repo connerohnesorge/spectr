@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 	"github.com/connerohnesorge/spectr/internal/validation"
 )
@@ -18,10 +19,17 @@ func ValidatePreArchive(
 	changeDir string,
 	strictMode bool,
 ) (*validation.ValidationReport, error) {
-	// Derive spectrRoot from changeDir
-	// changeDir format: /path/to/project/spectr/changes/<change-id>
-	// spectrRoot should be: /path/to/project/spectr
-	spectrRoot := filepath.Dir(filepath.Dir(changeDir))
+	// Load config to get the correct paths
+	// changeDir format: /path/to/project/<root_dir>/changes/<change-id>
+	// projectRoot should be: /path/to/project
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(changeDir)))
+
+	cfg, err := config.LoadFromPath(projectRoot)
+	if err != nil {
+		return nil, fmt.Errorf("load config: %w", err)
+	}
+
+	spectrRoot := cfg.RootPath()
 
 	// Use existing change validation from validation package
 	report, err := validation.ValidateChangeDeltaSpecs(changeDir, spectrRoot, strictMode)

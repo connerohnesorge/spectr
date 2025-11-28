@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
@@ -12,11 +13,22 @@ import (
 // Lister handles listing operations for changes and specs
 type Lister struct {
 	projectPath string
+	cfg         *config.Config
 }
 
 // NewLister creates a new Lister for the given project path
-func NewLister(projectPath string) *Lister {
-	return &Lister{projectPath: projectPath}
+func NewLister(projectPath string) (*Lister, error) {
+	cfg, err := config.LoadFromPath(projectPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Lister{projectPath: projectPath, cfg: cfg}, nil
+}
+
+// NewListerWithConfig creates a new Lister using an existing config
+func NewListerWithConfig(cfg *config.Config) *Lister {
+	return &Lister{projectPath: cfg.ProjectRoot, cfg: cfg}
 }
 
 // ListChanges retrieves information about all active changes
@@ -28,7 +40,7 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 
 	var changes []ChangeInfo
 	for _, id := range changeIDs {
-		changeDir := filepath.Join(l.projectPath, "spectr", "changes", id)
+		changeDir := filepath.Join(l.cfg.ChangesPath(), id)
 		proposalPath := filepath.Join(changeDir, "proposal.md")
 		tasksPath := filepath.Join(changeDir, "tasks.md")
 
@@ -73,9 +85,7 @@ func (l *Lister) ListSpecs() ([]SpecInfo, error) {
 	var specs []SpecInfo
 	for _, id := range specIDs {
 		specPath := filepath.Join(
-			l.projectPath,
-			"spectr",
-			"specs",
+			l.cfg.SpecsPath(),
 			id,
 			"spec.md",
 		)

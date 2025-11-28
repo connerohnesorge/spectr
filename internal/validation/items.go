@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 )
 
@@ -62,7 +63,12 @@ func GetAllItems(
 func GetChangeItems(
 	projectPath string,
 ) ([]ValidationItem, error) {
-	changeIDs, err := discovery.GetActiveChangeIDs(projectPath)
+	cfg, err := config.LoadFromPath(projectPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	changeIDs, err := discovery.GetActiveChangeIDsWithConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to discover changes: %w",
@@ -70,7 +76,7 @@ func GetChangeItems(
 		)
 	}
 
-	basePath := filepath.Join(projectPath, SpectrDir, "changes")
+	basePath := cfg.ChangesPath()
 
 	return CreateValidationItems(
 		projectPath,
@@ -84,12 +90,17 @@ func GetChangeItems(
 func GetSpecItems(
 	projectPath string,
 ) ([]ValidationItem, error) {
-	specIDs, err := discovery.GetSpecIDs(projectPath)
+	cfg, err := config.LoadFromPath(projectPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	specIDs, err := discovery.GetSpecIDsWithConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to discover specs: %w", err)
 	}
 
-	basePath := filepath.Join(projectPath, SpectrDir, "specs")
+	basePath := cfg.SpecsPath()
 
 	return CreateValidationItems(
 		projectPath,

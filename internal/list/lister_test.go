@@ -47,7 +47,10 @@ More details here.`
 	}
 
 	// Test listing
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 	changes, err := lister.ListChanges()
 	if err != nil {
 		t.Fatalf("ListChanges failed: %v", err)
@@ -77,7 +80,10 @@ More details here.`
 
 func TestListChanges_NoChanges(t *testing.T) {
 	tmpDir := t.TempDir()
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 	changes, err := lister.ListChanges()
 	if err != nil {
 		t.Fatalf("ListChanges failed: %v", err)
@@ -101,7 +107,10 @@ func TestListChanges_FallbackTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 	changes, err := lister.ListChanges()
 	if err != nil {
 		t.Fatalf("ListChanges failed: %v", err)
@@ -141,7 +150,10 @@ Reset feature
 	}
 
 	// Test listing
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 	specs, err := lister.ListSpecs()
 	if err != nil {
 		t.Fatalf("ListSpecs failed: %v", err)
@@ -165,7 +177,10 @@ Reset feature
 
 func TestListSpecs_NoSpecs(t *testing.T) {
 	tmpDir := t.TempDir()
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 	specs, err := lister.ListSpecs()
 	if err != nil {
 		t.Fatalf("ListSpecs failed: %v", err)
@@ -191,7 +206,10 @@ func TestListSpecs_FallbackTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 	specs, err := lister.ListSpecs()
 	if err != nil {
 		t.Fatalf("ListSpecs failed: %v", err)
@@ -249,7 +267,10 @@ func TestListAll(t *testing.T) {
 	}
 
 	// Test listing all items
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 	items, err := lister.ListAll(nil)
 	if err != nil {
 		t.Fatalf("ListAll failed: %v", err)
@@ -304,7 +325,10 @@ func TestListAll_FilterByType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 
 	// Test filtering for changes only
 	changeType := ItemTypeChange
@@ -360,7 +384,10 @@ func TestListAll_NoSorting(t *testing.T) {
 		}
 	}
 
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 
 	// Test with sorting disabled
 	items, err := lister.ListAll(&ListAllOptions{
@@ -388,7 +415,10 @@ func TestListAll_NoSorting(t *testing.T) {
 
 func TestListAll_Empty(t *testing.T) {
 	tmpDir := t.TempDir()
-	lister := NewLister(tmpDir)
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
 
 	items, err := lister.ListAll(nil)
 	if err != nil {
@@ -397,5 +427,88 @@ func TestListAll_Empty(t *testing.T) {
 
 	if len(items) != 0 {
 		t.Errorf("Expected empty list, got %d items", len(items))
+	}
+}
+
+func TestListChanges_CustomRootDir(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create spectr.yaml with custom root_dir
+	configContent := `root_dir: myspecs`
+	if err := os.WriteFile(filepath.Join(tmpDir, "spectr.yaml"), []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create change with custom root_dir
+	changesDir := filepath.Join(tmpDir, "myspecs", "changes")
+	changeDir := filepath.Join(changesDir, "test-change")
+	if err := os.MkdirAll(changeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	proposalContent := `# Change: Custom Root Test`
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test listing
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
+
+	changes, err := lister.ListChanges()
+	if err != nil {
+		t.Fatalf("ListChanges failed: %v", err)
+	}
+
+	if len(changes) != 1 {
+		t.Fatalf("Expected 1 change, got %d", len(changes))
+	}
+
+	if changes[0].Title != "Custom Root Test" {
+		t.Errorf("Expected title 'Custom Root Test', got %q", changes[0].Title)
+	}
+}
+
+func TestListSpecs_CustomRootDir(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create spectr.yaml with custom root_dir
+	configContent := `root_dir: myspecs`
+	if err := os.WriteFile(filepath.Join(tmpDir, "spectr.yaml"), []byte(configContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create spec with custom root_dir
+	specsDir := filepath.Join(tmpDir, "myspecs", "specs")
+	specDir := filepath.Join(specsDir, "test-spec")
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	specContent := `# Custom Spec
+### Requirement: Feature`
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test listing
+	lister, err := NewLister(tmpDir)
+	if err != nil {
+		t.Fatalf("NewLister failed: %v", err)
+	}
+
+	specs, err := lister.ListSpecs()
+	if err != nil {
+		t.Fatalf("ListSpecs failed: %v", err)
+	}
+
+	if len(specs) != 1 {
+		t.Fatalf("Expected 1 spec, got %d", len(specs))
+	}
+
+	if specs[0].Title != "Custom Spec" {
+		t.Errorf("Expected title 'Custom Spec', got %q", specs[0].Title)
 	}
 }

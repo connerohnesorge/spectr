@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 //nolint:revive // cognitive-complexity - comprehensive test coverage
@@ -167,4 +169,139 @@ func TestGetActiveChangeIDs(t *testing.T) {
 
 	// Verify archive is excluded
 	verifyChangesExcluded(t, changes, []string{"archived-change"})
+}
+
+// TestGetActiveChangesWithConfig_CustomRootDir tests discovery with custom root_dir
+func TestGetActiveChangesWithConfig_CustomRootDir(t *testing.T) {
+	tmpDir := t.TempDir()
+	customRoot := "my-specs"
+	changesDir := filepath.Join(tmpDir, customRoot, "changes")
+
+	// Create test structure with custom root
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create test changes
+	testChanges := []string{"feature-a", "feature-b"}
+	for _, name := range testChanges {
+		createChangeDir(t, changesDir, name, "# Test")
+	}
+
+	// Create config with custom root
+	cfg := &config.Config{
+		RootDir:     customRoot,
+		ProjectRoot: tmpDir,
+	}
+
+	// Test discovery with config
+	changes, err := GetActiveChangesWithConfig(cfg)
+	if err != nil {
+		t.Fatalf("GetActiveChangesWithConfig failed: %v", err)
+	}
+
+	if len(changes) != len(testChanges) {
+		t.Errorf("Expected %d changes, got %d", len(testChanges), len(changes))
+	}
+
+	// Verify all changes found
+	changeMap := make(map[string]bool)
+	for _, c := range changes {
+		changeMap[c] = true
+	}
+	for _, expected := range testChanges {
+		if !changeMap[expected] {
+			t.Errorf("Expected change %s not found", expected)
+		}
+	}
+}
+
+// TestGetActiveChangesWithConfig_FromConfigFile tests discovery with spectr.yaml
+func TestGetActiveChangesWithConfig_FromConfigFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	customRoot := "docs"
+
+	// Create spectr.yaml with custom root_dir
+	configContent := "root_dir: " + customRoot + "\n"
+	configPath := filepath.Join(tmpDir, "spectr.yaml")
+	if err := os.WriteFile(configPath, []byte(configContent), testFilePerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create changes directory with custom root
+	changesDir := filepath.Join(tmpDir, customRoot, "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create test change
+	createChangeDir(t, changesDir, "test-change", "# Test")
+
+	// Load config and test discovery
+	cfg, err := config.LoadFromPath(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to load config: %v", err)
+	}
+
+	changes, err := GetActiveChangesWithConfig(cfg)
+	if err != nil {
+		t.Fatalf("GetActiveChangesWithConfig failed: %v", err)
+	}
+
+	if len(changes) != 1 {
+		t.Errorf("Expected 1 change, got %d", len(changes))
+	}
+
+	if len(changes) > 0 && changes[0] != "test-change" {
+		t.Errorf("Expected change 'test-change', got '%s'", changes[0])
+	}
+}
+
+// TestGetActiveChanges_BackwardCompatibility ensures existing code still works
+func TestGetActiveChanges_BackwardCompatibility(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+
+	// Create standard structure
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "legacy-change", "# Legacy")
+
+	// Test using old API (should still work)
+	changes, err := GetActiveChanges(tmpDir)
+	if err != nil {
+		t.Fatalf("GetActiveChanges failed: %v", err)
+	}
+
+	if len(changes) != 1 || changes[0] != "legacy-change" {
+		t.Errorf("Backward compatibility broken: expected ['legacy-change'], got %v", changes)
+	}
+}
+
+// TestGetActiveChangeIDsWithConfig tests the config-based ID function
+func TestGetActiveChangeIDsWithConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "id-test", "# Test")
+
+	cfg := &config.Config{
+		RootDir:     "spectr",
+		ProjectRoot: tmpDir,
+	}
+
+	ids, err := GetActiveChangeIDsWithConfig(cfg)
+	if err != nil {
+		t.Fatalf("GetActiveChangeIDsWithConfig failed: %v", err)
+	}
+
+	if len(ids) != 1 || ids[0] != "id-test" {
+		t.Errorf("Expected ['id-test'], got %v", ids)
+	}
 }

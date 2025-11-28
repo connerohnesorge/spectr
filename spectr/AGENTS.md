@@ -69,6 +69,7 @@ When code implementation diverges from specs, sync to update specs:
 ## Before Any Task
 
 **Context Checklist:**
+- [ ] Check for `spectr.yaml` to see if a custom root_dir is configured
 - [ ] Read relevant specs in `specs/[capability]/spec.md`
 - [ ] Check pending changes in `changes/` for conflicts
 - [ ] Read `spectr/project.md` for conventions
@@ -139,6 +140,12 @@ spectr/
 │       └── specs/          # Delta changes
 │           └── [capability]/
 │               └── spec.md # ADDED/MODIFIED/REMOVED
+```
+
+**Note:** The default root directory is `spectr/`. This can be customized via `spectr.yaml`:
+```yaml
+# spectr.yaml (at project root)
+root_dir: specs  # Uses "specs/" instead of "spectr/"
 ```
 
 ## Creating Change Proposals

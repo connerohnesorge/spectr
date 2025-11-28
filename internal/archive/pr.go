@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/git"
 )
 
@@ -180,13 +181,15 @@ func validateGitEnvironment() error {
 
 // stageArchiveFiles stages the archived directory and updated specs
 func stageArchiveFiles(ctx PRContext, workingDir string) error {
-	// Construct paths relative to the worktree's spectr root
-	worktreeSpectrRoot := filepath.Join(workingDir, "spectr")
+	// Load config from worktree
+	cfg, err := config.LoadFromPath(workingDir)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
 
 	paths := []string{
 		filepath.Join(
-			worktreeSpectrRoot,
-			"changes",
+			cfg.ChangesPath(),
 			"archive",
 			ctx.ArchiveName,
 		),
@@ -194,7 +197,7 @@ func stageArchiveFiles(ctx PRContext, workingDir string) error {
 
 	// Add specs directory if specs were updated
 	if !ctx.SkipSpecs {
-		paths = append(paths, filepath.Join(worktreeSpectrRoot, "specs"))
+		paths = append(paths, cfg.SpecsPath())
 	}
 
 	if err := stageFilesInWorktree(paths, workingDir); err != nil {

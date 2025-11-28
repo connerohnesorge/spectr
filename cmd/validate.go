@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
@@ -53,17 +54,23 @@ func (c *ValidateCmd) Run() error {
 func (c *ValidateCmd) runDirectValidation(
 	projectPath, itemName string,
 ) error {
+	// Load config
+	cfg, err := config.LoadFromPath(projectPath)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
 	// Determine item type
-	info, err := validation.DetermineItemType(projectPath, itemName, c.Type)
+	info, err := validation.DetermineItemTypeWithConfig(cfg, itemName, c.Type)
 	if err != nil {
 		return err
 	}
 
 	// Create validator and validate
 	validator := validation.NewValidator(c.Strict)
-	report, err := validation.ValidateItemByType(
+	report, err := validation.ValidateItemByTypeWithConfig(
 		validator,
-		projectPath,
+		cfg,
 		itemName,
 		info.ItemType,
 	)

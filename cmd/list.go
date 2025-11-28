@@ -51,7 +51,10 @@ func (c *ListCmd) Run() error {
 	}
 
 	// Create lister instance for the project
-	lister := list.NewLister(projectPath)
+	lister, err := list.NewLister(projectPath)
+	if err != nil {
+		return fmt.Errorf("failed to create lister: %w", err)
+	}
 
 	// Route to appropriate listing function
 	if c.All {

@@ -5,7 +5,7 @@ import (
 )
 
 // newListerForArchive creates a lister for the archive package
-func newListerForArchive(projectPath string) *list.Lister {
+func newListerForArchive(projectPath string) (*list.Lister, error) {
 	return list.NewLister(projectPath)
 }
 

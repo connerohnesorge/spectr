@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/list"
 )
 
@@ -127,8 +128,14 @@ func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
 		Yes: true,
 	}
 
+	// Create config for the project
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
 	// Run the archive workflow
-	if err := archive.Archive(archiveCmd, projectPath); err != nil {
+	if err := archive.ArchiveWithConfig(archiveCmd, cfg); err != nil {
 		return fmt.Errorf("archive workflow failed: %w", err)
 	}
 

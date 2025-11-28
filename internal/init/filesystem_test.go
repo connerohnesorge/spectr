@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 //nolint:revive // cognitive-complexity - comprehensive test coverage
@@ -275,8 +277,8 @@ func TestFileExists(t *testing.T) {
 	})
 }
 
-func TestIsSpectrInitialized(t *testing.T) {
-	t.Run("returns true when spectr/project.md exists", func(t *testing.T) {
+func TestIsSpectrInitializedWithConfig(t *testing.T) {
+	t.Run("returns true when project.md exists in default root", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		spectrDir := filepath.Join(tmpDir, "spectr")
 		projectFile := filepath.Join(spectrDir, "project.md")
@@ -292,20 +294,58 @@ func TestIsSpectrInitialized(t *testing.T) {
 			t.Fatalf("failed to create project.md: %v", err)
 		}
 
-		if !IsSpectrInitialized(tmpDir) {
-			t.Error("IsSpectrInitialized returned false for initialized project")
+		cfg := &config.Config{
+			RootDir:     "spectr",
+			ProjectRoot: tmpDir,
+		}
+
+		if !IsSpectrInitializedWithConfig(cfg) {
+			t.Error("IsSpectrInitializedWithConfig returned false for initialized project")
 		}
 	})
 
-	t.Run("returns false when spectr directory does not exist", func(t *testing.T) {
+	t.Run("returns true when project.md exists in custom root", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		customDir := filepath.Join(tmpDir, "my-specs")
+		projectFile := filepath.Join(customDir, "project.md")
+
+		// Create custom directory and project.md
+		err := os.Mkdir(customDir, 0755)
+		if err != nil {
+			t.Fatalf("failed to create custom directory: %v", err)
+		}
+
+		err = os.WriteFile(projectFile, []byte("# Project"), 0644)
+		if err != nil {
+			t.Fatalf("failed to create project.md: %v", err)
+		}
+
+		cfg := &config.Config{
+			RootDir:     "my-specs",
+			ProjectRoot: tmpDir,
+		}
+
+		if !IsSpectrInitializedWithConfig(cfg) {
+			t.Error(
+				"IsSpectrInitializedWithConfig returned false for initialized project with custom root",
+			)
+		}
+	})
+
+	t.Run("returns false when root directory does not exist", func(t *testing.T) {
 		tmpDir := t.TempDir()
 
-		if IsSpectrInitialized(tmpDir) {
-			t.Error("IsSpectrInitialized returned true for uninitialized project")
+		cfg := &config.Config{
+			RootDir:     "spectr",
+			ProjectRoot: tmpDir,
+		}
+
+		if IsSpectrInitializedWithConfig(cfg) {
+			t.Error("IsSpectrInitializedWithConfig returned true for uninitialized project")
 		}
 	})
 
-	t.Run("returns false when spectr exists but project.md does not", func(t *testing.T) {
+	t.Run("returns false when root exists but project.md does not", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		spectrDir := filepath.Join(tmpDir, "spectr")
 
@@ -315,15 +355,19 @@ func TestIsSpectrInitialized(t *testing.T) {
 			t.Fatalf("failed to create spectr directory: %v", err)
 		}
 
-		if IsSpectrInitialized(tmpDir) {
-			t.Error("IsSpectrInitialized returned true without project.md")
+		cfg := &config.Config{
+			RootDir:     "spectr",
+			ProjectRoot: tmpDir,
+		}
+
+		if IsSpectrInitializedWithConfig(cfg) {
+			t.Error("IsSpectrInitializedWithConfig returned true without project.md")
 		}
 	})
 
-	t.Run("returns false for empty path", func(t *testing.T) {
-		if IsSpectrInitialized("") {
-			//nolint:revive // cognitive-complexity - comprehensive test coverage
-			t.Error("IsSpectrInitialized returned true for empty path")
+	t.Run("returns false for nil config", func(t *testing.T) {
+		if IsSpectrInitializedWithConfig(nil) {
+			t.Error("IsSpectrInitializedWithConfig returned true for nil config")
 		}
 	})
 }

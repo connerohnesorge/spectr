@@ -9,17 +9,24 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/init/providers"
 )
 
 // InitExecutor handles the actual initialization process
 type InitExecutor struct {
 	projectPath string
+	rootDir     string // Custom root directory name (default: "spectr")
 	tm          *TemplateManager
 }
 
 // NewInitExecutor creates a new initialization executor
 func NewInitExecutor(cmd *InitCmd) (*InitExecutor, error) {
+	return NewInitExecutorWithRootDir(cmd, config.DefaultRootDir)
+}
+
+// NewInitExecutorWithRootDir creates a new initialization executor with a custom root directory
+func NewInitExecutorWithRootDir(cmd *InitCmd, rootDir string) (*InitExecutor, error) {
 	// Use the resolved path from InitCmd
 	projectPath := cmd.Path
 	if projectPath == "" {
@@ -35,6 +42,11 @@ func NewInitExecutor(cmd *InitCmd) (*InitExecutor, error) {
 			)
 	}
 
+	// Use default root dir if empty
+	if rootDir == "" {
+		rootDir = config.DefaultRootDir
+	}
+
 	// Initialize template manager
 	tm, err := NewTemplateManager()
 	if err != nil {
@@ -47,6 +59,7 @@ func NewInitExecutor(cmd *InitCmd) (*InitExecutor, error) {
 
 	return &InitExecutor{
 		projectPath: projectPath,
+		rootDir:     rootDir,
 		tm:          tm,
 	}, nil
 }
@@ -62,7 +75,11 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 1. Check if Spectr is already initialized
-	if IsSpectrInitialized(e.projectPath) {
+	cfg := &config.Config{
+		RootDir:     e.rootDir,
+		ProjectRoot: e.projectPath,
+	}
+	if IsSpectrInitializedWithConfig(cfg) {
 		result.Errors = append(
 			result.Errors,
 			"Spectr already initialized in this project",
@@ -70,8 +87,16 @@ func (e *InitExecutor) Execute(
 		// Don't return error - allow updating tool configurations
 	}
 
-	// 2. Create spectr/ directory structure
-	spectrDir := filepath.Join(e.projectPath, "spectr")
+	// 2. Create spectr.yaml if non-default root directory
+	if err := e.createConfigFile(result); err != nil {
+		result.Errors = append(
+			result.Errors,
+			fmt.Sprintf("failed to create config file: %v", err),
+		)
+	}
+
+	// 3. Create spectr/ directory structure
+	spectrDir := filepath.Join(e.projectPath, e.rootDir)
 	if err := e.createDirectoryStructure(spectrDir, result); err != nil {
 		return result, fmt.Errorf(
 			"failed to create directory structure: %w",
@@ -79,7 +104,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 3. Create project.md
+	// 4. Create project.md
 	if err := e.createProjectMd(spectrDir, result); err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -87,7 +112,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 4. Create AGENTS.md
+	// 5. Create AGENTS.md
 	if err := e.createAgentsMd(spectrDir, result); err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -95,7 +120,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 5. Configure selected providers
+	// 6. Configure selected providers
 	if err := e.configureProviders(selectedProviderIDs, spectrDir, result); err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -103,7 +128,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 6. Create README if it doesn't exist
+	// 7. Create README if it doesn't exist
 	if err := e.createReadmeIfMissing(result); err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -112,6 +137,39 @@ func (e *InitExecutor) Execute(
 	}
 
 	return result, nil
+}
+
+// createConfigFile creates spectr.yaml with the given root directory name
+// Only creates the file if a non-default root directory is specified
+func (e *InitExecutor) createConfigFile(result *ExecutionResult) error {
+	// Don't create config file for default root - it's optional
+	if e.rootDir == config.DefaultRootDir {
+		return nil
+	}
+
+	configPath := filepath.Join(e.projectPath, config.ConfigFileName)
+
+	// Check if it already exists
+	if FileExists(configPath) {
+		result.Errors = append(
+			result.Errors,
+			"spectr.yaml already exists, skipping",
+		)
+
+		return nil
+	}
+
+	// Create config file content
+	content := fmt.Sprintf("# Spectr configuration\nroot_dir: %s\n", e.rootDir)
+
+	// Write file
+	if err := os.WriteFile(configPath, []byte(content), filePerm); err != nil {
+		return fmt.Errorf("failed to write spectr.yaml: %w", err)
+	}
+
+	result.CreatedFiles = append(result.CreatedFiles, config.ConfigFileName)
+
+	return nil
 }
 
 // createDirectoryStructure creates the spectr/ directory
@@ -178,7 +236,7 @@ func (e *InitExecutor) createProjectMd(
 		return fmt.Errorf("failed to write project.md: %w", err)
 	}
 
-	result.CreatedFiles = append(result.CreatedFiles, "spectr/project.md")
+	result.CreatedFiles = append(result.CreatedFiles, filepath.Join(e.rootDir, "project.md"))
 
 	return nil
 }
@@ -211,7 +269,7 @@ func (e *InitExecutor) createAgentsMd(
 		return fmt.Errorf("failed to write AGENTS.md: %w", err)
 	}
 
-	result.CreatedFiles = append(result.CreatedFiles, "spectr/AGENTS.md")
+	result.CreatedFiles = append(result.CreatedFiles, filepath.Join(e.rootDir, "AGENTS.md"))
 
 	return nil
 }

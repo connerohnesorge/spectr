@@ -1,3 +1,5 @@
+// Package cmd provides command-line interface implementations for Spectr.
+// This file contains the init command for initializing new Spectr projects.
 package cmd
 
 import (
@@ -6,6 +8,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/connerohnesorge/spectr/internal/config"
 	initpkg "github.com/connerohnesorge/spectr/internal/init"
 	"github.com/connerohnesorge/spectr/internal/init/providers"
 )
@@ -43,11 +46,17 @@ func (c *InitCmd) Run() error {
 	c.Path = expandedPath
 
 	// Check if already initialized
-	if c.NonInteractive && initpkg.IsSpectrInitialized(expandedPath) {
-		return fmt.Errorf(
-			"init failed: Spectr is already initialized in %s",
-			expandedPath,
-		)
+	if c.NonInteractive {
+		cfg := &config.Config{
+			RootDir:     config.DefaultRootDir,
+			ProjectRoot: expandedPath,
+		}
+		if initpkg.IsSpectrInitializedWithConfig(cfg) {
+			return fmt.Errorf(
+				"init failed: Spectr is already initialized in %s",
+				expandedPath,
+			)
+		}
 	}
 
 	// Non-interactive mode

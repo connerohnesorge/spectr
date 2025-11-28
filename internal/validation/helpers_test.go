@@ -253,7 +253,7 @@ func TestValidateSingleItem_InvalidContent(t *testing.T) {
 	setupTestProject(t, tmpDir, nil, []string{"bad-spec"})
 
 	// Create invalid spec
-	specDir := filepath.Join(tmpDir, SpectrDir, "specs", "bad-spec")
+	specDir := filepath.Join(tmpDir, DefaultSpectrDir, "specs", "bad-spec")
 	specPath := filepath.Join(specDir, "spec.md")
 	err := os.WriteFile(specPath, []byte("# Bad Spec\nNo proper content"), testFilePerm)
 	assert.NoError(t, err)
@@ -306,7 +306,7 @@ func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
 	t.Helper()
 
 	// Create changes directory
-	changesDir := filepath.Join(tmpDir, SpectrDir, "changes")
+	changesDir := filepath.Join(tmpDir, DefaultSpectrDir, "changes")
 	err := os.MkdirAll(changesDir, testDirPerm)
 	assert.NoError(t, err)
 
@@ -322,7 +322,7 @@ func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
 	}
 
 	// Create specs directory
-	specsDir := filepath.Join(tmpDir, SpectrDir, "specs")
+	specsDir := filepath.Join(tmpDir, DefaultSpectrDir, "specs")
 	err = os.MkdirAll(specsDir, testDirPerm)
 	assert.NoError(t, err)
 
@@ -342,7 +342,7 @@ func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
 func createValidChange(t *testing.T, tmpDir, changeName string) string {
 	t.Helper()
 
-	changeDir := filepath.Join(tmpDir, SpectrDir, "changes", changeName)
+	changeDir := filepath.Join(tmpDir, DefaultSpectrDir, "changes", changeName)
 
 	// Create proposal.md
 	proposalContent := `# Change: Add Feature
@@ -396,7 +396,7 @@ The system SHALL provide the new feature.
 func createInvalidChange(t *testing.T, tmpDir, changeName string) string {
 	t.Helper()
 
-	changeDir := filepath.Join(tmpDir, SpectrDir, "changes", changeName)
+	changeDir := filepath.Join(tmpDir, DefaultSpectrDir, "changes", changeName)
 
 	// Create minimal proposal.md that might fail validation
 	proposalPath := filepath.Join(changeDir, "proposal.md")
@@ -410,7 +410,7 @@ func createInvalidChange(t *testing.T, tmpDir, changeName string) string {
 func createValidSpec(t *testing.T, tmpDir, specName string) string {
 	t.Helper()
 
-	specDir := filepath.Join(tmpDir, SpectrDir, "specs", specName)
+	specDir := filepath.Join(tmpDir, DefaultSpectrDir, "specs", specName)
 	err := os.MkdirAll(specDir, testDirPerm)
 	assert.NoError(t, err)
 

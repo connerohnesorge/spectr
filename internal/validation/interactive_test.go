@@ -43,7 +43,7 @@ func TestValidateItems(t *testing.T) {
 	setupTestProject(t, tmpDir, nil, []string{"test-spec"})
 	createValidSpec(t, tmpDir, "test-spec")
 
-	specPath := filepath.Join(tmpDir, SpectrDir, "specs", "test-spec", "spec.md")
+	specPath := filepath.Join(tmpDir, DefaultSpectrDir, "specs", "test-spec", "spec.md")
 	items := []ValidationItem{
 		{
 			Name:     "test-spec",
@@ -72,12 +72,12 @@ func TestValidateItems_MultipleItems(t *testing.T) {
 		{
 			Name:     "spec1",
 			ItemType: ItemTypeSpec,
-			Path:     filepath.Join(tmpDir, SpectrDir, "specs", "spec1", "spec.md"),
+			Path:     filepath.Join(tmpDir, DefaultSpectrDir, "specs", "spec1", "spec.md"),
 		},
 		{
 			Name:     "spec2",
 			ItemType: ItemTypeSpec,
-			Path:     filepath.Join(tmpDir, SpectrDir, "specs", "spec2", "spec.md"),
+			Path:     filepath.Join(tmpDir, DefaultSpectrDir, "specs", "spec2", "spec.md"),
 		},
 	}
 
@@ -97,7 +97,7 @@ func TestValidateItems_WithFailures(t *testing.T) {
 	createValidSpec(t, tmpDir, "good-spec")
 
 	// Create invalid spec
-	badSpecDir := filepath.Join(tmpDir, SpectrDir, "specs", "bad-spec")
+	badSpecDir := filepath.Join(tmpDir, DefaultSpectrDir, "specs", "bad-spec")
 	err := os.MkdirAll(badSpecDir, testDirPerm)
 	assert.NoError(t, err)
 	badSpecPath := filepath.Join(badSpecDir, "spec.md")
@@ -108,7 +108,7 @@ func TestValidateItems_WithFailures(t *testing.T) {
 		{
 			Name:     "good-spec",
 			ItemType: ItemTypeSpec,
-			Path:     filepath.Join(tmpDir, SpectrDir, "specs", "good-spec", "spec.md"),
+			Path:     filepath.Join(tmpDir, DefaultSpectrDir, "specs", "good-spec", "spec.md"),
 		},
 		{
 			Name:     "bad-spec",
@@ -218,7 +218,7 @@ func TestRunValidationAndPrint_JSON(t *testing.T) {
 		{
 			Name:     "test-spec",
 			ItemType: ItemTypeSpec,
-			Path:     filepath.Join(tmpDir, SpectrDir, "specs", "test-spec", "spec.md"),
+			Path:     filepath.Join(tmpDir, DefaultSpectrDir, "specs", "test-spec", "spec.md"),
 		},
 	}
 

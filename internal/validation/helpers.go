@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"slices"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 )
 
@@ -14,8 +15,9 @@ const (
 	ItemTypeChange = "change"
 	// ItemTypeSpec represents a spec item type
 	ItemTypeSpec = "spec"
-	// SpectrDir is the base directory for spectr files
-	SpectrDir = "spectr"
+	// DefaultSpectrDir is the default spectr directory name
+	// Deprecated: Use config.DefaultRootDir instead
+	DefaultSpectrDir = config.DefaultRootDir
 )
 
 // ItemTypeInfo holds information about an item's type
@@ -25,12 +27,14 @@ type ItemTypeInfo struct {
 	IsSpec   bool
 }
 
-// DetermineItemType determines if an item is a change or spec
-func DetermineItemType(
-	projectPath, itemName string,
+// DetermineItemTypeWithConfig determines if an item is a change or spec
+// using config.
+func DetermineItemTypeWithConfig(
+	cfg *config.Config,
+	itemName string,
 	typeFlag *string,
 ) (ItemTypeInfo, error) {
-	changes, err := discovery.GetActiveChangeIDs(projectPath)
+	changes, err := discovery.GetActiveChangeIDsWithConfig(cfg)
 	if err != nil {
 		return ItemTypeInfo{}, fmt.Errorf(
 			"failed to discover changes: %w",
@@ -38,7 +42,7 @@ func DetermineItemType(
 		)
 	}
 
-	specs, err := discovery.GetSpecIDs(projectPath)
+	specs, err := discovery.GetSpecIDsWithConfig(cfg)
 	if err != nil {
 		return ItemTypeInfo{}, fmt.Errorf(
 			"failed to discover specs: %w",
@@ -87,31 +91,52 @@ func DetermineItemType(
 	return info, nil
 }
 
-// ValidateItemByType validates an item based on its type
-func ValidateItemByType(
+// DetermineItemType determines if an item is a change or spec.
+// Deprecated: Use DetermineItemTypeWithConfig for projects with custom root
+// directories.
+func DetermineItemType(
+	projectPath, itemName string,
+	typeFlag *string,
+) (ItemTypeInfo, error) {
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return DetermineItemTypeWithConfig(cfg, itemName, typeFlag)
+}
+
+// ValidateItemByTypeWithConfig validates an item based on its type using
+// the provided config.
+func ValidateItemByTypeWithConfig(
 	validator *Validator,
-	projectPath, itemName, itemType string,
+	cfg *config.Config,
+	itemName, itemType string,
 ) (*ValidationReport, error) {
 	if itemType == ItemTypeChange {
-		changePath := filepath.Join(
-			projectPath,
-			SpectrDir,
-			"changes",
-			itemName,
-		)
+		changePath := filepath.Join(cfg.ChangesDir(), itemName)
 
 		return validator.ValidateChange(changePath)
 	}
 
-	specPath := filepath.Join(
-		projectPath,
-		SpectrDir,
-		"specs",
-		itemName,
-		"spec.md",
-	)
+	specPath := filepath.Join(cfg.SpecsDir(), itemName, "spec.md")
 
 	return validator.ValidateSpec(specPath)
+}
+
+// ValidateItemByType validates an item based on its type.
+// Deprecated: Use ValidateItemByTypeWithConfig for projects with custom root
+// directories.
+func ValidateItemByType(
+	validator *Validator,
+	projectPath, itemName, itemType string,
+) (*ValidationReport, error) {
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return ValidateItemByTypeWithConfig(validator, cfg, itemName, itemType)
 }
 
 // ValidateSingleItem validates a single item and returns the bulk result

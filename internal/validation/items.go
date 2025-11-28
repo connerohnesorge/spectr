@@ -70,7 +70,7 @@ func GetChangeItems(
 		)
 	}
 
-	basePath := filepath.Join(projectPath, SpectrDir, "changes")
+	basePath := filepath.Join(projectPath, DefaultSpectrDir, "changes")
 
 	return CreateValidationItems(
 		projectPath,
@@ -89,7 +89,7 @@ func GetSpecItems(
 		return nil, fmt.Errorf("failed to discover specs: %w", err)
 	}
 
-	basePath := filepath.Join(projectPath, SpectrDir, "specs")
+	basePath := filepath.Join(projectPath, DefaultSpectrDir, "specs")
 
 	return CreateValidationItems(
 		projectPath,

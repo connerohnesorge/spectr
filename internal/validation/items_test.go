@@ -191,7 +191,7 @@ func TestGetChangeItems(t *testing.T) {
 	for _, item := range items {
 		assert.Equal(t, ItemTypeChange, item.ItemType)
 		assert.True(t, expectedNames[item.Name], "unexpected change: %s", item.Name)
-		expectedPath := filepath.Join(tmpDir, SpectrDir, "changes", item.Name)
+		expectedPath := filepath.Join(tmpDir, DefaultSpectrDir, "changes", item.Name)
 		assert.Equal(t, expectedPath, item.Path)
 	}
 }
@@ -217,7 +217,7 @@ func TestGetChangeItems_PathConstruction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))
 
-	expectedPath := filepath.Join(tmpDir, SpectrDir, "changes", "add-feature")
+	expectedPath := filepath.Join(tmpDir, DefaultSpectrDir, "changes", "add-feature")
 	assert.Equal(t, expectedPath, items[0].Path)
 }
 
@@ -242,7 +242,7 @@ func TestGetSpecItems(t *testing.T) {
 	for _, item := range items {
 		assert.Equal(t, ItemTypeSpec, item.ItemType)
 		assert.True(t, expectedNames[item.Name], "unexpected spec: %s", item.Name)
-		expectedPath := filepath.Join(tmpDir, SpectrDir, "specs", item.Name, "spec.md")
+		expectedPath := filepath.Join(tmpDir, DefaultSpectrDir, "specs", item.Name, "spec.md")
 		assert.Equal(t, expectedPath, item.Path)
 	}
 }
@@ -268,7 +268,7 @@ func TestGetSpecItems_PathConstruction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))
 
-	expectedPath := filepath.Join(tmpDir, SpectrDir, "specs", "user-auth", "spec.md")
+	expectedPath := filepath.Join(tmpDir, DefaultSpectrDir, "specs", "user-auth", "spec.md")
 	assert.Equal(t, expectedPath, items[0].Path)
 }
 
@@ -341,7 +341,7 @@ func TestGetChangeItems_WithArchive(t *testing.T) {
 	setupTestProject(t, tmpDir, []string{"active-change"}, nil)
 
 	// Create archived change
-	archiveDir := filepath.Join(tmpDir, SpectrDir, "changes", "archive", "old-change")
+	archiveDir := filepath.Join(tmpDir, DefaultSpectrDir, "changes", "archive", "old-change")
 	err := os.MkdirAll(archiveDir, testDirPerm)
 	assert.NoError(t, err)
 	err = os.WriteFile(filepath.Join(archiveDir, "proposal.md"), []byte("# Old"), testFilePerm)
@@ -360,7 +360,7 @@ func TestGetChangeItems_WithHidden(t *testing.T) {
 	setupTestProject(t, tmpDir, []string{"visible-change"}, nil)
 
 	// Create hidden directory
-	hiddenDir := filepath.Join(tmpDir, SpectrDir, "changes", ".hidden")
+	hiddenDir := filepath.Join(tmpDir, DefaultSpectrDir, "changes", ".hidden")
 	err := os.MkdirAll(hiddenDir, testDirPerm)
 	assert.NoError(t, err)
 	err = os.WriteFile(filepath.Join(hiddenDir, "proposal.md"), []byte("# Hidden"), testFilePerm)
@@ -379,7 +379,7 @@ func TestGetSpecItems_WithHidden(t *testing.T) {
 	setupTestProject(t, tmpDir, nil, []string{"visible-spec"})
 
 	// Create hidden directory
-	hiddenDir := filepath.Join(tmpDir, SpectrDir, "specs", ".hidden")
+	hiddenDir := filepath.Join(tmpDir, DefaultSpectrDir, "specs", ".hidden")
 	err := os.MkdirAll(hiddenDir, testDirPerm)
 	assert.NoError(t, err)
 	err = os.WriteFile(filepath.Join(hiddenDir, "spec.md"), []byte("# Hidden"), testFilePerm)

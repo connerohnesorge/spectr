@@ -419,6 +419,34 @@ spectr archive <CHANGE-ID> [FLAGS]
 - `--yes` / `-y`: Skip confirmation prompts (non-interactive)
 - `--no-interactive`: Disable interactive mode
 
+**Partial ID Matching:**
+
+You don't need to type the full change ID. Spectr supports intelligent partial matching:
+
+```bash
+# Instead of typing the full ID:
+spectr archive refactor-unified-interactive-tui
+
+# Use a prefix:
+spectr archive refactor
+# Output: Resolved 'refactor' -> 'refactor-unified-interactive-tui'
+
+# Or a substring:
+spectr archive unified
+# Output: Resolved 'unified' -> 'refactor-unified-interactive-tui'
+
+# Case-insensitive:
+spectr archive REFACTOR
+# Output: Resolved 'REFACTOR' -> 'refactor-unified-interactive-tui'
+```
+
+The matching algorithm:
+1. **Exact match**: Used directly (no resolution message)
+2. **Prefix match**: Finds IDs starting with your input (case-insensitive)
+3. **Substring match**: Finds IDs containing your input (fallback if no prefix match)
+
+If multiple changes match, you'll get an error listing the ambiguous matches.
+
 **Examples:**
 ```bash
 # Archive with interactive confirmation
@@ -429,6 +457,9 @@ spectr archive fix-typo --skip-specs
 
 # Non-interactive archive (for CI/CD)
 spectr archive add-feature --yes
+
+# Use partial ID for long change names
+spectr archive refactor --yes
 ```
 
 **What It Does:**

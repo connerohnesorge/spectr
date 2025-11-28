@@ -62,3 +62,80 @@ func GetActiveChanges(projectPath string) ([]string, error) {
 func GetActiveChangeIDs(projectRoot string) ([]string, error) {
 	return GetActiveChanges(projectRoot)
 }
+
+// ResolveResult contains the resolved change ID and whether it was a partial match
+type ResolveResult struct {
+	ChangeID     string
+	PartialMatch bool
+}
+
+// ResolveChangeID resolves a partial change ID to a full change ID.
+// The resolution algorithm:
+// 1. Exact match: returns immediately if partialID exactly matches a change ID
+// 2. Prefix match: finds all change IDs that start with partialID (case-insensitive)
+// 3. Substring match: if no prefix matches, finds all change IDs containing partialID (case-insensitive)
+//
+// Returns an error if:
+// - No changes match the partial ID
+// - Multiple changes match the partial ID (ambiguous)
+func ResolveChangeID(partialID string, projectRoot string) (ResolveResult, error) {
+	changes, err := GetActiveChangeIDs(projectRoot)
+	if err != nil {
+		return ResolveResult{}, fmt.Errorf("get active changes: %w", err)
+	}
+
+	if len(changes) == 0 {
+		return ResolveResult{}, fmt.Errorf("no change found matching '%s'", partialID)
+	}
+
+	partialLower := strings.ToLower(partialID)
+
+	// Check for exact match first
+	for _, change := range changes {
+		if change == partialID {
+			return ResolveResult{ChangeID: change, PartialMatch: false}, nil
+		}
+	}
+
+	// Try prefix matching (case-insensitive)
+	var prefixMatches []string
+	for _, change := range changes {
+		if strings.HasPrefix(strings.ToLower(change), partialLower) {
+			prefixMatches = append(prefixMatches, change)
+		}
+	}
+
+	if len(prefixMatches) == 1 {
+		return ResolveResult{ChangeID: prefixMatches[0], PartialMatch: true}, nil
+	}
+
+	if len(prefixMatches) > 1 {
+		return ResolveResult{}, fmt.Errorf(
+			"ambiguous ID '%s' matches multiple changes: %s",
+			partialID,
+			strings.Join(prefixMatches, ", "),
+		)
+	}
+
+	// Try substring matching (case-insensitive) as fallback
+	var substringMatches []string
+	for _, change := range changes {
+		if strings.Contains(strings.ToLower(change), partialLower) {
+			substringMatches = append(substringMatches, change)
+		}
+	}
+
+	if len(substringMatches) == 1 {
+		return ResolveResult{ChangeID: substringMatches[0], PartialMatch: true}, nil
+	}
+
+	if len(substringMatches) > 1 {
+		return ResolveResult{}, fmt.Errorf(
+			"ambiguous ID '%s' matches multiple changes: %s",
+			partialID,
+			strings.Join(substringMatches, ", "),
+		)
+	}
+
+	return ResolveResult{}, fmt.Errorf("no change found matching '%s'", partialID)
+}

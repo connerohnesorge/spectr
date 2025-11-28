@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -70,15 +71,20 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 		}
 		changeID = selectedID
 		cmd.ChangeID = changeID
+	} else {
+		// Resolve partial ID to full change ID
+		result, err := discovery.ResolveChangeID(changeID, projectRoot)
+		if err != nil {
+			return err
+		}
+		if result.PartialMatch {
+			fmt.Printf("Resolved '%s' -> '%s'\n\n", changeID, result.ChangeID)
+		}
+		changeID = result.ChangeID
+		cmd.ChangeID = changeID
 	}
 
 	changeDir := filepath.Join(spectrRoot, "changes", changeID)
-
-	// Check if change exists
-	_, err = os.Stat(changeDir)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("change not found: %s", changeID)
-	}
 
 	fmt.Printf("Archiving change: %s\n\n", changeID)
 

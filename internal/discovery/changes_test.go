@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 //nolint:revive // cognitive-complexity - comprehensive test coverage
@@ -96,6 +98,50 @@ func TestGetActiveChanges(t *testing.T) {
 	}
 	if changeMap["incomplete"] {
 		t.Error("Incomplete change should not be included")
+	}
+}
+
+func TestGetActiveChangesWithConfig(t *testing.T) {
+	// Create temporary test directory
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+
+	// Create test structure
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create active changes
+	testChanges := []string{"add-feature", "fix-bug"}
+	for _, name := range testChanges {
+		createChangeDir(t, changesDir, name, "# Test")
+	}
+
+	// Create config
+	cfg := &config.Config{
+		RootDir:     "spectr",
+		ProjectRoot: tmpDir,
+	}
+
+	// Test discovery
+	changes, err := GetActiveChangesWithConfig(cfg)
+	if err != nil {
+		t.Fatalf("GetActiveChangesWithConfig failed: %v", err)
+	}
+
+	if len(changes) != len(testChanges) {
+		t.Errorf("Expected %d changes, got %d", len(testChanges), len(changes))
+	}
+
+	// Verify all expected changes are found
+	changeMap := make(map[string]bool)
+	for _, c := range changes {
+		changeMap[c] = true
+	}
+	for _, expected := range testChanges {
+		if !changeMap[expected] {
+			t.Errorf("Expected change %s not found", expected)
+		}
 	}
 }
 
@@ -362,5 +408,46 @@ func TestResolveChangeID_EmptyChanges(t *testing.T) {
 	expectedMsg := "no change found matching 'anything'"
 	if err.Error() != expectedMsg {
 		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+	}
+}
+
+func TestResolveChangeIDWithConfig_CustomRootDir(t *testing.T) {
+	tmpDir := t.TempDir()
+	customRoot := "my-specs"
+	changesDir := filepath.Join(tmpDir, customRoot, "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "add-custom-feature", "# Test")
+	createChangeDir(t, changesDir, "update-custom-ui", "# Test")
+
+	cfg := &config.Config{
+		RootDir:     customRoot,
+		ProjectRoot: tmpDir,
+	}
+
+	// Test exact match
+	result, err := ResolveChangeIDWithConfig("add-custom-feature", cfg)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if result.ChangeID != "add-custom-feature" {
+		t.Errorf("Expected 'add-custom-feature', got '%s'", result.ChangeID)
+	}
+	if result.PartialMatch {
+		t.Error("Expected PartialMatch to be false for exact match")
+	}
+
+	// Test prefix match
+	result, err = ResolveChangeIDWithConfig("update", cfg)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if result.ChangeID != "update-custom-ui" {
+		t.Errorf("Expected 'update-custom-ui', got '%s'", result.ChangeID)
+	}
+	if !result.PartialMatch {
+		t.Error("Expected PartialMatch to be true for prefix match")
 	}
 }

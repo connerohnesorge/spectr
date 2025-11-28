@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 func TestGetSpecs(t *testing.T) {
@@ -56,6 +58,57 @@ func TestGetSpecs(t *testing.T) {
 	specs, err := GetSpecs(tmpDir)
 	if err != nil {
 		t.Fatalf("GetSpecs failed: %v", err)
+	}
+
+	if len(specs) != len(testSpecs) {
+		t.Errorf("Expected %d specs, got %d", len(testSpecs), len(specs))
+	}
+
+	// Verify all expected specs are found
+	specMap := make(map[string]bool)
+	for _, s := range specs {
+		specMap[s] = true
+	}
+	for _, expected := range testSpecs {
+		if !specMap[expected] {
+			t.Errorf("Expected spec %s not found", expected)
+		}
+	}
+}
+
+func TestGetSpecsWithConfig(t *testing.T) {
+	// Create temporary test directory
+	tmpDir := t.TempDir()
+	specsDir := filepath.Join(tmpDir, "spectr", "specs")
+
+	// Create test structure
+	if err := os.MkdirAll(specsDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create specs
+	testSpecs := []string{"auth", "api"}
+	for _, name := range testSpecs {
+		specDir := filepath.Join(specsDir, name)
+		if err := os.MkdirAll(specDir, testDirPerm); err != nil {
+			t.Fatal(err)
+		}
+		specPath := filepath.Join(specDir, "spec.md")
+		if err := os.WriteFile(specPath, []byte("# Test Spec"), testFilePerm); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Create config
+	cfg := &config.Config{
+		RootDir:     "spectr",
+		ProjectRoot: tmpDir,
+	}
+
+	// Test discovery
+	specs, err := GetSpecsWithConfig(cfg)
+	if err != nil {
+		t.Fatalf("GetSpecsWithConfig failed: %v", err)
 	}
 
 	if len(specs) != len(testSpecs) {
@@ -204,5 +257,58 @@ func TestGetSpecIDs_MissingSpecMd(t *testing.T) {
 
 	if len(specs) != 0 {
 		t.Errorf("Expected 0 specs (no spec.md), got %d", len(specs))
+	}
+}
+
+func TestGetSpecsWithConfig_CustomRootDir(t *testing.T) {
+	tmpDir := t.TempDir()
+	customRoot := "custom-specs"
+	specsDir := filepath.Join(tmpDir, customRoot, "specs")
+
+	// Create test structure
+	if err := os.MkdirAll(specsDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create specs
+	testSpecs := []string{"custom-auth", "custom-api"}
+	for _, name := range testSpecs {
+		specDir := filepath.Join(specsDir, name)
+		if err := os.MkdirAll(specDir, testDirPerm); err != nil {
+			t.Fatal(err)
+		}
+		specPath := filepath.Join(specDir, "spec.md")
+		if err := os.WriteFile(specPath, []byte("# Custom Spec"), testFilePerm); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Create config with custom root
+	cfg := &config.Config{
+		RootDir:     customRoot,
+		ProjectRoot: tmpDir,
+	}
+
+	// Test discovery
+	specs, err := GetSpecsWithConfig(cfg)
+	if err != nil {
+		t.Fatalf("GetSpecsWithConfig failed: %v", err)
+	}
+
+	if len(specs) != len(testSpecs) {
+		t.Errorf("Expected %d specs, got %d", len(testSpecs), len(specs))
+	}
+
+	// Verify all expected specs are found and sorted
+	expectedSorted := []string{"custom-api", "custom-auth"}
+	for i, expected := range expectedSorted {
+		if i >= len(specs) {
+			t.Error("Not enough specs returned")
+
+			break
+		}
+		if specs[i] != expected {
+			t.Errorf("Expected spec[%d] to be %s, got %s", i, expected, specs[i])
+		}
 	}
 }

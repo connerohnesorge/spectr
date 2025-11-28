@@ -6,12 +6,16 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
-// GetActiveChanges finds all active changes in spectr/changes/,
-// excluding archive directory
-func GetActiveChanges(projectPath string) ([]string, error) {
-	changesDir := filepath.Join(projectPath, "spectr", "changes")
+// GetActiveChangesWithConfig finds all active changes using the provided
+// config.
+// It searches in the changes directory specified by the config,
+// excluding the archive directory.
+func GetActiveChangesWithConfig(cfg *config.Config) ([]string, error) {
+	changesDir := cfg.ChangesDir()
 
 	// Check if changes directory exists
 	_, err := os.Stat(changesDir)
@@ -55,10 +59,34 @@ func GetActiveChanges(projectPath string) ([]string, error) {
 	return changes, nil
 }
 
+// GetActiveChanges finds all active changes in spectr/changes/,
+// excluding archive directory.
+// Deprecated: Use GetActiveChangesWithConfig for projects with custom root
+// directories.
+func GetActiveChanges(projectPath string) ([]string, error) {
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectPath,
+	}
+
+	return GetActiveChangesWithConfig(cfg)
+}
+
+// GetActiveChangeIDsWithConfig returns a list of active change IDs using
+// the provided config (directory names under the configured changes directory,
+// excluding archive/).
+// Returns empty slice (not error) if the directory doesn't exist.
+// Results are sorted alphabetically for consistency.
+func GetActiveChangeIDsWithConfig(cfg *config.Config) ([]string, error) {
+	return GetActiveChangesWithConfig(cfg)
+}
+
 // GetActiveChangeIDs returns a list of active change IDs
-// (directory names under spectr/changes/, excluding archive/)
-// Returns empty slice (not error) if the directory doesn't exist
-// Results are sorted alphabetically for consistency
+// (directory names under spectr/changes/, excluding archive/).
+// Returns empty slice (not error) if the directory doesn't exist.
+// Results are sorted alphabetically for consistency.
+// Deprecated: Use GetActiveChangeIDsWithConfig for projects with custom root
+// directories.
 func GetActiveChangeIDs(projectRoot string) ([]string, error) {
 	return GetActiveChanges(projectRoot)
 }
@@ -70,7 +98,8 @@ type ResolveResult struct {
 	PartialMatch bool
 }
 
-// ResolveChangeID resolves a partial change ID to a full change ID.
+// ResolveChangeIDWithConfig resolves a partial change ID to a full change ID
+// using the provided config.
 // The resolution algorithm:
 //  1. Exact match: returns immediately if partialID exactly matches a change ID
 //  2. Prefix match: finds all change IDs that start with partialID
@@ -81,8 +110,11 @@ type ResolveResult struct {
 // Returns an error if:
 // - No changes match the partial ID
 // - Multiple changes match the partial ID (ambiguous)
-func ResolveChangeID(partialID, projectRoot string) (ResolveResult, error) {
-	changes, err := GetActiveChangeIDs(projectRoot)
+func ResolveChangeIDWithConfig(
+	partialID string,
+	cfg *config.Config,
+) (ResolveResult, error) {
+	changes, err := GetActiveChangeIDsWithConfig(cfg)
 	if err != nil {
 		return ResolveResult{},
 			fmt.Errorf("get active changes: %w", err)
@@ -156,4 +188,26 @@ func ResolveChangeID(partialID, projectRoot string) (ResolveResult, error) {
 			"no change found matching '%s'",
 			partialID,
 		)
+}
+
+// ResolveChangeID resolves a partial change ID to a full change ID.
+// The resolution algorithm:
+//  1. Exact match: returns immediately if partialID exactly matches a change ID
+//  2. Prefix match: finds all change IDs that start with partialID
+//     (case-insensitive)
+//  3. Substring match: if no prefix matches, finds all change IDs containing
+//     partialID (case-insensitive)
+//
+// Returns an error if:
+// - No changes match the partial ID
+// - Multiple changes match the partial ID (ambiguous)
+// Deprecated: Use ResolveChangeIDWithConfig for projects with custom root
+// directories.
+func ResolveChangeID(partialID, projectRoot string) (ResolveResult, error) {
+	cfg := &config.Config{
+		RootDir:     config.DefaultRootDir,
+		ProjectRoot: projectRoot,
+	}
+
+	return ResolveChangeIDWithConfig(partialID, cfg)
 }

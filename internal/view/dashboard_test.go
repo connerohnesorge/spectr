@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/config"
 )
 
 //nolint:revive // cognitive-complexity justified for comprehensive testing
@@ -399,4 +401,93 @@ func TestCollectData_ChangeWithZeroTasks(t *testing.T) {
 	}
 
 	t.Log("Change with zero tasks correctly categorized as completed")
+}
+
+// TestCollectDataWithConfig_CustomRootDir tests collecting data with a custom root_dir
+func TestCollectDataWithConfig_CustomRootDir(t *testing.T) {
+	// Create a temporary directory with a custom root directory name
+	tempDir := t.TempDir()
+	customRootDir := "custom-specs"
+	customRoot := filepath.Join(tempDir, customRootDir)
+	changesDir := filepath.Join(customRoot, "changes")
+	specsDir := filepath.Join(customRoot, "specs")
+
+	// Create directories
+	if err := os.MkdirAll(changesDir, 0755); err != nil {
+		t.Fatalf("Failed to create changes directory: %v", err)
+	}
+	if err := os.MkdirAll(specsDir, 0755); err != nil {
+		t.Fatalf("Failed to create specs directory: %v", err)
+	}
+
+	// Create a test change
+	changeDir := filepath.Join(changesDir, "test-change")
+	if err := os.MkdirAll(changeDir, 0755); err != nil {
+		t.Fatalf("Failed to create change directory: %v", err)
+	}
+
+	// Write proposal.md
+	proposalContent := "# Custom Root Test\n\n## Why\nTest custom root_dir\n\n## What Changes\n- Test\n"
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+		t.Fatalf("Failed to write proposal.md: %v", err)
+	}
+
+	// Write tasks.md
+	tasksContent := "## 1. Implementation\n- [ ] 1.1 Task one\n"
+	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
+		t.Fatalf("Failed to write tasks.md: %v", err)
+	}
+
+	// Create a test spec
+	specDir := filepath.Join(specsDir, "test-spec")
+	if err := os.MkdirAll(specDir, 0755); err != nil {
+		t.Fatalf("Failed to create spec directory: %v", err)
+	}
+
+	// Write spec.md
+	specContent := "# Test Spec\n\n## Requirements\n\n### Requirement: Test\nThe system SHALL test.\n\n#### Scenario: Success\n- **WHEN** testing\n- **THEN** it works\n"
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0644); err != nil {
+		t.Fatalf("Failed to write spec.md: %v", err)
+	}
+
+	// Create config with custom root_dir
+	cfg := &config.Config{
+		RootDir:     customRootDir,
+		ProjectRoot: tempDir,
+	}
+
+	// Collect data using the custom config
+	data, err := CollectDataWithConfig(cfg)
+	if err != nil {
+		t.Fatalf("CollectDataWithConfig failed: %v", err)
+	}
+
+	// Verify data was collected correctly
+	if data.Summary.ActiveChanges != 1 {
+		t.Errorf("Expected ActiveChanges=1, got %d", data.Summary.ActiveChanges)
+	}
+	if len(data.ActiveChanges) != 1 {
+		t.Fatalf("Expected 1 active change, got %d", len(data.ActiveChanges))
+	}
+	if data.ActiveChanges[0].ID != "test-change" {
+		t.Errorf("Expected change ID='test-change', got '%s'", data.ActiveChanges[0].ID)
+	}
+	if data.ActiveChanges[0].Title != "Custom Root Test" {
+		t.Errorf("Expected title='Custom Root Test', got '%s'", data.ActiveChanges[0].Title)
+	}
+
+	if data.Summary.TotalSpecs != 1 {
+		t.Errorf("Expected TotalSpecs=1, got %d", data.Summary.TotalSpecs)
+	}
+	if len(data.Specs) != 1 {
+		t.Fatalf("Expected 1 spec, got %d", len(data.Specs))
+	}
+	if data.Specs[0].ID != "test-spec" {
+		t.Errorf("Expected spec ID='test-spec', got '%s'", data.Specs[0].ID)
+	}
+	if data.Specs[0].RequirementCount != 1 {
+		t.Errorf("Expected RequirementCount=1, got %d", data.Specs[0].RequirementCount)
+	}
+
+	t.Log("Custom root_dir configuration works correctly")
 }

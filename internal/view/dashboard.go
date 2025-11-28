@@ -3,9 +3,11 @@
 package view
 
 import (
+	"fmt"
 	"path/filepath"
 	"sort"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
@@ -28,6 +30,19 @@ import (
 //
 //nolint:revive // cognitive-complexity justified for data collection
 func CollectData(projectPath string) (*DashboardData, error) {
+	cfg, err := config.LoadFromPath(projectPath)
+	if err != nil {
+		return nil, fmt.Errorf("load config: %w", err)
+	}
+
+	return CollectDataWithConfig(cfg)
+}
+
+// CollectDataWithConfig gathers all dashboard information using the provided configuration.
+// This allows for custom root_dir configurations and is useful for testing.
+//
+//nolint:revive // cognitive-complexity justified for data collection
+func CollectDataWithConfig(cfg *config.Config) (*DashboardData, error) {
 	data := &DashboardData{
 		Summary:          SummaryMetrics{},
 		ActiveChanges:    []ChangeProgress{},
@@ -36,14 +51,14 @@ func CollectData(projectPath string) (*DashboardData, error) {
 	}
 
 	// Discover all changes
-	changeIDs, err := discovery.GetActiveChanges(projectPath)
+	changeIDs, err := discovery.GetActiveChangesWithConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// Process each change
 	for _, changeID := range changeIDs {
-		changeDir := filepath.Join(projectPath, "spectr", "changes", changeID)
+		changeDir := filepath.Join(cfg.ChangesPath(), changeID)
 
 		// Parse title from proposal.md
 		proposalPath := filepath.Join(changeDir, "proposal.md")
@@ -94,14 +109,14 @@ func CollectData(projectPath string) (*DashboardData, error) {
 	}
 
 	// Discover all specs
-	specIDs, err := discovery.GetSpecs(projectPath)
+	specIDs, err := discovery.GetSpecsWithConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// Process each spec
 	for _, specID := range specIDs {
-		specPath := filepath.Join(projectPath, "spectr", "specs", specID, "spec.md")
+		specPath := filepath.Join(cfg.SpecsPath(), specID, "spec.md")
 
 		// Parse title from spec.md
 		title, err := parsers.ExtractTitle(specPath)

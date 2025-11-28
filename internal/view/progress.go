@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/connerohnesorge/spectr/internal/theme"
 )
 
 const (
@@ -23,15 +24,17 @@ const (
 	emptyChar = "░"
 )
 
-var (
-	// filledStyle applies green color to the filled portion
-	// of the progress bar
-	filledStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("2"))
+// filledStyle returns a style with the success color from the current theme
+// for the filled portion of the progress bar
+func filledStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Success)
+}
 
-	// emptyStyle applies dim gray color to the empty portion
-	// of the progress bar
-	emptyStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-)
+// emptyStyle returns a style with the muted color from the current theme
+// for the empty portion of the progress bar
+func emptyStyle() lipgloss.Style {
+	return lipgloss.NewStyle().Foreground(theme.Current().Muted)
+}
 
 // RenderBar creates a visual progress bar string with the format:
 // [████████████░░░░░░░░] 60%
@@ -56,7 +59,7 @@ func RenderBar(completed, total int) string {
 			emptyBar += emptyChar
 		}
 
-		return fmt.Sprintf("[%s] 0%%", emptyStyle.Render(emptyBar))
+		return fmt.Sprintf("[%s] 0%%", emptyStyle().Render(emptyBar))
 	}
 
 	// Calculate percentage (0-100)
@@ -90,8 +93,8 @@ func RenderBar(completed, total int) string {
 	}
 
 	// Apply styling and combine
-	styledFilled := filledStyle.Render(filledPortion)
-	styledEmpty := emptyStyle.Render(emptyPortion)
+	styledFilled := filledStyle().Render(filledPortion)
+	styledEmpty := emptyStyle().Render(emptyPortion)
 
 	return fmt.Sprintf("[%s%s] %d%%", styledFilled, styledEmpty, percentage)
 }

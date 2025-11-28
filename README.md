@@ -281,6 +281,84 @@ spectr/
 
 ---
 
+## Configuration
+
+Spectr supports an optional `spectr.yaml` configuration file at your project root to customize settings.
+
+### Custom Root Directory
+
+By default, Spectr uses `spectr/` as the root directory. To use a different name (e.g., `specs/`, `openspec/`, `.spectr/`), create a `spectr.yaml` file:
+
+```yaml
+# spectr.yaml
+root_dir: specs  # Use "specs/" instead of "spectr/"
+```
+
+#### Configuration File Discovery
+
+Spectr searches for `spectr.yaml` by walking up the directory tree from the current working directory. This allows commands to work from any subdirectory within your project.
+
+```
+project/
+├── spectr.yaml          # Configuration file (optional)
+├── specs/               # Custom root directory (matches root_dir)
+│   ├── project.md
+│   ├── specs/
+│   └── changes/
+└── src/
+    └── components/      # Commands work from here too
+```
+
+#### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `root_dir` | string | `spectr` | Root directory name for Spectr files |
+| `theme` | string | `default` | Color theme for TUI output |
+
+### Color Themes
+
+Spectr supports customizable color themes for all TUI output including the dashboard, init wizard, interactive modes, and progress bars.
+
+#### Available Themes
+
+| Theme | Description |
+|-------|-------------|
+| `default` | Purple/violet accents, optimized for dark terminals |
+| `dark` | High contrast bright colors on dark backgrounds |
+| `light` | Darker accents optimized for light terminal backgrounds |
+| `solarized` | Solarized Dark color palette |
+| `monokai` | Monokai color palette |
+
+#### Example
+
+```yaml
+# spectr.yaml
+theme: monokai  # Use Monokai color scheme
+```
+
+#### Validation Rules
+
+- `root_dir` must be a simple directory name (no path separators)
+- Cannot contain `..`, `*`, or start with `.`
+- The specified directory must exist
+
+#### Example
+
+```bash
+# Create custom configuration
+echo "root_dir: specs" > spectr.yaml
+
+# Initialize with custom root
+mkdir -p specs/{specs,changes}
+
+# All commands now use specs/ instead of spectr/
+spectr list              # Lists from specs/changes/
+spectr validate --strict # Validates specs/specs/
+```
+
+---
+
 ## Command Reference
 
 ### spectr init

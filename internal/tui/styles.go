@@ -4,29 +4,22 @@ package tui
 import (
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
-)
-
-// Color constants used across TUI components
-const (
-	ColorBorder    = "240"
-	ColorHeader    = "99"
-	ColorSelected  = "229"
-	ColorHighlight = "57"
-	ColorHelp      = "240"
+	"github.com/connerohnesorge/spectr/internal/theme"
 )
 
 // ApplyTableStyles applies the default Spectr styling to a table.
 func ApplyTableStyles(t *table.Model) {
+	th := theme.Current()
 	s := table.DefaultStyles()
 	s.Header = s.Header.
 		BorderStyle(lipgloss.NormalBorder()).
-		BorderForeground(lipgloss.Color(ColorBorder)).
+		BorderForeground(th.Border).
 		BorderBottom(true).
 		Bold(true).
-		Foreground(lipgloss.Color(ColorHeader))
+		Foreground(th.Header)
 	s.Selected = s.Selected.
-		Foreground(lipgloss.Color(ColorSelected)).
-		Background(lipgloss.Color(ColorHighlight)).
+		Foreground(th.Selected).
+		Background(th.Highlight).
 		Bold(true)
 
 	t.SetStyles(s)
@@ -36,22 +29,24 @@ func ApplyTableStyles(t *table.Model) {
 func TitleStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color(ColorHeader)).
+		Foreground(theme.Current().Header).
 		MarginBottom(1)
 }
 
 // HelpStyle returns the style for help text.
 func HelpStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorHelp)).
+		Foreground(theme.Current().Muted).
 		MarginTop(1)
 }
 
 // SelectedStyle returns the style for selected items.
 func SelectedStyle() lipgloss.Style {
+	th := theme.Current()
+
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorSelected)).
-		Background(lipgloss.Color(ColorHighlight)).
+		Foreground(th.Selected).
+		Background(th.Highlight).
 		Bold(true).
 		PaddingLeft(2)
 }

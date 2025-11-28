@@ -168,3 +168,199 @@ func TestGetActiveChangeIDs(t *testing.T) {
 	// Verify archive is excluded
 	verifyChangesExcluded(t, changes, []string{"archived-change"})
 }
+
+func TestResolveChangeID_ExactMatch(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "add-feature", "# Test")
+	createChangeDir(t, changesDir, "add-feature-extended", "# Test")
+
+	result, err := ResolveChangeID("add-feature", tmpDir)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if result.ChangeID != "add-feature" {
+		t.Errorf("Expected 'add-feature', got '%s'", result.ChangeID)
+	}
+	if result.PartialMatch {
+		t.Error("Expected PartialMatch to be false for exact match")
+	}
+}
+
+func TestResolveChangeID_UniquePrefixMatch(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "refactor-unified-interactive-tui", "# Test")
+	createChangeDir(t, changesDir, "add-feature", "# Test")
+
+	result, err := ResolveChangeID("refactor", tmpDir)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if result.ChangeID != "refactor-unified-interactive-tui" {
+		t.Errorf("Expected 'refactor-unified-interactive-tui', got '%s'", result.ChangeID)
+	}
+	if !result.PartialMatch {
+		t.Error("Expected PartialMatch to be true for prefix match")
+	}
+}
+
+func TestResolveChangeID_UniqueSubstringMatch(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "refactor-unified-interactive-tui", "# Test")
+	createChangeDir(t, changesDir, "add-feature", "# Test")
+
+	result, err := ResolveChangeID("unified", tmpDir)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if result.ChangeID != "refactor-unified-interactive-tui" {
+		t.Errorf("Expected 'refactor-unified-interactive-tui', got '%s'", result.ChangeID)
+	}
+	if !result.PartialMatch {
+		t.Error("Expected PartialMatch to be true for substring match")
+	}
+}
+
+func TestResolveChangeID_MultiplePrefixMatches(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "add-feature", "# Test")
+	createChangeDir(t, changesDir, "add-hotkey", "# Test")
+
+	_, err := ResolveChangeID("add", tmpDir)
+	if err == nil {
+		t.Fatal("Expected error for ambiguous prefix match")
+	}
+
+	expectedMsg := "ambiguous ID 'add' matches multiple changes: add-feature, add-hotkey"
+	if err.Error() != expectedMsg {
+		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+	}
+}
+
+func TestResolveChangeID_MultipleSubstringMatches(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "add-search-hotkey", "# Test")
+	createChangeDir(t, changesDir, "update-search-ui", "# Test")
+
+	_, err := ResolveChangeID("search", tmpDir)
+	if err == nil {
+		t.Fatal("Expected error for ambiguous substring match")
+	}
+
+	expectedMsg := "ambiguous ID 'search' matches multiple changes: add-search-hotkey, update-search-ui"
+	if err.Error() != expectedMsg {
+		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+	}
+}
+
+func TestResolveChangeID_NoMatch(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "add-feature", "# Test")
+
+	_, err := ResolveChangeID("nonexistent", tmpDir)
+	if err == nil {
+		t.Fatal("Expected error for no match")
+	}
+
+	expectedMsg := "no change found matching 'nonexistent'"
+	if err.Error() != expectedMsg {
+		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+	}
+}
+
+func TestResolveChangeID_CaseInsensitive(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "refactor-unified-interactive-tui", "# Test")
+
+	// Test uppercase prefix
+	result, err := ResolveChangeID("REFACTOR", tmpDir)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if result.ChangeID != "refactor-unified-interactive-tui" {
+		t.Errorf("Expected 'refactor-unified-interactive-tui', got '%s'", result.ChangeID)
+	}
+
+	// Test mixed case substring
+	result, err = ResolveChangeID("Unified", tmpDir)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if result.ChangeID != "refactor-unified-interactive-tui" {
+		t.Errorf("Expected 'refactor-unified-interactive-tui', got '%s'", result.ChangeID)
+	}
+}
+
+func TestResolveChangeID_PrefixPreferredOverSubstring(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	createChangeDir(t, changesDir, "add-feature", "# Test")
+	createChangeDir(t, changesDir, "update-add-button", "# Test")
+
+	result, err := ResolveChangeID("add", tmpDir)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if result.ChangeID != "add-feature" {
+		t.Errorf("Expected 'add-feature' (prefix match), got '%s'", result.ChangeID)
+	}
+	if !result.PartialMatch {
+		t.Error("Expected PartialMatch to be true")
+	}
+}
+
+func TestResolveChangeID_EmptyChanges(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ResolveChangeID("anything", tmpDir)
+	if err == nil {
+		t.Fatal("Expected error for empty changes directory")
+	}
+
+	expectedMsg := "no change found matching 'anything'"
+	if err.Error() != expectedMsg {
+		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+	}
+}

@@ -62,8 +62,8 @@ stop:
   rounds: null
   # Example: rounds: 3
 
-# Validation rules for hook processing
-rules:
+# Pre-tool-use hook configuration - runs before tools are executed
+preToolUse:
   # Prevent Claude from creating or modifying files at the repository root
   # Helps maintain clean project structure
   preventRootAdditions: true
@@ -74,31 +74,6 @@ rules:
     - ".conclaude.yaml"
     - ".golangci.yaml"
     - ".golangci.yml"
-  # Examples:
-  # uneditableFiles:
-  #   - "./package.json"      # specific file
-  #   - "*.md"                # file extension
-  #   - "src/**/*.ts"         # nested patterns
-  #   - ".env*"               # environment files
-  #   - "docs/**"             # entire directories
-  #   - "{package,tsconfig}.json"  # multiple specific files
-
-  # Tool usage validation rules - control which tools can be used on which files
-  # Allows fine-grained control over tool usage based on file patterns
-  toolUsageValidation: []
-  # Examples:
-  # toolUsageValidation:
-  #   - tool: "Write"
-  #     pattern: "**/*.js"
-  #     action: "allow"
-  #     message: "Writing to JavaScript files is allowed"
-  #   - tool: "*"
-  #     pattern: ".env*"
-  #     action: "block"
-  #     message: "Environment files cannot be modified"
-
-# Pre-tool-use hook configuration - runs before tools are executed
-preToolUse:
   # Directories where file additions are prevented (in addition to root)
   # List of directory paths where new files cannot be created
   preventAdditions: []

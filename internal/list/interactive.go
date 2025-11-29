@@ -103,6 +103,8 @@ type interactiveModel struct {
 	allRows          []table.Row // stores all rows for filtering
 	filteredRows     []table.Row // pre-allocated buffer for GC
 	selectionMode    bool        // true: Enter selects without copying
+	confirmDelete    bool        // whether we're in delete confirmation mode
+	deleteTarget     string      // the spec ID being deleted
 }
 
 // Init initializes the model
@@ -116,6 +118,15 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch typedMsg := msg.(type) {
 	case tea.KeyMsg:
+		// Handle delete confirmation mode input
+		if m.confirmDelete {
+			var handled bool
+			m, cmd, handled = m.handleDeleteConfirmation(typedMsg)
+			if handled {
+				return m, cmd
+			}
+		}
+
 		// Handle search mode input
 		if m.searchMode {
 			var handled bool
@@ -149,6 +160,9 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "a":
 			return m.handleArchive()
+
+		case "d":
+			return m.handleDelete()
 
 		case "/":
 			m = m.toggleSearchMode()
@@ -344,6 +358,149 @@ func (m interactiveModel) handleArchive() (interactiveModel, tea.Cmd) {
 	return m, nil
 }
 
+// handleDelete handles the 'd' key press for deleting a spec
+func (m interactiveModel) handleDelete() (interactiveModel, tea.Cmd) {
+	cursor := m.table.Cursor()
+	if cursor < 0 || cursor >= len(m.table.Rows()) {
+		return m, nil
+	}
+
+	row := m.table.Rows()[cursor]
+	if len(row) == 0 {
+		return m, nil
+	}
+
+	// Determine if item is a spec based on mode
+	switch m.itemType {
+	case itemTypeChange:
+		// Can't delete changes, show message
+		m.err = errors.New("cannot delete changes; use archive instead")
+
+		return m, nil
+	case itemTypeSpec:
+		// In spec mode, all items are specs
+		m.deleteTarget = row[0]
+		m.confirmDelete = true
+
+		return m, nil
+	case itemTypeAll:
+		// In unified mode, check the type column
+		if len(row) > 1 && row[1] == "SPEC" {
+			m.deleteTarget = row[0]
+			m.confirmDelete = true
+
+			return m, nil
+		}
+		// Not a spec, show message
+		m.err = errors.New("cannot delete changes; use archive instead")
+
+		return m, nil
+	}
+
+	return m, nil
+}
+
+// handleDeleteConfirmation handles keyboard input when in delete confirmation mode
+// Returns (model, cmd, handled) - handled is true if the input was processed
+func (m interactiveModel) handleDeleteConfirmation(
+	keyMsg tea.KeyMsg,
+) (interactiveModel, tea.Cmd, bool) {
+	switch keyMsg.String() {
+	case "y", "Y":
+		// Perform deletion
+		err := m.deleteSpecFolder(m.deleteTarget)
+		if err != nil {
+			m.err = err
+			m.confirmDelete = false
+			m.deleteTarget = ""
+
+			return m, nil, true
+		}
+
+		// Deletion successful - rebuild table
+		m = m.removeDeletedSpec()
+		m.err = nil // Clear any previous errors
+		m.confirmDelete = false
+		m.deleteTarget = ""
+
+		return m, nil, true
+	case "n", "N", "esc":
+		// Cancel deletion
+		m.err = errors.New("cancelled")
+		m.confirmDelete = false
+		m.deleteTarget = ""
+
+		return m, nil, true
+	default:
+		// Any other key cancels
+		m.err = errors.New("cancelled")
+		m.confirmDelete = false
+		m.deleteTarget = ""
+
+		return m, nil, true
+	}
+}
+
+// deleteSpecFolder deletes the spec folder from disk
+func (m interactiveModel) deleteSpecFolder(specID string) error {
+	path := fmt.Sprintf("%s/spectr/specs/%s", m.projectPath, specID)
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return fmt.Errorf("spec folder not found: %s", path)
+	}
+
+	return os.RemoveAll(path)
+}
+
+// removeDeletedSpec removes the deleted spec from the table and rebuilds
+func (m interactiveModel) removeDeletedSpec() interactiveModel {
+	cursor := m.table.Cursor()
+
+	// Remove from allRows
+	newRows := make([]table.Row, 0, len(m.allRows)-1)
+	for _, row := range m.allRows {
+		if len(row) > 0 && row[0] != m.deleteTarget {
+			newRows = append(newRows, row)
+		}
+	}
+	m.allRows = newRows
+
+	// If in unified mode, also update allItems
+	if m.itemType == itemTypeAll {
+		newItems := make(ItemList, 0, len(m.allItems)-1)
+		for _, item := range m.allItems {
+			if item.ID() != m.deleteTarget {
+				newItems = append(newItems, item)
+			}
+		}
+		m.allItems = newItems
+
+		// Rebuild the unified table
+		m = rebuildUnifiedTable(m)
+	} else {
+		// For spec-only mode, just update the table rows
+		m.table.SetRows(m.allRows)
+
+		// Update help text footer
+		m.minimalFooter = fmt.Sprintf(
+			"showing: %d | project: %s | ?: help",
+			len(m.allRows),
+			m.projectPath,
+		)
+	}
+
+	// Adjust cursor if needed
+	rowCount := len(m.table.Rows())
+	if rowCount > 0 {
+		if cursor >= rowCount {
+			m.table.SetCursor(rowCount - 1)
+		}
+	} else {
+		m.table.SetCursor(0)
+	}
+
+	return m
+}
+
 // rebuildUnifiedTable rebuilds the table based on current filter
 func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 	var items ItemList
@@ -406,7 +563,7 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 	}
 	m.helpText = fmt.Sprintf(
 		"↑/↓/j/k: navigate | Enter: copy ID | e: edit | "+
-			"a: archive | t: filter (%s) | /: search | q: quit",
+			"a: archive | d: delete (specs) | t: filter (%s) | /: search | q: quit",
 		filterDesc,
 	)
 	m.minimalFooter = fmt.Sprintf(
@@ -571,6 +728,15 @@ func (m interactiveModel) View() string {
 		}
 
 		return "Cancelled.\n"
+	}
+
+	// Display delete confirmation prompt if active
+	if m.confirmDelete {
+		return fmt.Sprintf(
+			"%s\n\nDelete spec '%s'? This will remove the entire folder. (y/N)\n",
+			m.table.View(),
+			m.deleteTarget,
+		)
 	}
 
 	// Display search input if search mode is active
@@ -798,7 +964,7 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 		searchInput: newTextInput(),
 		allRows:     rows,
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
-			"/: search | q: quit",
+			"d: delete | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(specs),
@@ -888,7 +1054,7 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 		searchInput: newTextInput(),
 		allRows:     rows,
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
-			"a: archive | t: filter (all) | /: search | q: quit",
+			"a: archive | d: delete (specs) | t: filter (all) | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),

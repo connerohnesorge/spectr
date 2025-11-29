@@ -1,13 +1,13 @@
 ## 1. Implementation
 
-- [ ] 1.1 Add `handleDelete()` method to `interactiveModel` in `internal/list/interactive.go`
-- [ ] 1.2 Add 'd' key case to the `Update()` switch statement in `internal/list/interactive.go`
-- [ ] 1.3 Implement confirmation prompt before deletion (inline TUI state or hchoose/confirm)
-- [ ] 1.4 Implement `deleteSpecFolder()` function using `os.RemoveAll()` on `spectr/specs/<spec-id>/`
-- [ ] 1.5 Handle deletion result: remove row from table, update row count, reset cursor if needed
-- [ ] 1.6 Update help text for specs mode to include `d: delete`
-- [ ] 1.7 Update help text for unified mode to include `d: delete` (spec rows only)
-- [ ] 1.8 Ensure 'd' key is ignored when a change row is selected in unified mode
+- [x] 1.1 Add `handleDelete()` method to `interactiveModel` in `internal/list/interactive.go`
+- [x] 1.2 Add 'd' key case to the `Update()` switch statement in `internal/list/interactive.go`
+- [x] 1.3 Implement confirmation prompt before deletion (inline TUI state or hchoose/confirm)
+- [x] 1.4 Implement `deleteSpecFolder()` function using `os.RemoveAll()` on `spectr/specs/<spec-id>/`
+- [x] 1.5 Handle deletion result: remove row from table, update row count, reset cursor if needed
+- [x] 1.6 Update help text for specs mode to include `d: delete`
+- [x] 1.7 Update help text for unified mode to include `d: delete (specs)` (spec rows only)
+- [x] 1.8 Ensure 'd' key is ignored when a change row is selected in unified mode
 
 ## 2. Testing
 
@@ -18,6 +18,6 @@
 
 ## 3. Validation
 
-- [ ] 3.1 Run `go test ./...` to verify all tests pass
-- [ ] 3.2 Run `golangci-lint run` to verify code quality
+- [x] 3.1 Run `go test ./...` to verify all tests pass
+- [x] 3.2 Run `golangci-lint run` to verify code quality
 - [ ] 3.3 Manual testing of delete flow in TUI

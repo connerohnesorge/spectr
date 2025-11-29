@@ -1,0 +1,45 @@
+# Spectr Configuration
+# Location: ~/.config/spectr/config.yaml
+# (or $XDG_CONFIG_HOME/spectr/config.yaml if XDG_CONFIG_HOME is set)
+
+# Theme Configuration
+# Colors can be specified as:
+#   - ANSI 256 color codes: "0" to "255"
+#   - Hex color codes: "#RGB" or "#RRGGBB"
+# Only override colors you want to change - unspecified colors use defaults.
+
+theme:
+  # Accent color for emphasis and headers (default: "99" purple)
+  accent: "99"
+
+  # Error message color (default: "1" red)
+  error: "1"
+
+  # Success/confirmation color (default: "2" green)
+  success: "2"
+
+  # Table border color (default: "240" gray)
+  border: "240"
+
+  # Help text color (default: "240" gray)
+  help: "240"
+
+  # Selected item foreground (default: "229" light yellow)
+  selected: "229"
+
+  # Selected item background (default: "57" blue)
+  highlight: "57"
+
+  # Header/title color (default: "99" purple)
+  header: "99"
+
+# Example with hex colors:
+# theme:
+#   accent: "#8B5CF6"    # violet
+#   error: "#EF4444"     # red
+#   success: "#10B981"   # emerald
+#   border: "#6B7280"    # gray
+#   help: "#9CA3AF"      # light gray
+#   selected: "#FDE68A"  # amber
+#   highlight: "#1E40AF" # blue
+#   header: "#8B5CF6"    # violet

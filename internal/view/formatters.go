@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/connerohnesorge/spectr/internal/tui"
 )
 
 const (
@@ -47,34 +48,48 @@ const (
 	newline = "\n"
 )
 
-var (
-	// Section header style: bold, cyan
-	headerStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("6")) // Cyan
+// Style functions that use centralized theme configuration.
+// These are functions rather than variables to ensure colors are evaluated
+// at runtime after theme initialization.
 
-	// Summary bullet style: cyan
-	summaryBulletStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("6")) // Cyan
+// headerStyle returns the style for section headers (bold, accent color)
+func headerStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(tui.GetAccentColor()))
+}
 
-	// Active change indicator style: yellow
-	activeChangeStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("3")) // Yellow
+// summaryBulletStyle returns the style for summary bullets (accent color)
+func summaryBulletStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(tui.GetAccentColor()))
+}
 
-	// Completed change indicator style: green
-	completedChangeStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("2")) // Green
+// activeChangeStyle returns the style for active change indicators
+// (header color for standout)
+func activeChangeStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(tui.GetHeaderColor()))
+}
 
-	// Spec indicator style: blue
-	specStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("4")) // Blue
+// completedChangeStyle returns the style for completed change
+// indicators (success/green)
+func completedChangeStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(tui.GetSuccessColor()))
+}
 
-	// Percentage style: dim
+// specStyle returns the style for spec indicators (accent color)
+func specStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(tui.GetAccentColor()))
+}
 
-	// Footer hint style: dim
-	footerStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("240")) // Dim
-)
+// footerStyle returns the style for footer hints (help/dim)
+func footerStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(tui.GetHelpColor()))
+}
 
 // FormatDashboardText formats the dashboard data as
 // human-readable terminal output with colored sections,
@@ -125,7 +140,7 @@ func FormatDashboardText(data *DashboardData) string {
 	// Footer: Double-line separator and hints
 	sections = append(sections, doubleLineSeparator)
 	sections = append(sections, "")
-	sections = append(sections, footerStyle.Render(footerHint))
+	sections = append(sections, footerStyle().Render(footerHint))
 
 	return strings.Join(sections, "\n")
 }
@@ -139,16 +154,17 @@ func formatSummarySection(summary SummaryMetrics) string {
 	// Specifications: X specs, Y requirements
 	specsLine := fmt.Sprintf("%s %s Specifications: %d specs, %d requirements",
 		indentation,
-		summaryBulletStyle.Render(summaryBullet),
+		summaryBulletStyle().Render(summaryBullet),
 		summary.TotalSpecs,
 		summary.TotalRequirements,
 	)
 	lines = append(lines, specsLine)
 
 	// Active Changes: X in progress
-	activeLine := fmt.Sprintf("%s %s Active Changes: %d in progress",
+	activeLine := fmt.Sprintf(
+		"%s %s Active Changes: %d in progress",
 		indentation,
-		summaryBulletStyle.Render(summaryBullet),
+		summaryBulletStyle().Render(summaryBullet),
 		summary.ActiveChanges,
 	)
 	lines = append(lines, activeLine)
@@ -156,7 +172,7 @@ func formatSummarySection(summary SummaryMetrics) string {
 	// Completed Changes: X
 	completedLine := fmt.Sprintf("%s %s Completed Changes: %d",
 		indentation,
-		summaryBulletStyle.Render(summaryBullet),
+		summaryBulletStyle().Render(summaryBullet),
 		summary.CompletedChanges,
 	)
 	lines = append(lines, completedLine)
@@ -164,12 +180,13 @@ func formatSummarySection(summary SummaryMetrics) string {
 	// Task Progress: X/Y (Z% complete)
 	taskPercentage := 0
 	if summary.TotalTasks > 0 {
-		taskPercentage = (summary.CompletedTasks * percentageMultiplier) /
-			summary.TotalTasks
+		taskPercentage = (summary.CompletedTasks *
+			percentageMultiplier) / summary.TotalTasks
 	}
-	taskLine := fmt.Sprintf("%s %s Task Progress: %d/%d (%d%% complete)",
+	taskLine := fmt.Sprintf(
+		"%s %s Task Progress: %d/%d (%d%% complete)",
 		indentation,
-		summaryBulletStyle.Render(summaryBullet),
+		summaryBulletStyle().Render(summaryBullet),
 		summary.CompletedTasks,
 		summary.TotalTasks,
 		taskPercentage,
@@ -185,7 +202,7 @@ func formatActiveChangesSection(changes []ChangeProgress) string {
 	var lines []string
 
 	// Section header
-	lines = append(lines, headerStyle.Render(activeChangesHeader))
+	lines = append(lines, headerStyle().Render(activeChangesHeader))
 	lines = append(lines, singleLineSeparator)
 
 	// Each active change: ◉ id [progress bar] percentage%
@@ -197,7 +214,7 @@ func formatActiveChangesSection(changes []ChangeProgress) string {
 		// Format: "  ◉ change-id              [████████░░░░░░░░░░░░] 37%"
 		line := fmt.Sprintf("%s %s %-*s %s",
 			indentation,
-			activeChangeStyle.Render(activeChangeCircle),
+			activeChangeStyle().Render(activeChangeCircle),
 			changeIDWidth,
 			change.ID,
 			progressBar,
@@ -214,14 +231,14 @@ func formatCompletedChangesSection(changes []CompletedChange) string {
 	var lines []string
 
 	// Section header
-	lines = append(lines, headerStyle.Render(completedChangesHeader))
+	lines = append(lines, headerStyle().Render(completedChangesHeader))
 	lines = append(lines, singleLineSeparator)
 
 	// Each completed change: ✓ id
 	for _, change := range changes {
 		line := fmt.Sprintf("%s %s %s",
 			indentation,
-			completedChangeStyle.Render(completedCheckmark),
+			completedChangeStyle().Render(completedCheckmark),
 			change.ID,
 		)
 		lines = append(lines, line)
@@ -235,14 +252,14 @@ func formatSpecsSection(specs []SpecInfo) string {
 	var lines []string
 
 	// Section header
-	lines = append(lines, headerStyle.Render(specsHeader))
+	lines = append(lines, headerStyle().Render(specsHeader))
 	lines = append(lines, singleLineSeparator)
 
 	// Each spec: ▪ id                  X requirements
 	for _, spec := range specs {
 		line := fmt.Sprintf("%s %s %-*s %d requirements",
 			indentation,
-			specStyle.Render(specSquare),
+			specStyle().Render(specSquare),
 			specIDWidth,
 			spec.ID,
 			spec.RequirementCount,

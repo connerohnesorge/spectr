@@ -12,4 +12,5 @@ type CLI struct {
 	Archive  archive.ArchiveCmd `cmd:"" help:"Archive a completed change"`
 	View     ViewCmd            `cmd:"" help:"Display project dashboard"`
 	Version  VersionCmd         `cmd:"" help:"Show version and build info"`
+	Config   ConfigCmd          `cmd:"" help:"Display current config and path"`
 }

@@ -51,7 +51,11 @@ func setupTestProject(t *testing.T, tmpDir string, changes []string) {
 
 		// Create proposal.md
 		proposalContent := "# Change: " + changeName + "\n\n## Why\nTest change.\n\n## What Changes\n- Test\n\n## Impact\n- specs: test-feature\n"
-		err = os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), testFilePerm)
+		err = os.WriteFile(
+			filepath.Join(changeDir, "proposal.md"),
+			[]byte(proposalContent),
+			testFilePerm,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -73,7 +77,11 @@ The system SHALL provide test functionality.
 - **WHEN** test is run
 - **THEN** it passes
 `
-		err = os.WriteFile(filepath.Join(changeSpecsDir, "spec.md"), []byte(deltaSpec), testFilePerm)
+		err = os.WriteFile(
+			filepath.Join(changeSpecsDir, "spec.md"),
+			[]byte(deltaSpec),
+			testFilePerm,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}

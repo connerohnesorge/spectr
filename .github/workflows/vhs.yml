@@ -6,6 +6,7 @@ on:
       - "assets/vhs/*.tape"
     branches:
       - main
+  workflow_dispatch:
 
 # Cancel in-progress runs for the same branch
 concurrency:

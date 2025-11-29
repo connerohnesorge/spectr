@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -443,12 +444,21 @@ func (m interactiveModel) handleDeleteConfirmation(
 
 // deleteSpecFolder deletes the spec folder from disk
 func (m interactiveModel) deleteSpecFolder(specID string) error {
-	path := fmt.Sprintf("%s/spectr/specs/%s", m.projectPath, specID)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return fmt.Errorf("spec folder not found: %s", path)
+	// Validate specID against path traversal attacks
+	if strings.Contains(specID, "..") || strings.Contains(specID, "/") ||
+		strings.Contains(specID, "\\") {
+		return fmt.Errorf("invalid spec ID: %s", specID)
 	}
 
-	return os.RemoveAll(path)
+	path := filepath.Join(m.projectPath, "spectr", "specs", specID)
+
+	// Use RemoveAll directly - it's idempotent and avoids race conditions
+	// between existence check and removal
+	if err := os.RemoveAll(path); err != nil {
+		return fmt.Errorf("failed to delete spec folder: %w", err)
+	}
+
+	return nil
 }
 
 // removeDeletedSpec removes the deleted spec from the table and rebuilds

@@ -477,10 +477,7 @@ func (m interactiveModel) removeDeletedSpec() interactiveModel {
 		// Rebuild the unified table
 		m = rebuildUnifiedTable(m)
 	} else {
-		// For spec-only mode, just update the table rows
-		m.table.SetRows(m.allRows)
-
-		// Update help text footer
+		// Update help text footer for spec-only mode
 		m.minimalFooter = fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(m.allRows),
@@ -488,11 +485,21 @@ func (m interactiveModel) removeDeletedSpec() interactiveModel {
 		)
 	}
 
+	// Re-apply search filter if active to maintain filtered view
+	m = m.applyFilter()
+
+	// Update footer to reflect actual visible count after filtering
+	visibleCount := len(m.table.Rows())
+	m.minimalFooter = fmt.Sprintf(
+		"showing: %d | project: %s | ?: help",
+		visibleCount,
+		m.projectPath,
+	)
+
 	// Adjust cursor if needed
-	rowCount := len(m.table.Rows())
-	if rowCount > 0 {
-		if cursor >= rowCount {
-			m.table.SetCursor(rowCount - 1)
+	if visibleCount > 0 {
+		if cursor >= visibleCount {
+			m.table.SetCursor(visibleCount - 1)
 		}
 	} else {
 		m.table.SetCursor(0)

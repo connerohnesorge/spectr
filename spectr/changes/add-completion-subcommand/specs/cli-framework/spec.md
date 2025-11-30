@@ -24,11 +24,6 @@ The CLI SHALL provide a `completion` subcommand that outputs shell completion sc
 - **THEN** the system outputs a valid fish completion script
 - **AND** the script can be saved to fish completions directory
 
-#### Scenario: PowerShell completion output
-- **WHEN** user runs `spectr completion powershell`
-- **THEN** the system outputs a valid PowerShell completion script
-- **AND** the script can be added to the PowerShell profile
-
 ### Requirement: Custom Predictors for Dynamic Arguments
 The completion system SHALL provide context-aware suggestions for arguments that accept dynamic values like change IDs or spec IDs.
 

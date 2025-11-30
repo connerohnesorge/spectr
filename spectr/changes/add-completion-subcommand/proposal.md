@@ -10,7 +10,7 @@ Shell completion improves CLI usability by allowing users to tab-complete comman
 - Modify `main.go` to use the kong-completion registration pattern (init Kong, register completions, then parse)
 - Add `Completion` subcommand to the CLI struct in `cmd/root.go`
 - Implement custom predictors for dynamic arguments (change IDs, spec IDs, item types)
-- Support bash, zsh, fish, and PowerShell completions
+- Support bash, zsh, and fish completions (PowerShell not supported by kong-completion)
 
 ## Impact
 

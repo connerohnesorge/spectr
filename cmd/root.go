@@ -2,14 +2,16 @@ package cmd
 
 import (
 	"github.com/connerohnesorge/spectr/internal/archive"
+	kongcompletion "github.com/jotaen/kong-completion"
 )
 
 // CLI represents the root command structure for Kong
 type CLI struct {
-	Init     InitCmd            `cmd:"" help:"Initialize Spectr in a project"`
-	List     ListCmd            `cmd:"" help:"List changes or specifications"`
-	Validate ValidateCmd        `cmd:"" help:"Validate changes or specs"`
-	Archive  archive.ArchiveCmd `cmd:"" help:"Archive a completed change"`
-	View     ViewCmd            `cmd:"" help:"Display project dashboard"`
-	Version  VersionCmd         `cmd:"" help:"Show version and build info"`
+	Init       InitCmd                   `cmd:"" help:"Initialize Spectr"`
+	List       ListCmd                   `cmd:"" help:"List changes or specs"`
+	Validate   ValidateCmd               `cmd:"" help:"Validate items"`
+	Archive    archive.ArchiveCmd        `cmd:"" help:"Archive a change"`
+	View       ViewCmd                   `cmd:"" help:"Display dashboard"`
+	Version    VersionCmd                `cmd:"" help:"Show version info"`
+	Completion kongcompletion.Completion `cmd:"" help:"Generate completions"`
 }

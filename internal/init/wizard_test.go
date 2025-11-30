@@ -1,6 +1,9 @@
 package init
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -171,6 +174,109 @@ func TestGetSelectedProviderIDs(t *testing.T) {
 
 	if !hasClaudeCode || !hasCline || !hasCursor {
 		t.Error("Not all selected provider IDs were returned")
+	}
+}
+
+func TestNewWizardModelWithConfiguredProviders(t *testing.T) {
+	// Create a temp directory with a configured provider
+	tempDir := t.TempDir()
+
+	// Create CLAUDE.md to make claude-code provider configured
+	claudeFile := filepath.Join(tempDir, "CLAUDE.md")
+	err := os.WriteFile(claudeFile, []byte("# Claude Configuration\n"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create CLAUDE.md: %v", err)
+	}
+
+	// Create .claude/commands/spectr/ directory and slash commands to fully configure Claude
+	commandsDir := filepath.Join(tempDir, ".claude", "commands", "spectr")
+	err = os.MkdirAll(commandsDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create commands directory: %v", err)
+	}
+
+	// Create the three slash command files (in the spectr/ subdirectory)
+	for _, cmdFile := range []string{
+		"proposal.md",
+		"sync.md",
+		"apply.md",
+	} {
+		filePath := filepath.Join(commandsDir, cmdFile)
+		err = os.WriteFile(filePath, []byte("# Command\n"), 0644)
+		if err != nil {
+			t.Fatalf("Failed to create %s: %v", cmdFile, err)
+		}
+	}
+
+	// Create wizard model
+	cmd := &InitCmd{Path: tempDir}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Verify claude-code is marked as configured
+	if !wizard.configuredProviders["claude-code"] {
+		t.Error("Expected claude-code to be marked as configured")
+	}
+
+	// Verify claude-code is pre-selected
+	if !wizard.selectedProviders["claude-code"] {
+		t.Error("Expected claude-code to be pre-selected")
+	}
+}
+
+func TestNewWizardModelNoConfiguredProviders(t *testing.T) {
+	// Create an empty temp directory
+	tempDir := t.TempDir()
+
+	// Create wizard model
+	cmd := &InitCmd{Path: tempDir}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Verify no providers are marked as configured
+	for providerID, isConfigured := range wizard.configuredProviders {
+		if isConfigured {
+			t.Errorf("Expected no providers to be configured, but %s is configured", providerID)
+		}
+	}
+
+	// Verify no providers are pre-selected
+	if len(wizard.selectedProviders) != 0 {
+		t.Errorf(
+			"Expected no providers to be selected, but got %d selected",
+			len(wizard.selectedProviders),
+		)
+	}
+}
+
+func TestRenderSelectShowsConfiguredIndicator(t *testing.T) {
+	// Create wizard with manually set configured provider
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Manually mark claude-code as configured
+	wizard.configuredProviders["claude-code"] = true
+	wizard.selectedProviders["claude-code"] = true
+	wizard.step = StepSelect
+
+	// Render the select view
+	output := wizard.renderSelect()
+
+	// Verify output contains "(configured)" indicator
+	if !strings.Contains(output, "(configured)") {
+		t.Error("Expected select view to contain '(configured)' indicator for configured providers")
+	}
+
+	// Verify output contains "Claude Code"
+	if !strings.Contains(output, "Claude Code") {
+		t.Error("Expected select view to contain 'Claude Code' provider name")
 	}
 }
 

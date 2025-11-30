@@ -32,14 +32,15 @@ const (
 
 // WizardModel is the Bubbletea model for the init wizard
 type WizardModel struct {
-	step              WizardStep
-	projectPath       string
-	selectedProviders map[string]bool // provider ID -> selected
-	cursor            int             // cursor position in list
-	executing         bool
-	executionResult   *ExecutionResult
-	err               error
-	allProviders      []providers.Provider // sorted providers for display
+	step                WizardStep
+	projectPath         string
+	selectedProviders   map[string]bool // provider ID -> selected
+	configuredProviders map[string]bool // provider ID -> is configured
+	cursor              int             // cursor position in list
+	executing           bool
+	executionResult     *ExecutionResult
+	err                 error
+	allProviders        []providers.Provider // sorted providers for display
 }
 
 // ExecutionResult holds the result of initialization
@@ -98,12 +99,28 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 	// Get all providers from the new registry, sorted by priority
 	allProviders := providers.All()
 
+	// Initialize maps for configured and selected providers
+	configuredProviders := make(map[string]bool)
+	selectedProviders := make(map[string]bool)
+
+	// Detect which providers are already configured and pre-select them
+	for _, provider := range allProviders {
+		isConfigured := provider.IsConfigured(projectPath)
+		configuredProviders[provider.ID()] = isConfigured
+
+		// Pre-select already-configured providers
+		if isConfigured {
+			selectedProviders[provider.ID()] = true
+		}
+	}
+
 	return &WizardModel{
-		step:              StepIntro,
-		projectPath:       projectPath,
-		selectedProviders: make(map[string]bool),
-		cursor:            0,
-		allProviders:      allProviders,
+		step:                StepIntro,
+		projectPath:         projectPath,
+		selectedProviders:   selectedProviders,
+		configuredProviders: configuredProviders,
+		cursor:              0,
+		allProviders:        allProviders,
 	}, nil
 }
 
@@ -300,8 +317,16 @@ func (m WizardModel) renderSelect() string {
 	// Render all providers in a single flat list
 	b.WriteString(m.renderProviderGroup(m.allProviders, 0))
 
-	// Instructions
+	// Configured indicator explanation
 	b.WriteString(doubleNewline)
+	b.WriteString(
+		subtleStyle.Render(
+			"Items marked (configured) are already set up and will be updated.\n",
+		),
+	)
+
+	// Instructions
+	b.WriteString(newline)
 	b.WriteString(
 		subtleStyle.Render(
 			"↑/↓: Navigate  Space: Toggle  a: All  n: None  " +
@@ -327,15 +352,25 @@ func (m WizardModel) renderProviderGroup(providersList []providers.Provider, off
 			checkbox = selectedStyle.Render("[✓]")
 		}
 
+		// Build the base line with provider name
 		line := fmt.Sprintf("  %s %s %s", cursor, checkbox, provider.Name())
+
+		// Add configured indicator if provider is already configured
+		configuredIndicator := ""
+		if m.configuredProviders[provider.ID()] {
+			configuredIndicator = subtleStyle.Render(" (configured)")
+		}
 
 		switch {
 		case m.cursor == actualIndex:
 			b.WriteString(cursorStyle.Render(line))
+			b.WriteString(configuredIndicator)
 		case m.selectedProviders[provider.ID()]:
 			b.WriteString(selectedStyle.Render(line))
+			b.WriteString(configuredIndicator)
 		default:
 			b.WriteString(dimmedStyle.Render(line))
+			b.WriteString(configuredIndicator)
 		}
 
 		b.WriteString("\n")

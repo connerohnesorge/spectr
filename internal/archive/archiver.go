@@ -40,9 +40,6 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 		projectRoot string
 		err         error
 		selectedID  string
-
-		totalCounts  OperationCounts
-		capabilities []string
 	)
 	if workingDir == "" {
 		projectRoot, err = os.Getwd()
@@ -111,7 +108,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 
 	// Spec update workflow
 	if !cmd.SkipSpecs {
-		totalCounts, capabilities, err = updateSpecsWithTracking(cmd.Yes, changeDir, projectRoot)
+		_, _, err = updateSpecsWithTracking(cmd.Yes, changeDir, projectRoot)
 		if err != nil {
 			return fmt.Errorf("spec update failed: %w", err)
 		}
@@ -120,31 +117,12 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	}
 
 	// Archive operation
-	archiveName, err := moveToArchive(changeDir, changeID, projectRoot)
+	_, err = moveToArchive(changeDir, changeID, projectRoot)
 	if err != nil {
 		return fmt.Errorf("move to archive failed: %w", err)
 	}
 
 	fmt.Printf("\n✓ Successfully archived: %s\n", changeID)
-
-	// PR creation workflow (only if --pr flag is set)
-	if cmd.PR {
-		ctx := PRContext{
-			ChangeID:     changeID,
-			ArchiveName:  archiveName,
-			SkipSpecs:    cmd.SkipSpecs,
-			OpCounts:     totalCounts,
-			Capabilities: capabilities,
-			SpectrRoot:   spectrRoot,
-		}
-
-		if err := createPR(ctx); err != nil {
-			// PR creation failure should not fail the entire archive
-			fmt.Printf("\n⚠️  PR creation failed: %v\n", err)
-
-			return nil
-		}
-	}
 
 	return nil
 }

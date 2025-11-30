@@ -10,7 +10,6 @@ type ArchiveCmd struct {
 	Yes        bool   `name:"yes" short:"y" help:"Skip confirmation"`
 	SkipSpecs  bool   `name:"skip-specs" help:"Skip spec updates"`
 	NoValidate bool   `name:"no-validate" help:"Skip validation"`
-	PR         bool   `name:"pr" help:"Create PR after archive"`
 }
 
 // Run executes the archive command

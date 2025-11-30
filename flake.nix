@@ -174,7 +174,7 @@
       packages = {
         default = pkgs.buildGoModule rec {
           pname = "spectr";
-          version = "0.0.1";
+          version = "0.0.3";
           src = self;
           vendorHash = "sha256-5mlBRTA+olCXHyKHb7zkLe0ySTv9Y2Qq4GbylzqSyjY=";
           ldflags = [

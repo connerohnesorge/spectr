@@ -36,12 +36,6 @@
 
 **Migration**: Standard git error messages are visible when running commands directly.
 
-### Requirement: Archive PR Worktree Isolation
-
-**Reason**: Worktree isolation only exists to support the removed `--pr` flag.
-
-**Migration**: Users work directly in their repository without worktree complexity.
-
 ### Requirement: Archive PR Success Reporting
 
 **Reason**: PR URL reporting only exists to support the removed `--pr` flag.

@@ -11,13 +11,13 @@ import (
 
 // ValidateCmd represents the validate command
 type ValidateCmd struct {
-	ItemName      *string `arg:"" optional:"" help:"Item to validate"`
+	ItemName      *string `arg:"" optional:"" predictor:"item"`
 	Strict        bool    `name:"strict" help:"Treat warnings as errors"`
 	JSON          bool    `name:"json" help:"Output as JSON"`
 	All           bool    `name:"all" help:"Validate all"`
 	Changes       bool    `name:"changes" help:"Validate changes"`
 	Specs         bool    `name:"specs" help:"Validate specs"`
-	Type          *string `name:"type" enum:"change,spec" help:"Item type"`
+	Type          *string `name:"type" enum:"change,spec" predictor:"itemType"`
 	NoInteractive bool    `name:"no-interactive" help:"No prompts"`
 }
 

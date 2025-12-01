@@ -1,7 +1,7 @@
-// Package init provides initialization functionality for Spectr,
+// Package initialize provides initialization functionality for Spectr,
 // including an interactive wizard for project setup and gradient
 // rendering utilities for enhanced visual presentation.
-package init
+package initialize
 
 import (
 	"fmt"

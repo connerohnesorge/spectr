@@ -1,6 +1,6 @@
-// Package init provides filesystem operations and configuration utilities
+// Package initialize provides filesystem operations and configuration utilities
 // for initializing Spectr projects.
-package init
+package initialize
 
 import (
 	"errors"

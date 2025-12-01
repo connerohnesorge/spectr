@@ -1,5 +1,5 @@
 //nolint:revive // file-length-limit,receiver-naming,unused-receiver,add-constant,early-return - UI code prioritizes readability
-package init
+package initialize
 
 //nolint:revive // line-length-limit,add-constant - readability over strict limits
 
@@ -11,7 +11,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/connerohnesorge/spectr/internal/init/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
 const (

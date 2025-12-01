@@ -1,4 +1,4 @@
-package init
+package initialize
 
 const (
 	// File and directory permission constants

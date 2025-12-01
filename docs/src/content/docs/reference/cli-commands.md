@@ -123,15 +123,7 @@ spectr init
 spectr init ./docs
 ```
 
-### Update Instructions
-
-Update Spectr instruction files:
-
-```bash
-spectr update [path]
-```
-
-This updates the instruction markdown files in the project.
+This also updates the instruction markdown files in the project.
 
 ## Global Options
 

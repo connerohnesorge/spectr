@@ -6,7 +6,7 @@ description: Implement an approved Spectr change and keep tasks in sync.
 **Guardrails**
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
-- Refer to `spectr/AGENTS.md` (located inside the `spectr/` directory—run `ls spectr` or `spectr update` if you don't see it) if you need additional Spectr conventions or clarifications.
+- Refer to `spectr/AGENTS.md` (located inside the `spectr/` directory—run `ls spectr` or `spectr init` if you don't see it) if you need additional Spectr conventions or clarifications.
 
 **Steps**
 Track these steps as TODOs and complete them one by one.

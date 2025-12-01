@@ -33,7 +33,7 @@ The provider SHALL create and maintain a `QODER.md` instruction file in the proj
 - **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
 
 #### Scenario: Instruction file update
-- **WHEN** `spectr update` runs
+- **WHEN** `spectr init` runs
 - **THEN** the system updates the Spectr instructions block in `QODER.md`
 - **AND** preserves existing content outside the markers
 

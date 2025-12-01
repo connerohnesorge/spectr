@@ -6,13 +6,13 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	initpkg "github.com/connerohnesorge/spectr/internal/init"
-	"github.com/connerohnesorge/spectr/internal/init/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
-// InitCmd wraps the init package's InitCmd type to add Run method
+// InitCmd wraps the initialize package's InitCmd type to add Run method
 type InitCmd struct {
-	initpkg.InitCmd
+	initialize.InitCmd
 }
 
 // Run executes the init command
@@ -34,7 +34,7 @@ func (c *InitCmd) Run() error {
 	}
 
 	// Expand and validate path
-	expandedPath, err := initpkg.ExpandPath(projectPath)
+	expandedPath, err := initialize.ExpandPath(projectPath)
 	if err != nil {
 		return fmt.Errorf("invalid path: %w", err)
 	}
@@ -43,7 +43,7 @@ func (c *InitCmd) Run() error {
 	c.Path = expandedPath
 
 	// Check if already initialized
-	if c.NonInteractive && initpkg.IsSpectrInitialized(expandedPath) {
+	if c.NonInteractive && initialize.IsSpectrInitialized(expandedPath) {
 		return fmt.Errorf(
 			"init failed: Spectr is already initialized in %s",
 			expandedPath,
@@ -60,7 +60,7 @@ func (c *InitCmd) Run() error {
 }
 
 func runInteractiveInit(c *InitCmd) error {
-	model, err := initpkg.NewWizardModel(&c.InitCmd)
+	model, err := initialize.NewWizardModel(&c.InitCmd)
 	if err != nil {
 		return fmt.Errorf("failed to create wizard: %w", err)
 	}
@@ -72,7 +72,7 @@ func runInteractiveInit(c *InitCmd) error {
 	}
 
 	// Check if there were errors during execution
-	wizardModel, ok := finalModel.(initpkg.WizardModel)
+	wizardModel, ok := finalModel.(initialize.WizardModel)
 	if !ok {
 		return errors.New("failed to cast final model to WizardModel")
 	}
@@ -99,7 +99,7 @@ func runNonInteractiveInit(c *InitCmd) error {
 	}
 
 	// Create executor and run
-	executor, err := initpkg.NewInitExecutor(&c.InitCmd)
+	executor, err := initialize.NewInitExecutor(&c.InitCmd)
 	if err != nil {
 		return fmt.Errorf("failed to create executor: %w", err)
 	}
@@ -114,7 +114,7 @@ func runNonInteractiveInit(c *InitCmd) error {
 
 func printInitResults(
 	projectPath string,
-	result *initpkg.ExecutionResult,
+	result *initialize.ExecutionResult,
 ) error {
 	fmt.Println("Spectr initialized successfully!")
 	fmt.Printf("Project: %s\n\n", projectPath)
@@ -144,7 +144,7 @@ func printInitResults(
 		return errors.New("initialization completed with errors")
 	}
 
-	fmt.Print(initpkg.FormatNextStepsMessage())
+	fmt.Print(initialize.FormatNextStepsMessage())
 
 	return nil
 }

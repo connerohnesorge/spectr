@@ -1,4 +1,4 @@
-package init
+package initialize
 
 // InitCmd represents the init command with all its flags
 type InitCmd struct {

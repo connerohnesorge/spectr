@@ -1,15 +1,15 @@
-// Package init provides utilities for initializing Spectr
+// Package initialize provides utilities for initializing Spectr
 // in a project directory.
 //
 //nolint:revive // file-length-limit - logically cohesive, no benefit to split
-package init
+package initialize
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/connerohnesorge/spectr/internal/init/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
 // InitExecutor handles the actual initialization process

@@ -5,4 +5,4 @@
 - [ ] 1.3 Update `TemplateRenderer` interface in `providers/provider.go` to include `RenderInstructionPointer()`
 - [ ] 1.4 Update `configureConfigFile()` in `providers/provider.go` to call `RenderInstructionPointer()` instead of `RenderAgents()`
 - [ ] 1.5 Add unit test for `RenderInstructionPointer()` in `templates_test.go`
-- [ ] 1.6 Run `spectr update` on this repo to verify the change works correctly
+- [ ] 1.6 Run `spectr init` on this repo to verify the change works correctly

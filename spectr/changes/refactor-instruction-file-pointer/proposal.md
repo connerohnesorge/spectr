@@ -2,7 +2,7 @@
 
 ## Why
 
-Currently, `spectr init` and `spectr update` inject the full ~450-line `AGENTS.md.tmpl` content into root-level instruction files (`CLAUDE.md`, `AGENTS.md` at project root, etc.) between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers. This duplicates the same content that already exists in `spectr/AGENTS.md`, wasting AI assistant context window tokens on every request.
+Currently, `spectr init` injects the full ~450-line `AGENTS.md.tmpl` content into root-level instruction files (`CLAUDE.md`, `AGENTS.md` at project root, etc.) between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers. This duplicates the same content that already exists in `spectr/AGENTS.md`, wasting AI assistant context window tokens on every request.
 
 ## What Changes
 

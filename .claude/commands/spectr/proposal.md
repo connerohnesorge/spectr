@@ -8,7 +8,7 @@ tags: [spectr, change]
 **Guardrails**
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
-- Refer to `spectr/AGENTS.md` (located inside the `spectr/` directory—run `ls spectr` or `spectr update` if you don't see it) if you need additional Spectr conventions or clarifications.
+- Refer to `spectr/AGENTS.md` (located inside the `spectr/` directory—run `ls spectr` or `spectr init` if you don't see it) if you need additional Spectr conventions or clarifications.
 - Identify any vague or ambiguous details and ask the necessary follow-up questions before editing files.
 
 **Steps**

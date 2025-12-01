@@ -22,5 +22,5 @@
 - [x] 4.1 Add unit tests for CodexProvider in `providers/codex_test.go`
 - [x] 4.2 Test global path expansion on actual filesystem
 - [x] 4.3 Verify `spectr init` with codex provider selection
-- [x] 4.4 Verify `spectr update` updates global codex prompts
+- [x] 4.4 Verify `spectr init` updates global codex prompts
 - [x] 4.5 Run full test suite: `go test ./...`

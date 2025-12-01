@@ -7,6 +7,7 @@ description: Detect spec drift from code and update specs interactively.
 - Code is the source of truth—specs should reflect actual implementation.
 - Only update specs after user confirms each change.
 - Keep spec updates minimal and focused on actual drift.
+- Create missing specs for new capabilities supported by the implementation.
 - Refer to `spectr/AGENTS.md` for Spectr conventions.
 
 ### Steps

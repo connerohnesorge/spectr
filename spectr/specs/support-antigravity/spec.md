@@ -32,7 +32,7 @@ The provider SHALL create and maintain an `AGENTS.md` instruction file in the pr
 - **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
 
 #### Scenario: Instruction file updates
-- **WHEN** `spectr update` runs for Antigravity provider
+- **WHEN** `spectr init` runs for Antigravity provider
 - **THEN** the system updates content between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
 - **AND** preserves content outside the markers
 

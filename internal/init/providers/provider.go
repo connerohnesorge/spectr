@@ -143,6 +143,9 @@ type Provider interface {
 type TemplateRenderer interface {
 	// RenderAgents renders the AGENTS.md template content.
 	RenderAgents() (string, error)
+	// RenderInstructionPointer renders a short pointer template that directs
+	// AI assistants to read spectr/AGENTS.md for full instructions.
+	RenderInstructionPointer() (string, error)
 	// RenderSlashCommand renders a slash command template
 	// IE. proposal, apply, or sync.
 	RenderSlashCommand(command string) (string, error)
@@ -239,9 +242,9 @@ func (p *BaseProvider) configureConfigFile(
 	projectPath string,
 	tm TemplateRenderer,
 ) error {
-	content, err := tm.RenderAgents()
+	content, err := tm.RenderInstructionPointer()
 	if err != nil {
-		return fmt.Errorf("failed to render agents template: %w", err)
+		return fmt.Errorf("failed to render instruction pointer template: %w", err)
 	}
 
 	filePath := filepath.Join(projectPath, p.configFile)

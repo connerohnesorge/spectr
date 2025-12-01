@@ -52,6 +52,26 @@ func (tm *TemplateManager) RenderAgents() (string, error) {
 	return buf.String(), nil
 }
 
+// RenderInstructionPointer renders the instruction-pointer.md template
+// This is a short pointer that directs AI assistants to read spectr/AGENTS.md
+func (tm *TemplateManager) RenderInstructionPointer() (string, error) {
+	var buf bytes.Buffer
+	err := tm.templates.ExecuteTemplate(
+		&buf,
+		"instruction-pointer.md.tmpl",
+		nil,
+	)
+	if err != nil {
+		return "",
+			fmt.Errorf(
+				"failed to render instruction pointer template: %w",
+				err,
+			)
+	}
+
+	return buf.String(), nil
+}
+
 // RenderSlashCommand renders a slash command template
 // commandType must be one of: "proposal", "apply", "archive"
 func (tm *TemplateManager) RenderSlashCommand(

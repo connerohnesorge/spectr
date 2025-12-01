@@ -100,7 +100,7 @@ spectr archive <change-id> [--yes|-y]   # Archive after deployment (add --yes fo
 
 # Project management
 spectr init [path]           # Initialize Spectr
-spectr update [path]         # Update instruction files
+spectr init [path]           # Initialize or update instruction files
 
 # Interactive mode
 spectr validate              # Bulk validation mode

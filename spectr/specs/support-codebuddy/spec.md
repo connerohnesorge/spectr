@@ -32,7 +32,7 @@ The provider SHALL create and maintain a `CODEBUDDY.md` instruction file in the 
 - **AND** it SHALL insert Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
 
 #### Scenario: Instruction file update
-- **WHEN** `spectr update` runs in a project with CodeBuddy provider
+- **WHEN** `spectr init` runs in a project with CodeBuddy provider
 - **THEN** the system SHALL update the managed block in `CODEBUDDY.md`
 - **AND** it SHALL preserve any user content outside the markers
 

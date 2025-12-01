@@ -5,6 +5,12 @@
 # - Creating a new Spectr project structure
 # - Viewing the generated files
 #
+# Execution Model:
+# - Creates a temporary directory (/tmp/spectr-demo) for the demo
+# - Unlike other demos, we NEED to create a fresh directory since
+#   we're demonstrating project initialization from scratch
+# - Uses Hide/Show to hide cleanup commands at the end
+#
 # Output: assets/gifs/init.gif
 
 Output assets/gifs/init.gif
@@ -27,8 +33,8 @@ Type "# Starting in a fresh directory"
 Enter
 Sleep 500ms
 
-# Run spectr init with _demo directory
-Type "spectr init _demo"
+# Run spectr init with /tmp/spectr-demo directory
+Type "spectr init /tmp/spectr-demo"
 Enter
 Sleep 1s
 
@@ -48,30 +54,29 @@ Enter
 Sleep 1.5s
 
 # Show the created structure
-Type "echo ''"
-Enter
 Type "echo 'Generated project structure:'"
 Enter
-Type "tree _demo -L 2"
+Type "tree /tmp/spectr-demo -L 2"
 Enter
 Sleep 2s
 
 # Show the project.md file was created
-Type "echo ''"
-Enter
 Type "echo 'Project configuration:'"
 Enter
-Type "head -n 10 _demo/project.md"
+Type "head -n 10 /tmp/spectr-demo/project.md"
 Enter
 Sleep 2s
 
+# Hide cleanup commands from viewers
+Hide
+
 # Cleanup
-Type "echo ''"
+Type "rm -rf /tmp/spectr-demo"
 Enter
 Sleep 500ms
-Type "rm -rf _demo"
-Enter
-Sleep 500ms
+
+# Show the screen again for final pause
+Show
 
 # Final pause to let viewers see the result
 Sleep 1s

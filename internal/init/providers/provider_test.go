@@ -9,13 +9,15 @@ import (
 
 // mockTemplateRenderer implements TemplateRenderer for testing
 type mockTemplateRenderer struct {
-	agentsContent string
-	slashContent  map[string]string
+	agentsContent          string
+	instructionPtrContent  string
+	slashContent           map[string]string
 }
 
 func newMockRenderer() *mockTemplateRenderer {
 	return &mockTemplateRenderer{
-		agentsContent: "# Test AGENTS content",
+		agentsContent:         "# Test AGENTS content",
+		instructionPtrContent: "# Spectr Instructions\nRead spectr/AGENTS.md",
 		slashContent: map[string]string{
 			"proposal": "Proposal command content",
 			"apply":    "Apply command content",
@@ -26,6 +28,10 @@ func newMockRenderer() *mockTemplateRenderer {
 
 func (m *mockTemplateRenderer) RenderAgents() (string, error) {
 	return m.agentsContent, nil
+}
+
+func (m *mockTemplateRenderer) RenderInstructionPointer() (string, error) {
+	return m.instructionPtrContent, nil
 }
 
 func (m *mockTemplateRenderer) RenderSlashCommand(command string) (string, error) {

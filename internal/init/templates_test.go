@@ -123,7 +123,7 @@ func TestTemplateManager_RenderAgents(t *testing.T) {
 		"## Three-Stage Workflow",
 		"### Stage 1: Creating Changes",
 		"### Stage 2: Implementing Changes",
-		"### Stage 3: Syncing & Archiving",
+		"### Stage 3: Syncing",
 		"## Directory Structure",
 		"## Creating Change Proposals",
 		"## Spec File Format",
@@ -147,6 +147,58 @@ func TestTemplateManager_RenderAgents(t *testing.T) {
 			"RenderAgents() output too short: got %d characters, expected at least 5000",
 			len(got),
 		)
+	}
+}
+
+func TestTemplateManager_RenderInstructionPointer(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	got, err := tm.RenderInstructionPointer()
+	if err != nil {
+		t.Fatalf("RenderInstructionPointer() error = %v", err)
+	}
+
+	// Check for key content in instruction pointer
+	expectedContent := []string{
+		"# Spectr Instructions",
+		"spectr/AGENTS.md",
+		"proposal",
+		"spec",
+		"change",
+	}
+
+	for _, content := range expectedContent {
+		if !strings.Contains(got, content) {
+			t.Errorf("RenderInstructionPointer() missing expected content %q", content)
+		}
+	}
+
+	// Verify it's a concise pointer (less than 20 lines as per spec)
+	lineCount := strings.Count(got, "\n") + 1
+	if lineCount > 20 {
+		t.Errorf(
+			"RenderInstructionPointer() output too long: got %d lines, expected at most 20",
+			lineCount,
+		)
+	}
+
+	// Verify it does NOT contain the full workflow instructions
+	fullWorkflowIndicators := []string{
+		"## TL;DR Quick Checklist",
+		"## Three-Stage Workflow",
+		"## Directory Structure",
+	}
+
+	for _, indicator := range fullWorkflowIndicators {
+		if strings.Contains(got, indicator) {
+			t.Errorf(
+				"RenderInstructionPointer() should not contain full workflow content %q",
+				indicator,
+			)
+		}
 	}
 }
 
@@ -259,6 +311,13 @@ func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
 		_, err := tm.RenderAgents()
 		if err != nil {
 			t.Errorf("Agents template failed to render: %v", err)
+		}
+	})
+
+	t.Run("instruction pointer template", func(t *testing.T) {
+		_, err := tm.RenderInstructionPointer()
+		if err != nil {
+			t.Errorf("Instruction pointer template failed to render: %v", err)
 		}
 	})
 

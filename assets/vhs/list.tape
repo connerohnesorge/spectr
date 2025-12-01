@@ -5,6 +5,11 @@
 # - Listing specifications with spectr list --specs
 # - Understanding what's in progress vs what's built
 #
+# Execution model:
+# - Runs commands directly in examples/list/spectr/ directory
+# - Read-only operations (no setup or cleanup needed)
+# - No git restore needed (list commands don't modify state)
+#
 # Output: assets/gifs/list.gif
 
 Output assets/gifs/list.gif
@@ -22,55 +27,29 @@ Type "clear"
 Enter
 Sleep 500ms
 
-# Set up demo environment
-Type "# Set up demo environment from pre-made example"
-Enter
-Type "cp -r examples/list/spectr _demo"
-Enter
-Sleep 500ms
-
-Type "echo ''"
-Enter
-
 # List active changes
 Type "echo '=== Active Changes (What is being proposed) ==='"
 Enter
 Sleep 500ms
-Type "cd _demo && spectr list"
+Type "cd examples/list/spectr && spectr list"
 Enter
 Sleep 2s
-
-Type "echo ''"
-Enter
-Sleep 500ms
 
 # List specifications
 Type "echo '=== Specifications (What is built) ==='"
 Enter
 Sleep 500ms
-Type "cd _demo && spectr list --specs"
+Type "cd examples/list/spectr && spectr list --specs"
 Enter
 Sleep 2s
-
-Type "echo ''"
-Enter
-Sleep 500ms
 
 # Show long format for more details
 Type "echo '=== Detailed Spec View ==='"
 Enter
 Sleep 500ms
-Type "cd _demo && spectr list --specs --long"
+Type "cd examples/list/spectr && spectr list --specs --long"
 Enter
 Sleep 2.5s
-
-# Cleanup
-Type "echo ''"
-Enter
-Sleep 500ms
-Type "rm -rf _demo"
-Enter
-Sleep 500ms
 
 # Final pause
 Sleep 1s

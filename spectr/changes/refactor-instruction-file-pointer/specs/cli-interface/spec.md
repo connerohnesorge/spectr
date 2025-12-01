@@ -13,7 +13,7 @@ The system SHALL use a short pointer template when injecting Spectr instructions
 
 #### Scenario: Update refreshes instruction file with pointer
 
-- **WHEN** user runs `spectr update` on an already-initialized project
+- **WHEN** user runs `spectr init` on an already-initialized project
 - **THEN** the root-level instruction files are updated with the short pointer content
 - **AND** the `spectr/AGENTS.md` file retains the full instructions
 

@@ -112,7 +112,7 @@ func getSlashToolMapping(configToolID string) (string, bool) {
 **Migration impact**:
 - Users with existing projects won't be affected (files already created)
 - New users get simpler, better experience
-- `spectr update` could theoretically detect and migrate, but not necessary
+- `spectr init` could theoretically detect and migrate, but not necessary
 
 ### Decision 4: Tool Naming - Keep Current Names
 
@@ -174,7 +174,7 @@ func getSlashToolMapping(configToolID string) (string, bool) {
 ### For Existing Projects
 1. No action required - existing files are preserved
 2. If they run `spectr init` again, configurators respect existing files
-3. `spectr update` behavior unchanged (only updates instruction content)
+3. `spectr init` behavior unchanged (only updates instruction content)
 
 ### Rollback Strategy
 If this change causes issues:

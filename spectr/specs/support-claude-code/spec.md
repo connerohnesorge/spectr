@@ -32,7 +32,7 @@ The provider SHALL create and maintain a `CLAUDE.md` instruction file in the pro
 - **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
 
 #### Scenario: Instruction file updates
-- **WHEN** `spectr update` runs in a project with Claude Code provider
+- **WHEN** `spectr init` runs in a project with Claude Code provider
 - **THEN** the system updates content between markers in `CLAUDE.md`
 - **AND** preserves any user content outside the markers
 

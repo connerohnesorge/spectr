@@ -101,7 +101,7 @@ spectr validate [item]       # Validate changes or specs
 
 # Project management
 spectr init [path]           # Initialize Spectr
-spectr update [path]         # Update instruction files
+spectr init [path]           # Initialize or update instruction files
 
 # Interactive mode
 spectr validate              # Bulk validation mode

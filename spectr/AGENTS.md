@@ -101,7 +101,11 @@ spectr validate [item]       # Validate changes or specs
 
 # Project management
 spectr init [path]           # Initialize Spectr
-spectr init [path]           # Initialize or update instruction files
+spectr archive <change-id>   # Archive a completed change
+
+# Pull request creation
+spectr pr archive <change-id>    # Archive change and create PR
+spectr pr new <change-id>        # Create PR for proposal review (no archive)
 
 # Interactive mode
 spectr validate              # Bulk validation mode
@@ -451,5 +455,27 @@ spectr validate --strict # Is it correct?
 **Reading Details (for AI agents):**
 - Read `spectr/specs/<capability>/spec.md` for spec details
 - Read `spectr/changes/<change-id>/proposal.md` for change details
+
+### PR Command Examples
+
+Create a PR for a completed change (archives and creates PR):
+```bash
+spectr pr archive add-user-auth
+spectr pr archive add-user-auth --draft    # Create as draft PR
+spectr pr archive add-user-auth --base dev # Target specific branch
+```
+
+Create a PR for proposal review (without archiving):
+```bash
+spectr pr new add-user-auth
+spectr pr new add-user-auth --draft        # Create as draft PR
+```
+
+Common flags:
+- `--base <branch>` - Target branch (default: auto-detect main/master)
+- `--draft` - Create as draft PR
+- `--force` - Overwrite existing PR branch
+- `--dry-run` - Preview what would be done
+- `--skip-specs` - Skip spec merging (archive only)
 
 Remember: Specs are truth. Changes are proposals. Keep them in sync.

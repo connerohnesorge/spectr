@@ -9,9 +9,9 @@ import (
 
 // mockTemplateRenderer implements TemplateRenderer for testing
 type mockTemplateRenderer struct {
-	agentsContent          string
-	instructionPtrContent  string
-	slashContent           map[string]string
+	agentsContent         string
+	instructionPtrContent string
+	slashContent          map[string]string
 }
 
 func newMockRenderer() *mockTemplateRenderer {

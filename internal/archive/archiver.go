@@ -69,8 +69,9 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 		changeID = selectedID
 		cmd.ChangeID = changeID
 	} else {
+		var result discovery.ResolveResult
 		// Resolve partial ID to full change ID
-		result, err := discovery.ResolveChangeID(changeID, projectRoot)
+		result, err = discovery.ResolveChangeID(changeID, projectRoot)
 		if err != nil {
 			return err
 		}
@@ -257,7 +258,8 @@ func updateSpecsWithTracking(
 		return OperationCounts{}, nil, err
 	}
 
-	if err := writeSpecs(mergedSpecs, workingDir); err != nil {
+	err = writeSpecs(mergedSpecs)
+	if err != nil {
 		return OperationCounts{}, nil, err
 	}
 
@@ -416,7 +418,7 @@ func processOneMerge(
 }
 
 // writeSpecs writes all merged specs to disk
-func writeSpecs(mergedSpecs map[string]string, workingDir string) error {
+func writeSpecs(mergedSpecs map[string]string) error {
 	for targetPath, content := range mergedSpecs {
 		if err := os.MkdirAll(
 			filepath.Dir(targetPath),

@@ -104,7 +104,8 @@ func prepareArchiveWorkflow(
 	platformInfo := git.DetectPlatform(remoteURL)
 
 	// Validate CLI availability for platform
-	if err := validatePlatformCLI(platformInfo); err != nil {
+	err = validatePlatformCLI(platformInfo)
+	if err != nil {
 		return git.PlatformInfo{}, "", "", err
 	}
 
@@ -146,7 +147,8 @@ func executeArchiveInWorktree(
 	}
 
 	// Stage and commit
-	if err := stageSpectrDir(worktree.Path); err != nil {
+	err = stageSpectrDir(worktree.Path)
+	if err != nil {
 		return nil, fmt.Errorf("stage changes: %w", err)
 	}
 
@@ -160,12 +162,14 @@ func executeArchiveInWorktree(
 		return nil, fmt.Errorf("render commit message: %w", err)
 	}
 
-	if err := createCommit(worktree.Path, commitMsg); err != nil {
+	err = createCommit(worktree.Path, commitMsg)
+	if err != nil {
 		return nil, fmt.Errorf("create commit: %w", err)
 	}
 
 	// Push and create PR
-	if err := pushBranch(worktree.Path, branchName); err != nil {
+	err = pushBranch(worktree.Path, branchName)
+	if err != nil {
 		return nil, fmt.Errorf("push branch: %w", err)
 	}
 
@@ -286,12 +290,14 @@ func executeNewInWorktree(
 	destPath := filepath.Join(
 		worktree.Path, "spectr", "changes", cfg.ChangeID,
 	)
-	if err := copyDir(changePath, destPath); err != nil {
+	err = copyDir(changePath, destPath)
+	if err != nil {
 		return nil, fmt.Errorf("copy change directory: %w", err)
 	}
 
 	// Stage and commit
-	if err := stageSpectrDir(worktree.Path); err != nil {
+	err = stageSpectrDir(worktree.Path)
+	if err != nil {
 		return nil, fmt.Errorf("stage changes: %w", err)
 	}
 
@@ -305,12 +311,14 @@ func executeNewInWorktree(
 		return nil, fmt.Errorf("render commit message: %w", err)
 	}
 
-	if err := createCommit(worktree.Path, commitMsg); err != nil {
+	err = createCommit(worktree.Path, commitMsg)
+	if err != nil {
 		return nil, fmt.Errorf("create commit: %w", err)
 	}
 
 	// Push and create PR
-	if err := pushBranch(worktree.Path, branchName); err != nil {
+	err = pushBranch(worktree.Path, branchName)
+	if err != nil {
 		return nil, fmt.Errorf("push branch: %w", err)
 	}
 
@@ -494,10 +502,12 @@ func createPR(
 	}
 	defer func() { _ = os.Remove(bodyFile.Name()) }()
 
-	if _, err := bodyFile.WriteString(body); err != nil {
+	_, err = bodyFile.WriteString(body)
+	if err != nil {
 		return "", fmt.Errorf("write body file: %w", err)
 	}
-	if err := bodyFile.Close(); err != nil {
+	err = bodyFile.Close()
+	if err != nil {
 		return "", fmt.Errorf("close body file: %w", err)
 	}
 

@@ -20,7 +20,7 @@ type OperationCounts struct {
 	Renamed  int
 }
 
-// Add increments the total operation count
+// Total adds up all counts for delta operations.
 func (oc *OperationCounts) Total() int {
 	return oc.Added + oc.Modified + oc.Removed + oc.Renamed
 }

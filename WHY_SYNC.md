@@ -12,7 +12,7 @@ However, many developers work "Code First":
 1. Modify Code
 2. Update Spec to reflect Code
 
-The `/sync` command acknowledges that **Code is the ultimate Source of Truth**. It allows the agent to look at the current state of the codebase and "sync" the specs to match, regardless of whether a formal "Change" object was used. This bridges the gap for users who may not want to strictly follow the formal SDD lifecycle for every modification.
+The `/sync` command acknowledges that **Code can be understood as ultimate Source of Truth**. It allows the agent to look at the current state of the codebase and "sync" the specs to match, regardless of whether a formal "Change" object was used. This bridges the gap for users who may not want to strictly follow the formal SDD lifecycle for every modification.
 
 ## 2. `archive` is a Simple CLI Wrapper
 The old `/archive` slash command essentially just ran `spectr archive <id>`. This is a trivial operation that doesn't require a complex prompt. A user can simply ask the agent "archive change 123" or run the CLI command themselves.

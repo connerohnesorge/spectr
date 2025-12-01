@@ -45,11 +45,13 @@ func ValidatePostMerge(mergedContent, _ string) error {
 		_ = os.Remove(tmpFile.Name())
 	}()
 
-	if _, err := tmpFile.WriteString(mergedContent); err != nil {
+	_, err = tmpFile.WriteString(mergedContent)
+	if err != nil {
 		return fmt.Errorf("write temp file: %w", err)
 	}
 
-	if err := tmpFile.Close(); err != nil {
+	err = tmpFile.Close()
+	if err != nil {
 		return fmt.Errorf("close temp file: %w", err)
 	}
 

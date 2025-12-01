@@ -66,13 +66,6 @@ When code implementation diverges from specs, sync to update specs:
 4. Edit specs directly with confirmed changes
 5. Run `spectr validate --strict` to ensure validity
 
-**Archiving Changes (after deployment):**
-After deployment, archive completed changes:
-- Move `changes/[name]/` → `changes/archive/YYYY-MM-DD-[name]/`
-- Update `specs/` if capabilities changed
-- Use `spectr archive <change-id> --skip-specs --yes` for tooling-only changes
-- Run `spectr validate --strict` to confirm the archived change passes checks
-
 ## Before Any Task
 
 **Context Checklist:**
@@ -105,7 +98,6 @@ After deployment, archive completed changes:
 spectr list                  # List active changes
 spectr list --specs          # List specifications
 spectr validate [item]       # Validate changes or specs
-spectr archive <change-id> [--yes|-y]   # Archive after deployment (add --yes for non-interactive runs)
 
 # Project management
 spectr init [path]           # Initialize Spectr
@@ -129,8 +121,6 @@ spectr validate [change] --strict
 - `--type change|spec` - Disambiguate items
 - `--strict` - Comprehensive validation
 - `--no-interactive` - Disable prompts
-- `--skip-specs` - Archive without spec updates
-- `--yes`/`-y` - Skip confirmation prompts (non-interactive archive)
 
 ## Directory Structure
 
@@ -321,7 +311,7 @@ Example for RENAMED:
 spectr validate [change] --strict
 ```
 
-**For AI agents debugging:**
+**For validation debugging:**
 - Read delta specs directly: `spectr/changes/<change-id>/specs/<capability>/spec.md`
 - Check spec content by reading: `spectr/specs/<capability>/spec.md`
 
@@ -452,8 +442,8 @@ Only add complexity with:
 ### File Purposes
 - `proposal.md` - Why and what
 - `tasks.md` - Implementation steps
-- `design.md` - Technical decisions
 - `spec.md` - Requirements and behavior
+- `design.md` - Technical decisions (optional)
 
 ### CLI Essentials
 ```bash

@@ -6,6 +6,12 @@
 # - Fixing errors in the spec file
 # - Re-running validation successfully
 #
+# Execution Model:
+# - Runs commands directly in examples/validate/spectr/ directory
+# - Uses Hide/Show to hide setup commands that create the broken change
+# - Shows the validation errors and the fix process
+# - Uses Hide/Show to hide cleanup commands
+#
 # Output: assets/gifs/validate.gif
 
 Output assets/gifs/validate.gif
@@ -23,62 +29,51 @@ Type "clear"
 Enter
 Sleep 500ms
 
-# Copy base project and broken change
-Type "# Set up demo with a broken change proposal"
+# HIDDEN: Set up the broken change proposal
+Hide
+Type "mkdir -p examples/validate/spectr/changes/test-validation/specs/test-feature"
 Enter
-Type "cp -r examples/validate/spectr _demo"
+Type "cp examples/validate/broken/proposal.md examples/validate/spectr/changes/test-validation/"
 Enter
-Type "mkdir -p _demo/changes/test-validation/specs/test-feature"
+Type "cp examples/validate/broken/specs/test-feature/spec.md examples/validate/spectr/changes/test-validation/specs/test-feature/"
 Enter
-Type "cp examples/validate/broken/proposal.md _demo/changes/test-validation/"
-Enter
-Type "cp examples/validate/broken/specs/test-feature/spec.md _demo/changes/test-validation/specs/test-feature/"
-Enter
-Sleep 500ms
-
-Type "echo ''"
-Enter
-Sleep 500ms
+Sleep 200ms
+Show
 
 # Run validation - it will fail
 Type "echo '=== Running validation (will show errors) ==='"
 Enter
 Sleep 500ms
-Type "cd _demo && spectr validate test-validation --strict"
+Type "cd examples/validate/spectr && spectr validate test-validation --strict"
 Enter
 Sleep 2s
 
-Type "echo ''"
-Enter
 Sleep 1s
 
 # Fix the error by copying the fixed version
 Type "echo '=== Fixing the spec by using corrected version ==='"
 Enter
 Sleep 500ms
-Type "cp examples/validate/fixed/specs/test-feature/spec.md _demo/changes/test-validation/specs/test-feature/"
+Type "cp examples/validate/fixed/specs/test-feature/spec.md examples/validate/spectr/changes/test-validation/specs/test-feature/"
 Enter
 Sleep 500ms
 
-Type "echo ''"
-Enter
 Sleep 500ms
 
 # Run validation again - success
 Type "echo '=== Re-running validation (should pass) ==='"
 Enter
 Sleep 500ms
-Type "cd _demo && spectr validate test-validation --strict"
+Type "cd examples/validate/spectr && spectr validate test-validation --strict"
 Enter
 Sleep 2s
 
-# Cleanup
-Type "echo ''"
+# HIDDEN: Cleanup - restore the repository
+Hide
+Type "cd examples/validate/spectr && git restore ."
 Enter
-Sleep 500ms
-Type "rm -rf _demo"
-Enter
-Sleep 500ms
+Sleep 200ms
+Show
 
 # Final pause
 Sleep 1s

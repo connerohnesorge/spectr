@@ -14,7 +14,7 @@ import (
 
 // PRCmd represents the pr command with subcommands.
 type PRCmd struct {
-	Archive PRArchiveCmd `cmd:"" help:"Archive change and create PR"`
+	Archive PRArchiveCmd `cmd:"" aliases:"a" help:"Archive and create PR"`
 	New     PRNewCmd     `cmd:"" help:"Create PR without archiving"`
 }
 

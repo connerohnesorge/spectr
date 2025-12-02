@@ -104,10 +104,10 @@ func TestPRResult_Struct(t *testing.T) {
 		result PRResult
 	}{
 		{
-			name: "full result",
+			name: "full result - archive mode",
 			result: PRResult{
 				PRURL:       "https://github.com/owner/repo/pull/123",
-				BranchName:  "spectr/add-feature-x",
+				BranchName:  "spectr/archive/add-feature-x",
 				ArchivePath: "spectr/changes/archive/2024-01-15-add-feature-x/",
 				Counts: archive.OperationCounts{
 					Added:    3,
@@ -120,10 +120,10 @@ func TestPRResult_Struct(t *testing.T) {
 			},
 		},
 		{
-			name: "bitbucket result with manual URL",
+			name: "bitbucket result with manual URL - proposal mode",
 			result: PRResult{
 				PRURL:       "",
-				BranchName:  "spectr/new-feature",
+				BranchName:  "spectr/proposal/new-feature",
 				ArchivePath: "",
 				Counts:      archive.OperationCounts{},
 				Platform:    git.PlatformBitbucket,
@@ -131,9 +131,9 @@ func TestPRResult_Struct(t *testing.T) {
 			},
 		},
 		{
-			name: "minimal result",
+			name: "minimal result - proposal mode",
 			result: PRResult{
-				BranchName: "spectr/minimal",
+				BranchName: "spectr/proposal/minimal",
 				Platform:   git.PlatformGitLab,
 			},
 		},
@@ -532,7 +532,7 @@ func TestWorkflowContext_Struct(t *testing.T) {
 		ctx  workflowContext
 	}{
 		{
-			name: "github context",
+			name: "github context - archive mode",
 			ctx: workflowContext{
 				platformInfo: git.PlatformInfo{
 					Platform: git.PlatformGitHub,
@@ -540,11 +540,11 @@ func TestWorkflowContext_Struct(t *testing.T) {
 					RepoURL:  "https://github.com/owner/repo",
 				},
 				baseBranch: "origin/main",
-				branchName: "spectr/add-feature",
+				branchName: "spectr/archive/add-feature",
 			},
 		},
 		{
-			name: "gitlab context",
+			name: "gitlab context - proposal mode",
 			ctx: workflowContext{
 				platformInfo: git.PlatformInfo{
 					Platform: git.PlatformGitLab,
@@ -552,7 +552,7 @@ func TestWorkflowContext_Struct(t *testing.T) {
 					RepoURL:  "https://gitlab.com/group/project",
 				},
 				baseBranch: "origin/develop",
-				branchName: "spectr/new-proposal",
+				branchName: "spectr/proposal/new-proposal",
 			},
 		},
 	}

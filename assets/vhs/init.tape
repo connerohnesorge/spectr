@@ -54,15 +54,11 @@ Enter
 Sleep 1.5s
 
 # Show the created structure
-Type "echo 'Generated project structure:'"
-Enter
 Type "tree /tmp/spectr-demo -L 2"
 Enter
 Sleep 2s
 
 # Show the project.md file was created
-Type "echo 'Project configuration:'"
-Enter
 Type "head -n 10 /tmp/spectr-demo/project.md"
 Enter
 Sleep 2s

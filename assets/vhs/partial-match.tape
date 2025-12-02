@@ -29,17 +29,11 @@ Enter
 Sleep 500ms
 
 # Show the change in the list (full name visible)
-Type "echo '=== Active change with long ID ==='"
-Enter
-Sleep 500ms
 Type "cd examples/partial-match/spectr && spectr list"
 Enter
 Sleep 1.5s
 
 # Demonstrate prefix matching
-Type "echo '=== Archive using prefix: refactor ==='"
-Enter
-Sleep 500ms
 Type "cd examples/partial-match/spectr && spectr archive refactor --yes"
 Enter
 Sleep 2s
@@ -52,9 +46,6 @@ Sleep 500ms
 Show
 
 # Demonstrate substring matching
-Type "echo '=== Archive using substring: unified ==='"
-Enter
-Sleep 500ms
 Type "cd examples/partial-match/spectr && spectr archive unified --yes"
 Enter
 Sleep 2s
@@ -67,9 +58,6 @@ Sleep 500ms
 Show
 
 # Demonstrate case-insensitive matching
-Type "echo '=== Case-insensitive: REFACTOR ==='"
-Enter
-Sleep 500ms
 Type "cd examples/partial-match/spectr && spectr archive REFACTOR --yes"
 Enter
 Sleep 2s

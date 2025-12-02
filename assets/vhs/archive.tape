@@ -29,33 +29,21 @@ Enter
 Sleep 500ms
 
 # Show the change in the list
-Type "echo '=== Current active changes ==='"
-Enter
-Sleep 500ms
 Type "cd examples/archive/spectr && spectr list"
 Enter
 Sleep 1.5s
 
 # Run archive command
-Type "echo '=== Archiving the completed change ==='"
-Enter
-Sleep 500ms
 Type "cd examples/archive/spectr && spectr archive test-archive --yes"
 Enter
 Sleep 2s
 
 # Verify it moved to archive
-Type "echo '=== Verifying archive ==='"
-Enter
-Sleep 500ms
 Type "ls -la examples/archive/spectr/changes/archive/ | tail -5"
 Enter
 Sleep 1.5s
 
 # Show it's no longer in active changes
-Type "echo '=== Active changes (should not include test-archive) ==='"
-Enter
-Sleep 500ms
 Type "cd examples/archive/spectr && spectr list"
 Enter
 Sleep 1.5s

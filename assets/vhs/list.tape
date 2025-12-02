@@ -28,25 +28,16 @@ Enter
 Sleep 500ms
 
 # List active changes
-Type "echo '=== Active Changes (What is being proposed) ==='"
-Enter
-Sleep 500ms
 Type "cd examples/list/spectr && spectr list"
 Enter
 Sleep 2s
 
 # List specifications
-Type "echo '=== Specifications (What is built) ==='"
-Enter
-Sleep 500ms
 Type "cd examples/list/spectr && spectr list --specs"
 Enter
 Sleep 2s
 
 # Show long format for more details
-Type "echo '=== Detailed Spec View ==='"
-Enter
-Sleep 500ms
 Type "cd examples/list/spectr && spectr list --specs --long"
 Enter
 Sleep 2.5s

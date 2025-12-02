@@ -41,9 +41,6 @@ Sleep 200ms
 Show
 
 # Run validation - it will fail
-Type "echo '=== Running validation (will show errors) ==='"
-Enter
-Sleep 500ms
 Type "cd examples/validate/spectr && spectr validate test-validation --strict"
 Enter
 Sleep 2s
@@ -51,9 +48,6 @@ Sleep 2s
 Sleep 1s
 
 # Fix the error by copying the fixed version
-Type "echo '=== Fixing the spec by using corrected version ==='"
-Enter
-Sleep 500ms
 Type "cp examples/validate/fixed/specs/test-feature/spec.md examples/validate/spectr/changes/test-validation/specs/test-feature/"
 Enter
 Sleep 500ms
@@ -61,9 +55,6 @@ Sleep 500ms
 Sleep 500ms
 
 # Run validation again - success
-Type "echo '=== Re-running validation (should pass) ==='"
-Enter
-Sleep 500ms
 Type "cd examples/validate/spectr && spectr validate test-validation --strict"
 Enter
 Sleep 2s

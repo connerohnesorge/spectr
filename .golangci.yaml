@@ -17,6 +17,7 @@ linters:
     - errname
     - copyloopvar
     - errname
+    - prealloc
     # - gosec
     # - goconst
     - intrange

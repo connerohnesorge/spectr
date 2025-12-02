@@ -34,7 +34,7 @@ func FormatChangesText(changes []ChangeInfo) string {
 		}
 	}
 
-	var lines []string
+	lines := make([]string, 0, len(changes))
 	for _, change := range changes {
 		line := fmt.Sprintf("%-*s  %d/%d tasks",
 			maxIDLen,
@@ -59,7 +59,7 @@ func FormatChangesLong(changes []ChangeInfo) string {
 		return changes[i].ID < changes[j].ID
 	})
 
-	var lines []string
+	lines := make([]string, 0, len(changes))
 	for _, change := range changes {
 		line := fmt.Sprintf("%s: %s [deltas %d] [tasks %d/%d]",
 			change.ID,
@@ -104,7 +104,7 @@ func FormatSpecsText(specs []SpecInfo) string {
 		return specs[i].ID < specs[j].ID
 	})
 
-	var lines []string
+	lines := make([]string, 0, len(specs))
 	for _, spec := range specs {
 		lines = append(lines, spec.ID)
 	}
@@ -123,7 +123,7 @@ func FormatSpecsLong(specs []SpecInfo) string {
 		return specs[i].ID < specs[j].ID
 	})
 
-	var lines []string
+	lines := make([]string, 0, len(specs))
 	for _, spec := range specs {
 		line := fmt.Sprintf("%s: %s [requirements %d]",
 			spec.ID,

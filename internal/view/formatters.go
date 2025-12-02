@@ -182,7 +182,7 @@ func formatSummarySection(summary SummaryMetrics) string {
 // formatActiveChangesSection creates the active changes section
 // with progress bars
 func formatActiveChangesSection(changes []ChangeProgress) string {
-	var lines []string
+	lines := make([]string, 0, 2+len(changes))
 
 	// Section header
 	lines = append(lines, headerStyle.Render(activeChangesHeader))
@@ -211,7 +211,7 @@ func formatActiveChangesSection(changes []ChangeProgress) string {
 // formatCompletedChangesSection creates the completed changes
 // section with checkmarks
 func formatCompletedChangesSection(changes []CompletedChange) string {
-	var lines []string
+	lines := make([]string, 0, 2+len(changes))
 
 	// Section header
 	lines = append(lines, headerStyle.Render(completedChangesHeader))
@@ -232,7 +232,7 @@ func formatCompletedChangesSection(changes []CompletedChange) string {
 
 // formatSpecsSection creates the specifications section with requirement counts
 func formatSpecsSection(specs []SpecInfo) string {
-	var lines []string
+	lines := make([]string, 0, 2+len(specs))
 
 	// Section header
 	lines = append(lines, headerStyle.Render(specsHeader))

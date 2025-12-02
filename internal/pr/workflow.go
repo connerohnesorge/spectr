@@ -96,7 +96,19 @@ func prepareWorkflowContext(config PRConfig) (*workflowContext, error) {
 		return nil, fmt.Errorf("determine base branch: %w", err)
 	}
 
-	branchName := fmt.Sprintf("spectr/%s", config.ChangeID)
+	// Generate mode-specific branch name:
+	// - archive mode: spectr/archive/<change-id>
+	// - new mode: spectr/proposal/<change-id>
+	var branchPrefix string
+	switch config.Mode {
+	case ModeArchive:
+		branchPrefix = "spectr/archive"
+	case ModeNew:
+		branchPrefix = "spectr/proposal"
+	default:
+		branchPrefix = "spectr"
+	}
+	branchName := fmt.Sprintf("%s/%s", branchPrefix, config.ChangeID)
 
 	// Handle existing branch
 	if err := handleExistingBranch(config, branchName); err != nil {

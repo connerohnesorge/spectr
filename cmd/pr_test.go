@@ -257,6 +257,26 @@ func TestPRCmd_Struct(t *testing.T) {
 	}
 }
 
+// TestPRCmd_ArchiveHasAlias verifies that the archive subcommand has the "a" alias.
+func TestPRCmd_ArchiveHasAlias(t *testing.T) {
+	prCmdType := reflect.TypeOf(PRCmd{})
+	archiveField, found := prCmdType.FieldByName("Archive")
+	if !found {
+		t.Fatal("PRCmd does not have Archive field")
+	}
+
+	// Get the aliases tag
+	tag := archiveField.Tag
+	aliases := tag.Get("aliases")
+	if aliases == "" {
+		t.Fatal("Archive field does not have aliases tag")
+	}
+
+	if aliases != "a" {
+		t.Errorf("Archive aliases = %q, want %q", aliases, "a")
+	}
+}
+
 // TestPRArchiveCmd_HasRunMethod verifies the Run method exists.
 func TestPRArchiveCmd_HasRunMethod(t *testing.T) {
 	cmd := &PRArchiveCmd{}

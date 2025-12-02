@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/connerohnesorge/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/git"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -153,4 +154,35 @@ func (l *Lister) ListAll(opts *ListAllOptions) (ItemList, error) {
 	}
 
 	return items, nil
+}
+
+// FilterChangesNotOnRef filters the given changes to only include those
+// whose paths do NOT exist on the specified git ref. This is useful for
+// identifying unmerged changes that haven't been merged to the main branch yet.
+// The ref should be a full ref like "origin/main" or "origin/master".
+func FilterChangesNotOnRef(
+	changes []ChangeInfo,
+	ref string,
+) ([]ChangeInfo, error) {
+	var unmerged []ChangeInfo
+
+	for _, change := range changes {
+		changePath := filepath.Join("spectr", "changes", change.ID)
+		exists, err := git.PathExistsOnRef(ref, changePath)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to check if change %q exists on %s: %w",
+				change.ID,
+				ref,
+				err,
+			)
+		}
+
+		// Only include changes that do NOT exist on the ref
+		if !exists {
+			unmerged = append(unmerged, change)
+		}
+	}
+
+	return unmerged, nil
 }

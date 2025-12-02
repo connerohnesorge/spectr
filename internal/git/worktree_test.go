@@ -488,3 +488,151 @@ func TestCreateWorktree_UniquePathGeneration(t *testing.T) {
 		t.Errorf("CreateWorktree path does not contain 'spectr-pr-': %s", info2.Path)
 	}
 }
+
+func TestPathExistsOnRef_ExistingPath(t *testing.T) {
+	if !isGitAvailable() {
+		t.Skip("git is not available")
+	}
+	if !isInGitRepo() {
+		t.Skip("not in a git repository")
+	}
+	if !hasOriginRemote() {
+		t.Skip("origin remote not configured")
+	}
+
+	// Change to the repo root for consistent path resolution
+	repoRoot, err := GetRepoRoot()
+	if err != nil {
+		t.Fatalf("GetRepoRoot() error = %v", err)
+	}
+	oldWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+	defer func() { _ = os.Chdir(oldWd) }()
+	if err := os.Chdir(repoRoot); err != nil {
+		t.Fatalf("failed to change to repo root: %v", err)
+	}
+
+	// Auto-detect the base branch
+	baseBranch, err := GetBaseBranch("")
+	if err != nil {
+		t.Skipf("could not auto-detect base branch: %v", err)
+	}
+
+	// Test with known paths that should exist in the repository
+	tests := []struct {
+		name string
+		path string
+	}{
+		{"cmd directory", "cmd"},
+		{"internal directory", "internal"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exists, err := PathExistsOnRef(baseBranch, tt.path)
+			if err != nil {
+				t.Fatalf("PathExistsOnRef(%q, %q) error = %v", baseBranch, tt.path, err)
+			}
+			if !exists {
+				t.Errorf("PathExistsOnRef(%q, %q) = false, want true", baseBranch, tt.path)
+			}
+		})
+	}
+}
+
+func TestPathExistsOnRef_NonExistingPath(t *testing.T) {
+	if !isGitAvailable() {
+		t.Skip("git is not available")
+	}
+	if !isInGitRepo() {
+		t.Skip("not in a git repository")
+	}
+	if !hasOriginRemote() {
+		t.Skip("origin remote not configured")
+	}
+
+	// Change to the repo root for consistent path resolution
+	repoRoot, err := GetRepoRoot()
+	if err != nil {
+		t.Fatalf("GetRepoRoot() error = %v", err)
+	}
+	oldWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+	defer func() { _ = os.Chdir(oldWd) }()
+	if err := os.Chdir(repoRoot); err != nil {
+		t.Fatalf("failed to change to repo root: %v", err)
+	}
+
+	// Auto-detect the base branch
+	baseBranch, err := GetBaseBranch("")
+	if err != nil {
+		t.Skipf("could not auto-detect base branch: %v", err)
+	}
+
+	// Test with a path that should not exist
+	nonExistentPath := "nonexistent-path-xyz-12345"
+	exists, err := PathExistsOnRef(baseBranch, nonExistentPath)
+	if err != nil {
+		t.Fatalf("PathExistsOnRef(%q, %q) error = %v", baseBranch, nonExistentPath, err)
+	}
+	if exists {
+		t.Errorf("PathExistsOnRef(%q, %q) = true, want false", baseBranch, nonExistentPath)
+	}
+}
+
+func TestPathExistsOnRef_SubDirectoryPath(t *testing.T) {
+	if !isGitAvailable() {
+		t.Skip("git is not available")
+	}
+	if !isInGitRepo() {
+		t.Skip("not in a git repository")
+	}
+	if !hasOriginRemote() {
+		t.Skip("origin remote not configured")
+	}
+
+	// Change to the repo root for consistent path resolution
+	repoRoot, err := GetRepoRoot()
+	if err != nil {
+		t.Fatalf("GetRepoRoot() error = %v", err)
+	}
+	oldWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+	defer func() { _ = os.Chdir(oldWd) }()
+	if err := os.Chdir(repoRoot); err != nil {
+		t.Fatalf("failed to change to repo root: %v", err)
+	}
+
+	// Auto-detect the base branch
+	baseBranch, err := GetBaseBranch("")
+	if err != nil {
+		t.Skipf("could not auto-detect base branch: %v", err)
+	}
+
+	// Test with deeper paths that should exist in the repository
+	tests := []struct {
+		name string
+		path string
+	}{
+		{"internal/git subdirectory", "internal/git"},
+		{"cmd subdirectory", "cmd"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			exists, err := PathExistsOnRef(baseBranch, tt.path)
+			if err != nil {
+				t.Fatalf("PathExistsOnRef(%q, %q) error = %v", baseBranch, tt.path, err)
+			}
+			if !exists {
+				t.Errorf("PathExistsOnRef(%q, %q) = false, want true", baseBranch, tt.path)
+			}
+		})
+	}
+}

@@ -1,6 +1,6 @@
 # Cli Interface Specification Delta
 
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: PR Proposal Subcommand
 The `spectr pr proposal` subcommand SHALL create a pull request containing a Spectr change proposal for review, copying the change to an isolated git worktree without archiving. This command replaces the deprecated `spectr pr new` command.

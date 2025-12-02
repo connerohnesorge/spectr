@@ -2,8 +2,11 @@ package list
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
 func TestListChanges(t *testing.T) {
@@ -397,5 +400,291 @@ func TestListAll_Empty(t *testing.T) {
 
 	if len(items) != 0 {
 		t.Errorf("Expected empty list, got %d items", len(items))
+	}
+}
+
+// isGitAvailable checks if git command is available.
+func isGitAvailable() bool {
+	_, err := exec.LookPath("git")
+
+	return err == nil
+}
+
+// isInGitRepo checks if we're currently in a git repository.
+func isInGitRepo() bool {
+	cmd := exec.Command("git", "rev-parse", "--git-dir")
+
+	return cmd.Run() == nil
+}
+
+// hasOriginRemote checks if the origin remote is configured.
+func hasOriginRemote() bool {
+	cmd := exec.Command("git", "remote", "get-url", "origin")
+
+	return cmd.Run() == nil
+}
+
+func TestFilterChangesNotOnRef_EmptySlice(t *testing.T) {
+	// Test with empty changes slice - should return empty slice without error
+	var changes []ChangeInfo
+	result, err := FilterChangesNotOnRef(changes, "origin/main")
+	if err != nil {
+		t.Fatalf("FilterChangesNotOnRef with empty slice failed: %v", err)
+	}
+	if len(result) != 0 {
+		t.Errorf("Expected empty result, got %d changes", len(result))
+	}
+}
+
+func TestFilterChangesNotOnRef_Integration(t *testing.T) {
+	if !isGitAvailable() {
+		t.Skip("git is not available")
+	}
+	if !isInGitRepo() {
+		t.Skip("not in a git repository")
+	}
+	if !hasOriginRemote() {
+		t.Skip("origin remote not configured")
+	}
+
+	// Change to the repo root for consistent path resolution
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	output, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("failed to get repo root: %v", err)
+	}
+	repoRoot := string(output[:len(output)-1]) // trim newline
+
+	oldWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+	defer func() { _ = os.Chdir(oldWd) }()
+	if err := os.Chdir(repoRoot); err != nil {
+		t.Fatalf("failed to change to repo root: %v", err)
+	}
+
+	// Create test changes - some that exist on origin/main and some that don't
+	testCases := []struct {
+		name             string
+		changes          []ChangeInfo
+		ref              string
+		expectFiltered   int // number of changes expected in result
+		expectContains   []string
+		expectNotContain []string
+	}{
+		{
+			name: "filter changes not on origin/main",
+			changes: []ChangeInfo{
+				// This is a made-up change that should NOT exist on origin/main
+				{
+					ID:         "nonexistent-test-change-xyz-12345",
+					Title:      "Test Change",
+					DeltaCount: 0,
+					TaskStatus: parsers.TaskStatus{},
+				},
+				// These are known paths that should exist on origin/main (from archive)
+				// We use "archive" since it's in the archive directory
+			},
+			ref:            "origin/main",
+			expectFiltered: 1,
+			expectContains: []string{"nonexistent-test-change-xyz-12345"},
+		},
+		{
+			name:           "all changes already merged",
+			changes:        nil, // Empty slice - no changes to filter
+			ref:            "origin/main",
+			expectFiltered: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := FilterChangesNotOnRef(tc.changes, tc.ref)
+			if err != nil {
+				t.Fatalf("FilterChangesNotOnRef failed: %v", err)
+			}
+
+			if len(result) != tc.expectFiltered {
+				t.Errorf("Expected %d filtered changes, got %d", tc.expectFiltered, len(result))
+			}
+
+			// Check expected IDs are in the result
+			for _, expectedID := range tc.expectContains {
+				found := false
+				for _, change := range result {
+					if change.ID == expectedID {
+						found = true
+
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Expected change %q to be in result, but it wasn't", expectedID)
+				}
+			}
+		})
+	}
+}
+
+func TestFilterChangesNotOnRef_MixedChanges(t *testing.T) {
+	if !isGitAvailable() {
+		t.Skip("git is not available")
+	}
+	if !isInGitRepo() {
+		t.Skip("not in a git repository")
+	}
+	if !hasOriginRemote() {
+		t.Skip("origin remote not configured")
+	}
+
+	// Change to the repo root for consistent path resolution
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	output, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("failed to get repo root: %v", err)
+	}
+	repoRoot := string(output[:len(output)-1]) // trim newline
+
+	oldWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+	defer func() { _ = os.Chdir(oldWd) }()
+	if err := os.Chdir(repoRoot); err != nil {
+		t.Fatalf("failed to change to repo root: %v", err)
+	}
+
+	// Test with a mix of changes - one that exists (archive) and ones that don't
+	changes := []ChangeInfo{
+		{ID: "archive", Title: "Archive", DeltaCount: 0, TaskStatus: parsers.TaskStatus{}},
+		{
+			ID:         "nonexistent-change-abc",
+			Title:      "Non-existent 1",
+			DeltaCount: 1,
+			TaskStatus: parsers.TaskStatus{Total: 2, Completed: 1},
+		},
+		{
+			ID:         "another-fake-change-xyz",
+			Title:      "Non-existent 2",
+			DeltaCount: 2,
+			TaskStatus: parsers.TaskStatus{Total: 3, Completed: 0},
+		},
+	}
+
+	result, err := FilterChangesNotOnRef(changes, "origin/main")
+	if err != nil {
+		t.Fatalf("FilterChangesNotOnRef failed: %v", err)
+	}
+
+	// "archive" exists on origin/main, so only the two fake changes should remain
+	if len(result) != 2 {
+		t.Errorf("Expected 2 filtered changes (non-existent ones), got %d", len(result))
+		for _, c := range result {
+			t.Logf("  - %s", c.ID)
+		}
+	}
+
+	// Verify archive is NOT in the result
+	for _, change := range result {
+		if change.ID == "archive" {
+			t.Error("archive should have been filtered out (it exists on origin/main)")
+		}
+	}
+
+	// Verify the non-existent changes ARE in the result
+	foundAbc := false
+	foundXyz := false
+	for _, change := range result {
+		if change.ID == "nonexistent-change-abc" {
+			foundAbc = true
+		}
+		if change.ID == "another-fake-change-xyz" {
+			foundXyz = true
+		}
+	}
+	if !foundAbc {
+		t.Error("nonexistent-change-abc should be in the result")
+	}
+	if !foundXyz {
+		t.Error("another-fake-change-xyz should be in the result")
+	}
+}
+
+func TestFilterChangesNotOnRef_PreservesChangeInfo(t *testing.T) {
+	if !isGitAvailable() {
+		t.Skip("git is not available")
+	}
+	if !isInGitRepo() {
+		t.Skip("not in a git repository")
+	}
+	if !hasOriginRemote() {
+		t.Skip("origin remote not configured")
+	}
+
+	// Change to the repo root for consistent path resolution
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	output, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("failed to get repo root: %v", err)
+	}
+	repoRoot := string(output[:len(output)-1]) // trim newline
+
+	oldWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+	defer func() { _ = os.Chdir(oldWd) }()
+	if err := os.Chdir(repoRoot); err != nil {
+		t.Fatalf("failed to change to repo root: %v", err)
+	}
+
+	// Create a change with full info to verify it's preserved
+	originalChange := ChangeInfo{
+		ID:         "test-change-preserve-info-xyz",
+		Title:      "Test Change with Full Info",
+		DeltaCount: 5,
+		TaskStatus: parsers.TaskStatus{Total: 10, Completed: 7},
+	}
+
+	changes := []ChangeInfo{originalChange}
+
+	result, err := FilterChangesNotOnRef(changes, "origin/main")
+	if err != nil {
+		t.Fatalf("FilterChangesNotOnRef failed: %v", err)
+	}
+
+	if len(result) != 1 {
+		t.Fatalf("Expected 1 filtered change, got %d", len(result))
+	}
+
+	// Verify all fields are preserved
+	filteredChange := result[0]
+	if filteredChange.ID != originalChange.ID {
+		t.Errorf("ID mismatch: got %q, want %q", filteredChange.ID, originalChange.ID)
+	}
+	if filteredChange.Title != originalChange.Title {
+		t.Errorf("Title mismatch: got %q, want %q", filteredChange.Title, originalChange.Title)
+	}
+	if filteredChange.DeltaCount != originalChange.DeltaCount {
+		t.Errorf(
+			"DeltaCount mismatch: got %d, want %d",
+			filteredChange.DeltaCount,
+			originalChange.DeltaCount,
+		)
+	}
+	if filteredChange.TaskStatus.Total != originalChange.TaskStatus.Total {
+		t.Errorf(
+			"TaskStatus.Total mismatch: got %d, want %d",
+			filteredChange.TaskStatus.Total,
+			originalChange.TaskStatus.Total,
+		)
+	}
+	if filteredChange.TaskStatus.Completed != originalChange.TaskStatus.Completed {
+		t.Errorf(
+			"TaskStatus.Completed mismatch: got %d, want %d",
+			filteredChange.TaskStatus.Completed,
+			originalChange.TaskStatus.Completed,
+		)
 	}
 }

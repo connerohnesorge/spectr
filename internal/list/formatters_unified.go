@@ -32,7 +32,7 @@ func FormatAllText(items ItemList) string {
 	}
 
 	// Build lines for each item with type indicator
-	var lines []string
+	lines := make([]string, 0, len(items))
 	for _, item := range items {
 		var typeIndicator, details string
 		switch item.Type {

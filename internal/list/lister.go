@@ -26,7 +26,7 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 		return nil, fmt.Errorf("failed to discover changes: %w", err)
 	}
 
-	var changes []ChangeInfo
+	changes := make([]ChangeInfo, 0, len(changeIDs))
 	for _, id := range changeIDs {
 		changeDir := filepath.Join(l.projectPath, "spectr", "changes", id)
 		proposalPath := filepath.Join(changeDir, "proposal.md")
@@ -70,7 +70,7 @@ func (l *Lister) ListSpecs() ([]SpecInfo, error) {
 		return nil, fmt.Errorf("failed to discover specs: %w", err)
 	}
 
-	var specs []SpecInfo
+	specs := make([]SpecInfo, 0, len(specIDs))
 	for _, id := range specIDs {
 		specPath := filepath.Join(
 			l.projectPath,

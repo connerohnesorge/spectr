@@ -255,11 +255,11 @@ func extractOrderedRequirements(
 	reqsContent string,
 	reqMap map[string]parsers.RequirementBlock,
 ) []parsers.RequirementBlock {
-	var ordered []parsers.RequirementBlock
-
 	// Find requirement headers in order
 	reqPattern := regexp.MustCompile(`(?m)^###\s+Requirement:\s*(.+)$`)
 	matches := reqPattern.FindAllStringSubmatch(reqsContent, -1)
+
+	ordered := make([]parsers.RequirementBlock, 0, len(matches))
 
 	for _, match := range matches {
 		if len(match) <= 1 {

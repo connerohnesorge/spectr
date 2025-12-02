@@ -8,6 +8,7 @@ import (
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/git"
 	"github.com/connerohnesorge/spectr/internal/list"
 	"github.com/connerohnesorge/spectr/internal/pr"
 )
@@ -81,7 +82,16 @@ func (c *PRProposalCmd) Run() error {
 		return fmt.Errorf("get working directory: %w", err)
 	}
 
-	changeID, err := resolveOrSelectChangeID(c.ChangeID, projectRoot)
+	var changeID string
+
+	// For proposal command without explicit ID, filter to unmerged changes only
+	if c.ChangeID == "" {
+		changeID, err = selectChangeForProposal(projectRoot, c.Base)
+	} else {
+		// Explicit ID provided - resolve without filtering
+		changeID, err = resolveOrSelectChangeID(c.ChangeID, projectRoot)
+	}
+
 	if err != nil {
 		if errors.Is(err, archive.ErrUserCancelled) {
 			return nil // User cancelled, exit gracefully
@@ -145,6 +155,59 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 	}
 
 	selectedID, err := list.RunInteractiveArchive(changes, projectRoot)
+	if err != nil {
+		return "", fmt.Errorf("interactive selection: %w", err)
+	}
+
+	if selectedID == "" {
+		return "", archive.ErrUserCancelled
+	}
+
+	return selectedID, nil
+}
+
+// selectChangeForProposal prompts the user to select a change interactively,
+// filtering out changes that already exist on the base branch.
+// This ensures only unmerged proposals are shown for PR creation.
+func selectChangeForProposal(projectRoot, baseBranch string) (string, error) {
+	lister := list.NewLister(projectRoot)
+
+	changes, err := lister.ListChanges()
+	if err != nil {
+		return "", fmt.Errorf("list changes: %w", err)
+	}
+
+	if len(changes) == 0 {
+		fmt.Println("No changes found.")
+
+		return "", archive.ErrUserCancelled
+	}
+
+	// Fetch origin to ensure refs are current
+	if err := git.FetchOrigin(); err != nil {
+		return "", fmt.Errorf("fetch origin: %w", err)
+	}
+
+	// Determine the base branch ref
+	ref, err := git.GetBaseBranch(baseBranch)
+	if err != nil {
+		return "", fmt.Errorf("get base branch: %w", err)
+	}
+
+	// Filter to only show changes not already on the base branch
+	unmergedChanges, err := list.FilterChangesNotOnRef(changes, ref)
+	if err != nil {
+		return "", fmt.Errorf("filter changes: %w", err)
+	}
+
+	if len(unmergedChanges) == 0 {
+		fmt.Println("No unmerged proposals found. " +
+			"All changes already exist on main.")
+
+		return "", archive.ErrUserCancelled
+	}
+
+	selectedID, err := list.RunInteractiveArchive(unmergedChanges, projectRoot)
 	if err != nil {
 		return "", fmt.Errorf("interactive selection: %w", err)
 	}

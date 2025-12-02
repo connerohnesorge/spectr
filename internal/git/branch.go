@@ -128,6 +128,27 @@ func GetRepoRoot() (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+// PathExistsOnRef checks if a given path exists on a specific git ref.
+// The ref should be a full ref like "origin/main" or "origin/master".
+// The path should be relative to the repository root.
+func PathExistsOnRef(ref, path string) (bool, error) {
+	cmd := exec.Command(gitCmd, "ls-tree", ref, path)
+	output, err := cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return false, fmt.Errorf(
+				"git ls-tree failed: %s",
+				strings.TrimSpace(string(exitErr.Stderr)),
+			)
+		}
+
+		return false, fmt.Errorf("failed to run git ls-tree: %w", err)
+	}
+
+	// If output is non-empty, the path exists on the ref
+	return strings.TrimSpace(string(output)) != "", nil
+}
+
 // deleteBranch deletes a local branch, ignoring errors if not found.
 func deleteBranch(branchName string) []string {
 	cmd := exec.Command(gitCmd, "branch", "-D", branchName)

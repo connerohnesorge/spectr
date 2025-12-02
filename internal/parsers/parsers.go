@@ -5,6 +5,7 @@ package parsers
 
 import (
 	"bufio"
+	"errors"
 	"os"
 	"regexp"
 	"strings"
@@ -165,7 +166,12 @@ func ValidateTasksStructure(filePath string) (*TasksStructureResult, error) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		return result, nil
+		// Only ignore missing files; propagate other I/O errors
+		if errors.Is(err, os.ErrNotExist) {
+			return result, nil
+		}
+
+		return nil, err
 	}
 	defer func() { _ = file.Close() }()
 

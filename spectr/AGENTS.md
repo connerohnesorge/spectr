@@ -227,13 +227,20 @@ The system SHALL provide...
 ```
 If multiple capabilities are affected, create multiple delta files under `changes/[change-id]/specs/<capability>/spec.md`—one per capability.
 
-4. **Create tasks.md:**
+4. **Create tasks.md:** (MUST use numbered section format)
 ```markdown
-## 1. Implementation
-- [ ] 1.1 Create database schema
-- [ ] 1.2 Implement API endpoint
-- [ ] 1.3 Add frontend component
-- [ ] 1.4 Write tests
+## 1. Setup
+- [ ] 1.1 Create project structure
+- [ ] 1.2 Configure dependencies
+
+## 2. Implementation
+- [ ] 2.1 Create database schema
+- [ ] 2.2 Implement API endpoint
+- [ ] 2.3 Add frontend component
+
+## 3. Testing
+- [ ] 3.1 Write unit tests
+- [ ] 3.2 Write integration tests
 ```
 
 5. **Create design.md when needed:**
@@ -267,6 +274,36 @@ Minimal `design.md` skeleton:
 ```
 
 ## Spec File Format
+
+### tasks.md Format Requirements
+
+The `tasks.md` file MUST use numbered section headers. This format is validated and will produce warnings or errors if not followed.
+
+**Required format:**
+- Section headers MUST use `## N. Section Name` format (where N is a number)
+- Section numbers MUST be sequential (1, 2, 3...)
+- Tasks should be nested under numbered sections with matching prefixes (e.g., `1.1`, `1.2`)
+- Each section should contain at least one task
+
+**Example:**
+```markdown
+## 1. Setup
+- [ ] 1.1 Create project structure
+- [ ] 1.2 Configure dependencies
+
+## 2. Implementation
+- [ ] 2.1 Create database schema
+- [ ] 2.2 Implement API endpoints
+
+## 3. Testing
+- [ ] 3.1 Write unit tests
+- [ ] 3.2 Write integration tests
+```
+
+**Validation warnings:**
+- Empty sections will generate warnings
+- Tasks outside numbered sections will generate warnings
+- Missing or non-sequential section numbers will generate warnings
 
 ### Critical: Scenario Formatting
 
@@ -333,6 +370,11 @@ Example for RENAMED:
 **Silent scenario parsing failures**
 - Exact format required: `#### Scenario: Name`
 - Debug by reading the delta spec file directly: `spectr/changes/<change-id>/specs/<capability>/spec.md`
+
+**"tasks.md has no numbered sections"**
+- Use `## 1. Section Name` format for section headers
+- Ensure section numbers are sequential (1, 2, 3...)
+- Each section should contain at least one task item
 
 ### Validation Tips
 

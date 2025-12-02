@@ -989,3 +989,426 @@ func TestFindPreMergeErrorLine_UsesRenamedBulletLine(t *testing.T) {
 		t.Fatalf("expected TO error to map to line 4, got %d", line)
 	}
 }
+
+// Helper function to create a tasks.md file for testing
+func createTasksFile(t *testing.T, dir, content string) string {
+	t.Helper()
+	tasksPath := filepath.Join(dir, "tasks.md")
+	if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+		t.Fatalf("Failed to write tasks.md: %v", err)
+	}
+
+	return tasksPath
+}
+
+func TestValidateTasksFile_ValidStructure(t *testing.T) {
+	// Well-formed tasks.md with numbered sections
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+## 1. Setup
+
+- [ ] Initialize project
+- [x] Install dependencies
+
+## 2. Implementation
+
+- [ ] Write core functionality
+- [ ] Add error handling
+
+## 3. Testing
+
+- [x] Write unit tests
+- [ ] Run integration tests
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	if len(issues) == 0 {
+		return
+	}
+
+	t.Errorf("Expected 0 issues for valid tasks.md, got %d", len(issues))
+	for _, issue := range issues {
+		t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+	}
+}
+
+func TestValidateTasksFile_NoSections(t *testing.T) {
+	// Tasks without numbered sections
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+Some intro text without sections.
+
+- [ ] Task one
+- [x] Task two
+- [ ] Task three
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	// Expect warning about no sections and orphaned tasks
+	if len(issues) < 1 {
+		t.Errorf("Expected at least 1 issue, got %d", len(issues))
+	}
+
+	foundNoSections := false
+	for _, issue := range issues {
+		if issue.Level == LevelWarning &&
+			strings.Contains(issue.Message, "no numbered sections") {
+			foundNoSections = true
+
+			break
+		}
+	}
+
+	if foundNoSections {
+		return
+	}
+
+	t.Error("Expected warning about no numbered sections")
+	for _, issue := range issues {
+		t.Logf("  %s: %s", issue.Level, issue.Message)
+	}
+}
+
+func TestValidateTasksFile_OrphanedTasks(t *testing.T) {
+	// Some tasks before first section
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+- [ ] Orphaned task 1
+- [ ] Orphaned task 2
+
+## 1. Setup
+
+- [ ] Task in section
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	foundOrphanedWarning := false
+	for _, issue := range issues {
+		if issue.Level != LevelWarning {
+			continue
+		}
+
+		if !strings.Contains(issue.Message, "tasks outside numbered sections") {
+			continue
+		}
+
+		foundOrphanedWarning = true
+		// Verify it says 2 orphaned tasks
+		if !strings.Contains(issue.Message, "2 tasks") {
+			t.Errorf("Expected warning about 2 orphaned tasks, got: %s", issue.Message)
+		}
+
+		break
+	}
+
+	if foundOrphanedWarning {
+		return
+	}
+
+	t.Error("Expected warning about orphaned tasks")
+	for _, issue := range issues {
+		t.Logf("  %s: %s", issue.Level, issue.Message)
+	}
+}
+
+func TestValidateTasksFile_EmptySections(t *testing.T) {
+	// Sections without tasks
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+## 1. Setup
+
+- [ ] Setup task
+
+## 2. Empty Section
+
+## 3. Another Empty Section
+
+## 4. Final Section
+
+- [ ] Final task
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	// Count warnings for empty sections
+	emptyCount := 0
+	for _, issue := range issues {
+		if issue.Level == LevelWarning && strings.Contains(issue.Message, "has no tasks") {
+			emptyCount++
+		}
+	}
+
+	// Should have 2 empty section warnings
+	if emptyCount != 2 {
+		t.Errorf("Expected 2 empty section warnings, got %d", emptyCount)
+		for _, issue := range issues {
+			t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+		}
+	}
+
+	// Verify specific section names are mentioned
+	foundEmpty1 := false
+	foundEmpty2 := false
+	for _, issue := range issues {
+		if strings.Contains(issue.Message, "Empty Section") {
+			foundEmpty1 = true
+		}
+		if strings.Contains(issue.Message, "Another Empty Section") {
+			foundEmpty2 = true
+		}
+	}
+
+	if !foundEmpty1 || !foundEmpty2 {
+		t.Error("Expected warnings to mention specific empty section names")
+	}
+}
+
+func TestValidateTasksFile_NonSequentialSections(t *testing.T) {
+	// Sections 1, 3, 5 - missing 2 and 4
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+## 1. First Section
+
+- [ ] Task 1
+
+## 3. Third Section
+
+- [ ] Task 3
+
+## 5. Fifth Section
+
+- [ ] Task 5
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	foundNonSequential := false
+	for _, issue := range issues {
+		if issue.Level != LevelWarning {
+			continue
+		}
+
+		if !strings.Contains(issue.Message, "not sequential") {
+			continue
+		}
+
+		foundNonSequential = true
+		// Check that missing numbers are mentioned
+		if !strings.Contains(issue.Message, "2") || !strings.Contains(issue.Message, "4") {
+			t.Errorf("Expected warning to mention missing numbers 2 and 4, got: %s", issue.Message)
+		}
+
+		break
+	}
+
+	if foundNonSequential {
+		return
+	}
+
+	t.Error("Expected warning about non-sequential section numbers")
+	for _, issue := range issues {
+		t.Logf("  %s: %s", issue.Level, issue.Message)
+	}
+}
+
+func TestValidateTasksFile_NonexistentFile(t *testing.T) {
+	// File doesn't exist - should return no issues (optional validation)
+	tasksPath := filepath.Join(t.TempDir(), "nonexistent", "tasks.md")
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error for nonexistent file: %v", err)
+	}
+
+	if len(issues) == 0 {
+		return
+	}
+
+	t.Errorf("Expected 0 issues for nonexistent tasks.md, got %d", len(issues))
+	for _, issue := range issues {
+		t.Logf("  %s: %s", issue.Level, issue.Message)
+	}
+}
+
+func TestValidateTasksFile_MultipleIssues(t *testing.T) {
+	// File with multiple problems:
+	// - Orphaned tasks
+	// - Empty section
+	// - Non-sequential sections (1, 3)
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+- [ ] Orphaned task
+
+## 1. First Section
+
+- [ ] Task in first section
+
+## 3. Third Section (skipped 2)
+
+## 5. Empty Section (skipped 4)
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	// Should have at least 3 issues:
+	// 1. Orphaned tasks warning
+	// 2. Non-sequential numbers warning
+	// 3-4. Empty section warnings (sections 3 and 5 have no tasks)
+
+	if len(issues) < 3 {
+		t.Errorf("Expected at least 3 issues for file with multiple problems, got %d", len(issues))
+	}
+
+	// Verify all issue types are present
+	foundOrphaned := false
+	foundNonSequential := false
+	foundEmptySection := false
+
+	for _, issue := range issues {
+		if strings.Contains(issue.Message, "tasks outside numbered sections") {
+			foundOrphaned = true
+		}
+		if strings.Contains(issue.Message, "not sequential") {
+			foundNonSequential = true
+		}
+		if strings.Contains(issue.Message, "has no tasks") {
+			foundEmptySection = true
+		}
+	}
+
+	if !foundOrphaned {
+		t.Error("Expected orphaned tasks warning")
+	}
+	if !foundNonSequential {
+		t.Error("Expected non-sequential numbers warning")
+	}
+	if !foundEmptySection {
+		t.Error("Expected empty section warning")
+	}
+
+	// Log all issues for debugging
+	t.Log("All issues found:")
+	for _, issue := range issues {
+		t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+	}
+}
+
+func TestValidateTasksFile_AllWarningsAreLevelWarning(t *testing.T) {
+	// Verify that all issues from ValidateTasksFile are warnings, not errors
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+- [ ] Orphaned task
+
+## 2. Skipped First Section
+
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	for _, issue := range issues {
+		if issue.Level != LevelWarning {
+			t.Errorf("Expected all issues to be warnings, got %s: %s", issue.Level, issue.Message)
+		}
+	}
+}
+
+func TestValidateTasksFile_LineNumbers(t *testing.T) {
+	// Verify that line numbers are correctly reported for empty sections
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+## 1. First Section
+
+## 2. Second Empty Section
+
+## 3. Third Section
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	// Find the empty section warnings and check line numbers
+	for _, issue := range issues {
+		checkSectionLineNumber(t, issue, "First Section", 3)
+		checkSectionLineNumber(t, issue, "Second Empty Section", 5)
+		checkSectionLineNumber(t, issue, "Third Section", 7)
+	}
+}
+
+func checkSectionLineNumber(t *testing.T, issue ValidationIssue, section string, line int) {
+	t.Helper()
+
+	if !strings.Contains(issue.Message, section) {
+		return
+	}
+
+	if !strings.Contains(issue.Message, "has no tasks") {
+		return
+	}
+
+	if issue.Line != line {
+		t.Errorf("Expected %s warning at line %d, got line %d", section, line, issue.Line)
+	}
+}
+
+func TestValidateTasksFile_PathIncludedInIssues(t *testing.T) {
+	// Verify that the tasks.md path is included in all issues
+	tempDir := t.TempDir()
+	content := `# Tasks
+
+- [ ] Orphaned task
+`
+	tasksPath := createTasksFile(t, tempDir, content)
+
+	issues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		t.Fatalf("ValidateTasksFile returned error: %v", err)
+	}
+
+	for _, issue := range issues {
+		if issue.Path != tasksPath {
+			t.Errorf("Expected issue path to be %s, got %s", tasksPath, issue.Path)
+		}
+	}
+}

@@ -110,6 +110,14 @@ func ValidateChangeDeltaSpecs(
 		allIssues = append(allIssues, baseSpecIssues...)
 	}
 
+	// Validate tasks.md structure
+	tasksPath := filepath.Join(changeDir, "tasks.md")
+	tasksIssues, err := ValidateTasksFile(tasksPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate tasks.md: %w", err)
+	}
+	allIssues = append(allIssues, tasksIssues...)
+
 	// Check if there are no deltas at all
 	if totalDeltas == 0 {
 		allIssues = append(allIssues, ValidationIssue{
@@ -573,4 +581,75 @@ func findMalformedRenamedLine(lines []string, sectionLine int) int {
 	}
 
 	return sectionLine // Default to section start if not found
+}
+
+// ValidateTasksFile validates the structure of a tasks.md file and returns validation issues.
+// It checks for:
+// - No numbered sections found
+// - Tasks existing outside numbered sections (orphaned tasks)
+// - Empty sections (no tasks)
+// - Non-sequential section numbers
+// If tasks.md doesn't exist, returns empty issues (optional validation).
+func ValidateTasksFile(tasksPath string) ([]ValidationIssue, error) {
+	// Check if tasks.md exists - if not, skip validation (tasks.md is optional)
+	if _, err := os.Stat(tasksPath); os.IsNotExist(err) {
+		return nil, nil
+	}
+
+	result, err := parsers.ValidateTasksStructure(tasksPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate tasks structure: %w", err)
+	}
+
+	var issues []ValidationIssue
+
+	// Check for no numbered sections
+	if len(result.Sections) == 0 {
+		issues = append(issues, ValidationIssue{
+			Level:   LevelWarning,
+			Path:    tasksPath,
+			Line:    1,
+			Message: "tasks.md has no numbered sections (expected ## 1., ## 2., etc.)",
+		})
+	}
+
+	// Check for orphaned tasks (tasks outside numbered sections)
+	if result.OrphanedTasks > 0 {
+		issues = append(issues, ValidationIssue{
+			Level: LevelWarning,
+			Path:  tasksPath,
+			Line:  1,
+			Message: fmt.Sprintf(
+				"tasks.md has %d tasks outside numbered sections",
+				result.OrphanedTasks,
+			),
+		})
+	}
+
+	// Check for empty sections
+	for _, section := range result.Sections {
+		if section.TaskCount == 0 {
+			issues = append(issues, ValidationIssue{
+				Level:   LevelWarning,
+				Path:    tasksPath,
+				Line:    section.Line,
+				Message: fmt.Sprintf("Section '%s' has no tasks", section.Name),
+			})
+		}
+	}
+
+	// Check for non-sequential section numbers
+	if !result.SequentialNumbers && len(result.NonSequentialGaps) > 0 {
+		issues = append(issues, ValidationIssue{
+			Level: LevelWarning,
+			Path:  tasksPath,
+			Line:  1,
+			Message: fmt.Sprintf(
+				"Section numbers are not sequential; missing: %v",
+				result.NonSequentialGaps,
+			),
+		})
+	}
+
+	return issues, nil
 }

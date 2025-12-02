@@ -137,6 +137,49 @@ func CountRequirements(specPath string) (int, error) {
 	return count, scanner.Err()
 }
 
+// TaskSection represents a numbered section in a tasks.md file
+type TaskSection struct {
+	Number    int    `json:"number"`     // The section number (1, 2, 3, etc.)
+	Name      string `json:"name"`       // The section header text
+	TaskCount int    `json:"task_count"` // Number of tasks in this section
+	Line      int    `json:"line"`       // Line number where section starts
+}
+
+// TasksStructureResult contains validation results for a tasks.md file
+type TasksStructureResult struct {
+	// Sections is the list of numbered sections found
+	Sections []TaskSection `json:"sections"`
+	// OrphanedTasks is the count of tasks not under any numbered section
+	OrphanedTasks int `json:"orphaned_tasks"`
+	// EmptySections contains names of sections that have no tasks
+	EmptySections []string `json:"empty_sections"`
+	// SequentialNumbers indicates whether section numbers are sequential
+	SequentialNumbers bool `json:"sequential_numbers"`
+	// NonSequentialGaps lists which numbers are missing if not sequential
+	NonSequentialGaps []int `json:"non_sequential_gaps"`
+}
+
+// ValidateTasksStructure parses a tasks.md file and validates its structure
+func ValidateTasksStructure(filePath string) (*TasksStructureResult, error) {
+	result := newTasksStructureResult()
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return result, nil
+	}
+	defer func() { _ = file.Close() }()
+
+	parseTasksFile(file, result)
+
+	if err := file.Close(); err != nil {
+		return result, err
+	}
+
+	finalizeTasksResult(result)
+
+	return result, nil
+}
+
 // walkSpecFiles walks through all spec.md files in a directory tree
 func walkSpecFiles(root string, fn func(string) error) error {
 	entries, err := os.ReadDir(root)

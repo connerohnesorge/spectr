@@ -60,8 +60,8 @@ func setupTestProject(t *testing.T, tmpDir string, changes []string) {
 			t.Fatal(err)
 		}
 
-		// Create tasks.md with completed tasks
-		tasksContent := "## Tasks\n- [x] Task 1\n"
+		// Create tasks.md with completed tasks (using numbered section format)
+		tasksContent := "## 1. Implementation Tasks\n- [x] Task 1\n"
 		err = os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), testFilePerm)
 		if err != nil {
 			t.Fatal(err)

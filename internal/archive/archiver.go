@@ -145,7 +145,7 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 		return "", ErrUserCancelled
 	}
 
-	selectedID, err := runInteractiveArchiveForArchiver(changes, projectRoot)
+	selectedID, err := runInteractiveSelectChangeForArchiver(changes, projectRoot)
 	if err != nil {
 		return "", fmt.Errorf("interactive selection: %w", err)
 	}

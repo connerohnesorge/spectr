@@ -413,8 +413,8 @@ The interactive table interfaces SHALL display the project root path to provide 
 - **THEN** the `projectPath` parameter is passed from the calling command
 - **AND** the `projectPath` field on `interactiveModel` is set during initialization
 
-#### Scenario: Project path properly initialized for archive
-- **WHEN** `RunInteractiveArchive()` is invoked
+#### Scenario: Project path properly initialized for change selection
+- **WHEN** `RunInteractiveSelectChange()` is invoked
 - **THEN** the `projectPath` parameter is passed from the calling command
 - **AND** the `projectPath` field on `interactiveModel` is set during initialization
 

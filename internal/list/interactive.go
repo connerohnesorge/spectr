@@ -678,10 +678,10 @@ func RunInteractiveChanges(
 	return "", nil
 }
 
-// RunInteractiveArchive runs the interactive table for
-// archive selection. Returns the selected change ID or empty
-// string if cancelled
-func RunInteractiveArchive(
+// RunInteractiveSelectChange runs the interactive table for
+// change selection. Returns the selected change ID or empty
+// string if cancelled.
+func RunInteractiveSelectChange(
 	changes []ChangeInfo,
 	projectPath string,
 ) (string, error) {

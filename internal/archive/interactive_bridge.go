@@ -9,11 +9,11 @@ func newListerForArchive(projectPath string) *list.Lister {
 	return list.NewLister(projectPath)
 }
 
-// runInteractiveArchiveForArchiver wraps the list package's
-// interactive archive function
-func runInteractiveArchiveForArchiver(
+// runInteractiveSelectChangeForArchiver wraps the list package's
+// interactive change selection function.
+func runInteractiveSelectChangeForArchiver(
 	changes []list.ChangeInfo,
 	projectPath string,
 ) (string, error) {
-	return list.RunInteractiveArchive(changes, projectPath)
+	return list.RunInteractiveSelectChange(changes, projectPath)
 }

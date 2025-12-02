@@ -139,7 +139,7 @@ func selectChangeInteractiveForPR(projectRoot string) (string, error) {
 		return "", errors.New("no changes found")
 	}
 
-	selectedID, err := list.RunInteractiveArchive(changes, projectRoot)
+	selectedID, err := list.RunInteractiveSelectChange(changes, projectRoot)
 	if err != nil {
 		return "", fmt.Errorf("interactive selection: %w", err)
 	}

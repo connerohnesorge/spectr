@@ -69,7 +69,7 @@ func DetectPlatform(remoteURL string) PlatformInfo {
 		return PlatformInfo{Platform: PlatformUnknown}
 	}
 
-	var host, path string
+	var host string
 
 	// Try SSH URL format first
 	sshMatches := sshURLPattern.FindStringSubmatch(url)
@@ -78,37 +78,39 @@ func DetectPlatform(remoteURL string) PlatformInfo {
 	switch {
 	case len(sshMatches) == urlMatchGroups:
 		host = strings.ToLower(sshMatches[1])
-		path = sshMatches[2]
 	case len(httpsMatches) == urlMatchGroups:
 		host = strings.ToLower(httpsMatches[1])
-		path = httpsMatches[2]
 	default:
 		return PlatformInfo{Platform: PlatformUnknown, RepoURL: url}
 	}
 
 	info := PlatformInfo{RepoURL: url}
 
-	// Detect platform based on host
+	// Detect platform based on host.
+	// Uses strict matching to avoid false positives.
 	switch {
-	case host == "github.com" || strings.Contains(host, "github"):
+	case host == "github.com" ||
+		strings.HasSuffix(host, ".github.com") ||
+		strings.HasPrefix(host, "github."):
 		info.Platform = PlatformGitHub
 		info.CLITool = "gh"
-	case host == "gitlab.com" || strings.Contains(host, "gitlab"):
+	case host == "gitlab.com" ||
+		strings.HasSuffix(host, ".gitlab.com") ||
+		strings.HasPrefix(host, "gitlab."):
 		info.Platform = PlatformGitLab
 		info.CLITool = "glab"
-	case strings.Contains(host, "gitea") || strings.Contains(host, "forgejo"):
+	case strings.HasPrefix(host, "gitea.") ||
+		strings.HasPrefix(host, "forgejo."):
 		info.Platform = PlatformGitea
 		info.CLITool = "tea"
-	case host == "bitbucket.org" || strings.Contains(host, "bitbucket"):
+	case host == "bitbucket.org" ||
+		strings.HasSuffix(host, ".bitbucket.org") ||
+		strings.HasPrefix(host, "bitbucket."):
 		info.Platform = PlatformBitbucket
 		info.CLITool = "bb"
 	default:
 		info.Platform = PlatformUnknown
 	}
-
-	// Normalize path (remove .git suffix if present)
-	path = strings.TrimSuffix(path, ".git")
-	_ = path // path is available for future use if needed
 
 	return info
 }

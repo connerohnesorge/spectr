@@ -621,7 +621,10 @@ func deleteBranch(branch string) error {
 	) //nolint:gosec
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("delete branch: %s: %w", string(output), err)
+		return fmt.Errorf(
+			"failed to delete remote branch %q (branch may still exist locally): %w\nOutput: %s",
+			branch, err, strings.TrimSpace(string(output)),
+		)
 	}
 
 	return nil
@@ -697,6 +700,19 @@ func copyDir(src, dst string) error {
 	for _, entry := range entries {
 		srcPath := filepath.Join(src, entry.Name())
 		dstPath := filepath.Join(dst, entry.Name())
+
+		// Handle symlinks
+		if entry.Type()&os.ModeSymlink != 0 {
+			target, err := os.Readlink(srcPath)
+			if err != nil {
+				return fmt.Errorf("read symlink %s: %w", srcPath, err)
+			}
+			if err := os.Symlink(target, dstPath); err != nil {
+				return fmt.Errorf("create symlink %s: %w", dstPath, err)
+			}
+
+			continue
+		}
 
 		if entry.IsDir() {
 			if err := copyDir(srcPath, dstPath); err != nil {

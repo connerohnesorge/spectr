@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TODO: Add purpose description
+Defines how AI agent prompts should guide assistants to discover and interact with spectr project structures, preferring direct file system access over CLI commands for better reliability and context.
 
 ## Requirements
 

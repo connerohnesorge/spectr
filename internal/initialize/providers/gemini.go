@@ -96,7 +96,7 @@ func (p *GeminiProvider) configureTOMLCommand(
 ) error {
 	filePath := p.getTOMLCommandPath(projectPath, cmd)
 
-	prompt, err := tm.RenderSlashCommand(cmd)
+	prompt, err := tm.RenderSlashCommand(cmd, DefaultTemplateContext())
 	if err != nil {
 		return fmt.Errorf("failed to render slash command %s: %w", cmd, err)
 	}

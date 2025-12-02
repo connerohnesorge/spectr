@@ -3,7 +3,7 @@
 - Only update specs after user confirms each change.
 - Keep spec updates minimal and focused on actual drift.
 - Create missing specs for new capabilities supported by the implementation.
-- Refer to `spectr/AGENTS.md` for Spectr conventions.
+- Refer to `{{ .AgentsFile }}` for Spectr conventions.
 
 ### Steps
 1. Determine scope:
@@ -11,8 +11,8 @@
    - Otherwise, ask the user which capabilities to sync, or analyze recent git changes to suggest candidates.
 
 2. Load current specs:
-   - Read the `spectr/specs/` directory to enumerate capabilities.
-   - Read each relevant `spectr/specs/<capability>/spec.md`.
+   - Read the `{{ .SpecsDir }}/` directory to enumerate capabilities.
+   - Read each relevant `{{ .SpecsDir }}/<capability>/spec.md`.
 
 3. Analyze implementation:
    - For each capability, identify related code (by directory name, imports, or user guidance).
@@ -32,6 +32,6 @@
    - Show summary of changes made.
 
 ### Reference
-- Read `spectr/specs/<capability>/spec.md` to view current spec content.
+- Read `{{ .SpecsDir }}/<capability>/spec.md` to view current spec content.
 - Search code with `rg` to find implementations.
 - Validate after edits with `spectr validate --strict`.

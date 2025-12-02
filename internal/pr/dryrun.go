@@ -44,7 +44,7 @@ func printOperationStep(config PRConfig) {
 	case ModeArchive:
 		fmt.Printf("2. Copy change '%s' to worktree\n", config.ChangeID)
 		fmt.Printf("3. Run archive (skip-specs: %v)\n", config.SkipSpecs)
-	case ModeNew:
+	case ModeProposal:
 		fmt.Printf("2. Copy change '%s' to worktree\n", config.ChangeID)
 	}
 }

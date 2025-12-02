@@ -17,7 +17,7 @@ import (
 // PRConfig contains configuration for the PR workflow.
 type PRConfig struct {
 	ChangeID    string // The change ID to create PR for
-	Mode        string // "archive" or "new"
+	Mode        string // "archive" or "proposal"
 	BaseBranch  string // Target branch for PR (optional, auto-detect if empty)
 	Draft       bool   // Create as draft PR
 	Force       bool   // Delete existing remote branch if present
@@ -98,12 +98,12 @@ func prepareWorkflowContext(config PRConfig) (*workflowContext, error) {
 
 	// Generate mode-specific branch name:
 	// - archive mode: spectr/archive/<change-id>
-	// - new mode: spectr/proposal/<change-id>
+	// - proposal mode: spectr/proposal/<change-id>
 	var branchPrefix string
 	switch config.Mode {
 	case ModeArchive:
 		branchPrefix = "spectr/archive"
-	case ModeNew:
+	case ModeProposal:
 		branchPrefix = "spectr/proposal"
 	default:
 		branchPrefix = "spectr"
@@ -234,7 +234,7 @@ func executeOperation(
 		result.Counts = archiveResult.Counts
 		result.Capabilities = archiveResult.Capabilities
 
-	case ModeNew:
+	case ModeProposal:
 		if err := copyChangeToWorktree(config, worktreePath); err != nil {
 			return fmt.Errorf("copy operation failed: %w", err)
 		}
@@ -368,9 +368,9 @@ func validatePrerequisites(config PRConfig) error {
 	}
 
 	// Check mode is valid
-	if config.Mode != ModeArchive && config.Mode != ModeNew {
+	if config.Mode != ModeArchive && config.Mode != ModeProposal {
 		return fmt.Errorf(
-			"invalid mode '%s'; must be 'archive' or 'new'",
+			"invalid mode '%s'; must be 'archive' or 'proposal'",
 			config.Mode,
 		)
 	}

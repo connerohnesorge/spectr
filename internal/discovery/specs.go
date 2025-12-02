@@ -53,3 +53,98 @@ func GetSpecs(projectPath string) ([]string, error) {
 func GetSpecIDs(projectRoot string) ([]string, error) {
 	return GetSpecs(projectRoot)
 }
+
+// SpecResolveResult contains the resolved spec ID and whether it was a partial
+// match.
+type SpecResolveResult struct {
+	SpecID       string
+	PartialMatch bool
+}
+
+// ResolveSpecID resolves a partial spec ID to a full spec ID.
+// The resolution algorithm:
+//  1. Exact match: returns immediately if partialID exactly matches a spec ID
+//  2. Prefix match: finds all spec IDs that start with partialID
+//     (case-insensitive)
+//  3. Substring match: if no prefix matches, finds all spec IDs containing
+//     partialID (case-insensitive)
+//
+// Returns an error if:
+// - No specs match the partial ID
+// - Multiple specs match the partial ID (ambiguous)
+func ResolveSpecID(partialID, projectRoot string) (SpecResolveResult, error) {
+	specs, err := GetSpecIDs(projectRoot)
+	if err != nil {
+		return SpecResolveResult{},
+			fmt.Errorf("get specs: %w", err)
+	}
+
+	if len(specs) == 0 {
+		return SpecResolveResult{},
+			fmt.Errorf("no spec found matching '%s'", partialID)
+	}
+
+	partialLower := strings.ToLower(partialID)
+
+	// Check for exact match first
+	for _, spec := range specs {
+		if spec == partialID {
+			return SpecResolveResult{
+				SpecID:       spec,
+				PartialMatch: false,
+			}, nil
+		}
+	}
+
+	// Try prefix matching (case-insensitive)
+	var prefixMatches []string
+	for _, spec := range specs {
+		if strings.HasPrefix(strings.ToLower(spec), partialLower) {
+			prefixMatches = append(prefixMatches, spec)
+		}
+	}
+
+	if len(prefixMatches) == 1 {
+		return SpecResolveResult{
+			SpecID:       prefixMatches[0],
+			PartialMatch: true,
+		}, nil
+	}
+
+	if len(prefixMatches) > 1 {
+		return SpecResolveResult{}, fmt.Errorf(
+			"ambiguous ID '%s' matches multiple specs: %s",
+			partialID,
+			strings.Join(prefixMatches, ", "),
+		)
+	}
+
+	// Try substring matching (case-insensitive) as fallback
+	var substringMatches []string
+	for _, spec := range specs {
+		if strings.Contains(strings.ToLower(spec), partialLower) {
+			substringMatches = append(substringMatches, spec)
+		}
+	}
+
+	if len(substringMatches) == 1 {
+		return SpecResolveResult{
+			SpecID:       substringMatches[0],
+			PartialMatch: true,
+		}, nil
+	}
+
+	if len(substringMatches) > 1 {
+		return SpecResolveResult{}, fmt.Errorf(
+			"ambiguous ID '%s' matches multiple specs: %s",
+			partialID,
+			strings.Join(substringMatches, ", "),
+		)
+	}
+
+	return SpecResolveResult{},
+		fmt.Errorf(
+			"no spec found matching '%s'",
+			partialID,
+		)
+}

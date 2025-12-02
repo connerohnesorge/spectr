@@ -33,6 +33,27 @@ func createChangeDir(
 	}
 }
 
+// createSpecDir creates a spec directory with a spec.md file.
+// It sets up the directory structure and writes the spec content.
+func createSpecDir(
+	t *testing.T,
+	specsDir, name, content string,
+) {
+	t.Helper()
+	specDir := filepath.Join(specsDir, name)
+	if err := os.MkdirAll(specDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+	specPath := filepath.Join(specDir, "spec.md")
+	if err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		testFilePerm,
+	); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // verifyChangesExcluded checks that specified changes are not present.
 // It verifies excluded items don't appear in the changes list.
 func verifyChangesExcluded(

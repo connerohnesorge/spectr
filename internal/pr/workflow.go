@@ -96,7 +96,13 @@ func prepareWorkflowContext(config PRConfig) (*workflowContext, error) {
 		return nil, fmt.Errorf("determine base branch: %w", err)
 	}
 
-	branchName := fmt.Sprintf("spectr/%s", config.ChangeID)
+	// Determine branch name based on mode
+	var branchName string
+	if config.Mode == ModeDelete {
+		branchName = fmt.Sprintf("spectr/delete-%s", config.ChangeID)
+	} else {
+		branchName = fmt.Sprintf("spectr/%s", config.ChangeID)
+	}
 
 	// Handle existing branch
 	if err := handleExistingBranch(config, branchName); err != nil {
@@ -227,6 +233,11 @@ func executeOperation(
 			return fmt.Errorf("copy operation failed: %w", err)
 		}
 
+	case ModeDelete:
+		if err := executeDeleteInWorktree(config.ChangeID, worktreePath); err != nil {
+			return fmt.Errorf("delete operation failed: %w", err)
+		}
+
 	default:
 		return fmt.Errorf("unknown mode: %s", config.Mode)
 	}
@@ -333,32 +344,57 @@ func validatePrerequisites(config PRConfig) error {
 		)
 	}
 
-	// Check change exists
-	changes, err := discovery.GetActiveChangeIDs(projectRoot)
-	if err != nil {
-		return fmt.Errorf("list changes: %w", err)
-	}
-
-	found := false
-	for _, change := range changes {
-		if change == config.ChangeID {
-			found = true
-
-			break
+	// Mode-specific validation
+	switch config.Mode {
+	case ModeDelete:
+		// For delete mode, verify spec exists
+		specs, err := discovery.GetSpecIDs(projectRoot)
+		if err != nil {
+			return fmt.Errorf("list specs: %w", err)
 		}
-	}
 
-	if !found {
-		return fmt.Errorf(
-			"change '%s' not found in spectr/changes/",
-			config.ChangeID,
-		)
-	}
+		found := false
+		for _, spec := range specs {
+			if spec == config.ChangeID {
+				found = true
 
-	// Check mode is valid
-	if config.Mode != ModeArchive && config.Mode != ModeNew {
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf(
+				"spec '%s' not found in spectr/specs/",
+				config.ChangeID,
+			)
+		}
+
+	case ModeArchive, ModeNew:
+		// For archive/new modes, verify change exists
+		changes, err := discovery.GetActiveChangeIDs(projectRoot)
+		if err != nil {
+			return fmt.Errorf("list changes: %w", err)
+		}
+
+		found := false
+		for _, change := range changes {
+			if change == config.ChangeID {
+				found = true
+
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf(
+				"change '%s' not found in spectr/changes/",
+				config.ChangeID,
+			)
+		}
+
+	default:
 		return fmt.Errorf(
-			"invalid mode '%s'; must be 'archive' or 'new'",
+			"invalid mode '%s'; must be 'archive', 'new', or 'delete'",
 			config.Mode,
 		)
 	}

@@ -48,6 +48,19 @@ func TestPRConfig_Struct(t *testing.T) {
 				Mode:     ModeNew,
 			},
 		},
+		{
+			name: "delete mode config",
+			config: PRConfig{
+				ChangeID:    "cli-interface",
+				Mode:        ModeDelete,
+				BaseBranch:  "main",
+				Draft:       false,
+				Force:       false,
+				DryRun:      true,
+				SkipSpecs:   false,
+				ProjectRoot: "/tmp/project",
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -666,4 +679,79 @@ func findSubstring(s, substr string) bool {
 	}
 
 	return false
+}
+
+// TestExecuteDeleteInWorktree tests spec directory deletion in worktree.
+func TestExecuteDeleteInWorktree(t *testing.T) {
+	t.Run("delete existing spec directory", func(t *testing.T) {
+		// Create temporary worktree structure
+		worktreePath := t.TempDir()
+		specID := "test-spec"
+		specDir := filepath.Join(worktreePath, "spectr", "specs", specID)
+
+		// Create spec directory with files
+		if err := os.MkdirAll(specDir, 0755); err != nil {
+			t.Fatalf("Failed to create spec directory: %v", err)
+		}
+		specFile := filepath.Join(specDir, "spec.md")
+		if err := os.WriteFile(specFile, []byte("# Test Spec"), 0644); err != nil {
+			t.Fatalf("Failed to write spec file: %v", err)
+		}
+
+		// Execute delete
+		err := executeDeleteInWorktree(specID, worktreePath)
+		if err != nil {
+			t.Fatalf("executeDeleteInWorktree() error = %v", err)
+		}
+
+		// Verify spec directory was deleted
+		if _, err := os.Stat(specDir); !os.IsNotExist(err) {
+			t.Error("Spec directory should be deleted")
+		}
+	})
+
+	t.Run("delete non-existent spec directory", func(t *testing.T) {
+		// This should not error - os.RemoveAll doesn't error on non-existent paths
+		worktreePath := t.TempDir()
+		specID := "nonexistent-spec"
+
+		err := executeDeleteInWorktree(specID, worktreePath)
+		if err != nil {
+			t.Errorf("executeDeleteInWorktree() should not error for non-existent path: %v", err)
+		}
+	})
+
+	t.Run("delete spec with nested directories", func(t *testing.T) {
+		worktreePath := t.TempDir()
+		specID := "nested-spec"
+		specDir := filepath.Join(worktreePath, "spectr", "specs", specID)
+		nestedDir := filepath.Join(specDir, "examples", "deep")
+
+		// Create nested structure
+		if err := os.MkdirAll(nestedDir, 0755); err != nil {
+			t.Fatalf("Failed to create nested directories: %v", err)
+		}
+		files := map[string]string{
+			"spec.md":               "# Spec",
+			"examples/example1.md":  "Example 1",
+			"examples/deep/deep.md": "Deep file",
+		}
+		for path, content := range files {
+			fullPath := filepath.Join(specDir, path)
+			if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+				t.Fatalf("Failed to write file %s: %v", path, err)
+			}
+		}
+
+		// Execute delete
+		err := executeDeleteInWorktree(specID, worktreePath)
+		if err != nil {
+			t.Fatalf("executeDeleteInWorktree() error = %v", err)
+		}
+
+		// Verify entire directory tree was deleted
+		if _, err := os.Stat(specDir); !os.IsNotExist(err) {
+			t.Error("Spec directory and all contents should be deleted")
+		}
+	})
 }

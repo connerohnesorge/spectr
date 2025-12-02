@@ -16,6 +16,7 @@ import (
 type PRCmd struct {
 	Archive PRArchiveCmd `cmd:"" aliases:"a" help:"Archive and create PR"`
 	New     PRNewCmd     `cmd:"" help:"Create PR without archiving"`
+	Delete  PRDeleteCmd  `cmd:"" aliases:"d" help:"Delete spec via PR"`
 }
 
 // PRArchiveCmd represents the pr archive subcommand.
@@ -35,6 +36,15 @@ type PRNewCmd struct {
 	Draft    bool   `name:"draft" short:"d" help:"Create as draft PR"`
 	Force    bool   `name:"force" short:"f" help:"Delete existing branch"`
 	DryRun   bool   `name:"dry-run" help:"Preview without executing"`
+}
+
+// PRDeleteCmd represents the pr delete subcommand.
+type PRDeleteCmd struct {
+	SpecID string `arg:"" optional:"" predictor:"specID" help:"Spec ID"`
+	Base   string `name:"base" short:"b" help:"Target branch for PR"`
+	Draft  bool   `name:"draft" short:"d" help:"Create as draft PR"`
+	Force  bool   `name:"force" short:"f" help:"Delete existing branch"`
+	DryRun bool   `name:"dry-run" help:"Preview without executing"`
 }
 
 // Run executes the pr archive command.
@@ -154,6 +164,79 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 	}
 
 	return selectedID, nil
+}
+
+// Run executes the pr delete command.
+func (c *PRDeleteCmd) Run() error {
+	projectRoot, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get working directory: %w", err)
+	}
+
+	specID, err := resolveOrSelectSpecID(c.SpecID, projectRoot)
+	if err != nil {
+		if errors.Is(err, archive.ErrUserCancelled) {
+			return nil // User cancelled, exit gracefully
+		}
+
+		return err
+	}
+
+	config := pr.PRConfig{
+		ChangeID:    specID,
+		Mode:        pr.ModeDelete,
+		BaseBranch:  c.Base,
+		Draft:       c.Draft,
+		Force:       c.Force,
+		DryRun:      c.DryRun,
+		ProjectRoot: projectRoot,
+	}
+
+	result, err := pr.ExecutePR(config)
+	if err != nil {
+		return fmt.Errorf("pr delete failed: %w", err)
+	}
+
+	printPRResult(result)
+
+	return nil
+}
+
+// resolveOrSelectSpecID resolves a partial spec ID or prompts for
+// interactive selection if no ID is provided.
+func resolveOrSelectSpecID(specID, projectRoot string) (string, error) {
+	if specID == "" {
+		return selectSpecInteractive(projectRoot)
+	}
+
+	result, err := discovery.ResolveSpecID(specID, projectRoot)
+	if err != nil {
+		return "", err
+	}
+
+	if result.PartialMatch {
+		fmt.Printf("Resolved '%s' -> '%s'\n\n", specID, result.SpecID)
+	}
+
+	return result.SpecID, nil
+}
+
+// selectSpecInteractive prompts the user to select a spec interactively.
+func selectSpecInteractive(projectRoot string) (string, error) {
+	specs, err := discovery.GetSpecIDs(projectRoot)
+	if err != nil {
+		return "", fmt.Errorf("list specs: %w", err)
+	}
+
+	if len(specs) == 0 {
+		fmt.Println("No specs found.")
+
+		return "", archive.ErrUserCancelled
+	}
+
+	// For now, just return an error asking for spec ID
+	// (interactive selection can be enhanced later)
+	return "", errors.New("please specify a spec ID to delete")
 }
 
 // printPRResult displays the result of a PR operation.

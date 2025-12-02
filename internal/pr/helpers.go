@@ -1,3 +1,6 @@
+// Package pr provides helper functions for the pull request workflow.
+// These helpers handle CLI tool verification, file operations for worktrees,
+// git staging/committing, and spec deletion operations.
 package pr
 
 import (
@@ -109,31 +112,39 @@ func copyChangeToWorktree(config PRConfig, worktreePath string) error {
 	return nil
 }
 
-// copyDir recursively copies a directory.
+// copyDir recursively copies a directory from src to dst.
+// It preserves the original directory permissions and handles nested
+// directories by recursively calling itself for subdirectories.
 func copyDir(src, dst string) error {
+	// Get source directory info for permissions
 	srcInfo, err := os.Stat(src)
 	if err != nil {
 		return err
 	}
 
+	// Create destination directory with same permissions
 	if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
 		return err
 	}
 
+	// Read all entries in source directory
 	entries, err := os.ReadDir(src)
 	if err != nil {
 		return err
 	}
 
+	// Copy each entry (file or directory)
 	for _, entry := range entries {
 		srcPath := filepath.Join(src, entry.Name())
 		dstPath := filepath.Join(dst, entry.Name())
 
 		if entry.IsDir() {
+			// Recursively copy subdirectories
 			if err := copyDir(srcPath, dstPath); err != nil {
 				return err
 			}
 		} else {
+			// Copy regular files
 			if err := copyFile(srcPath, dstPath); err != nil {
 				return err
 			}
@@ -143,19 +154,23 @@ func copyDir(src, dst string) error {
 	return nil
 }
 
-// copyFile copies a single file.
+// copyFile copies a single file from src to dst.
+// It preserves the original file permissions from the source file.
 func copyFile(src, dst string) error {
+	// Open source file for reading
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = srcFile.Close() }()
 
+	// Get source file info for permissions
 	srcInfo, err := srcFile.Stat()
 	if err != nil {
 		return err
 	}
 
+	// Create destination file with same permissions
 	dstFile, err := os.OpenFile(
 		dst,
 		os.O_CREATE|os.O_WRONLY|os.O_TRUNC,
@@ -166,16 +181,20 @@ func copyFile(src, dst string) error {
 	}
 	defer func() { _ = dstFile.Close() }()
 
+	// Copy file contents
 	_, err = io.Copy(dstFile, srcFile)
 
 	return err
 }
 
 // stageAndCommit stages the spectr/ directory and creates a commit.
+// It runs git add on the spectr/ directory and then creates a commit
+// with the provided message. Both operations are executed in the
+// specified worktree path.
 func stageAndCommit(worktreePath, commitMsg string) error {
 	fmt.Println("Staging changes...")
 
-	// git add spectr/
+	// Stage all changes in the spectr directory
 	addCmd := exec.Command("git", "add", "spectr/")
 	addCmd.Dir = worktreePath
 
@@ -189,7 +208,7 @@ func stageAndCommit(worktreePath, commitMsg string) error {
 
 	fmt.Println("Creating commit...")
 
-	// git commit
+	// Create commit with the provided message
 	commitCmd := exec.Command("git", "commit", "-m", commitMsg)
 	commitCmd.Dir = worktreePath
 
@@ -204,10 +223,13 @@ func stageAndCommit(worktreePath, commitMsg string) error {
 	return nil
 }
 
-// pushBranch pushes the branch to origin.
+// pushBranch pushes the branch to origin with upstream tracking.
+// It uses the -u flag to set up the remote tracking branch for
+// future push/pull operations.
 func pushBranch(worktreePath, branchName string) error {
 	fmt.Printf("Pushing branch: %s\n", branchName)
 
+	// Push with upstream tracking enabled
 	cmd := exec.Command("git", "push", "-u", "origin", branchName)
 	cmd.Dir = worktreePath
 
@@ -217,6 +239,23 @@ func pushBranch(worktreePath, branchName string) error {
 			"git push failed: %s",
 			strings.TrimSpace(string(output)),
 		)
+	}
+
+	return nil
+}
+
+// executeDeleteInWorktree removes the spec directory from the worktree.
+// This is used in the PR delete workflow to remove a spec before
+// creating a pull request for the deletion.
+func executeDeleteInWorktree(specID, worktreePath string) error {
+	// Build path to spec directory
+	specDir := filepath.Join(worktreePath, "spectr", "specs", specID)
+
+	fmt.Printf("Removing spec directory: spectr/specs/%s\n", specID)
+
+	// Remove the entire directory tree
+	if err := os.RemoveAll(specDir); err != nil {
+		return fmt.Errorf("remove spec directory: %w", err)
 	}
 
 	return nil

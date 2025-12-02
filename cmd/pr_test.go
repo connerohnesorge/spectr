@@ -127,15 +127,15 @@ func TestPRArchiveCmd_SetFields(t *testing.T) {
 	}
 }
 
-// TestPRNewCmd_Struct tests the PRNewCmd struct construction.
-func TestPRNewCmd_Struct(t *testing.T) {
-	cmd := &PRNewCmd{}
+// TestPRProposalCmd_Struct tests the PRProposalCmd struct construction.
+func TestPRProposalCmd_Struct(t *testing.T) {
+	cmd := &PRProposalCmd{}
 	val := reflect.ValueOf(cmd).Elem()
 
 	// Check ChangeID field exists
 	changeIDField := val.FieldByName("ChangeID")
 	if !changeIDField.IsValid() {
-		t.Error("PRNewCmd does not have ChangeID field")
+		t.Error("PRProposalCmd does not have ChangeID field")
 	}
 	if changeIDField.Kind() != reflect.String {
 		t.Errorf("ChangeID should be string, got %v", changeIDField.Kind())
@@ -144,7 +144,7 @@ func TestPRNewCmd_Struct(t *testing.T) {
 	// Check Base field exists
 	baseField := val.FieldByName("Base")
 	if !baseField.IsValid() {
-		t.Error("PRNewCmd does not have Base field")
+		t.Error("PRProposalCmd does not have Base field")
 	}
 	if baseField.Kind() != reflect.String {
 		t.Errorf("Base should be string, got %v", baseField.Kind())
@@ -153,7 +153,7 @@ func TestPRNewCmd_Struct(t *testing.T) {
 	// Check Draft field exists
 	draftField := val.FieldByName("Draft")
 	if !draftField.IsValid() {
-		t.Error("PRNewCmd does not have Draft field")
+		t.Error("PRProposalCmd does not have Draft field")
 	}
 	if draftField.Kind() != reflect.Bool {
 		t.Errorf("Draft should be bool, got %v", draftField.Kind())
@@ -162,7 +162,7 @@ func TestPRNewCmd_Struct(t *testing.T) {
 	// Check Force field exists
 	forceField := val.FieldByName("Force")
 	if !forceField.IsValid() {
-		t.Error("PRNewCmd does not have Force field")
+		t.Error("PRProposalCmd does not have Force field")
 	}
 	if forceField.Kind() != reflect.Bool {
 		t.Errorf("Force should be bool, got %v", forceField.Kind())
@@ -171,22 +171,22 @@ func TestPRNewCmd_Struct(t *testing.T) {
 	// Check DryRun field exists
 	dryRunField := val.FieldByName("DryRun")
 	if !dryRunField.IsValid() {
-		t.Error("PRNewCmd does not have DryRun field")
+		t.Error("PRProposalCmd does not have DryRun field")
 	}
 	if dryRunField.Kind() != reflect.Bool {
 		t.Errorf("DryRun should be bool, got %v", dryRunField.Kind())
 	}
 
-	// Verify SkipSpecs is NOT in PRNewCmd (it's archive-specific)
+	// Verify SkipSpecs is NOT in PRProposalCmd (it's archive-specific)
 	skipSpecsField := val.FieldByName("SkipSpecs")
 	if skipSpecsField.IsValid() {
-		t.Error("PRNewCmd should not have SkipSpecs field (archive-specific)")
+		t.Error("PRProposalCmd should not have SkipSpecs field (archive-specific)")
 	}
 }
 
-// TestPRNewCmd_DefaultValues tests that default values are correct.
-func TestPRNewCmd_DefaultValues(t *testing.T) {
-	cmd := &PRNewCmd{}
+// TestPRProposalCmd_DefaultValues tests that default values are correct.
+func TestPRProposalCmd_DefaultValues(t *testing.T) {
+	cmd := &PRProposalCmd{}
 
 	// All fields should have zero values by default
 	if cmd.ChangeID != "" {
@@ -206,9 +206,9 @@ func TestPRNewCmd_DefaultValues(t *testing.T) {
 	}
 }
 
-// TestPRNewCmd_SetFields tests setting all field values.
-func TestPRNewCmd_SetFields(t *testing.T) {
-	cmd := &PRNewCmd{
+// TestPRProposalCmd_SetFields tests setting all field values.
+func TestPRProposalCmd_SetFields(t *testing.T) {
+	cmd := &PRProposalCmd{
 		ChangeID: "new-proposal",
 		Base:     "develop",
 		Draft:    true,
@@ -247,13 +247,13 @@ func TestPRCmd_Struct(t *testing.T) {
 		t.Errorf("Archive field type = %s, want PRArchiveCmd", archiveField.Type().Name())
 	}
 
-	// Check New subcommand exists
-	newField := val.FieldByName("New")
-	if !newField.IsValid() {
-		t.Error("PRCmd does not have New field")
+	// Check Proposal subcommand exists
+	proposalField := val.FieldByName("Proposal")
+	if !proposalField.IsValid() {
+		t.Error("PRCmd does not have Proposal field")
 	}
-	if newField.Type().Name() != "PRNewCmd" {
-		t.Errorf("New field type = %s, want PRNewCmd", newField.Type().Name())
+	if proposalField.Type().Name() != "PRProposalCmd" {
+		t.Errorf("Proposal field type = %s, want PRProposalCmd", proposalField.Type().Name())
 	}
 }
 
@@ -299,15 +299,15 @@ func TestPRArchiveCmd_HasRunMethod(t *testing.T) {
 	}
 }
 
-// TestPRNewCmd_HasRunMethod verifies the Run method exists.
-func TestPRNewCmd_HasRunMethod(t *testing.T) {
-	cmd := &PRNewCmd{}
+// TestPRProposalCmd_HasRunMethod verifies the Run method exists.
+func TestPRProposalCmd_HasRunMethod(t *testing.T) {
+	cmd := &PRProposalCmd{}
 	val := reflect.ValueOf(cmd)
 
 	// Check that Run method exists
 	runMethod := val.MethodByName("Run")
 	if !runMethod.IsValid() {
-		t.Fatal("PRNewCmd does not have Run method")
+		t.Fatal("PRProposalCmd does not have Run method")
 	}
 
 	// Check that Run returns error

@@ -54,9 +54,9 @@
 ## 3. CLI Command Implementation
 
 - [x] 3.1 Create `cmd/pr.go` with Kong command structure:
-  - [x] Define PRCmd struct with Archive and New subcommands
+  - [x] Define PRCmd struct with Archive and Proposal subcommands
   - [x] Define PRArchiveCmd with flags: --base, --draft, --force, --dry-run, --skip-specs
-  - [x] Define PRNewCmd with flags: --base, --draft, --force, --dry-run
+  - [x] Define PRProposalCmd with flags: --base, --draft, --force, --dry-run
   - [x] Implement Run() methods that delegate to internal/pr
 - [x] 3.2 Update `cmd/root.go` to add PR command to CLI struct
 - [x] 3.3 Add shell completion support for change IDs in PR commands (via predictor:"changeID" tag)
@@ -96,7 +96,7 @@
   - [x] Test archive workflow executed in worktree
   - [x] Test commit message content
   - [x] Test cleanup on success
-- [x] 5.3 Test `spectr pr new` end-to-end:
+- [x] 5.3 Test `spectr pr proposal` end-to-end:
   - [x] Test with valid change, verify copy operation
   - [x] Test commit message content
   - [x] Test cleanup on success
@@ -111,6 +111,6 @@
 
 - [x] 6.1 Add `spectr pr --help` documentation (via Kong help tags)
 - [x] 6.2 Add `spectr pr archive --help` documentation (via Kong help tags)
-- [x] 6.3 Add `spectr pr new --help` documentation (via Kong help tags)
+- [x] 6.3 Add `spectr pr proposal --help` documentation (via Kong help tags)
 - [x] 6.4 Update AGENTS.md with new command reference
 - [x] 6.5 Add examples to documentation showing common workflows

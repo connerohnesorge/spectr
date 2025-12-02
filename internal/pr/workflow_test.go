@@ -29,10 +29,10 @@ func TestPRConfig_Struct(t *testing.T) {
 			},
 		},
 		{
-			name: "new mode config",
+			name: "proposal mode config",
 			config: PRConfig{
 				ChangeID:    "new-proposal",
-				Mode:        ModeNew,
+				Mode:        ModeProposal,
 				BaseBranch:  "",
 				Draft:       false,
 				Force:       true,
@@ -45,7 +45,7 @@ func TestPRConfig_Struct(t *testing.T) {
 			name: "minimal config",
 			config: PRConfig{
 				ChangeID: "minimal",
-				Mode:     ModeNew,
+				Mode:     ModeProposal,
 			},
 		},
 	}

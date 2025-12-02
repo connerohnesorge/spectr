@@ -10,13 +10,13 @@ A dedicated `spectr pr` subcommand with `archive` and `new` variants provides:
 - Structured commit messages and PR bodies with change metadata
 - Single command to go from completed change to PR under review
 
-This is distinct from a `--pr` flag on archive because it provides a dedicated namespace for PR operations with multiple subcommands (`archive` for completed changes, `new` for in-progress changes).
+This is distinct from a `--pr` flag on archive because it provides a dedicated namespace for PR operations with multiple subcommands (`archive` for completed changes, `proposal` for in-progress changes).
 
 ## What Changes
 
 - **NEW**: Add `spectr pr` top-level command with two subcommands:
   - `spectr pr archive <change-id>` - Archive a change and create PR (MUST ALSO SUPPORT partial ids similar to `archive`)
-  - `spectr pr new <change-id>` - Copy change to PR branch without archiving
+  - `spectr pr proposal <change-id>` - Copy change to PR branch without archiving
 
 - **NEW**: Both subcommands share common PR workflow:
   1. Detect git hosting platform from `origin` remote URL
@@ -24,7 +24,7 @@ This is distinct from a `--pr` flag on archive because it provides a dedicated n
   3. Create temporary git worktree on branch `spectr/<change-id>`
   4. Execute change operation within worktree:
      - `archive`: Run `spectr archive <change-id> --yes`
-     - `new`: Copy `spectr/changes/<change-id>/` to worktree
+     - `proposal`: Copy `spectr/changes/<change-id>/` to worktree
   5. Stage the entire `spectr/` directory (`git add spectr/`)
   6. Commit with structured message including change metadata
   7. Push worktree branch to origin

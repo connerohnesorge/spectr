@@ -972,7 +972,9 @@ The `spectr pr archive` subcommand SHALL create a pull request containing an arc
 - **AND** uncommitted changes are NOT included in the PR
 
 ### Requirement: PR Proposal Subcommand
-The `spectr pr proposal` subcommand SHALL create a pull request containing a Spectr change proposal for review, copying the change to an isolated git worktree without archiving.
+The `spectr pr proposal` subcommand SHALL create a pull request containing a Spectr change proposal for review, copying the change to an isolated git worktree without archiving. This command replaces the deprecated `spectr pr new` command.
+
+The renaming from `new` to `proposal` aligns CLI terminology with the `/spectr:proposal` slash command naming convention, creating consistent vocabulary across CLI and IDE integrations.
 
 #### Scenario: Proposal PR workflow execution
 - **WHEN** user runs `spectr pr proposal <change-id>`
@@ -996,6 +998,17 @@ The `spectr pr proposal` subcommand SHALL create a pull request containing a Spe
 - **THEN** the system runs validation on the change
 - **AND** warnings are displayed if validation issues exist
 - **AND** the PR workflow continues (validation does not block)
+
+#### Scenario: User runs spectr pr without subcommand
+- **WHEN** user runs `spectr pr` without a subcommand
+- **THEN** help text is displayed showing available subcommands (archive, proposal)
+- **AND** the command exits with code 0
+
+#### Scenario: Unique prefix match for PR proposal command
+- **WHEN** user runs `spectr pr proposal refactor`
+- **AND** only one change ID starts with `refactor`
+- **THEN** a resolution message is displayed
+- **AND** the PR workflow proceeds with the resolved ID
 
 ### Requirement: PR Common Flags
 Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support common flags for controlling PR creation behavior.

@@ -12,7 +12,7 @@ tags: [spectr, change]
 - Identify any vague or ambiguous details and ask the necessary follow-up questions before editing files.
 
 **Steps**
-1. Review `spectr/project.md`, run `spectr list` and `spectr list --specs`, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the proposal in current behaviour; note any gaps that require clarification.
+1. Review `spectr/project.md`, read `spectr/specs/` and `spectr/changes/` directories, and inspect related code or docs (e.g., via `rg`/`ls`) to ground the proposal in current behaviour; note any gaps that require clarification.
 2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, and `design.md` (when needed) under `spectr/changes/<id>/`.
 3. Map the change into concrete capabilities or requirements, breaking multi-scope efforts into distinct spec deltas with clear relationships and sequencing.
 4. Capture architectural reasoning in `design.md` when the solution spans multiple systems, introduces new patterns, or demands trade-off discussion before committing to specs.

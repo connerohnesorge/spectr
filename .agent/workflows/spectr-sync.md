@@ -16,7 +16,7 @@ description: Detect spec drift from code and update specs interactively.
    - Otherwise, ask the user which capabilities to sync, or analyze recent git changes to suggest candidates.
 
 2. Load current specs:
-   - Run `spectr list --specs` to enumerate capabilities.
+   - Read the `spectr/specs/` directory to enumerate capabilities.
    - Read each relevant `spectr/specs/<capability>/spec.md`.
 
 3. Analyze implementation:

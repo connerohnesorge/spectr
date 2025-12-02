@@ -16,7 +16,7 @@ Track these steps as TODOs and complete them one by one.
 2. Work through tasks sequentially, keeping edits minimal and focused on the requested change.
 3. Confirm completion before updating statuses—make sure every item in `tasks.md` is finished.
 4. Update the checklist after all work is done so each task is marked `- [x]` and reflects reality.
-5. Reference `spectr list` when additional context is required.
+5. Read `spectr/changes/` and `spectr/specs/` directories when additional context is required.
 
 **Reference**
 - Read `spectr/changes/<id>/proposal.md` for proposal details.

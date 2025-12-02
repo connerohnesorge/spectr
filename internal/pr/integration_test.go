@@ -249,8 +249,8 @@ func TestIntegration_ExecutePR_Archive_DryRun(t *testing.T) {
 	}
 }
 
-// TestIntegration_ExecutePR_New_DryRun tests the new proposal dry run functionality.
-func TestIntegration_ExecutePR_New_DryRun(t *testing.T) {
+// TestIntegration_ExecutePR_Proposal_DryRun tests the proposal dry run functionality.
+func TestIntegration_ExecutePR_Proposal_DryRun(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
@@ -260,7 +260,7 @@ func TestIntegration_ExecutePR_New_DryRun(t *testing.T) {
 	defer cleanupTestRepo(t, repoPath)
 
 	// Create a test change
-	changeID := "test-new-change"
+	changeID := "test-proposal-change"
 	createTestChange(t, repoPath, changeID)
 
 	// Save original working directory
@@ -278,7 +278,7 @@ func TestIntegration_ExecutePR_New_DryRun(t *testing.T) {
 	// Run ExecutePR with DryRun=true
 	config := PRConfig{
 		ChangeID:    changeID,
-		Mode:        ModeNew,
+		Mode:        ModeProposal,
 		DryRun:      true,
 		ProjectRoot: repoPath,
 	}
@@ -435,7 +435,7 @@ func TestIntegration_WorktreeIsolation(t *testing.T) {
 	// Run ExecutePR with DryRun
 	config := PRConfig{
 		ChangeID:    changeID,
-		Mode:        ModeNew,
+		Mode:        ModeProposal,
 		DryRun:      true,
 		ProjectRoot: repoPath,
 	}

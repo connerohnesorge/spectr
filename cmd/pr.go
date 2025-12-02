@@ -14,8 +14,8 @@ import (
 
 // PRCmd represents the pr command with subcommands.
 type PRCmd struct {
-	Archive PRArchiveCmd `cmd:"" aliases:"a" help:"Archive and create PR"`
-	New     PRNewCmd     `cmd:"" help:"Create PR without archiving"`
+	Archive  PRArchiveCmd  `cmd:"" aliases:"a" help:"Archive and create PR"`
+	Proposal PRProposalCmd `cmd:"" aliases:"p" help:"Create proposal PR"`
 }
 
 // PRArchiveCmd represents the pr archive subcommand.
@@ -28,8 +28,8 @@ type PRArchiveCmd struct {
 	SkipSpecs bool   `name:"skip-specs" help:"Skip spec merging"`
 }
 
-// PRNewCmd represents the pr new subcommand.
-type PRNewCmd struct {
+// PRProposalCmd represents the pr proposal subcommand.
+type PRProposalCmd struct {
 	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change ID"`
 	Base     string `name:"base" short:"b" help:"Target branch for PR"`
 	Draft    bool   `name:"draft" short:"d" help:"Create as draft PR"`
@@ -74,8 +74,8 @@ func (c *PRArchiveCmd) Run() error {
 	return nil
 }
 
-// Run executes the pr new command.
-func (c *PRNewCmd) Run() error {
+// Run executes the pr proposal command.
+func (c *PRProposalCmd) Run() error {
 	projectRoot, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("get working directory: %w", err)
@@ -92,7 +92,7 @@ func (c *PRNewCmd) Run() error {
 
 	config := pr.PRConfig{
 		ChangeID:    changeID,
-		Mode:        pr.ModeNew,
+		Mode:        pr.ModeProposal,
 		BaseBranch:  c.Base,
 		Draft:       c.Draft,
 		Force:       c.Force,
@@ -102,7 +102,7 @@ func (c *PRNewCmd) Run() error {
 
 	result, err := pr.ExecutePR(config)
 	if err != nil {
-		return fmt.Errorf("pr new failed: %w", err)
+		return fmt.Errorf("pr proposal failed: %w", err)
 	}
 
 	printPRResult(result)

@@ -250,7 +250,7 @@ func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 				"### Steps",
 				"### Reference",
 				"Code is the source of truth",
-				"spectr list --specs",
+				"Read the `spectr/specs/` directory to enumerate capabilities",
 				"spectr validate --strict",
 			},
 			wantErr: false,

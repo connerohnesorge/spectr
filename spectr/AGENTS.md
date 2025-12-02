@@ -4,7 +4,7 @@ Instructions for AI coding assistants using Spectr for spec-driven development.
 
 ## TL;DR Quick Checklist
 
-- Search existing work: `spectr spec list --long`, `spectr list` (use `rg` only for full-text search)
+- Search existing work: Read `spectr/changes/` and `spectr/specs/` directories (use `rg` for full-text search)
 - Decide scope: new capability vs modify existing capability
 - Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
 - Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta specs per affected capability
@@ -41,7 +41,7 @@ Skip proposal for:
 - Tests for existing behavior
 
 **Workflow**
-1. Review `spectr/project.md`, `spectr list`, and `spectr list --specs` to understand current context.
+1. Review `spectr/project.md` and read `spectr/specs/` and `spectr/changes/` directories to understand current context.
 2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `spectr/changes/<id>/`.
 3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement.
 4. Run `spectr validate <id> --strict` and resolve any issues before sharing the proposal.
@@ -72,8 +72,8 @@ When code implementation diverges from specs, sync to update specs:
 - [ ] Read relevant specs in `specs/[capability]/spec.md`
 - [ ] Check pending changes in `changes/` for conflicts
 - [ ] Read `spectr/project.md` for conventions
-- [ ] Run `spectr list` to see active changes
-- [ ] Run `spectr list --specs` to see existing capabilities
+- [ ] Read `spectr/changes/` directory to see active changes
+- [ ] Read `spectr/specs/` directory to see existing capabilities
 
 **Before Creating Specs:**
 - Always check if capability already exists
@@ -82,8 +82,8 @@ When code implementation diverges from specs, sync to update specs:
 - If request is ambiguous, ask 1–2 clarifying questions before scaffolding
 
 ### Search Guidance
-- Enumerate specs: `spectr spec list --long` (or `--json` for scripts)
-- Enumerate changes: `spectr list` (or `spectr change list --json` - deprecated but available)
+- Enumerate specs: Read `spectr/specs/` directory (or `spectr spec list --long` for formatted output)
+- Enumerate changes: Read `spectr/changes/` directory (or `spectr list` for formatted output)
 - Read details directly:
   - Spec: Read `spectr/specs/<capability>/spec.md`
   - Change: Read `spectr/changes/<change-id>/proposal.md`
@@ -445,7 +445,7 @@ Only add complexity with:
 ## Error Recovery
 
 ### Change Conflicts
-1. Run `spectr list` to see active changes
+1. Read `spectr/changes/` directory to see active changes
 2. Check for overlapping specs
 3. Coordinate with change owners
 4. Consider combining proposals

@@ -4,7 +4,7 @@ Instructions for AI coding assistants using Spectr for spec-driven development.
 
 ## TL;DR Quick Checklist
 
-- Search existing work: Read `spectr/changes/` and `spectr/specs/` directories (use `rg` for full-text search)
+- Search existing work: Read `{{ .ChangesDir }}/` and `{{ .SpecsDir }}/` directories (use `rg` for full-text search)
 - Decide scope: new capability vs modify existing capability
 - Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
 - Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta specs per affected capability
@@ -34,8 +34,8 @@ Skip proposal for:
 - Tests for existing behavior
 
 Workflow:
-1. Review `spectr/project.md` and read `spectr/specs/` and `spectr/changes/` directories to understand current context.
-2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `spectr/changes/<id>/`.
+1. Review `{{ .ProjectFile }}` and read `{{ .SpecsDir }}/` and `{{ .ChangesDir }}/` directories to understand current context.
+2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `{{ .ChangesDir }}/<id>/`.
 3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement.
 4. Run `spectr validate <id> --strict` and resolve any issues before sharing the proposal.
 
@@ -64,23 +64,23 @@ When code implementation diverges from specs, sync to update specs:
 Context Checklist:
 - [ ] Read relevant specs in `specs/[capability]/spec.md`
 - [ ] Check pending changes in `changes/` for conflicts
-- [ ] Read `spectr/project.md` for conventions
-- [ ] Read `spectr/changes/` directory to see active changes
-- [ ] Read `spectr/specs/` directory to see existing capabilities
+- [ ] Read `{{ .ProjectFile }}` for conventions
+- [ ] Read `{{ .ChangesDir }}/` directory to see active changes
+- [ ] Read `{{ .SpecsDir }}/` directory to see existing capabilities
 
 Before Creating Specs:
 - Always check if capability already exists
 - Prefer modifying existing specs over creating duplicates
-- Read `spectr/specs/<capability>/spec.md` directly to review current state
-- If request is ambiguous, ask 1–2 clarifying questions before scaffolding
+- Read `{{ .SpecsDir }}/<capability>/spec.md` directly to review current state
+- If request is ambiguous, ask 1-2 clarifying questions before scaffolding
 
 ### Search Guidance
-- Enumerate specs: Read `spectr/specs/` directory (or `spectr spec list --long` for formatted output)
-- Enumerate changes: Read `spectr/changes/` directory (or `spectr list` for formatted output)
+- Enumerate specs: Read `{{ .SpecsDir }}/` directory (or `spectr spec list --long` for formatted output)
+- Enumerate changes: Read `{{ .ChangesDir }}/` directory (or `spectr list` for formatted output)
 - Read details directly:
-  - Spec: Read `spectr/specs/<capability>/spec.md`
-  - Change: Read `spectr/changes/<change-id>/proposal.md`
-- Full-text search (use ripgrep): `rg -n "Requirement:|Scenario:" spectr/specs`
+  - Spec: Read `{{ .SpecsDir }}/<capability>/spec.md`
+  - Change: Read `{{ .ChangesDir }}/<change-id>/proposal.md`
+- Full-text search (use ripgrep): `rg -n "Requirement:|Scenario:" {{ .SpecsDir }}`
 
 ## Quick Start
 
@@ -103,9 +103,9 @@ spectr validate [change] --strict
 ```
 
 Reading Specs and Changes (for AI agents):
-- Specs: Read `spectr/specs/<capability>/spec.md` directly
-- Changes: Read `spectr/changes/<change-id>/proposal.md` directly
-- Tasks: Read `spectr/changes/<change-id>/tasks.md` directly
+- Specs: Read `{{ .SpecsDir }}/<capability>/spec.md` directly
+- Changes: Read `{{ .ChangesDir }}/<change-id>/proposal.md` directly
+- Tasks: Read `{{ .ChangesDir }}/<change-id>/tasks.md` directly
 
 ### Command Flags
 
@@ -117,7 +117,7 @@ Reading Specs and Changes (for AI agents):
 ## Directory Structure
 
 ```
-spectr/
+{{ .BaseDir }}/
 ├── project.md              # Project conventions
 ├── specs/                  # Current truth - what IS built
 │   └── [capability]/       # Single focused capability
@@ -268,7 +268,7 @@ Headers matched with `trim(header)` - whitespace ignored.
 Common pitfall: Using MODIFIED to add a new concern without including the previous text. This causes loss of detail at archive time. If you aren't explicitly changing the existing requirement, add a new requirement under ADDED instead.
 
 Authoring a MODIFIED requirement correctly:
-1) Locate the existing requirement in `spectr/specs/<capability>/spec.md`.
+1) Locate the existing requirement in `{{ .SpecsDir }}/<capability>/spec.md`.
 2) Copy the entire requirement block (from `### Requirement: ...` through its scenarios).
 3) Paste it under `## MODIFIED Requirements` and edit to reflect the new behavior.
 4) Ensure the header text matches exactly (whitespace-insensitive) and keep at least one `#### Scenario:`.
@@ -294,7 +294,7 @@ Example for RENAMED:
 
 Silent scenario parsing failures
 - Exact format required: `#### Scenario: Name`
-- Debug by reading the delta spec file directly: `spectr/changes/<change-id>/specs/<capability>/spec.md`
+- Debug by reading the delta spec file directly: `{{ .ChangesDir }}/<change-id>/specs/<capability>/spec.md`
 
 ### Validation Tips
 
@@ -304,8 +304,8 @@ spectr validate [change] --strict
 ```
 
 For validation debugging:
-- Read delta specs directly: `spectr/changes/<change-id>/specs/<capability>/spec.md`
-- Check spec content by reading: `spectr/specs/<capability>/spec.md`
+- Read delta specs directly: `{{ .ChangesDir }}/<change-id>/specs/<capability>/spec.md`
+- Check spec content by reading: `{{ .SpecsDir }}/<capability>/spec.md`
 
 ## Happy Path Script
 
@@ -314,17 +314,17 @@ For validation debugging:
 spectr spec list --long
 spectr list
 # Optional full-text search:
-# rg -n "Requirement:|Scenario:" spectr/specs
-# rg -n "^#|Requirement:" spectr/changes
+# rg -n "Requirement:|Scenario:" {{ .SpecsDir }}
+# rg -n "^#|Requirement:" {{ .ChangesDir }}
 
 # 2) Choose change id and scaffold
 CHANGE=add-two-factor-auth
-mkdir -p spectr/changes/$CHANGE/{specs/auth}
-printf "## Why\\n...\\n\\n## What Changes\\n- ...\\n\\n## Impact\\n- ...\\n" > spectr/changes/$CHANGE/proposal.md
-printf "## 1. Implementation\\n- [ ] 1.1 ...\\n" > spectr/changes/$CHANGE/tasks.md
+mkdir -p {{ .ChangesDir }}/$CHANGE/{specs/auth}
+printf "## Why\\n...\\n\\n## What Changes\\n- ...\\n\\n## Impact\\n- ...\\n" > {{ .ChangesDir }}/$CHANGE/proposal.md
+printf "## 1. Implementation\\n- [ ] 1.1 ...\\n" > {{ .ChangesDir }}/$CHANGE/tasks.md
 
 # 3) Add deltas (example)
-cat > spectr/changes/$CHANGE/specs/auth/spec.md << 'EOF'
+cat > {{ .ChangesDir }}/$CHANGE/specs/auth/spec.md << 'EOF'
 ## ADDED Requirements
 ### Requirement: Two-Factor Authentication
 Users MUST provide a second factor during login.
@@ -341,7 +341,7 @@ spectr validate $CHANGE --strict
 ## Multi-Capability Example
 
 ```
-spectr/changes/add-2fa-notify/
+{{ .ChangesDir }}/add-2fa-notify/
 ├── proposal.md
 ├── tasks.md
 └── specs/
@@ -407,7 +407,7 @@ Only add complexity with:
 ## Error Recovery
 
 ### Change Conflicts
-1. Read `spectr/changes/` directory to see active changes
+1. Read `{{ .ChangesDir }}/` directory to see active changes
 2. Check for overlapping specs
 3. Coordinate with change owners
 4. Consider combining proposals
@@ -445,7 +445,7 @@ spectr archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation
 ```
 
 Reading Details (for AI agents):
-- Read `spectr/specs/<capability>/spec.md` for spec details
-- Read `spectr/changes/<change-id>/proposal.md` for change details
+- Read `{{ .SpecsDir }}/<capability>/spec.md` for spec details
+- Read `{{ .ChangesDir }}/<change-id>/proposal.md` for change details
 
 Remember: Specs are truth. Changes are proposals. Keep them in sync.

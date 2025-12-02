@@ -5,6 +5,8 @@ import (
 	"embed"
 	"fmt"
 	"text/template"
+
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
 //go:embed templates/**/*.tmpl
@@ -41,10 +43,13 @@ func (tm *TemplateManager) RenderProject(ctx ProjectContext) (string, error) {
 	return buf.String(), nil
 }
 
-// RenderAgents renders the AGENTS.md template (static, no variables)
-func (tm *TemplateManager) RenderAgents() (string, error) {
+// RenderAgents renders the AGENTS.md template with the given template context
+// The context provides path variables for dynamic directory names
+func (tm *TemplateManager) RenderAgents(
+	ctx providers.TemplateContext,
+) (string, error) {
 	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(&buf, "AGENTS.md.tmpl", nil)
+	err := tm.templates.ExecuteTemplate(&buf, "AGENTS.md.tmpl", ctx)
 	if err != nil {
 		return "", fmt.Errorf("failed to render agents template: %w", err)
 	}
@@ -53,13 +58,16 @@ func (tm *TemplateManager) RenderAgents() (string, error) {
 }
 
 // RenderInstructionPointer renders the instruction-pointer.md template
-// This is a short pointer that directs AI assistants to read spectr/AGENTS.md
-func (tm *TemplateManager) RenderInstructionPointer() (string, error) {
+// This is a short pointer that directs AI assistants to read the AGENTS.md file
+// The context provides path variables for dynamic directory names
+func (tm *TemplateManager) RenderInstructionPointer(
+	ctx providers.TemplateContext,
+) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
 		&buf,
 		"instruction-pointer.md.tmpl",
-		nil,
+		ctx,
 	)
 	if err != nil {
 		return "",
@@ -72,14 +80,16 @@ func (tm *TemplateManager) RenderInstructionPointer() (string, error) {
 	return buf.String(), nil
 }
 
-// RenderSlashCommand renders a slash command template
+// RenderSlashCommand renders a slash command template with the given context
 // commandType must be one of: "proposal", "apply", "archive"
+// The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderSlashCommand(
 	commandType string,
+	ctx providers.TemplateContext,
 ) (string, error) {
 	templateName := fmt.Sprintf("slash-%s.md.tmpl", commandType)
 	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(&buf, templateName, nil)
+	err := tm.templates.ExecuteTemplate(&buf, templateName, ctx)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to render slash command template %s: %w",

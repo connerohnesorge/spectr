@@ -128,7 +128,8 @@ func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
 	}
 
 	// Run the archive workflow
-	if err := archive.Archive(archiveCmd, projectPath); err != nil {
+	// Result is discarded for interactive usage - already prints to terminal
+	if _, err := archive.Archive(archiveCmd, projectPath); err != nil {
 		return fmt.Errorf("archive workflow failed: %w", err)
 	}
 

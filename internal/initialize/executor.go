@@ -201,7 +201,7 @@ func (e *InitExecutor) createAgentsMd(
 	}
 
 	// Render template
-	content, err := e.tm.RenderAgents()
+	content, err := e.tm.RenderAgents(providers.DefaultTemplateContext())
 	if err != nil {
 		return fmt.Errorf("failed to render agents template: %w", err)
 	}

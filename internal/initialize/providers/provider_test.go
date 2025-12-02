@@ -26,15 +26,18 @@ func newMockRenderer() *mockTemplateRenderer {
 	}
 }
 
-func (m *mockTemplateRenderer) RenderAgents() (string, error) {
+func (m *mockTemplateRenderer) RenderAgents(_ TemplateContext) (string, error) {
 	return m.agentsContent, nil
 }
 
-func (m *mockTemplateRenderer) RenderInstructionPointer() (string, error) {
+func (m *mockTemplateRenderer) RenderInstructionPointer(_ TemplateContext) (string, error) {
 	return m.instructionPtrContent, nil
 }
 
-func (m *mockTemplateRenderer) RenderSlashCommand(command string) (string, error) {
+func (m *mockTemplateRenderer) RenderSlashCommand(
+	command string,
+	_ TemplateContext,
+) (string, error) {
 	return m.slashContent[command], nil
 }
 

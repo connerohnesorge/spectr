@@ -79,6 +79,32 @@ const (
 	FormatTOML
 )
 
+// TemplateContext holds path-related template variables for dynamic directory names.
+// This struct is defined in the providers package to avoid import cycles.
+type TemplateContext struct {
+	// BaseDir is the base directory for spectr files (default: "spectr")
+	BaseDir string
+	// SpecsDir is the directory for spec files (default: "spectr/specs")
+	SpecsDir string
+	// ChangesDir is the directory for change proposals (default: "spectr/changes")
+	ChangesDir string
+	// ProjectFile is the path to the project configuration file (default: "spectr/project.md")
+	ProjectFile string
+	// AgentsFile is the path to the agents file (default: "spectr/AGENTS.md")
+	AgentsFile string
+}
+
+// DefaultTemplateContext returns a TemplateContext with default values.
+func DefaultTemplateContext() TemplateContext {
+	return TemplateContext{
+		BaseDir:     "spectr",
+		SpecsDir:    "spectr/specs",
+		ChangesDir:  "spectr/changes",
+		ProjectFile: "spectr/project.md",
+		AgentsFile:  "spectr/AGENTS.md",
+	}
+}
+
 // Provider represents an AI CLI tool (Claude Code, Gemini, Cline, etc.).
 // Each provider handles both its instruction file AND slash commands.
 type Provider interface {
@@ -142,13 +168,13 @@ type Provider interface {
 // full TemplateManager.
 type TemplateRenderer interface {
 	// RenderAgents renders the AGENTS.md template content.
-	RenderAgents() (string, error)
+	RenderAgents(ctx TemplateContext) (string, error)
 	// RenderInstructionPointer renders a short pointer template that directs
 	// AI assistants to read spectr/AGENTS.md for full instructions.
-	RenderInstructionPointer() (string, error)
+	RenderInstructionPointer(ctx TemplateContext) (string, error)
 	// RenderSlashCommand renders a slash command template
 	// IE. proposal, apply, or sync.
-	RenderSlashCommand(command string) (string, error)
+	RenderSlashCommand(command string, ctx TemplateContext) (string, error)
 }
 
 // BaseProvider provides a default implementation of the Provider
@@ -242,7 +268,7 @@ func (p *BaseProvider) configureConfigFile(
 	projectPath string,
 	tm TemplateRenderer,
 ) error {
-	content, err := tm.RenderInstructionPointer()
+	content, err := tm.RenderInstructionPointer(DefaultTemplateContext())
 	if err != nil {
 		return fmt.Errorf("failed to render instruction pointer template: %w", err)
 	}
@@ -291,7 +317,7 @@ func (p *BaseProvider) configureSlashCommand(
 	filePath, cmd string,
 	tm TemplateRenderer,
 ) error {
-	body, err := tm.RenderSlashCommand(cmd)
+	body, err := tm.RenderSlashCommand(cmd, DefaultTemplateContext())
 	if err != nil {
 		return fmt.Errorf("failed to render slash command %s: %w", cmd, err)
 	}

@@ -3,6 +3,8 @@ package initialize
 import (
 	"strings"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
 func TestNewTemplateManager(t *testing.T) {
@@ -111,7 +113,7 @@ func TestTemplateManager_RenderAgents(t *testing.T) {
 		t.Fatalf("NewTemplateManager() error = %v", err)
 	}
 
-	got, err := tm.RenderAgents()
+	got, err := tm.RenderAgents(providers.DefaultTemplateContext())
 	if err != nil {
 		t.Fatalf("RenderAgents() error = %v", err)
 	}
@@ -156,7 +158,7 @@ func TestTemplateManager_RenderInstructionPointer(t *testing.T) {
 		t.Fatalf("NewTemplateManager() error = %v", err)
 	}
 
-	got, err := tm.RenderInstructionPointer()
+	got, err := tm.RenderInstructionPointer(providers.DefaultTemplateContext())
 	if err != nil {
 		t.Fatalf("RenderInstructionPointer() error = %v", err)
 	}
@@ -265,7 +267,7 @@ func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tm.RenderSlashCommand(tt.commandType)
+			got, err := tm.RenderSlashCommand(tt.commandType, providers.DefaultTemplateContext())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RenderSlashCommand() error = %v, wantErr %v", err, tt.wantErr)
 
@@ -308,14 +310,14 @@ func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
 	})
 
 	t.Run("agents template", func(t *testing.T) {
-		_, err := tm.RenderAgents()
+		_, err := tm.RenderAgents(providers.DefaultTemplateContext())
 		if err != nil {
 			t.Errorf("Agents template failed to render: %v", err)
 		}
 	})
 
 	t.Run("instruction pointer template", func(t *testing.T) {
-		_, err := tm.RenderInstructionPointer()
+		_, err := tm.RenderInstructionPointer(providers.DefaultTemplateContext())
 		if err != nil {
 			t.Errorf("Instruction pointer template failed to render: %v", err)
 		}
@@ -324,7 +326,7 @@ func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
 	t.Run("slash commands", func(t *testing.T) {
 		commands := []string{"proposal", "apply", "sync"}
 		for _, cmd := range commands {
-			_, err := tm.RenderSlashCommand(cmd)
+			_, err := tm.RenderSlashCommand(cmd, providers.DefaultTemplateContext())
 			if err != nil {
 				t.Errorf("Slash command %s failed to render: %v", cmd, err)
 			}

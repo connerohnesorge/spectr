@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: spectr-action
-        uses: connerohnesorge/spectr-action@v0.0.1
+        uses: connerohnesorge/spectr-action@v0.0.2
   lint:
     name: Lint
     runs-on: ubuntu-latest

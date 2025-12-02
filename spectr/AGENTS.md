@@ -108,6 +108,10 @@ spectr validate              # Bulk validation mode
 
 # Debugging
 spectr validate [change] --strict
+
+# Pull request creation
+spectr pr archive [change-id] # Archive change and create PR
+spectr pr new [change-id]     # Create PR for proposal without archiving
 ```
 
 **Reading Specs and Changes (for AI agents):**
@@ -121,6 +125,33 @@ spectr validate [change] --strict
 - `--type change|spec` - Disambiguate items
 - `--strict` - Comprehensive validation
 - `--no-interactive` - Disable prompts
+
+### PR Creation
+
+Create pull requests directly from changes using git worktree isolation:
+
+```bash
+# Archive completed change and create PR
+spectr pr archive my-feature
+
+# Create PR for proposal review (without archiving)
+spectr pr new my-feature
+
+# Common options
+spectr pr archive --draft     # Create as draft PR
+spectr pr archive --force     # Delete existing branch
+spectr pr archive --dry-run   # Preview without changes
+spectr pr archive --base dev  # Target non-default branch
+```
+
+The PR workflow:
+1. Creates isolated git worktree (user's working directory untouched)
+2. Executes archive/copy operation in worktree
+3. Commits with structured message
+4. Pushes branch and creates PR via platform CLI (gh, glab, tea)
+5. Cleans up worktree automatically
+
+Supports GitHub, GitLab, Gitea/Forgejo, and Bitbucket (manual URL).
 
 ## Directory Structure
 
@@ -446,6 +477,8 @@ Only add complexity with:
 ```bash
 spectr list              # What's in progress?
 spectr validate --strict # Is it correct?
+spectr pr archive [change]  # Create PR for completed change
+spectr pr new [change]      # Create PR for proposal review
 ```
 
 **Reading Details (for AI agents):**

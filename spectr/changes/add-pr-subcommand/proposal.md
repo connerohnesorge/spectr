@@ -27,8 +27,8 @@ This is distinct from a `--pr` flag on archive because it provides a dedicated n
      - `new`: Copy `spectr/changes/<change-id>/` to worktree
   5. Stage the entire `spectr/` directory (`git add spectr/`)
   6. Commit with structured message including change metadata
-  7. Push branch to origin
-  8. Create PR/MR using platform-appropriate CLI
+  7. Push worktree branch to origin
+  8. Create PR/MR from worktree using platform-appropriate CLI
   9. Clean up temporary worktree
   10. Display PR URL on success
 

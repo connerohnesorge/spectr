@@ -29,11 +29,15 @@ import (
 
 // Archive archives a change by validating, applying specs, and moving to archive directory
 //
-// The workingDir parameter allows operating in a different working directory (e.g., for git worktree operations).
+// The workingDir parameter allows operating in a different working directory
+// (e.g., for git worktree operations).
 // If workingDir is empty, the current working directory is used as the project root.
 //
+// Returns ArchiveResult containing the archive path, operation counts, and
+// updated capabilities.
+//
 //nolint:revive // cmd.ChangeID field needs to be reassigned when empty
-func Archive(cmd *ArchiveCmd, workingDir string) error {
+func Archive(cmd *ArchiveCmd, workingDir string) (ArchiveResult, error) {
 	changeID := cmd.ChangeID
 	// Get project root based on workingDir parameter
 	var (
@@ -44,7 +48,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	if workingDir == "" {
 		projectRoot, err = os.Getwd()
 		if err != nil {
-			return fmt.Errorf("get working directory: %w", err)
+			return ArchiveResult{}, fmt.Errorf("get working directory: %w", err)
 		}
 	} else {
 		projectRoot = workingDir
@@ -54,17 +58,20 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	spectrRoot := filepath.Join(projectRoot, "spectr")
 	_, err = os.Stat(spectrRoot)
 	if os.IsNotExist(err) {
-		return fmt.Errorf("spectr directory not found in %s", projectRoot)
+		return ArchiveResult{}, fmt.Errorf(
+			"spectr directory not found in %s",
+			projectRoot,
+		)
 	}
 
 	// If no change ID provided, use interactive selection
 	if changeID == "" {
 		selectedID, err = selectChangeInteractive(projectRoot)
 		if errors.Is(err, ErrUserCancelled) {
-			return nil // User cancelled, exit gracefully
+			return ArchiveResult{}, nil // User cancelled, exit gracefully
 		}
 		if err != nil {
-			return fmt.Errorf("select change: %w", err)
+			return ArchiveResult{}, fmt.Errorf("select change: %w", err)
 		}
 		changeID = selectedID
 		cmd.ChangeID = changeID
@@ -73,7 +80,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 		// Resolve partial ID to full change ID
 		result, err = discovery.ResolveChangeID(changeID, projectRoot)
 		if err != nil {
-			return err
+			return ArchiveResult{}, err
 		}
 		if result.PartialMatch {
 			fmt.Printf("Resolved '%s' -> '%s'\n\n", changeID, result.ChangeID)
@@ -90,12 +97,12 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	if !cmd.NoValidate {
 		err = runValidation(changeDir)
 		if err != nil {
-			return fmt.Errorf("validation failed: %w", err)
+			return ArchiveResult{}, fmt.Errorf("validation failed: %w", err)
 		}
 	} else {
 		if !cmd.Yes {
 			if !confirm("Validation is disabled. Continue anyway?") {
-				return errors.New("archive cancelled")
+				return ArchiveResult{}, errors.New("archive cancelled")
 			}
 		}
 		fmt.Println("⚠️  Skipping validation")
@@ -104,28 +111,41 @@ func Archive(cmd *ArchiveCmd, workingDir string) error {
 	// Task checking
 	err = checkTasks(cmd.Yes, changeDir)
 	if err != nil {
-		return fmt.Errorf("task check failed: %w", err)
+		return ArchiveResult{}, fmt.Errorf("task check failed: %w", err)
 	}
 
-	// Spec update workflow
+	// Spec update workflow - capture counts and capabilities
+	var counts OperationCounts
+	var capabilities []string
 	if !cmd.SkipSpecs {
-		_, _, err = updateSpecsWithTracking(cmd.Yes, changeDir, projectRoot)
+		counts, capabilities, err = updateSpecsWithTracking(
+			cmd.Yes,
+			changeDir,
+			projectRoot,
+		)
 		if err != nil {
-			return fmt.Errorf("spec update failed: %w", err)
+			return ArchiveResult{}, fmt.Errorf("spec update failed: %w", err)
 		}
 	} else {
 		fmt.Println("⚠️  Skipping spec updates")
 	}
 
-	// Archive operation
-	_, err = moveToArchive(changeDir, changeID, projectRoot)
+	// Archive operation - capture archive name
+	archiveName, err := moveToArchive(changeDir, changeID, projectRoot)
 	if err != nil {
-		return fmt.Errorf("move to archive failed: %w", err)
+		return ArchiveResult{}, fmt.Errorf("move to archive failed: %w", err)
 	}
 
 	fmt.Printf("\n✓ Successfully archived: %s\n", changeID)
 
-	return nil
+	// Build relative archive path
+	archivePath := fmt.Sprintf("spectr/changes/archive/%s/", archiveName)
+
+	return ArchiveResult{
+		ArchivePath:  archivePath,
+		Counts:       counts,
+		Capabilities: capabilities,
+	}, nil
 }
 
 // selectChangeInteractive uses the interactive table for change selection.

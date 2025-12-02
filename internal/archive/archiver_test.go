@@ -104,7 +104,7 @@ func TestArchive_PartialIDPrefix(t *testing.T) {
 		Yes:      true,       // Skip confirmations
 	}
 
-	err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir)
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
 	}
@@ -165,7 +165,7 @@ func TestArchive_PartialIDSubstring(t *testing.T) {
 		Yes:      true,
 	}
 
-	err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir)
 
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
@@ -203,7 +203,7 @@ func TestArchive_PartialIDAmbiguous(t *testing.T) {
 		Yes:      true,
 	}
 
-	err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir)
 
 	if err == nil {
 		t.Fatal("Expected error for ambiguous partial ID")
@@ -225,7 +225,7 @@ func TestArchive_PartialIDNoMatch(t *testing.T) {
 		Yes:      true,
 	}
 
-	err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir)
 
 	if err == nil {
 		t.Fatal("Expected error for non-matching partial ID")
@@ -253,7 +253,7 @@ func TestArchive_ExactIDNoResolutionMessage(t *testing.T) {
 		Yes:      true,
 	}
 
-	err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir)
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
 	}
@@ -295,7 +295,7 @@ func TestArchive_CaseInsensitiveMatch(t *testing.T) {
 		Yes:      true,
 	}
 
-	err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir)
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
 	}

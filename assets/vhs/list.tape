@@ -20,21 +20,25 @@ Enter
 Sleep 1s
 
 Type "spectr list"
+Sleep 1s
 Enter
 Sleep 2s
 
 # List specifications
 Type "spectr list --specs"
+Sleep 1s
 Enter
 Sleep 2s
 
 # Show long format for more details
 Type "spectr list --specs --long"
+Sleep 1s
 Enter
 Sleep 2.5s
 
 # Show interative mode
 Type "spectr list -I"
+Sleep 1s
 Enter
 Sleep 2s
 

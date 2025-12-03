@@ -18,19 +18,25 @@ Sleep 500ms
 Type "cd examples/archive/"
 Enter
 Type "spectr list"
+Sleep 1s
+Enter
+Sleep 1s
 
 # Run archive command
 Type "spectr archive test-archive --yes"
+Sleep 1s
 Enter
 Sleep 2s
 
 # Verify it moved to archive
 Type "ls -la spectr/changes/archive/ | tail -5"
+Sleep 1s
 Enter
 Sleep 1.5s
 
 # Show it's no longer in active changes
 Type "spectr list"
+Sleep 1s
 Enter
 Sleep 1.5s
 
@@ -38,8 +44,4 @@ Sleep 1.5s
 Hide
 Type "git checkout -- ."
 Enter
-Sleep 500ms
 Show
-
-# Final pause
-Sleep 1s

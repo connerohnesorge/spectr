@@ -9,6 +9,11 @@ Set Theme "Catppuccin Mocha"
 Set TypingSpeed 50ms
 Set Shell "zsh"
 
+Hide
+Type rm -rf examples/partial-match/spectr/changes/archive/
+Enter
+Show
+
 # Setup: Clear screen
 Type "clear"
 Enter

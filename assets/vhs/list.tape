@@ -15,7 +15,7 @@ Enter
 Sleep 500ms
 
 # List active changes
-Type "cd examples/list/spectr"
+Type "cd examples/list/"
 Enter
 Sleep 1s
 

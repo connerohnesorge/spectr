@@ -7,6 +7,7 @@ Set Height 600
 Set Padding 10
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 50ms
+Set Shell "zsh"
 
 # Setup: Clear screen
 Type "clear"

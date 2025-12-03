@@ -1,17 +1,3 @@
-# Demo: spectr list - Listing Changes and Specifications
-#
-# This demo showcases:
-# - Listing active changes with spectr list
-# - Listing specifications with spectr list --specs
-# - Understanding what's in progress vs what's built
-#
-# Execution model:
-# - Runs commands directly in examples/list/spectr/ directory
-# - Read-only operations (no setup or cleanup needed)
-# - No git restore needed (list commands don't modify state)
-#
-# Output: assets/gifs/list.gif
-
 Output assets/gifs/list.gif
 
 # VHS Configuration
@@ -21,6 +7,7 @@ Set Height 600
 Set Padding 10
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 50ms
+Set Shell "zsh"
 
 # Setup: Clear screen
 Type "clear"
@@ -28,19 +15,28 @@ Enter
 Sleep 500ms
 
 # List active changes
-Type "cd examples/list/spectr && spectr list"
+Type "cd examples/list/spectr"
+Enter
+Sleep 1s
+
+Type "spectr list"
 Enter
 Sleep 2s
 
 # List specifications
-Type "cd examples/list/spectr && spectr list --specs"
+Type "spectr list --specs"
 Enter
 Sleep 2s
 
 # Show long format for more details
-Type "cd examples/list/spectr && spectr list --specs --long"
+Type "spectr list --specs --long"
 Enter
 Sleep 2.5s
+
+# Show interative mode
+Type "spectr list -I"
+Enter
+Sleep 2s
 
 # Final pause
 Sleep 1s

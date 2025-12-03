@@ -1,18 +1,3 @@
-# Demo: spectr archive - Archiving Completed Changes
-#
-# This demo showcases:
-# - Running spectr archive on a completed change
-# - Merging deltas into base specs
-# - Moving change to archive with timestamp
-# - Verifying the archived state
-#
-# Execution Model:
-# - Runs directly in examples/archive/spectr/ directory (no _demo copy)
-# - The archive command WILL modify the directory (moves test-archive to changes/archive/)
-# - Git restore commands are hidden at the end to reset the example directory
-#
-# Output: assets/gifs/archive.gif
-
 Output assets/gifs/archive.gif
 
 # VHS Configuration
@@ -22,6 +7,7 @@ Set Height 600
 Set Padding 10
 Set Theme "Catppuccin Mocha"
 Set TypingSpeed 50ms
+Set Shell "zsh"
 
 # Setup: Clear screen
 Type "clear"
@@ -29,28 +15,28 @@ Enter
 Sleep 500ms
 
 # Show the change in the list
-Type "cd examples/archive/spectr && spectr list"
+Type "cd examples/archive/"
 Enter
-Sleep 1.5s
+Type "spectr list"
 
 # Run archive command
-Type "cd examples/archive/spectr && spectr archive test-archive --yes"
+Type "spectr archive test-archive --yes"
 Enter
 Sleep 2s
 
 # Verify it moved to archive
-Type "ls -la examples/archive/spectr/changes/archive/ | tail -5"
+Type "ls -la spectr/changes/archive/ | tail -5"
 Enter
 Sleep 1.5s
 
 # Show it's no longer in active changes
-Type "cd examples/archive/spectr && spectr list"
+Type "spectr list"
 Enter
 Sleep 1.5s
 
 # Restore the example directory to original state (hidden from recording)
 Hide
-Type "cd examples/archive/spectr && git checkout -- ."
+Type "git checkout -- ."
 Enter
 Sleep 500ms
 Show

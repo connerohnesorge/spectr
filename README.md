@@ -285,6 +285,8 @@ spectr/
 
 ### spectr init
 
+![spectr init demo](assets/gifs/init.gif)
+
 Initialize Spectr in a project directory.
 
 **Usage:**
@@ -319,6 +321,8 @@ spectr init --non-interactive
 ```
 
 ### spectr list
+
+![spectr list demo](assets/gifs/list.gif)
 
 List active changes or specifications.
 
@@ -358,6 +362,8 @@ Run 'spectr view <change>' for details
 ```
 
 ### spectr validate
+
+![spectr validate demo](assets/gifs/validate.gif)
 
 Validate changes or specifications against rules.
 
@@ -406,6 +412,8 @@ Validating change: add-two-factor-auth
 ```
 
 ### spectr archive
+
+![spectr archive demo](assets/gifs/archive.gif)
 
 Archive a completed change, merging deltas into specs.
 

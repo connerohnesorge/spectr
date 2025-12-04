@@ -10,7 +10,7 @@ Set TypingSpeed 50ms
 Set Shell "zsh"
 
 Hide
-Type rm -rf examples/partial-match/spectr/changes/archive/
+Type "rm -rf examples/partial-match/spectr/changes/archive/"
 Enter
 Show
 

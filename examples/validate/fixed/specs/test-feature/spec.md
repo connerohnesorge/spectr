@@ -7,7 +7,7 @@ The system SHALL provide secure authentication.
 - **THEN** system grants access token
 
 ### Requirement: Missing Scenario Example
-This requirement now has a scenario.
+The system SHALL demonstrate proper scenario formatting.
 
 #### Scenario: Example scenario
 - **WHEN** condition occurs

@@ -31,7 +31,7 @@ Sleep 2s
 
 # Restore for next demo (hidden)
 Hide
-Type "git checkout -- ."
+Type "git checkout -- . && rm -rf spectr/changes/archive/"
 Enter
 Sleep 500ms
 Show
@@ -43,7 +43,7 @@ Sleep 2s
 
 # Restore for next demo (hidden)
 Hide
-Type "git checkout -- ."
+Type "git checkout -- . && rm -rf spectr/changes/archive/"
 Enter
 Sleep 500ms
 Show

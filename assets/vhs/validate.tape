@@ -16,7 +16,7 @@ Type "cp examples/validate/broken/proposal.md examples/validate/spectr/changes/t
 Enter
 Type "cp examples/validate/broken/specs/test-feature/spec.md examples/validate/spectr/changes/test-validation/specs/test-feature/"
 Enter
-Type "rm -rf examples/validate/spectr/changes/"
+Type "rm -rf examples/validate/spectr/changes/archive/"
 Enter
 Type "clear"
 Enter

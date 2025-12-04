@@ -60,7 +60,7 @@
         generate-gif = {
           exec = rooted ''
             cd "$REPO_ROOT"
-            DEMOS="init list validate archive workflow"
+            DEMOS="init list validate archive partial-match"
 
             if [[ "''${1:-}" == "-h" ]] || [[ "''${1:-}" == "--help" ]]; then
               echo "Usage: generate-gif [demo]"

@@ -5,15 +5,18 @@
     "": {
       "name": "docs",
       "dependencies": {
-        "@astrojs/starlight": "^0.36.2",
-        "astro": "^5.6.1",
-        "sharp": "^0.34.2",
+        "@astrojs/starlight": "^0.36.3",
+        "astro": "^5.16.0",
+        "sharp": "^0.34.5",
+        "starlight-changelogs": "^0.2.3",
         "starlight-llms-txt": "^0.6.0",
         "starlight-site-graph": "^0.5.0",
       },
     },
   },
   "packages": {
+    "@ascorbic/loader-utils": ["@ascorbic/loader-utils@1.0.2", "", { "peerDependencies": { "astro": "^4.14.0 || ^5.0.0-beta.0" } }, "sha512-pg43g83gojVtEsAkXfjWuzJhuXneJp4wM/leBftGkCPV3yxKgB92EWA+nWu735BgbBMph3P7DrVqVc3ikt+dJA=="],
+
     "@astrojs/compiler": ["@astrojs/compiler@2.13.0", "", {}, "sha512-mqVORhUJViA28fwHYaWmsXSzLO9osbdZ5ImUfxBarqsYdMlPbqAqGJCxsNzvppp1BEzc1mJNjOVvQqeDN8Vspw=="],
 
     "@astrojs/internal-helpers": ["@astrojs/internal-helpers@0.7.5", "", {}, "sha512-vreGnYSSKhAjFJCWAwe/CNhONvoc5lokxtRoZims+0wa3KbHBdPHSSthJsKxPd8d/aic6lWKpRTYGY/hsgK6EA=="],
@@ -973,6 +976,8 @@
     "space-separated-tokens": ["space-separated-tokens@2.0.2", "", {}, "sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q=="],
 
     "sprintf-js": ["sprintf-js@1.0.3", "", {}, "sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g=="],
+
+    "starlight-changelogs": ["starlight-changelogs@0.2.3", "", { "dependencies": { "@ascorbic/loader-utils": "^1.0.2", "github-slugger": "^2.0.0", "mdast-util-from-markdown": "^2.0.2", "mdast-util-to-markdown": "^2.1.2", "mdast-util-to-string": "^4.0.0", "unist-util-visit": "^5.0.0" }, "peerDependencies": { "@astrojs/starlight": ">=0.35.0" } }, "sha512-DnBJed0ltdt1IpUyoUUr8RTLV/LO80FE61Wycdzre6Ocy4vI5d7054sZm1XB3AQVAt9cbKfIWyjw82RXCyQlEg=="],
 
     "starlight-llms-txt": ["starlight-llms-txt@0.6.0", "", { "dependencies": { "@astrojs/mdx": "^4.0.5", "@types/hast": "^3.0.4", "@types/micromatch": "^4.0.9", "github-slugger": "^2.0.0", "hast-util-select": "^6.0.3", "micromatch": "^4.0.8", "rehype-parse": "^9.0.1", "rehype-remark": "^10.0.0", "remark-gfm": "^4.0.0", "remark-stringify": "^11.0.0", "unified": "^11.0.5", "unist-util-remove": "^4.0.0" }, "peerDependencies": { "@astrojs/starlight": ">=0.31", "astro": "^5.1.6" } }, "sha512-mKkRPlGZ+kKJlnclXkW3s+RSVF/10Ct2BsQ4dYDaK8j4h/L55WbZCds1PsqQiLYPrDp7wIN6gm7LYsrUlGaBjQ=="],
 

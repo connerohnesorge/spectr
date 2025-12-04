@@ -55,7 +55,7 @@ Sleep 2s
 
 # Final restore (hidden)
 Hide
-Type "git checkout -- ."
+Type "git checkout -- . && rm -rf spectr/changes/archive/"
 Enter
 Sleep 500ms
 Show

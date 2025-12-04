@@ -10,13 +10,13 @@ Set TypingSpeed 50ms
 Set Shell "zsh"
 
 Hide
+Type "rm -rf examples/validate/spectr/changes/"
+Enter
 Type "mkdir -p examples/validate/spectr/changes/test-validation/specs/test-feature"
 Enter
 Type "cp examples/validate/broken/proposal.md examples/validate/spectr/changes/test-validation/"
 Enter
 Type "cp examples/validate/broken/specs/test-feature/spec.md examples/validate/spectr/changes/test-validation/specs/test-feature/"
-Enter
-Type "rm -rf examples/validate/spectr/changes/archive/"
 Enter
 Type "clear"
 Enter
@@ -43,7 +43,7 @@ Sleep 2s
 
 # HIDDEN: Cleanup - restore the repository
 Hide
-Type "git restore ."
+Type "rm -rf spectr/changes/"
 Enter
 Sleep 200ms
 Show

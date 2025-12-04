@@ -9,6 +9,12 @@ Set Theme "Catppuccin Mocha"
 Set TypingSpeed 50ms
 Set Shell "zsh"
 
+# Setup: Clean leftover artifacts from previous runs
+Hide
+Type "rm -rf examples/archive/spectr/changes/archive/"
+Enter
+Show
+
 # Setup: Clear screen
 Type "clear"
 Enter
@@ -42,6 +48,6 @@ Sleep 1.5s
 
 # Restore the example directory to original state (hidden from recording)
 Hide
-Type "git checkout -- ."
+Type "git checkout -- . && rm -rf spectr/changes/archive/"
 Enter
 Show

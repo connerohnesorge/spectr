@@ -1,4 +1,5 @@
 {
+  "agent": "base",
   "hooks": {
     "PreToolUse": [
       {

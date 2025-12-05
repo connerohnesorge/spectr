@@ -310,3 +310,75 @@ The documentation site SHALL provide enhanced Starlight components (Card, Aside,
 - **AND** Aside components SHALL support icon attributes
 - **AND** IconLink components SHALL be available for icon-labeled links
 - **AND** all enhanced components SHALL use icons from installed Iconify collections
+### Requirement: Page Action Buttons for Documentation
+The system SHALL provide page action buttons on documentation pages enabling users to quickly copy markdown content and open pages in AI chat services through the starlight-page-actions plugin.
+
+#### Scenario: User copies markdown content
+- **WHEN** a user visits any documentation page
+- **THEN** they SHALL see a "Copy Markdown" button
+- **AND** clicking it SHALL copy the raw markdown content to clipboard
+
+#### Scenario: User opens page in AI chat service
+- **WHEN** a user clicks the "Open" dropdown button
+- **THEN** they SHALL see options to open the page in default AI chat services (ChatGPT, Claude, Gemini, etc.)
+- **AND** selecting an option SHALL open the documentation in the chosen service
+
+### Requirement: Starlight Page Actions Plugin Configuration
+The system SHALL configure the starlight-page-actions plugin in the Astro configuration with llms.txt generation disabled to avoid conflicts with existing starlight-llms-txt plugin while enabling page action functionality with default AI service list.
+
+#### Scenario: Plugin is installed
+- **WHEN** dependencies are installed
+- **THEN** the starlight-page-actions package SHALL be present in package.json
+- **AND** it SHALL be importable in astro.config.mjs
+
+#### Scenario: Plugin is configured with options
+- **WHEN** Starlight is initialized
+- **THEN** starlightPageActions() SHALL be included in the plugins array with a configuration object
+- **AND** the configuration SHALL set `llmstxt: false` to disable llms.txt generation
+- **AND** the plugin SHALL use default AI services for the Open dropdown
+
+#### Scenario: No conflict with existing llms.txt plugin
+- **WHEN** the documentation site is built with both starlight-page-actions and starlight-llms-txt plugins
+- **THEN** the build SHALL complete without conflicts
+- **AND** llms.txt SHALL be generated only by the starlight-llms-txt plugin
+- **AND** page action buttons SHALL render correctly without interfering with llms.txt generation
+
+#### Scenario: Plugin renders page actions
+- **WHEN** a documentation page is loaded
+- **THEN** the plugin SHALL render page action buttons
+- **AND** the buttons SHALL function correctly with the configured options
+### Requirement: Browser-Integrated Search with Star Warp
+The documentation site SHALL integrate the @inox-tools/star-warp Starlight plugin to enable quick navigation to search results and native browser search integration via OpenSearch protocol.
+
+#### Scenario: User searches via warp URL
+- **WHEN** a user navigates to `/spectr/warp?q=validation`
+- **THEN** they SHALL be redirected to the first search result matching "validation"
+- **AND** the redirect SHALL work statically without requiring server-side rendering
+
+#### Scenario: User searches from browser address bar
+- **WHEN** a user has registered the Spectr docs as a search engine in their browser
+- **AND** they type the site shortcut followed by a search query in the address bar
+- **THEN** the browser SHALL submit the query to the Spectr docs warp endpoint
+- **AND** they SHALL be navigated to the first matching result
+
+#### Scenario: OpenSearch description is available
+- **WHEN** a user visits any documentation page
+- **THEN** the page SHALL include an OpenSearch link tag in the `<head>` section
+- **AND** the link tag SHALL be automatically injected by the Star Warp plugin
+- **AND** the OpenSearch XML SHALL be available at `/spectr/warp.xml`
+- **AND** the description SHALL identify the site as "Spectr" for browser display
+
+#### Scenario: Browser registers search engine
+- **WHEN** a user visits the Spectr documentation site
+- **THEN** their browser (Chrome, Safari, Firefox) SHALL automatically detect the OpenSearch description
+- **AND** the browser SHALL allow the user to activate "Spectr" as a custom search engine
+- **AND** typing queries after the domain SHALL trigger Spectr documentation search
+
+#### Scenario: Star Warp configuration with defaults
+- **WHEN** the Star Warp plugin is configured in `astro.config.mjs`
+- **THEN** it SHALL be added to the Starlight plugins array (not the root integrations array)
+- **AND** OpenSearch SHALL be enabled with `openSearch.enabled: true`
+- **AND** the path SHALL use the default `/warp` value
+- **AND** the OpenSearch title SHALL default to "Spectr" from the Starlight config
+- **AND** the OpenSearch description SHALL default to "Search Spectr"
+- **AND** the warp route SHALL respect the project's base path `/spectr`

@@ -11,6 +11,7 @@ import (
 	"github.com/connerohnesorge/spectr/internal/git"
 	"github.com/connerohnesorge/spectr/internal/list"
 	"github.com/connerohnesorge/spectr/internal/pr"
+	"github.com/connerohnesorge/spectr/internal/tui"
 )
 
 // PRCmd represents the pr command with subcommands.
@@ -36,6 +37,7 @@ type PRProposalCmd struct {
 	Draft    bool   `name:"draft" short:"d" help:"Create as draft PR"`
 	Force    bool   `name:"force" short:"f" help:"Delete existing branch"`
 	DryRun   bool   `name:"dry-run" help:"Preview without executing"`
+	Yes      bool   `name:"yes" short:"y" help:"Skip cleanup prompt"`
 }
 
 // Run executes the pr archive command.
@@ -116,6 +118,11 @@ func (c *PRProposalCmd) Run() error {
 	}
 
 	printPRResult(result)
+
+	// Only prompt for cleanup if PR was successfully created
+	if result.PRURL != "" && !c.Yes && !c.DryRun {
+		promptCleanupChange(projectRoot, changeID)
+	}
 
 	return nil
 }
@@ -240,4 +247,37 @@ func printPRResult(result *pr.PRResult) {
 	} else if result.ManualURL != "" {
 		fmt.Printf("\nCreate PR manually: %s\n", result.ManualURL)
 	}
+}
+
+// promptCleanupChange prompts the user to remove the local change directory.
+// If confirmed, removes the change directory and prints the result.
+// All errors are handled internally and printed as warnings (non-fatal).
+func promptCleanupChange(projectRoot, changeID string) {
+	confirmCfg := tui.ConfirmConfig{
+		Question:   "Remove local change proposal from spectr/changes/?",
+		DefaultYes: false, // Default to No for safety
+	}
+	picker := tui.NewConfirmPicker(confirmCfg)
+	confirmed, cancelled, err := picker.Run()
+
+	if err != nil {
+		fmt.Printf("Warning: Failed to show confirmation prompt: %v\n", err)
+
+		return
+	}
+
+	if !confirmed || cancelled {
+		fmt.Printf("Local change kept: spectr/changes/%s/\n", changeID)
+
+		return
+	}
+
+	// User confirmed removal
+	if err := pr.RemoveChangeDirectory(projectRoot, changeID); err != nil {
+		fmt.Printf("Warning: Failed to remove change directory: %v\n", err)
+
+		return
+	}
+
+	fmt.Printf("Removed local change: %s\n", changeID)
 }

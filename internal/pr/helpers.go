@@ -1,6 +1,7 @@
 package pr
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -217,6 +218,48 @@ func pushBranch(worktreePath, branchName string) error {
 			"git push failed: %s",
 			strings.TrimSpace(string(output)),
 		)
+	}
+
+	return nil
+}
+
+// RemoveChangeDirectory removes the change directory at
+// spectr/changes/<changeID>/. It validates that the path is within the
+// expected spectr/changes/ directory to prevent accidental deletion of
+// other directories.
+func RemoveChangeDirectory(projectRoot, changeID string) error {
+	if changeID == "" {
+		return errors.New("changeID cannot be empty")
+	}
+
+	// Construct the expected changes directory and target path
+	changesDir := filepath.Join(projectRoot, "spectr", "changes")
+	targetDir := filepath.Join(changesDir, changeID)
+
+	// Clean and resolve the paths to prevent path traversal attacks
+	cleanedTarget, err := filepath.Abs(targetDir)
+	if err != nil {
+		return fmt.Errorf("failed to resolve target path: %w", err)
+	}
+
+	cleanedChangesDir, err := filepath.Abs(changesDir)
+	if err != nil {
+		return fmt.Errorf("failed to resolve changes directory: %w", err)
+	}
+
+	// Validate that the target is within the changes directory
+	expectedPrefix := cleanedChangesDir + string(filepath.Separator)
+	if !strings.HasPrefix(cleanedTarget, expectedPrefix) {
+		return fmt.Errorf(
+			"invalid path: %s is not within %s",
+			cleanedTarget,
+			cleanedChangesDir,
+		)
+	}
+
+	// Remove the directory
+	if err := os.RemoveAll(cleanedTarget); err != nil {
+		return fmt.Errorf("failed to remove change directory: %w", err)
 	}
 
 	return nil

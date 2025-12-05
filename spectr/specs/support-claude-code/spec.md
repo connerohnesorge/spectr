@@ -47,7 +47,6 @@ The provider SHALL create slash commands in `.claude/commands/spectr/` directory
 #### Scenario: Command paths
 - **WHEN** the provider generates slash command files
 - **THEN** it creates `.claude/commands/spectr/proposal.md`
-- **AND** it creates `.claude/commands/spectr/sync.md`
 - **AND** it creates `.claude/commands/spectr/apply.md`
 
 #### Scenario: Command format

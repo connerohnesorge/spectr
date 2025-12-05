@@ -552,7 +552,6 @@ The init system SHALL define a `Provider` interface that all AI CLI tool integra
 - **AND** it SHALL implement `Priority() int` returning display order
 - **AND** it SHALL implement `ConfigFile() string` returning instruction file path or empty string
 - **AND** it SHALL implement `GetProposalCommandPath() string` returning relative path for proposal command or empty string
-- **AND** it SHALL implement `GetSyncCommandPath() string` returning relative path for sync command or empty string
 - **AND** it SHALL implement `GetApplyCommandPath() string` returning relative path for apply command or empty string
 - **AND** it SHALL implement `CommandFormat() CommandFormat` returning Markdown or TOML
 - **AND** it SHALL implement `Configure(projectPath, spectrDir string) error` for configuration

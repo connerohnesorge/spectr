@@ -36,7 +36,6 @@ The provider SHALL create slash commands in `.aider/commands/spectr/` directory.
 #### Scenario: Command paths
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `.aider/commands/spectr/proposal.md`
-- **AND** it creates `.aider/commands/spectr/sync.md`
 - **AND** it creates `.aider/commands/spectr/apply.md`
 
 #### Scenario: Command format

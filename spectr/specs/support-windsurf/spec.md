@@ -40,7 +40,6 @@ The provider SHALL create slash commands in `.windsurf/commands/spectr/` directo
 #### Scenario: Command paths
 - **WHEN** the provider configures slash commands
 - **THEN** it SHALL create `.windsurf/commands/spectr/proposal.md`
-- **AND** it SHALL create `.windsurf/commands/spectr/sync.md`
 - **AND** it SHALL create `.windsurf/commands/spectr/apply.md`
 
 #### Scenario: Command format
@@ -51,10 +50,6 @@ The provider SHALL create slash commands in `.windsurf/commands/spectr/` directo
 #### Scenario: Proposal command frontmatter
 - **WHEN** the proposal command is created
 - **THEN** the frontmatter description SHALL be "Scaffold a new Spectr change and validate strictly."
-
-#### Scenario: Sync command frontmatter
-- **WHEN** the sync command is created
-- **THEN** the frontmatter description SHALL be "Detect spec drift from code and update specs interactively."
 
 #### Scenario: Apply command frontmatter
 - **WHEN** the apply command is created

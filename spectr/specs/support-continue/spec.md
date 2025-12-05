@@ -43,7 +43,6 @@ The provider SHALL create slash commands in `.continue/commands/spectr/` directo
 #### Scenario: Command paths
 - **WHEN** the provider creates slash command files
 - **THEN** it SHALL create `.continue/commands/spectr/proposal.md`
-- **AND** it SHALL create `.continue/commands/spectr/sync.md`
 - **AND** it SHALL create `.continue/commands/spectr/apply.md`
 
 #### Scenario: Command format

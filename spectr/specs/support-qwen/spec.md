@@ -31,7 +31,6 @@ The provider SHALL create slash commands in `.qwen/commands/spectr/` directory.
 #### Scenario: Command paths
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `.qwen/commands/spectr/proposal.md`
-- **AND** it creates `.qwen/commands/spectr/sync.md`
 - **AND** it creates `.qwen/commands/spectr/apply.md`
 
 #### Scenario: Command format

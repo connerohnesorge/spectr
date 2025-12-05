@@ -508,9 +508,8 @@ This automatic installation provides users with complete Spectr integration in a
 - **THEN** the system creates `CLAUDE.md` in the project root
 - **AND** the system creates `.claude/commands/spectr/proposal.md`
 - **AND** the system creates `.claude/commands/spectr/apply.md`
-- **AND** the system creates `.claude/commands/spectr/sync.md`
 - **AND** all files are tracked in the execution result
-- **AND** the completion screen shows all 4 files created
+- **AND** the completion screen shows all 3 files created
 
 #### Scenario: Multiple tools with slash commands selected
 
@@ -528,28 +527,6 @@ This automatic installation provides users with complete Spectr integration in a
 - **AND** the file's YAML frontmatter is preserved
 - **AND** no error occurs
 - **AND** the file is marked as "updated" rather than "created" in execution result
-
-#### Scenario: Config-based tool without slash mapping
-
-- **WHEN** a config-based tool has no slash command equivalent in the mapping
-- **THEN** only the config file is created
-- **AND** no error occurs
-- **AND** the system continues with remaining tool configurations
-
-#### Scenario: Tool mapping is explicit and centralized
-
-- **WHEN** a developer reviews the mapping logic
-- **THEN** they find the tool mapping integrated into the tool registry configuration
-- **AND** the registry uses data-driven tool definitions with type-safe IDs
-- **AND** the mapping can be extended for new tools through configuration
-
-#### Scenario: ToolDefinition structure simplified
-
-- **WHEN** a developer reviews the ToolDefinition struct in `internal/init/models.go`
-- **THEN** the struct contains: ID (type-safe ToolID), Name, Type, Priority, and Configured fields
-- **AND** the struct does NOT contain a ConfigPath field
-- **AND** file paths are determined by configurator implementations, not the registry
-- **AND** the `getToolFileInfo()` function queries configurators for actual file paths
 
 ### Requirement: Archive Hotkey in Interactive Changes Mode
 The interactive changes list mode SHALL provide an 'a' hotkey that archives the currently selected change, invoking the same workflow as `spectr archive <change-id>`.

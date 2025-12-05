@@ -46,7 +46,6 @@ The provider SHALL create slash commands in `.kilocode/commands/spectr/` directo
 #### Scenario: Command paths
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `.kilocode/commands/spectr/proposal.md`
-- **AND** it creates `.kilocode/commands/spectr/sync.md`
 - **AND** it creates `.kilocode/commands/spectr/apply.md`
 
 #### Scenario: Command format
@@ -61,7 +60,3 @@ The provider SHALL create slash commands in `.kilocode/commands/spectr/` directo
 #### Scenario: Apply command frontmatter
 - **WHEN** apply command is created
 - **THEN** frontmatter contains description "Implement an approved Spectr change and keep tasks in sync."
-
-#### Scenario: Sync command frontmatter
-- **WHEN** sync command is created
-- **THEN** frontmatter contains description "Detect spec drift from code and update specs interactively."

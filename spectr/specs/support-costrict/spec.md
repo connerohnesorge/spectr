@@ -31,7 +31,6 @@ The provider SHALL create slash commands in `.costrict/commands/spectr/` directo
 #### Scenario: Command paths
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `.costrict/commands/spectr/proposal.md`
-- **AND** it creates `.costrict/commands/spectr/sync.md`
 - **AND** it creates `.costrict/commands/spectr/apply.md`
 
 #### Scenario: Command format

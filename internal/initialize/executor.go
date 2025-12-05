@@ -107,15 +107,6 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 6. Create README if it doesn't exist
-	err = e.createReadmeIfMissing(result)
-	if err != nil {
-		result.Errors = append(
-			result.Errors,
-			fmt.Sprintf("failed to create README: %v", err),
-		)
-	}
-
 	return result, nil
 }
 
@@ -291,49 +282,4 @@ Next steps:
 
 ────────────────────────────────────────────────────────────────
 `
-}
-
-// createReadmeIfMissing creates a basic README.md if it doesn't exist
-func (e *InitExecutor) createReadmeIfMissing(result *ExecutionResult) error {
-	readmePath := filepath.Join(e.projectPath, "README.md")
-
-	// Only create if it doesn't exist
-	if FileExists(readmePath) {
-		return nil
-	}
-
-	// Get project name
-	projectName := filepath.Base(e.projectPath)
-
-	content := fmt.Sprintf(`# %s
-
-This project uses [Spectr](https://spectr.dev) for structured development and change management.
-
-## Getting Started
-
-1. Review the project documentation in `+"`spectr/project.md`"+`
-2. Explore the Spectr documentation: https://spectr.dev
-3. Create your first change proposal: `+"`spectr proposal <change-name>`"+`
-
-## Spectr Commands
-
-- `+"`spectr proposal <name>`"+` - Create a new change proposal
-- `+"`spectr apply <change-id>`"+` - Apply an approved change
-- `+"`spectr archive <change-id>`"+` - Archive a deployed change
-
-## Documentation
-
-- [Project Overview](spectr/project.md)
-- [AI Agent Instructions](spectr/AGENTS.md)
-- [Specifications](spectr/specs/)
-- [Change Proposals](spectr/changes/)
-`, projectName)
-
-	if err := os.WriteFile(readmePath, []byte(content), 0644); err != nil {
-		return fmt.Errorf("failed to create README.md: %w", err)
-	}
-
-	result.CreatedFiles = append(result.CreatedFiles, "README.md")
-
-	return nil
 }

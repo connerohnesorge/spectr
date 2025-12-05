@@ -89,6 +89,7 @@ type interactiveModel struct {
 	copied           bool
 	quitting         bool
 	archiveRequested bool
+	prRequested      bool // true when P (pr) hotkey was pressed
 	err              error
 	helpText         string
 	minimalFooter    string
@@ -149,6 +150,9 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "a":
 			return m.handleArchive()
+
+		case "P":
+			return m.handlePR()
 
 		case "/":
 			m = m.toggleSearchMode()
@@ -342,6 +346,30 @@ func (m interactiveModel) handleArchive() (interactiveModel, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+// handlePR handles the 'P' key press for entering PR mode
+func (m interactiveModel) handlePR() (interactiveModel, tea.Cmd) {
+	// Only available in changes mode
+	if m.itemType != itemTypeChange {
+		return m, nil
+	}
+
+	// Get selected row
+	cursor := m.table.Cursor()
+	if cursor < 0 || cursor >= len(m.table.Rows()) {
+		return m, nil
+	}
+
+	row := m.table.Rows()[cursor]
+	if len(row) == 0 {
+		return m, nil
+	}
+
+	m.selectedID = row[0]
+	m.prRequested = true
+
+	return m, tea.Quit
 }
 
 // rebuildUnifiedTable rebuilds the table based on current filter
@@ -555,6 +583,10 @@ func (m interactiveModel) View() string {
 			return fmt.Sprintf("Archiving: %s\n", m.selectedID)
 		}
 
+		if m.prRequested && m.selectedID != "" {
+			return fmt.Sprintf("PR mode: %s\n", m.selectedID)
+		}
+
 		// In selection mode, just show selected ID without clipboard message
 		if m.selectionMode && m.selectedID != "" {
 			return fmt.Sprintf("Selected: %s\n", m.selectedID)
@@ -596,14 +628,16 @@ func (m interactiveModel) View() string {
 }
 
 // RunInteractiveChanges runs the interactive table for changes.
-// Returns the change ID if archive was requested, empty string
-// otherwise.
+// Returns (archiveID, prID, error):
+//   - archiveID is set if archive was requested via 'a' key
+//   - prID is set if PR mode was requested via 'P' key
+//   - Both are empty if user quit or cancelled
 func RunInteractiveChanges(
 	changes []ChangeInfo,
 	projectPath string,
-) (string, error) {
+) (archiveID, prID string, err error) {
 	if len(changes) == 0 {
-		return "", nil
+		return "", "", nil
 	}
 
 	columns := []table.Column{
@@ -643,7 +677,7 @@ func RunInteractiveChanges(
 		searchInput: newTextInput(),
 		allRows:     rows,
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
-			"a: archive | /: search | q: quit",
+			"a: archive | P: pr | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),
@@ -652,9 +686,9 @@ func RunInteractiveChanges(
 	}
 
 	p := tea.NewProgram(m)
-	finalModel, err := p.Run()
-	if err != nil {
-		return "", fmt.Errorf(errInteractiveModeFormat, err)
+	finalModel, runErr := p.Run()
+	if runErr != nil {
+		return "", "", fmt.Errorf(errInteractiveModeFormat, runErr)
 	}
 
 	// Check if there was an error during execution
@@ -671,11 +705,16 @@ func RunInteractiveChanges(
 
 		// Return archive ID if archive was requested
 		if fm.archiveRequested && fm.selectedID != "" {
-			return fm.selectedID, nil
+			return fm.selectedID, "", nil
+		}
+
+		// Return PR ID if PR was requested
+		if fm.prRequested && fm.selectedID != "" {
+			return "", fm.selectedID, nil
 		}
 	}
 
-	return "", nil
+	return "", "", nil
 }
 
 // RunInteractiveArchive runs the interactive table for

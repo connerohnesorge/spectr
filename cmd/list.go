@@ -9,6 +9,7 @@ import (
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/list"
+	"github.com/connerohnesorge/spectr/internal/pr"
 )
 
 // ListCmd represents the list command which displays changes or specs.
@@ -81,7 +82,7 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		archiveID, err := list.RunInteractiveChanges(changes, projectPath)
+		archiveID, prID, err := list.RunInteractiveChanges(changes, projectPath)
 		if err != nil {
 			return err
 		}
@@ -89,6 +90,11 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 		// If an archive was requested, run the archive workflow
 		if archiveID != "" {
 			return c.runArchiveWorkflow(archiveID, projectPath)
+		}
+
+		// If PR mode was requested, run the PR workflow
+		if prID != "" {
+			return c.runPRWorkflow(prID, projectPath)
 		}
 
 		return nil
@@ -131,6 +137,32 @@ func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
 	// Result is discarded for interactive usage - already prints to terminal
 	if _, err := archive.Archive(archiveCmd, projectPath); err != nil {
 		return fmt.Errorf("archive workflow failed: %w", err)
+	}
+
+	return nil
+}
+
+// runPRWorkflow executes the PR proposal workflow for a change.
+func (*ListCmd) runPRWorkflow(changeID, projectPath string) error {
+	config := pr.PRConfig{
+		ChangeID:    changeID,
+		Mode:        pr.ModeProposal,
+		ProjectRoot: projectPath,
+	}
+
+	result, err := pr.ExecutePR(config)
+	if err != nil {
+		return fmt.Errorf("pr workflow failed: %w", err)
+	}
+
+	// Print the PR result
+	fmt.Println()
+	fmt.Printf("Branch: %s\n", result.BranchName)
+
+	if result.PRURL != "" {
+		fmt.Printf("\nPR created: %s\n", result.PRURL)
+	} else if result.ManualURL != "" {
+		fmt.Printf("\nCreate PR manually: %s\n", result.ManualURL)
 	}
 
 	return nil

@@ -14,7 +14,7 @@ import (
 
 func TestRunInteractiveChanges_EmptyList(t *testing.T) {
 	var changes []ChangeInfo
-	archiveID, err := RunInteractiveChanges(changes, "/tmp/test-project")
+	archiveID, prID, err := RunInteractiveChanges(changes, "/tmp/test-project")
 	if err != nil {
 		t.Errorf("RunInteractiveChanges with empty list should not error, got: %v", err)
 	}
@@ -22,6 +22,12 @@ func TestRunInteractiveChanges_EmptyList(t *testing.T) {
 		t.Errorf(
 			"RunInteractiveChanges with empty list should return empty archive ID, got: %s",
 			archiveID,
+		)
+	}
+	if prID != "" {
+		t.Errorf(
+			"RunInteractiveChanges with empty list should return empty PR ID, got: %s",
+			prID,
 		)
 	}
 }
@@ -807,6 +813,136 @@ func TestHandleArchive_UnifiedMode_Spec(t *testing.T) {
 	}
 	if cmd != nil {
 		t.Error("Expected no command for SPEC in unified mode")
+	}
+}
+
+func TestHandlePR_ChangeMode(t *testing.T) {
+	// Create a model in change mode with a valid change
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"test-change-1", "Test Change 1", "2", "3/5"},
+		{"test-change-2", "Test Change 2", "1", "2/2"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "change",
+		projectPath: "/tmp/test",
+		table:       tbl,
+	}
+
+	// Call handlePR
+	updatedModel, cmd := model.handlePR()
+
+	// Should set prRequested and selectedID
+	if !updatedModel.prRequested {
+		t.Error("Expected prRequested to be true in change mode")
+	}
+	if updatedModel.selectedID != "test-change-1" {
+		t.Errorf("Expected selectedID to be 'test-change-1', got '%s'", updatedModel.selectedID)
+	}
+	// Should return tea.Quit
+	if cmd == nil {
+		t.Error("Expected command to be returned (tea.Quit)")
+	}
+}
+
+func TestHandlePR_SpecMode(t *testing.T) {
+	// Create a model in spec mode
+	columns := []table.Column{
+		{Title: "ID", Width: specIDWidth},
+		{Title: "Title", Width: specTitleWidth},
+		{Title: "Requirements", Width: specRequirementsWidth},
+	}
+	rows := []table.Row{
+		{"test-spec", "Test Spec", "5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "spec",
+		projectPath: "/tmp/test",
+		table:       tbl,
+	}
+
+	// Call handlePR
+	updatedModel, cmd := model.handlePR()
+
+	// Should NOT set prRequested in spec mode
+	if updatedModel.prRequested {
+		t.Error("Expected prRequested to be false in spec mode")
+	}
+	if updatedModel.selectedID != "" {
+		t.Errorf("Expected selectedID to be empty in spec mode, got '%s'", updatedModel.selectedID)
+	}
+	// Should not return tea.Quit
+	if cmd != nil {
+		t.Error("Expected no command in spec mode")
+	}
+}
+
+func TestHandlePR_UnifiedMode(t *testing.T) {
+	// Create a model in unified mode
+	columns := []table.Column{
+		{Title: "ID", Width: unifiedIDWidth},
+		{Title: "Type", Width: unifiedTypeWidth},
+		{Title: "Title", Width: unifiedTitleWidth},
+		{Title: "Details", Width: unifiedDetailsWidth},
+	}
+	rows := []table.Row{
+		{"test-change", "CHANGE", "Test Change", "Tasks: 3/5"},
+		{"test-spec", "SPEC", "Test Spec", "Reqs: 5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:    "all",
+		projectPath: "/tmp/test",
+		table:       tbl,
+	}
+
+	// Call handlePR (cursor is on first row which is CHANGE)
+	updatedModel, cmd := model.handlePR()
+
+	// Should NOT set prRequested in unified mode (PR only works in change mode)
+	if updatedModel.prRequested {
+		t.Error("Expected prRequested to be false in unified mode")
+	}
+	if cmd != nil {
+		t.Error("Expected no command in unified mode")
+	}
+}
+
+func TestViewShowsPRMode(t *testing.T) {
+	model := interactiveModel{
+		quitting:    true,
+		prRequested: true,
+		selectedID:  "test-change-id",
+	}
+
+	view := model.View()
+	if !strings.Contains(view, "PR mode: test-change-id") {
+		t.Errorf("Expected view to contain 'PR mode: test-change-id', got: %s", view)
 	}
 }
 

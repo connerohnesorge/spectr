@@ -72,7 +72,8 @@ func (e *InitExecutor) Execute(
 
 	// 2. Create spectr/ directory structure
 	spectrDir := filepath.Join(e.projectPath, "spectr")
-	if err := e.createDirectoryStructure(spectrDir, result); err != nil {
+	err := e.createDirectoryStructure(spectrDir, result)
+	if err != nil {
 		return result, fmt.Errorf(
 			"failed to create directory structure: %w",
 			err,
@@ -80,7 +81,8 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 3. Create project.md
-	if err := e.createProjectMd(spectrDir, result); err != nil {
+	err = e.createProjectMd(spectrDir, result)
+	if err != nil {
 		result.Errors = append(
 			result.Errors,
 			fmt.Sprintf("failed to create project.md: %v", err),
@@ -88,7 +90,8 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 4. Create AGENTS.md
-	if err := e.createAgentsMd(spectrDir, result); err != nil {
+	err = e.createAgentsMd(spectrDir, result)
+	if err != nil {
 		result.Errors = append(
 			result.Errors,
 			fmt.Sprintf("failed to create AGENTS.md: %v", err),
@@ -96,7 +99,8 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 5. Configure selected providers
-	if err := e.configureProviders(selectedProviderIDs, spectrDir, result); err != nil {
+	err = e.configureProviders(selectedProviderIDs, spectrDir, result)
+	if err != nil {
 		result.Errors = append(
 			result.Errors,
 			fmt.Sprintf("failed to configure tools: %v", err),
@@ -104,7 +108,8 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 6. Create README if it doesn't exist
-	if err := e.createReadmeIfMissing(result); err != nil {
+	err = e.createReadmeIfMissing(result)
+	if err != nil {
 		result.Errors = append(
 			result.Errors,
 			fmt.Sprintf("failed to create README: %v", err),

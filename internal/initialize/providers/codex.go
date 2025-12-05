@@ -14,7 +14,6 @@ type CodexProvider struct {
 func NewCodexProvider() *CodexProvider {
 	// Codex uses global paths, not project-relative paths
 	proposalPath := "~/.codex/prompts/spectr-proposal.md"
-	syncPath := "~/.codex/prompts/spectr-sync.md"
 	applyPath := "~/.codex/prompts/spectr-apply.md"
 
 	return &CodexProvider{
@@ -24,7 +23,6 @@ func NewCodexProvider() *CodexProvider {
 			priority:      PriorityCodex,
 			configFile:    "AGENTS.md",
 			proposalPath:  proposalPath,
-			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

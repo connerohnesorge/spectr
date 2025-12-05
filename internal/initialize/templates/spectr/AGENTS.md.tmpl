@@ -12,7 +12,7 @@ Instructions for AI coding assistants using Spectr for spec-driven development.
 - Validate: `spectr validate [change-id] --strict` and fix issues
 - Request approval: Do not start implementation until proposal is approved
 
-## Three-Stage Workflow
+## Two-Stage Workflow
 
 ### Stage 1: Creating Changes
 Create proposal when you need to:
@@ -48,16 +48,6 @@ Track these steps as TODOs and complete them one by one.
 5. Confirm completion - Ensure every item in `tasks.md` is finished before updating statuses
 6. Update checklist - After all work is done, set every task to `- [x]` so the list reflects reality
 7. Approval gate - Do not start implementation until the proposal is reviewed and approved
-
-### Stage 3: Syncing
-
-When code implementation diverges from specs, sync to update specs:
-1. Compare code behavior against spec requirements
-2. Identify drift: new features (ADDED), changed behavior (MODIFIED), removed features (REMOVED)
-3. Review each change interactively before applying
-4. Edit specs directly with confirmed changes
-5. Create new change proposals for undocumented code changes
-6. Run `spectr validate --strict` to ensure validity
 
 ## Before Any Task
 

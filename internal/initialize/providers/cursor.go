@@ -12,7 +12,7 @@ type CursorProvider struct {
 
 // NewCursorProvider creates a new Cursor provider.
 func NewCursorProvider() *CursorProvider {
-	proposalPath, syncPath, applyPath := StandardCommandPaths(
+	proposalPath, applyPath := StandardCommandPaths(
 		".cursorrules/commands", ".md",
 	)
 
@@ -23,7 +23,6 @@ func NewCursorProvider() *CursorProvider {
 			priority:      PriorityCursor,
 			configFile:    "",
 			proposalPath:  proposalPath,
-			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

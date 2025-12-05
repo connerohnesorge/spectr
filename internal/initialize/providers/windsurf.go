@@ -12,7 +12,7 @@ type WindsurfProvider struct {
 
 // NewWindsurfProvider creates a new Windsurf provider.
 func NewWindsurfProvider() *WindsurfProvider {
-	proposalPath, syncPath, applyPath := StandardCommandPaths(
+	proposalPath, applyPath := StandardCommandPaths(
 		".windsurf/commands", ".md",
 	)
 
@@ -23,7 +23,6 @@ func NewWindsurfProvider() *WindsurfProvider {
 			priority:      PriorityWindsurf,
 			configFile:    "",
 			proposalPath:  proposalPath,
-			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

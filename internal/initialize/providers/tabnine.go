@@ -12,7 +12,7 @@ type TabnineProvider struct {
 
 // NewTabnineProvider creates a new Tabnine provider.
 func NewTabnineProvider() *TabnineProvider {
-	proposalPath, syncPath, applyPath := StandardCommandPaths(
+	proposalPath, applyPath := StandardCommandPaths(
 		".tabnine/commands", ".md",
 	)
 
@@ -23,7 +23,6 @@ func NewTabnineProvider() *TabnineProvider {
 			priority:      PriorityTabnine,
 			configFile:    "",
 			proposalPath:  proposalPath,
-			syncPath:      syncPath,
 			applyPath:     applyPath,
 			commandFormat: FormatMarkdown,
 			frontmatter:   StandardFrontmatter(),

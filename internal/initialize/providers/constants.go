@@ -33,11 +33,6 @@ description: Scaffold a new Spectr change and validate strictly.
 	FrontmatterApply = `---
 description: Implement an approved Spectr change and keep tasks in sync.
 ---`
-
-	// FrontmatterSync is the YAML frontmatter for sync commands.
-	FrontmatterSync = `---
-description: Detect spec drift from code and update specs interactively.
----`
 )
 
 // StandardFrontmatter returns the standard frontmatter map for most providers.
@@ -45,7 +40,6 @@ func StandardFrontmatter() map[string]string {
 	return map[string]string{
 		"proposal": FrontmatterProposal,
 		"apply":    FrontmatterApply,
-		"sync":     FrontmatterSync,
 	}
 }
 
@@ -53,28 +47,26 @@ func StandardFrontmatter() map[string]string {
 // directory and extension.
 // Uses subdirectory structure: {dir}/spectr/{command}{ext}
 // Example: ".claude/commands", ".md" -> ".claude/commands/spectr/proposal.md"
-// Returns proposalPath, syncPath, applyPath.
+// Returns proposalPath, applyPath.
 func StandardCommandPaths(
 	dir, ext string,
-) (proposalPath, syncPath, applyPath string) {
+) (proposalPath, applyPath string) {
 	spectrDir := filepath.Join(dir, "spectr")
 	proposalPath = filepath.Join(spectrDir, "proposal"+ext)
-	syncPath = filepath.Join(spectrDir, "sync"+ext)
 	applyPath = filepath.Join(spectrDir, "apply"+ext)
 
-	return proposalPath, syncPath, applyPath
+	return proposalPath, applyPath
 }
 
 // PrefixedCommandPaths returns command paths using a flat prefix pattern.
 // Uses flat structure: {dir}/spectr-{command}{ext}
 // Example: ".agent/workflows", ".md" -> ".agent/workflows/spectr-proposal.md"
-// Returns proposalPath, syncPath, applyPath.
+// Returns proposalPath, applyPath.
 func PrefixedCommandPaths(
 	dir, ext string,
-) (proposalPath, syncPath, applyPath string) {
+) (proposalPath, applyPath string) {
 	proposalPath = filepath.Join(dir, "spectr-proposal"+ext)
-	syncPath = filepath.Join(dir, "spectr-sync"+ext)
 	applyPath = filepath.Join(dir, "spectr-apply"+ext)
 
-	return proposalPath, syncPath, applyPath
+	return proposalPath, applyPath
 }

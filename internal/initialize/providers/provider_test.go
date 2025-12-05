@@ -21,7 +21,6 @@ func newMockRenderer() *mockTemplateRenderer {
 		slashContent: map[string]string{
 			"proposal": "Proposal command content",
 			"apply":    "Apply command content",
-			"sync":     "Sync command content",
 		},
 	}
 }
@@ -62,12 +61,6 @@ func TestClaudeProvider(t *testing.T) {
 			p.GetProposalCommandPath(),
 		)
 	}
-	if p.GetSyncCommandPath() != ".claude/commands/spectr/sync.md" {
-		t.Errorf(
-			"GetSyncCommandPath() = %s, want .claude/commands/spectr/sync.md",
-			p.GetSyncCommandPath(),
-		)
-	}
 	if p.GetApplyCommandPath() != ".claude/commands/spectr/apply.md" {
 		t.Errorf(
 			"GetApplyCommandPath() = %s, want .claude/commands/spectr/apply.md",
@@ -101,12 +94,6 @@ func TestGeminiProvider(t *testing.T) {
 		t.Errorf(
 			"GetProposalCommandPath() = %s, want .gemini/commands/spectr/proposal.toml",
 			p.GetProposalCommandPath(),
-		)
-	}
-	if p.GetSyncCommandPath() != ".gemini/commands/spectr/sync.toml" {
-		t.Errorf(
-			"GetSyncCommandPath() = %s, want .gemini/commands/spectr/sync.toml",
-			p.GetSyncCommandPath(),
 		)
 	}
 	if p.GetApplyCommandPath() != ".gemini/commands/spectr/apply.toml" {
@@ -165,7 +152,7 @@ func TestBaseProviderConfigure(t *testing.T) {
 	}
 
 	// Check slash command files were created
-	commands := []string{"proposal", "apply", "sync"}
+	commands := []string{"proposal", "apply"}
 	for _, cmd := range commands {
 		cmdPath := filepath.Join(tmpDir, ".claude/commands/spectr", cmd+".md")
 		if !FileExists(cmdPath) {
@@ -205,12 +192,11 @@ func TestBaseProviderGetFilePaths(t *testing.T) {
 	p := NewClaudeProvider()
 	paths := p.GetFilePaths()
 
-	// Should have config file + 3 slash command files
+	// Should have config file + 2 slash command files
 	expectedPaths := []string{
 		"CLAUDE.md",
 		".claude/commands/spectr/proposal.md",
 		".claude/commands/spectr/apply.md",
-		".claude/commands/spectr/sync.md",
 	}
 
 	if len(paths) != len(expectedPaths) {
@@ -248,7 +234,7 @@ func TestGeminiProviderConfigure(t *testing.T) {
 	}
 
 	// Check TOML files were created
-	commands := []string{"proposal", "apply", "sync"}
+	commands := []string{"proposal", "apply"}
 	for _, cmd := range commands {
 		cmdPath := filepath.Join(tmpDir, ".gemini/commands/spectr", cmd+".toml")
 		if !FileExists(cmdPath) {
@@ -279,7 +265,6 @@ func TestSlashOnlyProviderGetFilePaths(t *testing.T) {
 	expectedPaths := []string{
 		".cursorrules/commands/spectr/proposal.md",
 		".cursorrules/commands/spectr/apply.md",
-		".cursorrules/commands/spectr/sync.md",
 	}
 
 	if len(paths) != len(expectedPaths) {
@@ -306,8 +291,7 @@ func TestAllProvidersHaveRequiredFields(t *testing.T) {
 			t.Errorf("Provider %s has no slash commands", p.ID())
 		}
 		// Check that at least one command path is set
-		if p.GetProposalCommandPath() == "" && p.GetSyncCommandPath() == "" &&
-			p.GetApplyCommandPath() == "" {
+		if p.GetProposalCommandPath() == "" && p.GetApplyCommandPath() == "" {
 			t.Errorf("Provider %s has no command paths set", p.ID())
 		}
 	}

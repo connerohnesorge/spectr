@@ -27,7 +27,7 @@
 //	}
 //
 //	func NewMyToolProvider() *MyToolProvider {
-//		proposalPath, syncPath, applyPath := StandardCommandPaths(
+//		proposalPath, applyPath := StandardCommandPaths(
 //			".mytool/commands", ".md",
 //		)
 //
@@ -40,7 +40,6 @@
 //				configFile:    "MYTOOL.md",
 //				// Empty if no slash commands
 //				proposalPath:  proposalPath,
-//				syncPath:      syncPath,
 //				applyPath:     applyPath,
 //				commandFormat: FormatMarkdown,
 //				frontmatter: map[string]string{
@@ -48,8 +47,6 @@
 //					"---\ndescription: Scaffold a new Spectr change.\n---",
 //					"apply":
 //					"---\ndescription: Implement an \n---",
-//					"sync":
-//					"---\ndescription: Sync a deployed .\n---",
 //				},
 //			},
 //		}
@@ -130,11 +127,6 @@ type Provider interface {
 	// Returns empty string if the provider has no proposal command.
 	GetProposalCommandPath() string
 
-	// GetSyncCommandPath returns the relative path for the sync command.
-	// Example: ".claude/commands/spectr-sync.md"
-	// Returns empty string if the provider has no sync command.
-	GetSyncCommandPath() string
-
 	// GetApplyCommandPath returns the relative path for the apply command.
 	// Example: ".claude/commands/spectr-apply.md"
 	// Returns empty string if the provider has no apply command.
@@ -185,7 +177,6 @@ type BaseProvider struct {
 	priority      int
 	configFile    string // Empty if no instruction file
 	proposalPath  string // e.g., ".claude/commands/spectr-proposal.md"
-	syncPath      string // e.g., ".claude/commands/spectr-sync.md"
 	applyPath     string // e.g., ".claude/commands/spectr-apply.md"
 	commandFormat CommandFormat
 	frontmatter   map[string]string // Command name -> frontmatter content
@@ -216,11 +207,6 @@ func (p *BaseProvider) GetProposalCommandPath() string {
 	return p.proposalPath
 }
 
-// GetSyncCommandPath returns the relative path for the sync command.
-func (p *BaseProvider) GetSyncCommandPath() string {
-	return p.syncPath
-}
-
 // GetApplyCommandPath returns the relative path for the apply command.
 func (p *BaseProvider) GetApplyCommandPath() string {
 	return p.applyPath
@@ -238,7 +224,7 @@ func (p *BaseProvider) HasConfigFile() bool {
 
 // HasSlashCommands returns true if this provider has slash commands.
 func (p *BaseProvider) HasSlashCommands() bool {
-	return p.proposalPath != "" || p.syncPath != "" || p.applyPath != ""
+	return p.proposalPath != "" || p.applyPath != ""
 }
 
 // Configure applies all configuration for the provider.
@@ -291,7 +277,6 @@ func (p *BaseProvider) configureSlashCommands(
 	paths := map[string]string{
 		"proposal": p.proposalPath,
 		"apply":    p.applyPath,
-		"sync":     p.syncPath,
 	}
 
 	for cmd, relPath := range paths {
@@ -393,7 +378,7 @@ func (p *BaseProvider) IsConfigured(projectPath string) bool {
 	}
 
 	// Check slash commands using path methods
-	paths := []string{p.proposalPath, p.syncPath, p.applyPath}
+	paths := []string{p.proposalPath, p.applyPath}
 	for _, relPath := range paths {
 		if relPath == "" {
 			continue
@@ -422,7 +407,7 @@ func (p *BaseProvider) GetFilePaths() []string {
 
 	// Add command paths that are non-empty
 	for _, relPath := range []string{
-		p.proposalPath, p.syncPath, p.applyPath,
+		p.proposalPath, p.applyPath,
 	} {
 		if relPath != "" {
 			paths = append(paths, relPath)

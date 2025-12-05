@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TODO: Add purpose description
+This specification defines the community behavioral standards and guidelines for the project, establishing expectations for respectful communication, tolerance, and inclusive participation.
 
 ## Requirements
 

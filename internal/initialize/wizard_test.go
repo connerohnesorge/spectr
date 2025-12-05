@@ -195,10 +195,9 @@ func TestNewWizardModelWithConfiguredProviders(t *testing.T) {
 		t.Fatalf("Failed to create commands directory: %v", err)
 	}
 
-	// Create the three slash command files (in the spectr/ subdirectory)
+	// Create the two slash command files (in the spectr/ subdirectory)
 	for _, cmdFile := range []string{
 		"proposal.md",
-		"sync.md",
 		"apply.md",
 	} {
 		filePath := filepath.Join(commandsDir, cmdFile)

@@ -40,7 +40,6 @@ The provider SHALL create slash commands in the global `~/.codex/prompts/` direc
 #### Scenario: Command paths
 - **WHEN** the provider generates slash command files
 - **THEN** it creates `~/.codex/prompts/spectr-proposal.md`
-- **AND** it creates `~/.codex/prompts/spectr-sync.md`
 - **AND** it creates `~/.codex/prompts/spectr-apply.md`
 
 #### Scenario: Global path expansion
@@ -64,10 +63,6 @@ The provider SHALL use Markdown format with YAML frontmatter for slash commands.
 #### Scenario: Apply command frontmatter
 - **WHEN** generating the apply command file
 - **THEN** the frontmatter description is "Implement an approved Spectr change and keep tasks in sync."
-
-#### Scenario: Sync command frontmatter
-- **WHEN** generating the sync command file
-- **THEN** the frontmatter description is "Detect spec drift from code and update specs interactively."
 
 ### Requirement: Global Path Support in Provider Framework
 The provider framework SHALL support global paths (starting with `~/` or `/`) in addition to project-relative paths.
@@ -94,11 +89,6 @@ Users SHALL invoke Spectr commands in Codex using the `/spectr-<command>` patter
 - **WHEN** user types `/spectr-proposal` in Codex
 - **THEN** Codex loads and executes the proposal prompt
 
-#### Scenario: Invoking sync command
-- **WHEN** user types `/spectr-sync` in Codex
-- **THEN** Codex loads and executes the sync prompt
-
 #### Scenario: Invoking apply command
 - **WHEN** user types `/spectr-apply` in Codex
 - **THEN** Codex loads and executes the apply prompt
-

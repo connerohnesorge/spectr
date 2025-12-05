@@ -47,7 +47,6 @@ The provider SHALL create slash commands in `.agent/workflows/` directory.
 #### Scenario: Command file paths
 - **WHEN** the provider creates slash command files
 - **THEN** it creates `.agent/workflows/spectr-proposal.md`
-- **AND** it creates `.agent/workflows/spectr-sync.md`
 - **AND** it creates `.agent/workflows/spectr-apply.md`
 
 #### Scenario: Command file format

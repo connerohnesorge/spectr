@@ -47,7 +47,6 @@ The provider SHALL create slash commands in `.codebuddy/commands/spectr/` direct
 #### Scenario: Command file paths
 - **WHEN** the provider configures slash commands
 - **THEN** it SHALL create `.codebuddy/commands/spectr/proposal.md`
-- **AND** it SHALL create `.codebuddy/commands/spectr/sync.md`
 - **AND** it SHALL create `.codebuddy/commands/spectr/apply.md`
 
 #### Scenario: Command format
@@ -63,10 +62,6 @@ The provider SHALL create slash commands in `.codebuddy/commands/spectr/` direct
 #### Scenario: Apply command frontmatter
 - **WHEN** the apply command file is created
 - **THEN** it SHALL include frontmatter with description: "Implement an approved Spectr change and keep tasks in sync."
-
-#### Scenario: Sync command frontmatter
-- **WHEN** the sync command file is created
-- **THEN** it SHALL include frontmatter with description: "Detect spec drift from code and update specs interactively."
 
 ### Requirement: CodeBuddy Command Content
 The provider SHALL use standard Spectr command instructions for each slash command.

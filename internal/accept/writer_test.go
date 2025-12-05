@@ -436,7 +436,11 @@ func TestWriteTasksJSON_SimpleFixture(t *testing.T) {
 
 	// All tasks in simple.md are completed
 	if result.Summary.Total != result.Summary.Completed {
-		t.Errorf("Expected all tasks completed, got %d/%d", result.Summary.Completed, result.Summary.Total)
+		t.Errorf(
+			"Expected all tasks completed, got %d/%d",
+			result.Summary.Completed,
+			result.Summary.Total,
+		)
 	}
 }
 
@@ -489,7 +493,10 @@ func TestWriteTasksJSON_ComplexFixture(t *testing.T) {
 	if len(result.Sections) > 0 {
 		section1 := result.Sections[0]
 		if section1.Name != "Foundation: Create New Abstractions" {
-			t.Errorf("Expected first section name 'Foundation: Create New Abstractions', got %q", section1.Name)
+			t.Errorf(
+				"Expected first section name 'Foundation: Create New Abstractions', got %q",
+				section1.Name,
+			)
 		}
 		if len(section1.Tasks) == 0 {
 			t.Error("Expected first section to have tasks")
@@ -757,7 +764,7 @@ func TestCalculateSummary_TableDriven(t *testing.T) {
 	}{
 		{
 			name:              "Empty sections",
-			sections:          []Section{},
+			sections:          nil,
 			expectedTotal:     0,
 			expectedCompleted: 0,
 		},
@@ -843,7 +850,7 @@ func TestCountTasks_TableDriven(t *testing.T) {
 	}{
 		{
 			name:              "Empty tasks",
-			tasks:             []Task{},
+			tasks:             nil,
 			expectedTotal:     0,
 			expectedCompleted: 0,
 		},

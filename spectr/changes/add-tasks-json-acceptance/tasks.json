@@ -1,0 +1,215 @@
+{
+  "version": "1.0",
+  "changeId": "add-tasks-json-acceptance",
+  "acceptedAt": "2025-12-05T19:51:51Z",
+  "sections": [
+    {
+      "number": 1,
+      "name": "Task Parser Implementation",
+      "tasks": [
+        {
+          "id": "1.1",
+          "description": "Create `internal/accept/types.go` with Task, Section, and TasksJSON struct definitions",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "1.2",
+          "description": "Create `internal/accept/parser.go` to parse tasks.md into structured format\n- Parse section headers (`## N. Section Name`)\n- Parse task lines (`- [ ] N.N Description`)\n- Handle unlimited nested subtasks recursively (`- [ ] N.N.N.N...`)\n- Parse indented detail lines and append to task description\n- Preserve completion status from `[x]` markers",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "1.3",
+          "description": "Add comprehensive tests in `internal/accept/parser_test.go`\n- Test section parsing\n- Test task ID extraction\n- Test completion status detection (preserve [x] markers)\n- Test unlimited recursive nesting (1.1.1.1.1...)\n- Test indented detail line parsing and description concatenation\n- Test edge cases (empty sections, no tasks, malformed lines)",
+          "completed": true,
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Test Fixtures from Archive",
+      "tasks": [
+        {
+          "id": "2.1",
+          "description": "Identify diverse tasks.md examples from `spectr/changes/archive/`",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "2.2",
+          "description": "Copy selected fixtures to `testdata/tasks/` directory\n- Include simple, medium, and complex examples\n- Include examples with nested tasks\n- Include examples with all tasks completed",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "2.3",
+          "description": "Create expected JSON outputs for each fixture",
+          "completed": true,
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "name": "JSON Schema Implementation",
+      "tasks": [
+        {
+          "id": "3.1",
+          "description": "Define tasks.json schema with version, metadata, sections, and summary",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "3.2",
+          "description": "Create `internal/accept/writer.go` for JSON generation\n- Atomic write with temp file rename\n- Pretty-print with 2-space indentation\n- Calculate summary totals automatically",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "3.3",
+          "description": "Add writer tests with golden file comparison",
+          "completed": true,
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Accept Command Implementation",
+      "tasks": [
+        {
+          "id": "4.1",
+          "description": "Create `cmd/accept.go` with AcceptCmd struct\n- ChangeID positional argument (optional for interactive selection)\n- `--yes` flag to skip confirmation prompt",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "4.2",
+          "description": "Add AcceptCmd to CLI struct in `cmd/root.go`",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "4.3",
+          "description": "Create `internal/accept/accept.go` with core workflow\n- Validate change exists\n- Check tasks.md exists\n- Check tasks.json does not already exist\n- Parse tasks.md\n- Generate tasks.json\n- Remove tasks.md",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "4.4",
+          "description": "Add confirmation prompt before conversion (unless --yes)",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "4.5",
+          "description": "Add success/error output messages",
+          "completed": true,
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Apply Slash Command Integration",
+      "tasks": [
+        {
+          "id": "5.1",
+          "description": "Update `.claude/commands/spectr/apply.md` to integrate acceptance workflow\n- Check if tasks.json exists for the change\n- If missing, instruct agent: \"Run `spectr accept \u003cchange-id\u003e` first\"\n- Update task tracking instructions to use tasks.json instead of tasks.md\n- Clarify that tasks.json is the source of truth after acceptance",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "5.2",
+          "description": "Document the acceptance workflow in AGENTS.md reference",
+          "completed": true,
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Archive Workflow Compatibility",
+      "tasks": [
+        {
+          "id": "6.1",
+          "description": "Update `internal/archive/archiver.go` checkTasks() to handle both formats\n- Check for tasks.json first, fall back to tasks.md\n- Parse tasks.json for completion status",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "6.2",
+          "description": "Add JSON task parser to `internal/parsers/parsers.go`\n- CountTasksJSON() function",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "6.3",
+          "description": "Update `internal/list/` and `internal/view/` to support tasks.json",
+          "completed": true,
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "name": "Validation",
+      "tasks": [
+        {
+          "id": "7.1",
+          "description": "Run `go build` to verify compilation",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "7.2",
+          "description": "Run `go test ./...` to verify all tests pass",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "7.3",
+          "description": "Run `golangci-lint run` to verify no linting errors",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "7.4",
+          "description": "Test `spectr accept` command manually with a test change",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "7.5",
+          "description": "Run `spectr validate add-tasks-json-acceptance --strict`",
+          "completed": true,
+          "subtasks": []
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Documentation",
+      "tasks": [
+        {
+          "id": "8.1",
+          "description": "Add help text to accept command describing purpose and workflow",
+          "completed": true,
+          "subtasks": []
+        },
+        {
+          "id": "8.2",
+          "description": "Update CLI help to show accept command",
+          "completed": true,
+          "subtasks": []
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 26,
+    "completed": 26
+  }
+}

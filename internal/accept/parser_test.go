@@ -313,7 +313,10 @@ func TestParseTask_SubtaskWithoutParent(t *testing.T) {
 
 	// Orphan should be treated as top-level
 	if len(sections[0].Tasks) != 1 {
-		t.Fatalf("Expected orphan to be treated as top-level task, got %d tasks", len(sections[0].Tasks))
+		t.Fatalf(
+			"Expected orphan to be treated as top-level task, got %d tasks",
+			len(sections[0].Tasks),
+		)
 	}
 
 	task := sections[0].Tasks[0]
@@ -763,13 +766,13 @@ func TestIntToString(t *testing.T) {
 
 func TestParseTaskLine_TableDriven(t *testing.T) {
 	tests := []struct {
-		name        string
-		line        string
-		sectionNum  int
-		wantID      string
-		wantDesc    string
-		wantDone    bool
-		wantNil     bool
+		name       string
+		line       string
+		sectionNum int
+		wantID     string
+		wantDesc   string
+		wantDone   bool
+		wantNil    bool
 	}{
 		{
 			name:       "Simple incomplete task",
@@ -872,12 +875,12 @@ func TestParseTaskLine_TableDriven(t *testing.T) {
 
 func TestParseSectionHeader_TableDriven(t *testing.T) {
 	tests := []struct {
-		name       string
-		line       string
-		wantNum    int
-		wantName   string
-		wantNil    bool
-		autoIncr   bool // whether auto number should increment
+		name     string
+		line     string
+		wantNum  int
+		wantName string
+		wantNil  bool
+		autoIncr bool // whether auto number should increment
 	}{
 		{
 			name:     "Numbered section",

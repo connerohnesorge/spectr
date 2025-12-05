@@ -307,3 +307,142 @@ The Astro documentation site SHALL configure the starlight-changelogs plugin in 
 - **WHEN** the docs project dependencies are reviewed
 - **THEN** `starlight-changelogs` SHALL appear in the dependencies section of `docs/package.json`
 - **AND** the version SHALL be the latest compatible release
+### Requirement: Starlight Icons Plugin Integration with UnoCSS
+The documentation site SHALL integrate the starlight-plugin-icons plugin with UnoCSS to enable icon support in sidebar navigation, code blocks, and file tree components using the Iconify icon library through a wrapper-based integration pattern.
+
+#### Scenario: Icons plugin dependencies are installed
+- **WHEN** the documentation site dependencies are installed
+- **THEN** the starlight-plugin-icons package SHALL be present in docs/package.json
+- **AND** the unocss package SHALL be present as a prerequisite dependency
+- **AND** at least one @iconify-json/* icon collection package SHALL be installed
+- **AND** the plugin SHALL be configured in docs/astro.config.mjs using the wrapper pattern
+
+#### Scenario: UnoCSS is configured for icon processing
+- **WHEN** the documentation site is built
+- **THEN** a uno.config.ts file SHALL exist with presetStarlightIcons() configured
+- **AND** UnoCSS SHALL be added to the Astro integrations array before Starlight
+- **AND** UnoCSS SHALL extract icon classes from astro.config.mjs for safelist generation
+
+#### Scenario: Starlight integration uses Icons wrapper pattern
+- **WHEN** the astro.config.mjs is read
+- **THEN** the Starlight configuration SHALL be wrapped by the Icons() function
+- **AND** all Starlight options (title, social, sidebar, plugins) SHALL be nested under Icons({ starlight: { ... } })
+- **AND** existing Starlight plugins SHALL remain functional within the wrapped configuration
+
+#### Scenario: Sidebar icons feature is enabled
+- **WHEN** sidebar icons are configured
+- **THEN** the Icons configuration SHALL include sidebar: true
+- **AND** sidebar entries MAY include an icon field with format i-<collection>:<name>
+- **AND** icon classes SHALL be automatically extracted via extractSafelist: true
+
+#### Scenario: Icons are available for documentation content
+- **WHEN** documentation pages are viewed
+- **THEN** icons from installed Iconify collections SHALL be available for use
+- **AND** icons MAY be used in sidebar navigation entries via icon field
+- **AND** code blocks SHALL automatically display Material Icons based on language or title
+- **AND** FileTree components SHALL render with file type icons
+
+#### Scenario: Documentation builds with icons plugin and UnoCSS
+- **WHEN** the documentation site is built
+- **THEN** the build SHALL complete successfully with UnoCSS and icons plugin enabled
+- **AND** icons SHALL render correctly on all documentation pages
+- **AND** no conflicts SHALL occur with existing Starlight plugins (starlightSiteGraph, starlightLlmsTxt)
+
+#### Scenario: Icon cache directory is ignored by version control
+- **WHEN** the .gitignore file is checked
+- **THEN** the .starlight-icons cache directory SHALL be listed in docs/.gitignore
+- **AND** icon cache files SHALL not be committed to the repository
+
+### Requirement: Enhanced Components with Icon Support
+The documentation site SHALL provide enhanced Starlight components (Card, Aside, FileTree, IconLink) with icon support through the starlight-plugin-icons integration.
+
+#### Scenario: FileTree displays file type icons
+- **WHEN** a FileTree component is rendered in documentation
+- **THEN** file entries SHALL display appropriate icons based on file extensions
+- **AND** folder entries SHALL display folder icons
+- **AND** icons SHALL use Material Icon set by default
+
+#### Scenario: Code blocks display language icons
+- **WHEN** a code block is rendered with a language identifier
+- **THEN** the code block SHALL display an appropriate icon for the language
+- **AND** the icon SHALL be from the Material Icon set
+- **AND** icons SHALL appear automatically without manual configuration
+
+#### Scenario: Enhanced components are available for use
+- **WHEN** documentation content is authored
+- **THEN** Card components SHALL support icon attributes
+- **AND** Aside components SHALL support icon attributes
+- **AND** IconLink components SHALL be available for icon-labeled links
+- **AND** all enhanced components SHALL use icons from installed Iconify collections
+### Requirement: Page Action Buttons for Documentation
+The system SHALL provide page action buttons on documentation pages enabling users to quickly copy markdown content and open pages in AI chat services through the starlight-page-actions plugin.
+
+#### Scenario: User copies markdown content
+- **WHEN** a user visits any documentation page
+- **THEN** they SHALL see a "Copy Markdown" button
+- **AND** clicking it SHALL copy the raw markdown content to clipboard
+
+#### Scenario: User opens page in AI chat service
+- **WHEN** a user clicks the "Open" dropdown button
+- **THEN** they SHALL see options to open the page in default AI chat services (ChatGPT, Claude, Gemini, etc.)
+- **AND** selecting an option SHALL open the documentation in the chosen service
+
+### Requirement: Starlight Page Actions Plugin Configuration
+The system SHALL configure the starlight-page-actions plugin in the Astro configuration with llms.txt generation disabled to avoid conflicts with existing starlight-llms-txt plugin while enabling page action functionality with default AI service list.
+
+#### Scenario: Plugin is installed
+- **WHEN** dependencies are installed
+- **THEN** the starlight-page-actions package SHALL be present in package.json
+- **AND** it SHALL be importable in astro.config.mjs
+
+#### Scenario: Plugin is configured with options
+- **WHEN** Starlight is initialized
+- **THEN** starlightPageActions() SHALL be included in the plugins array with a configuration object
+- **AND** the configuration SHALL set `llmstxt: false` to disable llms.txt generation
+- **AND** the plugin SHALL use default AI services for the Open dropdown
+
+#### Scenario: No conflict with existing llms.txt plugin
+- **WHEN** the documentation site is built with both starlight-page-actions and starlight-llms-txt plugins
+- **THEN** the build SHALL complete without conflicts
+- **AND** llms.txt SHALL be generated only by the starlight-llms-txt plugin
+- **AND** page action buttons SHALL render correctly without interfering with llms.txt generation
+
+#### Scenario: Plugin renders page actions
+- **WHEN** a documentation page is loaded
+- **THEN** the plugin SHALL render page action buttons
+- **AND** the buttons SHALL function correctly with the configured options
+### Requirement: Browser-Integrated Search with Star Warp
+The documentation site SHALL integrate the @inox-tools/star-warp Starlight plugin to enable quick navigation to search results and native browser search integration via OpenSearch protocol.
+
+#### Scenario: User searches via warp URL
+- **WHEN** a user navigates to `/spectr/warp?q=validation`
+- **THEN** they SHALL be redirected to the first search result matching "validation"
+- **AND** the redirect SHALL work statically without requiring server-side rendering
+
+#### Scenario: User searches from browser address bar
+- **WHEN** a user has registered the Spectr docs as a search engine in their browser
+- **AND** they type the site shortcut followed by a search query in the address bar
+- **THEN** the browser SHALL submit the query to the Spectr docs warp endpoint
+- **AND** they SHALL be navigated to the first matching result
+
+#### Scenario: OpenSearch description is available
+- **WHEN** a user visits any documentation page
+- **THEN** the page SHALL include an OpenSearch link tag in the `<head>` section
+- **AND** the link tag SHALL be automatically injected by the Star Warp plugin
+- **AND** the OpenSearch XML SHALL be available at `/spectr/warp.xml`
+- **AND** the description SHALL identify the site as "Spectr" for browser display
+
+#### Scenario: Browser registers search engine
+- **WHEN** a user visits the Spectr documentation site
+- **THEN** their browser (Chrome, Safari, Firefox) SHALL automatically detect the OpenSearch description
+- **AND** the browser SHALL allow the user to activate "Spectr" as a custom search engine
+- **AND** typing queries after the domain SHALL trigger Spectr documentation search
+
+#### Scenario: Star Warp configuration with defaults
+- **WHEN** the Star Warp plugin is configured in `astro.config.mjs`
+- **THEN** it SHALL be added to the Starlight plugins array (not the root integrations array)
+- **AND** OpenSearch SHALL be enabled with `openSearch.enabled: true`
+- **AND** the path SHALL use the default `/warp` value
+- **AND** the OpenSearch title SHALL default to "Spectr" from the Starlight config
+- **AND** the OpenSearch description SHALL default to "Search Spectr"
+- **AND** the warp route SHALL respect the project's base path `/spectr`

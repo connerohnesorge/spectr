@@ -18,7 +18,9 @@ type GeminiProvider struct {
 	BaseProvider
 }
 
-// NewGeminiProvider creates a new Gemini CLI provider.
+// NewGeminiProvider creates a GeminiProvider configured for the Gemini CLI.
+// The provider is initialized with the standard proposal and apply command paths,
+// uses TOML as the command format, and includes provider metadata (id "gemini", name "Gemini CLI", priority PriorityGemini).
 func NewGeminiProvider() *GeminiProvider {
 	proposalPath, applyPath := StandardCommandPaths(
 		".gemini/commands", ".toml",

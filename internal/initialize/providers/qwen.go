@@ -10,7 +10,8 @@ type QwenProvider struct {
 	BaseProvider
 }
 
-// NewQwenProvider creates a new Qwen Code provider.
+// NewQwenProvider constructs a QwenProvider preconfigured for Qwen Code commands.
+// The provider is initialized with id "qwen", name "Qwen Code", PriorityQwen, config file "QWEN.md", proposal and apply paths derived from StandardCommandPaths(".qwen/commands", ".md"), markdown command format, and standard frontmatter.
 func NewQwenProvider() *QwenProvider {
 	proposalPath, applyPath := StandardCommandPaths(
 		".qwen/commands", ".md",

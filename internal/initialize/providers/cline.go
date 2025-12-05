@@ -10,7 +10,7 @@ type ClineProvider struct {
 	BaseProvider
 }
 
-// NewClineProvider creates a new Cline provider.
+// NewClineProvider constructs a ClineProvider configured for Cline commands, using standard command paths and the Markdown command format.
 func NewClineProvider() *ClineProvider {
 	proposalPath, applyPath := StandardCommandPaths(
 		".clinerules/commands", ".md",

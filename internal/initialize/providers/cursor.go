@@ -10,7 +10,7 @@ type CursorProvider struct {
 	BaseProvider
 }
 
-// NewCursorProvider creates a new Cursor provider.
+// NewCursorProvider returns a CursorProvider configured for the "cursor" provider with id "cursor", display name "Cursor", priority PriorityCursor, no config file, proposal and apply command paths under ".cursorrules/commands" for ".md" files, Markdown command format, and standard frontmatter.
 func NewCursorProvider() *CursorProvider {
 	proposalPath, applyPath := StandardCommandPaths(
 		".cursorrules/commands", ".md",

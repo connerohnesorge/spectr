@@ -10,7 +10,10 @@ type TabnineProvider struct {
 	BaseProvider
 }
 
-// NewTabnineProvider creates a new Tabnine provider.
+// NewTabnineProvider returns a configured *TabnineProvider for the Tabnine backend.
+// The provider is initialized with id "tabnine", name "Tabnine", priority PriorityTabnine,
+// an empty config file, command paths derived from StandardCommandPaths(".tabnine/commands", ".md"),
+// a Markdown command format (FormatMarkdown), and frontmatter from StandardFrontmatter().
 func NewTabnineProvider() *TabnineProvider {
 	proposalPath, applyPath := StandardCommandPaths(
 		".tabnine/commands", ".md",

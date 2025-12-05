@@ -10,7 +10,8 @@ type AntigravityProvider struct {
 	BaseProvider
 }
 
-// NewAntigravityProvider creates a new Antigravity provider.
+// NewAntigravityProvider creates and returns an AntigravityProvider configured for Antigravity integrations.
+// The provider is initialized with id "antigravity", name "Antigravity", PriorityAntigravity, config file "AGENTS.md", Markdown command format, standard frontmatter, and proposal/apply paths derived from ".agent/workflows" and ".md".
 func NewAntigravityProvider() *AntigravityProvider {
 	proposalPath, applyPath := PrefixedCommandPaths(
 		".agent/workflows", ".md",

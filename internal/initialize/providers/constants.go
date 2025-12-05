@@ -35,7 +35,8 @@ description: Implement an approved Spectr change and keep tasks in sync.
 ---`
 )
 
-// StandardFrontmatter returns the standard frontmatter map for most providers.
+// StandardFrontmatter returns the standard frontmatter templates used by most providers.
+// The returned map contains the "proposal" and "apply" keys, each mapped to a YAML frontmatter string for the corresponding command.
 func StandardFrontmatter() map[string]string {
 	return map[string]string{
 		"proposal": FrontmatterProposal,
@@ -47,7 +48,9 @@ func StandardFrontmatter() map[string]string {
 // directory and extension.
 // Uses subdirectory structure: {dir}/spectr/{command}{ext}
 // Example: ".claude/commands", ".md" -> ".claude/commands/spectr/proposal.md"
-// Returns proposalPath, applyPath.
+// StandardCommandPaths constructs standard file paths for the "proposal" and
+// "apply" commands located in a "spectr" subdirectory of dir, appending ext
+// to each filename and returning the proposal path followed by the apply path.
 func StandardCommandPaths(
 	dir, ext string,
 ) (proposalPath, applyPath string) {
@@ -61,7 +64,8 @@ func StandardCommandPaths(
 // PrefixedCommandPaths returns command paths using a flat prefix pattern.
 // Uses flat structure: {dir}/spectr-{command}{ext}
 // Example: ".agent/workflows", ".md" -> ".agent/workflows/spectr-proposal.md"
-// Returns proposalPath, applyPath.
+// PrefixedCommandPaths builds filesystem paths for prefixed spectr proposal and apply commands in dir using ext as the file extension.
+// The first return is the proposal path (dir/spectr-proposal+ext) and the second is the apply path (dir/spectr-apply+ext).
 func PrefixedCommandPaths(
 	dir, ext string,
 ) (proposalPath, applyPath string) {

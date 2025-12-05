@@ -10,7 +10,10 @@ type CostrictProvider struct {
 	BaseProvider
 }
 
-// NewCostrictProvider creates a new CoStrict provider.
+// NewCostrictProvider constructs a *CostrictProvider configured for CoStrict command files.
+// The provider is initialized with id "costrict", name "CoStrict", priority PriorityCostrict,
+// config file "COSTRICT.md", proposal and apply paths from StandardCommandPaths, markdown
+// command format, and frontmatter from StandardFrontmatter().
 func NewCostrictProvider() *CostrictProvider {
 	proposalPath, applyPath := StandardCommandPaths(
 		".costrict/commands", ".md",

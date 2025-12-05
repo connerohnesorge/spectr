@@ -10,7 +10,9 @@ type AiderProvider struct {
 	BaseProvider
 }
 
-// NewAiderProvider creates a new Aider provider.
+// NewAiderProvider creates an AiderProvider configured to load commands from
+// ".aider/commands" with Markdown command files and standard frontmatter.
+// The provider is identified as "aider", has no config file, and uses PriorityAider.
 func NewAiderProvider() *AiderProvider {
 	proposalPath, applyPath := StandardCommandPaths(
 		".aider/commands", ".md",

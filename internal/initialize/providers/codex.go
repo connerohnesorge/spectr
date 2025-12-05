@@ -10,7 +10,7 @@ type CodexProvider struct {
 	BaseProvider
 }
 
-// NewCodexProvider creates a new Codex CLI provider.
+// frontmatter. The provider is identified as "codex" with PriorityCodex.
 func NewCodexProvider() *CodexProvider {
 	// Codex uses global paths, not project-relative paths
 	proposalPath := "~/.codex/prompts/spectr-proposal.md"

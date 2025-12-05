@@ -1,10 +1,13 @@
 package initialize
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func TestNewWizardModel(t *testing.T) {
@@ -293,4 +296,133 @@ func findSubstring(s, substr string) bool {
 	}
 
 	return false
+}
+
+// ============================================================================
+// Tests for 'c' key (copy prompt) functionality
+// ============================================================================
+
+func TestHandleCompleteKeysCopyOnSuccess(t *testing.T) {
+	// Test that pressing 'c' on success screen (m.err == nil) returns tea.Quit
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Set up success state (no error)
+	wizard.step = StepComplete
+	wizard.err = nil
+	wizard.executionResult = &ExecutionResult{
+		CreatedFiles: []string{"spectr/project.md"},
+		UpdatedFiles: make([]string, 0),
+		Errors:       make([]string, 0),
+	}
+
+	// Simulate pressing 'c' key
+	keyMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}}
+	_, resultCmd := wizard.Update(keyMsg)
+
+	// Verify tea.Quit is returned
+	if resultCmd == nil {
+		t.Error("Expected tea.Quit command to be returned when pressing 'c' on success screen")
+	}
+}
+
+func TestHandleCompleteKeysCopyOnError(t *testing.T) {
+	// Test that pressing 'c' on error screen (m.err != nil) does NOT return tea.Quit
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Set up error state
+	wizard.step = StepComplete
+	wizard.err = errors.New("initialization failed")
+	wizard.executionResult = nil
+
+	// Simulate pressing 'c' key
+	keyMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'c'}}
+	_, resultCmd := wizard.Update(keyMsg)
+
+	// Verify tea.Quit is NOT returned (should be nil)
+	if resultCmd != nil {
+		t.Error("Expected no command when pressing 'c' on error screen, but got a command")
+	}
+}
+
+func TestRenderCompleteShowsCopyHintOnSuccess(t *testing.T) {
+	// Test that renderComplete() on success screen contains "c: copy"
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Set up success state
+	wizard.step = StepComplete
+	wizard.err = nil
+	wizard.executionResult = &ExecutionResult{
+		CreatedFiles: []string{"spectr/project.md"},
+		UpdatedFiles: make([]string, 0),
+		Errors:       make([]string, 0),
+	}
+
+	output := wizard.renderComplete()
+
+	// Verify "c: copy" hint is shown on success screen
+	if !strings.Contains(output, "c: copy") {
+		t.Error("Expected success screen to contain 'c: copy' hint")
+	}
+}
+
+func TestRenderCompleteHidesCopyHintOnError(t *testing.T) {
+	// Test that renderComplete() on error screen does NOT contain "c: copy"
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Set up error state
+	wizard.step = StepComplete
+	wizard.err = errors.New("initialization failed")
+	wizard.executionResult = nil
+
+	output := wizard.renderComplete()
+
+	// Verify "c: copy" hint is NOT shown on error screen
+	if strings.Contains(output, "c: copy") {
+		t.Error("Expected error screen to NOT contain 'c: copy' hint")
+	}
+
+	// Verify the quit hint is still shown
+	if !strings.Contains(output, "q") {
+		t.Error("Expected error screen to contain quit hint")
+	}
+}
+
+func TestPopulateContextPromptHasNoSurroundingQuotes(t *testing.T) {
+	// Test that PopulateContextPrompt constant does not contain surrounding quotes
+	// The raw content should be copied without extra formatting
+
+	// Check that the prompt does not start with a quote character
+	if strings.HasPrefix(PopulateContextPrompt, "\"") ||
+		strings.HasPrefix(PopulateContextPrompt, "'") ||
+		strings.HasPrefix(PopulateContextPrompt, "`") {
+		t.Error("PopulateContextPrompt should not start with a quote character")
+	}
+
+	// Check that the prompt does not end with a quote character
+	if strings.HasSuffix(PopulateContextPrompt, "\"") ||
+		strings.HasSuffix(PopulateContextPrompt, "'") ||
+		strings.HasSuffix(PopulateContextPrompt, "`") {
+		t.Error("PopulateContextPrompt should not end with a quote character")
+	}
+
+	// Verify the prompt contains expected content (basic sanity check)
+	if !strings.Contains(PopulateContextPrompt, "spectr/project.md") {
+		t.Error("PopulateContextPrompt should reference spectr/project.md")
+	}
 }

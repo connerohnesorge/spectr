@@ -12,6 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/tui"
 )
 
 const (
@@ -253,6 +254,15 @@ func (m WizardModel) handleCompleteKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case keyQuit, keyCtrlC, keyEnter:
 		return m, tea.Quit
+	case keyCopy:
+		// Only allow copy on success screen (no init error)
+		if m.err == nil {
+			// Copy the populate context prompt to clipboard
+			// CopyToClipboard uses OSC 52 fallback, so it never fails
+			_ = tui.CopyToClipboard(PopulateContextPrompt)
+
+			return m, tea.Quit
+		}
 	}
 
 	return m, nil
@@ -481,7 +491,7 @@ func (m WizardModel) renderComplete() string {
 
 	b.WriteString(FormatNextStepsMessage())
 	b.WriteString(newline)
-	b.WriteString(subtleStyle.Render("Press 'q' to quit" + newline))
+	b.WriteString(subtleStyle.Render("c: copy prompt  q: quit" + newline))
 
 	return b.String()
 }

@@ -277,8 +277,7 @@ Next steps:
 
 1. Populate your project context by telling your AI assistant:
 
-   "Review spectr/project.md and help me fill in our project's tech stack,
-   conventions, and description. Ask me questions to understand the codebase."
+   "` + PopulateContextPrompt + `"
 
 2. Create your first change proposal by saying:
 

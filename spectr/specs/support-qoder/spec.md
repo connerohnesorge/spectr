@@ -48,7 +48,6 @@ The provider SHALL create slash commands in `.qoder/commands/spectr/` directory.
 #### Scenario: Standard command paths
 - **WHEN** the provider generates command file paths
 - **THEN** it creates `.qoder/commands/spectr/proposal.md`
-- **AND** it creates `.qoder/commands/spectr/sync.md`
 - **AND** it creates `.qoder/commands/spectr/apply.md`
 
 #### Scenario: Command format
@@ -64,7 +63,3 @@ The provider SHALL create slash commands in `.qoder/commands/spectr/` directory.
 #### Scenario: Apply command frontmatter
 - **WHEN** the apply command file is created
 - **THEN** frontmatter description SHALL be "Implement an approved Spectr change and keep tasks in sync."
-
-#### Scenario: Sync command frontmatter
-- **WHEN** the sync command file is created
-- **THEN** frontmatter description SHALL be "Detect spec drift from code and update specs interactively."

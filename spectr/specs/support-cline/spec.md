@@ -31,7 +31,6 @@ The provider SHALL create slash commands in `.clinerules/commands/spectr/` direc
 #### Scenario: Command paths
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `.clinerules/commands/spectr/proposal.md`
-- **AND** it creates `.clinerules/commands/spectr/sync.md`
 - **AND** it creates `.clinerules/commands/spectr/apply.md`
 
 #### Scenario: Command format

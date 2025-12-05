@@ -30,7 +30,6 @@ The provider SHALL create slash commands in `.tabnine/commands/spectr/` director
 #### Scenario: Command paths
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `.tabnine/commands/spectr/proposal.md`
-- **AND** it creates `.tabnine/commands/spectr/sync.md`
 - **AND** it creates `.tabnine/commands/spectr/apply.md`
 
 #### Scenario: Command format

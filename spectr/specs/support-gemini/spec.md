@@ -30,7 +30,6 @@ The provider SHALL create slash commands in `.gemini/commands/spectr/` directory
 #### Scenario: Command paths
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `.gemini/commands/spectr/proposal.toml`
-- **AND** it creates `.gemini/commands/spectr/sync.toml`
 - **AND** it creates `.gemini/commands/spectr/apply.toml`
 
 #### Scenario: TOML command format

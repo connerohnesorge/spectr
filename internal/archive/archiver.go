@@ -216,11 +216,24 @@ func runValidation(changeDir string) error {
 
 // checkTasks checks task completion status
 func checkTasks(yes bool, changeDir string) error {
-	tasksPath := filepath.Join(changeDir, "tasks.md")
-	status, err := parsers.CountTasks(tasksPath)
-	if err != nil {
-		// tasks.md is optional
-		return nil
+	var status parsers.TaskStatus
+	var err error
+
+	// Check for tasks.json first (accepted changes)
+	tasksJSONPath := filepath.Join(changeDir, "tasks.json")
+	if _, statErr := os.Stat(tasksJSONPath); statErr == nil {
+		status, err = parsers.CountTasksJSON(tasksJSONPath)
+		if err != nil {
+			return fmt.Errorf("parse tasks.json: %w", err)
+		}
+	} else {
+		// Fall back to tasks.md
+		tasksMdPath := filepath.Join(changeDir, "tasks.md")
+		status, err = parsers.CountTasks(tasksMdPath)
+		if err != nil {
+			// tasks.md is optional
+			return nil
+		}
 	}
 
 	if status.Total == 0 {

@@ -11,6 +11,7 @@ Instructions for AI coding assistants using Spectr for spec-driven development.
 - Write deltas: use `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`; include at least one `#### Scenario:` per requirement
 - Validate: `spectr validate [change-id] --strict` and fix issues
 - Request approval: Do not start implementation until proposal is approved
+- Accept: Run `spectr accept <change-id>` to convert tasks.md to tasks.json before implementing
 
 ## Three-Stage Workflow
 
@@ -48,13 +49,29 @@ Skip proposal for:
 
 ### Stage 2: Implementing Changes
 Track these steps as TODOs and complete them one by one.
-1. **Read proposal.md** - Understand what's being built
-2. **Read design.md** (if exists) - Review technical decisions
-3. **Read tasks.md** - Get implementation checklist
-4. **Implement tasks sequentially** - Complete in order
-5. **Confirm completion** - Ensure every item in `tasks.md` is finished before updating statuses
-6. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
-7. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+1. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+2. **Accept change** - Run `spectr accept <change-id>` to convert tasks.md to structured tasks.json
+3. **Read proposal.md** - Understand what's being built
+4. **Read design.md** (if exists) - Review technical decisions
+5. **Read tasks.json** - Get implementation checklist (structured JSON format)
+6. **Implement tasks sequentially** - Complete in order
+7. **Confirm completion** - Ensure every item in `tasks.json` is finished before updating statuses
+8. **Update checklist** - After all work is done, set `"completed": true` for each task in tasks.json
+
+### Acceptance Workflow
+
+When a proposal is approved, run `spectr accept <change-id>` to:
+1. Convert `tasks.md` to structured `tasks.json` format
+2. Remove the original `tasks.md` to prevent drift
+3. Mark the change as ready for implementation
+
+The `tasks.json` format is machine-stable and less prone to accidental modification by AI agents. Each task has:
+- `id`: Task identifier (e.g., "1.1", "1.1.1")
+- `description`: Task description text
+- `completed`: Boolean completion status
+- `subtasks`: Nested subtask array (for hierarchical tasks)
+
+After acceptance, update `tasks.json` directly by setting `"completed": true` for finished tasks.
 
 ### Stage 3: Syncing Specs
 
@@ -98,6 +115,7 @@ When code implementation diverges from specs, sync to update specs:
 spectr list                  # List active changes
 spectr list --specs          # List specifications
 spectr validate [item]       # Validate changes or specs
+spectr accept [change-id]    # Accept a change (convert tasks.md to tasks.json)
 
 # Project management
 spectr init [path]           # Initialize Spectr

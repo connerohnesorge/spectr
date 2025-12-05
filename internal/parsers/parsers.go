@@ -5,6 +5,7 @@ package parsers
 
 import (
 	"bufio"
+	"encoding/json"
 	"os"
 	"regexp"
 	"strings"
@@ -75,6 +76,40 @@ func CountTasks(filePath string) (TaskStatus, error) {
 	}
 
 	return status, scanner.Err()
+}
+
+// tasksJSONSummary represents the summary field in tasks.json
+type tasksJSONSummary struct {
+	Total     int `json:"total"`
+	Completed int `json:"completed"`
+}
+
+// tasksJSON represents the root structure of tasks.json
+// We only need the summary field since it already contains the counts
+type tasksJSON struct {
+	Summary tasksJSONSummary `json:"summary"`
+}
+
+// CountTasksJSON counts tasks in tasks.json, identifying completed vs total
+// It reads the pre-computed summary from the JSON file
+func CountTasksJSON(filePath string) (TaskStatus, error) {
+	status := TaskStatus{Total: 0, Completed: 0}
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return status, err
+	}
+
+	var tasks tasksJSON
+	if err := json.Unmarshal(data, &tasks); err != nil {
+		return status, err
+	}
+
+	// Use the pre-computed summary from tasks.json
+	status.Total = tasks.Summary.Total
+	status.Completed = tasks.Summary.Completed
+
+	return status, nil
 }
 
 // CountDeltas counts the number of delta sections

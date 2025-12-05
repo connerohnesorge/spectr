@@ -35,19 +35,19 @@
 
 ## 4. Accept Command Implementation
 
-- [ ] 4.1 Create `cmd/accept.go` with AcceptCmd struct
+- [x] 4.1 Create `cmd/accept.go` with AcceptCmd struct
   - ChangeID positional argument (optional for interactive selection)
   - `--yes` flag to skip confirmation prompt
-- [ ] 4.2 Add AcceptCmd to CLI struct in `cmd/root.go`
-- [ ] 4.3 Create `internal/accept/accept.go` with core workflow
+- [x] 4.2 Add AcceptCmd to CLI struct in `cmd/root.go`
+- [x] 4.3 Create `internal/accept/accept.go` with core workflow
   - Validate change exists
   - Check tasks.md exists
   - Check tasks.json does not already exist
   - Parse tasks.md
   - Generate tasks.json
   - Remove tasks.md
-- [ ] 4.4 Add confirmation prompt before conversion (unless --yes)
-- [ ] 4.5 Add success/error output messages
+- [x] 4.4 Add confirmation prompt before conversion (unless --yes)
+- [x] 4.5 Add success/error output messages
 
 ## 5. Apply Slash Command Integration
 

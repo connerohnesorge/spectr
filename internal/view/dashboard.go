@@ -3,6 +3,7 @@
 package view
 
 import (
+	"os"
 	"path/filepath"
 	"sort"
 
@@ -17,7 +18,7 @@ import (
 // The function performs the following steps:
 //  1. Discovers all changes in spectr/changes/ directory
 //  2. Parses each change's proposal.md for title
-//  3. Parses each change's tasks.md for task completion status
+//  3. Parses each change's tasks.json (or tasks.md) for task completion status
 //  4. Categorizes changes as active (incomplete) or completed
 //  5. Discovers all specs in spectr/specs/ directory
 //  6. Parses each spec's spec.md for title and requirement count
@@ -53,12 +54,20 @@ func CollectData(projectPath string) (*DashboardData, error) {
 			title = changeID
 		}
 
-		// Parse task counts from tasks.md
-		tasksPath := filepath.Join(changeDir, "tasks.md")
-		taskStatus, err := parsers.CountTasks(tasksPath)
-		if err != nil {
-			// If tasks.md can't be read, assume zero tasks
-			taskStatus = parsers.TaskStatus{Total: 0, Completed: 0}
+		// Parse task counts - check tasks.json first (accepted changes), then tasks.md
+		var taskStatus parsers.TaskStatus
+		tasksJSONPath := filepath.Join(changeDir, "tasks.json")
+		if _, statErr := os.Stat(tasksJSONPath); statErr == nil {
+			taskStatus, err = parsers.CountTasksJSON(tasksJSONPath)
+			if err != nil {
+				taskStatus = parsers.TaskStatus{Total: 0, Completed: 0}
+			}
+		} else {
+			tasksPath := filepath.Join(changeDir, "tasks.md")
+			taskStatus, err = parsers.CountTasks(tasksPath)
+			if err != nil {
+				taskStatus = parsers.TaskStatus{Total: 0, Completed: 0}
+			}
 		}
 
 		// Calculate completion percentage

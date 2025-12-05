@@ -123,12 +123,12 @@ type Provider interface {
 
 	// GetProposalCommandPath returns the relative path for the
 	// proposal command.
-	// Example: ".claude/commands/spectr-proposal.md"
+	// Example: ".claude/commands/spectr/proposal.md"
 	// Returns empty string if the provider has no proposal command.
 	GetProposalCommandPath() string
 
 	// GetApplyCommandPath returns the relative path for the apply command.
-	// Example: ".claude/commands/spectr-apply.md"
+	// Example: ".claude/commands/spectr/apply.md"
 	// Returns empty string if the provider has no apply command.
 	GetApplyCommandPath() string
 
@@ -164,8 +164,7 @@ type TemplateRenderer interface {
 	// RenderInstructionPointer renders a short pointer template that directs
 	// AI assistants to read spectr/AGENTS.md for full instructions.
 	RenderInstructionPointer(ctx TemplateContext) (string, error)
-	// RenderSlashCommand renders a slash command template
-	// IE. proposal, apply, or sync.
+	// RenderSlashCommand renders a slash command template (proposal or apply).
 	RenderSlashCommand(command string, ctx TemplateContext) (string, error)
 }
 
@@ -176,8 +175,8 @@ type BaseProvider struct {
 	name          string
 	priority      int
 	configFile    string // Empty if no instruction file
-	proposalPath  string // e.g., ".claude/commands/spectr-proposal.md"
-	applyPath     string // e.g., ".claude/commands/spectr-apply.md"
+	proposalPath  string // e.g., ".claude/commands/spectr/proposal.md"
+	applyPath     string // e.g., ".claude/commands/spectr/apply.md"
 	commandFormat CommandFormat
 	frontmatter   map[string]string // Command name -> frontmatter content
 }

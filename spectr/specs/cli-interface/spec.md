@@ -143,6 +143,8 @@ The message SHALL include:
 3. References to key Spectr files and documentation
 4. Placeholder text that users can customize (e.g., "[YOUR FEATURE HERE]")
 
+The init command SHALL NOT automatically create project files outside the `spectr/` directory (such as README.md). Users maintain full control over their project's root-level documentation.
+
 #### Scenario: Interactive mode initialization succeeds
 
 - **WHEN** a user completes initialization via the interactive TUI wizard
@@ -173,6 +175,13 @@ The message SHALL include:
 - **AND** step 3 SHALL guide users to learn the Spectr workflow from spectr/AGENTS.md
 - **AND** each step SHALL include a complete, copy-paste ready prompt in quotes
 - **AND** the message SHALL include a visual separator using dashes or similar characters
+
+#### Scenario: Init does not create README
+
+- **WHEN** a user runs `spectr init` on a project without a README.md
+- **THEN** the init command SHALL NOT create a README.md file
+- **AND** only files within the `spectr/` directory SHALL be created
+- **AND** tool-specific files (e.g., CLAUDE.md, .cursor/) SHALL be created as configured
 
 ### Requirement: Flat Tool List in Initialization Wizard
 

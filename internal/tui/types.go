@@ -76,3 +76,13 @@ type MenuConfig struct {
 	// Receives the index of the selected choice.
 	SelectHandler func(index int) tea.Cmd
 }
+
+// ConfirmConfig holds configuration for ConfirmPicker.
+type ConfirmConfig struct {
+	// Question is the confirmation prompt to display.
+	Question string
+
+	// DefaultNo determines whether "No" is the default selection.
+	// Defaults to true for safety - users must explicitly select Yes.
+	DefaultNo bool
+}

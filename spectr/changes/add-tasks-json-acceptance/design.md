@@ -1,155 +1,129 @@
 ## Context
 
-This change implements learnings from Anthropic's research on effective harnesses for long-running agents. The core insight is that JSON-formatted task lists are more stable than Markdown when worked on by AI agents across multiple context windows. Agents working incrementally are less likely to accidentally modify or overwrite JSON files.
+AI agents working with Spectr proposals frequently need to update task status as they complete implementation work. The current `tasks.md` Markdown format is human-readable but presents challenges for agent stability:
 
-**Stakeholders**: Developers using Spectr with AI coding assistants (Claude Code, Cursor, etc.)
+1. **Parsing fragility**: Regex-based parsing of `- [ ]` and `- [x]` patterns can fail on edge cases
+2. **Overwrite risk**: Agents may accidentally rewrite task descriptions when updating status
+3. **Format drift**: Multiple agents or manual edits can introduce inconsistent formatting
+4. **Silent corruption**: Markdown doesn't fail loudly when the structure is wrong
 
-**Constraints**:
-- Must preserve existing tasks.md format for human authoring during proposal phase
-- Must be backwards compatible (changes without tasks.json should still work)
-- Must integrate cleanly with existing archive workflow
+Anthropic's research on effective harnesses for long-running agents recommends structured formats like JSON for state that agents need to read and write repeatedly.
 
 ## Goals / Non-Goals
 
-**Goals**:
-- Enable stable task tracking for long-running AI agent sessions
-- Preserve full task information (sections, IDs, descriptions, status)
-- Provide clear acceptance gate in workflow
-- Support incremental task completion by agents
-- Maintain human-readable proposal experience
+**Goals:**
+- Provide a stable, machine-readable format for task tracking during implementation
+- Prevent accidental task list corruption by agents
+- Maintain human-readability during the proposal/review phase
+- Ensure backward compatibility with existing changes using `tasks.md`
 
-**Non-Goals**:
-- Automatic conversion without explicit acceptance step
-- Changing the tasks.md authoring format
-- Requiring tasks.json for all workflows
-- Complex status tracking beyond completed/pending
+**Non-Goals:**
+- Forcing JSON format for the initial proposal phase (Markdown is better for human review)
+- Breaking existing tooling that reads `tasks.md`
+- Automatic migration of all existing changes
 
 ## Decisions
 
-### Decision 1: Two-Phase Task Lifecycle
+### Decision 1: Two-phase task format
 
-**What**: Tasks exist as `tasks.md` during proposal phase, converted to `tasks.json` at acceptance.
-
-**Why**:
-- tasks.md is easier for humans to author during proposal creation
-- tasks.json is more stable for AI agents during implementation
-- Clear lifecycle boundary at "acceptance" moment
-
-**Alternatives considered**:
-- Always use JSON: Harder for humans to author, less readable in proposals
-- Keep both: Risk of drift between formats
-- Convert at archive: Too late, agents need JSON during implementation
-
-### Decision 2: `spectr accept` as Explicit Command
-
-**What**: New CLI subcommand that performs conversion and removes original.
+**What**: Use `tasks.md` during proposal creation/review, convert to `tasks.json` at acceptance time.
 
 **Why**:
-- Explicit acceptance gate aligns with proposal workflow
-- CLI command can be validated and tested
-- Provides clear point of no return for format transition
+- Markdown is better for human review (GitHub diffs, PRs, comments)
+- JSON is better for agent manipulation during implementation
+- Clear transition point (acceptance) provides semantic meaning
 
 **Alternatives considered**:
-- Magic conversion on first task completion: Too implicit, confusing
-- Conversion during archive: Doesn't help agents during implementation
+- JSON-only: Would hurt proposal readability and review experience
+- Both formats simultaneously: Creates drift risk, violates single source of truth
+- YAML: Slightly more readable than JSON but similar parsing complexity
 
-### Decision 3: tasks.json Schema
+### Decision 2: Remove tasks.md after conversion
 
-**What**: Structured JSON preserving sections and task hierarchy with unlimited nesting:
+**What**: The `accept` command removes `tasks.md` after successfully creating `tasks.json`.
+
+**Why**:
+- Prevents drift between two files
+- Clear signal to agents that JSON is the authoritative source
+- Archived changes retain `tasks.json` for historical record
+
+**Alternatives considered**:
+- Keep both: Creates confusion about which is authoritative
+- Rename to `tasks.md.bak`: Clutters directory, agents might still find it
+
+### Decision 3: Fallback to tasks.md for backward compatibility
+
+**What**: All tooling checks for `tasks.json` first, falls back to `tasks.md`.
+
+**Why**:
+- Existing changes continue to work
+- Gradual migration path
+- No breaking changes for users who don't use `accept`
+
+### Decision 4: Require accept before apply
+
+**What**: The `apply` slash command instructions require agents to run `spectr accept` first.
+
+**Why**:
+- Ensures agents work with stable JSON format
+- Validates change before implementation begins
+- Creates explicit approval gate
+
+## JSON Schema
+
 ```json
 {
-  "version": "1.0",
-  "changeId": "add-feature",
-  "acceptedAt": "2025-12-05T10:30:00Z",
-  "sections": [
+  "version": 1,
+  "tasks": [
     {
-      "name": "Implementation",
-      "number": 1,
-      "tasks": [
-        {
-          "id": "1.1",
-          "description": "Create database schema\n- Parse requirement headers\n- Extract requirement name",
-          "completed": true,
-          "subtasks": [
-            {
-              "id": "1.1.1",
-              "description": "Add users table",
-              "completed": false,
-              "subtasks": [
-                {
-                  "id": "1.1.1.1",
-                  "description": "Add primary key constraint",
-                  "completed": false,
-                  "subtasks": []
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      "id": "1.1",
+      "section": "Implementation",
+      "description": "Create database schema",
+      "status": "pending"
+    },
+    {
+      "id": "1.2",
+      "section": "Implementation",
+      "description": "Implement API endpoint",
+      "status": "completed"
     }
-  ],
-  "summary": {
-    "total": 4,
-    "completed": 1
-  }
+  ]
 }
 ```
 
-**Why**:
-- Preserves section grouping for logical organization
-- Task IDs enable precise references (e.g., "complete task 1.3")
-- Unlimited recursive nesting via `subtasks` array supports deep task hierarchies
-- Indented detail lines appended to description with newlines
-- Summary enables quick progress checks without parsing (includes all nested tasks)
-- Version field allows future schema evolution
-- acceptedAt provides audit trail
+**Fields:**
+- `version`: Schema version for future compatibility
+- `tasks[]`: Array of task objects
+- `tasks[].id`: Original task ID (e.g., "1.1", "2.3")
+- `tasks[].section`: Section header (e.g., "Implementation", "Testing")
+- `tasks[].description`: Full task description text
+- `tasks[].status`: One of `"pending"`, `"in_progress"`, `"completed"`
 
-**Alternatives considered**:
-- Flat task list: Loses section context
-- Minimal schema: Harder to extend later
+**Status values:**
+- `pending`: Not started (default from `- [ ]`)
+- `in_progress`: Currently being worked on (agents can set this)
+- `completed`: Done (from `- [x]`)
 
-### Decision 4: Remove tasks.md After Conversion
-
-**What**: Delete tasks.md after successful tasks.json creation.
-
-**Why**:
-- Prevents drift between two sources of truth
-- Forces agents to use JSON format
-- Clear signal that proposal is now "accepted"
-
-**Alternatives considered**:
-- Keep both with warning: Risk of agents updating wrong file
-- Rename to tasks.md.bak: Adds clutter, unclear lifecycle
+Note: `in_progress` is a new status that JSON enables but Markdown couldn't easily represent.
 
 ## Risks / Trade-offs
 
-| Risk | Mitigation |
-|------|------------|
-| Users accidentally accept before tasks are finalized | Clear warning prompt, --yes flag for automation |
-| JSON corruption by agent errors | Validate JSON before writing, atomic writes |
-| Loss of tasks.md without backup | Prompt user, keep in git history |
-| Parser fails on unusual task formats | Extensive test fixtures from archive |
+### Risk: Agent confusion with status values
+**Mitigation**: Clear documentation in AGENTS.md and slash command templates.
+
+### Risk: Incomplete accept leaving orphan tasks.json
+**Mitigation**: Accept is atomic - either fully succeeds or rolls back.
+
+### Trade-off: Slightly more complex implementation
+**Accepted**: The stability benefits outweigh the implementation cost.
 
 ## Migration Plan
 
-1. **No migration required** - New feature, existing changes continue to work
-2. **Existing tasks.md files remain valid** - Archive workflow unchanged
-3. **Apply slash command updated** - Will prompt to run `spectr accept` if tasks.json missing
+1. **Phase 1**: Add `accept` command and JSON support to all tooling
+2. **Phase 2**: Update slash commands to recommend `spectr accept` before implementation
+3. **Phase 3**: (Future, not in this change) Consider auto-accept on first task update
 
-## Resolved Questions
+## Open Questions
 
-1. **Should `spectr accept` work on partial task completion?**
-   - **Decision**: Yes, preserve existing `[x]` markers as `"completed": true` in tasks.json
-
-2. **Should we support nested subtasks (e.g., 1.1.1)?**
-   - **Decision**: Unlimited recursive nesting - 1.1.1.1 is subtask of 1.1.1 which is subtask of 1.1
-
-3. **How should indented detail lines under tasks be handled?**
-   - **Decision**: Append to description - concatenate indented lines into the task description with newlines
-
-4. **How should the apply slash command integrate?**
-   - **Decision**: Check for tasks.json; if missing, instruct agent to run `spectr accept <change-id>` and use tasks.json for tracking from then on
-
-5. **Should tasks.json be excluded from validation if tasks.md exists?**
-   - **Decision**: Yes, only one format should exist at a time
+- Should `spectr archive` auto-accept if `tasks.md` still exists? (Proposed: Yes, with warning)
+- Should there be a `spectr reject` to revert to `tasks.md`? (Proposed: No, just delete `tasks.json` and restore from git)

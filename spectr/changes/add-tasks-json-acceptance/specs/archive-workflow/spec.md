@@ -1,21 +1,17 @@
 ## MODIFIED Requirements
 
 ### Requirement: Task Completion Checking
-The system SHALL check task completion status from either tasks.json or tasks.md, preferring the JSON format when present.
+The system SHALL check task completion status and warn users before archiving. The system SHALL read from `tasks.json` when present, falling back to `tasks.md`.
 
-#### Scenario: Check tasks from tasks.json
-- **WHEN** archiving a change that has tasks.json
-- **THEN** the system reads completion status from the JSON file
-- **AND** uses summary.total and summary.completed for display
+#### Scenario: Display task status from JSON
+- **WHEN** archiving a change with `tasks.json`
+- **THEN** the system reads task status from JSON file
+- **AND** displays task completion status (e.g., "3/5 complete")
 
-#### Scenario: Fall back to tasks.md
-- **WHEN** archiving a change that has tasks.md but no tasks.json
-- **THEN** the system reads completion status from the Markdown file
-- **AND** counts `[x]` and `[ ]` markers as before
-
-#### Scenario: Display task status
-- **WHEN** archiving a change
-- **THEN** the system displays task completion status (e.g., "3/5 complete")
+#### Scenario: Display task status from Markdown
+- **WHEN** archiving a change with only `tasks.md`
+- **THEN** the system reads task status from Markdown file
+- **AND** displays task completion status (e.g., "3/5 complete")
 
 #### Scenario: Warn on incomplete tasks
 - **WHEN** a change has incomplete tasks
@@ -27,35 +23,22 @@ The system SHALL check task completion status from either tasks.json or tasks.md
 
 ## ADDED Requirements
 
-### Requirement: Task Format Detection
-The system SHALL automatically detect whether a change uses tasks.json or tasks.md format.
+### Requirement: Auto-Accept on Archive
+The system SHALL automatically convert `tasks.md` to `tasks.json` during archive if not already accepted, ensuring archived changes have stable task format.
 
-#### Scenario: Prefer tasks.json when both exist
-- **WHEN** a change directory contains both tasks.json and tasks.md
-- **THEN** the system SHALL use tasks.json as the source of truth
-- **AND** SHALL log a warning about the duplicate files
+#### Scenario: Archive triggers auto-accept
+- **WHEN** archiving a change that has `tasks.md` but no `tasks.json`
+- **THEN** the system displays a warning that auto-acceptance will occur
+- **AND** the system converts `tasks.md` to `tasks.json` before archiving
+- **AND** the system removes `tasks.md` after successful conversion
 
-#### Scenario: Use tasks.md when no JSON exists
-- **WHEN** a change directory contains only tasks.md
-- **THEN** the system SHALL use tasks.md for task tracking
+#### Scenario: Archive with existing tasks.json
+- **WHEN** archiving a change that already has `tasks.json`
+- **THEN** the system proceeds normally without conversion
+- **AND** the archived change contains `tasks.json`
 
-#### Scenario: Handle missing task files
-- **WHEN** a change directory has neither tasks.json nor tasks.md
-- **THEN** the system SHALL report zero tasks
-- **AND** SHALL continue without error
-
-### Requirement: tasks.json Parsing
-The system SHALL parse tasks.json files to extract completion metrics.
-
-#### Scenario: Parse summary from JSON
-- **WHEN** reading a tasks.json file
-- **THEN** the system extracts total and completed from the summary object
-
-#### Scenario: Handle malformed JSON
-- **WHEN** tasks.json exists but is not valid JSON
-- **THEN** the system displays an error with the file path and parse error
-- **AND** blocks archive until the file is fixed
-
-#### Scenario: Handle missing summary
-- **WHEN** tasks.json exists but lacks a summary object
-- **THEN** the system calculates totals by iterating through sections and tasks (including nested subtasks recursively)
+#### Scenario: Auto-accept failure blocks archive
+- **WHEN** auto-acceptance fails during archive (e.g., invalid tasks.md format)
+- **THEN** the system displays the conversion error
+- **AND** the system aborts the archive operation
+- **AND** no files are modified

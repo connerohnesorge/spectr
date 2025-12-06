@@ -1,5 +1,7 @@
 package pr
 
+// This file provides dry-run simulation for PR workflow operations.
+
 import (
 	"fmt"
 	"strings"
@@ -46,6 +48,9 @@ func printOperationStep(config PRConfig) {
 		fmt.Printf("3. Run archive (skip-specs: %v)\n", config.SkipSpecs)
 	case ModeProposal:
 		fmt.Printf("2. Copy change '%s' to worktree\n", config.ChangeID)
+	case ModeRemove:
+		fmt.Printf("2. Copy change '%s' to worktree\n", config.ChangeID)
+		fmt.Println("3. Remove change directory")
 	}
 }
 

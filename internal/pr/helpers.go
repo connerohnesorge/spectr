@@ -109,6 +109,30 @@ func copyChangeToWorktree(config PRConfig, worktreePath string) error {
 	return nil
 }
 
+// removeChangeInWorktree removes the change directory within the worktree.
+func removeChangeInWorktree(config PRConfig, worktreePath string) error {
+	changeDir := filepath.Join(
+		worktreePath, "spectr", "changes", config.ChangeID,
+	)
+
+	fmt.Printf("Removing change in worktree: %s\n", config.ChangeID)
+
+	// Verify the directory exists before attempting removal
+	if _, err := os.Stat(changeDir); os.IsNotExist(err) {
+		return fmt.Errorf(
+			"change directory does not exist in worktree: %s",
+			changeDir,
+		)
+	}
+
+	// Remove the entire change directory
+	if err := os.RemoveAll(changeDir); err != nil {
+		return fmt.Errorf("remove change directory: %w", err)
+	}
+
+	return nil
+}
+
 // copyDir recursively copies a directory.
 func copyDir(src, dst string) error {
 	srcInfo, err := os.Stat(src)

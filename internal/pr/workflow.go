@@ -99,12 +99,15 @@ func prepareWorkflowContext(config PRConfig) (*workflowContext, error) {
 	// Generate mode-specific branch name:
 	// - archive mode: spectr/archive/<change-id>
 	// - proposal mode: spectr/proposal/<change-id>
+	// - remove mode: spectr/remove/<change-id>
 	var branchPrefix string
 	switch config.Mode {
 	case ModeArchive:
 		branchPrefix = "spectr/archive"
 	case ModeProposal:
 		branchPrefix = "spectr/proposal"
+	case ModeRemove:
+		branchPrefix = "spectr/remove"
 	default:
 		branchPrefix = "spectr"
 	}
@@ -239,6 +242,16 @@ func executeOperation(
 			return fmt.Errorf("copy operation failed: %w", err)
 		}
 
+	case ModeRemove:
+		// Copy change to worktree first so git can track the deletion
+		if err := copyChangeToWorktree(config, worktreePath); err != nil {
+			return fmt.Errorf("copy operation failed: %w", err)
+		}
+		// Remove the change directory
+		if err := removeChangeInWorktree(config, worktreePath); err != nil {
+			return fmt.Errorf("remove operation failed: %w", err)
+		}
+
 	default:
 		return fmt.Errorf("unknown mode: %s", config.Mode)
 	}
@@ -368,9 +381,9 @@ func validatePrerequisites(config PRConfig) error {
 	}
 
 	// Check mode is valid
-	if config.Mode != ModeArchive && config.Mode != ModeProposal {
+	if config.Mode != ModeArchive && config.Mode != ModeProposal && config.Mode != ModeRemove {
 		return fmt.Errorf(
-			"invalid mode '%s'; must be 'archive' or 'proposal'",
+			"invalid mode '%s'; must be 'archive', 'proposal', or 'remove'",
 			config.Mode,
 		)
 	}

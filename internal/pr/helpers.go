@@ -1,21 +1,21 @@
+// Package pr provides pull request creation and management functionality.
+// This file contains helper functions for the PR workflow, including
+// CLI tool verification, archive execution, and git operations.
 package pr
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
-	"github.com/connerohnesorge/spectr/internal/git"
 )
 
-// dirPerm is the default permission for created directories.
+// dirPerm is the default permission for created directories (rwxr-xr-x).
 const dirPerm = 0755
 
 // checkCLITool verifies that the required CLI tool is installed.
+// Returns an error with installation suggestions if not found.
 func checkCLITool(tool string) error {
 	_, err := exec.LookPath(tool)
 	if err != nil {
@@ -32,6 +32,7 @@ func checkCLITool(tool string) error {
 }
 
 // getCLIInstallSuggestion returns installation suggestions for a CLI tool.
+// Supports gh (GitHub CLI), glab (GitLab CLI), and tea (Gitea CLI).
 func getCLIInstallSuggestion(tool string) string {
 	switch tool {
 	case "gh":
@@ -47,27 +48,24 @@ func getCLIInstallSuggestion(tool string) string {
 }
 
 // executeArchiveInWorktree runs the archive workflow within the worktree.
+// It copies the change files to the worktree and executes the archive command.
 func executeArchiveInWorktree(
 	config PRConfig,
 	worktreePath string,
 ) (archive.ArchiveResult, error) {
 	fmt.Println("Running archive operation in worktree...")
 
-	// Copy the change from source to worktree first
 	if err := copyChangeToWorktree(config, worktreePath); err != nil {
 		return archive.ArchiveResult{},
 			fmt.Errorf("copy change to worktree: %w", err)
 	}
 
-	// Create archive command
 	archiveCmd := &archive.ArchiveCmd{
 		ChangeID:  config.ChangeID,
-		Yes:       true, // Non-interactive
+		Yes:       true,
 		SkipSpecs: config.SkipSpecs,
 	}
 
-	// Execute archive within the worktree and capture results.
-	// The ArchiveResult contains path, operation counts, and capabilities.
 	result, err := archive.Archive(archiveCmd, worktreePath)
 	if err != nil {
 		return archive.ArchiveResult{}, err
@@ -76,106 +74,11 @@ func executeArchiveInWorktree(
 	return result, nil
 }
 
-// copyChangeToWorktree copies the change directory from source to worktree.
-func copyChangeToWorktree(config PRConfig, worktreePath string) error {
-	projectRoot := config.ProjectRoot
-	if projectRoot == "" {
-		var err error
-		projectRoot, err = git.GetRepoRoot()
-		if err != nil {
-			return fmt.Errorf("get repo root: %w", err)
-		}
-	}
-
-	sourceDir := filepath.Join(
-		projectRoot, "spectr", "changes", config.ChangeID,
-	)
-	targetDir := filepath.Join(
-		worktreePath, "spectr", "changes", config.ChangeID,
-	)
-
-	fmt.Printf("Copying change to worktree: %s\n", config.ChangeID)
-
-	// Create target directory structure
-	if err := os.MkdirAll(filepath.Dir(targetDir), dirPerm); err != nil {
-		return fmt.Errorf("create target directory: %w", err)
-	}
-
-	// Copy directory recursively
-	if err := copyDir(sourceDir, targetDir); err != nil {
-		return fmt.Errorf("copy directory: %w", err)
-	}
-
-	return nil
-}
-
-// copyDir recursively copies a directory.
-func copyDir(src, dst string) error {
-	srcInfo, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(dst, srcInfo.Mode()); err != nil {
-		return err
-	}
-
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return err
-	}
-
-	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		dstPath := filepath.Join(dst, entry.Name())
-
-		if entry.IsDir() {
-			if err := copyDir(srcPath, dstPath); err != nil {
-				return err
-			}
-		} else {
-			if err := copyFile(srcPath, dstPath); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-// copyFile copies a single file.
-func copyFile(src, dst string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = srcFile.Close() }()
-
-	srcInfo, err := srcFile.Stat()
-	if err != nil {
-		return err
-	}
-
-	dstFile, err := os.OpenFile(
-		dst,
-		os.O_CREATE|os.O_WRONLY|os.O_TRUNC,
-		srcInfo.Mode(),
-	)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = dstFile.Close() }()
-
-	_, err = io.Copy(dstFile, srcFile)
-
-	return err
-}
-
 // stageAndCommit stages the spectr/ directory and creates a commit.
+// It runs git add and git commit within the worktree directory.
 func stageAndCommit(worktreePath, commitMsg string) error {
 	fmt.Println("Staging changes...")
 
-	// git add spectr/
 	addCmd := exec.Command("git", "add", "spectr/")
 	addCmd.Dir = worktreePath
 
@@ -189,7 +92,6 @@ func stageAndCommit(worktreePath, commitMsg string) error {
 
 	fmt.Println("Creating commit...")
 
-	// git commit
 	commitCmd := exec.Command("git", "commit", "-m", commitMsg)
 	commitCmd.Dir = worktreePath
 
@@ -204,7 +106,8 @@ func stageAndCommit(worktreePath, commitMsg string) error {
 	return nil
 }
 
-// pushBranch pushes the branch to origin.
+// pushBranch pushes the branch to origin with upstream tracking.
+// It runs git push -u origin within the worktree directory.
 func pushBranch(worktreePath, branchName string) error {
 	fmt.Printf("Pushing branch: %s\n", branchName)
 

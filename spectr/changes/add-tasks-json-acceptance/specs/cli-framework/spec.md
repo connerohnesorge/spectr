@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Accept Command Structure
-The CLI SHALL provide an `accept` command that converts tasks.md to tasks.json format when a change proposal is approved for implementation.
+The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.json` format for stable agent manipulation during implementation.
 
 #### Scenario: Accept command registration
 - **WHEN** the CLI is initialized
@@ -11,133 +11,88 @@ The CLI SHALL provide an `accept` command that converts tasks.md to tasks.json f
 
 #### Scenario: Accept with change ID
 - **WHEN** user runs `spectr accept <change-id>`
-- **THEN** the system converts tasks.md to tasks.json for the specified change
-- **AND** removes the original tasks.md file
-- **AND** displays a success message with the generated file path
+- **THEN** the system validates the change exists in `spectr/changes/<change-id>/`
+- **AND** the system parses `tasks.md` into structured format
+- **AND** the system writes `tasks.json` with proper schema
+- **AND** the system removes `tasks.md` to prevent drift
 
-#### Scenario: Interactive accept selection
-- **WHEN** user runs `spectr accept` without specifying a change ID
-- **THEN** the system displays a list of active changes with tasks.md files
-- **AND** prompts for selection
+#### Scenario: Accept with validation
+- **WHEN** user runs `spectr accept <change-id>`
+- **THEN** the system validates the change before conversion
+- **AND** the system blocks acceptance if validation fails
+- **AND** the system displays validation errors
 
-#### Scenario: Non-interactive accept with yes flag
-- **WHEN** user runs `spectr accept <change-id> --yes`
-- **THEN** the system converts without any confirmation prompts
+#### Scenario: Accept dry-run mode
+- **WHEN** user runs `spectr accept <change-id> --dry-run`
+- **THEN** the system displays what would be converted
+- **AND** the system does NOT write tasks.json
+- **AND** the system does NOT remove tasks.md
+
+#### Scenario: Accept already accepted change
+- **WHEN** user runs `spectr accept <change-id>` on a change that already has tasks.json
+- **THEN** the system displays a message indicating change is already accepted
+- **AND** the system exits with code 0 (success, idempotent)
+
+#### Scenario: Accept change without tasks.md
+- **WHEN** user runs `spectr accept <change-id>` on a change without tasks.md
+- **THEN** the system displays an error indicating no tasks.md found
+- **AND** the system exits with code 1
+
+### Requirement: Tasks JSON Schema
+The accept command SHALL generate `tasks.json` files conforming to a versioned schema with structured task objects.
+
+#### Scenario: JSON file structure
+- **WHEN** the accept command creates tasks.json
+- **THEN** the file SHALL contain a root object with `version` and `tasks` fields
+- **AND** `version` SHALL be integer 1 for this schema version
+- **AND** `tasks` SHALL be an array of task objects
+
+#### Scenario: Task object structure
+- **WHEN** a task is serialized to JSON
+- **THEN** it SHALL have `id` field containing the task identifier (e.g., "1.1")
+- **AND** it SHALL have `section` field containing the section header (e.g., "Implementation")
+- **AND** it SHALL have `description` field containing the full task text
+- **AND** it SHALL have `status` field with value "pending", "in_progress", or "completed"
+
+#### Scenario: Status value mapping from Markdown
+- **WHEN** converting tasks.md to tasks.json
+- **THEN** `- [ ]` SHALL map to status "pending"
+- **AND** `- [x]` (case-insensitive) SHALL map to status "completed"
 
 ### Requirement: Accept Command Flags
 The accept command SHALL support flags for controlling behavior.
 
-#### Scenario: Yes flag skips confirmation
-- **WHEN** user provides the `-y` or `--yes` flag
-- **THEN** the system skips the confirmation prompt before conversion
+#### Scenario: Dry-run flag
+- **WHEN** user provides the `--dry-run` flag
+- **THEN** the system previews the conversion without writing files
+- **AND** displays the JSON that would be generated
 
-### Requirement: Accept Command Validation
-The accept command SHALL validate preconditions before conversion.
+#### Scenario: Interactive change selection
+- **WHEN** user runs `spectr accept` without specifying a change ID
+- **THEN** the system displays a list of active changes with tasks.md files
+- **AND** prompts for selection using existing TUI components
 
-#### Scenario: Change must exist
-- **WHEN** user runs `spectr accept <change-id>` for a non-existent change
-- **THEN** the system displays an error message and exits with non-zero code
+## MODIFIED Requirements
 
-#### Scenario: tasks.md must exist
-- **WHEN** user runs `spectr accept <change-id>` and tasks.md does not exist
-- **THEN** the system displays an error: "No tasks.md found for change '<change-id>'"
+### Requirement: Task Counting
+The system SHALL count tasks in `tasks.md` files by identifying lines matching the pattern `- [ ]` or `- [x]` (case-insensitive), with completed tasks marked by `[x]`. The system SHALL prefer `tasks.json` when present.
 
-#### Scenario: tasks.json must not already exist
-- **WHEN** user runs `spectr accept <change-id>` and tasks.json already exists
-- **THEN** the system displays an error: "Change '<change-id>' has already been accepted"
+#### Scenario: Count tasks from JSON
+- **WHEN** the system counts tasks and `tasks.json` exists
+- **THEN** it reads task status from the JSON file
+- **AND** counts tasks by status field values
+- **AND** reports `taskStatus` with total and completed counts
 
-### Requirement: tasks.json Schema
-The accept command SHALL generate tasks.json with a structured schema that preserves task hierarchy and metadata.
+#### Scenario: Count completed and total tasks
+- **WHEN** the system reads a `tasks.md` file with 3 tasks, 2 marked `[x]` and 1 marked `[ ]`
+- **THEN** it reports `taskStatus` as `{ total: 3, completed: 2 }`
 
-#### Scenario: JSON structure fields
-- **WHEN** tasks.json is generated
-- **THEN** it SHALL include `version` field with value "1.0"
-- **AND** it SHALL include `changeId` field with the change identifier
-- **AND** it SHALL include `acceptedAt` field with ISO 8601 timestamp
-- **AND** it SHALL include `sections` array with section objects
-- **AND** it SHALL include `summary` object with total and completed counts
+#### Scenario: Handle missing tasks file
+- **WHEN** the system cannot find or read a `tasks.md` or `tasks.json` file for a change
+- **THEN** it reports `taskStatus` as `{ total: 0, completed: 0 }`
+- **AND** continues processing without error
 
-#### Scenario: Section object structure
-- **WHEN** parsing a section from tasks.md
-- **THEN** each section object SHALL include `name` (section title)
-- **AND** SHALL include `number` (section number from header)
-- **AND** SHALL include `tasks` array with task objects
-
-#### Scenario: Task object structure
-- **WHEN** parsing a task from tasks.md
-- **THEN** each task object SHALL include `id` (e.g., "1.1", "2.3")
-- **AND** SHALL include `description` (task text after ID, with indented detail lines appended)
-- **AND** SHALL include `completed` boolean based on `[x]` vs `[ ]`
-- **AND** SHALL include `subtasks` array (empty if no nested tasks, recursive for unlimited depth)
-
-#### Scenario: Summary calculation
-- **WHEN** generating tasks.json
-- **THEN** summary.total SHALL equal total number of tasks across all sections (including all nested subtasks recursively)
-- **AND** summary.completed SHALL equal number of tasks with `completed: true` (including nested subtasks)
-
-### Requirement: Task ID Parsing
-The accept command SHALL parse task IDs from the standard tasks.md format.
-
-#### Scenario: Parse simple task ID
-- **WHEN** parsing line `- [ ] 1.1 Create database schema`
-- **THEN** task ID SHALL be "1.1"
-- **AND** description SHALL be "Create database schema"
-- **AND** completed SHALL be false
-
-#### Scenario: Parse completed task
-- **WHEN** parsing line `- [x] 2.3 Write unit tests`
-- **THEN** task ID SHALL be "2.3"
-- **AND** completed SHALL be true
-
-#### Scenario: Parse nested subtask
-- **WHEN** parsing line `- [ ] 1.1.1 Create users table`
-- **THEN** task ID SHALL be "1.1.1"
-- **AND** the task SHALL be added to subtasks of task "1.1"
-
-#### Scenario: Parse deeply nested subtask
-- **WHEN** parsing line `- [ ] 1.1.1.1 Add primary key constraint`
-- **THEN** task ID SHALL be "1.1.1.1"
-- **AND** the task SHALL be added to subtasks of task "1.1.1" (unlimited nesting depth)
-
-#### Scenario: Handle task without ID
-- **WHEN** parsing line `- [ ] Some task without numeric ID`
-- **THEN** the system SHALL generate an auto-incremented ID within its section
-- **AND** description SHALL be "Some task without numeric ID"
-
-#### Scenario: Parse task with indented detail lines
-- **WHEN** parsing a task followed by indented lines (2+ spaces or tab):
-  ```
-  - [ ] 1.1 Create database schema
-    - Parse requirement headers
-    - Extract requirement name and content
-  ```
-- **THEN** the indented lines SHALL be appended to the description with newlines
-- **AND** the final description SHALL be "Create database schema\n- Parse requirement headers\n- Extract requirement name and content"
-
-#### Scenario: Preserve completion status from tasks.md
-- **WHEN** parsing a task marked `[x]` in tasks.md
-- **THEN** the task SHALL have `completed: true` in tasks.json
-- **AND** existing progress is preserved during acceptance
-
-### Requirement: Section Header Parsing
-The accept command SHALL parse section headers from tasks.md format.
-
-#### Scenario: Parse numbered section header
-- **WHEN** parsing line `## 1. Implementation`
-- **THEN** section number SHALL be 1
-- **AND** section name SHALL be "Implementation"
-
-#### Scenario: Parse section header without number
-- **WHEN** parsing line `## Validation`
-- **THEN** section number SHALL be auto-assigned based on order
-- **AND** section name SHALL be "Validation"
-
-### Requirement: Accept Command Help Text
-The accept command SHALL provide comprehensive help documentation.
-
-#### Scenario: Command help display
-- **WHEN** user invokes `spectr accept --help`
-- **THEN** help text SHALL describe task conversion purpose
-- **AND** SHALL explain that tasks.md is converted to tasks.json
-- **AND** SHALL note that tasks.md is removed after conversion
-- **AND** SHALL list available flags with descriptions
+#### Scenario: JSON takes precedence over Markdown
+- **WHEN** both `tasks.json` and `tasks.md` exist (should not happen normally)
+- **THEN** the system reads from `tasks.json`
+- **AND** ignores `tasks.md`

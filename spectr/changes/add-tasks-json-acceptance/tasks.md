@@ -1,81 +1,53 @@
-## 1. Task Parser Implementation
+## 1. Core Accept Command
 
-- [ ] 1.1 Create `internal/accept/types.go` with Task, Section, and TasksJSON struct definitions
-- [ ] 1.2 Create `internal/accept/parser.go` to parse tasks.md into structured format
-  - Parse section headers (`## N. Section Name`)
-  - Parse task lines (`- [ ] N.N Description`)
-  - Handle unlimited nested subtasks recursively (`- [ ] N.N.N.N...`)
-  - Parse indented detail lines and append to task description
-  - Preserve completion status from `[x]` markers
-- [ ] 1.3 Add comprehensive tests in `internal/accept/parser_test.go`
-  - Test section parsing
-  - Test task ID extraction
-  - Test completion status detection (preserve [x] markers)
-  - Test unlimited recursive nesting (1.1.1.1.1...)
-  - Test indented detail line parsing and description concatenation
-  - Test edge cases (empty sections, no tasks, malformed lines)
+- [ ] 1.1 Create `cmd/accept.go` with `AcceptCmd` struct following Kong patterns
+- [ ] 1.2 Add `AcceptCmd` to `CLI` struct in `cmd/root.go`
+- [ ] 1.3 Implement `Run()` method that validates change exists
+- [ ] 1.4 Implement `parseTasksMd()` function to parse tasks.md into structured format
+- [ ] 1.5 Implement `writeTasksJson()` function to write tasks.json with proper schema
+- [ ] 1.6 Add change validation step before conversion (reuse existing validation)
+- [ ] 1.7 Remove tasks.md after successful tasks.json creation
+- [ ] 1.8 Add `--dry-run` flag to preview conversion without writing files
 
-## 2. Test Fixtures from Archive
+## 2. JSON Schema and Types
 
-- [ ] 2.1 Identify diverse tasks.md examples from `spectr/changes/archive/`
-- [ ] 2.2 Copy selected fixtures to `testdata/tasks/` directory
-  - Include simple, medium, and complex examples
-  - Include examples with nested tasks
-  - Include examples with all tasks completed
-- [ ] 2.3 Create expected JSON outputs for each fixture
+- [ ] 2.1 Define `TasksFile` struct with version field and tasks array
+- [ ] 2.2 Define `Task` struct with id, section, description, and status fields
+- [ ] 2.3 Add JSON struct tags for proper serialization
+- [ ] 2.4 Add `TaskStatus` type with `pending`, `in_progress`, `completed` values
 
-## 3. JSON Schema Implementation
+## 3. Parser Updates
 
-- [ ] 3.1 Define tasks.json schema with version, metadata, sections, and summary
-- [ ] 3.2 Create `internal/accept/writer.go` for JSON generation
-  - Atomic write with temp file rename
-  - Pretty-print with 2-space indentation
-  - Calculate summary totals automatically
-- [ ] 3.3 Add writer tests with golden file comparison
+- [ ] 3.1 Update `parsers.CountTasks()` to check for `tasks.json` first
+- [ ] 3.2 Add `parsers.ReadTasksJson()` function to read and parse tasks.json
+- [ ] 3.3 Ensure backward compatibility - fall back to tasks.md if no JSON exists
+- [ ] 3.4 Update `parsers.TaskStatus` to include in_progress count if needed
 
-## 4. Accept Command Implementation
+## 4. Integration with Existing Commands
 
-- [ ] 4.1 Create `cmd/accept.go` with AcceptCmd struct
-  - ChangeID positional argument (optional for interactive selection)
-  - `--yes` flag to skip confirmation prompt
-- [ ] 4.2 Add AcceptCmd to CLI struct in `cmd/root.go`
-- [ ] 4.3 Create `internal/accept/accept.go` with core workflow
-  - Validate change exists
-  - Check tasks.md exists
-  - Check tasks.json does not already exist
-  - Parse tasks.md
-  - Generate tasks.json
-  - Remove tasks.md
-- [ ] 4.4 Add confirmation prompt before conversion (unless --yes)
-- [ ] 4.5 Add success/error output messages
+- [ ] 4.1 Update `internal/archive/archiver.go` to use new task reading logic
+- [ ] 4.2 Update `internal/list/lister.go` to use new task reading logic
+- [ ] 4.3 Update `internal/view/dashboard.go` to use new task reading logic
+- [ ] 4.4 Add auto-accept step to archive command when tasks.md still exists (with warning)
 
-## 5. Apply Slash Command Integration
+## 5. Slash Command Updates
 
-- [ ] 5.1 Update `.claude/commands/spectr/apply.md` to integrate acceptance workflow
-  - Check if tasks.json exists for the change
-  - If missing, instruct agent: "Run `spectr accept <change-id>` first"
-  - Update task tracking instructions to use tasks.json instead of tasks.md
-  - Clarify that tasks.json is the source of truth after acceptance
-- [ ] 5.2 Document the acceptance workflow in AGENTS.md reference
+- [ ] 5.1 Update `.claude/commands/spectr/apply.md` to require `spectr accept` first
+- [ ] 5.2 Update `.gemini/commands/spectr/apply.toml` with accept requirement
+- [ ] 5.3 Update template files in `internal/initialize/templates/tools/slash-apply.md.tmpl`
+- [ ] 5.4 Add `spectr accept` instructions to AGENTS.md Stage 2 workflow
 
-## 6. Archive Workflow Compatibility
+## 6. Testing
 
-- [ ] 6.1 Update `internal/archive/archiver.go` checkTasks() to handle both formats
-  - Check for tasks.json first, fall back to tasks.md
-  - Parse tasks.json for completion status
-- [ ] 6.2 Add JSON task parser to `internal/parsers/parsers.go`
-  - CountTasksJSON() function
-- [ ] 6.3 Update `internal/list/` and `internal/view/` to support tasks.json
+- [ ] 6.1 Add unit tests for `parseTasksMd()` with various task formats
+- [ ] 6.2 Add unit tests for `writeTasksJson()` with expected output
+- [ ] 6.3 Add unit tests for `parsers.ReadTasksJson()`
+- [ ] 6.4 Add integration test for full accept workflow
+- [ ] 6.5 Add test for backward compatibility (tasks.md fallback)
+- [ ] 6.6 Add test for dry-run mode
 
-## 7. Validation
+## 7. Documentation
 
-- [ ] 7.1 Run `go build` to verify compilation
-- [ ] 7.2 Run `go test ./...` to verify all tests pass
-- [ ] 7.3 Run `golangci-lint run` to verify no linting errors
-- [ ] 7.4 Test `spectr accept` command manually with a test change
-- [ ] 7.5 Run `spectr validate add-tasks-json-acceptance --strict`
-
-## 8. Documentation
-
-- [ ] 8.1 Add help text to accept command describing purpose and workflow
-- [ ] 8.2 Update CLI help to show accept command
+- [ ] 7.1 Update README with `spectr accept` command documentation
+- [ ] 7.2 Update CLI reference docs with accept command
+- [ ] 7.3 Add example tasks.json format to documentation

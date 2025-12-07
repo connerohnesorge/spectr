@@ -1,6 +1,7 @@
 package list
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -1481,5 +1482,1173 @@ func TestHelpToggleInUnifiedMode(t *testing.T) {
 	view := m.View()
 	if !strings.Contains(view, "t: filter") {
 		t.Error("Expected view to show full help text with filter option in unified mode")
+	}
+}
+
+// =============================================================================
+// Responsive Column Calculation Tests (Tasks 5.1 and 5.2)
+// =============================================================================
+
+// TestCalculateChangesColumns_FullWidth tests that all 4 columns are returned
+// at full width (110+)
+func TestCalculateChangesColumns_FullWidth(t *testing.T) {
+	testWidths := []int{110, 120, 150, 200}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateChangesColumns(width)
+
+			if len(cols) != 4 {
+				t.Errorf("Expected 4 columns at width %d, got %d", width, len(cols))
+			}
+
+			// Verify column titles
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleTitle,
+				columnTitleDeltas,
+				columnTitleTasks,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Verify default widths at full breakpoint
+			if cols[0].Width != changeIDWidth {
+				t.Errorf("ID column width: expected %d, got %d",
+					changeIDWidth, cols[0].Width)
+			}
+			if cols[1].Width != changeTitleWidth {
+				t.Errorf("Title column width: expected %d, got %d",
+					changeTitleWidth, cols[1].Width)
+			}
+			if cols[2].Width != changeDeltaWidth {
+				t.Errorf("Deltas column width: expected %d, got %d",
+					changeDeltaWidth, cols[2].Width)
+			}
+			if cols[3].Width != changeTasksWidth {
+				t.Errorf("Tasks column width: expected %d, got %d",
+					changeTasksWidth, cols[3].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateChangesColumns_MediumWidth tests that all 4 columns are returned
+// at medium width (90-109) but with narrower title
+func TestCalculateChangesColumns_MediumWidth(t *testing.T) {
+	testWidths := []int{90, 95, 100, 109}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateChangesColumns(width)
+
+			if len(cols) != 4 {
+				t.Errorf("Expected 4 columns at width %d, got %d", width, len(cols))
+			}
+
+			// Verify all columns are present
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleTitle,
+				columnTitleDeltas,
+				columnTitleTasks,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Title width should be calculated dynamically but at least 20
+			if cols[1].Width < 20 {
+				t.Errorf("Title column width too small: expected >= 20, got %d",
+					cols[1].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateChangesColumns_NarrowTitleWidth tests that all 4 columns are still
+// present at width 80-89, but Title is very narrow
+func TestCalculateChangesColumns_NarrowTitleWidth(t *testing.T) {
+	testWidths := []int{80, 85, 89}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateChangesColumns(width)
+
+			if len(cols) != 4 {
+				t.Errorf("Expected 4 columns at width %d, got %d", width, len(cols))
+			}
+
+			// Verify all column titles are present
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleTitle,
+				columnTitleDeltas,
+				columnTitleTasks,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Title should be narrow (15-20 chars)
+			if cols[1].Width > 20 {
+				t.Errorf("Title column width should be <= 20 at width %d, got %d",
+					width, cols[1].Width)
+			}
+			if cols[1].Width < 15 {
+				t.Errorf("Title column width should be >= 15 at width %d, got %d",
+					width, cols[1].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateChangesColumns_NarrowWidth tests that Title column is hidden
+// at width 70-79, keeping ID, Deltas, and Tasks
+func TestCalculateChangesColumns_NarrowWidth(t *testing.T) {
+	testWidths := []int{70, 75, 79}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateChangesColumns(width)
+
+			if len(cols) != 3 {
+				t.Errorf("Expected 3 columns at width %d, got %d", width, len(cols))
+			}
+
+			// Verify ID, Deltas, Tasks are present (Title hidden)
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleDeltas,
+				columnTitleTasks,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+		})
+	}
+}
+
+// TestCalculateChangesColumns_MinimalWidth tests minimal width behavior (<70)
+// At this width, only ID and Tasks are shown (Title and Deltas hidden)
+func TestCalculateChangesColumns_MinimalWidth(t *testing.T) {
+	testWidths := []int{50, 60, 69}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateChangesColumns(width)
+
+			if len(cols) != 2 {
+				t.Errorf("Expected 2 columns at width %d, got %d", width, len(cols))
+			}
+
+			// Verify only ID and Tasks are present
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleTasks,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// ID should be compressed to 20
+			if cols[0].Width != 20 {
+				t.Errorf("ID column width at minimal: expected 20, got %d",
+					cols[0].Width)
+			}
+
+			// Tasks should be at least 10
+			if cols[1].Width < 10 {
+				t.Errorf("Tasks column width too small: expected >= 10, got %d",
+					cols[1].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateSpecsColumns_FullWidth tests that all 3 columns are returned
+// at full width (110+)
+func TestCalculateSpecsColumns_FullWidth(t *testing.T) {
+	testWidths := []int{110, 120, 150, 200}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateSpecsColumns(width)
+
+			if len(cols) != 3 {
+				t.Errorf("Expected 3 columns at width %d, got %d", width, len(cols))
+			}
+
+			// Verify column titles
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleTitle,
+				columnTitleRequirements,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Verify default widths at full breakpoint
+			if cols[0].Width != specIDWidth {
+				t.Errorf("ID column width: expected %d, got %d",
+					specIDWidth, cols[0].Width)
+			}
+			if cols[1].Width != specTitleWidth {
+				t.Errorf("Title column width: expected %d, got %d",
+					specTitleWidth, cols[1].Width)
+			}
+			if cols[2].Width != specRequirementsWidth {
+				t.Errorf("Requirements column width: expected %d, got %d",
+					specRequirementsWidth, cols[2].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateSpecsColumns_MediumWidth tests medium width (90-109)
+func TestCalculateSpecsColumns_MediumWidth(t *testing.T) {
+	testWidths := []int{90, 95, 100, 109}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateSpecsColumns(width)
+
+			if len(cols) != 3 {
+				t.Errorf("Expected 3 columns at width %d, got %d", width, len(cols))
+			}
+
+			// All columns should be present
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleTitle,
+				columnTitleRequirements,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Title width should be at least 25
+			if cols[1].Width < 25 {
+				t.Errorf("Title column width too small: expected >= 25, got %d",
+					cols[1].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateSpecsColumns_NarrowWidth tests narrow width (70-89)
+func TestCalculateSpecsColumns_NarrowWidth(t *testing.T) {
+	testWidths := []int{70, 75, 80, 89}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateSpecsColumns(width)
+
+			if len(cols) != 3 {
+				t.Errorf("Expected 3 columns at width %d, got %d", width, len(cols))
+			}
+
+			// All columns should be present but Requirements narrowed
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleTitle,
+				columnTitleRequirements,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Requirements column should be narrowed to 8
+			if cols[2].Width != 8 {
+				t.Errorf("Requirements column width at narrow: expected 8, got %d",
+					cols[2].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateSpecsColumns_MinimalWidth tests minimal width (<70)
+func TestCalculateSpecsColumns_MinimalWidth(t *testing.T) {
+	testWidths := []int{50, 60, 69}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateSpecsColumns(width)
+
+			if len(cols) != 2 {
+				t.Errorf("Expected 2 columns at width %d, got %d", width, len(cols))
+			}
+
+			// Only ID and Title should be present (Requirements hidden)
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleTitle,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// ID should be compressed to 25
+			if cols[0].Width != 25 {
+				t.Errorf("ID column width at minimal: expected 25, got %d",
+					cols[0].Width)
+			}
+
+			// Title should be at least 15
+			if cols[1].Width < 15 {
+				t.Errorf("Title column width too small: expected >= 15, got %d",
+					cols[1].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateUnifiedColumns_FullWidth tests that all 4 columns are returned
+// at full width (110+)
+func TestCalculateUnifiedColumns_FullWidth(t *testing.T) {
+	testWidths := []int{110, 120, 150, 200}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateUnifiedColumns(width)
+
+			if len(cols) != 4 {
+				t.Errorf("Expected 4 columns at width %d, got %d", width, len(cols))
+			}
+
+			// Verify column titles
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleType,
+				columnTitleTitle,
+				columnTitleDetails,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Verify default widths at full breakpoint
+			if cols[0].Width != unifiedIDWidth {
+				t.Errorf("ID column width: expected %d, got %d",
+					unifiedIDWidth, cols[0].Width)
+			}
+			if cols[1].Width != unifiedTypeWidth {
+				t.Errorf("Type column width: expected %d, got %d",
+					unifiedTypeWidth, cols[1].Width)
+			}
+			if cols[2].Width != unifiedTitleWidth {
+				t.Errorf("Title column width: expected %d, got %d",
+					unifiedTitleWidth, cols[2].Width)
+			}
+			if cols[3].Width != unifiedDetailsWidth {
+				t.Errorf("Details column width: expected %d, got %d",
+					unifiedDetailsWidth, cols[3].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateUnifiedColumns_MediumWidth tests medium width (90-109)
+func TestCalculateUnifiedColumns_MediumWidth(t *testing.T) {
+	testWidths := []int{90, 95, 100, 109}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateUnifiedColumns(width)
+
+			if len(cols) != 4 {
+				t.Errorf("Expected 4 columns at width %d, got %d", width, len(cols))
+			}
+
+			// All columns should be present
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleType,
+				columnTitleTitle,
+				columnTitleDetails,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Title width should be at least 25
+			if cols[2].Width < 25 {
+				t.Errorf("Title column width too small: expected >= 25, got %d",
+					cols[2].Width)
+			}
+
+			// Type width should remain fixed at 8
+			if cols[1].Width != unifiedTypeWidth {
+				t.Errorf("Type column width should remain %d, got %d",
+					unifiedTypeWidth, cols[1].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateUnifiedColumns_NarrowWidth tests narrow width (70-89)
+func TestCalculateUnifiedColumns_NarrowWidth(t *testing.T) {
+	testWidths := []int{70, 75, 80, 89}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateUnifiedColumns(width)
+
+			if len(cols) != 3 {
+				t.Errorf("Expected 3 columns at width %d, got %d", width, len(cols))
+			}
+
+			// ID, Type, Title should be present (Details hidden)
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleType,
+				columnTitleTitle,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// Title width should be at least 20
+			if cols[2].Width < 20 {
+				t.Errorf("Title column width too small: expected >= 20, got %d",
+					cols[2].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateUnifiedColumns_MinimalWidth tests minimal width (<70)
+func TestCalculateUnifiedColumns_MinimalWidth(t *testing.T) {
+	testWidths := []int{50, 60, 69}
+
+	for _, width := range testWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			cols := calculateUnifiedColumns(width)
+
+			if len(cols) != 3 {
+				t.Errorf("Expected 3 columns at width %d, got %d", width, len(cols))
+			}
+
+			// ID, Type, Title should be present
+			expectedTitles := []string{
+				columnTitleID,
+				columnTitleType,
+				columnTitleTitle,
+			}
+			for i, expected := range expectedTitles {
+				if i < len(cols) && cols[i].Title != expected {
+					t.Errorf("Column %d: expected title '%s', got '%s'",
+						i, expected, cols[i].Title)
+				}
+			}
+
+			// ID should be compressed to 20
+			if cols[0].Width != 20 {
+				t.Errorf("ID column width at minimal: expected 20, got %d",
+					cols[0].Width)
+			}
+
+			// Type should remain fixed at 8
+			if cols[1].Width != unifiedTypeWidth {
+				t.Errorf("Type column width should remain %d, got %d",
+					unifiedTypeWidth, cols[1].Width)
+			}
+
+			// Title should be at least 15
+			if cols[2].Width < 15 {
+				t.Errorf("Title column width too small: expected >= 15, got %d",
+					cols[2].Width)
+			}
+		})
+	}
+}
+
+// TestCalculateTitleTruncate_ChangeType tests title truncation for change view
+func TestCalculateTitleTruncate_ChangeType(t *testing.T) {
+	tests := []struct {
+		name     string
+		width    int
+		minValue int // truncate should be at least this
+	}{
+		{"full_width", 110, 35},
+		{"medium_width", 95, 15},
+		{"narrow_width", 75, 15},
+		{"minimal_width", 60, 13},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			truncate := calculateTitleTruncate(itemTypeChange, tt.width)
+
+			if truncate < tt.minValue {
+				t.Errorf("Title truncate at width %d: expected >= %d, got %d",
+					tt.width, tt.minValue, truncate)
+			}
+		})
+	}
+}
+
+// TestCalculateTitleTruncate_SpecType tests title truncation for spec view
+func TestCalculateTitleTruncate_SpecType(t *testing.T) {
+	tests := []struct {
+		name     string
+		width    int
+		minValue int
+	}{
+		{"full_width", 110, 40},
+		{"medium_width", 95, 20},
+		{"narrow_width", 75, 15},
+		{"minimal_width", 60, 13},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			truncate := calculateTitleTruncate(itemTypeSpec, tt.width)
+
+			if truncate < tt.minValue {
+				t.Errorf("Title truncate at width %d: expected >= %d, got %d",
+					tt.width, tt.minValue, truncate)
+			}
+		})
+	}
+}
+
+// TestCalculateTitleTruncate_AllType tests title truncation for unified view
+func TestCalculateTitleTruncate_AllType(t *testing.T) {
+	tests := []struct {
+		name     string
+		width    int
+		minValue int
+	}{
+		{"full_width", 110, 35},
+		{"medium_width", 95, 20},
+		{"narrow_width", 75, 15},
+		{"minimal_width", 60, 13},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			truncate := calculateTitleTruncate(itemTypeAll, tt.width)
+
+			if truncate < tt.minValue {
+				t.Errorf("Title truncate at width %d: expected >= %d, got %d",
+					tt.width, tt.minValue, truncate)
+			}
+		})
+	}
+}
+
+// TestCalculateTitleTruncate_UnknownType tests default fallback
+func TestCalculateTitleTruncate_UnknownType(t *testing.T) {
+	truncate := calculateTitleTruncate("unknown", 100)
+
+	// Should return default fallback of 38
+	if truncate != 38 {
+		t.Errorf("Unknown type truncate: expected 38, got %d", truncate)
+	}
+}
+
+// TestHasHiddenColumns_Changes tests column visibility detection for changes view
+func TestHasHiddenColumns_Changes(t *testing.T) {
+	tests := []struct {
+		name   string
+		width  int
+		hidden bool
+	}{
+		{"full_width_110", 110, false},
+		{"full_width_120", 120, false},
+		{"medium_width_100", 100, false},
+		{"medium_width_90", 90, false},
+		{"narrow_title_85", 85, false}, // Still 4 columns, just narrower Title
+		{"narrow_title_80", 80, false}, // Still 4 columns, just narrower Title
+		{"hide_title_75", 75, true},    // Title hidden, 3 columns
+		{"hide_title_70", 70, true},    // Title hidden, 3 columns
+		{"minimal_60", 60, true},       // Title + Deltas hidden, 2 columns
+		{"minimal_50", 50, true},       // Title + Deltas hidden, 2 columns
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hidden := hasHiddenColumns(itemTypeChange, tt.width)
+
+			if hidden != tt.hidden {
+				t.Errorf("hasHiddenColumns(change, %d): expected %v, got %v",
+					tt.width, tt.hidden, hidden)
+			}
+		})
+	}
+}
+
+// TestHasHiddenColumns_Specs tests column visibility detection for specs view
+func TestHasHiddenColumns_Specs(t *testing.T) {
+	tests := []struct {
+		name   string
+		width  int
+		hidden bool
+	}{
+		{"full_width_110", 110, false},
+		{"full_width_120", 120, false},
+		{"medium_width_100", 100, false},
+		{"medium_width_90", 90, false},
+		{"narrow_80", 80, false},
+		{"narrow_70", 70, false},
+		{"minimal_69", 69, true},
+		{"minimal_60", 60, true},
+		{"minimal_50", 50, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hidden := hasHiddenColumns(itemTypeSpec, tt.width)
+
+			if hidden != tt.hidden {
+				t.Errorf("hasHiddenColumns(spec, %d): expected %v, got %v",
+					tt.width, tt.hidden, hidden)
+			}
+		})
+	}
+}
+
+// TestHasHiddenColumns_Unified tests column visibility detection for unified view
+func TestHasHiddenColumns_Unified(t *testing.T) {
+	tests := []struct {
+		name   string
+		width  int
+		hidden bool
+	}{
+		{"full_width_110", 110, false},
+		{"full_width_120", 120, false},
+		{"medium_width_100", 100, false},
+		{"medium_width_90", 90, false},
+		{"narrow_89", 89, true},
+		{"narrow_80", 80, true},
+		{"narrow_70", 70, true},
+		{"minimal_60", 60, true},
+		{"minimal_50", 50, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			hidden := hasHiddenColumns(itemTypeAll, tt.width)
+
+			if hidden != tt.hidden {
+				t.Errorf("hasHiddenColumns(all, %d): expected %v, got %v",
+					tt.width, tt.hidden, hidden)
+			}
+		})
+	}
+}
+
+// TestHasHiddenColumns_UnknownType tests unknown type returns false
+func TestHasHiddenColumns_UnknownType(t *testing.T) {
+	hidden := hasHiddenColumns("unknown", 50)
+
+	if hidden {
+		t.Error("hasHiddenColumns for unknown type should return false")
+	}
+}
+
+// TestColumnCountsByBreakpoint is a comprehensive test that validates
+// the expected column counts at each major breakpoint for all view types
+func TestColumnCountsByBreakpoint(t *testing.T) {
+	type testCase struct {
+		viewType    string
+		width       int
+		expectedLen int
+	}
+
+	tests := []testCase{
+		// Changes view breakpoints - Tasks has higher priority than Title
+		{itemTypeChange, 110, 4}, // Full: ID, Title, Deltas, Tasks
+		{itemTypeChange, 109, 4}, // Medium: still 4 columns
+		{itemTypeChange, 90, 4},  // Medium: still 4 columns
+		{itemTypeChange, 89, 4},  // Narrow Title: 4 columns, Title very narrow
+		{itemTypeChange, 80, 4},  // Narrow Title: 4 columns, Title very narrow
+		{itemTypeChange, 79, 3},  // Hide Title: ID, Deltas, Tasks
+		{itemTypeChange, 70, 3},  // Hide Title: ID, Deltas, Tasks
+		{itemTypeChange, 69, 2},  // Minimal: ID, Tasks only
+		{itemTypeChange, 50, 2},  // Minimal: ID, Tasks only
+
+		// Specs view breakpoints
+		{itemTypeSpec, 110, 3}, // Full: ID, Title, Requirements
+		{itemTypeSpec, 109, 3}, // Medium
+		{itemTypeSpec, 90, 3},  // Medium
+		{itemTypeSpec, 89, 3},  // Narrow with narrowed Requirements
+		{itemTypeSpec, 70, 3},  // Still 3 columns
+		{itemTypeSpec, 69, 2},  // Minimal: Requirements hidden
+		{itemTypeSpec, 50, 2},  // Minimal
+
+		// Unified view breakpoints
+		{itemTypeAll, 110, 4}, // Full: ID, Type, Title, Details
+		{itemTypeAll, 109, 4}, // Medium
+		{itemTypeAll, 90, 4},  // Medium
+		{itemTypeAll, 89, 3},  // Narrow: Details hidden
+		{itemTypeAll, 70, 3},  // Narrow
+		{itemTypeAll, 69, 3},  // Minimal: still 3 columns
+		{itemTypeAll, 50, 3},  // Minimal
+	}
+
+	for _, tt := range tests {
+		name := fmt.Sprintf("%s_width_%d", tt.viewType, tt.width)
+		t.Run(name, func(t *testing.T) {
+			var cols []table.Column
+			switch tt.viewType {
+			case itemTypeChange:
+				cols = calculateChangesColumns(tt.width)
+			case itemTypeSpec:
+				cols = calculateSpecsColumns(tt.width)
+			case itemTypeAll:
+				cols = calculateUnifiedColumns(tt.width)
+			}
+
+			if len(cols) != tt.expectedLen {
+				t.Errorf("Expected %d columns for %s at width %d, got %d",
+					tt.expectedLen, tt.viewType, tt.width, len(cols))
+			}
+		})
+	}
+}
+
+// TestBuildChangesRows_ResponsiveColumns tests that buildChangesRows creates
+// correct number of row values for different column counts
+func TestBuildChangesRows_ResponsiveColumns(t *testing.T) {
+	changes := []ChangeInfo{
+		{
+			ID:         "test-change-1",
+			Title:      "Test Change One",
+			DeltaCount: 3,
+			TaskStatus: parsers.TaskStatus{Total: 5, Completed: 2},
+		},
+		{
+			ID:         "test-change-2",
+			Title:      "Test Change Two",
+			DeltaCount: 1,
+			TaskStatus: parsers.TaskStatus{Total: 3, Completed: 3},
+		},
+	}
+
+	tests := []struct {
+		name           string
+		numColumns     int
+		expectedRowLen int
+	}{
+		{"full_4_columns", 4, 4},
+		{"medium_3_columns", 3, 3},
+		{"minimal_2_columns", 2, 2},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rows := buildChangesRows(changes, 30, tt.numColumns)
+
+			if len(rows) != len(changes) {
+				t.Errorf("Expected %d rows, got %d", len(changes), len(rows))
+			}
+
+			for i, row := range rows {
+				if len(row) != tt.expectedRowLen {
+					t.Errorf("Row %d: expected %d values, got %d",
+						i, tt.expectedRowLen, len(row))
+				}
+			}
+		})
+	}
+}
+
+// TestBuildSpecsRows_ResponsiveColumns tests that buildSpecsRows creates
+// correct number of row values for different column counts
+func TestBuildSpecsRows_ResponsiveColumns(t *testing.T) {
+	specs := []SpecInfo{
+		{
+			ID:               "test-spec-1",
+			Title:            "Test Spec One",
+			RequirementCount: 5,
+		},
+		{
+			ID:               "test-spec-2",
+			Title:            "Test Spec Two",
+			RequirementCount: 8,
+		},
+	}
+
+	tests := []struct {
+		name           string
+		numColumns     int
+		expectedRowLen int
+	}{
+		{"full_3_columns", 3, 3},
+		{"minimal_2_columns", 2, 2},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rows := buildSpecsRows(specs, 30, tt.numColumns)
+
+			if len(rows) != len(specs) {
+				t.Errorf("Expected %d rows, got %d", len(specs), len(rows))
+			}
+
+			for i, row := range rows {
+				if len(row) != tt.expectedRowLen {
+					t.Errorf("Row %d: expected %d values, got %d",
+						i, tt.expectedRowLen, len(row))
+				}
+			}
+		})
+	}
+}
+
+// TestBuildUnifiedRows_ResponsiveColumns tests that buildUnifiedRows creates
+// correct number of row values for different column counts
+func TestBuildUnifiedRows_ResponsiveColumns(t *testing.T) {
+	items := ItemList{
+		NewChangeItem(ChangeInfo{
+			ID:         "test-change",
+			Title:      "Test Change",
+			DeltaCount: 2,
+			TaskStatus: parsers.TaskStatus{Total: 4, Completed: 1},
+		}),
+		NewSpecItem(SpecInfo{
+			ID:               "test-spec",
+			Title:            "Test Spec",
+			RequirementCount: 6,
+		}),
+	}
+
+	tests := []struct {
+		name           string
+		numColumns     int
+		expectedRowLen int
+	}{
+		{"full_4_columns", 4, 4},
+		{"narrow_3_columns", 3, 3},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rows := buildUnifiedRows(items, 30, tt.numColumns)
+
+			if len(rows) != len(items) {
+				t.Errorf("Expected %d rows, got %d", len(items), len(rows))
+			}
+
+			for i, row := range rows {
+				if len(row) != tt.expectedRowLen {
+					t.Errorf("Row %d: expected %d values, got %d",
+						i, tt.expectedRowLen, len(row))
+				}
+			}
+		})
+	}
+}
+
+// TestViewShowsHiddenColumnsHint tests that the view shows a hint when
+// columns are hidden
+func TestViewShowsHiddenColumnsHint(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: 20},
+		{Title: "Title", Width: 20},
+	}
+	rows := []table.Row{
+		{"test-id", "Test Title"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:      itemTypeChange,
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		showHelp:      false,
+		terminalWidth: 75, // Narrow width where columns are hidden
+		helpText:      "Test help text",
+		minimalFooter: "showing: 1 | project: /tmp/test | ?: help",
+	}
+
+	view := model.View()
+
+	// Should contain hidden columns hint
+	if !strings.Contains(view, "(some columns hidden)") {
+		t.Error("Expected view to show '(some columns hidden)' hint at narrow width")
+	}
+}
+
+// TestViewNoHiddenColumnsHint tests that the view does not show a hint when
+// all columns are visible
+func TestViewNoHiddenColumnsHint(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"test-id", "Test Title", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := interactiveModel{
+		itemType:      itemTypeChange,
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		showHelp:      false,
+		terminalWidth: 120, // Full width where all columns are visible
+		helpText:      "Test help text",
+		minimalFooter: "showing: 1 | project: /tmp/test | ?: help",
+	}
+
+	view := model.View()
+
+	// Should NOT contain hidden columns hint
+	if strings.Contains(view, "(some columns hidden)") {
+		t.Error("Expected view NOT to show '(some columns hidden)' hint at full width")
+	}
+}
+
+// TestWindowSizeMsg_TriggersRebuild tests that WindowSizeMsg triggers table rebuild
+func TestWindowSizeMsg_TriggersRebuild(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"test-change", "Test Change", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	changes := []ChangeInfo{
+		{
+			ID:         "test-change",
+			Title:      "Test Change",
+			DeltaCount: 2,
+			TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+		},
+	}
+
+	model := interactiveModel{
+		itemType:      itemTypeChange,
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		changesData:   changes,
+		terminalWidth: 120,
+		helpText:      "Test help text",
+		minimalFooter: "showing: 1 | project: /tmp/test | ?: help",
+		allRows:       rows,
+	}
+
+	// Send WindowSizeMsg with narrow width
+	updatedModel, _ := model.Update(tea.WindowSizeMsg{Width: 75, Height: 24})
+	m, ok := updatedModel.(interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
+
+	// Terminal width should be updated
+	if m.terminalWidth != 75 {
+		t.Errorf("Expected terminalWidth to be 75, got %d", m.terminalWidth)
+	}
+
+	// At width 75, changes view should have 2 columns (narrow breakpoint)
+	expectedColCount := len(calculateChangesColumns(75))
+	actualColCount := len(m.table.Columns())
+
+	if actualColCount != expectedColCount {
+		t.Errorf("Expected %d columns after resize to 75, got %d",
+			expectedColCount, actualColCount)
+	}
+}
+
+// TestRebuildTablePreservesCursor tests that table rebuild preserves cursor position
+func TestRebuildTablePreservesCursor(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"change-1", "Change One", "1", "1/2"},
+		{"change-2", "Change Two", "2", "2/3"},
+		{"change-3", "Change Three", "3", "3/4"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+	// Set cursor to second row
+	tbl.SetCursor(1)
+
+	changes := []ChangeInfo{
+		{
+			ID:         "change-1",
+			Title:      "Change One",
+			DeltaCount: 1,
+			TaskStatus: parsers.TaskStatus{Total: 2, Completed: 1},
+		},
+		{
+			ID:         "change-2",
+			Title:      "Change Two",
+			DeltaCount: 2,
+			TaskStatus: parsers.TaskStatus{Total: 3, Completed: 2},
+		},
+		{
+			ID:         "change-3",
+			Title:      "Change Three",
+			DeltaCount: 3,
+			TaskStatus: parsers.TaskStatus{Total: 4, Completed: 3},
+		},
+	}
+
+	model := interactiveModel{
+		itemType:      itemTypeChange,
+		projectPath:   "/tmp/test",
+		table:         tbl,
+		changesData:   changes,
+		terminalWidth: 120,
+		helpText:      "Test help text",
+		minimalFooter: "showing: 3 | project: /tmp/test | ?: help",
+		allRows:       rows,
+	}
+
+	// Verify initial cursor position
+	if model.table.Cursor() != 1 {
+		t.Fatalf("Initial cursor should be 1, got %d", model.table.Cursor())
+	}
+
+	// Resize terminal
+	updatedModel, _ := model.Update(tea.WindowSizeMsg{Width: 75, Height: 24})
+	m, ok := updatedModel.(interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
+
+	// Cursor position should be preserved
+	if m.table.Cursor() != 1 {
+		t.Errorf("Expected cursor to remain at 1 after resize, got %d",
+			m.table.Cursor())
+	}
+}
+
+// TestBreakpointConstants verifies the breakpoint constants are correctly defined
+func TestBreakpointConstants(t *testing.T) {
+	// Verify breakpoint values match documentation
+	if breakpointFull != 110 {
+		t.Errorf("breakpointFull should be 110, got %d", breakpointFull)
+	}
+	if breakpointMedium != 90 {
+		t.Errorf("breakpointMedium should be 90, got %d", breakpointMedium)
+	}
+	if breakpointNarrow != 70 {
+		t.Errorf("breakpointNarrow should be 70, got %d", breakpointNarrow)
+	}
+	if breakpointHideTitle != 80 {
+		t.Errorf("breakpointHideTitle should be 80, got %d", breakpointHideTitle)
+	}
+}
+
+// TestColumnPriorityConstants verifies column priority constants
+func TestColumnPriorityConstants(t *testing.T) {
+	// Verify priority ordering
+	if ColumnPriorityEssential >= ColumnPriorityHigh {
+		t.Error("ColumnPriorityEssential should be less than ColumnPriorityHigh")
+	}
+	if ColumnPriorityHigh >= ColumnPriorityMedium {
+		t.Error("ColumnPriorityHigh should be less than ColumnPriorityMedium")
+	}
+	if ColumnPriorityMedium >= ColumnPriorityLow {
+		t.Error("ColumnPriorityMedium should be less than ColumnPriorityLow")
+	}
+}
+
+// TestTitleWidthMinimums tests that title widths never go below minimums
+// when the title column is present
+func TestTitleWidthMinimums(t *testing.T) {
+	// Test extremely narrow widths
+	extremeWidths := []int{30, 40, 45}
+
+	for _, width := range extremeWidths {
+		t.Run(fmt.Sprintf("width_%d", width), func(t *testing.T) {
+			// Changes: at minimal width, Title is hidden (only ID, Tasks shown)
+			// So we check Tasks column width instead
+			changesCols := calculateChangesColumns(width)
+			// At minimal widths, changes only has ID and Tasks (no Title)
+			// Verify Tasks column (index 1) has reasonable width
+			if len(changesCols) >= 2 && changesCols[1].Title == columnTitleTasks {
+				if changesCols[1].Width < 10 {
+					t.Errorf("Changes tasks width at %d should be >= 10, got %d",
+						width, changesCols[1].Width)
+				}
+			}
+
+			// Specs: title min is 15 at minimal breakpoint
+			specsCols := calculateSpecsColumns(width)
+			if len(specsCols) >= 2 && specsCols[1].Width < 15 {
+				t.Errorf("Specs title width at %d should be >= 15, got %d",
+					width, specsCols[1].Width)
+			}
+
+			// Unified: title min is 15 at minimal breakpoint
+			unifiedCols := calculateUnifiedColumns(width)
+			if len(unifiedCols) >= 3 && unifiedCols[2].Width < 15 {
+				t.Errorf("Unified title width at %d should be >= 15, got %d",
+					width, unifiedCols[2].Width)
+			}
+		})
 	}
 }

@@ -53,12 +53,11 @@ func CollectData(projectPath string) (*DashboardData, error) {
 			title = changeID
 		}
 
-		// Parse task counts from tasks.md
-		tasksPath := filepath.Join(changeDir, "tasks.md")
-		taskStatus, err := parsers.CountTasks(tasksPath)
+		// Parse task counts from tasks.json or tasks.md
+		taskStatus, err := parsers.CountTasks(changeDir)
 		if err != nil {
-			// If tasks.md can't be read, assume zero tasks
-			taskStatus = parsers.TaskStatus{Total: 0, Completed: 0}
+			// If tasks can't be read, assume zero tasks
+			taskStatus = parsers.TaskStatus{Total: 0, Completed: 0, InProgress: 0}
 		}
 
 		// Calculate completion percentage

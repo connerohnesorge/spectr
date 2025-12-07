@@ -31,7 +31,6 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 	for _, id := range changeIDs {
 		changeDir := filepath.Join(l.projectPath, "spectr", "changes", id)
 		proposalPath := filepath.Join(changeDir, "proposal.md")
-		tasksPath := filepath.Join(changeDir, "tasks.md")
 
 		// Extract title
 		title, err := parsers.ExtractTitle(proposalPath)
@@ -40,11 +39,13 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 			title = id
 		}
 
-		// Count tasks
-		taskStatus, err := parsers.CountTasks(tasksPath)
+		// Count tasks (from tasks.json or tasks.md)
+		taskStatus, err := parsers.CountTasks(changeDir)
 		if err != nil {
 			// If error reading tasks, use zero status
-			taskStatus = parsers.TaskStatus{Total: 0, Completed: 0}
+			taskStatus = parsers.TaskStatus{
+				Total: 0, Completed: 0, InProgress: 0,
+			}
 		}
 
 		// Count deltas

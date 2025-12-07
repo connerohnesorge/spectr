@@ -5,6 +5,7 @@ package parsers
 
 import (
 	"bufio"
+	"encoding/json"
 	"os"
 	"regexp"
 	"strings"
@@ -42,13 +43,68 @@ func ExtractTitle(filePath string) (string, error) {
 
 // TaskStatus represents task completion status
 type TaskStatus struct {
-	Total     int `json:"total"`
-	Completed int `json:"completed"`
+	Total      int `json:"total"`
+	Completed  int `json:"completed"`
+	InProgress int `json:"in_progress"`
 }
 
-// CountTasks counts tasks in tasks.md, identifying completed vs total
-func CountTasks(filePath string) (TaskStatus, error) {
-	status := TaskStatus{Total: 0, Completed: 0}
+// ReadTasksJson reads and parses a tasks.json file
+func ReadTasksJson(filePath string) (*TasksFile, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var tasksFile TasksFile
+	if err := json.Unmarshal(data, &tasksFile); err != nil {
+		return nil, err
+	}
+
+	return &tasksFile, nil
+}
+
+// CountTasks counts tasks in a change directory, checking tasks.json first
+// and falling back to tasks.md if tasks.json doesn't exist
+func CountTasks(changeDir string) (TaskStatus, error) {
+	// First, try to read tasks.json
+	tasksJsonPath := changeDir + "/tasks.json"
+	if _, err := os.Stat(tasksJsonPath); err == nil {
+		return countTasksFromJson(tasksJsonPath)
+	}
+
+	// Fall back to tasks.md
+	tasksMdPath := changeDir + "/tasks.md"
+
+	return countTasksFromMarkdown(tasksMdPath)
+}
+
+// countTasksFromJson counts tasks from a tasks.json file
+func countTasksFromJson(filePath string) (TaskStatus, error) {
+	status := TaskStatus{Total: 0, Completed: 0, InProgress: 0}
+
+	tasksFile, err := ReadTasksJson(filePath)
+	if err != nil {
+		return status, err
+	}
+
+	status.Total = len(tasksFile.Tasks)
+	for _, task := range tasksFile.Tasks {
+		switch task.Status {
+		case TaskStatusCompleted:
+			status.Completed++
+		case TaskStatusInProgress:
+			status.InProgress++
+		case TaskStatusPending:
+			// Pending tasks are counted in Total, no separate counter needed
+		}
+	}
+
+	return status, nil
+}
+
+// countTasksFromMarkdown counts tasks from a tasks.md file
+func countTasksFromMarkdown(filePath string) (TaskStatus, error) {
+	status := TaskStatus{Total: 0, Completed: 0, InProgress: 0}
 
 	file, err := os.Open(filePath)
 	if err != nil {

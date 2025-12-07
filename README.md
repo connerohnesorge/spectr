@@ -30,6 +30,7 @@ Built with Go
   - [spectr init](#spectr-init)
   - [spectr list](#spectr-list)
   - [spectr validate](#spectr-validate)
+  - [spectr accept](#spectr-accept)
   - [spectr archive](#spectr-archive)
   - [spectr view](#spectr-view)
 - [Architecture & Development](#architecture--development)
@@ -410,6 +411,60 @@ Validating change: add-two-factor-auth
 ✓ Scenario formatting correct
 ✓ All validations passed!
 ```
+
+### spectr accept
+
+Accept a change proposal and convert tasks.md to tasks.json format for stable machine-readable task tracking.
+
+**Usage:**
+```bash
+spectr accept <CHANGE-ID> [FLAGS]
+```
+
+**Flags:**
+- `--dry-run`: Preview conversion without writing files
+- `--no-interactive`: Disable interactive prompts
+
+**What It Does:**
+1. Validates the change before accepting
+2. Parses `tasks.md` and extracts task sections, IDs, descriptions, and status
+3. Writes `tasks.json` with structured task data
+4. Removes `tasks.md` to prevent drift (JSON becomes single source of truth)
+
+**Example:**
+```bash
+# Accept a change (with validation)
+spectr accept add-two-factor-auth
+
+# Preview conversion without making changes
+spectr accept add-two-factor-auth --dry-run
+```
+
+**tasks.json Format:**
+```json
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Implementation",
+      "description": "Create database schema",
+      "status": "pending"
+    }
+  ]
+}
+```
+
+**Status Values:**
+- `pending`: Task not started
+- `in_progress`: Task being worked on
+- `completed`: Task finished
+
+**Why JSON?**
+Based on Anthropic's research on effective harnesses for long-running agents, JSON task lists are more stable for AI agents:
+- Structural validation catches corruption immediately
+- Atomic field updates prevent accidental overwrites
+- Machine-readable format eliminates parsing errors
 
 ### spectr archive
 
@@ -832,9 +887,10 @@ Create a proposal when you need to:
 1. Read `proposal.md` - Understand what's being built
 2. Read `design.md` (if exists) - Review technical decisions
 3. Read `tasks.md` - Get implementation checklist
-4. Implement tasks sequentially
-5. Mark tasks complete with `- [x]` after implementation
-6. **Approval gate**: Do not implement until proposal is approved
+4. Run `spectr accept <id>` - Convert to stable JSON format
+5. Implement tasks sequentially
+6. Update task status in `tasks.json` with values: `pending`, `in_progress`, `completed`
+7. **Approval gate**: Do not implement until proposal is approved
 
 #### Stage 3: Archiving Changes
 After deployment:

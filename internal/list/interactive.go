@@ -80,7 +80,391 @@ const (
 
 	// Error message format
 	errInteractiveModeFormat = "error running interactive mode: %w"
+
+	// Width breakpoint thresholds for responsive column layout.
+	// breakpointFull: all columns shown at default widths
+	breakpointFull = 110 //nolint:unused // used by calculateResponsiveColumns
+	// breakpointMedium: title column narrowed, all columns still visible
+	breakpointMedium = 90 //nolint:unused // used by calculateResponsiveColumns
+	// breakpointNarrow: low-priority columns hidden
+	breakpointNarrow = 70 //nolint:unused // used by calculateResponsiveColumns
+	// breakpointMinimal: only essential columns (ID, Title)
+	breakpointMinimal = 50 //nolint:unused // used by calculateResponsiveColumns
+
+	// Additional breakpoints for specific column hiding
+	// breakpointHideTasks: threshold below which Tasks column is hidden
+	breakpointHideTasks = 90 //nolint:unused // used by calculateResponsiveColumns
+	// breakpointHideDeltas: threshold below which Deltas column is hidden
+	breakpointHideDeltas = 80 //nolint:unused // used by calculateResponsiveColumns
+	// breakpointHideTitle: threshold below which Title column is hidden (changes view)
+	breakpointHideTitle = 80 //nolint:unused // used by calculateResponsiveColumns
 )
+
+// ColumnPriority defines the priority level for table columns.
+// Higher priority columns are shown first when space is limited.
+type ColumnPriority int
+
+const (
+	// ColumnPriorityEssential - always shown (ID column)
+	ColumnPriorityEssential ColumnPriority = iota
+	// ColumnPriorityHigh - always shown, width may be adjusted (Title, Type)
+	ColumnPriorityHigh
+	// ColumnPriorityMedium - hidden below narrow breakpoint (Deltas, Requirements)
+	ColumnPriorityMedium
+	// ColumnPriorityLow - hidden below medium breakpoint (Tasks, Details)
+	ColumnPriorityLow
+)
+
+// calculateChangesColumns returns the appropriate columns for the changes view
+// based on the current terminal width. Column visibility and widths are
+// adjusted according to the priority system:
+//   - ID: Essential (always shown)
+//   - Tasks: High (shown until very narrow widths)
+//   - Deltas: Medium (hidden below 70 columns)
+//   - Title: Low (hidden below 80 columns to prioritize Tasks)
+//
+// Column order is always: ID | Title | Deltas | Tasks (when visible)
+func calculateChangesColumns(width int) []table.Column {
+	// Calculate available width for content (accounting for table borders/padding)
+	// Table has approximately 4 chars of padding/borders per column
+	const paddingPerColumn = 4
+
+	switch {
+	case width >= breakpointFull:
+		// Full width (110+): all 4 columns at default widths
+		return []table.Column{
+			{Title: columnTitleID, Width: changeIDWidth},
+			{Title: columnTitleTitle, Width: changeTitleWidth},
+			{Title: columnTitleDeltas, Width: changeDeltaWidth},
+			{Title: columnTitleTasks, Width: changeTasksWidth},
+		}
+
+	case width >= breakpointMedium:
+		// Medium width (90-109): all 4 columns visible, Title narrowed
+		titleWidth := max(width-changeIDWidth-changeDeltaWidth-
+			changeTasksWidth-(paddingPerColumn*4), 20)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: changeIDWidth},
+			{Title: columnTitleTitle, Width: titleWidth},
+			{Title: columnTitleDeltas, Width: changeDeltaWidth},
+			{Title: columnTitleTasks, Width: changeTasksWidth},
+		}
+
+	case width >= breakpointHideTitle:
+		// Width 80-89: all 4 columns, Title very narrow (15-20 chars)
+		titleWidth := max(width-changeIDWidth-changeDeltaWidth-
+			changeTasksWidth-(paddingPerColumn*4), 15)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: changeIDWidth},
+			{Title: columnTitleTitle, Width: titleWidth},
+			{Title: columnTitleDeltas, Width: changeDeltaWidth},
+			{Title: columnTitleTasks, Width: changeTasksWidth},
+		}
+
+	case width >= breakpointNarrow:
+		// Width 70-79: 3 columns - ID, Deltas, Tasks (Title hidden)
+		return []table.Column{
+			{Title: columnTitleID, Width: changeIDWidth},
+			{Title: columnTitleDeltas, Width: changeDeltaWidth},
+			{Title: columnTitleTasks, Width: changeTasksWidth},
+		}
+
+	default:
+		// Minimal width (<70): 2 columns - ID, Tasks only
+		idWidth := 20
+		tasksWidth := max(width-idWidth-(paddingPerColumn*2), 10)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: idWidth},
+			{Title: columnTitleTasks, Width: tasksWidth},
+		}
+	}
+}
+
+// calculateSpecsColumns returns the appropriate columns for the specs view
+// based on the current terminal width. Column visibility and widths are
+// adjusted according to the priority system:
+//   - ID: Essential (always shown)
+//   - Title: High (always shown, width adjustable)
+//   - Requirements: Medium (width reduced or hidden below 70 columns)
+func calculateSpecsColumns(width int) []table.Column {
+	const paddingPerColumn = 4
+
+	switch {
+	case width >= breakpointFull:
+		// Full width: all columns at default widths
+		return []table.Column{
+			{Title: columnTitleID, Width: specIDWidth},
+			{Title: columnTitleTitle, Width: specTitleWidth},
+			{Title: columnTitleRequirements, Width: specRequirementsWidth},
+		}
+
+	case width >= breakpointMedium:
+		// Medium width: all columns visible, Title narrowed
+		titleWidth := max(width-specIDWidth-specRequirementsWidth-
+			(paddingPerColumn*3), 25)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: specIDWidth},
+			{Title: columnTitleTitle, Width: titleWidth},
+			{Title: columnTitleRequirements, Width: specRequirementsWidth},
+		}
+
+	case width >= breakpointNarrow:
+		// Narrow width: Requirements column narrowed significantly
+		reqWidth := 8
+		titleWidth := max(width-specIDWidth-reqWidth-(paddingPerColumn*3), 20)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: specIDWidth},
+			{Title: columnTitleTitle, Width: titleWidth},
+			{Title: columnTitleRequirements, Width: reqWidth},
+		}
+
+	default:
+		// Minimal width: hide Requirements, compress ID and Title
+		idWidth := 25
+		titleWidth := max(width-idWidth-(paddingPerColumn*2), 15)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: idWidth},
+			{Title: columnTitleTitle, Width: titleWidth},
+		}
+	}
+}
+
+// calculateUnifiedColumns returns the appropriate columns for the unified view
+// based on the current terminal width. Column visibility and widths are
+// adjusted according to the priority system:
+//   - ID: Essential (always shown)
+//   - Type: High (always shown at fixed 8 width)
+//   - Title: High (width adjustable)
+//   - Details: Low (hidden below 90 columns)
+func calculateUnifiedColumns(width int) []table.Column {
+	const paddingPerColumn = 4
+
+	switch {
+	case width >= breakpointFull:
+		// Full width: all columns at default widths
+		return []table.Column{
+			{Title: columnTitleID, Width: unifiedIDWidth},
+			{Title: columnTitleType, Width: unifiedTypeWidth},
+			{Title: columnTitleTitle, Width: unifiedTitleWidth},
+			{Title: columnTitleDetails, Width: unifiedDetailsWidth},
+		}
+
+	case width >= breakpointMedium:
+		// Medium width: all columns visible, Title narrowed
+		titleWidth := max(width-unifiedIDWidth-unifiedTypeWidth-
+			unifiedDetailsWidth-(paddingPerColumn*4), 25)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: unifiedIDWidth},
+			{Title: columnTitleType, Width: unifiedTypeWidth},
+			{Title: columnTitleTitle, Width: titleWidth},
+			{Title: columnTitleDetails, Width: unifiedDetailsWidth},
+		}
+
+	case width >= breakpointNarrow:
+		// Narrow width: hide Details column
+		titleWidth := max(width-unifiedIDWidth-unifiedTypeWidth-
+			(paddingPerColumn*3), 20)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: unifiedIDWidth},
+			{Title: columnTitleType, Width: unifiedTypeWidth},
+			{Title: columnTitleTitle, Width: titleWidth},
+		}
+
+	default:
+		// Minimal width: hide Details, compress ID and Title
+		idWidth := 20
+		titleWidth := max(width-idWidth-unifiedTypeWidth-(paddingPerColumn*3), 15)
+
+		return []table.Column{
+			{Title: columnTitleID, Width: idWidth},
+			{Title: columnTitleType, Width: unifiedTypeWidth},
+			{Title: columnTitleTitle, Width: titleWidth},
+		}
+	}
+}
+
+// calculateTitleTruncate returns the appropriate title truncation limit
+// based on the view type and terminal width. The truncation is set slightly
+// below the column width to account for any table rendering overhead.
+func calculateTitleTruncate(viewType string, width int) int {
+	const truncateBuffer = 2 // Leave 2 chars buffer for clean truncation
+
+	switch viewType {
+	case itemTypeChange:
+		cols := calculateChangesColumns(width)
+		// Find Title column (may not be present at narrow widths)
+		for _, col := range cols {
+			if col.Title == columnTitleTitle {
+				return col.Width - truncateBuffer
+			}
+		}
+		// Title not present, return default
+		return changeTitleTruncate
+
+	case itemTypeSpec:
+		cols := calculateSpecsColumns(width)
+		// Title is always the second column
+		if len(cols) >= 2 {
+			return cols[1].Width - truncateBuffer
+		}
+
+		return specTitleTruncate
+
+	case itemTypeAll:
+		cols := calculateUnifiedColumns(width)
+		// Title is the third column in unified view
+		if len(cols) >= 3 {
+			return cols[2].Width - truncateBuffer
+		}
+
+		return unifiedTitleTruncate
+
+	default:
+		return 38 // Default fallback
+	}
+}
+
+// hasHiddenColumns returns true if any columns are hidden at the current width
+func hasHiddenColumns(viewType string, width int) bool {
+	switch viewType {
+	case itemTypeChange:
+		return len(calculateChangesColumns(width)) < 4 // Full has 4 columns
+	case itemTypeSpec:
+		return len(calculateSpecsColumns(width)) < 3 // Full has 3 columns
+	case itemTypeAll:
+		return len(calculateUnifiedColumns(width)) < 4 // Full has 4 columns
+	default:
+		return false
+	}
+}
+
+// buildChangesRows creates table rows for changes data with the given
+// title truncation and column set. The column set determines which fields
+// are included in each row to match the visible columns.
+func buildChangesRows(
+	changes []ChangeInfo,
+	titleTruncate int,
+	numColumns int,
+) []table.Row {
+	rows := make([]table.Row, len(changes))
+	for i, change := range changes {
+		tasksStatus := fmt.Sprintf("%d/%d",
+			change.TaskStatus.Completed,
+			change.TaskStatus.Total)
+
+		switch numColumns {
+		case 4:
+			// Full: ID, Title, Deltas, Tasks
+			rows[i] = table.Row{
+				change.ID,
+				tui.TruncateString(change.Title, titleTruncate),
+				fmt.Sprintf("%d", change.DeltaCount),
+				tasksStatus,
+			}
+		case 3:
+			// 3 columns without Title: ID, Deltas, Tasks
+			rows[i] = table.Row{
+				change.ID,
+				fmt.Sprintf("%d", change.DeltaCount),
+				tasksStatus,
+			}
+		default:
+			// Minimal 2 columns: ID, Tasks only
+			rows[i] = table.Row{
+				change.ID,
+				tasksStatus,
+			}
+		}
+	}
+
+	return rows
+}
+
+// buildSpecsRows creates table rows for specs data with the given
+// title truncation and number of columns.
+func buildSpecsRows(
+	specs []SpecInfo,
+	titleTruncate int,
+	numColumns int,
+) []table.Row {
+	rows := make([]table.Row, len(specs))
+	for i, spec := range specs {
+		switch numColumns {
+		case 3:
+			// Full: ID, Title, Requirements
+			rows[i] = table.Row{
+				spec.ID,
+				tui.TruncateString(spec.Title, titleTruncate),
+				fmt.Sprintf("%d", spec.RequirementCount),
+			}
+		default:
+			// Minimal: ID, Title only
+			rows[i] = table.Row{
+				spec.ID,
+				tui.TruncateString(spec.Title, titleTruncate),
+			}
+		}
+	}
+
+	return rows
+}
+
+// buildUnifiedRows creates table rows for unified (all items) view with the
+// given title truncation and number of columns.
+func buildUnifiedRows(
+	items ItemList,
+	titleTruncate int,
+	numColumns int,
+) []table.Row {
+	rows := make([]table.Row, len(items))
+	for i, item := range items {
+		var typeStr, details string
+		switch item.Type {
+		case ItemTypeChange:
+			typeStr = "CHANGE"
+			if item.Change != nil {
+				details = fmt.Sprintf("Tasks: %d/%d 🔺 %d",
+					item.Change.TaskStatus.Completed,
+					item.Change.TaskStatus.Total,
+					item.Change.DeltaCount,
+				)
+			}
+		case ItemTypeSpec:
+			typeStr = "SPEC"
+			if item.Spec != nil {
+				details = fmt.Sprintf("Reqs: %d", item.Spec.RequirementCount)
+			}
+		}
+
+		switch numColumns {
+		case 4:
+			// Full: ID, Type, Title, Details
+			rows[i] = table.Row{
+				item.ID(),
+				typeStr,
+				tui.TruncateString(item.Title(), titleTruncate),
+				details,
+			}
+		default:
+			// Narrow/Minimal: ID, Type, Title (no Details)
+			rows[i] = table.Row{
+				item.ID(),
+				typeStr,
+				tui.TruncateString(item.Title(), titleTruncate),
+			}
+		}
+	}
+
+	return rows
+}
 
 // interactiveModel represents the bubbletea model for interactive table
 type interactiveModel struct {
@@ -104,6 +488,10 @@ type interactiveModel struct {
 	allRows          []table.Row // stores all rows for filtering
 	filteredRows     []table.Row // pre-allocated buffer for GC
 	selectionMode    bool        // true: Enter selects without copying
+	terminalWidth    int         // current terminal width for responsive columns
+	// Source data for rebuilding rows on resize
+	changesData []ChangeInfo // original changes data for changes/archive views
+	specsData   []SpecInfo   // original specs data for specs view
 }
 
 // Init initializes the model
@@ -178,6 +566,14 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		// Continue in TUI on success
+		return m, nil
+
+	case tea.WindowSizeMsg:
+		// Store terminal width for responsive column calculations
+		m.terminalWidth = typedMsg.Width
+		// Trigger table rebuild to apply new column widths
+		m = m.rebuildTableForWidth()
+
 		return m, nil
 	}
 
@@ -373,6 +769,7 @@ func (m interactiveModel) handlePR() (interactiveModel, tea.Cmd) {
 }
 
 // rebuildUnifiedTable rebuilds the table based on current filter
+// and terminal width (for responsive columns)
 func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 	var items ItemList
 	if m.filterType == nil {
@@ -381,40 +778,16 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 		items = m.allItems.FilterByType(*m.filterType)
 	}
 
-	columns := []table.Column{
-		{Title: columnTitleID, Width: unifiedIDWidth},
-		{Title: columnTitleType, Width: unifiedTypeWidth},
-		{Title: columnTitleTitle, Width: unifiedTitleWidth},
-		{Title: columnTitleDetails, Width: unifiedDetailsWidth},
+	// Use responsive columns based on terminal width
+	// If width is 0 (unknown), use full-width defaults
+	width := m.terminalWidth
+	if width == 0 {
+		width = breakpointFull
 	}
+	columns := calculateUnifiedColumns(width)
+	titleTruncate := calculateTitleTruncate(itemTypeAll, width)
 
-	rows := make([]table.Row, len(items))
-	for i, item := range items {
-		var typeStr, details string
-		switch item.Type {
-		case ItemTypeChange:
-			typeStr = "CHANGE"
-			if item.Change != nil {
-				details = fmt.Sprintf("Tasks: %d/%d 🔺 %d",
-					item.Change.TaskStatus.Completed,
-					item.Change.TaskStatus.Total,
-					item.Change.DeltaCount,
-				)
-			}
-		case ItemTypeSpec:
-			typeStr = "SPEC"
-			if item.Spec != nil {
-				details = fmt.Sprintf("Reqs: %d", item.Spec.RequirementCount)
-			}
-		}
-
-		rows[i] = table.Row{
-			item.ID(),
-			typeStr,
-			tui.TruncateString(item.Title(), unifiedTitleTruncate),
-			details,
-		}
-	}
+	rows := buildUnifiedRows(items, titleTruncate, len(columns))
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -558,6 +931,96 @@ func (m interactiveModel) toggleSearchMode() interactiveModel {
 	return m
 }
 
+// rebuildTableForWidth rebuilds the table with columns adjusted for the
+// current terminal width. This is called when the terminal is resized.
+// It preserves cursor position and search state during the rebuild.
+func (m interactiveModel) rebuildTableForWidth() interactiveModel {
+	// Store current cursor position to restore after rebuild
+	currentCursor := m.table.Cursor()
+
+	// Use responsive columns based on terminal width
+	// If width is 0 (unknown), use full-width defaults
+	width := m.terminalWidth
+	if width == 0 {
+		width = breakpointFull
+	}
+
+	// Rebuild table based on item type
+	switch m.itemType {
+	case itemTypeAll:
+		m = rebuildUnifiedTable(m)
+	case itemTypeChange:
+		m = m.rebuildChangesTable(width)
+	case itemTypeSpec:
+		m = m.rebuildSpecsTable(width)
+	}
+
+	// Restore cursor position (bounded to row count)
+	rowCount := len(m.table.Rows())
+	if rowCount > 0 {
+		if currentCursor >= rowCount {
+			m.table.SetCursor(rowCount - 1)
+		} else {
+			m.table.SetCursor(currentCursor)
+		}
+	}
+
+	// Re-apply search filter if active
+	if m.searchQuery != "" {
+		m = m.applyFilter()
+	}
+
+	return m
+}
+
+// rebuildChangesTable rebuilds the changes table with responsive columns
+func (m interactiveModel) rebuildChangesTable(width int) interactiveModel {
+	if len(m.changesData) == 0 {
+		return m
+	}
+
+	columns := calculateChangesColumns(width)
+	titleTruncate := calculateTitleTruncate(itemTypeChange, width)
+	rows := buildChangesRows(m.changesData, titleTruncate, len(columns))
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(tableHeight),
+	)
+	tui.ApplyTableStyles(&t)
+
+	m.table = t
+	m.allRows = rows
+
+	return m
+}
+
+// rebuildSpecsTable rebuilds the specs table with responsive columns
+func (m interactiveModel) rebuildSpecsTable(width int) interactiveModel {
+	if len(m.specsData) == 0 {
+		return m
+	}
+
+	columns := calculateSpecsColumns(width)
+	titleTruncate := calculateTitleTruncate(itemTypeSpec, width)
+	rows := buildSpecsRows(m.specsData, titleTruncate, len(columns))
+
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(len(rows)),
+	)
+	tui.ApplyTableStyles(&t)
+
+	m.table = t
+	m.allRows = rows
+
+	return m
+}
+
 // getEditFilePath returns the file path to edit based on item type
 func (m interactiveModel) getEditFilePath(
 	itemID string,
@@ -617,6 +1080,11 @@ func (m interactiveModel) View() string {
 		footer = m.helpText
 	}
 
+	// Append hidden columns hint if columns are hidden due to narrow terminal
+	if m.terminalWidth > 0 && hasHiddenColumns(m.itemType, m.terminalWidth) {
+		footer += " | (some columns hidden)"
+	}
+
 	view += m.table.View() + "\n" + footer + "\n"
 
 	// Display error message if present, but keep TUI active
@@ -640,26 +1108,12 @@ func RunInteractiveChanges(
 		return "", "", nil
 	}
 
-	columns := []table.Column{
-		{Title: columnTitleID, Width: changeIDWidth},
-		{Title: columnTitleTitle, Width: changeTitleWidth},
-		{Title: columnTitleDeltas, Width: changeDeltaWidth},
-		{Title: columnTitleTasks, Width: changeTasksWidth},
-	}
+	// Use default full-width columns initially (terminalWidth=0 means unknown)
+	// WindowSizeMsg will trigger a rebuild with correct responsive columns
+	columns := calculateChangesColumns(breakpointFull)
+	titleTruncate := calculateTitleTruncate(itemTypeChange, breakpointFull)
 
-	rows := make([]table.Row, len(changes))
-	for i, change := range changes {
-		tasksStatus := fmt.Sprintf("%d/%d",
-			change.TaskStatus.Completed,
-			change.TaskStatus.Total)
-
-		rows[i] = table.Row{
-			change.ID,
-			tui.TruncateString(change.Title, changeTitleTruncate),
-			fmt.Sprintf("%d", change.DeltaCount),
-			tasksStatus,
-		}
-	}
+	rows := buildChangesRows(changes, titleTruncate, len(columns))
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -671,11 +1125,13 @@ func RunInteractiveChanges(
 	tui.ApplyTableStyles(&t)
 
 	m := interactiveModel{
-		table:       t,
-		itemType:    itemTypeChange,
-		projectPath: projectPath,
-		searchInput: newTextInput(),
-		allRows:     rows,
+		table:         t,
+		itemType:      itemTypeChange,
+		projectPath:   projectPath,
+		searchInput:   newTextInput(),
+		allRows:       rows,
+		terminalWidth: 0,       // Will be set by WindowSizeMsg
+		changesData:   changes, // Store for rebuild on resize
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
 			"a: archive | P: pr | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
@@ -728,26 +1184,12 @@ func RunInteractiveArchive(
 		return "", nil
 	}
 
-	columns := []table.Column{
-		{Title: columnTitleID, Width: changeIDWidth},
-		{Title: columnTitleTitle, Width: changeTitleWidth},
-		{Title: columnTitleDeltas, Width: changeDeltaWidth},
-		{Title: columnTitleTasks, Width: changeTasksWidth},
-	}
+	// Use default full-width columns initially (terminalWidth=0 means unknown)
+	// WindowSizeMsg will trigger a rebuild with correct responsive columns
+	columns := calculateChangesColumns(breakpointFull)
+	titleTruncate := calculateTitleTruncate(itemTypeChange, breakpointFull)
 
-	rows := make([]table.Row, len(changes))
-	for i, change := range changes {
-		tasksStatus := fmt.Sprintf("%d/%d",
-			change.TaskStatus.Completed,
-			change.TaskStatus.Total)
-
-		rows[i] = table.Row{
-			change.ID,
-			tui.TruncateString(change.Title, changeTitleTruncate),
-			fmt.Sprintf("%d", change.DeltaCount),
-			tasksStatus,
-		}
-	}
+	rows := buildChangesRows(changes, titleTruncate, len(columns))
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -764,7 +1206,9 @@ func RunInteractiveArchive(
 		projectPath:   projectPath,
 		searchInput:   newTextInput(),
 		allRows:       rows,
-		selectionMode: true, // Enter selects without copying
+		terminalWidth: 0,       // Will be set by WindowSizeMsg
+		changesData:   changes, // Store for rebuild on resize
+		selectionMode: true,    // Enter selects without copying
 		helpText:      "↑/↓/j/k: navigate | Enter: select | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
@@ -806,20 +1250,12 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 		return nil
 	}
 
-	columns := []table.Column{
-		{Title: columnTitleID, Width: specIDWidth},
-		{Title: columnTitleTitle, Width: specTitleWidth},
-		{Title: columnTitleRequirements, Width: specRequirementsWidth},
-	}
+	// Use default full-width columns initially (terminalWidth=0 means unknown)
+	// WindowSizeMsg will trigger a rebuild with correct responsive columns
+	columns := calculateSpecsColumns(breakpointFull)
+	titleTruncate := calculateTitleTruncate(itemTypeSpec, breakpointFull)
 
-	rows := make([]table.Row, len(specs))
-	for i, spec := range specs {
-		rows[i] = table.Row{
-			spec.ID,
-			tui.TruncateString(spec.Title, specTitleTruncate),
-			fmt.Sprintf("%d", spec.RequirementCount),
-		}
-	}
+	rows := buildSpecsRows(specs, titleTruncate, len(columns))
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -831,11 +1267,13 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 	tui.ApplyTableStyles(&t)
 
 	m := interactiveModel{
-		table:       t,
-		itemType:    itemTypeSpec,
-		projectPath: projectPath,
-		searchInput: newTextInput(),
-		allRows:     rows,
+		table:         t,
+		itemType:      itemTypeSpec,
+		projectPath:   projectPath,
+		searchInput:   newTextInput(),
+		allRows:       rows,
+		terminalWidth: 0,     // Will be set by WindowSizeMsg
+		specsData:     specs, // Store for rebuild on resize
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
 			"/: search | q: quit",
 		minimalFooter: fmt.Sprintf(
@@ -873,41 +1311,12 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 		return nil
 	}
 
-	// Build initial table with all items
-	columns := []table.Column{
-		{Title: columnTitleID, Width: unifiedIDWidth},
-		{Title: columnTitleType, Width: unifiedTypeWidth},
-		{Title: columnTitleTitle, Width: unifiedTitleWidth},
-		{Title: columnTitleDetails, Width: unifiedDetailsWidth},
-	}
+	// Use default full-width columns initially (terminalWidth=0 means unknown)
+	// WindowSizeMsg will trigger a rebuild with correct responsive columns
+	columns := calculateUnifiedColumns(breakpointFull)
+	titleTruncate := calculateTitleTruncate(itemTypeAll, breakpointFull)
 
-	rows := make([]table.Row, len(items))
-	for i, item := range items {
-		var typeStr, details string
-		switch item.Type {
-		case ItemTypeChange:
-			typeStr = "CHANGE"
-			if item.Change != nil {
-				details = fmt.Sprintf("Tasks: %d/%d 🔺 %d",
-					item.Change.TaskStatus.Completed,
-					item.Change.TaskStatus.Total,
-					item.Change.DeltaCount,
-				)
-			}
-		case ItemTypeSpec:
-			typeStr = "SPEC"
-			if item.Spec != nil {
-				details = fmt.Sprintf("Reqs: %d", item.Spec.RequirementCount)
-			}
-		}
-
-		rows[i] = table.Row{
-			item.ID(),
-			typeStr,
-			tui.TruncateString(item.Title(), unifiedTitleTruncate),
-			details,
-		}
-	}
+	rows := buildUnifiedRows(items, titleTruncate, len(columns))
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -919,13 +1328,14 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 	tui.ApplyTableStyles(&t)
 
 	m := interactiveModel{
-		table:       t,
-		itemType:    itemTypeAll,
-		projectPath: projectPath,
-		allItems:    items,
-		filterType:  nil, // Start with all items visible
-		searchInput: newTextInput(),
-		allRows:     rows,
+		table:         t,
+		itemType:      itemTypeAll,
+		projectPath:   projectPath,
+		allItems:      items,
+		filterType:    nil, // Start with all items visible
+		searchInput:   newTextInput(),
+		allRows:       rows,
+		terminalWidth: 0, // Will be set by WindowSizeMsg
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
 			"a: archive | t: filter (all) | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(

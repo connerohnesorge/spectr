@@ -5,97 +5,97 @@
       "id": "1.1",
       "section": "Core Infrastructure",
       "description": "Add `terminalWidth` field to `interactiveModel` struct to track current terminal width",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "1.2",
       "section": "Core Infrastructure",
       "description": "Handle `tea.WindowSizeMsg` in `Update()` to capture initial and resize terminal dimensions",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "1.3",
       "section": "Core Infrastructure",
       "description": "Define column priority constants and width breakpoint thresholds",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "2.1",
       "section": "Responsive Column Logic",
       "description": "Create `calculateResponsiveColumns()` function that returns appropriate columns based on terminal width",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "2.2",
       "section": "Responsive Column Logic",
       "description": "Implement priority-based column hiding for narrow terminals",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "2.3",
       "section": "Responsive Column Logic",
       "description": "Implement dynamic truncation thresholds based on available width",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "3.1",
       "section": "Apply to All Table Views",
       "description": "Update `RunInteractiveChanges()` to use responsive columns",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "3.2",
       "section": "Apply to All Table Views",
       "description": "Update `RunInteractiveSpecs()` to use responsive columns",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "3.3",
       "section": "Apply to All Table Views",
       "description": "Update `RunInteractiveAll()` (unified mode) to use responsive columns",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "3.4",
       "section": "Apply to All Table Views",
       "description": "Update `RunInteractiveArchive()` to use responsive columns",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "4.1",
       "section": "Dynamic Resize Handling",
       "description": "Rebuild table with new column configuration when terminal is resized",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "4.2",
       "section": "Dynamic Resize Handling",
       "description": "Preserve cursor position and selection state during resize",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "4.3",
       "section": "Dynamic Resize Handling",
       "description": "Update footer/help text to reflect current visible columns",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "5.1",
       "section": "Testing and Validation",
       "description": "Add unit tests for `calculateResponsiveColumns()` at various widths",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "5.2",
       "section": "Testing and Validation",
       "description": "Test column visibility at each breakpoint threshold",
-      "status": "done"
+      "status": "completed"
     },
     {
       "id": "5.3",
       "section": "Testing and Validation",
       "description": "Manual testing on different terminal sizes (80, 100, 120+ columns)",
-      "status": "done"
+      "status": "completed"
     }
   ]
 }

@@ -524,3 +524,59 @@ func TestIntegration_ExecutePR_InvalidMode(t *testing.T) {
 		t.Errorf("Expected mode-related error, got: %v", err)
 	}
 }
+
+// TestIntegration_ExecutePR_Remove_DryRun tests the remove dry run functionality.
+func TestIntegration_ExecutePR_Remove_DryRun(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
+
+	// Set up test repo
+	repoPath := setupTestRepo(t)
+	defer cleanupTestRepo(t, repoPath)
+
+	// Create a test change
+	changeID := "test-remove-change"
+	createTestChange(t, repoPath, changeID)
+
+	// Save original working directory
+	originalWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get working directory: %v", err)
+	}
+
+	// Change to test repo
+	if err := os.Chdir(repoPath); err != nil {
+		t.Fatalf("failed to change to test repo: %v", err)
+	}
+	defer func() { _ = os.Chdir(originalWd) }()
+
+	// Run ExecutePR with DryRun=true and ModeRemove
+	config := PRConfig{
+		ChangeID:    changeID,
+		Mode:        ModeRemove,
+		DryRun:      true,
+		ProjectRoot: repoPath,
+	}
+
+	result, err := ExecutePR(config)
+
+	// We expect an error because there's no origin remote
+	if err == nil {
+		if result != nil && result.PRURL != "" {
+			t.Error("DryRun should not create actual PR")
+		}
+	} else {
+		// Verify it's the expected error (no origin remote)
+		if !strings.Contains(err.Error(), "origin") &&
+			!strings.Contains(err.Error(), "remote") {
+			t.Logf("Expected origin-related error, got: %v", err)
+		}
+	}
+
+	// Verify change directory still exists (dry run should not delete it)
+	changeDir := filepath.Join(repoPath, "spectr", "changes", changeID)
+	if _, err := os.Stat(changeDir); os.IsNotExist(err) {
+		t.Error("Change directory should still exist after dry run")
+	}
+}

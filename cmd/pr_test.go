@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
@@ -595,5 +596,167 @@ func TestCLIHasPRCommand(t *testing.T) {
 	// Check the type
 	if prField.Type().Name() != "PRCmd" {
 		t.Errorf("PR field type: got %s, want PRCmd", prField.Type().Name())
+	}
+}
+
+// TestPRRemoveCmd_Struct tests the PRRemoveCmd struct construction.
+func TestPRRemoveCmd_Struct(t *testing.T) {
+	cmd := &PRRemoveCmd{}
+	val := reflect.ValueOf(cmd).Elem()
+
+	// Check ChangeID field exists and is string
+	changeIDField := val.FieldByName("ChangeID")
+	if !changeIDField.IsValid() {
+		t.Error("PRRemoveCmd does not have ChangeID field")
+	}
+	if changeIDField.Kind() != reflect.String {
+		t.Errorf("ChangeID should be string, got %v", changeIDField.Kind())
+	}
+
+	// Check Base field exists
+	baseField := val.FieldByName("Base")
+	if !baseField.IsValid() {
+		t.Error("PRRemoveCmd does not have Base field")
+	}
+	if baseField.Kind() != reflect.String {
+		t.Errorf("Base should be string, got %v", baseField.Kind())
+	}
+
+	// Check Draft field exists
+	draftField := val.FieldByName("Draft")
+	if !draftField.IsValid() {
+		t.Error("PRRemoveCmd does not have Draft field")
+	}
+	if draftField.Kind() != reflect.Bool {
+		t.Errorf("Draft should be bool, got %v", draftField.Kind())
+	}
+
+	// Check Force field exists
+	forceField := val.FieldByName("Force")
+	if !forceField.IsValid() {
+		t.Error("PRRemoveCmd does not have Force field")
+	}
+	if forceField.Kind() != reflect.Bool {
+		t.Errorf("Force should be bool, got %v", forceField.Kind())
+	}
+
+	// Check DryRun field exists
+	dryRunField := val.FieldByName("DryRun")
+	if !dryRunField.IsValid() {
+		t.Error("PRRemoveCmd does not have DryRun field")
+	}
+	if dryRunField.Kind() != reflect.Bool {
+		t.Errorf("DryRun should be bool, got %v", dryRunField.Kind())
+	}
+
+	// Verify SkipSpecs is NOT in PRRemoveCmd (it's archive-specific)
+	skipSpecsField := val.FieldByName("SkipSpecs")
+	if skipSpecsField.IsValid() {
+		t.Error("PRRemoveCmd should not have SkipSpecs field (archive-specific)")
+	}
+}
+
+// TestPRRemoveCmd_DefaultValues tests that default values are correct.
+func TestPRRemoveCmd_DefaultValues(t *testing.T) {
+	cmd := &PRRemoveCmd{}
+
+	if cmd.ChangeID != "" {
+		t.Errorf("ChangeID should default to empty string, got %q", cmd.ChangeID)
+	}
+	if cmd.Base != "" {
+		t.Errorf("Base should default to empty string, got %q", cmd.Base)
+	}
+	if cmd.Draft {
+		t.Errorf("Draft should default to false, got %v", cmd.Draft)
+	}
+	if cmd.Force {
+		t.Errorf("Force should default to false, got %v", cmd.Force)
+	}
+	if cmd.DryRun {
+		t.Errorf("DryRun should default to false, got %v", cmd.DryRun)
+	}
+}
+
+// TestPRRemoveCmd_SetFields tests setting all field values.
+func TestPRRemoveCmd_SetFields(t *testing.T) {
+	cmd := &PRRemoveCmd{
+		ChangeID: "remove-change",
+		Base:     "main",
+		Draft:    true,
+		Force:    true,
+		DryRun:   true,
+	}
+
+	if cmd.ChangeID != "remove-change" {
+		t.Errorf("ChangeID = %q, want %q", cmd.ChangeID, "remove-change")
+	}
+	if cmd.Base != "main" {
+		t.Errorf("Base = %q, want %q", cmd.Base, "main")
+	}
+	if !cmd.Draft {
+		t.Error("Draft should be true")
+	}
+	if !cmd.Force {
+		t.Error("Force should be true")
+	}
+	if !cmd.DryRun {
+		t.Error("DryRun should be true")
+	}
+}
+
+// TestPRRemoveCmd_HasRunMethod verifies the Run method exists.
+func TestPRRemoveCmd_HasRunMethod(t *testing.T) {
+	cmd := &PRRemoveCmd{}
+	val := reflect.ValueOf(cmd)
+
+	runMethod := val.MethodByName("Run")
+	if !runMethod.IsValid() {
+		t.Fatal("PRRemoveCmd does not have Run method")
+	}
+
+	runType := runMethod.Type()
+	if runType.NumOut() != 1 {
+		t.Errorf("Run method should return 1 value, got %d", runType.NumOut())
+	}
+
+	if runType.NumOut() > 0 && runType.Out(0).Name() != "error" {
+		t.Errorf("Run method should return error, got %s", runType.Out(0).Name())
+	}
+}
+
+// TestPRCmd_HasRemoveSubcommand verifies Remove subcommand is registered.
+func TestPRCmd_HasRemoveSubcommand(t *testing.T) {
+	cmd := &PRCmd{}
+	val := reflect.ValueOf(cmd).Elem()
+
+	removeField := val.FieldByName("Remove")
+	if !removeField.IsValid() {
+		t.Error("PRCmd does not have Remove field")
+	}
+	if removeField.Type().Name() != "PRRemoveCmd" {
+		t.Errorf("Remove field type = %s, want PRRemoveCmd", removeField.Type().Name())
+	}
+}
+
+// TestPRCmd_RemoveHasAliases verifies that the remove subcommand has the correct aliases.
+func TestPRCmd_RemoveHasAliases(t *testing.T) {
+	prCmdType := reflect.TypeOf(PRCmd{})
+	removeField, found := prCmdType.FieldByName("Remove")
+	if !found {
+		t.Fatal("PRCmd does not have Remove field")
+	}
+
+	tag := removeField.Tag
+	aliases := tag.Get("aliases")
+	if aliases == "" {
+		t.Fatal("Remove field does not have aliases tag")
+	}
+
+	// Should have both "r" and "remove" aliases
+	if !strings.Contains(aliases, "r") {
+		t.Errorf("Remove aliases should contain 'r', got %q", aliases)
+	}
+	if !strings.Contains(aliases, "remove") {
+		t.Errorf("Remove aliases should contain 'remove', got %q", aliases)
 	}
 }

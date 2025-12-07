@@ -51,10 +51,11 @@ Track these steps as TODOs and complete them one by one.
 1. **Read proposal.md** - Understand what's being built
 2. **Read design.md** (if exists) - Review technical decisions
 3. **Read tasks.md** - Get implementation checklist
-4. **Implement tasks sequentially** - Complete in order
-5. **Confirm completion** - Ensure every item in `tasks.md` is finished before updating statuses
-6. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
-7. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+4. **Run `spectr accept <id>`** - Convert `tasks.md` to `tasks.json` for stable task tracking
+5. **Implement tasks sequentially** - Complete in order
+6. **Confirm completion** - Ensure every item in `tasks.json` is finished before updating statuses
+7. **Update task status** - After each task is done, update its status in `tasks.json` to one of: `pending`, `in_progress`, `completed`
+8. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
 
 ### Stage 3: Syncing Specs
 
@@ -103,6 +104,9 @@ spectr validate [item]       # Validate changes or specs
 spectr init [path]           # Initialize Spectr
 spectr init [path]           # Initialize or update instruction files
 
+# Implementation workflow
+spectr accept <change-id>    # Accept proposal, convert tasks.md to tasks.json
+
 # Interactive mode
 spectr validate              # Bulk validation mode
 
@@ -117,7 +121,7 @@ spectr pr new [change-id]     # Create PR for proposal without archiving
 **Reading Specs and Changes (for AI agents):**
 - Specs: Read `spectr/specs/<capability>/spec.md` directly
 - Changes: Read `spectr/changes/<change-id>/proposal.md` directly
-- Tasks: Read `spectr/changes/<change-id>/tasks.md` directly
+- Tasks: Read `spectr/changes/<change-id>/tasks.json` (preferred) or `tasks.md` directly
 
 ### Command Flags
 

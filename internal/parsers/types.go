@@ -1,0 +1,34 @@
+// Package parsers provides utilities for extracting and counting
+// information from markdown specification files, including titles,
+// tasks, deltas, and requirements.
+//
+// This file contains JSON schema types for the tasks.json file format.
+package parsers
+
+// TaskStatusValue represents the status of a task in tasks.json
+type TaskStatusValue string
+
+// Task status constants for JSON serialization
+const (
+	TaskStatusPending    TaskStatusValue = "pending"
+	TaskStatusInProgress TaskStatusValue = "in_progress"
+	TaskStatusCompleted  TaskStatusValue = "completed"
+)
+
+// Task represents a single task in tasks.json
+type Task struct {
+	// ID is the task identifier, e.g., "1.1", "2.3"
+	ID string `json:"id"`
+	// Section is the task section, e.g., "Implementation", "Testing"
+	Section string `json:"section"`
+	// Description is the full task description text
+	Description string `json:"description"`
+	// Status is one of pending, in_progress, completed
+	Status TaskStatusValue `json:"status"`
+}
+
+// TasksFile represents the root structure of a tasks.json file
+type TasksFile struct {
+	Version int    `json:"version"`
+	Tasks   []Task `json:"tasks"`
+}

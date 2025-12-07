@@ -272,15 +272,15 @@ func TestWriteTasksJson(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			tasksJsonPath := filepath.Join(tmpDir, "tasks.json")
+			tasksJSONPath := filepath.Join(tmpDir, "tasks.json")
 
 			// Write the tasks
-			if err := writeTasksJson(tasksJsonPath, tt.tasks); err != nil {
+			if err := writeTasksJSON(tasksJSONPath, tt.tasks); err != nil {
 				t.Fatalf("writeTasksJson() error = %v", err)
 			}
 
 			// Read back and verify
-			data, err := os.ReadFile(tasksJsonPath)
+			data, err := os.ReadFile(tasksJSONPath)
 			if err != nil {
 				t.Fatalf("failed to read written file: %v", err)
 			}
@@ -305,17 +305,17 @@ func TestWriteTasksJson(t *testing.T) {
 
 func TestWriteTasksJsonIndentation(t *testing.T) {
 	tmpDir := t.TempDir()
-	tasksJsonPath := filepath.Join(tmpDir, "tasks.json")
+	tasksJSONPath := filepath.Join(tmpDir, "tasks.json")
 
 	tasks := []parsers.Task{
 		{ID: "1.1", Section: "Test", Description: "Task", Status: parsers.TaskStatusPending},
 	}
 
-	if err := writeTasksJson(tasksJsonPath, tasks); err != nil {
+	if err := writeTasksJSON(tasksJSONPath, tasks); err != nil {
 		t.Fatalf("writeTasksJson() error = %v", err)
 	}
 
-	data, err := os.ReadFile(tasksJsonPath)
+	data, err := os.ReadFile(tasksJSONPath)
 	if err != nil {
 		t.Fatalf("failed to read file: %v", err)
 	}
@@ -351,7 +351,8 @@ func TestWriteTasksJsonFilePermissions(t *testing.T) {
 		{ID: "1.1", Section: "Test", Description: "Task", Status: parsers.TaskStatusPending},
 	}
 
-	if err := writeTasksJson(tasksJsonPath, tasks); err != nil {
+	err := writeTasksJSON(tasksJsonPath, tasks)
+	if err != nil {
 		t.Fatalf("writeTasksJson() error = %v", err)
 	}
 

@@ -78,18 +78,18 @@ func (c *AcceptCmd) processChange(projectRoot, changeID string) error {
 		return fmt.Errorf("failed to parse tasks.md: %w", err)
 	}
 
-	tasksJsonPath := filepath.Join(changeDir, "tasks.json")
+	tasksJSONPath := filepath.Join(changeDir, "tasks.json")
 
 	if c.DryRun {
 		fmt.Printf("Would convert: %s\n", tasksMdPath)
-		fmt.Printf("Would write to: %s\n", tasksJsonPath)
+		fmt.Printf("Would write to: %s\n", tasksJSONPath)
 		fmt.Printf("Would remove: %s\n", tasksMdPath)
 		fmt.Printf("Found %d tasks\n", len(tasks))
 
 		return nil
 	}
 
-	if err := writeTasksJson(tasksJsonPath, tasks); err != nil {
+	if err := writeTasksJSON(tasksJSONPath, tasks); err != nil {
 		return fmt.Errorf("failed to write tasks.json: %w", err)
 	}
 
@@ -98,7 +98,7 @@ func (c *AcceptCmd) processChange(projectRoot, changeID string) error {
 		return fmt.Errorf("failed to remove tasks.md: %w", err)
 	}
 
-	fmt.Printf("Converted %s -> %s\n", tasksMdPath, tasksJsonPath)
+	fmt.Printf("Converted %s -> %s\n", tasksMdPath, tasksJSONPath)
 	fmt.Printf("Removed %s\n", tasksMdPath)
 	fmt.Printf("Wrote %d tasks\n", len(tasks))
 
@@ -232,9 +232,9 @@ func parseTasksMd(path string) ([]parsers.Task, error) {
 	return tasks, nil
 }
 
-// writeTasksJson writes tasks to a tasks.json file.
+// writeTasksJSON writes tasks to a tasks.json file.
 // The output follows the TasksFile structure defined in parsers/types.go.
-func writeTasksJson(path string, tasks []parsers.Task) error {
+func writeTasksJSON(path string, tasks []parsers.Task) error {
 	tasksFile := parsers.TasksFile{
 		Version: 1,
 		Tasks:   tasks,

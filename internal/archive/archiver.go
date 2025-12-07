@@ -216,10 +216,9 @@ func runValidation(changeDir string) error {
 
 // checkTasks checks task completion status
 func checkTasks(yes bool, changeDir string) error {
-	tasksPath := filepath.Join(changeDir, "tasks.md")
-	status, err := parsers.CountTasks(tasksPath)
+	status, err := parsers.CountTasks(changeDir)
 	if err != nil {
-		// tasks.md is optional
+		// tasks file is optional
 		return nil
 	}
 

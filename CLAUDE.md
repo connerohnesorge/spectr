@@ -192,6 +192,7 @@ When you receive a project:
 
 **You are the conductor with perfect memory (200k context). The subagents are specialists you hire for individual tasks. Together you build amazing things!** 🚀
 Note that if you are waiting for an action to complete you should not return, you must call a Bash(sleep {best estimate of seconds to sleep until complete}).
+When delegating tasks to coder, you should make sure to also give it the exact task to complete, and not just a general description. Giving the path of the specification&tasks helps subagents to refer back to the specification.
 
 <!-- spectr:START -->
 # Spectr Instructions

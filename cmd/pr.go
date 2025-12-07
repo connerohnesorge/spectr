@@ -1,4 +1,4 @@
-// Package cmd provides the command-line interface for spectr.
+//nolint:revive // file-length-limit - PR subcommands are logically cohesive
 package cmd
 
 import (
@@ -17,6 +17,7 @@ import (
 type PRCmd struct {
 	Archive  PRArchiveCmd  `cmd:"" aliases:"a" help:"Archive and create PR"`
 	Proposal PRProposalCmd `cmd:"" aliases:"p" help:"Create proposal PR"`
+	Remove   PRRemoveCmd   `cmd:"" name:"rm" aliases:"r,remove" help:"Remove via PR"`
 }
 
 // PRArchiveCmd represents the pr archive subcommand.
@@ -36,6 +37,51 @@ type PRProposalCmd struct {
 	Draft    bool   `name:"draft" short:"d" help:"Create as draft PR"`
 	Force    bool   `name:"force" short:"f" help:"Delete existing branch"`
 	DryRun   bool   `name:"dry-run" help:"Preview without executing"`
+}
+
+// PRRemoveCmd represents the pr remove subcommand.
+type PRRemoveCmd struct {
+	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change ID"`
+	Base     string `name:"base" short:"b" help:"Target branch for PR"`
+	Draft    bool   `name:"draft" short:"d" help:"Create as draft PR"`
+	Force    bool   `name:"force" short:"f" help:"Delete existing branch"`
+	DryRun   bool   `name:"dry-run" help:"Preview without executing"`
+}
+
+// Run executes the pr remove command.
+func (c *PRRemoveCmd) Run() error {
+	projectRoot, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get working directory: %w", err)
+	}
+
+	changeID, err := resolveOrSelectChangeID(c.ChangeID, projectRoot)
+	if err != nil {
+		if errors.Is(err, archive.ErrUserCancelled) {
+			return nil // User cancelled, exit gracefully
+		}
+
+		return err
+	}
+
+	config := pr.PRConfig{
+		ChangeID:    changeID,
+		Mode:        pr.ModeRemove,
+		BaseBranch:  c.Base,
+		Draft:       c.Draft,
+		Force:       c.Force,
+		DryRun:      c.DryRun,
+		ProjectRoot: projectRoot,
+	}
+
+	result, err := pr.ExecutePR(config)
+	if err != nil {
+		return fmt.Errorf("pr remove failed: %w", err)
+	}
+
+	printPRResult(result)
+
+	return nil
 }
 
 // Run executes the pr archive command.

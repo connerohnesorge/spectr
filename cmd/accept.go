@@ -21,6 +21,12 @@ import (
 // filePerm is the standard file permission for created files (rw-r--r--)
 const filePerm = 0644
 
+// Regex patterns for parsing tasks.md - compiled once at package level
+var (
+	sectionPattern = regexp.MustCompile(`^##\s+\d+\.\s+(.+)$`)
+	taskPattern    = regexp.MustCompile(`^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$`)
+)
+
 // AcceptCmd represents the accept command for converting tasks.md to
 // tasks.json. This command parses the human-readable tasks.md file and
 // produces a machine-readable tasks.json file with structured task data.
@@ -200,10 +206,6 @@ func parseTasksMd(path string) ([]parsers.Task, error) {
 
 	var tasks []parsers.Task
 	var currentSection string
-
-	// Regex patterns for parsing
-	sectionPattern := regexp.MustCompile(`^##\s+\d+\.\s+(.+)$`)
-	taskPattern := regexp.MustCompile(`^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$`)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {

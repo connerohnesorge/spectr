@@ -2594,17 +2594,11 @@ func TestBreakpointConstants(t *testing.T) {
 	if breakpointMedium != 90 {
 		t.Errorf("breakpointMedium should be 90, got %d", breakpointMedium)
 	}
-	if breakpointHideDeltas != 80 {
-		t.Errorf("breakpointHideDeltas should be 80, got %d", breakpointHideDeltas)
-	}
 	if breakpointNarrow != 70 {
 		t.Errorf("breakpointNarrow should be 70, got %d", breakpointNarrow)
 	}
-	if breakpointMinimal != 50 {
-		t.Errorf("breakpointMinimal should be 50, got %d", breakpointMinimal)
-	}
-	if breakpointHideTasks != 90 {
-		t.Errorf("breakpointHideTasks should be 90, got %d", breakpointHideTasks)
+	if breakpointHideTitle != 80 {
+		t.Errorf("breakpointHideTitle should be 80, got %d", breakpointHideTitle)
 	}
 }
 

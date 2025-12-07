@@ -83,21 +83,13 @@ const (
 
 	// Width breakpoint thresholds for responsive column layout.
 	// breakpointFull: all columns shown at default widths
-	breakpointFull = 110 //nolint:unused // used by calculateResponsiveColumns
+	breakpointFull = 110
 	// breakpointMedium: title column narrowed, all columns still visible
-	breakpointMedium = 90 //nolint:unused // used by calculateResponsiveColumns
+	breakpointMedium = 90
 	// breakpointNarrow: low-priority columns hidden
-	breakpointNarrow = 70 //nolint:unused // used by calculateResponsiveColumns
-	// breakpointMinimal: only essential columns (ID, Title)
-	breakpointMinimal = 50 //nolint:unused // used by calculateResponsiveColumns
-
-	// Additional breakpoints for specific column hiding
-	// breakpointHideTasks: threshold below which Tasks column is hidden
-	breakpointHideTasks = 90 //nolint:unused // used by calculateResponsiveColumns
-	// breakpointHideDeltas: threshold below which Deltas column is hidden
-	breakpointHideDeltas = 80 //nolint:unused // used by calculateResponsiveColumns
+	breakpointNarrow = 70
 	// breakpointHideTitle: threshold below which Title column is hidden (changes view)
-	breakpointHideTitle = 80 //nolint:unused // used by calculateResponsiveColumns
+	breakpointHideTitle = 80
 )
 
 // ColumnPriority defines the priority level for table columns.

@@ -7,6 +7,7 @@ package initialize
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -33,15 +34,17 @@ const (
 
 // WizardModel is the Bubbletea model for the init wizard
 type WizardModel struct {
-	step                WizardStep
-	projectPath         string
-	selectedProviders   map[string]bool // provider ID -> selected
-	configuredProviders map[string]bool // provider ID -> is configured
-	cursor              int             // cursor position in list
-	executing           bool
-	executionResult     *ExecutionResult
-	err                 error
-	allProviders        []providers.Provider // sorted providers for display
+	step                 WizardStep
+	projectPath          string
+	selectedProviders    map[string]bool // provider ID -> selected
+	configuredProviders  map[string]bool // provider ID -> is configured
+	cursor               int             // cursor position in list
+	executing            bool
+	executionResult      *ExecutionResult
+	err                  error
+	allProviders         []providers.Provider // sorted providers for display
+	ciWorkflowEnabled    bool                 // whether user wants CI workflow created
+	ciWorkflowConfigured bool                 // whether .github/workflows/spectr-ci.yml already exists
 }
 
 // ExecutionResult holds the result of initialization
@@ -115,13 +118,22 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 		}
 	}
 
+	// Detect if CI workflow is already configured
+	ciWorkflowPath := filepath.Join(projectPath, ".github", "workflows", "spectr-ci.yml")
+	ciWorkflowConfigured := FileExists(ciWorkflowPath)
+
+	// Pre-select CI workflow if already configured
+	ciWorkflowEnabled := ciWorkflowConfigured
+
 	return &WizardModel{
-		step:                StepIntro,
-		projectPath:         projectPath,
-		selectedProviders:   selectedProviders,
-		configuredProviders: configuredProviders,
-		cursor:              0,
-		allProviders:        allProviders,
+		step:                 StepIntro,
+		projectPath:          projectPath,
+		selectedProviders:    selectedProviders,
+		configuredProviders:  configuredProviders,
+		cursor:               0,
+		allProviders:         allProviders,
+		ciWorkflowEnabled:    ciWorkflowEnabled,
+		ciWorkflowConfigured: ciWorkflowConfigured,
 	}, nil
 }
 
@@ -239,12 +251,17 @@ func (m WizardModel) handleReviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.step = StepSelect
 
 		return m, nil
+	case " ":
+		// Toggle CI workflow option
+		m.ciWorkflowEnabled = !m.ciWorkflowEnabled
+
+		return m, nil
 	case "enter":
 		// Execute initialization
 		m.step = StepExecute
 		m.executing = true
 
-		return m, executeInit(m.projectPath, m.getSelectedProviderIDs())
+		return m, executeInit(m.projectPath, m.getSelectedProviderIDs(), m.ciWorkflowEnabled)
 	}
 
 	return m, nil
@@ -397,13 +414,31 @@ func (m WizardModel) renderReview() string {
 
 	selectedCount := len(m.getSelectedProviderIDs())
 	m.renderSelectedProviders(&b, selectedCount)
+
+	// CI workflow option
+	b.WriteString("Additional options:\n\n")
+	checkbox := "[ ]"
+	if m.ciWorkflowEnabled {
+		checkbox = selectedStyle.Render("[✓]")
+	}
+	configuredNote := ""
+	if m.ciWorkflowConfigured {
+		configuredNote = subtleStyle.Render(" (configured)")
+	}
+	b.WriteString(fmt.Sprintf("  %s Spectr CI Validation%s\n", checkbox, configuredNote))
+	b.WriteString(
+		subtleStyle.Render(
+			"      Creates .github/workflows/spectr-ci.yml for automated validation\n\n",
+		),
+	)
+
 	m.renderCreationPlan(&b, selectedCount)
 
 	b.WriteString(newline)
 	b.WriteString(
 		subtleStyle.Render(
-			"Press Enter to initialize, Backspace to go back, " +
-				"or 'q' to quit\n",
+			"Space: Toggle option  Enter: Initialize  Backspace: Go back  " +
+				"'q': Quit\n",
 		),
 	)
 
@@ -456,6 +491,15 @@ func (m WizardModel) renderCreationPlan(b *strings.Builder, count int) {
 			count,
 		)))
 		b.WriteString(newline)
+	}
+
+	if m.ciWorkflowEnabled {
+		status := "Create"
+		if m.ciWorkflowConfigured {
+			status = "Update"
+		}
+		b.WriteString(infoStyle.Render("  • .github/workflows/spectr-ci.yml"))
+		fmt.Fprintf(b, " - %s CI workflow for Spectr validation\n", status)
 	}
 }
 
@@ -568,7 +612,7 @@ func (m WizardModel) getSelectedProviderIDs() []string {
 }
 
 // executeInit runs the initialization and sends result
-func executeInit(projectPath string, selectedProviders []string) tea.Cmd {
+func executeInit(projectPath string, selectedProviders []string, ciWorkflowEnabled bool) tea.Cmd {
 	return func() tea.Msg {
 		// Create a minimal InitCmd for the executor
 		cmd := &InitCmd{
@@ -582,7 +626,7 @@ func executeInit(projectPath string, selectedProviders []string) tea.Cmd {
 			}
 		}
 
-		result, err := executor.Execute(selectedProviders)
+		result, err := executor.Execute(selectedProviders, ciWorkflowEnabled)
 
 		return ExecutionCompleteMsg{
 			result: result,

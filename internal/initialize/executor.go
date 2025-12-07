@@ -54,6 +54,7 @@ func NewInitExecutor(cmd *InitCmd) (*InitExecutor, error) {
 // Execute runs the initialization process
 func (e *InitExecutor) Execute(
 	selectedProviderIDs []string,
+	ciWorkflowEnabled bool,
 ) (*ExecutionResult, error) {
 	result := &ExecutionResult{
 		CreatedFiles: make([]string, 0),
@@ -105,6 +106,17 @@ func (e *InitExecutor) Execute(
 			result.Errors,
 			fmt.Sprintf("failed to configure tools: %v", err),
 		)
+	}
+
+	// 6. Create CI workflow if enabled
+	if ciWorkflowEnabled {
+		err = e.createCIWorkflow(result)
+		if err != nil {
+			result.Errors = append(
+				result.Errors,
+				fmt.Sprintf("failed to create CI workflow: %v", err),
+			)
+		}
 	}
 
 	return result, nil
@@ -254,6 +266,38 @@ func (e *InitExecutor) configureProviders(
 		} else {
 			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
 		}
+	}
+
+	return nil
+}
+
+// createCIWorkflow creates the .github/workflows/spectr-ci.yml file
+func (e *InitExecutor) createCIWorkflow(result *ExecutionResult) error {
+	// Ensure .github/workflows directory exists
+	workflowDir := filepath.Join(e.projectPath, ".github", "workflows")
+	if err := EnsureDir(workflowDir); err != nil {
+		return fmt.Errorf("failed to create workflows directory: %w", err)
+	}
+
+	workflowFile := filepath.Join(workflowDir, "spectr-ci.yml")
+	wasConfigured := FileExists(workflowFile)
+
+	// Render the CI workflow template
+	content, err := e.tm.RenderCIWorkflow()
+	if err != nil {
+		return fmt.Errorf("failed to render CI workflow template: %w", err)
+	}
+
+	// Write the workflow file
+	if err := os.WriteFile(workflowFile, []byte(content), filePerm); err != nil {
+		return fmt.Errorf("failed to write CI workflow file: %w", err)
+	}
+
+	// Track in results
+	if wasConfigured {
+		result.UpdatedFiles = append(result.UpdatedFiles, ".github/workflows/spectr-ci.yml")
+	} else {
+		result.CreatedFiles = append(result.CreatedFiles, ".github/workflows/spectr-ci.yml")
 	}
 
 	return nil

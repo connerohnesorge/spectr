@@ -276,6 +276,37 @@ func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 	}
 }
 
+func TestTemplateManager_RenderCIWorkflow(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	got, err := tm.RenderCIWorkflow()
+	if err != nil {
+		t.Fatalf("RenderCIWorkflow() error = %v", err)
+	}
+
+	// Check for key content in CI workflow
+	expectedContent := []string{
+		"name: Spectr Validation",
+		"push:",
+		"pull_request:",
+		"branches: [main]",
+		"spectr-validate:",
+		"runs-on: ubuntu-latest",
+		"actions/checkout@v4",
+		"connerohnesorge/spectr-action@v0.0.2",
+		"strict: false",
+	}
+
+	for _, content := range expectedContent {
+		if !strings.Contains(got, content) {
+			t.Errorf("RenderCIWorkflow() missing expected content %q", content)
+		}
+	}
+}
+
 func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
 	tm, err := NewTemplateManager()
 	if err != nil {
@@ -316,6 +347,13 @@ func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
 			if err != nil {
 				t.Errorf("Slash command %s failed to render: %v", cmd, err)
 			}
+		}
+	})
+
+	t.Run("ci workflow template", func(t *testing.T) {
+		_, err := tm.RenderCIWorkflow()
+		if err != nil {
+			t.Errorf("CI workflow template failed to render: %v", err)
 		}
 	})
 }

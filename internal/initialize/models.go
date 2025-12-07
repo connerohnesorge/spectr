@@ -6,6 +6,7 @@ type InitCmd struct {
 	PathFlag       string   `name:"path" short:"p" help:"Alt project path"`
 	Tools          []string `name:"tools" short:"t" help:"Tools list"`
 	NonInteractive bool     `name:"non-interactive" help:"Non-interactive"`
+	CIWorkflow     bool     `name:"ci-workflow" help:"Create CI workflow file"`
 }
 
 // ProjectConfig holds the overall project configuration during init

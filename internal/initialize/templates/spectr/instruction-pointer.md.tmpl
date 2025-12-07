@@ -11,3 +11,8 @@ Use `@/{{ .AgentsFile }}` to learn:
 - How to create and apply change proposals
 - Spec format and conventions
 - Project structure and guidelines
+
+When delegating tasks from a change proposal to subagents:
+- Provide the proposal path: `{{ .ChangesDir }}/<id>/proposal.md`
+- Include task context: `{{ .ChangesDir }}/<id>/tasks.json`
+- Reference delta specs: `{{ .ChangesDir }}/<id>/specs/<capability>/spec.md`

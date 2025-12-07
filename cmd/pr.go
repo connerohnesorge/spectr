@@ -17,7 +17,7 @@ import (
 type PRCmd struct {
 	Archive  PRArchiveCmd  `cmd:"" aliases:"a" help:"Archive and create PR"`
 	Proposal PRProposalCmd `cmd:"" aliases:"p" help:"Create proposal PR"`
-	Remove PRRemoveCmd `cmd:"" name:"rm" aliases:"r,remove" help:"Remove via PR"`
+	Remove   PRRemoveCmd   `cmd:"" name:"rm" aliases:"r,remove" help:"Remove via PR"`
 }
 
 // PRArchiveCmd represents the pr archive subcommand.

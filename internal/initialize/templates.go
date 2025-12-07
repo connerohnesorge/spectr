@@ -100,3 +100,15 @@ func (tm *TemplateManager) RenderSlashCommand(
 
 	return buf.String(), nil
 }
+
+// RenderCIWorkflow renders the spectr-ci.yml template for GitHub Actions
+// This template has no variables and returns the CI workflow configuration
+func (tm *TemplateManager) RenderCIWorkflow() (string, error) {
+	var buf bytes.Buffer
+	err := tm.templates.ExecuteTemplate(&buf, "spectr-ci.yml.tmpl", nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to render CI workflow template: %w", err)
+	}
+
+	return buf.String(), nil
+}

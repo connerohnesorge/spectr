@@ -104,7 +104,7 @@ func runNonInteractiveInit(c *InitCmd) error {
 		return fmt.Errorf("failed to create executor: %w", err)
 	}
 
-	result, err := executor.Execute(selectedProviders)
+	result, err := executor.Execute(selectedProviders, c.CIWorkflow)
 	if err != nil {
 		return fmt.Errorf("initialization failed: %w", err)
 	}

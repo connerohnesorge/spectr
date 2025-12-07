@@ -255,6 +255,63 @@ func TestNewWizardModelNoConfiguredProviders(t *testing.T) {
 	}
 }
 
+func TestNewWizardModelWithCIWorkflowConfigured(t *testing.T) {
+	// Create a temp directory with CI workflow file
+	tempDir := t.TempDir()
+
+	// Create .github/workflows/spectr-ci.yml
+	workflowDir := filepath.Join(tempDir, ".github", "workflows")
+	err := os.MkdirAll(workflowDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create workflows directory: %v", err)
+	}
+
+	workflowFile := filepath.Join(workflowDir, "spectr-ci.yml")
+	err = os.WriteFile(workflowFile, []byte("name: Spectr Validation\n"), 0644)
+	if err != nil {
+		t.Fatalf("Failed to create spectr-ci.yml: %v", err)
+	}
+
+	// Create wizard model
+	cmd := &InitCmd{Path: tempDir}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Verify CI workflow is marked as configured
+	if !wizard.ciWorkflowConfigured {
+		t.Error("Expected ciWorkflowConfigured to be true")
+	}
+
+	// Verify CI workflow is pre-selected
+	if !wizard.ciWorkflowEnabled {
+		t.Error("Expected ciWorkflowEnabled to be pre-selected")
+	}
+}
+
+func TestNewWizardModelWithoutCIWorkflow(t *testing.T) {
+	// Create an empty temp directory
+	tempDir := t.TempDir()
+
+	// Create wizard model
+	cmd := &InitCmd{Path: tempDir}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Verify CI workflow is NOT configured
+	if wizard.ciWorkflowConfigured {
+		t.Error("Expected ciWorkflowConfigured to be false")
+	}
+
+	// Verify CI workflow is NOT pre-selected
+	if wizard.ciWorkflowEnabled {
+		t.Error("Expected ciWorkflowEnabled to be false")
+	}
+}
+
 func TestRenderSelectShowsConfiguredIndicator(t *testing.T) {
 	// Create wizard with manually set configured provider
 	cmd := &InitCmd{Path: "/tmp/test-project"}
@@ -424,5 +481,91 @@ func TestPopulateContextPromptHasNoSurroundingQuotes(t *testing.T) {
 	// Verify the prompt contains expected content (basic sanity check)
 	if !strings.Contains(PopulateContextPrompt, "spectr/project.md") {
 		t.Error("PopulateContextPrompt should reference spectr/project.md")
+	}
+}
+
+// ============================================================================
+// Tests for CI workflow feature
+// ============================================================================
+
+func TestHandleReviewKeysToggleCIWorkflow(t *testing.T) {
+	// Test that pressing space on review screen toggles CI workflow option
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Set up review state
+	wizard.step = StepReview
+	wizard.ciWorkflowEnabled = false
+
+	// Simulate pressing space key
+	keyMsg := tea.KeyMsg{Type: tea.KeySpace}
+	newModel, _ := wizard.Update(keyMsg)
+	updatedWizard, ok := newModel.(WizardModel)
+	if !ok {
+		t.Fatal("Failed to cast model to WizardModel")
+	}
+
+	// Verify CI workflow is now enabled
+	if !updatedWizard.ciWorkflowEnabled {
+		t.Error("Expected ciWorkflowEnabled to be true after pressing space")
+	}
+
+	// Toggle again
+	keyMsg = tea.KeyMsg{Type: tea.KeySpace}
+	newModel, _ = updatedWizard.Update(keyMsg)
+	updatedWizard, ok = newModel.(WizardModel)
+	if !ok {
+		t.Fatal("Failed to cast model to WizardModel")
+	}
+
+	// Verify CI workflow is now disabled
+	if updatedWizard.ciWorkflowEnabled {
+		t.Error("Expected ciWorkflowEnabled to be false after pressing space again")
+	}
+}
+
+func TestRenderReviewShowsCIWorkflowOption(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	wizard.step = StepReview
+
+	// Render the review view
+	output := wizard.renderReview()
+
+	// Verify output contains CI workflow option
+	if !strings.Contains(output, "Spectr CI Validation") {
+		t.Error("Expected review view to contain 'Spectr CI Validation' option")
+	}
+
+	// Verify output contains toggle instructions
+	if !strings.Contains(output, "Space: Toggle") {
+		t.Error("Expected review view to contain 'Space: Toggle' instruction")
+	}
+}
+
+func TestRenderReviewShowsCIWorkflowConfigured(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	wizard.step = StepReview
+	wizard.ciWorkflowConfigured = true
+	wizard.ciWorkflowEnabled = true
+
+	// Render the review view
+	output := wizard.renderReview()
+
+	// Verify output contains configured indicator
+	if !strings.Contains(output, "(configured)") {
+		t.Error("Expected review view to contain '(configured)' indicator for CI workflow")
 	}
 }

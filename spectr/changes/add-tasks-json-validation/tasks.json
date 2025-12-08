@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Core Implementation",
+      "description": "Add `IsValid()` method to `TaskStatusValue` type in `internal/parsers/types.go`",
+      "status": "completed"
+    },
+    {
+      "id": "1.2",
+      "section": "Core Implementation",
+      "description": "Add `ValidateTasksJson()` function in `internal/parsers/parsers.go` that validates JSON structure and status values",
+      "status": "completed"
+    },
+    {
+      "id": "1.3",
+      "section": "Core Implementation",
+      "description": "Add `ValidTaskStatusValues()` helper function returning valid status slice",
+      "status": "completed"
+    },
+    {
+      "id": "2.1",
+      "section": "Integration",
+      "description": "Add tasks.json validation to change validation in `internal/validation/change_rules.go`",
+      "status": "completed"
+    },
+    {
+      "id": "2.2",
+      "section": "Integration",
+      "description": "Ensure validation errors include task ID and descriptive message",
+      "status": "completed"
+    },
+    {
+      "id": "3.1",
+      "section": "Testing",
+      "description": "Add unit tests for `IsValid()` method with valid and invalid status values",
+      "status": "completed"
+    },
+    {
+      "id": "3.2",
+      "section": "Testing",
+      "description": "Add tests for `ValidateTasksJson()` with valid tasks.json",
+      "status": "completed"
+    },
+    {
+      "id": "3.3",
+      "section": "Testing",
+      "description": "Add tests for `ValidateTasksJson()` with invalid status values (e.g., \"done\")",
+      "status": "completed"
+    },
+    {
+      "id": "3.4",
+      "section": "Testing",
+      "description": "Add tests for malformed JSON handling",
+      "status": "completed"
+    },
+    {
+      "id": "3.5",
+      "section": "Testing",
+      "description": "Add integration test verifying `spectr validate` catches invalid status values",
+      "status": "completed"
+    }
+  ]
+}

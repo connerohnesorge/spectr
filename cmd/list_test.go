@@ -42,3 +42,24 @@ func TestCLIHasListCommand(t *testing.T) {
 		t.Errorf("List field type: got %s, want ListCmd", listField.Type().Name())
 	}
 }
+
+// TestListCmd_HasLsAlias verifies that the list command has the "ls" alias.
+// This ensures "spectr ls" works identically to "spectr list".
+func TestListCmd_HasLsAlias(t *testing.T) {
+	cliType := reflect.TypeOf(CLI{})
+	listField, found := cliType.FieldByName("List")
+	if !found {
+		t.Fatal("CLI does not have List field")
+	}
+
+	// Get the aliases tag
+	tag := listField.Tag
+	aliases := tag.Get("aliases")
+	if aliases == "" {
+		t.Fatal("List field does not have aliases tag")
+	}
+
+	if aliases != "ls" {
+		t.Errorf("List aliases = %q, want %q", aliases, "ls")
+	}
+}

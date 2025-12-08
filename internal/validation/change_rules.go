@@ -35,6 +35,34 @@ func ValidateChangeDeltaSpecs(
 	spectrRoot string,
 	strictMode bool,
 ) (*ValidationReport, error) {
+	// Track all issues across validation
+	var allIssues []ValidationIssue
+
+	// Validate tasks.json if it exists
+	tasksJsonPath := filepath.Join(changeDir, "tasks.json")
+	if _, err := os.Stat(tasksJsonPath); err == nil {
+		validationErrors, err := parsers.ValidateTasksJson(tasksJsonPath)
+		if err != nil {
+			// Handle file read/parse errors
+			allIssues = append(allIssues, ValidationIssue{
+				Level:   LevelError,
+				Path:    tasksJsonPath,
+				Line:    1,
+				Message: "failed to parse tasks.json: " + err.Error(),
+			})
+		} else {
+			// Convert validation errors to issues
+			for _, ve := range validationErrors {
+				allIssues = append(allIssues, ValidationIssue{
+					Level:   LevelError,
+					Path:    tasksJsonPath,
+					Line:    0, // Line numbers not available from JSON parsing
+					Message: fmt.Sprintf("task %q: %s", ve.TaskID, ve.Message),
+				})
+			}
+		}
+	}
+
 	specsDir := filepath.Join(changeDir, "specs")
 
 	// Check if specs directory exists
@@ -71,9 +99,6 @@ func ValidateChangeDeltaSpecs(
 	if len(specFiles) == 0 {
 		return nil, fmt.Errorf("no spec.md files found in specs directory: %s", specsDir)
 	}
-
-	// Track all issues across all spec files
-	var allIssues []ValidationIssue
 
 	// Track requirement names for duplicate/conflict detection across all files
 	addedReqs := make(map[string]string)       // normalized name -> file path

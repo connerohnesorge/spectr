@@ -178,6 +178,15 @@ func TestPRProposalCmd_Struct(t *testing.T) {
 		t.Errorf("DryRun should be bool, got %v", dryRunField.Kind())
 	}
 
+	// Check Yes field exists
+	yesField := val.FieldByName("Yes")
+	if !yesField.IsValid() {
+		t.Error("PRProposalCmd does not have Yes field")
+	}
+	if yesField.Kind() != reflect.Bool {
+		t.Errorf("Yes should be bool, got %v", yesField.Kind())
+	}
+
 	// Verify SkipSpecs is NOT in PRProposalCmd (it's archive-specific)
 	skipSpecsField := val.FieldByName("SkipSpecs")
 	if skipSpecsField.IsValid() {
@@ -205,6 +214,9 @@ func TestPRProposalCmd_DefaultValues(t *testing.T) {
 	if cmd.DryRun {
 		t.Errorf("DryRun should default to false, got %v", cmd.DryRun)
 	}
+	if cmd.Yes {
+		t.Errorf("Yes should default to false, got %v", cmd.Yes)
+	}
 }
 
 // TestPRProposalCmd_SetFields tests setting all field values.
@@ -215,6 +227,7 @@ func TestPRProposalCmd_SetFields(t *testing.T) {
 		Draft:    true,
 		Force:    true,
 		DryRun:   true,
+		Yes:      true,
 	}
 
 	if cmd.ChangeID != "new-proposal" {
@@ -231,6 +244,51 @@ func TestPRProposalCmd_SetFields(t *testing.T) {
 	}
 	if !cmd.DryRun {
 		t.Error("DryRun should be true")
+	}
+	if !cmd.Yes {
+		t.Error("Yes should be true")
+	}
+}
+
+// TestPRProposalCmd_YesTagVerification verifies the struct tags for Yes field.
+func TestPRProposalCmd_YesTagVerification(t *testing.T) {
+	cmdType := reflect.TypeOf(PRProposalCmd{})
+	yesField, found := cmdType.FieldByName("Yes")
+	if !found {
+		t.Fatal("PRProposalCmd does not have Yes field")
+	}
+
+	tag := yesField.Tag
+
+	// Check name tag
+	nameTag := tag.Get("name")
+	if nameTag != "yes" {
+		t.Errorf("Yes field name tag = %q, want %q", nameTag, "yes")
+	}
+
+	// Check short tag
+	shortTag := tag.Get("short")
+	if shortTag != "y" {
+		t.Errorf("Yes field short tag = %q, want %q", shortTag, "y")
+	}
+
+	// Check help tag contains relevant keywords
+	helpTag := tag.Get("help")
+	if helpTag == "" {
+		t.Error("Yes field does not have help tag")
+	}
+
+	// Help should contain "non-interactive" or "skip" or "cleanup"
+	helpLower := strings.ToLower(helpTag)
+	hasNonInteractive := strings.Contains(helpLower, "non-interactive")
+	hasSkip := strings.Contains(helpLower, "skip")
+	hasCleanup := strings.Contains(helpLower, "cleanup")
+
+	if !hasNonInteractive && !hasSkip && !hasCleanup {
+		t.Errorf(
+			"Yes field help tag should contain 'non-interactive', 'skip', or 'cleanup', got %q",
+			helpTag,
+		)
 	}
 }
 

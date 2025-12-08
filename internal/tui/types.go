@@ -76,3 +76,21 @@ type MenuConfig struct {
 	// Receives the index of the selected choice.
 	SelectHandler func(index int) tea.Cmd
 }
+
+// ConfirmConfig holds configuration for ConfirmPrompt.
+type ConfirmConfig struct {
+	// Title is the prompt title/question.
+	Title string
+
+	// ConfirmText is the text for the confirm (yes) option.
+	// Defaults to "Yes" if empty.
+	ConfirmText string
+
+	// CancelText is the text for the cancel (no) option.
+	// Defaults to "No" if empty.
+	CancelText string
+
+	// DefaultConfirm sets whether confirm is selected by default.
+	// When false (default), cancel/no is selected first for safety.
+	DefaultConfirm bool
+}

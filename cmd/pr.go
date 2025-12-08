@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/git"
 	"github.com/connerohnesorge/spectr/internal/list"
 	"github.com/connerohnesorge/spectr/internal/pr"
+	"github.com/connerohnesorge/spectr/internal/tui"
 )
 
 // PRCmd represents the pr command with subcommands.
@@ -37,6 +39,7 @@ type PRProposalCmd struct {
 	Draft    bool   `name:"draft" short:"d" help:"Create as draft PR"`
 	Force    bool   `name:"force" short:"f" help:"Delete existing branch"`
 	DryRun   bool   `name:"dry-run" help:"Preview without executing"`
+	Yes      bool   `name:"yes" short:"y" help:"Non-interactive mode, skip cleanup prompt"`
 }
 
 // PRRemoveCmd represents the pr remove subcommand.
@@ -162,6 +165,33 @@ func (c *PRProposalCmd) Run() error {
 	}
 
 	printPRResult(result)
+
+	// Offer to cleanup local change directory after successful PR creation
+	// Only prompt if:
+	// 1. PR was actually created (not dry-run, indicated by PRURL being set)
+	// 2. Not in non-interactive mode (--yes flag)
+	if result.PRURL != "" && !c.Yes {
+		fmt.Println() // Add spacing before prompt
+
+		prompt := tui.NewConfirmPrompt(tui.ConfirmConfig{
+			Title:       "Remove local change directory?",
+			CancelText:  "No, keep it",
+			ConfirmText: "Yes, remove it",
+		})
+
+		confirmed, promptErr := prompt.Run()
+		if promptErr != nil {
+			// Prompt error is not fatal - PR was created successfully
+			fmt.Printf("Warning: cleanup prompt failed: %v\n", promptErr)
+		} else if confirmed {
+			changeDirPath := filepath.Join(projectRoot, "spectr", "changes", changeID)
+			if removeErr := os.RemoveAll(changeDirPath); removeErr != nil {
+				fmt.Printf("Warning: failed to remove change directory: %v\n", removeErr)
+			} else {
+				fmt.Printf("Removed: %s\n", changeDirPath)
+			}
+		}
+	}
 
 	return nil
 }

@@ -989,3 +989,216 @@ func TestFindPreMergeErrorLine_UsesRenamedBulletLine(t *testing.T) {
 		t.Fatalf("expected TO error to map to line 4, got %d", line)
 	}
 }
+
+// Task 3.5: Integration test for spectr validate catching invalid tasks.json status values
+func TestValidateChangeDeltaSpecs_InvalidTasksJsonStatus(t *testing.T) {
+	// Create a change directory with:
+	// - tasks.json containing an invalid status (e.g., "done")
+	// - Valid specs directory structure
+
+	specs := map[string]string{
+		"auth/spec.md": `## ADDED Requirements
+
+### Requirement: User Authentication
+The system SHALL provide user authentication functionality.
+
+#### Scenario: Successful login
+- **WHEN** user provides valid credentials
+- **THEN** user is authenticated
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(t, specs)
+
+	// Create tasks.json with invalid status value
+	tasksJsonContent := `{
+		"version": 1,
+		"tasks": [
+			{"id": "1.1", "section": "Implementation", "description": "Add auth feature", "status": "done"},
+			{"id": "1.2", "section": "Testing", "description": "Write tests", "status": "pending"}
+		]
+	}`
+	tasksJsonPath := filepath.Join(changeDir, "tasks.json")
+	if err := os.WriteFile(tasksJsonPath, []byte(tasksJsonContent), 0644); err != nil {
+		t.Fatalf("Failed to write tasks.json: %v", err)
+	}
+
+	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	if err != nil {
+		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+	}
+
+	// Verify the report is invalid due to tasks.json error
+	if report.Valid {
+		t.Error("Expected invalid report due to invalid tasks.json status, but got valid")
+	}
+
+	// Verify the validation includes the tasks.json error
+	foundTasksJsonError := false
+	for _, issue := range report.Issues {
+		if issue.Level == LevelError &&
+			strings.Contains(issue.Path, "tasks.json") &&
+			strings.Contains(issue.Message, "1.1") &&
+			strings.Contains(issue.Message, "invalid status") {
+			foundTasksJsonError = true
+
+			break
+		}
+	}
+
+	if foundTasksJsonError {
+		return
+	}
+	t.Error("Expected tasks.json validation error in report, but not found")
+	for _, issue := range report.Issues {
+		t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+	}
+}
+
+func TestValidateChangeDeltaSpecs_ValidTasksJsonStatus(t *testing.T) {
+	// Create a change directory with:
+	// - tasks.json containing all valid statuses
+	// - Valid specs directory structure
+
+	specs := map[string]string{
+		"auth/spec.md": `## ADDED Requirements
+
+### Requirement: User Authentication
+The system SHALL provide user authentication functionality.
+
+#### Scenario: Successful login
+- **WHEN** user provides valid credentials
+- **THEN** user is authenticated
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(t, specs)
+
+	// Create tasks.json with all valid status values
+	tasksJsonContent := `{
+		"version": 1,
+		"tasks": [
+			{"id": "1.1", "section": "Implementation", "description": "Add auth feature", "status": "completed"},
+			{"id": "1.2", "section": "Implementation", "description": "Add login form", "status": "in_progress"},
+			{"id": "1.3", "section": "Testing", "description": "Write tests", "status": "pending"}
+		]
+	}`
+	tasksJsonPath := filepath.Join(changeDir, "tasks.json")
+	if err := os.WriteFile(tasksJsonPath, []byte(tasksJsonContent), 0644); err != nil {
+		t.Fatalf("Failed to write tasks.json: %v", err)
+	}
+
+	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	if err != nil {
+		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+	}
+
+	// Verify the report is valid
+	if !report.Valid {
+		t.Error("Expected valid report with valid tasks.json statuses, but got invalid")
+		for _, issue := range report.Issues {
+			t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+		}
+	}
+
+	// Verify no tasks.json errors are present
+	for _, issue := range report.Issues {
+		if strings.Contains(issue.Path, "tasks.json") {
+			t.Errorf("Unexpected tasks.json error: %s", issue.Message)
+		}
+	}
+}
+
+func TestValidateChangeDeltaSpecs_MalformedTasksJson(t *testing.T) {
+	// Test that malformed tasks.json causes a validation error
+
+	specs := map[string]string{
+		"auth/spec.md": `## ADDED Requirements
+
+### Requirement: User Authentication
+The system SHALL provide user authentication functionality.
+
+#### Scenario: Successful login
+- **WHEN** user provides valid credentials
+- **THEN** user is authenticated
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(t, specs)
+
+	// Create malformed tasks.json
+	tasksJsonContent := `{this is not valid json`
+	tasksJsonPath := filepath.Join(changeDir, "tasks.json")
+	if err := os.WriteFile(tasksJsonPath, []byte(tasksJsonContent), 0644); err != nil {
+		t.Fatalf("Failed to write tasks.json: %v", err)
+	}
+
+	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	if err != nil {
+		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+	}
+
+	// Verify the report is invalid due to malformed tasks.json
+	if report.Valid {
+		t.Error("Expected invalid report due to malformed tasks.json, but got valid")
+	}
+
+	// Verify the validation includes the tasks.json parse error
+	foundParseError := false
+	for _, issue := range report.Issues {
+		if issue.Level == LevelError &&
+			strings.Contains(issue.Path, "tasks.json") &&
+			strings.Contains(issue.Message, "failed to parse") {
+			foundParseError = true
+
+			break
+		}
+	}
+
+	if foundParseError {
+		return
+	}
+	t.Error("Expected tasks.json parse error in report, but not found")
+	for _, issue := range report.Issues {
+		t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+	}
+}
+
+func TestValidateChangeDeltaSpecs_NoTasksJson(t *testing.T) {
+	// Test that validation works correctly when no tasks.json exists
+
+	specs := map[string]string{
+		"auth/spec.md": `## ADDED Requirements
+
+### Requirement: User Authentication
+The system SHALL provide user authentication functionality.
+
+#### Scenario: Successful login
+- **WHEN** user provides valid credentials
+- **THEN** user is authenticated
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(t, specs)
+	// Don't create tasks.json
+
+	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	if err != nil {
+		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+	}
+
+	// Verify the report is valid (missing tasks.json should not cause an error)
+	if !report.Valid {
+		t.Error("Expected valid report without tasks.json, but got invalid")
+		for _, issue := range report.Issues {
+			t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+		}
+	}
+
+	// Verify no tasks.json errors are present
+	for _, issue := range report.Issues {
+		if strings.Contains(issue.Path, "tasks.json") {
+			t.Errorf("Unexpected tasks.json error: %s", issue.Message)
+		}
+	}
+}

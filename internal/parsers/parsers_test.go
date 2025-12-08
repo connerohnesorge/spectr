@@ -434,3 +434,394 @@ func TestCountTasks_JsonPreferredOverMarkdown(t *testing.T) {
 		t.Errorf("Expected completed 1 (from JSON), got %d", status.Completed)
 	}
 }
+
+// Task 3.1: Unit tests for IsValid() method
+func TestTaskStatusValue_IsValid(t *testing.T) {
+	tests := []struct {
+		name     string
+		status   TaskStatusValue
+		expected bool
+	}{
+		// Valid values
+		{
+			name:     "pending is valid",
+			status:   TaskStatusPending,
+			expected: true,
+		},
+		{
+			name:     "in_progress is valid",
+			status:   TaskStatusInProgress,
+			expected: true,
+		},
+		{
+			name:     "completed is valid",
+			status:   TaskStatusCompleted,
+			expected: true,
+		},
+		// Invalid values
+		{
+			name:     "done is invalid",
+			status:   TaskStatusValue("done"),
+			expected: false,
+		},
+		{
+			name:     "finished is invalid",
+			status:   TaskStatusValue("finished"),
+			expected: false,
+		},
+		{
+			name:     "empty string is invalid",
+			status:   TaskStatusValue(""),
+			expected: false,
+		},
+		{
+			name:     "PENDING uppercase is invalid",
+			status:   TaskStatusValue("PENDING"),
+			expected: false,
+		},
+		{
+			name:     "IN_PROGRESS uppercase is invalid",
+			status:   TaskStatusValue("IN_PROGRESS"),
+			expected: false,
+		},
+		{
+			name:     "COMPLETED uppercase is invalid",
+			status:   TaskStatusValue("COMPLETED"),
+			expected: false,
+		},
+		{
+			name:     "random string is invalid",
+			status:   TaskStatusValue("random"),
+			expected: false,
+		},
+		{
+			name:     "todo is invalid",
+			status:   TaskStatusValue("todo"),
+			expected: false,
+		},
+		{
+			name:     "active is invalid",
+			status:   TaskStatusValue("active"),
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.status.IsValid()
+			if result != tt.expected {
+				t.Errorf(
+					"TaskStatusValue(%q).IsValid() = %v, want %v",
+					tt.status,
+					result,
+					tt.expected,
+				)
+			}
+		})
+	}
+}
+
+// Task 3.1 supplement: Test ValidTaskStatusValues()
+func TestValidTaskStatusValues(t *testing.T) {
+	validValues := ValidTaskStatusValues()
+
+	if len(validValues) != 3 {
+		t.Errorf("Expected 3 valid status values, got %d", len(validValues))
+	}
+
+	// Check that all expected values are present
+	expectedValues := map[TaskStatusValue]bool{
+		TaskStatusPending:    false,
+		TaskStatusInProgress: false,
+		TaskStatusCompleted:  false,
+	}
+
+	for _, v := range validValues {
+		if _, ok := expectedValues[v]; ok {
+			expectedValues[v] = true
+		} else {
+			t.Errorf("Unexpected value in ValidTaskStatusValues: %q", v)
+		}
+	}
+
+	for v, found := range expectedValues {
+		if !found {
+			t.Errorf("Expected value %q not found in ValidTaskStatusValues", v)
+		}
+	}
+}
+
+// Task 3.2: Tests for ValidateTasksJson() with valid tasks.json
+func TestValidateTasksJson_ValidFile(t *testing.T) {
+	tests := []struct {
+		name    string
+		content string
+	}{
+		{
+			name: "all pending tasks",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "pending"},
+					{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
+				]
+			}`,
+		},
+		{
+			name: "all completed tasks",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "completed"},
+					{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "completed"}
+				]
+			}`,
+		},
+		{
+			name: "all in_progress tasks",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "in_progress"},
+					{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "in_progress"}
+				]
+			}`,
+		},
+		{
+			name: "mixed valid statuses",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "1.1", "section": "Implementation", "description": "Task 1", "status": "completed"},
+					{"id": "1.2", "section": "Implementation", "description": "Task 2", "status": "in_progress"},
+					{"id": "1.3", "section": "Testing", "description": "Task 3", "status": "pending"},
+					{"id": "2.1", "section": "Testing", "description": "Task 4", "status": "completed"}
+				]
+			}`,
+		},
+		{
+			name: "empty tasks array",
+			content: `{
+				"version": 1,
+				"tasks": []
+			}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			filePath := filepath.Join(tmpDir, "tasks.json")
+			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			validationErrors, err := ValidateTasksJson(filePath)
+			if err != nil {
+				t.Fatalf("ValidateTasksJson returned error: %v", err)
+			}
+			if len(validationErrors) == 0 {
+				return
+			}
+			t.Errorf("Expected no validation errors, got %d:", len(validationErrors))
+			for _, ve := range validationErrors {
+				t.Logf("  Task %s: %s", ve.TaskID, ve.Message)
+			}
+		})
+	}
+}
+
+// Task 3.3: Tests for ValidateTasksJson() with invalid status values
+func TestValidateTasksJson_InvalidStatus(t *testing.T) {
+	tests := []struct {
+		name            string
+		content         string
+		expectedErrors  int
+		expectedTaskIDs []string
+	}{
+		{
+			name: "single invalid status done",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "done"},
+					{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "completed"}
+				]
+			}`,
+			expectedErrors:  1,
+			expectedTaskIDs: []string{"1.1"},
+		},
+		{
+			name: "single invalid status finished",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "2.1", "section": "Testing", "description": "Task 1", "status": "finished"}
+				]
+			}`,
+			expectedErrors:  1,
+			expectedTaskIDs: []string{"2.1"},
+		},
+		{
+			name: "multiple invalid statuses",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "done"},
+					{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "completed"},
+					{"id": "1.3", "section": "Impl", "description": "Task 3", "status": "todo"},
+					{"id": "2.1", "section": "Testing", "description": "Task 4", "status": "active"}
+				]
+			}`,
+			expectedErrors:  3,
+			expectedTaskIDs: []string{"1.1", "1.3", "2.1"},
+		},
+		{
+			name: "empty status string",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "1.1", "section": "Impl", "description": "Task 1", "status": ""}
+				]
+			}`,
+			expectedErrors:  1,
+			expectedTaskIDs: []string{"1.1"},
+		},
+		{
+			name: "uppercase status PENDING",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "PENDING"}
+				]
+			}`,
+			expectedErrors:  1,
+			expectedTaskIDs: []string{"1.1"},
+		},
+		{
+			name: "mixed case status In_Progress",
+			content: `{
+				"version": 1,
+				"tasks": [
+					{"id": "3.1", "section": "Impl", "description": "Task 1", "status": "In_Progress"}
+				]
+			}`,
+			expectedErrors:  1,
+			expectedTaskIDs: []string{"3.1"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			filePath := filepath.Join(tmpDir, "tasks.json")
+			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			validationErrors, err := ValidateTasksJson(filePath)
+			if err != nil {
+				t.Fatalf("ValidateTasksJson returned error: %v", err)
+			}
+
+			if len(validationErrors) != tt.expectedErrors {
+				t.Errorf(
+					"Expected %d validation errors, got %d",
+					tt.expectedErrors,
+					len(validationErrors),
+				)
+				for _, ve := range validationErrors {
+					t.Logf("  Task %s: %s", ve.TaskID, ve.Message)
+				}
+			}
+
+			// Verify the correct task IDs are reported
+			foundTaskIDs := make(map[string]bool)
+			for _, ve := range validationErrors {
+				foundTaskIDs[ve.TaskID] = true
+				// Verify the message contains "invalid status"
+				if !contains(ve.Message, "invalid status") {
+					t.Errorf(
+						"Expected error message to contain 'invalid status', got: %s",
+						ve.Message,
+					)
+				}
+			}
+
+			for _, expectedID := range tt.expectedTaskIDs {
+				if !foundTaskIDs[expectedID] {
+					t.Errorf("Expected error for task ID %s, but not found", expectedID)
+				}
+			}
+		})
+	}
+}
+
+// Task 3.4: Tests for malformed JSON handling
+func TestValidateTasksJson_MalformedJson(t *testing.T) {
+	tests := []struct {
+		name    string
+		content string
+	}{
+		{
+			name:    "invalid JSON syntax - missing closing brace",
+			content: `{"version": 1, "tasks": [`,
+		},
+		{
+			name:    "invalid JSON syntax - missing quote",
+			content: `{"version": 1, "tasks": [{"id": "1.1, "section": "Impl", "description": "Task", "status": "pending"}]}`,
+		},
+		{
+			name:    "invalid JSON syntax - trailing comma",
+			content: `{"version": 1, "tasks": [{"id": "1.1", "section": "Impl", "description": "Task", "status": "pending"},]}`,
+		},
+		{
+			name:    "invalid JSON syntax - completely malformed",
+			content: `this is not json at all`,
+		},
+		{
+			name:    "empty file",
+			content: ``,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			filePath := filepath.Join(tmpDir, "tasks.json")
+			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			_, err := ValidateTasksJson(filePath)
+			if err == nil {
+				t.Error("Expected error for malformed JSON, got nil")
+			}
+		})
+	}
+}
+
+func TestValidateTasksJson_MissingFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "nonexistent.json")
+
+	_, err := ValidateTasksJson(filePath)
+	if err == nil {
+		t.Error("Expected error for missing file, got nil")
+	}
+}
+
+// Helper function to check if a string contains a substring
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
+}
+
+func containsHelper(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+
+	return false
+}

@@ -32,3 +32,13 @@ type TasksFile struct {
 	Version int    `json:"version"`
 	Tasks   []Task `json:"tasks"`
 }
+
+// IsValid returns true if the status value is one of the valid statuses
+func (s TaskStatusValue) IsValid() bool {
+	switch s {
+	case TaskStatusPending, TaskStatusInProgress, TaskStatusCompleted:
+		return true
+	default:
+		return false
+	}
+}

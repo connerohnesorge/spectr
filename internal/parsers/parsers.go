@@ -217,3 +217,41 @@ func walkSpecFiles(root string, fn func(string) error) error {
 
 	return nil
 }
+
+// ValidTaskStatusValues returns a slice of all valid task status values
+func ValidTaskStatusValues() []TaskStatusValue {
+	return []TaskStatusValue{
+		TaskStatusPending,
+		TaskStatusInProgress,
+		TaskStatusCompleted,
+	}
+}
+
+// TaskValidationError represents an error found during tasks.json validation
+type TaskValidationError struct {
+	TaskID  string
+	Message string
+}
+
+// ValidateTasksJson validates a tasks.json file and returns validation errors.
+// The first return value contains validation errors (semantic issues).
+// The second return value is an error if the file can't be read or parsed.
+func ValidateTasksJson(filePath string) ([]TaskValidationError, error) {
+	tasksFile, err := ReadTasksJson(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var validationErrors []TaskValidationError
+
+	for _, task := range tasksFile.Tasks {
+		if !task.Status.IsValid() {
+			validationErrors = append(validationErrors, TaskValidationError{
+				TaskID:  task.ID,
+				Message: "invalid status value: " + string(task.Status),
+			})
+		}
+	}
+
+	return validationErrors, nil
+}

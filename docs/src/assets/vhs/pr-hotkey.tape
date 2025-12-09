@@ -1,4 +1,4 @@
-Output assets/gifs/pr-hotkey.gif
+Output docs/src/assets/gifs/pr-hotkey.gif
 
 # VHS Configuration
 Set FontSize 14

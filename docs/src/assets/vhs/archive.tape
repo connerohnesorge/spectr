@@ -1,4 +1,4 @@
-Output assets/gifs/archive.gif
+Output docs/src/assets/gifs/archive.gif
 
 # VHS Configuration
 Set FontSize 14

@@ -1,6 +1,6 @@
 # spectr
 
-<img src="https://github.com/connerohnesorge/spectr/blob/main/assets/logo.png" alt="Logo" width="95">
+<img src="https://github.com/connerohnesorge/spectr/blob/main/docs/src/assets/logo.png" alt="Logo" width="95">
 
 **Validatable spec-driven development (inspired by openspec and kiro)**
 
@@ -286,7 +286,7 @@ spectr/
 
 ### spectr init
 
-![spectr init demo](assets/gifs/init.gif)
+![spectr init demo](docs/src/assets/gifs/init.gif)
 
 Initialize Spectr in a project directory.
 
@@ -323,7 +323,7 @@ spectr init --non-interactive
 
 ### spectr list
 
-![spectr list demo](assets/gifs/list.gif)
+![spectr list demo](docs/src/assets/gifs/list.gif)
 
 List active changes or specifications.
 
@@ -364,7 +364,7 @@ Run 'spectr view <change>' for details
 
 ### spectr validate
 
-![spectr validate demo](assets/gifs/validate.gif)
+![spectr validate demo](docs/src/assets/gifs/validate.gif)
 
 Validate changes or specifications against rules.
 
@@ -468,7 +468,7 @@ Based on Anthropic's research on effective harnesses for long-running agents, JS
 
 ### spectr archive
 
-![spectr archive demo](assets/gifs/archive.gif)
+![spectr archive demo](docs/src/assets/gifs/archive.gif)
 
 Archive a completed change, merging deltas into specs.
 

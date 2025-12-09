@@ -72,10 +72,10 @@ The system SHALL use a specific version tag of the spectr-action (not `latest` o
 The system SHALL provide automated GIF generation through a GitHub Actions workflow that triggers when VHS tape files are modified and commits updated GIFs back to the repository.
 
 #### Scenario: GIF regeneration on tape file change
-- **WHEN** a developer pushes changes to any `.tape` file in `assets/vhs/`
+- **WHEN** a developer pushes changes to any `.tape` file in `docs/src/assets/vhs/`
 - **THEN** the VHS workflow executes automatically
 - **AND** VHS processes all tape files to generate updated GIFs
-- **AND** the generated GIFs are committed back to the `assets/gifs/` directory
+- **AND** the generated GIFs are committed back to the `docs/src/assets/gifs/` directory
 
 #### Scenario: Workflow ignores non-tape changes
 - **WHEN** a developer pushes changes that do not modify any `.tape` file
@@ -103,7 +103,7 @@ The system SHALL attribute auto-committed GIF changes to a dedicated bot identit
 - **WHEN** the VHS workflow generates new GIFs
 - **THEN** the commit author SHALL be identifiable as automated (e.g., `vhs-action` bot)
 - **AND** the commit message SHALL indicate it is an automated GIF update
-- **AND** the commit SHALL only include `*.gif` files from `assets/gifs/`
+- **AND** the commit SHALL only include `*.gif` files from `docs/src/assets/gifs/`
 
 ### Requirement: Workflow Permissions Configuration
 The system SHALL configure the VHS workflow with minimal required permissions to commit changes back to the repository securely.

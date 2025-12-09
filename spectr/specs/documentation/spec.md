@@ -123,7 +123,7 @@ The system SHALL maintain VHS tape files as version-controlled source for all de
 
 #### Scenario: Developer creates new demo
 - **WHEN** a developer wants to add a new demo
-- **THEN** they SHALL find existing tape files as examples in `assets/vhs/` directory
+- **THEN** they SHALL find existing tape files as examples in `docs/src/assets/vhs/` directory
 
 #### Scenario: Contributor finds demo standards
 - **WHEN** a contributor reads the development documentation
@@ -134,15 +134,15 @@ The system SHALL organize demo assets with clear separation between source files
 
 #### Scenario: Developer locates tape source
 - **WHEN** a developer needs to update a demo
-- **THEN** they SHALL find VHS tape files in `assets/vhs/` directory
+- **THEN** they SHALL find VHS tape files in `docs/src/assets/vhs/` directory
 
 #### Scenario: Documentation references generated GIF
 - **WHEN** the README or docs site needs to embed a demo
-- **THEN** they SHALL reference GIF files from `assets/gifs/` directory
+- **THEN** they SHALL reference GIF files from `docs/src/assets/gifs/` directory
 
 #### Scenario: Developer regenerates all demos
 - **WHEN** a developer runs the regeneration command
-- **THEN** all GIFs SHALL be generated from their corresponding tape files and placed in `assets/gifs/`
+- **THEN** all GIFs SHALL be generated from their corresponding tape files and placed in `docs/src/assets/gifs/`
 
 ### Requirement: Core Workflow Coverage
 The system SHALL provide demo GIFs covering all essential Spectr workflows: initialization, listing, validation, and archiving.
@@ -214,7 +214,7 @@ The system SHALL provide a `generate-gif` command (via Nix flake) to generate al
 #### Scenario: Developer regenerates all GIFs
 - **WHEN** a developer runs `generate-gif` in the nix develop shell
 - **THEN** all VHS tape files SHALL be processed
-- **AND** GIFs SHALL be output to `assets/gifs/` directory
+- **AND** GIFs SHALL be output to `docs/src/assets/gifs/` directory
 
 #### Scenario: Developer regenerates single GIF
 - **WHEN** a developer runs `generate-gif <demo-name>`
@@ -307,6 +307,7 @@ The Astro documentation site SHALL configure the starlight-changelogs plugin in 
 - **WHEN** the docs project dependencies are reviewed
 - **THEN** `starlight-changelogs` SHALL appear in the dependencies section of `docs/package.json`
 - **AND** the version SHALL be the latest compatible release
+
 ### Requirement: Starlight Icons Plugin Integration with UnoCSS
 The documentation site SHALL integrate the starlight-plugin-icons plugin with UnoCSS to enable icon support in sidebar navigation, code blocks, and file tree components using the Iconify icon library through a wrapper-based integration pattern.
 
@@ -374,6 +375,7 @@ The documentation site SHALL provide enhanced Starlight components (Card, Aside,
 - **AND** Aside components SHALL support icon attributes
 - **AND** IconLink components SHALL be available for icon-labeled links
 - **AND** all enhanced components SHALL use icons from installed Iconify collections
+
 ### Requirement: Page Action Buttons for Documentation
 The system SHALL provide page action buttons on documentation pages enabling users to quickly copy markdown content and open pages in AI chat services through the starlight-page-actions plugin.
 
@@ -411,6 +413,7 @@ The system SHALL configure the starlight-page-actions plugin in the Astro config
 - **WHEN** a documentation page is loaded
 - **THEN** the plugin SHALL render page action buttons
 - **AND** the buttons SHALL function correctly with the configured options
+
 ### Requirement: Browser-Integrated Search with Star Warp
 The documentation site SHALL integrate the @inox-tools/star-warp Starlight plugin to enable quick navigation to search results and native browser search integration via OpenSearch protocol.
 

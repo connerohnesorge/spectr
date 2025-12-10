@@ -63,7 +63,7 @@ Built with Go
 2. **Implementing Changes**: Follow the implementation checklist in `tasks.md`
 3. **Archiving Changes**: Merge deltas into specs, preserving history
 
-Spectr enforces a clear separation between current truth (`specs/` - what IS built) and proposed changes (`changes/` - what SHOULD change), ensuring all modifications are intentional, documented, and validated.
+Spectr enforces a clear separation between current truth (`spectr/specs/` - what IS built) and proposed changes (`spectr/changes/` - what SHOULD change), ensuring all modifications are intentional, documented, and validated.
 
 ## Key Features
 
@@ -275,9 +275,9 @@ spectr/
 ```
 
 **Key Concepts:**
-- **specs/**: The source of truth for what's currently built
-- **changes/**: Proposed modifications, kept separate until approved
-- **archive/**: Historical record of all changes with timestamps
+- **spectr/specs/**: The source of truth for what's currently built
+- **spectr/changes/**: Proposed modifications, kept separate until approved
+- **spectr/changes/archive/**: Historical record of all changes with timestamps
 - **Delta Specs**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED Requirements` headers
 
 ---
@@ -1074,7 +1074,7 @@ The system SHALL do something.
 Create multiple delta specs, one per capability:
 
 ```
-changes/add-2fa-notifications/
+spectr/changes/add-2fa-notifications/
 ├── proposal.md
 ├── tasks.md
 └── specs/
@@ -1117,7 +1117,7 @@ spectr validate <change> --json | jq '.errors[] | select(.rule == "RequirementSc
 Archives accumulate but remain organized by date:
 
 ```
-changes/archive/
+spectr/changes/archive/
 ├── 2025-11-15-add-auth/
 ├── 2025-11-16-fix-validation/
 ├── 2025-11-18-add-notifications/

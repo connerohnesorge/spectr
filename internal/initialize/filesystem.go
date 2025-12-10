@@ -3,21 +3,19 @@
 package initialize
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 const (
 	// File permissions
 	dirPerms  = 0755
 	filePerms = 0644
-
-	// Error messages
-	errEmptyPath = "path cannot be empty"
 )
 
 // ExpandPath expands a path that may contain ~ for home directory
@@ -31,7 +29,7 @@ const (
 func ExpandPath(path string) (string, error) {
 	// Handle empty path
 	if path == "" {
-		return "", errors.New(errEmptyPath)
+		return "", &specterrs.EmptyPathError{}
 	}
 
 	expandedPath := path
@@ -75,7 +73,7 @@ func ExpandPath(path string) (string, error) {
 // Returns an error if directory creation fails.
 func EnsureDir(path string) error {
 	if path == "" {
-		return errors.New(errEmptyPath)
+		return &specterrs.EmptyPathError{}
 	}
 
 	// Expand path to handle ~ and relative paths
@@ -106,7 +104,7 @@ func EnsureDir(path string) error {
 // existing files.
 func WriteFile(path string, content []byte) error {
 	if path == "" {
-		return errors.New(errEmptyPath)
+		return &specterrs.EmptyPathError{}
 	}
 
 	// Expand path to handle ~ and relative paths
@@ -191,7 +189,7 @@ func IsSpectrInitialized(projectPath string) bool {
 // Returns an error if the backup operation fails.
 func BackupFile(path string) error {
 	if path == "" {
-		return errors.New(errEmptyPath)
+		return &specterrs.EmptyPathError{}
 	}
 
 	// Expand path to handle ~ and relative paths

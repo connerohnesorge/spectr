@@ -1,0 +1,209 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Package Setup",
+      "description": "Create `internal/specterrs/` directory",
+      "status": "completed"
+    },
+    {
+      "id": "1.2",
+      "section": "Package Setup",
+      "description": "Create `doc.go` with package documentation",
+      "status": "completed"
+    },
+    {
+      "id": "1.3",
+      "section": "Package Setup",
+      "description": "Create `git.go` with 5 error types",
+      "status": "completed"
+    },
+    {
+      "id": "1.4",
+      "section": "Package Setup",
+      "description": "Create `archive.go` with 6 error types",
+      "status": "completed"
+    },
+    {
+      "id": "1.5",
+      "section": "Package Setup",
+      "description": "Create `validation.go` with 3 error types",
+      "status": "completed"
+    },
+    {
+      "id": "1.6",
+      "section": "Package Setup",
+      "description": "Create `initialize.go` with 3 error types",
+      "status": "completed"
+    },
+    {
+      "id": "1.7",
+      "section": "Package Setup",
+      "description": "Create `list.go` with 1 error type",
+      "status": "completed"
+    },
+    {
+      "id": "1.8",
+      "section": "Package Setup",
+      "description": "Create `environment.go` with 1 error type",
+      "status": "completed"
+    },
+    {
+      "id": "1.9",
+      "section": "Package Setup",
+      "description": "Create `pr.go` with 2 error types",
+      "status": "completed"
+    },
+    {
+      "id": "1.10",
+      "section": "Package Setup",
+      "description": "Run `go build ./...` to verify package compiles",
+      "status": "completed"
+    },
+    {
+      "id": "2.1",
+      "section": "Migration - Low Coupling",
+      "description": "Migrate `internal/list/interactive.go` (EditorNotSetError)",
+      "status": "completed"
+    },
+    {
+      "id": "2.2",
+      "section": "Migration - Low Coupling",
+      "description": "Migrate `cmd/list.go` (IncompatibleFlagsError)",
+      "status": "completed"
+    },
+    {
+      "id": "2.3",
+      "section": "Migration - Low Coupling",
+      "description": "Migrate `internal/initialize/filesystem.go` (EmptyPathError)",
+      "status": "completed"
+    },
+    {
+      "id": "2.4",
+      "section": "Migration - Low Coupling",
+      "description": "Migrate `cmd/init.go` (WizardModelCastError, InitializationCompletedWithErrorsError)",
+      "status": "completed"
+    },
+    {
+      "id": "2.5",
+      "section": "Migration - Low Coupling",
+      "description": "Run tests: `go test ./internal/list/... ./internal/initialize/... ./cmd/...`",
+      "status": "completed"
+    },
+    {
+      "id": "3.1",
+      "section": "Migration - Medium Coupling",
+      "description": "Migrate `internal/git/worktree.go` (BranchNameRequiredError, BaseBranchRequiredError, NotInGitRepositoryError)",
+      "status": "completed"
+    },
+    {
+      "id": "3.2",
+      "section": "Migration - Medium Coupling",
+      "description": "Migrate `internal/git/platform.go` (EmptyRemoteURLError)",
+      "status": "completed"
+    },
+    {
+      "id": "3.3",
+      "section": "Migration - Medium Coupling",
+      "description": "Migrate `internal/git/branch.go` (NotInGitRepositoryError, BaseBranchNotFoundError)",
+      "status": "completed"
+    },
+    {
+      "id": "3.4",
+      "section": "Migration - Medium Coupling",
+      "description": "Migrate `internal/pr/platforms.go` (UnknownPlatformError)",
+      "status": "completed"
+    },
+    {
+      "id": "3.5",
+      "section": "Migration - Medium Coupling",
+      "description": "Migrate `internal/pr/workflow.go` (PRPrerequisiteError)",
+      "status": "completed"
+    },
+    {
+      "id": "3.6",
+      "section": "Migration - Medium Coupling",
+      "description": "Run tests: `go test ./internal/git/... ./internal/pr/...`",
+      "status": "completed"
+    },
+    {
+      "id": "4.1",
+      "section": "Migration - High Coupling",
+      "description": "Migrate `cmd/validate.go` (ValidationFailedError)",
+      "status": "completed"
+    },
+    {
+      "id": "4.2",
+      "section": "Migration - High Coupling",
+      "description": "Migrate `internal/validation/delta_validators.go` (DeltaSpecParseError)",
+      "status": "completed"
+    },
+    {
+      "id": "4.3",
+      "section": "Migration - High Coupling",
+      "description": "Migrate `cmd/accept.go` (ValidationRequiredError)",
+      "status": "completed"
+    },
+    {
+      "id": "4.4",
+      "section": "Migration - High Coupling",
+      "description": "Run tests: `go test ./cmd/... ./internal/validation/...`",
+      "status": "completed"
+    },
+    {
+      "id": "5.1",
+      "section": "Migration - Archive (Highest Coupling)",
+      "description": "Migrate `internal/archive/archiver.go` (UserCancelledError, ArchiveCancelledError, ValidationRequiredError)",
+      "status": "completed"
+    },
+    {
+      "id": "5.2",
+      "section": "Migration - Archive (Highest Coupling)",
+      "description": "Migrate `internal/archive/validator.go` (DeltaConflictError - 6 instances)",
+      "status": "completed"
+    },
+    {
+      "id": "5.3",
+      "section": "Migration - Archive (Highest Coupling)",
+      "description": "Remove `ErrUserCancelled` from `internal/archive/types.go`",
+      "status": "completed"
+    },
+    {
+      "id": "5.4",
+      "section": "Migration - Archive (Highest Coupling)",
+      "description": "Remove `errEmptyPath` constant from `internal/initialize/filesystem.go`",
+      "status": "completed"
+    },
+    {
+      "id": "5.5",
+      "section": "Migration - Archive (Highest Coupling)",
+      "description": "Run tests: `go test ./internal/archive/...`",
+      "status": "completed"
+    },
+    {
+      "id": "6.1",
+      "section": "Verification",
+      "description": "Run full test suite: `go test ./...`",
+      "status": "completed"
+    },
+    {
+      "id": "6.2",
+      "section": "Verification",
+      "description": "Run linter: `golangci-lint run`",
+      "status": "completed"
+    },
+    {
+      "id": "6.3",
+      "section": "Verification",
+      "description": "Verify no `errors.New()` with hardcoded strings remain (grep check)",
+      "status": "completed"
+    },
+    {
+      "id": "6.4",
+      "section": "Verification",
+      "description": "Manual smoke test of CLI commands",
+      "status": "completed"
+    }
+  ]
+}

@@ -5,13 +5,13 @@
 package pr
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/git"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // prCreateArgs bundles arguments for PR creation.
@@ -106,7 +106,7 @@ func createPRForPlatform(
 		return createBitbucketPR(platform, args)
 
 	case git.PlatformUnknown:
-		return nil, errors.New("unknown platform; please create PR manually")
+		return nil, &specterrs.UnknownPlatformError{Platform: "unknown"}
 	}
 
 	return nil, fmt.Errorf(

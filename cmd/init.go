@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/connerohnesorge/spectr/internal/initialize"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // InitCmd wraps the initialize package's InitCmd type to add Run method
@@ -74,7 +75,7 @@ func runInteractiveInit(c *InitCmd) error {
 	// Check if there were errors during execution
 	wizardModel, ok := finalModel.(initialize.WizardModel)
 	if !ok {
-		return errors.New("failed to cast final model to WizardModel")
+		return &specterrs.WizardModelCastError{}
 	}
 	err = wizardModel.GetError()
 	if err != nil {
@@ -141,7 +142,16 @@ func printInitResults(
 			fmt.Printf("  ✗ %s\n", e)
 		}
 
-		return errors.New("initialization completed with errors")
+		// Convert string errors to error type
+		errs := make([]error, len(result.Errors))
+		for i, e := range result.Errors {
+			errs[i] = errors.New(e)
+		}
+
+		return &specterrs.InitializationCompletedWithErrorsError{
+			ErrorCount: len(result.Errors),
+			Errors:     errs,
+		}
 	}
 
 	fmt.Print(initialize.FormatNextStepsMessage())

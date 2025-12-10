@@ -3,12 +3,13 @@ package git
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 const (
@@ -36,13 +37,13 @@ type WorktreeInfo struct {
 // It creates a new branch based on the specified base branch.
 func CreateWorktree(config WorktreeConfig) (*WorktreeInfo, error) {
 	if config.BranchName == "" {
-		return nil, errors.New("branch name is required")
+		return nil, &specterrs.BranchNameRequiredError{}
 	}
 	if config.BaseBranch == "" {
-		return nil, errors.New("base branch is required")
+		return nil, &specterrs.BaseBranchRequiredError{}
 	}
 	if _, err := GetRepoRoot(); err != nil {
-		return nil, fmt.Errorf("not in a git repository: %w", err)
+		return nil, &specterrs.NotInGitRepositoryError{}
 	}
 
 	suffix, err := randomHex(randomSuffixBytes)
@@ -82,7 +83,7 @@ func handleWorktreeError(output []byte, config WorktreeConfig) error {
 		)
 	}
 	if strings.Contains(outputStr, "not a git repository") {
-		return errors.New("not in a git repository")
+		return &specterrs.NotInGitRepositoryError{}
 	}
 
 	return fmt.Errorf("failed to create worktree: %s", outputStr)

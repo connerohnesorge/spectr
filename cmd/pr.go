@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/git"
 	"github.com/connerohnesorge/spectr/internal/list"
 	"github.com/connerohnesorge/spectr/internal/pr"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // PRCmd represents the pr command with subcommands.
@@ -57,7 +57,8 @@ func (c *PRRemoveCmd) Run() error {
 
 	changeID, err := resolveOrSelectChangeID(c.ChangeID, projectRoot)
 	if err != nil {
-		if errors.Is(err, archive.ErrUserCancelled) {
+		var userCancelledErr *specterrs.UserCancelledError
+		if errors.As(err, &userCancelledErr) {
 			return nil // User cancelled, exit gracefully
 		}
 
@@ -93,7 +94,8 @@ func (c *PRArchiveCmd) Run() error {
 
 	changeID, err := resolveOrSelectChangeID(c.ChangeID, projectRoot)
 	if err != nil {
-		if errors.Is(err, archive.ErrUserCancelled) {
+		var userCancelledErr *specterrs.UserCancelledError
+		if errors.As(err, &userCancelledErr) {
 			return nil // User cancelled, exit gracefully
 		}
 
@@ -139,7 +141,8 @@ func (c *PRProposalCmd) Run() error {
 	}
 
 	if err != nil {
-		if errors.Is(err, archive.ErrUserCancelled) {
+		var userCancelledErr *specterrs.UserCancelledError
+		if errors.As(err, &userCancelledErr) {
 			return nil // User cancelled, exit gracefully
 		}
 
@@ -197,7 +200,7 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 	if len(changes) == 0 {
 		fmt.Println("No changes found.")
 
-		return "", archive.ErrUserCancelled
+		return "", &specterrs.UserCancelledError{Operation: "interactive selection"}
 	}
 
 	selectedID, err := list.RunInteractiveArchive(changes, projectRoot)
@@ -206,7 +209,7 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 	}
 
 	if selectedID == "" {
-		return "", archive.ErrUserCancelled
+		return "", &specterrs.UserCancelledError{Operation: "interactive selection"}
 	}
 
 	return selectedID, nil
@@ -226,7 +229,7 @@ func selectChangeForProposal(projectRoot, baseBranch string) (string, error) {
 	if len(changes) == 0 {
 		fmt.Println("No changes found.")
 
-		return "", archive.ErrUserCancelled
+		return "", &specterrs.UserCancelledError{Operation: "interactive selection"}
 	}
 
 	// Fetch origin to ensure refs are current
@@ -250,7 +253,7 @@ func selectChangeForProposal(projectRoot, baseBranch string) (string, error) {
 		fmt.Println("No unmerged proposals found. " +
 			"All changes already exist on main.")
 
-		return "", archive.ErrUserCancelled
+		return "", &specterrs.UserCancelledError{Operation: "interactive selection"}
 	}
 
 	selectedID, err := list.RunInteractiveArchive(unmergedChanges, projectRoot)
@@ -259,7 +262,7 @@ func selectChangeForProposal(projectRoot, baseBranch string) (string, error) {
 	}
 
 	if selectedID == "" {
-		return "", archive.ErrUserCancelled
+		return "", &specterrs.UserCancelledError{Operation: "interactive selection"}
 	}
 
 	return selectedID, nil

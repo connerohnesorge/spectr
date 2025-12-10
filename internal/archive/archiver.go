@@ -25,6 +25,7 @@ import (
 
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // Archive archives a change by validating, applying specs, and moving to archive directory
@@ -67,7 +68,8 @@ func Archive(cmd *ArchiveCmd, workingDir string) (ArchiveResult, error) {
 	// If no change ID provided, use interactive selection
 	if changeID == "" {
 		selectedID, err = selectChangeInteractive(projectRoot)
-		if errors.Is(err, ErrUserCancelled) {
+		var userCancelledErr *specterrs.UserCancelledError
+		if errors.As(err, &userCancelledErr) {
 			return ArchiveResult{}, nil // User cancelled, exit gracefully
 		}
 		if err != nil {
@@ -102,7 +104,7 @@ func Archive(cmd *ArchiveCmd, workingDir string) (ArchiveResult, error) {
 	} else {
 		if !cmd.Yes {
 			if !confirm("Validation is disabled. Continue anyway?") {
-				return ArchiveResult{}, errors.New("archive cancelled")
+				return ArchiveResult{}, &specterrs.ArchiveCancelledError{Reason: "validation disabled and user declined"}
 			}
 		}
 		fmt.Println("⚠️  Skipping validation")
@@ -162,7 +164,7 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 	if len(changes) == 0 {
 		fmt.Println("No changes found.")
 
-		return "", ErrUserCancelled
+		return "", &specterrs.UserCancelledError{Operation: "interactive selection"}
 	}
 
 	selectedID, err := runInteractiveArchiveForArchiver(changes, projectRoot)
@@ -171,7 +173,7 @@ func selectChangeInteractive(projectRoot string) (string, error) {
 	}
 
 	if selectedID == "" {
-		return "", ErrUserCancelled
+		return "", &specterrs.UserCancelledError{Operation: "interactive selection"}
 	}
 
 	return selectedID, nil
@@ -199,7 +201,7 @@ func runValidation(changeDir string) error {
 			)
 		}
 
-		return errors.New("validation errors must be fixed before archiving")
+		return &specterrs.ValidationRequiredError{Operation: "archiving"}
 	}
 
 	if report.Summary.Warnings > 0 {
@@ -233,7 +235,10 @@ func checkTasks(yes bool, changeDir string) error {
 		fmt.Printf(" (%d incomplete)\n", incomplete)
 		if !yes {
 			if !confirm("Archive with incomplete tasks?") {
-				return errors.New("archive cancelled due to incomplete tasks")
+				return &specterrs.IncompleteTasksError{
+					Total:     status.Total,
+					Completed: status.Completed,
+				}
 			}
 		}
 	} else {
@@ -269,7 +274,9 @@ func updateSpecsWithTracking(
 	displayUpdatePlan(updates)
 
 	if !yes && !confirm("\nApply spec updates?") {
-		return OperationCounts{}, nil, errors.New("archive cancelled")
+		return OperationCounts{}, nil, &specterrs.ArchiveCancelledError{
+			Reason: "user declined spec updates",
+		}
 	}
 
 	totalCounts, mergedSpecs, err := processMerges(updates)

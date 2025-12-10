@@ -22,7 +22,6 @@
 package list
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -31,6 +30,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 	"github.com/connerohnesorge/spectr/internal/tui"
 )
 
@@ -649,7 +649,7 @@ func (m interactiveModel) handleEdit() (interactiveModel, tea.Cmd) {
 	// Check if EDITOR is set
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
-		m.err = errors.New("EDITOR environment variable not set")
+		m.err = &specterrs.EditorNotSetError{Operation: "edit"}
 
 		return m, nil
 	}

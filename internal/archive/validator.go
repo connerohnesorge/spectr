@@ -2,12 +2,12 @@
 package archive
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
@@ -163,48 +163,54 @@ func checkCrossSectionConflicts(sets nameSets) error {
 	// ADDED cannot conflict with MODIFIED, REMOVED, or RENAMED TO
 	for name := range sets.added {
 		if sets.modified[name] {
-			return errors.New(
-				"requirement appears in both ADDED and " +
-					"MODIFIED sections",
-			)
+			return &specterrs.DeltaConflictError{
+				Section1:        "ADDED",
+				Section2:        "MODIFIED",
+				RequirementName: name,
+			}
 		}
 		if sets.removed[name] {
-			return errors.New(
-				"requirement appears in both ADDED and " +
-					"REMOVED sections",
-			)
+			return &specterrs.DeltaConflictError{
+				Section1:        "ADDED",
+				Section2:        "REMOVED",
+				RequirementName: name,
+			}
 		}
 		if sets.renamedTo[name] {
-			return errors.New(
-				"requirement appears in both ADDED and " +
-					"RENAMED TO sections",
-			)
+			return &specterrs.DeltaConflictError{
+				Section1:        "ADDED",
+				Section2:        "RENAMED TO",
+				RequirementName: name,
+			}
 		}
 	}
 
 	// MODIFIED cannot conflict with REMOVED or RENAMED FROM
 	for name := range sets.modified {
 		if sets.removed[name] {
-			return errors.New(
-				"requirement appears in both MODIFIED and " +
-					"REMOVED sections",
-			)
+			return &specterrs.DeltaConflictError{
+				Section1:        "MODIFIED",
+				Section2:        "REMOVED",
+				RequirementName: name,
+			}
 		}
 		if sets.renamedFrom[name] {
-			return errors.New(
-				"requirement appears in both MODIFIED and " +
-					"RENAMED FROM sections",
-			)
+			return &specterrs.DeltaConflictError{
+				Section1:        "MODIFIED",
+				Section2:        "RENAMED FROM",
+				RequirementName: name,
+			}
 		}
 	}
 
 	// REMOVED cannot conflict with RENAMED
 	for name := range sets.removed {
 		if sets.renamedFrom[name] {
-			return errors.New(
-				"requirement appears in both REMOVED and " +
-					"RENAMED FROM sections",
-			)
+			return &specterrs.DeltaConflictError{
+				Section1:        "REMOVED",
+				Section2:        "RENAMED FROM",
+				RequirementName: name,
+			}
 		}
 	}
 
@@ -221,11 +227,10 @@ func checkDuplicatesInSection(
 	for _, req := range reqs {
 		normalized := parsers.NormalizeRequirementName(req.Name)
 		if seen[normalized] {
-			return fmt.Errorf(
-				"duplicate requirement %q in %s section",
-				req.Name,
-				sectionName,
-			)
+			return &specterrs.DuplicateRequirementError{
+				RequirementName: req.Name,
+				SectionName:     sectionName,
+			}
 		}
 		seen[normalized] = true
 	}

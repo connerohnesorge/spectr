@@ -1,10 +1,5 @@
 package archive
 
-import "errors"
-
-// ErrUserCancelled is returned when the user cancels an interactive selection.
-var ErrUserCancelled = errors.New("user cancelled selection")
-
 // SpecUpdate represents a spec file to update during archive
 type SpecUpdate struct {
 	Source string // Path to delta spec in change

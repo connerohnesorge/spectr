@@ -1,10 +1,11 @@
 package git
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // GetBaseBranch determines the appropriate base branch to use for a PR.
@@ -48,10 +49,7 @@ func GetBaseBranch(preferredBase string) (string, error) {
 		return "origin/master", nil
 	}
 
-	return "", errors.New(
-		"could not determine base branch: " +
-			"neither 'main' nor 'master' found on origin",
-	)
+	return "", &specterrs.BaseBranchNotFoundError{}
 }
 
 // remoteBranchExists checks if a branch exists on the origin remote.
@@ -116,7 +114,7 @@ func GetRepoRoot() (string, error) {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			stderr := strings.TrimSpace(string(exitErr.Stderr))
 			if strings.Contains(stderr, "not a git repository") {
-				return "", errors.New("not a git repository")
+				return "", &specterrs.NotInGitRepositoryError{}
 			}
 
 			return "", fmt.Errorf("git rev-parse failed: %s", stderr)

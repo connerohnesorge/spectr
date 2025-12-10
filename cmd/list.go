@@ -3,13 +3,13 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/list"
 	"github.com/connerohnesorge/spectr/internal/pr"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // ListCmd represents the list command which displays changes or specs.
@@ -34,12 +34,18 @@ type ListCmd struct {
 func (c *ListCmd) Run() error {
 	// Validate flags - interactive and JSON are mutually exclusive
 	if c.Interactive && c.JSON {
-		return errors.New("cannot use --interactive with --json")
+		return &specterrs.IncompatibleFlagsError{
+			Flag1: "--interactive",
+			Flag2: "--json",
+		}
 	}
 
 	// Validate flags - all and specs are mutually exclusive
 	if c.All && c.Specs {
-		return errors.New("cannot use --all with --specs")
+		return &specterrs.IncompatibleFlagsError{
+			Flag1: "--all",
+			Flag2: "--specs",
+		}
 	}
 
 	// Get current working directory as the project path

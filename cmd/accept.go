@@ -16,6 +16,7 @@ import (
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // filePerm is the standard file permission for created files (rw-r--r--)
@@ -50,7 +51,8 @@ func (c *AcceptCmd) Run() error {
 
 	changeID, err := c.resolveChangeID(projectRoot)
 	if err != nil {
-		if errors.Is(err, archive.ErrUserCancelled) {
+		var userCancelledErr *specterrs.UserCancelledError
+		if errors.As(err, &userCancelledErr) {
 			return nil
 		}
 
@@ -132,7 +134,7 @@ func (*AcceptCmd) runValidation(changeDir string) error {
 			)
 		}
 
-		return errors.New("validation errors must be fixed before accepting")
+		return &specterrs.ValidationRequiredError{Operation: "accepting"}
 	}
 
 	if report.Summary.Warnings > 0 {

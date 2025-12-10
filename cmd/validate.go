@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
@@ -80,7 +81,10 @@ func (c *ValidateCmd) runDirectValidation(
 
 	// Return error if validation failed
 	if !report.Valid {
-		return errors.New("validation failed")
+		return &specterrs.ValidationFailedError{
+			ErrorCount:   report.Summary.Errors,
+			WarningCount: report.Summary.Warnings,
+		}
 	}
 
 	return nil
@@ -111,7 +115,7 @@ func (c *ValidateCmd) runBulkValidation(projectPath string) error {
 	}
 
 	if hasFailures {
-		return errors.New("validation failed for one or more items")
+		return &specterrs.MultiValidationFailedError{ItemCount: len(items)}
 	}
 
 	return nil

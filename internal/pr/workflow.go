@@ -5,13 +5,13 @@
 package pr
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/git"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // PRConfig contains configuration for the PR workflow.
@@ -353,9 +353,11 @@ func validatePrerequisites(config PRConfig) error {
 	// Check origin remote exists
 	_, err = git.GetOriginURL()
 	if err != nil {
-		return errors.New(
-			"no 'origin' remote found; configure remote before creating PR",
-		)
+		return &specterrs.PRPrerequisiteError{
+			Check:   "origin remote",
+			Details: "no 'origin' remote found; configure remote before creating PR",
+			Err:     err,
+		}
 	}
 
 	// Check change exists

@@ -1,11 +1,12 @@
 package git
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // Platform represents a Git hosting platform.
@@ -37,7 +38,7 @@ type PlatformInfo struct {
 // Supports HTTPS, SSH, and git:// protocol URLs.
 func DetectPlatform(remoteURL string) (PlatformInfo, error) {
 	if remoteURL == "" {
-		return PlatformInfo{}, errors.New("empty remote URL")
+		return PlatformInfo{}, &specterrs.EmptyRemoteURLError{}
 	}
 
 	// Normalize the URL to extract host and path

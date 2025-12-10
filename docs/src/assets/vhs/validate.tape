@@ -1,4 +1,4 @@
-Output assets/gifs/validate.gif
+Output docs/src/assets/gifs/validate.gif
 
 # VHS Configuration
 Set FontSize 14

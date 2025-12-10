@@ -70,20 +70,20 @@
               exit 0
             fi
 
-            mkdir -p "$REPO_ROOT/assets/gifs"
+            mkdir -p "$REPO_ROOT/docs/src/assets/gifs"
 
             if [[ -n "''${1:-}" ]]; then
-              if [[ ! -f "$REPO_ROOT/assets/vhs/$1.tape" ]]; then
+              if [[ ! -f "$REPO_ROOT/docs/src/assets/vhs/$1.tape" ]]; then
                 echo "Error: Unknown demo '$1'. Available: $DEMOS" >&2
                 exit 1
               fi
               echo "==> Generating $1.gif..."
-              vhs "$REPO_ROOT/assets/vhs/$1.tape"
+              vhs "$REPO_ROOT/docs/src/assets/vhs/$1.tape"
             else
               echo "==> Generating all demo GIFs..."
               for demo in $DEMOS; do
                 echo "==> Generating $demo.gif..."
-                vhs "$REPO_ROOT/assets/vhs/$demo.tape"
+                vhs "$REPO_ROOT/docs/src/assets/vhs/$demo.tape"
               done
               echo "==> All GIFs generated successfully!"
             fi

@@ -1,4 +1,4 @@
-Output assets/gifs/partial-match.gif
+Output docs/src/assets/gifs/partial-match.gif
 
 # VHS Configuration
 Set FontSize 14

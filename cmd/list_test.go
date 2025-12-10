@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"reflect"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 func TestListCmdStructure(t *testing.T) {
@@ -25,6 +28,12 @@ func TestListCmdStructure(t *testing.T) {
 	jsonField := val.FieldByName("JSON")
 	if !jsonField.IsValid() {
 		t.Error("ListCmd does not have JSON field")
+	}
+
+	// Check Stdout field exists
+	stdoutField := val.FieldByName("Stdout")
+	if !stdoutField.IsValid() {
+		t.Error("ListCmd does not have Stdout field")
 	}
 }
 
@@ -61,5 +70,46 @@ func TestListCmd_HasLsAlias(t *testing.T) {
 
 	if aliases != "ls" {
 		t.Errorf("List aliases = %q, want %q", aliases, "ls")
+	}
+}
+
+// TestListCmd_StdoutRequiresInteractive verifies that --stdout returns an error
+// when used without --interactive (-I).
+func TestListCmd_StdoutRequiresInteractive(t *testing.T) {
+	cmd := &ListCmd{
+		Stdout:      true,
+		Interactive: false,
+	}
+
+	err := cmd.Run()
+	if err == nil {
+		t.Error("Expected error when --stdout used without --interactive")
+	}
+
+	// Check it's the correct error type
+	var reqErr *specterrs.RequiresFlagError
+	if !errors.As(err, &reqErr) {
+		t.Errorf("Expected RequiresFlagError, got: %T", err)
+	}
+}
+
+// TestListCmd_StdoutIncompatibleWithJSON verifies that --stdout returns an error
+// when used together with --json since they are mutually exclusive.
+func TestListCmd_StdoutIncompatibleWithJSON(t *testing.T) {
+	cmd := &ListCmd{
+		Stdout:      true,
+		Interactive: true,
+		JSON:        true,
+	}
+
+	err := cmd.Run()
+	if err == nil {
+		t.Error("Expected error when --stdout used with --json")
+	}
+
+	// Check it's the correct error type
+	var incompatErr *specterrs.IncompatibleFlagsError
+	if !errors.As(err, &incompatErr) {
+		t.Errorf("Expected IncompatibleFlagsError, got: %T", err)
 	}
 }

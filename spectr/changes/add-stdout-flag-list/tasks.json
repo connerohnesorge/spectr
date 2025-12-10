@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Implementation",
+      "description": "Add `Stdout` boolean flag to `ListCmd` struct in `cmd/list.go` with help text",
+      "status": "done"
+    },
+    {
+      "id": "1.2",
+      "section": "Implementation",
+      "description": "Add validation that `--stdout` requires `-I` (interactive mode)",
+      "status": "done"
+    },
+    {
+      "id": "1.3",
+      "section": "Implementation",
+      "description": "Add `stdoutMode` field to `interactiveModel` in `internal/list/interactive.go`",
+      "status": "done"
+    },
+    {
+      "id": "1.4",
+      "section": "Implementation",
+      "description": "Modify `handleEnter()` to print to stdout when `stdoutMode` is true instead of copying to clipboard",
+      "status": "done"
+    },
+    {
+      "id": "1.5",
+      "section": "Implementation",
+      "description": "Update `View()` to show clean output (just the ID) when exiting in stdout mode",
+      "status": "done"
+    },
+    {
+      "id": "1.6",
+      "section": "Implementation",
+      "description": "Pass `stdoutMode` parameter to `RunInteractiveChanges()` and `RunInteractiveSpecs()` and `RunInteractiveAll()`",
+      "status": "done"
+    },
+    {
+      "id": "1.7",
+      "section": "Implementation",
+      "description": "Update `listChanges()`, `listSpecs()`, and `listAll()` in `cmd/list.go` to pass stdout mode",
+      "status": "done"
+    },
+    {
+      "id": "2.1",
+      "section": "Testing",
+      "description": "Add unit tests in `cmd/list_test.go` for `--stdout` flag parsing and validation",
+      "status": "done"
+    },
+    {
+      "id": "2.2",
+      "section": "Testing",
+      "description": "Add unit test for `--stdout` without `-I` returns error",
+      "status": "done"
+    },
+    {
+      "id": "2.3",
+      "section": "Testing",
+      "description": "Add unit test for `--stdout` with `--json` returns error (mutually exclusive)",
+      "status": "done"
+    },
+    {
+      "id": "2.4",
+      "section": "Testing",
+      "description": "Add unit tests in `internal/list/interactive_test.go` for stdout mode behavior",
+      "status": "done"
+    },
+    {
+      "id": "2.5",
+      "section": "Testing",
+      "description": "Add test that stdout mode prints ID without formatting prefix",
+      "status": "done"
+    },
+    {
+      "id": "2.6",
+      "section": "Testing",
+      "description": "Add test that stdout mode does not attempt clipboard copy",
+      "status": "done"
+    },
+    {
+      "id": "2.7",
+      "section": "Testing",
+      "description": "Run existing tests to ensure no regressions: `go test ./cmd/... ./internal/list/...`",
+      "status": "done"
+    },
+    {
+      "id": "3.1",
+      "section": "Validation",
+      "description": "Run `spectr validate add-stdout-flag-list --strict` to ensure proposal is valid",
+      "status": "done"
+    },
+    {
+      "id": "3.2",
+      "section": "Validation",
+      "description": "Manually test `spectr list -I --stdout` outputs selected ID to stdout",
+      "status": "done"
+    },
+    {
+      "id": "3.3",
+      "section": "Validation",
+      "description": "Manually test piping works: `spectr list -I --stdout | xargs echo \"Selected:\"`",
+      "status": "done"
+    }
+  ]
+}

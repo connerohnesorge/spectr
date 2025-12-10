@@ -480,6 +480,7 @@ type interactiveModel struct {
 	allRows          []table.Row // stores all rows for filtering
 	filteredRows     []table.Row // pre-allocated buffer for GC
 	selectionMode    bool        // true: Enter selects without copying
+	stdoutMode       bool        // true: prints ID to stdout instead of clipboard
 	terminalWidth    int         // current terminal width for responsive columns
 	// Source data for rebuilding rows on resize
 	changesData []ChangeInfo // original changes data for changes/archive views
@@ -593,6 +594,11 @@ func (m interactiveModel) handleEnter() interactiveModel {
 
 	// In selection mode, just select without copying to clipboard
 	if m.selectionMode {
+		return m
+	}
+
+	// In stdout mode, just set selectedID and return (no clipboard copy)
+	if m.stdoutMode {
 		return m
 	}
 
@@ -1042,6 +1048,11 @@ func (m interactiveModel) View() string {
 			return fmt.Sprintf("PR mode: %s\n", m.selectedID)
 		}
 
+		// In stdout mode, output just the ID for piping
+		if m.stdoutMode && m.selectedID != "" {
+			return m.selectedID + "\n"
+		}
+
 		// In selection mode, just show selected ID without clipboard message
 		if m.selectionMode && m.selectedID != "" {
 			return fmt.Sprintf("Selected: %s\n", m.selectedID)
@@ -1095,6 +1106,7 @@ func (m interactiveModel) View() string {
 func RunInteractiveChanges(
 	changes []ChangeInfo,
 	projectPath string,
+	stdoutMode bool,
 ) (archiveID, prID string, err error) {
 	if len(changes) == 0 {
 		return "", "", nil
@@ -1122,8 +1134,9 @@ func RunInteractiveChanges(
 		projectPath:   projectPath,
 		searchInput:   newTextInput(),
 		allRows:       rows,
-		terminalWidth: 0,       // Will be set by WindowSizeMsg
-		changesData:   changes, // Store for rebuild on resize
+		terminalWidth: 0,          // Will be set by WindowSizeMsg
+		changesData:   changes,    // Store for rebuild on resize
+		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
 			"a: archive | P: pr | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
@@ -1237,7 +1250,7 @@ func RunInteractiveArchive(
 }
 
 // RunInteractiveSpecs runs the interactive table for specs
-func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
+func RunInteractiveSpecs(specs []SpecInfo, projectPath string, stdoutMode bool) error {
 	if len(specs) == 0 {
 		return nil
 	}
@@ -1264,8 +1277,9 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 		projectPath:   projectPath,
 		searchInput:   newTextInput(),
 		allRows:       rows,
-		terminalWidth: 0,     // Will be set by WindowSizeMsg
-		specsData:     specs, // Store for rebuild on resize
+		terminalWidth: 0,          // Will be set by WindowSizeMsg
+		specsData:     specs,      // Store for rebuild on resize
+		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
 			"/: search | q: quit",
 		minimalFooter: fmt.Sprintf(
@@ -1298,7 +1312,7 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string) error {
 
 // RunInteractiveAll runs the interactive table for all items
 // (changes and specs)
-func RunInteractiveAll(items ItemList, projectPath string) error {
+func RunInteractiveAll(items ItemList, projectPath string, stdoutMode bool) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -1327,7 +1341,8 @@ func RunInteractiveAll(items ItemList, projectPath string) error {
 		filterType:    nil, // Start with all items visible
 		searchInput:   newTextInput(),
 		allRows:       rows,
-		terminalWidth: 0, // Will be set by WindowSizeMsg
+		terminalWidth: 0,          // Will be set by WindowSizeMsg
+		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
 		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
 			"a: archive | t: filter (all) | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(

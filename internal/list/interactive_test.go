@@ -15,7 +15,7 @@ import (
 
 func TestRunInteractiveChanges_EmptyList(t *testing.T) {
 	var changes []ChangeInfo
-	archiveID, prID, err := RunInteractiveChanges(changes, "/tmp/test-project")
+	archiveID, prID, err := RunInteractiveChanges(changes, "/tmp/test-project", false)
 	if err != nil {
 		t.Errorf("RunInteractiveChanges with empty list should not error, got: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestRunInteractiveChanges_EmptyList(t *testing.T) {
 
 func TestRunInteractiveSpecs_EmptyList(t *testing.T) {
 	var specs []SpecInfo
-	err := RunInteractiveSpecs(specs, "/tmp/test-project")
+	err := RunInteractiveSpecs(specs, "/tmp/test-project", false)
 	if err != nil {
 		t.Errorf("RunInteractiveSpecs with empty list should not error, got: %v", err)
 	}
@@ -298,7 +298,7 @@ func createMockTable(rows [][]string) table.Model {
 
 func TestRunInteractiveAll_EmptyList(t *testing.T) {
 	var items ItemList
-	err := RunInteractiveAll(items, "/tmp/test-project")
+	err := RunInteractiveAll(items, "/tmp/test-project", false)
 	if err != nil {
 		t.Errorf("RunInteractiveAll with empty list should not error, got: %v", err)
 	}
@@ -2650,5 +2650,100 @@ func TestTitleWidthMinimums(t *testing.T) {
 					width, unifiedCols[2].Width)
 			}
 		})
+	}
+}
+
+// TestInteractiveModel_View_StdoutMode tests that View() outputs just the ID
+// with a newline when in stdout mode (no formatting prefix like "Copied:" etc.)
+func TestInteractiveModel_View_StdoutMode(t *testing.T) {
+	model := interactiveModel{
+		quitting:   true,
+		stdoutMode: true,
+		selectedID: "test-change-id",
+	}
+
+	view := model.View()
+	// Should output just the ID with a newline
+	expected := "test-change-id\n"
+	if view != expected {
+		t.Errorf("View() in stdout mode = %q, want %q", view, expected)
+	}
+}
+
+// TestInteractiveModel_View_StdoutMode_NoPrefix tests that stdout mode prints
+// ID without any formatting prefix (no "Selected:", "Copied:", etc.)
+func TestInteractiveModel_View_StdoutMode_NoPrefix(t *testing.T) {
+	model := interactiveModel{
+		quitting:   true,
+		stdoutMode: true,
+		selectedID: "my-test-spec",
+	}
+
+	view := model.View()
+
+	// Should NOT contain any prefix
+	if strings.Contains(view, "Selected:") {
+		t.Error("View() in stdout mode should not contain 'Selected:' prefix")
+	}
+	if strings.Contains(view, "Copied:") {
+		t.Error("View() in stdout mode should not contain 'Copied:' prefix")
+	}
+	if strings.Contains(view, "Archiving:") {
+		t.Error("View() in stdout mode should not contain 'Archiving:' prefix")
+	}
+	if strings.Contains(view, "PR mode:") {
+		t.Error("View() in stdout mode should not contain 'PR mode:' prefix")
+	}
+
+	// Should be exactly the ID with newline
+	expected := "my-test-spec\n"
+	if view != expected {
+		t.Errorf("View() in stdout mode = %q, want %q", view, expected)
+	}
+}
+
+// TestInteractiveModel_HandleEnter_StdoutMode tests that handleEnter() in stdout mode
+// sets selectedID but does NOT set the copied flag (clipboard not used)
+func TestInteractiveModel_HandleEnter_StdoutMode(t *testing.T) {
+	model := interactiveModel{
+		stdoutMode: true,
+		table: createMockTable([][]string{
+			{"test-id", "Test Title", "2"},
+		}),
+	}
+
+	updatedModel := model.handleEnter()
+
+	// Should have selected ID
+	if updatedModel.selectedID != "test-id" {
+		t.Errorf("selectedID = %q, want %q", updatedModel.selectedID, "test-id")
+	}
+
+	// Should NOT have copied flag set (clipboard not used)
+	if updatedModel.copied {
+		t.Error("Expected copied to be false in stdout mode")
+	}
+}
+
+// TestInteractiveModel_HandleEnter_NormalMode tests that handleEnter() in normal mode
+// sets both selectedID and copied flag
+func TestInteractiveModel_HandleEnter_NormalMode(t *testing.T) {
+	model := interactiveModel{
+		stdoutMode: false,
+		table: createMockTable([][]string{
+			{"test-id", "Test Title", "2"},
+		}),
+	}
+
+	updatedModel := model.handleEnter()
+
+	// Should have selected ID
+	if updatedModel.selectedID != "test-id" {
+		t.Errorf("selectedID = %q, want %q", updatedModel.selectedID, "test-id")
+	}
+
+	// Should have copied flag set in normal mode
+	if !updatedModel.copied {
+		t.Error("Expected copied to be true in normal mode")
 	}
 }

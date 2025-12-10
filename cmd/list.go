@@ -26,6 +26,9 @@ type ListCmd struct {
 	JSON bool `name:"json" help:"Output as JSON"`
 	// Interactive enables interactive table mode with clipboard
 	Interactive bool `short:"I" name:"interactive" help:"Interactive mode"`
+	// Stdout prints selected ID to stdout instead of clipboard.
+	// Requires -I (interactive mode).
+	Stdout bool `name:"stdout" help:"Print ID to stdout (requires -I)"`
 }
 
 // Run executes the list command.
@@ -45,6 +48,22 @@ func (c *ListCmd) Run() error {
 		return &specterrs.IncompatibleFlagsError{
 			Flag1: "--all",
 			Flag2: "--specs",
+		}
+	}
+
+	// Validate flags - stdout requires interactive mode
+	if c.Stdout && !c.Interactive {
+		return &specterrs.RequiresFlagError{
+			Flag:         "--stdout",
+			RequiredFlag: "--interactive",
+		}
+	}
+
+	// Validate flags - stdout and JSON are mutually exclusive
+	if c.Stdout && c.JSON {
+		return &specterrs.IncompatibleFlagsError{
+			Flag1: "--stdout",
+			Flag2: "--json",
 		}
 	}
 
@@ -88,7 +107,9 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		archiveID, prID, err := list.RunInteractiveChanges(changes, projectPath)
+		archiveID, prID, err := list.RunInteractiveChanges(
+			changes, projectPath, c.Stdout,
+		)
 		if err != nil {
 			return err
 		}
@@ -191,7 +212,7 @@ func (c *ListCmd) listSpecs(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		return list.RunInteractiveSpecs(specs, projectPath)
+		return list.RunInteractiveSpecs(specs, projectPath, c.Stdout)
 	}
 
 	// Format output based on flags
@@ -235,7 +256,7 @@ func (c *ListCmd) listAll(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		return list.RunInteractiveAll(items, projectPath)
+		return list.RunInteractiveAll(items, projectPath, c.Stdout)
 	}
 
 	// Format output based on flags

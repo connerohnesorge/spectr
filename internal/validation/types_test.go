@@ -115,12 +115,12 @@ func TestValidationReport_JSONMarshaling(t *testing.T) {
 			{
 				Level:   LevelError,
 				Path:    "specs/auth/spec.md",
-				Message: "Missing Purpose section",
+				Message: "Missing Requirements section",
 			},
 			{
 				Level:   LevelWarning,
 				Path:    "specs/auth/spec.md",
-				Message: "Purpose section is too short",
+				Message: "Requirement should have at least one scenario",
 			},
 		},
 		Summary: ValidationSummary{

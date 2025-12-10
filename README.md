@@ -277,7 +277,7 @@ spectr/
 **Key Concepts:**
 - **spectr/specs/**: The source of truth for what's currently built
 - **spectr/changes/**: Proposed modifications, kept separate until approved
-- **spectr/chnages/archive/**: Historical record of all changes with timestamps
+- **spectr/changes/archive/**: Historical record of all changes with timestamps
 - **Delta Specs**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED Requirements` headers
 
 ---

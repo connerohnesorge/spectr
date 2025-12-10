@@ -93,7 +93,6 @@ Spectr implements a three-stage workflow:
 ### Validation Rules
 - Every requirement MUST have at least one scenario
 - Scenarios MUST use `#### Scenario:` format (4 hashtags, not bullets)
-- Purpose sections MUST be at least 50 characters
 - MODIFIED requirements MUST include full updated content
 - Delta operations MUST use exact header formats
 - Strict mode treats warnings as errors

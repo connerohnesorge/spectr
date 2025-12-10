@@ -97,9 +97,6 @@ func TestTemplateManager_RenderProject(t *testing.T) {
 			}
 
 			// Verify basic structure
-			if !strings.Contains(got, "## Purpose") {
-				t.Error("RenderProject() missing '## Purpose' section")
-			}
 			if !strings.Contains(got, "## Tech Stack") {
 				t.Error("RenderProject() missing '## Tech Stack' section")
 			}

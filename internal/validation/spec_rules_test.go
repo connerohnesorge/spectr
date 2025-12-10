@@ -11,9 +11,6 @@ func TestValidateSpecFile_ValidSpec(t *testing.T) {
 	// Create a valid spec file
 	content := `# Test Specification
 
-## Purpose
-This is a comprehensive purpose section that describes what this specification is about. It contains well over fifty characters to satisfy the minimum length requirement for a proper purpose section.
-
 ## Requirements
 
 ### Requirement: User Authentication
@@ -56,59 +53,10 @@ The system SHALL provide user authentication functionality.
 	}
 }
 
-func TestValidateSpecFile_MissingPurpose(t *testing.T) {
-	content := `# Test Specification
-
-## Requirements
-
-### Requirement: Some Feature
-The system SHALL provide some feature.
-
-#### Scenario: Test scenario
-- **WHEN** something happens
-- **THEN** something else happens
-`
-
-	tmpDir := t.TempDir()
-	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-
-	report, err := ValidateSpecFile(specPath, false)
-	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
-	}
-
-	// Should be invalid due to missing Purpose
-	if report.Valid {
-		t.Error("Expected invalid report due to missing Purpose section")
-	}
-
-	if report.Summary.Errors != 1 {
-		t.Errorf("Expected 1 error, got %d", report.Summary.Errors)
-	}
-
-	// Check that the error message is correct
-	found := false
-	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "Purpose") {
-			found = true
-
-			break
-		}
-	}
-	if !found {
-		t.Error("Expected error about missing Purpose section")
-	}
-}
-
 func TestValidateSpecFile_MissingRequirements(t *testing.T) {
 	content := `# Test Specification
 
-## Purpose
-This is a valid purpose section with enough characters to pass the length check.
+Some content here but no Requirements section.
 `
 
 	tmpDir := t.TempDir()
@@ -146,63 +94,8 @@ This is a valid purpose section with enough characters to pass the length check.
 	}
 }
 
-func TestValidateSpecFile_PurposeTooShort(t *testing.T) {
-	content := `# Test Specification
-
-## Purpose
-Too short.
-
-## Requirements
-
-### Requirement: Some Feature
-The system SHALL provide some feature.
-
-#### Scenario: Test scenario
-- **WHEN** something happens
-- **THEN** something else happens
-`
-
-	tmpDir := t.TempDir()
-	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
-	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
-	}
-
-	report, err := ValidateSpecFile(specPath, false)
-	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
-	}
-
-	// Should be valid (warnings don't make it invalid in non-strict mode)
-	if !report.Valid {
-		t.Error("Expected valid report (warnings don't invalidate in normal mode)")
-	}
-
-	if report.Summary.Warnings != 1 {
-		t.Errorf("Expected 1 warning, got %d", report.Summary.Warnings)
-	}
-
-	// Check that the warning message is correct
-	found := false
-	for _, issue := range report.Issues {
-		if issue.Level == LevelWarning &&
-			strings.Contains(issue.Message, "Purpose section is too short") {
-			found = true
-
-			break
-		}
-	}
-	if !found {
-		t.Error("Expected warning about short Purpose section")
-	}
-}
-
 func TestValidateSpecFile_RequirementWithoutShallOrMust(t *testing.T) {
 	content := `# Test Specification
-
-## Purpose
-This is a valid purpose section with enough characters to pass the length check.
 
 ## Requirements
 
@@ -252,9 +145,6 @@ The system provides some feature.
 func TestValidateSpecFile_RequirementWithoutScenarios(t *testing.T) {
 	content := `# Test Specification
 
-## Purpose
-This is a valid purpose section with enough characters to pass the length check.
-
 ## Requirements
 
 ### Requirement: Some Feature
@@ -298,9 +188,6 @@ The system SHALL provide some feature.
 
 func TestValidateSpecFile_InvalidScenarioFormat(t *testing.T) {
 	content := `# Test Specification
-
-## Purpose
-This is a valid purpose section with enough characters to pass the length check.
 
 ## Requirements
 
@@ -354,10 +241,8 @@ The system SHALL provide some feature.
 }
 
 func TestValidateSpecFile_StrictMode(t *testing.T) {
+	// This spec has a warning (missing SHALL/MUST in requirement)
 	content := `# Test Specification
-
-## Purpose
-Too short.
 
 ## Requirements
 
@@ -388,8 +273,9 @@ The system provides some feature.
 	}
 
 	// In strict mode, warnings are converted to errors
-	if report.Summary.Errors != 2 {
-		t.Errorf("Expected 2 errors in strict mode, got %d", report.Summary.Errors)
+	// 1 warning: missing SHALL/MUST in requirement
+	if report.Summary.Errors != 1 {
+		t.Errorf("Expected 1 error in strict mode, got %d", report.Summary.Errors)
 	}
 
 	if report.Summary.Warnings != 0 {
@@ -444,17 +330,17 @@ The system MUST provide feature three.
 		t.Fatalf("ValidateSpecFile returned error: %v", err)
 	}
 
-	// Should be invalid due to missing Purpose
-	if report.Valid {
-		t.Error("Expected invalid report")
+	// Should be valid (only warnings, no errors)
+	if !report.Valid {
+		t.Error("Expected valid report (warnings don't invalidate)")
 	}
 
 	// Expect:
-	// - 1 ERROR: missing Purpose
+	// - 0 ERRORs
 	// - 2 WARNINGs: Feature One (no SHALL/MUST), Feature One (no scenarios)
 	// - 0 WARNINGs: Feature Two (has SHALL and has scenario)
 	// - 1 WARNING: Feature Three (no scenarios)
-	expectedErrors := 1
+	expectedErrors := 0
 	expectedWarnings := 3
 
 	if report.Summary.Errors != expectedErrors {
@@ -476,9 +362,6 @@ The system MUST provide feature three.
 
 func TestValidateSpecFile_BoldScenarioFormat(t *testing.T) {
 	content := `# Test Specification
-
-## Purpose
-This is a valid purpose section with enough characters to pass the length check.
 
 ## Requirements
 
@@ -523,9 +406,6 @@ The system SHALL provide some feature.
 
 func TestValidateSpecFile_BulletScenarioFormat(t *testing.T) {
 	content := `# Test Specification
-
-## Purpose
-This is a valid purpose section with enough characters to pass the length check.
 
 ## Requirements
 

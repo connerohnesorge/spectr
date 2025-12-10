@@ -299,8 +299,6 @@ func generateSpecSkeleton(targetPath string) string {
 
 	var skeleton strings.Builder
 	skeleton.WriteString(fmt.Sprintf("# %s Specification\n\n", capability))
-	skeleton.WriteString("## Purpose\n\n")
-	skeleton.WriteString("TODO: Add purpose description\n\n")
 	skeleton.WriteString("## Requirements\n")
 
 	return skeleton.String()

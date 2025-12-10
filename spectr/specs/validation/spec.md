@@ -1,24 +1,14 @@
 # Validation Specification
 
-## Purpose
-
-This specification defines the validation system for checking spec files and change deltas for structural correctness, scenario formatting, delta operations, requirement normalization, and producing structured validation reports with helpful error messages.
-
 ## Requirements
 
 ### Requirement: Spec File Validation
 The validation system SHALL validate spec files for structural correctness and adherence to Spectr conventions.
 
 #### Scenario: Valid spec with all required sections
-- **WHEN** a spec file contains Purpose and Requirements sections with properly formatted requirements and scenarios
+- **WHEN** a spec file contains a Requirements section with properly formatted requirements and scenarios
 - **THEN** validation SHALL pass with no errors
 - **AND** the validation report SHALL indicate valid=true
-
-#### Scenario: Missing Purpose section
-- **WHEN** a spec file lacks a "## Purpose" section
-- **THEN** validation SHALL fail with an ERROR level issue
-- **AND** the error message SHALL indicate which section is missing
-- **AND** the error message SHALL include remediation guidance showing correct format
 
 #### Scenario: Missing Requirements section
 - **WHEN** a spec file lacks a "## Requirements" section

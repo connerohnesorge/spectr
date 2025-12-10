@@ -32,9 +32,6 @@ func TestValidator_ValidateSpec_ValidSpec(t *testing.T) {
 	// Create a valid spec file
 	content := `# Test Specification
 
-## Purpose
-This is a comprehensive purpose section that describes what this specification is about. It contains well over fifty characters to satisfy the minimum length requirement for a proper purpose section.
-
 ## Requirements
 
 ### Requirement: User Authentication
@@ -89,7 +86,7 @@ The system SHALL provide user authentication functionality.
 }
 
 func TestValidator_ValidateSpec_InvalidSpec(t *testing.T) {
-	// Create an invalid spec file (missing Purpose and Requirements sections)
+	// Create an invalid spec file (missing Requirements section)
 	content := `# Test Specification
 
 This is just some content without proper sections.
@@ -108,8 +105,8 @@ This is just some content without proper sections.
 		wantValid  bool
 		minErrors  int
 	}{
-		{"non-strict mode", false, false, 2}, // Missing Purpose and Requirements
-		{"strict mode", true, false, 2},
+		{"non-strict mode", false, false, 1}, // Missing Requirements
+		{"strict mode", true, false, 1},
 	}
 
 	for _, tt := range tests {
@@ -133,11 +130,8 @@ This is just some content without proper sections.
 }
 
 func TestValidator_ValidateSpec_WarningsInStrictMode(t *testing.T) {
-	// Create a spec with warnings (short purpose, missing scenarios)
+	// Create a spec with warnings (missing scenarios)
 	content := `# Test Specification
-
-## Purpose
-Short purpose.
 
 ## Requirements
 

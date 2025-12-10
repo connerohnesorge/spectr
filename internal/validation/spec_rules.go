@@ -6,9 +6,6 @@ import (
 	"strings"
 )
 
-// MinPurposeLength is the minimum recommended length for the Purpose section.
-const MinPurposeLength = 50
-
 // ValidateSpecFile validates a spec file according to Spectr rules
 // Returns a ValidationReport containing all issues found, or an error
 // for filesystem issues
@@ -28,18 +25,7 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 	sections := ExtractSections(contentStr)
 	issues := make([]ValidationIssue, 0)
 
-	// Rule 1: Check for ## Purpose section (ERROR if missing)
-	purposeContent, hasPurpose := sections["Purpose"]
-	if !hasPurpose {
-		issues = append(issues, ValidationIssue{
-			Level:   LevelError,
-			Path:    path,
-			Line:    1, // Missing section defaults to line 1
-			Message: "Missing required '## Purpose' section",
-		})
-	}
-
-	// Rule 2: Check for ## Requirements section (ERROR if missing)
+	// Rule 1: Check for ## Requirements section (ERROR if missing)
 	requirementsContent, hasRequirements := sections["Requirements"]
 	if !hasRequirements {
 		issues = append(issues, ValidationIssue{
@@ -50,23 +36,7 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 		})
 	}
 
-	// Rule 3: Check Purpose section length (WARNING if < MinPurposeLength chars)
-	if hasPurpose && len(purposeContent) < MinPurposeLength {
-		purposeLine := findSectionLine(lines, "Purpose")
-		issues = append(issues, ValidationIssue{
-			Level: LevelWarning,
-			Path:  path,
-			Line:  purposeLine,
-			Message: fmt.Sprintf(
-				"Purpose section is too short "+
-					"(%d characters, minimum %d recommended)",
-				len(purposeContent),
-				MinPurposeLength,
-			),
-		})
-	}
-
-	// Rule 4-7: Validate requirements (only if Requirements section exists)
+	// Rule 2-5: Validate requirements (only if Requirements section exists)
 	if hasRequirements {
 		requirements := ExtractRequirements(requirementsContent)
 		requirementsLine := findSectionLine(lines, "Requirements")
@@ -75,7 +45,7 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 			reqPath := fmt.Sprintf("%s: Requirement '%s'", path, req.Name)
 			reqLine := findRequirementLine(lines, req.Name, requirementsLine)
 
-			// Rule 4: Check for SHALL or MUST (WARNING if missing)
+			// Rule 2: Check for SHALL or MUST (WARNING if missing)
 			if !ContainsShallOrMust(req.Content) {
 				issues = append(issues, ValidationIssue{
 					Level: LevelWarning,
@@ -86,7 +56,7 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 				})
 			}
 
-			// Rule 5: Check for at least one scenario (WARNING)
+			// Rule 3: Check for at least one scenario (WARNING)
 			if len(req.Scenarios) == 0 {
 				issues = append(issues, ValidationIssue{
 					Level: LevelWarning,
@@ -97,7 +67,7 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 				})
 			}
 
-			// Rule 6: Check scenario format (ERROR if wrong format)
+			// Rule 4: Check scenario format (ERROR if wrong format)
 			// This is implicitly handled by ExtractScenarios - if
 			// there's content that looks like scenarios but doesn't
 			// match #### Scenario: format, they won't be extracted

@@ -1,5 +1,9 @@
 # Validation Specification
 
+## Purpose
+
+The validation system ensures that spec files and change proposals conform to Spectr conventions, providing structural correctness checks, helpful error messages, and bulk validation capabilities for CI/CD integration.
+
 ## Requirements
 
 ### Requirement: Spec File Validation

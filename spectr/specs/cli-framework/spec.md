@@ -1,11 +1,8 @@
 # Cli Framework Specification
-
 ## Purpose
-
 This specification defines the CLI framework structure using Kong for declarative command definitions with struct tags, supporting subcommands (archive, list, validate, view), flags, positional arguments, automatic method dispatch, and built-in help generation.
 
 ## Requirements
-
 ### Requirement: Archive Command
 The CLI SHALL provide an `archive` command that moves completed changes to a dated archive directory and applies delta specifications to main specs.
 
@@ -828,23 +825,57 @@ The accept command SHALL support flags for controlling behavior.
 - **AND** prompts for selection using existing TUI components
 
 ### Requirement: List Command Alias
-
 The `spectr list` command SHALL support `ls` as a shorthand alias, allowing users to invoke `spectr ls` as equivalent to `spectr list`.
 
 #### Scenario: User runs spectr ls shorthand
-
 - **WHEN** user runs `spectr ls`
 - **THEN** the system displays the list of changes identically to `spectr list`
 - **AND** all flags (`--specs`, `--all`, `--long`, `--json`, `--interactive`) work with the alias
 
 #### Scenario: User runs spectr ls with flags
-
 - **WHEN** user runs `spectr ls --specs --long`
 - **THEN** the command behaves identically to `spectr list --specs --long`
 - **AND** specs are displayed in long format
 
 #### Scenario: Help text shows list alias
-
 - **WHEN** user runs `spectr --help`
 - **THEN** the help text displays `list` with its `ls` alias
 - **AND** the alias is shown in parentheses or as comma-separated alternatives
+
+### Requirement: Item Name Path Normalization
+Commands accepting item names (validate, archive, accept) SHALL normalize path arguments to extract the item ID and infer the item type from the path structure.
+
+#### Scenario: Path with spectr/changes prefix
+- **WHEN** user runs a command with argument `spectr/changes/my-change`
+- **THEN** the system SHALL extract `my-change` as the item ID
+- **AND** SHALL infer the item type as "change"
+
+#### Scenario: Path with spectr/changes prefix and trailing content
+- **WHEN** user runs a command with argument `spectr/changes/my-change/specs/foo/spec.md`
+- **THEN** the system SHALL extract `my-change` as the item ID
+- **AND** SHALL infer the item type as "change"
+
+#### Scenario: Path with spectr/specs prefix
+- **WHEN** user runs a command with argument `spectr/specs/my-spec`
+- **THEN** the system SHALL extract `my-spec` as the item ID
+- **AND** SHALL infer the item type as "spec"
+
+#### Scenario: Path with spectr/specs prefix and spec.md file
+- **WHEN** user runs a command with argument `spectr/specs/my-spec/spec.md`
+- **THEN** the system SHALL extract `my-spec` as the item ID
+- **AND** SHALL infer the item type as "spec"
+
+#### Scenario: Simple ID without path prefix
+- **WHEN** user runs a command with argument `my-change`
+- **THEN** the system SHALL use `my-change` as-is for lookup
+- **AND** SHALL use existing auto-detection logic for item type
+
+#### Scenario: Absolute path normalization
+- **WHEN** user runs a command with argument `/home/user/project/spectr/changes/my-change`
+- **THEN** the system SHALL extract `my-change` as the item ID
+- **AND** SHALL infer the item type as "change"
+
+#### Scenario: Inferred type precedence
+- **WHEN** user provides a path argument that contains `spectr/changes/` or `spectr/specs/`
+- **THEN** the inferred type from path SHALL be used for validation
+- **AND** SHALL NOT trigger "exists as both change and spec" ambiguity errors

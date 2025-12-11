@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -223,30 +224,7 @@ func reconstructSpec(
 
 // splitSpec splits spec into preamble, requirements section content, and after
 func splitSpec(content string) (preamble, requirements, after string) {
-	// Find ## Requirements header
-	reqHeaderPattern := regexp.MustCompile(`(?m)^##\s+Requirements\s*$`)
-	match := reqHeaderPattern.FindStringIndex(content)
-	if match == nil {
-		// No requirements section, return everything as preamble
-		return content, "", ""
-	}
-
-	preamble = content[:match[1]] + "\n\n"
-
-	// Find next ## header after Requirements
-	nextHeaderPattern := regexp.MustCompile(`(?m)^##\s+`)
-	remainingContent := content[match[1]:]
-	nextMatch := nextHeaderPattern.FindStringIndex(remainingContent)
-
-	if nextMatch != nil {
-		requirements = remainingContent[:nextMatch[0]]
-		after = remainingContent[nextMatch[0]:]
-	} else {
-		requirements = remainingContent
-		after = ""
-	}
-
-	return preamble, requirements, after
+	return markdown.SplitSpec(content)
 }
 
 // extractOrderedRequirements preserves requirement ordering
@@ -255,18 +233,11 @@ func extractOrderedRequirements(
 	reqsContent string,
 	reqMap map[string]parsers.RequirementBlock,
 ) []parsers.RequirementBlock {
-	// Find requirement headers in order
-	reqPattern := regexp.MustCompile(`(?m)^###\s+Requirement:\s*(.+)$`)
-	matches := reqPattern.FindAllStringSubmatch(reqsContent, -1)
+	// Use markdown package to extract requirement names in order
+	orderedNames := markdown.ExtractOrderedRequirementNames(reqsContent)
+	ordered := make([]parsers.RequirementBlock, 0, len(orderedNames))
 
-	ordered := make([]parsers.RequirementBlock, 0, len(matches))
-
-	for _, match := range matches {
-		if len(match) <= 1 {
-			continue
-		}
-
-		name := strings.TrimSpace(match[1])
+	for _, name := range orderedNames {
 		normalized := parsers.NormalizeRequirementName(name)
 		req, exists := reqMap[normalized]
 		if !exists {

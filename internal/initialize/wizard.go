@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
@@ -45,6 +46,11 @@ type WizardModel struct {
 	allProviders         []providers.Provider // sorted providers for display
 	ciWorkflowEnabled    bool                 // whether user wants CI workflow created
 	ciWorkflowConfigured bool                 // whether .github/workflows/spectr-ci.yml already exists
+	// Search mode state
+	searchMode        bool                 // whether search mode is active
+	searchQuery       string               // current search query
+	searchInput       textinput.Model      // text input for search
+	filteredProviders []providers.Provider // providers matching search query
 }
 
 // ExecutionResult holds the result of initialization
@@ -125,6 +131,12 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 	// Pre-select CI workflow if already configured
 	ciWorkflowEnabled := ciWorkflowConfigured
 
+	// Initialize search input
+	searchInput := textinput.New()
+	searchInput.Placeholder = "Type to search..."
+	searchInput.CharLimit = 50
+	searchInput.Width = 30
+
 	return &WizardModel{
 		step:                 StepIntro,
 		projectPath:          projectPath,
@@ -134,6 +146,8 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 		allProviders:         allProviders,
 		ciWorkflowEnabled:    ciWorkflowEnabled,
 		ciWorkflowConfigured: ciWorkflowConfigured,
+		searchInput:          searchInput,
+		filteredProviders:    allProviders, // Initially show all providers
 	}, nil
 }
 
@@ -207,6 +221,12 @@ func (m WizardModel) handleIntroKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	// Handle search mode input
+	if m.searchMode {
+		return m.handleSearchModeInput(msg)
+	}
+
+	// Normal mode key handling
 	switch msg.String() {
 	case "q", "ctrl+c":
 		return m, tea.Quit
@@ -215,13 +235,13 @@ func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursor--
 		}
 	case "down", "j":
-		if m.cursor < len(m.allProviders)-1 {
+		if m.cursor < len(m.filteredProviders)-1 {
 			m.cursor++
 		}
 	case " ":
-		// Toggle selection
-		if m.cursor < len(m.allProviders) {
-			provider := m.allProviders[m.cursor]
+		// Toggle selection on filtered list
+		if m.cursor < len(m.filteredProviders) {
+			provider := m.filteredProviders[m.cursor]
 			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
 		}
 	case "enter":
@@ -230,16 +250,100 @@ func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 		return m, nil
 	case "a":
-		// Select all
+		// Select all (from full list, not just filtered)
 		for _, provider := range m.allProviders {
 			m.selectedProviders[provider.ID()] = true
 		}
 	case "n":
 		// Deselect all
 		m.selectedProviders = make(map[string]bool)
+	case "/":
+		// Enter search mode
+		m.searchMode = true
+		m.searchInput.Focus()
+
+		return m, nil
 	}
 
 	return m, nil
+}
+
+// handleSearchModeInput handles keyboard input when in search mode
+func (m WizardModel) handleSearchModeInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	//nolint:exhaustive // Only handling specific keys, default handles text input
+	switch msg.Type {
+	case tea.KeyEsc:
+		// Exit search mode, clear query and restore all providers
+		m.searchMode = false
+		m.searchQuery = ""
+		m.searchInput.SetValue("")
+		m.filteredProviders = m.allProviders
+		m.cursor = 0
+
+		return m, nil
+	case tea.KeyEnter:
+		// Exit search mode but keep filter applied, proceed to review
+		m.searchMode = false
+		m.step = StepReview
+
+		return m, nil
+	case tea.KeyUp:
+		// Allow navigation while searching
+		if m.cursor > 0 {
+			m.cursor--
+		}
+
+		return m, nil
+	case tea.KeyDown:
+		// Allow navigation while searching
+		if m.cursor < len(m.filteredProviders)-1 {
+			m.cursor++
+		}
+
+		return m, nil
+	case tea.KeySpace:
+		// Toggle selection on filtered list while in search mode
+		if m.cursor < len(m.filteredProviders) {
+			provider := m.filteredProviders[m.cursor]
+			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+		}
+
+		return m, nil
+	default:
+		// Handle text input for search
+		m.searchInput, cmd = m.searchInput.Update(msg)
+		m.searchQuery = m.searchInput.Value()
+		m.applyProviderFilter()
+
+		return m, cmd
+	}
+}
+
+// applyProviderFilter filters providers based on the current search query
+func (m *WizardModel) applyProviderFilter() {
+	query := strings.ToLower(m.searchQuery)
+
+	if query == "" {
+		m.filteredProviders = m.allProviders
+	} else {
+		m.filteredProviders = make([]providers.Provider, 0)
+		for _, provider := range m.allProviders {
+			if strings.Contains(strings.ToLower(provider.Name()), query) {
+				m.filteredProviders = append(m.filteredProviders, provider)
+			}
+		}
+	}
+
+	// Adjust cursor position to stay within bounds
+	if len(m.filteredProviders) > 0 {
+		if m.cursor >= len(m.filteredProviders) {
+			m.cursor = len(m.filteredProviders) - 1
+		}
+	} else {
+		m.cursor = 0
+	}
 }
 
 func (m WizardModel) handleReviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -341,8 +445,19 @@ func (m WizardModel) renderSelect() string {
 	)
 	b.WriteString("You can come back later to add more tools.\n\n")
 
-	// Render all providers in a single flat list
-	b.WriteString(m.renderProviderGroup(m.allProviders, 0))
+	// Show search input if search mode is active
+	if m.searchMode {
+		b.WriteString(fmt.Sprintf("Search: %s\n\n", m.searchInput.View()))
+	}
+
+	// Render filtered providers or show no match message
+	if len(m.filteredProviders) == 0 && m.searchQuery != "" {
+		b.WriteString(dimmedStyle.Render(
+			fmt.Sprintf("  No providers match '%s'\n", m.searchQuery),
+		))
+	} else {
+		b.WriteString(m.renderProviderGroup(m.filteredProviders, 0))
+	}
 
 	// Configured indicator explanation
 	b.WriteString(doubleNewline)
@@ -352,14 +467,22 @@ func (m WizardModel) renderSelect() string {
 		),
 	)
 
-	// Instructions
+	// Instructions - show different help text based on search mode
 	b.WriteString(newline)
-	b.WriteString(
-		subtleStyle.Render(
-			"↑/↓: Navigate  Space: Toggle  a: All  n: None  " +
-				"Enter: Continue  q: Quit\n",
-		),
-	)
+	if m.searchMode {
+		b.WriteString(
+			subtleStyle.Render(
+				"↑/↓: Navigate  Space: Toggle  Esc: Exit search  Enter: Continue\n",
+			),
+		)
+	} else {
+		b.WriteString(
+			subtleStyle.Render(
+				"↑/↓: Navigate  Space: Toggle  a: All  n: None  /: Search  " +
+					"Enter: Continue  q: Quit\n",
+			),
+		)
+	}
 
 	return b.String()
 }

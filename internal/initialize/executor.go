@@ -208,8 +208,8 @@ func (e *InitExecutor) createAgentsMd(
 		return nil
 	}
 
-	// Render template
-	content, err := e.tm.RenderAgents(providers.DefaultTemplateContext())
+	// Render template (empty providerID uses generic template)
+	content, err := e.tm.RenderAgents(providers.DefaultTemplateContext(), "")
 	if err != nil {
 		return fmt.Errorf("failed to render agents template: %w", err)
 	}

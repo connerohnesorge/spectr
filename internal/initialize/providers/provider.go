@@ -158,14 +158,32 @@ type Provider interface {
 //
 // This interface allows providers to render templates without depending on the
 // full TemplateManager.
+//
+// Template Resolution:
+// All methods accept a providerID parameter that controls template selection.
+// When providerID is non-empty, the renderer looks for provider-specific templates
+// in templates/{providerID}/ first, then falls back to generic templates.
+// When providerID is empty, the renderer uses generic templates directly
+// (backward compatible behavior).
 type TemplateRenderer interface {
 	// RenderAgents renders the AGENTS.md template content.
-	RenderAgents(ctx TemplateContext) (string, error)
+	// If providerID is non-empty, uses templates/{providerID}/AGENTS.md.tmpl if it exists,
+	// otherwise falls back to the generic template.
+	// If providerID is empty, uses the generic template directly.
+	RenderAgents(ctx TemplateContext, providerID string) (string, error)
+
 	// RenderInstructionPointer renders a short pointer template that directs
 	// AI assistants to read spectr/AGENTS.md for full instructions.
-	RenderInstructionPointer(ctx TemplateContext) (string, error)
+	// If providerID is non-empty, uses templates/{providerID}/instruction-pointer.md.tmpl if it exists,
+	// otherwise falls back to the generic template.
+	// If providerID is empty, uses the generic template directly.
+	RenderInstructionPointer(ctx TemplateContext, providerID string) (string, error)
+
 	// RenderSlashCommand renders a slash command template (proposal or apply).
-	RenderSlashCommand(command string, ctx TemplateContext) (string, error)
+	// If providerID is non-empty, uses templates/{providerID}/slash-{command}.md.tmpl if it exists,
+	// otherwise falls back to the generic template in templates/tools/.
+	// If providerID is empty, uses the generic template directly.
+	RenderSlashCommand(command string, ctx TemplateContext, providerID string) (string, error)
 }
 
 // BaseProvider provides a default implementation of the Provider
@@ -253,7 +271,7 @@ func (p *BaseProvider) configureConfigFile(
 	projectPath string,
 	tm TemplateRenderer,
 ) error {
-	content, err := tm.RenderInstructionPointer(DefaultTemplateContext())
+	content, err := tm.RenderInstructionPointer(DefaultTemplateContext(), p.id)
 	if err != nil {
 		return fmt.Errorf("failed to render instruction pointer template: %w", err)
 	}
@@ -301,7 +319,7 @@ func (p *BaseProvider) configureSlashCommand(
 	filePath, cmd string,
 	tm TemplateRenderer,
 ) error {
-	body, err := tm.RenderSlashCommand(cmd, DefaultTemplateContext())
+	body, err := tm.RenderSlashCommand(cmd, DefaultTemplateContext(), p.id)
 	if err != nil {
 		return fmt.Errorf("failed to render slash command %s: %w", cmd, err)
 	}

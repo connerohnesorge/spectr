@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Template Resolution Infrastructure",
+      "description": "Update `TemplateRenderer` interface to accept provider ID parameter",
+      "status": "done"
+    },
+    {
+      "id": "1.2",
+      "section": "Template Resolution Infrastructure",
+      "description": "Implement provider-first template lookup in `TemplateManager`",
+      "status": "done"
+    },
+    {
+      "id": "1.3",
+      "section": "Template Resolution Infrastructure",
+      "description": "Add helper function to resolve template path with fallback logic",
+      "status": "done"
+    },
+    {
+      "id": "1.4",
+      "section": "Template Resolution Infrastructure",
+      "description": "Write unit tests for template resolution with/without provider overrides",
+      "status": "done"
+    },
+    {
+      "id": "2.1",
+      "section": "Provider Integration",
+      "description": "Update `BaseProvider.Configure()` to pass provider ID to template renderer",
+      "status": "done"
+    },
+    {
+      "id": "2.2",
+      "section": "Provider Integration",
+      "description": "Update all `TemplateRenderer` method signatures",
+      "status": "done"
+    },
+    {
+      "id": "2.3",
+      "section": "Provider Integration",
+      "description": "Ensure backward compatibility (empty provider ID = generic)",
+      "status": "done"
+    },
+    {
+      "id": "2.4",
+      "section": "Provider Integration",
+      "description": "Write integration tests for provider-specific template rendering",
+      "status": "pending"
+    },
+    {
+      "id": "3.1",
+      "section": "Initial Provider Templates",
+      "description": "Create `templates/claude-code/` directory structure",
+      "status": "done"
+    },
+    {
+      "id": "3.2",
+      "section": "Initial Provider Templates",
+      "description": "Create Claude Code-specific `AGENTS.md.tmpl` with tool-specific references",
+      "status": "done"
+    },
+    {
+      "id": "3.3",
+      "section": "Initial Provider Templates",
+      "description": "Create `templates/crush/` directory structure",
+      "status": "done"
+    },
+    {
+      "id": "3.4",
+      "section": "Initial Provider Templates",
+      "description": "Create Crush-specific `AGENTS.md.tmpl` with agent delegation patterns",
+      "status": "done"
+    },
+    {
+      "id": "3.5",
+      "section": "Initial Provider Templates",
+      "description": "Verify `spectr init` produces provider-appropriate output",
+      "status": "pending"
+    },
+    {
+      "id": "4.1",
+      "section": "Validation \u0026 Documentation",
+      "description": "Run full test suite (`go test ./...`)",
+      "status": "pending"
+    },
+    {
+      "id": "4.2",
+      "section": "Validation \u0026 Documentation",
+      "description": "Test `spectr init` with claude-code and crush providers",
+      "status": "pending"
+    },
+    {
+      "id": "4.3",
+      "section": "Validation \u0026 Documentation",
+      "description": "Verify fallback works for providers without custom templates",
+      "status": "pending"
+    },
+    {
+      "id": "4.4",
+      "section": "Validation \u0026 Documentation",
+      "description": "Update provider documentation comments if needed",
+      "status": "pending"
+    }
+  ]
+}

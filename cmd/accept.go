@@ -153,7 +153,10 @@ func (*AcceptCmd) runValidation(changeDir string) error {
 // (unless NoInteractive is set).
 func (c *AcceptCmd) resolveChangeID(projectRoot string) (string, error) {
 	if c.ChangeID != "" {
-		result, err := discovery.ResolveChangeID(c.ChangeID, projectRoot)
+		// Normalize path to extract change ID
+		normalizedID, _ := discovery.NormalizeItemPath(c.ChangeID)
+
+		result, err := discovery.ResolveChangeID(normalizedID, projectRoot)
 		if err != nil {
 			return "", err
 		}

@@ -233,7 +233,8 @@ func selectChangeForProposal(projectRoot, baseBranch string) (string, error) {
 	}
 
 	// Fetch origin to ensure refs are current
-	if err := git.FetchOrigin(); err != nil {
+	err = git.FetchOrigin()
+	if err != nil {
 		return "", fmt.Errorf("fetch origin: %w", err)
 	}
 

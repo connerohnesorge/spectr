@@ -17,6 +17,7 @@ Built with Go
 
 - [Overview](#overview)
 - [Key Features](#key-features)
+- [Supported AI Tools](#supported-ai-tools)
 - [Installation](#installation)
   - [Using Nix Flakes](#using-nix-flakes)
   - [Building from Source](#building-from-source)
@@ -75,6 +76,31 @@ Spectr enforces a clear separation between current truth (`spectr/specs/` - what
 - **Clean Architecture**: Well-organized codebase with clear separation of concerns
 - **Comprehensive Testing**: Table-driven tests with high coverage
 - **Nix Integration**: First-class Nix flake support for reproducible builds
+
+## Supported AI Tools
+
+Spectr integrates with popular AI coding assistants to provide spec-driven development workflows:
+
+| Tool | Website |
+|------|---------|
+| [Claude Code](https://claude.ai/code) | Anthropic's CLI AI coding agent |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Google's Gemini CLI |
+| [Cursor](https://cursor.sh) | AI-powered code editor |
+| [Windsurf](https://codeium.com/windsurf) | AI code editor by Codeium |
+| [Aider](https://aider.chat) | AI pair programming in terminal |
+| [Cline](https://github.com/cline/cline) | Autonomous coding agent for VS Code |
+| [Continue](https://continue.dev) | Open-source AI code assistant |
+| [Codex CLI](https://github.com/openai/codex-cli) | OpenAI's Codex CLI |
+| [Crush](https://github.com/charmbracelet/crush) | A glamorous CLI AI coding agent by Charmbracelet |
+| [Tabnine](https://tabnine.com) | AI code completion |
+| [Kilocode](https://kilocode.ai) | AI coding assistant |
+| [Antigravity](https://antigravity.dev) | AI coding assistant |
+| [Qwen Code](https://github.com/QwenLM/Qwen-Agent) | Alibaba's Qwen Code assistant |
+| [CodeBuddy](https://codebuddy.ai) | AI coding assistant |
+| [CoStrict](https://costrict.dev) | AI coding assistant |
+| [Qoder](https://qoder.dev) | AI coding assistant |
+
+Run `spectr init` to configure Spectr for your preferred AI tools.
 
 ---
 

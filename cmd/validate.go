@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 	"github.com/connerohnesorge/spectr/internal/validation"
 )
@@ -54,8 +55,19 @@ func (c *ValidateCmd) Run() error {
 func (c *ValidateCmd) runDirectValidation(
 	projectPath, itemName string,
 ) error {
+	// Normalize the item path to extract ID and infer type
+	normalizedID, inferredType := discovery.NormalizeItemPath(itemName)
+
+	// Use inferred type if available, otherwise fall back to explicit type flag
+	typeHint := c.Type
+	if inferredType != "" {
+		typeHint = &inferredType
+	}
+
 	// Determine item type
-	info, err := validation.DetermineItemType(projectPath, itemName, c.Type)
+	info, err := validation.DetermineItemType(
+		projectPath, normalizedID, typeHint,
+	)
 	if err != nil {
 		return err
 	}
@@ -65,7 +77,7 @@ func (c *ValidateCmd) runDirectValidation(
 	report, err := validation.ValidateItemByType(
 		validator,
 		projectPath,
-		itemName,
+		normalizedID,
 		info.ItemType,
 	)
 	if err != nil {
@@ -76,7 +88,7 @@ func (c *ValidateCmd) runDirectValidation(
 	if c.JSON {
 		validation.PrintJSONReport(report)
 	} else {
-		validation.PrintHumanReport(itemName, report)
+		validation.PrintHumanReport(normalizedID, report)
 	}
 
 	// Return error if validation failed

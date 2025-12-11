@@ -40,6 +40,13 @@ import (
 //nolint:revive // cmd.ChangeID field needs to be reassigned when empty
 func Archive(cmd *ArchiveCmd, workingDir string) (ArchiveResult, error) {
 	changeID := cmd.ChangeID
+
+	// Normalize path to extract change ID (handles spectr/changes/<id> paths)
+	if changeID != "" {
+		normalizedID, _ := discovery.NormalizeItemPath(changeID)
+		changeID = normalizedID
+	}
+
 	// Get project root based on workingDir parameter
 	var (
 		projectRoot string

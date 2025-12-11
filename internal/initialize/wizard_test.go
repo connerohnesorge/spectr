@@ -569,3 +569,280 @@ func TestRenderReviewShowsCIWorkflowConfigured(t *testing.T) {
 		t.Error("Expected review view to contain '(configured)' indicator for CI workflow")
 	}
 }
+
+// ============================================================================
+// Tests for provider search/filter functionality
+// ============================================================================
+
+func TestProviderFilteringLogic(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Initial state should have all providers in filteredProviders
+	if len(wizard.filteredProviders) != len(wizard.allProviders) {
+		t.Errorf(
+			"Expected filteredProviders to equal allProviders, got %d vs %d",
+			len(wizard.filteredProviders), len(wizard.allProviders),
+		)
+	}
+
+	// Test filtering with "claude" - should match Claude Code
+	wizard.searchQuery = "claude"
+	wizard.applyProviderFilter()
+
+	if len(wizard.filteredProviders) == 0 {
+		t.Error("Expected at least one provider to match 'claude'")
+	}
+
+	// Verify all results contain "claude" (case-insensitive)
+	for _, provider := range wizard.filteredProviders {
+		if !strings.Contains(strings.ToLower(provider.Name()), "claude") {
+			t.Errorf("Provider %s should not match 'claude'", provider.Name())
+		}
+	}
+
+	// Test filtering with empty query - should restore all
+	wizard.searchQuery = ""
+	wizard.applyProviderFilter()
+
+	if len(wizard.filteredProviders) != len(wizard.allProviders) {
+		t.Error("Expected empty query to restore all providers")
+	}
+
+	// Test filtering with non-matching query
+	wizard.searchQuery = "nonexistentprovider123"
+	wizard.applyProviderFilter()
+
+	if len(wizard.filteredProviders) != 0 {
+		t.Error("Expected no providers to match 'nonexistentprovider123'")
+	}
+}
+
+func TestCursorAdjustmentOnFilter(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Set cursor to last provider
+	wizard.cursor = len(wizard.allProviders) - 1
+
+	// Apply a filter that reduces the list significantly
+	wizard.searchQuery = "claude"
+	wizard.applyProviderFilter()
+
+	// Cursor should be adjusted to be within bounds
+	if wizard.cursor >= len(wizard.filteredProviders) {
+		t.Errorf(
+			"Cursor %d should be less than filtered count %d",
+			wizard.cursor, len(wizard.filteredProviders),
+		)
+	}
+
+	// Test with no matches - cursor should be 0
+	wizard.searchQuery = "nonexistentprovider123"
+	wizard.applyProviderFilter()
+
+	if wizard.cursor != 0 {
+		t.Errorf("Expected cursor to be 0 when no matches, got %d", wizard.cursor)
+	}
+}
+
+func TestSelectionPreservedDuringFiltering(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	// Select all providers
+	for _, provider := range wizard.allProviders {
+		wizard.selectedProviders[provider.ID()] = true
+	}
+
+	originalSelectionCount := len(wizard.selectedProviders)
+
+	// Apply a filter that shows only some providers
+	wizard.searchQuery = "claude"
+	wizard.applyProviderFilter()
+
+	// Verify selection count is preserved (filtering shouldn't affect selections)
+	if len(wizard.selectedProviders) != originalSelectionCount {
+		t.Errorf(
+			"Selection count changed after filtering: %d vs %d",
+			len(wizard.selectedProviders), originalSelectionCount,
+		)
+	}
+
+	// Clear filter
+	wizard.searchQuery = ""
+	wizard.applyProviderFilter()
+
+	// Selection should still be preserved
+	if len(wizard.selectedProviders) != originalSelectionCount {
+		t.Errorf(
+			"Selection count changed after clearing filter: %d vs %d",
+			len(wizard.selectedProviders), originalSelectionCount,
+		)
+	}
+}
+
+func TestSearchModeActivation(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	wizard.step = StepSelect
+
+	// Simulate pressing '/' key
+	keyMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'/'}}
+	newModel, _ := wizard.Update(keyMsg)
+	updatedWizard, ok := newModel.(WizardModel)
+	if !ok {
+		t.Fatal("Failed to cast model to WizardModel")
+	}
+
+	// Verify search mode is active
+	if !updatedWizard.searchMode {
+		t.Error("Expected searchMode to be true after pressing '/'")
+	}
+}
+
+func TestSearchModeExitWithEscape(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	wizard.step = StepSelect
+	wizard.searchMode = true
+	wizard.searchQuery = "claude"
+	wizard.searchInput.SetValue("claude")
+	wizard.applyProviderFilter()
+
+	// Simulate pressing Escape key
+	keyMsg := tea.KeyMsg{Type: tea.KeyEsc}
+	newModel, _ := wizard.Update(keyMsg)
+	updatedWizard, ok := newModel.(WizardModel)
+	if !ok {
+		t.Fatal("Failed to cast model to WizardModel")
+	}
+
+	// Verify search mode is deactivated
+	if updatedWizard.searchMode {
+		t.Error("Expected searchMode to be false after pressing Escape")
+	}
+
+	// Verify search query is cleared
+	if updatedWizard.searchQuery != "" {
+		t.Errorf("Expected searchQuery to be empty, got '%s'", updatedWizard.searchQuery)
+	}
+
+	// Verify all providers are restored
+	if len(updatedWizard.filteredProviders) != len(updatedWizard.allProviders) {
+		t.Error("Expected all providers to be restored after Escape")
+	}
+}
+
+func TestRenderSelectShowsSearchInput(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	wizard.step = StepSelect
+	wizard.searchMode = true
+
+	output := wizard.renderSelect()
+
+	// Verify output contains search input
+	if !strings.Contains(output, "Search:") {
+		t.Error("Expected select view to contain 'Search:' when in search mode")
+	}
+
+	// Verify help text shows Escape instruction
+	if !strings.Contains(output, "Esc: Exit search") {
+		t.Error("Expected help text to contain 'Esc: Exit search' when in search mode")
+	}
+}
+
+func TestRenderSelectShowsSearchHotkey(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	wizard.step = StepSelect
+	wizard.searchMode = false
+
+	output := wizard.renderSelect()
+
+	// Verify help text shows /: Search when not in search mode
+	if !strings.Contains(output, "/: Search") {
+		t.Error("Expected help text to contain '/: Search' when not in search mode")
+	}
+}
+
+func TestRenderSelectShowsNoMatchMessage(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	wizard.step = StepSelect
+	wizard.searchMode = true
+	wizard.searchQuery = "nonexistentprovider123"
+	wizard.applyProviderFilter()
+
+	output := wizard.renderSelect()
+
+	// Verify output shows no match message
+	if !strings.Contains(output, "No providers match") {
+		t.Error("Expected select view to contain 'No providers match' message")
+	}
+}
+
+func TestSpaceToggleInSearchMode(t *testing.T) {
+	cmd := &InitCmd{Path: "/tmp/test-project"}
+	wizard, err := NewWizardModel(cmd)
+	if err != nil {
+		t.Fatalf("Failed to create wizard model: %v", err)
+	}
+
+	wizard.step = StepSelect
+	wizard.searchMode = true
+	wizard.cursor = 0
+
+	// Ensure first provider is not selected
+	if len(wizard.filteredProviders) > 0 {
+		wizard.selectedProviders[wizard.filteredProviders[0].ID()] = false
+	}
+
+	// Simulate pressing space key while in search mode
+	keyMsg := tea.KeyMsg{Type: tea.KeySpace}
+	newModel, _ := wizard.Update(keyMsg)
+	updatedWizard, ok := newModel.(WizardModel)
+	if !ok {
+		t.Fatal("Failed to cast model to WizardModel")
+	}
+
+	// Verify provider is now selected
+	if len(updatedWizard.filteredProviders) == 0 {
+		return
+	}
+
+	providerID := updatedWizard.filteredProviders[0].ID()
+	if !updatedWizard.selectedProviders[providerID] {
+		t.Errorf("Expected provider %s to be selected after space press", providerID)
+	}
+}

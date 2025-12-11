@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Setup",
+      "description": "Add blackfriday v2 dependency to go.mod",
+      "status": "completed"
+    },
+    {
+      "id": "1.2",
+      "section": "Setup",
+      "description": "Create `internal/markdown/` package directory structure",
+      "status": "completed"
+    },
+    {
+      "id": "2.1",
+      "section": "Core Markdown Package",
+      "description": "Implement `internal/markdown/types.go` with Header, Section, Task types",
+      "status": "completed"
+    },
+    {
+      "id": "2.2",
+      "section": "Core Markdown Package",
+      "description": "Implement `internal/markdown/parser.go` with Parse() function returning AST",
+      "status": "completed"
+    },
+    {
+      "id": "2.3",
+      "section": "Core Markdown Package",
+      "description": "Implement `internal/markdown/headers.go` with header extraction (H1-H4)",
+      "status": "completed"
+    },
+    {
+      "id": "2.4",
+      "section": "Core Markdown Package",
+      "description": "Implement `internal/markdown/sections.go` with section content extraction",
+      "status": "completed"
+    },
+    {
+      "id": "2.5",
+      "section": "Core Markdown Package",
+      "description": "Implement `internal/markdown/tasks.go` with task checkbox parsing",
+      "status": "completed"
+    },
+    {
+      "id": "2.7",
+      "section": "Core Markdown Package",
+      "description": "Write comparison tests that run both regex and AST parsers, asserting equal output",
+      "status": "completed"
+    },
+    {
+      "id": "3.1",
+      "section": "Replace Parsers Package",
+      "description": "Update `internal/parsers/parsers.go` to use markdown package for task counting",
+      "status": "completed"
+    },
+    {
+      "id": "3.2",
+      "section": "Replace Parsers Package",
+      "description": "Update `internal/parsers/parsers.go` to use markdown package for delta counting",
+      "status": "completed"
+    },
+    {
+      "id": "3.3",
+      "section": "Replace Parsers Package",
+      "description": "Update `internal/parsers/parsers.go` to use markdown package for requirement counting",
+      "status": "completed"
+    },
+    {
+      "id": "3.4",
+      "section": "Replace Parsers Package",
+      "description": "Update `internal/parsers/requirement_parser.go` to use markdown package",
+      "status": "completed"
+    },
+    {
+      "id": "3.5",
+      "section": "Replace Parsers Package",
+      "description": "Update `internal/parsers/delta_parser.go` to use markdown package",
+      "status": "completed"
+    },
+    {
+      "id": "3.6",
+      "section": "Replace Parsers Package",
+      "description": "Remove unused regex imports from parsers package",
+      "status": "completed"
+    },
+    {
+      "id": "3.7",
+      "section": "Replace Parsers Package",
+      "description": "Verify all existing parsers tests pass",
+      "status": "completed"
+    },
+    {
+      "id": "4.1",
+      "section": "Replace Validation Parser",
+      "description": "Update `internal/validation/parser.go` ExtractSections() to use markdown package",
+      "status": "completed"
+    },
+    {
+      "id": "4.2",
+      "section": "Replace Validation Parser",
+      "description": "Update `internal/validation/parser.go` ExtractRequirements() to use markdown package",
+      "status": "completed"
+    },
+    {
+      "id": "4.3",
+      "section": "Replace Validation Parser",
+      "description": "Update `internal/validation/parser.go` ExtractScenarios() to use markdown package",
+      "status": "completed"
+    },
+    {
+      "id": "4.4",
+      "section": "Replace Validation Parser",
+      "description": "Keep ContainsShallOrMust() and NormalizeRequirementName() as-is (not markdown parsing)",
+      "status": "completed"
+    },
+    {
+      "id": "4.5",
+      "section": "Replace Validation Parser",
+      "description": "Remove unused regex imports from validation/parser.go",
+      "status": "completed"
+    },
+    {
+      "id": "4.6",
+      "section": "Replace Validation Parser",
+      "description": "Verify all existing validation tests pass",
+      "status": "completed"
+    },
+    {
+      "id": "5.1",
+      "section": "Replace Archive Spec Merger",
+      "description": "Update `internal/archive/spec_merger.go` splitSpec() to use markdown package",
+      "status": "completed"
+    },
+    {
+      "id": "5.2",
+      "section": "Replace Archive Spec Merger",
+      "description": "Update `internal/archive/spec_merger.go` extractOrderedRequirements() to use markdown package",
+      "status": "completed"
+    },
+    {
+      "id": "5.3",
+      "section": "Replace Archive Spec Merger",
+      "description": "Keep reconstructSpec() newline normalization regex (utility, not markdown)",
+      "status": "completed"
+    },
+    {
+      "id": "5.4",
+      "section": "Replace Archive Spec Merger",
+      "description": "Remove unused regex imports from spec_merger.go",
+      "status": "completed"
+    },
+    {
+      "id": "5.5",
+      "section": "Replace Archive Spec Merger",
+      "description": "Verify all existing archive tests pass",
+      "status": "completed"
+    },
+    {
+      "id": "6.1",
+      "section": "Replace Accept Command Parser",
+      "description": "Update `cmd/accept.go` task parsing to use markdown package",
+      "status": "completed"
+    },
+    {
+      "id": "6.2",
+      "section": "Replace Accept Command Parser",
+      "description": "Remove package-level regex variables from accept.go",
+      "status": "completed"
+    },
+    {
+      "id": "6.3",
+      "section": "Replace Accept Command Parser",
+      "description": "Verify accept command tests pass",
+      "status": "completed"
+    },
+    {
+      "id": "7.1",
+      "section": "Validation and Cleanup",
+      "description": "Run full test suite (`go test ./...`)",
+      "status": "completed"
+    },
+    {
+      "id": "7.2",
+      "section": "Validation and Cleanup",
+      "description": "Run linter (`golangci-lint run`)",
+      "status": "completed"
+    },
+    {
+      "id": "7.3",
+      "section": "Validation and Cleanup",
+      "description": "Test with example spec files in `examples/` directory",
+      "status": "completed"
+    },
+    {
+      "id": "7.4",
+      "section": "Validation and Cleanup",
+      "description": "Test with actual project specs in `spectr/specs/`",
+      "status": "completed"
+    },
+    {
+      "id": "7.5",
+      "section": "Validation and Cleanup",
+      "description": "Update any documentation referencing regex parsing",
+      "status": "completed"
+    },
+    {
+      "id": "7.6",
+      "section": "Validation and Cleanup",
+      "description": "Run performance benchmarks comparing regex vs AST parsing",
+      "status": "completed"
+    }
+  ]
+}

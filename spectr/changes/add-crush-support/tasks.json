@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Implementation",
+      "description": "Add `PriorityCrush` constant to `internal/initialize/providers/constants.go`",
+      "status": "completed"
+    },
+    {
+      "id": "1.2",
+      "section": "Implementation",
+      "description": "Create `internal/initialize/providers/crush.go` with Crush provider implementation",
+      "status": "completed"
+    },
+    {
+      "id": "1.3",
+      "section": "Implementation",
+      "description": "Verify provider registers correctly with `go build ./...`",
+      "status": "completed"
+    },
+    {
+      "id": "2.1",
+      "section": "Testing",
+      "description": "Run existing provider tests to ensure no regressions: `go test ./internal/initialize/providers/...`",
+      "status": "completed"
+    },
+    {
+      "id": "2.2",
+      "section": "Testing",
+      "description": "Test `spectr init` with Crush provider manually selected",
+      "status": "completed"
+    },
+    {
+      "id": "2.3",
+      "section": "Testing",
+      "description": "Verify generated files are correct (CRUSH.md, .crush/commands/spectr/)",
+      "status": "completed"
+    },
+    {
+      "id": "3.1",
+      "section": "Documentation",
+      "description": "Update README.md to include Crush in the list of supported AI tools",
+      "status": "completed"
+    }
+  ]
+}

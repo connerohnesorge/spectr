@@ -20,6 +20,7 @@ const (
 	PriorityWindsurf    = 13
 	PriorityKilocode    = 14
 	PriorityContinue    = 15
+	PriorityCrush       = 16
 )
 
 // default frontmatter templates for slash commands.

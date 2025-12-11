@@ -91,7 +91,14 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 4. Create AGENTS.md
-	err = e.createAgentsMd(spectrDir, result)
+	// Determine provider ID for AGENTS.md template:
+	// - If exactly one provider is selected, use that provider's template
+	// - If multiple or no providers, use generic template (empty string)
+	agentsProviderID := ""
+	if len(selectedProviderIDs) == 1 {
+		agentsProviderID = selectedProviderIDs[0]
+	}
+	err = e.createAgentsMd(spectrDir, agentsProviderID, result)
 	if err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -194,6 +201,7 @@ func (e *InitExecutor) createProjectMd(
 // createAgentsMd creates the AGENTS.md file
 func (e *InitExecutor) createAgentsMd(
 	spectrDir string,
+	providerID string,
 	result *ExecutionResult,
 ) error {
 	agentsFile := filepath.Join(spectrDir, "AGENTS.md")
@@ -209,7 +217,7 @@ func (e *InitExecutor) createAgentsMd(
 	}
 
 	// Render template (empty providerID uses generic template)
-	content, err := e.tm.RenderAgents(providers.DefaultTemplateContext(), "")
+	content, err := e.tm.RenderAgents(providers.DefaultTemplateContext(), providerID)
 	if err != nil {
 		return fmt.Errorf("failed to render agents template: %w", err)
 	}

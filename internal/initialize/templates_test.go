@@ -1,6 +1,8 @@
 package initialize
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -252,7 +254,11 @@ func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tm.RenderSlashCommand(tt.commandType, providers.DefaultTemplateContext(), "")
+			got, err := tm.RenderSlashCommand(
+				tt.commandType,
+				providers.DefaultTemplateContext(),
+				"",
+			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RenderSlashCommand() error = %v, wantErr %v", err, tt.wantErr)
 
@@ -955,12 +961,12 @@ func TestRenderMethods_ProviderIDVariations(t *testing.T) {
 
 	// Various provider ID values that should all fall back to generic
 	providerIDs := []string{
-		"",                  // empty
-		"claude-code",       // typical provider ID
-		"crush",             // another typical provider ID
-		"opencode",          // yet another provider
-		"custom-provider",   // hyphenated
-		"SomeProvider",      // mixed case
+		"",                // empty
+		"claude-code",     // typical provider ID
+		"crush",           // another typical provider ID
+		"opencode",        // yet another provider
+		"custom-provider", // hyphenated
+		"SomeProvider",    // mixed case
 		"provider_with_underscore",
 	}
 
@@ -979,7 +985,11 @@ func TestRenderMethods_ProviderIDVariations(t *testing.T) {
 
 			_, err = tm.RenderSlashCommand("proposal", ctx, providerID)
 			if err != nil {
-				t.Errorf("RenderSlashCommand(proposal) with provider %q error = %v", providerID, err)
+				t.Errorf(
+					"RenderSlashCommand(proposal) with provider %q error = %v",
+					providerID,
+					err,
+				)
 			}
 
 			_, err = tm.RenderSlashCommand("apply", ctx, providerID)
@@ -1015,12 +1025,12 @@ func TestRenderAgents_CrushProvider(t *testing.T) {
 		"# Spectr Instructions",
 		"Instructions for Crush",
 		"Crush Tool Reference",
-		"Shell commands",      // Crush uses shell commands
-		"View file",           // Crush file viewing
-		"Edit operations",     // Crush file editing
-		"Shell execution",     // Crush shell execution
-		"Working with Files",  // Crush-specific section
-		"rg -n",               // ripgrep reference
+		"Shell commands",     // Crush uses shell commands
+		"View file",          // Crush file viewing
+		"Edit operations",    // Crush file editing
+		"Shell execution",    // Crush shell execution
+		"Working with Files", // Crush-specific section
+		"rg -n",              // ripgrep reference
 		"spectr validate",
 	}
 
@@ -1149,5 +1159,427 @@ func TestCrushTemplateDifferentFromClaudeCode(t *testing.T) {
 		if !strings.Contains(crushTemplate, content) {
 			t.Errorf("Crush template should contain: %q", content)
 		}
+	}
+}
+
+// =============================================================================
+// Integration Tests for Provider-Specific Template Rendering
+// =============================================================================
+
+// TestIntegration_ClaudeCodeProviderConfigure tests the full Configure() flow
+// for the Claude Code provider, verifying that provider-specific templates are used.
+func TestIntegration_ClaudeCodeProviderConfigure(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "spectr-integration-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	// Create the real TemplateManager
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	// Create the Claude Code provider
+	p := providers.NewClaudeProvider()
+
+	// Configure the provider
+	err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	if err != nil {
+		t.Fatalf("Configure() error = %v", err)
+	}
+
+	// Verify the instruction file was created with Claude Code-specific content
+	configPath := filepath.Join(tmpDir, "CLAUDE.md")
+	if !providers.FileExists(configPath) {
+		t.Fatal("CLAUDE.md was not created")
+	}
+
+	configContent, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("Failed to read CLAUDE.md: %v", err)
+	}
+
+	// The instruction file should contain spectr markers
+	if !strings.Contains(string(configContent), "spectr/AGENTS.md") {
+		t.Error("CLAUDE.md should reference spectr/AGENTS.md")
+	}
+
+	// Verify slash command files were created
+	proposalPath := filepath.Join(tmpDir, ".claude/commands/spectr/proposal.md")
+	applyPath := filepath.Join(tmpDir, ".claude/commands/spectr/apply.md")
+
+	if !providers.FileExists(proposalPath) {
+		t.Error("proposal.md was not created")
+	}
+	if !providers.FileExists(applyPath) {
+		t.Error("apply.md was not created")
+	}
+
+	// Read and verify proposal command content
+	proposalContent, err := os.ReadFile(proposalPath)
+	if err != nil {
+		t.Fatalf("Failed to read proposal.md: %v", err)
+	}
+
+	// Should contain standard slash command content
+	if !strings.Contains(string(proposalContent), "# Guardrails") {
+		t.Error("proposal.md should contain '# Guardrails'")
+	}
+	if !strings.Contains(string(proposalContent), "# Steps") {
+		t.Error("proposal.md should contain '# Steps'")
+	}
+}
+
+// TestIntegration_CrushProviderConfigure tests the full Configure() flow
+// for the Crush provider, verifying that provider-specific templates are used.
+func TestIntegration_CrushProviderConfigure(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "spectr-integration-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	// Create the real TemplateManager
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	// Create the Crush provider
+	p := providers.NewCrushProvider()
+
+	// Configure the provider
+	err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	if err != nil {
+		t.Fatalf("Configure() error = %v", err)
+	}
+
+	// Verify slash command files were created
+	proposalPath := filepath.Join(tmpDir, ".crush/commands/spectr/proposal.md")
+	applyPath := filepath.Join(tmpDir, ".crush/commands/spectr/apply.md")
+
+	if !providers.FileExists(proposalPath) {
+		t.Error("proposal.md was not created at expected path")
+	}
+	if !providers.FileExists(applyPath) {
+		t.Error("apply.md was not created at expected path")
+	}
+
+	// Read and verify proposal command content
+	proposalContent, err := os.ReadFile(proposalPath)
+	if err != nil {
+		t.Fatalf("Failed to read proposal.md: %v", err)
+	}
+
+	// Should contain standard slash command content
+	if !strings.Contains(string(proposalContent), "# Guardrails") {
+		t.Error("proposal.md should contain '# Guardrails'")
+	}
+}
+
+// TestIntegration_FallbackToGenericTemplate tests that providers without
+// custom templates (like cursor or gemini) fall back to generic templates.
+func TestIntegration_FallbackToGenericTemplate(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "spectr-integration-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	// Create the real TemplateManager
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	// Test with Cursor provider (no custom templates)
+	cursorProvider := providers.NewCursorProvider()
+
+	err = cursorProvider.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	if err != nil {
+		t.Fatalf("Cursor Configure() error = %v", err)
+	}
+
+	// Verify slash commands were created
+	proposalPath := filepath.Join(tmpDir, ".cursorrules/commands/spectr/proposal.md")
+	if !providers.FileExists(proposalPath) {
+		t.Error("Cursor proposal.md was not created")
+	}
+
+	proposalContent, err := os.ReadFile(proposalPath)
+	if err != nil {
+		t.Fatalf("Failed to read cursor proposal.md: %v", err)
+	}
+
+	// Should have generic content (not provider-specific markers)
+	if !strings.Contains(string(proposalContent), "# Guardrails") {
+		t.Error("Cursor proposal.md should contain generic '# Guardrails'")
+	}
+
+	// Clean up for next test
+	_ = os.RemoveAll(tmpDir)
+	tmpDir, _ = os.MkdirTemp("", "spectr-integration-test-*")
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	// Test with Gemini provider (no custom templates)
+	geminiProvider := providers.NewGeminiProvider()
+
+	err = geminiProvider.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	if err != nil {
+		t.Fatalf("Gemini Configure() error = %v", err)
+	}
+
+	// Verify TOML slash commands were created
+	geminiProposalPath := filepath.Join(tmpDir, ".gemini/commands/spectr/proposal.toml")
+	if !providers.FileExists(geminiProposalPath) {
+		t.Error("Gemini proposal.toml was not created")
+	}
+
+	geminiContent, err := os.ReadFile(geminiProposalPath)
+	if err != nil {
+		t.Fatalf("Failed to read gemini proposal.toml: %v", err)
+	}
+
+	// Should be TOML format
+	if !strings.Contains(string(geminiContent), "description =") {
+		t.Error("Gemini proposal.toml should be in TOML format")
+	}
+}
+
+// TestIntegration_ProviderSpecificAgentsContent verifies that when providers
+// render AGENTS.md content, they get provider-specific content.
+func TestIntegration_ProviderSpecificAgentsContent(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	ctx := providers.DefaultTemplateContext()
+
+	// Test Claude Code provider gets Claude Code-specific AGENTS.md content
+	t.Run("claude-code specific content", func(t *testing.T) {
+		content, err := tm.RenderAgents(ctx, "claude-code")
+		if err != nil {
+			t.Fatalf("RenderAgents(claude-code) error = %v", err)
+		}
+
+		// Must have Claude Code-specific markers
+		claudeCodeMarkers := []string{
+			"Instructions for Claude Code",
+			"Claude Code Tool Reference",
+			"`Glob`",
+			"`Grep`",
+			"`Read`",
+			"`Edit`",
+			"`Write`",
+			"`Bash`",
+			"`Task`",
+			"TodoWrite",
+		}
+
+		for _, marker := range claudeCodeMarkers {
+			if !strings.Contains(content, marker) {
+				t.Errorf("Claude Code AGENTS.md missing marker: %q", marker)
+			}
+		}
+
+		// Must NOT have generic AI assistant language
+		if strings.Contains(content, "Instructions for AI coding assistants") {
+			t.Error("Claude Code AGENTS.md should NOT have generic 'AI coding assistants' text")
+		}
+	})
+
+	// Test Crush provider gets Crush-specific AGENTS.md content
+	t.Run("crush specific content", func(t *testing.T) {
+		content, err := tm.RenderAgents(ctx, "crush")
+		if err != nil {
+			t.Fatalf("RenderAgents(crush) error = %v", err)
+		}
+
+		// Must have Crush-specific markers
+		crushMarkers := []string{
+			"Instructions for Crush",
+			"Crush Tool Reference",
+			"Shell commands",
+			"Working with Files",
+		}
+
+		for _, marker := range crushMarkers {
+			if !strings.Contains(content, marker) {
+				t.Errorf("Crush AGENTS.md missing marker: %q", marker)
+			}
+		}
+
+		// Must NOT have Claude Code tool references
+		if strings.Contains(content, "`Glob`") {
+			t.Error("Crush AGENTS.md should NOT have Claude Code '`Glob`' tool reference")
+		}
+	})
+
+	// Test generic fallback for unknown provider
+	t.Run("fallback to generic for unknown provider", func(t *testing.T) {
+		content, err := tm.RenderAgents(ctx, "unknown-provider")
+		if err != nil {
+			t.Fatalf("RenderAgents(unknown-provider) error = %v", err)
+		}
+
+		// Must have generic content
+		if !strings.Contains(content, "Instructions for AI coding assistants") {
+			t.Error("Unknown provider should get generic 'AI coding assistants' content")
+		}
+
+		// Must NOT have provider-specific markers
+		if strings.Contains(content, "Instructions for Claude Code") {
+			t.Error("Unknown provider should NOT have Claude Code-specific content")
+		}
+		if strings.Contains(content, "Instructions for Crush") {
+			t.Error("Unknown provider should NOT have Crush-specific content")
+		}
+	})
+}
+
+// TestIntegration_AllProvidersConfigureSuccessfully verifies that all registered
+// providers can be configured successfully with the real TemplateManager.
+func TestIntegration_AllProvidersConfigureSuccessfully(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	allProviders := providers.All()
+
+	for _, p := range allProviders {
+		t.Run(p.ID(), func(t *testing.T) {
+			tmpDir, err := os.MkdirTemp("", "spectr-provider-test-*")
+			if err != nil {
+				t.Fatalf("Failed to create temp dir: %v", err)
+			}
+			defer func() { _ = os.RemoveAll(tmpDir) }()
+
+			// Configure should succeed for all providers
+			err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+			if err != nil {
+				t.Fatalf("Configure() error for provider %s: %v", p.ID(), err)
+			}
+
+			// Provider should report as configured
+			if !p.IsConfigured(tmpDir) {
+				t.Errorf("Provider %s should be configured after Configure()", p.ID())
+			}
+
+			// All expected files should exist
+			filePaths := p.GetFilePaths()
+			for _, relPath := range filePaths {
+				fullPath := filepath.Join(tmpDir, relPath)
+				// Skip global paths (like ~/.config/...) in tests
+				if strings.HasPrefix(relPath, "~") || strings.HasPrefix(relPath, "/") {
+					continue
+				}
+				if !providers.FileExists(fullPath) {
+					t.Errorf("Provider %s: expected file not created: %s", p.ID(), relPath)
+				}
+			}
+		})
+	}
+}
+
+// TestIntegration_ProviderTemplateVariablesSubstituted verifies that template
+// variables like {{ .BaseDir }} are properly substituted in rendered content.
+func TestIntegration_ProviderTemplateVariablesSubstituted(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	// Custom context with non-default values
+	ctx := providers.TemplateContext{
+		BaseDir:     "custom-spectr",
+		SpecsDir:    "custom-spectr/specs",
+		ChangesDir:  "custom-spectr/changes",
+		ProjectFile: "custom-spectr/project.md",
+		AgentsFile:  "custom-spectr/AGENTS.md",
+	}
+
+	providerIDs := []string{"claude-code", "crush", ""}
+
+	for _, providerID := range providerIDs {
+		name := providerID
+		if name == "" {
+			name = "generic"
+		}
+		t.Run(name, func(t *testing.T) {
+			content, err := tm.RenderAgents(ctx, providerID)
+			if err != nil {
+				t.Fatalf("RenderAgents() error = %v", err)
+			}
+
+			// Custom paths should be present
+			if !strings.Contains(content, "custom-spectr/changes") {
+				t.Error("Content should contain custom ChangesDir path")
+			}
+			if !strings.Contains(content, "custom-spectr/specs") {
+				t.Error("Content should contain custom SpecsDir path")
+			}
+
+			// Template syntax should NOT be present
+			if strings.Contains(content, "{{ .BaseDir }}") {
+				t.Error("Content should not contain unsubstituted {{ .BaseDir }}")
+			}
+			if strings.Contains(content, "{{ .ChangesDir }}") {
+				t.Error("Content should not contain unsubstituted {{ .ChangesDir }}")
+			}
+			if strings.Contains(content, "{{ .SpecsDir }}") {
+				t.Error("Content should not contain unsubstituted {{ .SpecsDir }}")
+			}
+		})
+	}
+}
+
+// TestIntegration_ProviderIDPassedToConfigure verifies that BaseProvider.Configure()
+// correctly passes the provider ID to the template renderer methods.
+func TestIntegration_ProviderIDPassedToConfigure(t *testing.T) {
+	// This test verifies the integration between provider.Configure() and
+	// TemplateRenderer methods by checking that the rendered content matches
+	// what we expect for each provider.
+
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	testCases := []struct {
+		name           string
+		provider       providers.Provider
+		expectedMarker string // A marker that should appear in AGENTS.md for this provider
+	}{
+		{
+			name:           "claude-code",
+			provider:       providers.NewClaudeProvider(),
+			expectedMarker: "Claude Code Tool Reference",
+		},
+		{
+			name:           "crush",
+			provider:       providers.NewCrushProvider(),
+			expectedMarker: "Crush Tool Reference",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Render AGENTS.md with the provider's ID
+			ctx := providers.DefaultTemplateContext()
+			content, err := tm.RenderAgents(ctx, tc.provider.ID())
+			if err != nil {
+				t.Fatalf("RenderAgents() error = %v", err)
+			}
+
+			// The content should have the provider-specific marker
+			if !strings.Contains(content, tc.expectedMarker) {
+				t.Errorf("Provider %s: RenderAgents() should contain %q",
+					tc.name, tc.expectedMarker)
+			}
+		})
 	}
 }

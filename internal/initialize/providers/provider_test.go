@@ -29,7 +29,10 @@ func (m *mockTemplateRenderer) RenderAgents(_ TemplateContext, _ string) (string
 	return m.agentsContent, nil
 }
 
-func (m *mockTemplateRenderer) RenderInstructionPointer(_ TemplateContext, _ string) (string, error) {
+func (m *mockTemplateRenderer) RenderInstructionPointer(
+	_ TemplateContext,
+	_ string,
+) (string, error) {
 	return m.instructionPtrContent, nil
 }
 

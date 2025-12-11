@@ -47,7 +47,7 @@
       "id": "2.4",
       "section": "Provider Integration",
       "description": "Write integration tests for provider-specific template rendering",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "3.1",
@@ -77,31 +77,31 @@
       "id": "3.5",
       "section": "Initial Provider Templates",
       "description": "Verify `spectr init` produces provider-appropriate output",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "4.1",
       "section": "Validation \u0026 Documentation",
       "description": "Run full test suite (`go test ./...`)",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "4.2",
       "section": "Validation \u0026 Documentation",
       "description": "Test `spectr init` with claude-code and crush providers",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "4.3",
       "section": "Validation \u0026 Documentation",
       "description": "Verify fallback works for providers without custom templates",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "4.4",
       "section": "Validation \u0026 Documentation",
       "description": "Update provider documentation comments if needed",
-      "status": "pending"
+      "status": "done"
     }
   ]
 }

@@ -5,6 +5,7 @@ func init() {
 }
 
 // AntigravityProvider implements the Provider interface for Antigravity.
+//
 // Antigravity uses AGENTS.md and .agent/workflows/ for slash commands.
 type AntigravityProvider struct {
 	BaseProvider

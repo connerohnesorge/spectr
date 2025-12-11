@@ -3,7 +3,6 @@ description: Implement an approved Spectr change and keep tasks in sync.
 ---
 
 <!-- spectr:START -->
-
 # Guardrails
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
@@ -21,7 +20,6 @@ Track these steps as TODOs and complete them one by one.
 # Reference
 - Read `spectr/changes/<id>/proposal.md` for proposal details.
 - Read `spectr/changes/<id>/specs/<capability>/spec.md` for delta specs.
-
 
 <!-- spectr:END -->
 

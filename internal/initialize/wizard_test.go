@@ -20,15 +20,24 @@ func TestNewWizardModel(t *testing.T) {
 
 	// Verify initial state
 	if wizard.step != StepIntro {
-		t.Errorf("Expected initial step to be StepIntro, got %v", wizard.step)
+		t.Errorf(
+			"Expected initial step to be StepIntro, got %v",
+			wizard.step,
+		)
 	}
 
 	if wizard.projectPath != "/tmp/test-project" {
-		t.Errorf("Expected project path to be /tmp/test-project, got %s", wizard.projectPath)
+		t.Errorf(
+			"Expected project path to be /tmp/test-project, got %s",
+			wizard.projectPath,
+		)
 	}
 
 	if wizard.cursor != 0 {
-		t.Errorf("Expected cursor to start at 0, got %d", wizard.cursor)
+		t.Errorf(
+			"Expected cursor to start at 0, got %d",
+			wizard.cursor,
+		)
 	}
 
 	if len(wizard.allProviders) == 0 {
@@ -63,7 +72,10 @@ func TestWizardStepTransitions(t *testing.T) {
 	// Test getting selected provider IDs
 	selectedIDs := wizard.getSelectedProviderIDs()
 	if len(selectedIDs) != 1 {
-		t.Errorf("Expected 1 selected provider, got %d", len(selectedIDs))
+		t.Errorf(
+			"Expected 1 selected provider, got %d",
+			len(selectedIDs),
+		)
 	}
 }
 
@@ -141,13 +153,19 @@ func TestGetSelectedProviderIDs(t *testing.T) {
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
-		t.Fatalf("Failed to create wizard model: %v", err)
+		t.Fatalf(
+			"Failed to create wizard model: %v",
+			err,
+		)
 	}
 
 	// Test with no selections
 	ids := wizard.getSelectedProviderIDs()
 	if len(ids) != 0 {
-		t.Errorf("Expected 0 selected providers, got %d", len(ids))
+		t.Errorf(
+			"Expected 0 selected providers, got %d",
+			len(ids),
+		)
 	}
 
 	// Test with some selections
@@ -157,7 +175,10 @@ func TestGetSelectedProviderIDs(t *testing.T) {
 
 	ids = wizard.getSelectedProviderIDs()
 	if len(ids) != 3 {
-		t.Errorf("Expected 3 selected providers, got %d", len(ids))
+		t.Errorf(
+			"Expected 3 selected providers, got %d",
+			len(ids),
+		)
 	}
 
 	// Verify all selected IDs are present
@@ -186,16 +207,31 @@ func TestNewWizardModelWithConfiguredProviders(t *testing.T) {
 
 	// Create CLAUDE.md to make claude-code provider configured
 	claudeFile := filepath.Join(tempDir, "CLAUDE.md")
-	err := os.WriteFile(claudeFile, []byte("# Claude Configuration\n"), 0644)
+	err := os.WriteFile(
+		claudeFile,
+		[]byte("# Claude Configuration\n"),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create CLAUDE.md: %v", err)
+		t.Fatalf(
+			"Failed to create CLAUDE.md: %v",
+			err,
+		)
 	}
 
 	// Create .claude/commands/spectr/ directory and slash commands to fully configure Claude
-	commandsDir := filepath.Join(tempDir, ".claude", "commands", "spectr")
+	commandsDir := filepath.Join(
+		tempDir,
+		".claude",
+		"commands",
+		"spectr",
+	)
 	err = os.MkdirAll(commandsDir, 0755)
 	if err != nil {
-		t.Fatalf("Failed to create commands directory: %v", err)
+		t.Fatalf(
+			"Failed to create commands directory: %v",
+			err,
+		)
 	}
 
 	// Create the two slash command files (in the spectr/ subdirectory)
@@ -242,7 +278,10 @@ func TestNewWizardModelNoConfiguredProviders(t *testing.T) {
 	// Verify no providers are marked as configured
 	for providerID, isConfigured := range wizard.configuredProviders {
 		if isConfigured {
-			t.Errorf("Expected no providers to be configured, but %s is configured", providerID)
+			t.Errorf(
+				"Expected no providers to be configured, but %s is configured",
+				providerID,
+			)
 		}
 	}
 

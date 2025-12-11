@@ -125,7 +125,12 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 	}
 
 	// Detect if CI workflow is already configured
-	ciWorkflowPath := filepath.Join(projectPath, ".github", "workflows", "spectr-ci.yml")
+	ciWorkflowPath := filepath.Join(
+		projectPath,
+		".github",
+		"workflows",
+		"spectr-ci.yml",
+	)
 	ciWorkflowConfigured := FileExists(ciWorkflowPath)
 
 	// Pre-select CI workflow if already configured
@@ -147,7 +152,8 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 		ciWorkflowEnabled:    ciWorkflowEnabled,
 		ciWorkflowConfigured: ciWorkflowConfigured,
 		searchInput:          searchInput,
-		filteredProviders:    allProviders, // Initially show all providers
+		// Initially show all providers
+		filteredProviders: allProviders,
 	}, nil
 }
 
@@ -365,7 +371,11 @@ func (m WizardModel) handleReviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.step = StepExecute
 		m.executing = true
 
-		return m, executeInit(m.projectPath, m.getSelectedProviderIDs(), m.ciWorkflowEnabled)
+		return m, executeInit(
+			m.projectPath,
+			m.getSelectedProviderIDs(),
+			m.ciWorkflowEnabled,
+		)
 	}
 
 	return m, nil
@@ -397,7 +407,11 @@ func (m WizardModel) renderIntro() string {
 	var b strings.Builder
 
 	// ASCII art banner
-	b.WriteString(applyGradient(asciiArt, lipgloss.Color("99"), lipgloss.Color("205")))
+	b.WriteString(applyGradient(
+		asciiArt,
+		lipgloss.Color("99"),
+		lipgloss.Color("205"),
+	))
 	b.WriteString(newlineDouble)
 
 	// Welcome message
@@ -447,7 +461,10 @@ func (m WizardModel) renderSelect() string {
 
 	// Show search input if search mode is active
 	if m.searchMode {
-		b.WriteString(fmt.Sprintf("Search: %s\n\n", m.searchInput.View()))
+		b.WriteString(fmt.Sprintf(
+			"Search: %s\n\n",
+			m.searchInput.View(),
+		))
 	}
 
 	// Render filtered providers or show no match message
@@ -503,7 +520,12 @@ func (m WizardModel) renderProviderGroup(providersList []providers.Provider, off
 		}
 
 		// Build the base line with provider name
-		line := fmt.Sprintf("  %s %s %s", cursor, checkbox, provider.Name())
+		line := fmt.Sprintf(
+			"  %s %s %s",
+			cursor,
+			checkbox,
+			provider.Name(),
+		)
 
 		// Add configured indicator if provider is already configured
 		configuredIndicator := ""
@@ -548,7 +570,11 @@ func (m WizardModel) renderReview() string {
 	if m.ciWorkflowConfigured {
 		configuredNote = subtleStyle.Render(" (configured)")
 	}
-	b.WriteString(fmt.Sprintf("  %s Spectr CI Validation%s\n", checkbox, configuredNote))
+	b.WriteString(fmt.Sprintf(
+		"  %s Spectr CI Validation%s\n",
+		checkbox,
+		configuredNote,
+	))
 	b.WriteString(
 		subtleStyle.Render(
 			"      Creates .github/workflows/spectr-ci.yml for automated validation\n\n",

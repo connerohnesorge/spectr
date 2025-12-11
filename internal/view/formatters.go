@@ -137,7 +137,8 @@ func formatSummarySection(summary SummaryMetrics) string {
 	lines = append(lines, summaryHeader)
 
 	// Specifications: X specs, Y requirements
-	specsLine := fmt.Sprintf("%s %s Specifications: %d specs, %d requirements",
+	specsLine := fmt.Sprintf(
+		"%s %s Specifications: %d specs, %d requirements",
 		indentation,
 		summaryBulletStyle.Render(summaryBullet),
 		summary.TotalSpecs,

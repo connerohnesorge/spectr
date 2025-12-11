@@ -26,7 +26,10 @@ func TestFormatChangesText(t *testing.T) {
 					ID:         "add-feature",
 					Title:      "Add Feature",
 					DeltaCount: 2,
-					TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+					TaskStatus: parsers.TaskStatus{
+						Total:     5,
+						Completed: 3,
+					},
 				},
 			},
 			expected: []string{"add-feature  3/5 tasks"},
@@ -38,19 +41,28 @@ func TestFormatChangesText(t *testing.T) {
 					ID:         "update-docs",
 					Title:      "Update Docs",
 					DeltaCount: 1,
-					TaskStatus: parsers.TaskStatus{Total: 2, Completed: 1},
+					TaskStatus: parsers.TaskStatus{
+						Total:     2,
+						Completed: 1,
+					},
 				},
 				{
 					ID:         "add-feature",
 					Title:      "Add Feature",
 					DeltaCount: 2,
-					TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+					TaskStatus: parsers.TaskStatus{
+						Total:     5,
+						Completed: 3,
+					},
 				},
 				{
 					ID:         "fix-bug",
 					Title:      "Fix Bug",
 					DeltaCount: 1,
-					TaskStatus: parsers.TaskStatus{Total: 3, Completed: 3},
+					TaskStatus: parsers.TaskStatus{
+						Total:     3,
+						Completed: 3,
+					},
 				},
 			},
 			expected: []string{

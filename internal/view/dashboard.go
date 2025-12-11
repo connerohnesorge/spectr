@@ -28,6 +28,11 @@ import (
 //
 //nolint:revive // cognitive-complexity justified for data collection
 func CollectData(projectPath string) (*DashboardData, error) {
+	var (
+		proposalPath string
+		taskStatus   parsers.TaskStatus
+	)
+
 	data := &DashboardData{
 		Summary:          SummaryMetrics{},
 		ActiveChanges:    []ChangeProgress{},
@@ -43,49 +48,74 @@ func CollectData(projectPath string) (*DashboardData, error) {
 
 	// Process each change
 	for _, changeID := range changeIDs {
-		changeDir := filepath.Join(projectPath, "spectr", "changes", changeID)
+		var (
+			title string
+		)
+		changeDir := filepath.Join(
+			projectPath,
+			"spectr",
+			"changes",
+			changeID,
+		)
 
 		// Parse title from proposal.md
-		proposalPath := filepath.Join(changeDir, "proposal.md")
-		title, err := parsers.ExtractTitle(proposalPath)
+		proposalPath = filepath.Join(changeDir, "proposal.md")
+		title, err = parsers.ExtractTitle(proposalPath)
 		if err != nil {
 			// Skip changes that can't be parsed, use ID as fallback title
 			title = changeID
 		}
 
 		// Parse task counts from tasks.json or tasks.md
-		taskStatus, err := parsers.CountTasks(changeDir)
+		taskStatus, err = parsers.CountTasks(changeDir)
 		if err != nil {
 			// If tasks can't be read, assume zero tasks
-			taskStatus = parsers.TaskStatus{Total: 0, Completed: 0, InProgress: 0}
+			taskStatus = parsers.TaskStatus{
+				Total:     0,
+				Completed: 0,
+				// InProgress: 0,
+			}
 		}
 
 		// Calculate completion percentage
-		percentage := calculatePercentage(taskStatus.Completed, taskStatus.Total)
+		percentage := calculatePercentage(
+			taskStatus.Completed,
+			taskStatus.Total,
+		)
 
 		// Categorize as active or completed
-		// A change is completed if: (completed == total AND total > 0) OR total == 0
-		isCompleted := (taskStatus.Completed == taskStatus.Total && taskStatus.Total > 0) ||
+		// A change is completed if:
+		// (completed == total AND total > 0)
+		// OR
+		// total == 0
+		isCompleted := (taskStatus.Completed == taskStatus.Total &&
+			taskStatus.Total > 0) ||
 			taskStatus.Total == 0
 
 		if isCompleted {
 			// Add to completed changes
-			data.CompletedChanges = append(data.CompletedChanges, CompletedChange{
-				ID:    changeID,
-				Title: title,
-			})
+			data.CompletedChanges = append(
+				data.CompletedChanges,
+				CompletedChange{
+					ID:    changeID,
+					Title: title,
+				},
+			)
 			data.Summary.CompletedChanges++
 		} else {
 			// Add to active changes
-			data.ActiveChanges = append(data.ActiveChanges, ChangeProgress{
-				ID:    changeID,
-				Title: title,
-				Progress: ProgressMetrics{
-					Total:      taskStatus.Total,
-					Completed:  taskStatus.Completed,
-					Percentage: percentage,
+			data.ActiveChanges = append(
+				data.ActiveChanges,
+				ChangeProgress{
+					ID:    changeID,
+					Title: title,
+					Progress: ProgressMetrics{
+						Total:      taskStatus.Total,
+						Completed:  taskStatus.Completed,
+						Percentage: percentage,
+					},
 				},
-			})
+			)
 			data.Summary.ActiveChanges++
 			data.Summary.TotalTasks += taskStatus.Total
 			data.Summary.CompletedTasks += taskStatus.Completed

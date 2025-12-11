@@ -832,13 +832,16 @@ func (m interactiveModel) applyFilter() interactiveModel {
 		// No filter - show all rows directly
 		m.table.SetRows(m.allRows)
 	} else {
-		// Reuse the filteredRows buffer to avoid allocations on every keystroke
+		// Reuse the filteredRows buffer to avoid allocations on every
+		// keystroke
 		m.filteredRows = m.filteredRows[:0] // reset length but keep capacity
+
 		for _, row := range m.allRows {
 			if rowMatchesQuery(row, query) {
 				m.filteredRows = append(m.filteredRows, row)
 			}
 		}
+
 		m.table.SetRows(m.filteredRows)
 	}
 
@@ -1053,7 +1056,8 @@ func (m interactiveModel) View() string {
 			return m.selectedID + "\n"
 		}
 
-		// In selection mode, just show selected ID without clipboard message
+		// In selection mode, just show selected ID without clipboard
+		// message.
 		if m.selectionMode && m.selectedID != "" {
 			return fmt.Sprintf("Selected: %s\n", m.selectedID)
 		}
@@ -1113,6 +1117,7 @@ func RunInteractiveChanges(
 	}
 
 	// Use default full-width columns initially (terminalWidth=0 means unknown)
+	//
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
 	columns := calculateChangesColumns(breakpointFull)
 	titleTruncate := calculateTitleTruncate(itemTypeChange, breakpointFull)
@@ -1256,6 +1261,7 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string, stdoutMode bool) 
 	}
 
 	// Use default full-width columns initially (terminalWidth=0 means unknown)
+	//
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
 	columns := calculateSpecsColumns(breakpointFull)
 	titleTruncate := calculateTitleTruncate(itemTypeSpec, breakpointFull)

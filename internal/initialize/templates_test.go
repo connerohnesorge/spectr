@@ -1458,6 +1458,10 @@ func TestIntegration_AllProvidersConfigureSuccessfully(t *testing.T) {
 			}
 			defer func() { _ = os.RemoveAll(tmpDir) }()
 
+			// Set HOME to temp dir for providers that use global paths (e.g., codex)
+			// This ensures tests work in sandboxed environments like Nix
+			t.Setenv("HOME", tmpDir)
+
 			// Configure should succeed for all providers
 			err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
 			if err != nil {

@@ -14,7 +14,8 @@ type AntigravityProvider struct {
 // NewAntigravityProvider creates a new Antigravity provider.
 func NewAntigravityProvider() *AntigravityProvider {
 	proposalPath, applyPath := PrefixedCommandPaths(
-		".agent/workflows", ".md",
+		".agent/workflows",
+		".md",
 	)
 
 	return &AntigravityProvider{

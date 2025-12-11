@@ -27,7 +27,10 @@ type ValidationRequiredError struct {
 }
 
 func (e *ValidationRequiredError) Error() string {
-	return fmt.Sprintf("validation errors must be fixed before %s", e.Operation)
+	return fmt.Sprintf(
+		"validation errors must be fixed before %s",
+		e.Operation,
+	)
 }
 
 // DeltaConflictError indicates a requirement appears in multiple sections.

@@ -141,6 +141,7 @@
             reftools
             goreleaser
             vhs
+            gofumpt
 
             # For docs site
             biome

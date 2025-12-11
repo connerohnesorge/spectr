@@ -138,7 +138,10 @@ type Provider interface {
 	// Configure applies all configuration (instruction file + slash commands).
 	// projectPath is the root project directory.
 	// spectrDir is the path to the spectr/ directory.
-	Configure(projectPath, spectrDir string, tm TemplateRenderer) error
+	Configure(
+		projectPath, spectrDir string,
+		tm TemplateRenderer,
+	) error
 
 	// IsConfigured checks if the provider is fully configured.
 	// Returns true if all expected files exist.
@@ -160,12 +163,19 @@ type Provider interface {
 // full TemplateManager.
 type TemplateRenderer interface {
 	// RenderAgents renders the AGENTS.md template content.
-	RenderAgents(ctx TemplateContext) (string, error)
+	RenderAgents(
+		ctx TemplateContext,
+	) (string, error)
 	// RenderInstructionPointer renders a short pointer template that directs
 	// AI assistants to read spectr/AGENTS.md for full instructions.
-	RenderInstructionPointer(ctx TemplateContext) (string, error)
+	RenderInstructionPointer(
+		ctx TemplateContext,
+	) (string, error)
 	// RenderSlashCommand renders a slash command template (proposal or apply).
-	RenderSlashCommand(command string, ctx TemplateContext) (string, error)
+	RenderSlashCommand(
+		command string,
+		ctx TemplateContext,
+	) (string, error)
 }
 
 // BaseProvider provides a default implementation of the Provider
@@ -223,7 +233,8 @@ func (p *BaseProvider) HasConfigFile() bool {
 
 // HasSlashCommands returns true if this provider has slash commands.
 func (p *BaseProvider) HasSlashCommands() bool {
-	return p.proposalPath != "" || p.applyPath != ""
+	return p.proposalPath != "" ||
+		p.applyPath != ""
 }
 
 // Configure applies all configuration for the provider.
@@ -234,14 +245,20 @@ func (p *BaseProvider) Configure(
 	// Configure instruction file if provider has one
 	if p.HasConfigFile() {
 		if err := p.configureConfigFile(projectPath, tm); err != nil {
-			return fmt.Errorf("failed to configure instruction file: %w", err)
+			return fmt.Errorf(
+				"failed to configure instruction file: %w",
+				err,
+			)
 		}
 	}
 
 	// Configure slash commands if provider has them
 	if p.HasSlashCommands() {
 		if err := p.configureSlashCommands(projectPath, tm); err != nil {
-			return fmt.Errorf("failed to configure slash commands: %w", err)
+			return fmt.Errorf(
+				"failed to configure slash commands: %w",
+				err,
+			)
 		}
 	}
 
@@ -253,12 +270,20 @@ func (p *BaseProvider) configureConfigFile(
 	projectPath string,
 	tm TemplateRenderer,
 ) error {
-	content, err := tm.RenderInstructionPointer(DefaultTemplateContext())
+	content, err := tm.RenderInstructionPointer(
+		DefaultTemplateContext(),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to render instruction pointer template: %w", err)
+		return fmt.Errorf(
+			"failed to render instruction pointer template: %w",
+			err,
+		)
 	}
 
-	filePath := filepath.Join(projectPath, p.configFile)
+	filePath := filepath.Join(
+		projectPath,
+		p.configFile,
+	)
 
 	return UpdateFileWithMarkers(
 		filePath,
@@ -301,16 +326,31 @@ func (p *BaseProvider) configureSlashCommand(
 	filePath, cmd string,
 	tm TemplateRenderer,
 ) error {
-	body, err := tm.RenderSlashCommand(cmd, DefaultTemplateContext())
+	body, err := tm.RenderSlashCommand(
+		cmd,
+		DefaultTemplateContext(),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to render slash command %s: %w", cmd, err)
+		return fmt.Errorf(
+			"failed to render slash command %s: %w",
+			cmd,
+			err,
+		)
 	}
 
 	if FileExists(filePath) {
-		return p.updateExistingSlashCommand(filePath, body, cmd)
+		return p.updateExistingSlashCommand(
+			filePath,
+			body,
+			cmd,
+		)
 	}
 
-	return p.createNewSlashCommand(filePath, cmd, body)
+	return p.createNewSlashCommand(
+		filePath,
+		cmd,
+		body,
+	)
 }
 
 // updateExistingSlashCommand updates an existing slash command file.
@@ -318,7 +358,11 @@ func (p *BaseProvider) updateExistingSlashCommand(
 	filePath, body, cmd string,
 ) error {
 	frontmatter := p.frontmatter[cmd]
-	err := updateSlashCommandBody(filePath, body, frontmatter)
+	err := updateSlashCommandBody(
+		filePath,
+		body,
+		frontmatter,
+	)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to update slash command file %s: %w",
@@ -331,18 +375,27 @@ func (p *BaseProvider) updateExistingSlashCommand(
 }
 
 // createNewSlashCommand creates a new slash command file.
-func (p *BaseProvider) createNewSlashCommand(filePath, cmd, body string) error {
+func (p *BaseProvider) createNewSlashCommand(
+	filePath, cmd, body string,
+) error {
 	var sections []string
 
-	if frontmatter, ok := p.frontmatter[cmd]; ok && frontmatter != "" {
-		sections = append(sections, strings.TrimSpace(frontmatter))
+	if frontmatter, ok := p.frontmatter[cmd]; ok &&
+		frontmatter != "" {
+		sections = append(
+			sections,
+			strings.TrimSpace(frontmatter),
+		)
 	}
 
 	sections = append(
 		sections,
 		SpectrStartMarker+newlineDouble+body+newlineDouble+SpectrEndMarker,
 	)
-	content := strings.Join(sections, newlineDouble) + newlineDouble
+	content := strings.Join(
+		sections,
+		newlineDouble,
+	) + newlineDouble
 
 	dir := filepath.Dir(filePath)
 	err := EnsureDir(dir)
@@ -354,7 +407,11 @@ func (p *BaseProvider) createNewSlashCommand(filePath, cmd, body string) error {
 		)
 	}
 
-	err = os.WriteFile(filePath, []byte(content), filePerm)
+	err = os.WriteFile(
+		filePath,
+		[]byte(content),
+		filePerm,
+	)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to write slash command file %s: %w",
@@ -367,10 +424,15 @@ func (p *BaseProvider) createNewSlashCommand(filePath, cmd, body string) error {
 }
 
 // IsConfigured checks if the provider is fully configured.
-func (p *BaseProvider) IsConfigured(projectPath string) bool {
+func (p *BaseProvider) IsConfigured(
+	projectPath string,
+) bool {
 	// Check instruction file if provider has one
 	if p.HasConfigFile() {
-		filePath := filepath.Join(projectPath, p.configFile)
+		filePath := filepath.Join(
+			projectPath,
+			p.configFile,
+		)
 		if !FileExists(filePath) {
 			return false
 		}

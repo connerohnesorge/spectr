@@ -8,7 +8,9 @@ import (
 )
 
 // TestRenderCommitMessage_Archive tests archive mode commit message rendering.
-func TestRenderCommitMessage_Archive(t *testing.T) {
+func TestRenderCommitMessage_Archive(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		data     CommitTemplateData
@@ -100,13 +102,21 @@ func TestRenderCommitMessage_Archive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := RenderCommitMessage(tt.data)
+			result, err := RenderCommitMessage(
+				tt.data,
+			)
 			if err != nil {
-				t.Fatalf("RenderCommitMessage() error = %v", err)
+				t.Fatalf(
+					"RenderCommitMessage() error = %v",
+					err,
+				)
 			}
 
 			for _, exp := range tt.expected {
-				if !strings.Contains(result, exp) {
+				if !strings.Contains(
+					result,
+					exp,
+				) {
 					t.Errorf(
 						"RenderCommitMessage() missing expected string %q\nGot:\n%s",
 						exp,
@@ -118,38 +128,63 @@ func TestRenderCommitMessage_Archive(t *testing.T) {
 	}
 
 	// Also test that zero counts do NOT appear
-	t.Run("zero counts not displayed", func(t *testing.T) {
-		data := CommitTemplateData{
-			ChangeID:    "partial",
-			ArchivePath: "spectr/accepted/partial",
-			Mode:        ModeArchive,
-			Counts: archive.OperationCounts{
-				Added:    2,
-				Modified: 0,
-				Removed:  0,
-				Renamed:  0,
-			},
-		}
-		result, err := RenderCommitMessage(data)
-		if err != nil {
-			t.Fatalf("RenderCommitMessage() error = %v", err)
-		}
+	t.Run(
+		"zero counts not displayed",
+		func(t *testing.T) {
+			data := CommitTemplateData{
+				ChangeID:    "partial",
+				ArchivePath: "spectr/accepted/partial",
+				Mode:        ModeArchive,
+				Counts: archive.OperationCounts{
+					Added:    2,
+					Modified: 0,
+					Removed:  0,
+					Renamed:  0,
+				},
+			}
+			result, err := RenderCommitMessage(
+				data,
+			)
+			if err != nil {
+				t.Fatalf(
+					"RenderCommitMessage() error = %v",
+					err,
+				)
+			}
 
-		// Should NOT contain modified, removed, or renamed
-		if strings.Contains(result, "modified") {
-			t.Error("Expected no 'modified' line when count is 0")
-		}
-		if strings.Contains(result, "removed") {
-			t.Error("Expected no 'removed' line when count is 0")
-		}
-		if strings.Contains(result, "renamed") {
-			t.Error("Expected no 'renamed' line when count is 0")
-		}
-	})
+			// Should NOT contain modified, removed, or renamed
+			if strings.Contains(
+				result,
+				"modified",
+			) {
+				t.Error(
+					"Expected no 'modified' line when count is 0",
+				)
+			}
+			if strings.Contains(
+				result,
+				"removed",
+			) {
+				t.Error(
+					"Expected no 'removed' line when count is 0",
+				)
+			}
+			if strings.Contains(
+				result,
+				"renamed",
+			) {
+				t.Error(
+					"Expected no 'renamed' line when count is 0",
+				)
+			}
+		},
+	)
 }
 
 // TestRenderCommitMessage_Proposal tests proposal mode commit message rendering.
-func TestRenderCommitMessage_Proposal(t *testing.T) {
+func TestRenderCommitMessage_Proposal(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		data     CommitTemplateData
@@ -182,13 +217,21 @@ func TestRenderCommitMessage_Proposal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := RenderCommitMessage(tt.data)
+			result, err := RenderCommitMessage(
+				tt.data,
+			)
 			if err != nil {
-				t.Fatalf("RenderCommitMessage() error = %v", err)
+				t.Fatalf(
+					"RenderCommitMessage() error = %v",
+					err,
+				)
 			}
 
 			for _, exp := range tt.expected {
-				if !strings.Contains(result, exp) {
+				if !strings.Contains(
+					result,
+					exp,
+				) {
 					t.Errorf(
 						"RenderCommitMessage() missing expected string %q\nGot:\n%s",
 						exp,
@@ -201,7 +244,9 @@ func TestRenderCommitMessage_Proposal(t *testing.T) {
 }
 
 // TestRenderCommitMessage_InvalidMode tests that invalid modes return an error.
-func TestRenderCommitMessage_InvalidMode(t *testing.T) {
+func TestRenderCommitMessage_InvalidMode(
+	t *testing.T,
+) {
 	tests := []struct {
 		name string
 		mode string
@@ -209,7 +254,10 @@ func TestRenderCommitMessage_InvalidMode(t *testing.T) {
 		{name: "empty mode", mode: ""},
 		{name: "unknown mode", mode: "unknown"},
 		{name: "typo in archive", mode: "archiv"},
-		{name: "case sensitive", mode: "Proposal"},
+		{
+			name: "case sensitive",
+			mode: "Proposal",
+		},
 	}
 
 	for _, tt := range tests {
@@ -218,7 +266,9 @@ func TestRenderCommitMessage_InvalidMode(t *testing.T) {
 				ChangeID: "test-change",
 				Mode:     tt.mode,
 			}
-			result, err := RenderCommitMessage(data)
+			result, err := RenderCommitMessage(
+				data,
+			)
 			if err == nil {
 				t.Errorf(
 					"RenderCommitMessage() expected error for mode %q, got result: %s",
@@ -226,8 +276,14 @@ func TestRenderCommitMessage_InvalidMode(t *testing.T) {
 					result,
 				)
 			}
-			if !strings.Contains(err.Error(), "unknown mode") {
-				t.Errorf("RenderCommitMessage() error should mention 'unknown mode', got: %v", err)
+			if !strings.Contains(
+				err.Error(),
+				"unknown mode",
+			) {
+				t.Errorf(
+					"RenderCommitMessage() error should mention 'unknown mode', got: %v",
+					err,
+				)
 			}
 		})
 	}
@@ -334,18 +390,32 @@ func TestRenderPRBody_Archive(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := RenderPRBody(tt.data)
 			if err != nil {
-				t.Fatalf("RenderPRBody() error = %v", err)
+				t.Fatalf(
+					"RenderPRBody() error = %v",
+					err,
+				)
 			}
 
 			for _, exp := range tt.expected {
-				if !strings.Contains(result, exp) {
-					t.Errorf("RenderPRBody() missing expected string %q\nGot:\n%s", exp, result)
+				if !strings.Contains(
+					result,
+					exp,
+				) {
+					t.Errorf(
+						"RenderPRBody() missing expected string %q\nGot:\n%s",
+						exp,
+						result,
+					)
 				}
 			}
 
 			for _, abs := range tt.absent {
 				if strings.Contains(result, abs) {
-					t.Errorf("RenderPRBody() should NOT contain %q\nGot:\n%s", abs, result)
+					t.Errorf(
+						"RenderPRBody() should NOT contain %q\nGot:\n%s",
+						abs,
+						result,
+					)
 				}
 			}
 		})
@@ -397,12 +467,22 @@ func TestRenderPRBody_Proposal(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := RenderPRBody(tt.data)
 			if err != nil {
-				t.Fatalf("RenderPRBody() error = %v", err)
+				t.Fatalf(
+					"RenderPRBody() error = %v",
+					err,
+				)
 			}
 
 			for _, exp := range tt.expected {
-				if !strings.Contains(result, exp) {
-					t.Errorf("RenderPRBody() missing expected string %q\nGot:\n%s", exp, result)
+				if !strings.Contains(
+					result,
+					exp,
+				) {
+					t.Errorf(
+						"RenderPRBody() missing expected string %q\nGot:\n%s",
+						exp,
+						result,
+					)
 				}
 			}
 		})
@@ -418,7 +498,10 @@ func TestRenderPRBody_InvalidMode(t *testing.T) {
 		{name: "empty mode", mode: ""},
 		{name: "unknown mode", mode: "invalid"},
 		{name: "typo", mode: "propos"},
-		{name: "case sensitive", mode: "Proposal"},
+		{
+			name: "case sensitive",
+			mode: "Proposal",
+		},
 	}
 
 	for _, tt := range tests {
@@ -435,8 +518,14 @@ func TestRenderPRBody_InvalidMode(t *testing.T) {
 					result,
 				)
 			}
-			if !strings.Contains(err.Error(), "unknown mode") {
-				t.Errorf("RenderPRBody() error should mention 'unknown mode', got: %v", err)
+			if !strings.Contains(
+				err.Error(),
+				"unknown mode",
+			) {
+				t.Errorf(
+					"RenderPRBody() error should mention 'unknown mode', got: %v",
+					err,
+				)
 			}
 		})
 	}
@@ -490,7 +579,10 @@ func TestGetPRTitle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := GetPRTitle(tt.changeID, tt.mode)
+			result := GetPRTitle(
+				tt.changeID,
+				tt.mode,
+			)
 			if result != tt.expected {
 				t.Errorf(
 					"GetPRTitle(%q, %q) = %q, want %q",
@@ -507,15 +599,25 @@ func TestGetPRTitle(t *testing.T) {
 // TestModeConstants verifies the mode constant values.
 func TestModeConstants(t *testing.T) {
 	if ModeArchive != "archive" {
-		t.Errorf("ModeArchive = %q, want %q", ModeArchive, "archive")
+		t.Errorf(
+			"ModeArchive = %q, want %q",
+			ModeArchive,
+			"archive",
+		)
 	}
 	if ModeProposal != "proposal" {
-		t.Errorf("ModeProposal = %q, want %q", ModeProposal, "proposal")
+		t.Errorf(
+			"ModeProposal = %q, want %q",
+			ModeProposal,
+			"proposal",
+		)
 	}
 }
 
 // TestRenderCommitMessage_Remove tests remove mode commit message rendering.
-func TestRenderCommitMessage_Remove(t *testing.T) {
+func TestRenderCommitMessage_Remove(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		data     CommitTemplateData
@@ -548,13 +650,21 @@ func TestRenderCommitMessage_Remove(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := RenderCommitMessage(tt.data)
+			result, err := RenderCommitMessage(
+				tt.data,
+			)
 			if err != nil {
-				t.Fatalf("RenderCommitMessage() error = %v", err)
+				t.Fatalf(
+					"RenderCommitMessage() error = %v",
+					err,
+				)
 			}
 
 			for _, exp := range tt.expected {
-				if !strings.Contains(result, exp) {
+				if !strings.Contains(
+					result,
+					exp,
+				) {
 					t.Errorf(
 						"RenderCommitMessage() missing expected string %q\nGot:\n%s",
 						exp,
@@ -596,12 +706,22 @@ func TestRenderPRBody_Remove(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := RenderPRBody(tt.data)
 			if err != nil {
-				t.Fatalf("RenderPRBody() error = %v", err)
+				t.Fatalf(
+					"RenderPRBody() error = %v",
+					err,
+				)
 			}
 
 			for _, exp := range tt.expected {
-				if !strings.Contains(result, exp) {
-					t.Errorf("RenderPRBody() missing expected string %q\nGot:\n%s", exp, result)
+				if !strings.Contains(
+					result,
+					exp,
+				) {
+					t.Errorf(
+						"RenderPRBody() missing expected string %q\nGot:\n%s",
+						exp,
+						result,
+					)
 				}
 			}
 		})
@@ -610,16 +730,27 @@ func TestRenderPRBody_Remove(t *testing.T) {
 
 // TestGetPRTitle_Remove tests PR title for remove mode.
 func TestGetPRTitle_Remove(t *testing.T) {
-	result := GetPRTitle("obsolete-change", ModeRemove)
+	result := GetPRTitle(
+		"obsolete-change",
+		ModeRemove,
+	)
 	expected := "spectr(remove): obsolete-change"
 	if result != expected {
-		t.Errorf("GetPRTitle() = %q, want %q", result, expected)
+		t.Errorf(
+			"GetPRTitle() = %q, want %q",
+			result,
+			expected,
+		)
 	}
 }
 
 // TestModeRemoveConstant tests the ModeRemove constant value.
 func TestModeRemoveConstant(t *testing.T) {
 	if ModeRemove != "remove" {
-		t.Errorf("ModeRemove = %q, want %q", ModeRemove, "remove")
+		t.Errorf(
+			"ModeRemove = %q, want %q",
+			ModeRemove,
+			"remove",
+		)
 	}
 }

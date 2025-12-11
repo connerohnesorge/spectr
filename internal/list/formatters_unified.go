@@ -39,15 +39,19 @@ func FormatAllText(items ItemList) string {
 		case ItemTypeChange:
 			typeIndicator = "[CHANGE]"
 			if item.Change != nil {
-				details = fmt.Sprintf("%d/%d tasks",
+				details = fmt.Sprintf(
+					"%d/%d tasks",
 					item.Change.TaskStatus.Completed,
-					item.Change.TaskStatus.Total)
+					item.Change.TaskStatus.Total,
+				)
 			}
 		case ItemTypeSpec:
 			typeIndicator = "[SPEC]  "
 			if item.Spec != nil {
-				details = fmt.Sprintf("%d requirements",
-					item.Spec.RequirementCount)
+				details = fmt.Sprintf(
+					"%d requirements",
+					item.Spec.RequirementCount,
+				)
 			}
 		}
 
@@ -112,7 +116,9 @@ func FormatAllLong(items ItemList) string {
 // FormatAllJSON formats all items as a JSON array. Each item includes its type
 // (change or spec) along with all relevant fields. Items are sorted by ID
 // before serialization. Returns an empty JSON array if no items are provided.
-func FormatAllJSON(items ItemList) (string, error) {
+func FormatAllJSON(
+	items ItemList,
+) (string, error) {
 	if len(items) == 0 {
 		return "[]", nil
 	}
@@ -123,9 +129,16 @@ func FormatAllJSON(items ItemList) (string, error) {
 	})
 
 	// Marshal items to JSON with indentation for readability
-	data, err := json.MarshalIndent(items, "", "  ")
+	data, err := json.MarshalIndent(
+		items,
+		"",
+		"  ",
+	)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal JSON: %w", err)
+		return "", fmt.Errorf(
+			"failed to marshal JSON: %w",
+			err,
+		)
 	}
 
 	return string(data), nil

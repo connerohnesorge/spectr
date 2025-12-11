@@ -30,32 +30,63 @@ func setupTestRepo(t *testing.T) string {
 	cmd := exec.Command("git", "init")
 	cmd.Dir = tmpDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("failed to init git repo: %s: %v", output, err)
+		t.Fatalf(
+			"failed to init git repo: %s: %v",
+			output,
+			err,
+		)
 	}
 
 	// Configure git user for commits
-	cmd = exec.Command("git", "config", "user.email", "test@example.com")
+	cmd = exec.Command(
+		"git",
+		"config",
+		"user.email",
+		"test@example.com",
+	)
 	cmd.Dir = tmpDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("failed to configure git email: %s: %v", output, err)
+		t.Fatalf(
+			"failed to configure git email: %s: %v",
+			output,
+			err,
+		)
 	}
 
-	cmd = exec.Command("git", "config", "user.name", "Test User")
+	cmd = exec.Command(
+		"git",
+		"config",
+		"user.name",
+		"Test User",
+	)
 	cmd.Dir = tmpDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("failed to configure git name: %s: %v", output, err)
+		t.Fatalf(
+			"failed to configure git name: %s: %v",
+			output,
+			err,
+		)
 	}
 
 	// Create spectr directory structure
 	spectrDir := filepath.Join(tmpDir, "spectr")
-	changesDir := filepath.Join(spectrDir, "changes")
+	changesDir := filepath.Join(
+		spectrDir,
+		"changes",
+	)
 	specsDir := filepath.Join(spectrDir, "specs")
 
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
-		t.Fatalf("failed to create changes dir: %v", err)
+		t.Fatalf(
+			"failed to create changes dir: %v",
+			err,
+		)
 	}
 	if err := os.MkdirAll(specsDir, testDirPerm); err != nil {
-		t.Fatalf("failed to create specs dir: %v", err)
+		t.Fatalf(
+			"failed to create specs dir: %v",
+			err,
+		)
 	}
 
 	// Create project.md
@@ -65,20 +96,36 @@ func setupTestRepo(t *testing.T) string {
 		[]byte(projectContent),
 		testFilePerm,
 	); err != nil {
-		t.Fatalf("failed to create project.md: %v", err)
+		t.Fatalf(
+			"failed to create project.md: %v",
+			err,
+		)
 	}
 
 	// Create initial commit
 	cmd = exec.Command("git", "add", ".")
 	cmd.Dir = tmpDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("failed to git add: %s: %v", output, err)
+		t.Fatalf(
+			"failed to git add: %s: %v",
+			output,
+			err,
+		)
 	}
 
-	cmd = exec.Command("git", "commit", "-m", "Initial commit")
+	cmd = exec.Command(
+		"git",
+		"commit",
+		"-m",
+		"Initial commit",
+	)
 	cmd.Dir = tmpDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("failed to git commit: %s: %v", output, err)
+		t.Fatalf(
+			"failed to git commit: %s: %v",
+			output,
+			err,
+		)
 	}
 
 	return tmpDir
@@ -86,30 +133,57 @@ func setupTestRepo(t *testing.T) string {
 
 // setupTestRepoWithOrigin creates a test repo with a fake origin remote.
 // This allows testing of validation logic that runs after the origin check.
-func setupTestRepoWithOrigin(t *testing.T) string {
+func setupTestRepoWithOrigin(
+	t *testing.T,
+) string {
 	t.Helper()
 
 	repoPath := setupTestRepo(t)
 
 	// Add a fake origin remote (invalid URL is fine for validation tests)
-	cmd := exec.Command("git", "remote", "add", "origin", "https://github.com/test/test.git")
+	cmd := exec.Command(
+		"git",
+		"remote",
+		"add",
+		"origin",
+		"https://github.com/test/test.git",
+	)
 	cmd.Dir = repoPath
 	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("failed to add origin remote: %s: %v", output, err)
+		t.Fatalf(
+			"failed to add origin remote: %s: %v",
+			output,
+			err,
+		)
 	}
 
 	return repoPath
 }
 
 // createTestChange creates a test change proposal with minimal content.
-func createTestChange(t *testing.T, repoPath, changeID string) {
+func createTestChange(
+	t *testing.T,
+	repoPath, changeID string,
+) {
 	t.Helper()
 
-	changeDir := filepath.Join(repoPath, "spectr", "changes", changeID)
-	changeSpecsDir := filepath.Join(changeDir, "specs", "test-feature")
+	changeDir := filepath.Join(
+		repoPath,
+		"spectr",
+		"changes",
+		changeID,
+	)
+	changeSpecsDir := filepath.Join(
+		changeDir,
+		"specs",
+		"test-feature",
+	)
 
 	if err := os.MkdirAll(changeSpecsDir, testDirPerm); err != nil {
-		t.Fatalf("failed to create change specs dir: %v", err)
+		t.Fatalf(
+			"failed to create change specs dir: %v",
+			err,
+		)
 	}
 
 	// Create proposal.md
@@ -132,7 +206,10 @@ This is a test change for integration testing.
 		[]byte(proposalContent),
 		testFilePerm,
 	); err != nil {
-		t.Fatalf("failed to create proposal.md: %v", err)
+		t.Fatalf(
+			"failed to create proposal.md: %v",
+			err,
+		)
 	}
 
 	// Create tasks.md
@@ -146,7 +223,10 @@ This is a test change for integration testing.
 		[]byte(tasksContent),
 		testFilePerm,
 	); err != nil {
-		t.Fatalf("failed to create tasks.md: %v", err)
+		t.Fatalf(
+			"failed to create tasks.md: %v",
+			err,
+		)
 	}
 
 	// Create delta spec
@@ -164,14 +244,20 @@ The system SHALL provide test functionality.
 		[]byte(deltaSpec),
 		testFilePerm,
 	); err != nil {
-		t.Fatalf("failed to create spec.md: %v", err)
+		t.Fatalf(
+			"failed to create spec.md: %v",
+			err,
+		)
 	}
 }
 
 // cleanupTestRepo removes the test repository.
 // This is typically handled by t.TempDir() cleanup, but provided
 // for explicit cleanup needs.
-func cleanupTestRepo(t *testing.T, repoPath string) {
+func cleanupTestRepo(
+	t *testing.T,
+	repoPath string,
+) {
 	t.Helper()
 
 	if repoPath != "" {
@@ -181,9 +267,13 @@ func cleanupTestRepo(t *testing.T, repoPath string) {
 }
 
 // TestIntegration_ExecutePR_Archive_DryRun tests the archive dry run functionality.
-func TestIntegration_ExecutePR_Archive_DryRun(t *testing.T) {
+func TestIntegration_ExecutePR_Archive_DryRun(
+	t *testing.T,
+) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(
+			"skipping integration test in short mode",
+		)
 	}
 
 	// Set up test repo
@@ -197,12 +287,18 @@ func TestIntegration_ExecutePR_Archive_DryRun(t *testing.T) {
 	// Save original working directory
 	originalWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 
 	// Change to test repo
 	if err := os.Chdir(repoPath); err != nil {
-		t.Fatalf("failed to change to test repo: %v", err)
+		t.Fatalf(
+			"failed to change to test repo: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(originalWd) }()
 
@@ -222,7 +318,9 @@ func TestIntegration_ExecutePR_Archive_DryRun(t *testing.T) {
 	if err == nil {
 		// If it somehow succeeds (shouldn't happen), verify no changes
 		if result != nil && result.PRURL != "" {
-			t.Error("DryRun should not create actual PR")
+			t.Error(
+				"DryRun should not create actual PR",
+			)
 		}
 	} else {
 		// Verify it's the expected error (no origin remote)
@@ -233,26 +331,45 @@ func TestIntegration_ExecutePR_Archive_DryRun(t *testing.T) {
 	}
 
 	// Verify no worktree was created (check temp dirs)
-	tempDirs, _ := filepath.Glob(filepath.Join(os.TempDir(), "spectr-pr-*"))
+	tempDirs, _ := filepath.Glob(
+		filepath.Join(
+			os.TempDir(),
+			"spectr-pr-*",
+		),
+	)
 	for _, dir := range tempDirs {
 		// Clean up any stray worktrees
 		_ = os.RemoveAll(dir)
 	}
 
 	// Verify original repo is unchanged
-	cmd := exec.Command("git", "status", "--porcelain")
+	cmd := exec.Command(
+		"git",
+		"status",
+		"--porcelain",
+	)
 	cmd.Dir = repoPath
 	output, _ := cmd.CombinedOutput()
 	// Should have untracked change directory
-	if !strings.Contains(string(output), changeID) {
-		t.Logf("Expected change directory to remain untracked, status: %s", output)
+	if !strings.Contains(
+		string(output),
+		changeID,
+	) {
+		t.Logf(
+			"Expected change directory to remain untracked, status: %s",
+			output,
+		)
 	}
 }
 
 // TestIntegration_ExecutePR_Proposal_DryRun tests the proposal dry run functionality.
-func TestIntegration_ExecutePR_Proposal_DryRun(t *testing.T) {
+func TestIntegration_ExecutePR_Proposal_DryRun(
+	t *testing.T,
+) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(
+			"skipping integration test in short mode",
+		)
 	}
 
 	// Set up test repo
@@ -266,12 +383,18 @@ func TestIntegration_ExecutePR_Proposal_DryRun(t *testing.T) {
 	// Save original working directory
 	originalWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 
 	// Change to test repo
 	if err := os.Chdir(repoPath); err != nil {
-		t.Fatalf("failed to change to test repo: %v", err)
+		t.Fatalf(
+			"failed to change to test repo: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(originalWd) }()
 
@@ -288,7 +411,9 @@ func TestIntegration_ExecutePR_Proposal_DryRun(t *testing.T) {
 	// We expect an error because there's no origin remote
 	if err == nil {
 		if result != nil && result.PRURL != "" {
-			t.Error("DryRun should not create actual PR")
+			t.Error(
+				"DryRun should not create actual PR",
+			)
 		}
 	} else {
 		// Verify it's the expected error
@@ -299,16 +424,29 @@ func TestIntegration_ExecutePR_Proposal_DryRun(t *testing.T) {
 	}
 
 	// Verify change directory still exists
-	changeDir := filepath.Join(repoPath, "spectr", "changes", changeID)
-	if _, err := os.Stat(changeDir); os.IsNotExist(err) {
-		t.Error("Change directory should still exist after dry run")
+	changeDir := filepath.Join(
+		repoPath,
+		"spectr",
+		"changes",
+		changeID,
+	)
+	if _, err := os.Stat(changeDir); os.IsNotExist(
+		err,
+	) {
+		t.Error(
+			"Change directory should still exist after dry run",
+		)
 	}
 }
 
 // TestIntegration_ExecutePR_InvalidChangeID tests error handling for non-existent change.
-func TestIntegration_ExecutePR_InvalidChangeID(t *testing.T) {
+func TestIntegration_ExecutePR_InvalidChangeID(
+	t *testing.T,
+) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(
+			"skipping integration test in short mode",
+		)
 	}
 
 	// Set up test repo with origin (so we get past origin check)
@@ -318,12 +456,18 @@ func TestIntegration_ExecutePR_InvalidChangeID(t *testing.T) {
 	// Save original working directory
 	originalWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 
 	// Change to test repo
 	if err := os.Chdir(repoPath); err != nil {
-		t.Fatalf("failed to change to test repo: %v", err)
+		t.Fatalf(
+			"failed to change to test repo: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(originalWd) }()
 
@@ -339,7 +483,9 @@ func TestIntegration_ExecutePR_InvalidChangeID(t *testing.T) {
 
 	// We expect an error about the change not being found
 	if err == nil {
-		t.Error("Expected error for non-existent change ID")
+		t.Error(
+			"Expected error for non-existent change ID",
+		)
 	} else if !strings.Contains(err.Error(), "not found") &&
 		!strings.Contains(err.Error(), "nonexistent") {
 		t.Errorf("Expected 'not found' error, got: %v", err)
@@ -347,9 +493,13 @@ func TestIntegration_ExecutePR_InvalidChangeID(t *testing.T) {
 }
 
 // TestIntegration_ExecutePR_NoOriginRemote tests error when no origin remote exists.
-func TestIntegration_ExecutePR_NoOriginRemote(t *testing.T) {
+func TestIntegration_ExecutePR_NoOriginRemote(
+	t *testing.T,
+) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(
+			"skipping integration test in short mode",
+		)
 	}
 
 	// Set up test repo (no origin remote by default)
@@ -363,12 +513,18 @@ func TestIntegration_ExecutePR_NoOriginRemote(t *testing.T) {
 	// Save original working directory
 	originalWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 
 	// Change to test repo
 	if err := os.Chdir(repoPath); err != nil {
-		t.Fatalf("failed to change to test repo: %v", err)
+		t.Fatalf(
+			"failed to change to test repo: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(originalWd) }()
 
@@ -384,7 +540,9 @@ func TestIntegration_ExecutePR_NoOriginRemote(t *testing.T) {
 
 	// We expect an error about no origin remote
 	if err == nil {
-		t.Error("Expected error when no origin remote exists")
+		t.Error(
+			"Expected error when no origin remote exists",
+		)
 	} else if !strings.Contains(err.Error(), "origin") &&
 		!strings.Contains(err.Error(), "remote") {
 		t.Errorf("Expected origin-related error, got: %v", err)
@@ -393,9 +551,13 @@ func TestIntegration_ExecutePR_NoOriginRemote(t *testing.T) {
 
 // TestIntegration_WorktreeIsolation verifies that user's working directory
 // is not modified during PR operations.
-func TestIntegration_WorktreeIsolation(t *testing.T) {
+func TestIntegration_WorktreeIsolation(
+	t *testing.T,
+) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(
+			"skipping integration test in short mode",
+		)
 	}
 
 	// Set up test repo
@@ -407,28 +569,47 @@ func TestIntegration_WorktreeIsolation(t *testing.T) {
 	createTestChange(t, repoPath, changeID)
 
 	// Create an uncommitted file to track
-	uncommittedFile := filepath.Join(repoPath, "uncommitted.txt")
+	uncommittedFile := filepath.Join(
+		repoPath,
+		"uncommitted.txt",
+	)
 	uncommittedContent := "This file is uncommitted and should not be touched"
 	if err := os.WriteFile(uncommittedFile, []byte(uncommittedContent), testFilePerm); err != nil {
-		t.Fatalf("failed to create uncommitted file: %v", err)
+		t.Fatalf(
+			"failed to create uncommitted file: %v",
+			err,
+		)
 	}
 
 	// Create a modified tracked file
-	projectFile := filepath.Join(repoPath, "spectr", "project.md")
+	projectFile := filepath.Join(
+		repoPath,
+		"spectr",
+		"project.md",
+	)
 	modifiedContent := "# Modified Project\n\nThis has local modifications.\n"
 	if err := os.WriteFile(projectFile, []byte(modifiedContent), testFilePerm); err != nil {
-		t.Fatalf("failed to modify project.md: %v", err)
+		t.Fatalf(
+			"failed to modify project.md: %v",
+			err,
+		)
 	}
 
 	// Save original working directory
 	originalWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 
 	// Change to test repo
 	if err := os.Chdir(repoPath); err != nil {
-		t.Fatalf("failed to change to test repo: %v", err)
+		t.Fatalf(
+			"failed to change to test repo: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(originalWd) }()
 
@@ -446,7 +627,10 @@ func TestIntegration_WorktreeIsolation(t *testing.T) {
 	// Verify uncommitted file still exists with same content
 	content, err := os.ReadFile(uncommittedFile)
 	if err != nil {
-		t.Errorf("Uncommitted file should still exist: %v", err)
+		t.Errorf(
+			"Uncommitted file should still exist: %v",
+			err,
+		)
 	} else if string(content) != uncommittedContent {
 		t.Errorf("Uncommitted file content changed: got %q, want %q",
 			string(content), uncommittedContent)
@@ -455,14 +639,21 @@ func TestIntegration_WorktreeIsolation(t *testing.T) {
 	// Verify modified project.md still has local modifications
 	content, err = os.ReadFile(projectFile)
 	if err != nil {
-		t.Errorf("project.md should still exist: %v", err)
+		t.Errorf(
+			"project.md should still exist: %v",
+			err,
+		)
 	} else if string(content) != modifiedContent {
 		t.Errorf("project.md modifications were lost: got %q, want %q",
 			string(content), modifiedContent)
 	}
 
 	// Verify git status shows expected state
-	cmd := exec.Command("git", "status", "--porcelain")
+	cmd := exec.Command(
+		"git",
+		"status",
+		"--porcelain",
+	)
 	cmd.Dir = repoPath
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -471,19 +662,33 @@ func TestIntegration_WorktreeIsolation(t *testing.T) {
 
 	statusOutput := string(output)
 	// Should show uncommitted.txt as untracked
-	if !strings.Contains(statusOutput, "uncommitted.txt") {
-		t.Error("uncommitted.txt should appear in git status as untracked")
+	if !strings.Contains(
+		statusOutput,
+		"uncommitted.txt",
+	) {
+		t.Error(
+			"uncommitted.txt should appear in git status as untracked",
+		)
 	}
 	// Should show project.md as modified
-	if !strings.Contains(statusOutput, "project.md") {
-		t.Error("project.md should appear in git status as modified")
+	if !strings.Contains(
+		statusOutput,
+		"project.md",
+	) {
+		t.Error(
+			"project.md should appear in git status as modified",
+		)
 	}
 }
 
 // TestIntegration_ExecutePR_InvalidMode tests error handling for invalid mode.
-func TestIntegration_ExecutePR_InvalidMode(t *testing.T) {
+func TestIntegration_ExecutePR_InvalidMode(
+	t *testing.T,
+) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(
+			"skipping integration test in short mode",
+		)
 	}
 
 	// Set up test repo with origin (so we get past origin check)
@@ -497,12 +702,18 @@ func TestIntegration_ExecutePR_InvalidMode(t *testing.T) {
 	// Save original working directory
 	originalWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 
 	// Change to test repo
 	if err := os.Chdir(repoPath); err != nil {
-		t.Fatalf("failed to change to test repo: %v", err)
+		t.Fatalf(
+			"failed to change to test repo: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(originalWd) }()
 
@@ -526,9 +737,13 @@ func TestIntegration_ExecutePR_InvalidMode(t *testing.T) {
 }
 
 // TestIntegration_ExecutePR_Remove_DryRun tests the remove dry run functionality.
-func TestIntegration_ExecutePR_Remove_DryRun(t *testing.T) {
+func TestIntegration_ExecutePR_Remove_DryRun(
+	t *testing.T,
+) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip(
+			"skipping integration test in short mode",
+		)
 	}
 
 	// Set up test repo
@@ -542,12 +757,18 @@ func TestIntegration_ExecutePR_Remove_DryRun(t *testing.T) {
 	// Save original working directory
 	originalWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 
 	// Change to test repo
 	if err := os.Chdir(repoPath); err != nil {
-		t.Fatalf("failed to change to test repo: %v", err)
+		t.Fatalf(
+			"failed to change to test repo: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(originalWd) }()
 
@@ -564,7 +785,9 @@ func TestIntegration_ExecutePR_Remove_DryRun(t *testing.T) {
 	// We expect an error because there's no origin remote
 	if err == nil {
 		if result != nil && result.PRURL != "" {
-			t.Error("DryRun should not create actual PR")
+			t.Error(
+				"DryRun should not create actual PR",
+			)
 		}
 	} else {
 		// Verify it's the expected error (no origin remote)
@@ -575,8 +798,17 @@ func TestIntegration_ExecutePR_Remove_DryRun(t *testing.T) {
 	}
 
 	// Verify change directory still exists (dry run should not delete it)
-	changeDir := filepath.Join(repoPath, "spectr", "changes", changeID)
-	if _, err := os.Stat(changeDir); os.IsNotExist(err) {
-		t.Error("Change directory should still exist after dry run")
+	changeDir := filepath.Join(
+		repoPath,
+		"spectr",
+		"changes",
+		changeID,
+	)
+	if _, err := os.Stat(changeDir); os.IsNotExist(
+		err,
+	) {
+		t.Error(
+			"Change directory should still exist after dry run",
+		)
 	}
 }

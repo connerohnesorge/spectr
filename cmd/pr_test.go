@@ -20,80 +20,130 @@ func TestPRArchiveCmd_Struct(t *testing.T) {
 	// Check ChangeID field exists and is string
 	changeIDField := val.FieldByName("ChangeID")
 	if !changeIDField.IsValid() {
-		t.Error("PRArchiveCmd does not have ChangeID field")
+		t.Error(
+			"PRArchiveCmd does not have ChangeID field",
+		)
 	}
 	if changeIDField.Kind() != reflect.String {
-		t.Errorf("ChangeID should be string, got %v", changeIDField.Kind())
+		t.Errorf(
+			"ChangeID should be string, got %v",
+			changeIDField.Kind(),
+		)
 	}
 
 	// Check Base field exists
 	baseField := val.FieldByName("Base")
 	if !baseField.IsValid() {
-		t.Error("PRArchiveCmd does not have Base field")
+		t.Error(
+			"PRArchiveCmd does not have Base field",
+		)
 	}
 	if baseField.Kind() != reflect.String {
-		t.Errorf("Base should be string, got %v", baseField.Kind())
+		t.Errorf(
+			"Base should be string, got %v",
+			baseField.Kind(),
+		)
 	}
 
 	// Check Draft field exists
 	draftField := val.FieldByName("Draft")
 	if !draftField.IsValid() {
-		t.Error("PRArchiveCmd does not have Draft field")
+		t.Error(
+			"PRArchiveCmd does not have Draft field",
+		)
 	}
 	if draftField.Kind() != reflect.Bool {
-		t.Errorf("Draft should be bool, got %v", draftField.Kind())
+		t.Errorf(
+			"Draft should be bool, got %v",
+			draftField.Kind(),
+		)
 	}
 
 	// Check Force field exists
 	forceField := val.FieldByName("Force")
 	if !forceField.IsValid() {
-		t.Error("PRArchiveCmd does not have Force field")
+		t.Error(
+			"PRArchiveCmd does not have Force field",
+		)
 	}
 	if forceField.Kind() != reflect.Bool {
-		t.Errorf("Force should be bool, got %v", forceField.Kind())
+		t.Errorf(
+			"Force should be bool, got %v",
+			forceField.Kind(),
+		)
 	}
 
 	// Check DryRun field exists
 	dryRunField := val.FieldByName("DryRun")
 	if !dryRunField.IsValid() {
-		t.Error("PRArchiveCmd does not have DryRun field")
+		t.Error(
+			"PRArchiveCmd does not have DryRun field",
+		)
 	}
 	if dryRunField.Kind() != reflect.Bool {
-		t.Errorf("DryRun should be bool, got %v", dryRunField.Kind())
+		t.Errorf(
+			"DryRun should be bool, got %v",
+			dryRunField.Kind(),
+		)
 	}
 
 	// Check SkipSpecs field exists (archive-specific)
 	skipSpecsField := val.FieldByName("SkipSpecs")
 	if !skipSpecsField.IsValid() {
-		t.Error("PRArchiveCmd does not have SkipSpecs field")
+		t.Error(
+			"PRArchiveCmd does not have SkipSpecs field",
+		)
 	}
 	if skipSpecsField.Kind() != reflect.Bool {
-		t.Errorf("SkipSpecs should be bool, got %v", skipSpecsField.Kind())
+		t.Errorf(
+			"SkipSpecs should be bool, got %v",
+			skipSpecsField.Kind(),
+		)
 	}
 }
 
 // TestPRArchiveCmd_DefaultValues tests that default values are correct.
-func TestPRArchiveCmd_DefaultValues(t *testing.T) {
+func TestPRArchiveCmd_DefaultValues(
+	t *testing.T,
+) {
 	cmd := &PRArchiveCmd{}
 
 	// All fields should have zero values by default
 	if cmd.ChangeID != "" {
-		t.Errorf("ChangeID should default to empty string, got %q", cmd.ChangeID)
+		t.Errorf(
+			"ChangeID should default to empty string, got %q",
+			cmd.ChangeID,
+		)
 	}
 	if cmd.Base != "" {
-		t.Errorf("Base should default to empty string, got %q", cmd.Base)
+		t.Errorf(
+			"Base should default to empty string, got %q",
+			cmd.Base,
+		)
 	}
 	if cmd.Draft {
-		t.Errorf("Draft should default to false, got %v", cmd.Draft)
+		t.Errorf(
+			"Draft should default to false, got %v",
+			cmd.Draft,
+		)
 	}
 	if cmd.Force {
-		t.Errorf("Force should default to false, got %v", cmd.Force)
+		t.Errorf(
+			"Force should default to false, got %v",
+			cmd.Force,
+		)
 	}
 	if cmd.DryRun {
-		t.Errorf("DryRun should default to false, got %v", cmd.DryRun)
+		t.Errorf(
+			"DryRun should default to false, got %v",
+			cmd.DryRun,
+		)
 	}
 	if cmd.SkipSpecs {
-		t.Errorf("SkipSpecs should default to false, got %v", cmd.SkipSpecs)
+		t.Errorf(
+			"SkipSpecs should default to false, got %v",
+			cmd.SkipSpecs,
+		)
 	}
 }
 
@@ -109,10 +159,18 @@ func TestPRArchiveCmd_SetFields(t *testing.T) {
 	}
 
 	if cmd.ChangeID != "test-change" {
-		t.Errorf("ChangeID = %q, want %q", cmd.ChangeID, "test-change")
+		t.Errorf(
+			"ChangeID = %q, want %q",
+			cmd.ChangeID,
+			"test-change",
+		)
 	}
 	if cmd.Base != "main" {
-		t.Errorf("Base = %q, want %q", cmd.Base, "main")
+		t.Errorf(
+			"Base = %q, want %q",
+			cmd.Base,
+			"main",
+		)
 	}
 	if !cmd.Draft {
 		t.Error("Draft should be true")
@@ -136,74 +194,118 @@ func TestPRProposalCmd_Struct(t *testing.T) {
 	// Check ChangeID field exists
 	changeIDField := val.FieldByName("ChangeID")
 	if !changeIDField.IsValid() {
-		t.Error("PRProposalCmd does not have ChangeID field")
+		t.Error(
+			"PRProposalCmd does not have ChangeID field",
+		)
 	}
 	if changeIDField.Kind() != reflect.String {
-		t.Errorf("ChangeID should be string, got %v", changeIDField.Kind())
+		t.Errorf(
+			"ChangeID should be string, got %v",
+			changeIDField.Kind(),
+		)
 	}
 
 	// Check Base field exists
 	baseField := val.FieldByName("Base")
 	if !baseField.IsValid() {
-		t.Error("PRProposalCmd does not have Base field")
+		t.Error(
+			"PRProposalCmd does not have Base field",
+		)
 	}
 	if baseField.Kind() != reflect.String {
-		t.Errorf("Base should be string, got %v", baseField.Kind())
+		t.Errorf(
+			"Base should be string, got %v",
+			baseField.Kind(),
+		)
 	}
 
 	// Check Draft field exists
 	draftField := val.FieldByName("Draft")
 	if !draftField.IsValid() {
-		t.Error("PRProposalCmd does not have Draft field")
+		t.Error(
+			"PRProposalCmd does not have Draft field",
+		)
 	}
 	if draftField.Kind() != reflect.Bool {
-		t.Errorf("Draft should be bool, got %v", draftField.Kind())
+		t.Errorf(
+			"Draft should be bool, got %v",
+			draftField.Kind(),
+		)
 	}
 
 	// Check Force field exists
 	forceField := val.FieldByName("Force")
 	if !forceField.IsValid() {
-		t.Error("PRProposalCmd does not have Force field")
+		t.Error(
+			"PRProposalCmd does not have Force field",
+		)
 	}
 	if forceField.Kind() != reflect.Bool {
-		t.Errorf("Force should be bool, got %v", forceField.Kind())
+		t.Errorf(
+			"Force should be bool, got %v",
+			forceField.Kind(),
+		)
 	}
 
 	// Check DryRun field exists
 	dryRunField := val.FieldByName("DryRun")
 	if !dryRunField.IsValid() {
-		t.Error("PRProposalCmd does not have DryRun field")
+		t.Error(
+			"PRProposalCmd does not have DryRun field",
+		)
 	}
 	if dryRunField.Kind() != reflect.Bool {
-		t.Errorf("DryRun should be bool, got %v", dryRunField.Kind())
+		t.Errorf(
+			"DryRun should be bool, got %v",
+			dryRunField.Kind(),
+		)
 	}
 
 	// Verify SkipSpecs is NOT in PRProposalCmd (it's archive-specific)
 	skipSpecsField := val.FieldByName("SkipSpecs")
 	if skipSpecsField.IsValid() {
-		t.Error("PRProposalCmd should not have SkipSpecs field (archive-specific)")
+		t.Error(
+			"PRProposalCmd should not have SkipSpecs field (archive-specific)",
+		)
 	}
 }
 
 // TestPRProposalCmd_DefaultValues tests that default values are correct.
-func TestPRProposalCmd_DefaultValues(t *testing.T) {
+func TestPRProposalCmd_DefaultValues(
+	t *testing.T,
+) {
 	cmd := &PRProposalCmd{}
 
 	// All fields should have zero values by default
 	if cmd.ChangeID != "" {
-		t.Errorf("ChangeID should default to empty string, got %q", cmd.ChangeID)
+		t.Errorf(
+			"ChangeID should default to empty string, got %q",
+			cmd.ChangeID,
+		)
 	}
 	if cmd.Base != "" {
-		t.Errorf("Base should default to empty string, got %q", cmd.Base)
+		t.Errorf(
+			"Base should default to empty string, got %q",
+			cmd.Base,
+		)
 	}
 	if cmd.Draft {
-		t.Errorf("Draft should default to false, got %v", cmd.Draft)
+		t.Errorf(
+			"Draft should default to false, got %v",
+			cmd.Draft,
+		)
 	}
 	if cmd.Force {
-		t.Errorf("Force should default to false, got %v", cmd.Force)
+		t.Errorf(
+			"Force should default to false, got %v",
+			cmd.Force,
+		)
 	}
 	if cmd.DryRun {
-		t.Errorf("DryRun should default to false, got %v", cmd.DryRun)
+		t.Errorf(
+			"DryRun should default to false, got %v",
+			cmd.DryRun,
+		)
 	}
 }
 
@@ -218,10 +320,18 @@ func TestPRProposalCmd_SetFields(t *testing.T) {
 	}
 
 	if cmd.ChangeID != "new-proposal" {
-		t.Errorf("ChangeID = %q, want %q", cmd.ChangeID, "new-proposal")
+		t.Errorf(
+			"ChangeID = %q, want %q",
+			cmd.ChangeID,
+			"new-proposal",
+		)
 	}
 	if cmd.Base != "develop" {
-		t.Errorf("Base = %q, want %q", cmd.Base, "develop")
+		t.Errorf(
+			"Base = %q, want %q",
+			cmd.Base,
+			"develop",
+		)
 	}
 	if !cmd.Draft {
 		t.Error("Draft should be true")
@@ -242,39 +352,63 @@ func TestPRCmd_Struct(t *testing.T) {
 	// Check Archive subcommand exists
 	archiveField := val.FieldByName("Archive")
 	if !archiveField.IsValid() {
-		t.Error("PRCmd does not have Archive field")
+		t.Error(
+			"PRCmd does not have Archive field",
+		)
 	}
-	if archiveField.Type().Name() != "PRArchiveCmd" {
-		t.Errorf("Archive field type = %s, want PRArchiveCmd", archiveField.Type().Name())
+	if archiveField.Type().
+		Name() !=
+		"PRArchiveCmd" {
+		t.Errorf(
+			"Archive field type = %s, want PRArchiveCmd",
+			archiveField.Type().Name(),
+		)
 	}
 
 	// Check Proposal subcommand exists
 	proposalField := val.FieldByName("Proposal")
 	if !proposalField.IsValid() {
-		t.Error("PRCmd does not have Proposal field")
+		t.Error(
+			"PRCmd does not have Proposal field",
+		)
 	}
-	if proposalField.Type().Name() != "PRProposalCmd" {
-		t.Errorf("Proposal field type = %s, want PRProposalCmd", proposalField.Type().Name())
+	if proposalField.Type().
+		Name() !=
+		"PRProposalCmd" {
+		t.Errorf(
+			"Proposal field type = %s, want PRProposalCmd",
+			proposalField.Type().Name(),
+		)
 	}
 }
 
 // TestPRCmd_ArchiveHasAlias verifies that the archive subcommand has the "a" alias.
 func TestPRCmd_ArchiveHasAlias(t *testing.T) {
 	prCmdType := reflect.TypeOf(PRCmd{})
-	archiveField, found := prCmdType.FieldByName("Archive")
+	archiveField, found := prCmdType.FieldByName(
+		"Archive",
+	)
 	if !found {
-		t.Fatal("PRCmd does not have Archive field")
+		t.Fatal(
+			"PRCmd does not have Archive field",
+		)
 	}
 
 	// Get the aliases tag
 	tag := archiveField.Tag
 	aliases := tag.Get("aliases")
 	if aliases == "" {
-		t.Fatal("Archive field does not have aliases tag")
+		t.Fatal(
+			"Archive field does not have aliases tag",
+		)
 	}
 
 	if aliases != "a" {
-		t.Errorf("Archive aliases = %q, want %q", aliases, "a")
+		t.Errorf(
+			"Archive aliases = %q, want %q",
+			aliases,
+			"a",
+		)
 	}
 }
 
@@ -286,39 +420,59 @@ func TestPRArchiveCmd_HasRunMethod(t *testing.T) {
 	// Check that Run method exists
 	runMethod := val.MethodByName("Run")
 	if !runMethod.IsValid() {
-		t.Fatal("PRArchiveCmd does not have Run method")
+		t.Fatal(
+			"PRArchiveCmd does not have Run method",
+		)
 	}
 
 	// Check that Run returns error
 	runType := runMethod.Type()
 	if runType.NumOut() != 1 {
-		t.Errorf("Run method should return 1 value, got %d", runType.NumOut())
+		t.Errorf(
+			"Run method should return 1 value, got %d",
+			runType.NumOut(),
+		)
 	}
 
-	if runType.NumOut() > 0 && runType.Out(0).Name() != "error" {
-		t.Errorf("Run method should return error, got %s", runType.Out(0).Name())
+	if runType.NumOut() > 0 &&
+		runType.Out(0).Name() != "error" {
+		t.Errorf(
+			"Run method should return error, got %s",
+			runType.Out(0).Name(),
+		)
 	}
 }
 
 // TestPRProposalCmd_HasRunMethod verifies the Run method exists.
-func TestPRProposalCmd_HasRunMethod(t *testing.T) {
+func TestPRProposalCmd_HasRunMethod(
+	t *testing.T,
+) {
 	cmd := &PRProposalCmd{}
 	val := reflect.ValueOf(cmd)
 
 	// Check that Run method exists
 	runMethod := val.MethodByName("Run")
 	if !runMethod.IsValid() {
-		t.Fatal("PRProposalCmd does not have Run method")
+		t.Fatal(
+			"PRProposalCmd does not have Run method",
+		)
 	}
 
 	// Check that Run returns error
 	runType := runMethod.Type()
 	if runType.NumOut() != 1 {
-		t.Errorf("Run method should return 1 value, got %d", runType.NumOut())
+		t.Errorf(
+			"Run method should return 1 value, got %d",
+			runType.NumOut(),
+		)
 	}
 
-	if runType.NumOut() > 0 && runType.Out(0).Name() != "error" {
-		t.Errorf("Run method should return error, got %s", runType.Out(0).Name())
+	if runType.NumOut() > 0 &&
+		runType.Out(0).Name() != "error" {
+		t.Errorf(
+			"Run method should return error, got %s",
+			runType.Out(0).Name(),
+		)
 	}
 }
 
@@ -338,7 +492,10 @@ func TestPrintPRResult_Basic(t *testing.T) {
 
 		// Check for panic recovery
 		if rec := recover(); rec != nil {
-			t.Errorf("printPRResult panicked: %v", rec)
+			t.Errorf(
+				"printPRResult panicked: %v",
+				rec,
+			)
 		}
 	}()
 
@@ -372,23 +529,45 @@ func TestPrintPRResult_WithPRURL(t *testing.T) {
 	output := buf.String()
 
 	// Verify output contains branch name
-	if !bytes.Contains([]byte(output), []byte("spectr/add-feature")) {
-		t.Errorf("Output should contain branch name, got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("spectr/add-feature"),
+	) {
+		t.Errorf(
+			"Output should contain branch name, got: %s",
+			output,
+		)
 	}
 
 	// Verify output contains PR URL
-	if !bytes.Contains([]byte(output), []byte("https://github.com/owner/repo/pull/123")) {
-		t.Errorf("Output should contain PR URL, got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte(
+			"https://github.com/owner/repo/pull/123",
+		),
+	) {
+		t.Errorf(
+			"Output should contain PR URL, got: %s",
+			output,
+		)
 	}
 
 	// Verify output contains "PR created"
-	if !bytes.Contains([]byte(output), []byte("PR created")) {
-		t.Errorf("Output should contain 'PR created', got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("PR created"),
+	) {
+		t.Errorf(
+			"Output should contain 'PR created', got: %s",
+			output,
+		)
 	}
 }
 
 // TestPrintPRResult_WithManualURL tests output when ManualURL is set (no PRURL).
-func TestPrintPRResult_WithManualURL(t *testing.T) {
+func TestPrintPRResult_WithManualURL(
+	t *testing.T,
+) {
 	// Capture stdout
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -409,26 +588,45 @@ func TestPrintPRResult_WithManualURL(t *testing.T) {
 	output := buf.String()
 
 	// Verify output contains branch name
-	if !bytes.Contains([]byte(output), []byte("spectr/add-feature")) {
-		t.Errorf("Output should contain branch name, got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("spectr/add-feature"),
+	) {
+		t.Errorf(
+			"Output should contain branch name, got: %s",
+			output,
+		)
 	}
 
 	// Verify output contains manual URL
 	if !bytes.Contains(
 		[]byte(output),
-		[]byte("https://bitbucket.org/owner/repo/pull-requests/new"),
+		[]byte(
+			"https://bitbucket.org/owner/repo/pull-requests/new",
+		),
 	) {
-		t.Errorf("Output should contain manual URL, got: %s", output)
+		t.Errorf(
+			"Output should contain manual URL, got: %s",
+			output,
+		)
 	}
 
 	// Verify output contains "manually"
-	if !bytes.Contains([]byte(output), []byte("manually")) {
-		t.Errorf("Output should contain 'manually', got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("manually"),
+	) {
+		t.Errorf(
+			"Output should contain 'manually', got: %s",
+			output,
+		)
 	}
 }
 
 // TestPrintPRResult_WithArchivePath tests output when ArchivePath is set.
-func TestPrintPRResult_WithArchivePath(t *testing.T) {
+func TestPrintPRResult_WithArchivePath(
+	t *testing.T,
+) {
 	// Capture stdout
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()
@@ -450,13 +648,25 @@ func TestPrintPRResult_WithArchivePath(t *testing.T) {
 	output := buf.String()
 
 	// Verify output contains archive path
-	if !bytes.Contains([]byte(output), []byte("spectr/accepted/add-feature")) {
-		t.Errorf("Output should contain archive path, got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("spectr/accepted/add-feature"),
+	) {
+		t.Errorf(
+			"Output should contain archive path, got: %s",
+			output,
+		)
 	}
 
 	// Verify output contains "Archived to"
-	if !bytes.Contains([]byte(output), []byte("Archived to")) {
-		t.Errorf("Output should contain 'Archived to', got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("Archived to"),
+	) {
+		t.Errorf(
+			"Output should contain 'Archived to', got: %s",
+			output,
+		)
 	}
 }
 
@@ -488,19 +698,43 @@ func TestPrintPRResult_WithCounts(t *testing.T) {
 	output := buf.String()
 
 	// Verify output contains spec operations line
-	if !bytes.Contains([]byte(output), []byte("Spec operations")) {
-		t.Errorf("Output should contain 'Spec operations', got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("Spec operations"),
+	) {
+		t.Errorf(
+			"Output should contain 'Spec operations', got: %s",
+			output,
+		)
 	}
 
 	// Verify counts are displayed (+3 ~2 -1)
-	if !bytes.Contains([]byte(output), []byte("+3")) {
-		t.Errorf("Output should contain '+3' for added, got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("+3"),
+	) {
+		t.Errorf(
+			"Output should contain '+3' for added, got: %s",
+			output,
+		)
 	}
-	if !bytes.Contains([]byte(output), []byte("~2")) {
-		t.Errorf("Output should contain '~2' for modified, got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("~2"),
+	) {
+		t.Errorf(
+			"Output should contain '~2' for modified, got: %s",
+			output,
+		)
 	}
-	if !bytes.Contains([]byte(output), []byte("-1")) {
-		t.Errorf("Output should contain '-1' for removed, got: %s", output)
+	if !bytes.Contains(
+		[]byte(output),
+		[]byte("-1"),
+	) {
+		t.Errorf(
+			"Output should contain '-1' for removed, got: %s",
+			output,
+		)
 	}
 }
 
@@ -531,8 +765,14 @@ func TestPrintPRResult_ZeroCounts(t *testing.T) {
 	output := buf.String()
 
 	// With zero counts, "Spec operations" should NOT appear
-	if bytes.Contains([]byte(output), []byte("Spec operations")) {
-		t.Errorf("Output should NOT contain 'Spec operations' with zero counts, got: %s", output)
+	if bytes.Contains(
+		[]byte(output),
+		[]byte("Spec operations"),
+	) {
+		t.Errorf(
+			"Output should NOT contain 'Spec operations' with zero counts, got: %s",
+			output,
+		)
 	}
 }
 
@@ -577,8 +817,15 @@ func TestPrintPRResult_FullResult(t *testing.T) {
 	}
 
 	for _, expected := range expectedElements {
-		if !bytes.Contains([]byte(output), []byte(expected)) {
-			t.Errorf("Output should contain %q, got: %s", expected, output)
+		if !bytes.Contains(
+			[]byte(output),
+			[]byte(expected),
+		) {
+			t.Errorf(
+				"Output should contain %q, got: %s",
+				expected,
+				output,
+			)
 		}
 	}
 }
@@ -590,12 +837,17 @@ func TestCLIHasPRCommand(t *testing.T) {
 	prField := val.FieldByName("PR")
 
 	if !prField.IsValid() {
-		t.Fatal("CLI struct does not have PR field")
+		t.Fatal(
+			"CLI struct does not have PR field",
+		)
 	}
 
 	// Check the type
 	if prField.Type().Name() != "PRCmd" {
-		t.Errorf("PR field type: got %s, want PRCmd", prField.Type().Name())
+		t.Errorf(
+			"PR field type: got %s, want PRCmd",
+			prField.Type().Name(),
+		)
 	}
 }
 
@@ -607,52 +859,79 @@ func TestPRRemoveCmd_Struct(t *testing.T) {
 	// Check ChangeID field exists and is string
 	changeIDField := val.FieldByName("ChangeID")
 	if !changeIDField.IsValid() {
-		t.Error("PRRemoveCmd does not have ChangeID field")
+		t.Error(
+			"PRRemoveCmd does not have ChangeID field",
+		)
 	}
 	if changeIDField.Kind() != reflect.String {
-		t.Errorf("ChangeID should be string, got %v", changeIDField.Kind())
+		t.Errorf(
+			"ChangeID should be string, got %v",
+			changeIDField.Kind(),
+		)
 	}
 
 	// Check Base field exists
 	baseField := val.FieldByName("Base")
 	if !baseField.IsValid() {
-		t.Error("PRRemoveCmd does not have Base field")
+		t.Error(
+			"PRRemoveCmd does not have Base field",
+		)
 	}
 	if baseField.Kind() != reflect.String {
-		t.Errorf("Base should be string, got %v", baseField.Kind())
+		t.Errorf(
+			"Base should be string, got %v",
+			baseField.Kind(),
+		)
 	}
 
 	// Check Draft field exists
 	draftField := val.FieldByName("Draft")
 	if !draftField.IsValid() {
-		t.Error("PRRemoveCmd does not have Draft field")
+		t.Error(
+			"PRRemoveCmd does not have Draft field",
+		)
 	}
 	if draftField.Kind() != reflect.Bool {
-		t.Errorf("Draft should be bool, got %v", draftField.Kind())
+		t.Errorf(
+			"Draft should be bool, got %v",
+			draftField.Kind(),
+		)
 	}
 
 	// Check Force field exists
 	forceField := val.FieldByName("Force")
 	if !forceField.IsValid() {
-		t.Error("PRRemoveCmd does not have Force field")
+		t.Error(
+			"PRRemoveCmd does not have Force field",
+		)
 	}
 	if forceField.Kind() != reflect.Bool {
-		t.Errorf("Force should be bool, got %v", forceField.Kind())
+		t.Errorf(
+			"Force should be bool, got %v",
+			forceField.Kind(),
+		)
 	}
 
 	// Check DryRun field exists
 	dryRunField := val.FieldByName("DryRun")
 	if !dryRunField.IsValid() {
-		t.Error("PRRemoveCmd does not have DryRun field")
+		t.Error(
+			"PRRemoveCmd does not have DryRun field",
+		)
 	}
 	if dryRunField.Kind() != reflect.Bool {
-		t.Errorf("DryRun should be bool, got %v", dryRunField.Kind())
+		t.Errorf(
+			"DryRun should be bool, got %v",
+			dryRunField.Kind(),
+		)
 	}
 
 	// Verify SkipSpecs is NOT in PRRemoveCmd (it's archive-specific)
 	skipSpecsField := val.FieldByName("SkipSpecs")
 	if skipSpecsField.IsValid() {
-		t.Error("PRRemoveCmd should not have SkipSpecs field (archive-specific)")
+		t.Error(
+			"PRRemoveCmd should not have SkipSpecs field (archive-specific)",
+		)
 	}
 }
 
@@ -661,19 +940,34 @@ func TestPRRemoveCmd_DefaultValues(t *testing.T) {
 	cmd := &PRRemoveCmd{}
 
 	if cmd.ChangeID != "" {
-		t.Errorf("ChangeID should default to empty string, got %q", cmd.ChangeID)
+		t.Errorf(
+			"ChangeID should default to empty string, got %q",
+			cmd.ChangeID,
+		)
 	}
 	if cmd.Base != "" {
-		t.Errorf("Base should default to empty string, got %q", cmd.Base)
+		t.Errorf(
+			"Base should default to empty string, got %q",
+			cmd.Base,
+		)
 	}
 	if cmd.Draft {
-		t.Errorf("Draft should default to false, got %v", cmd.Draft)
+		t.Errorf(
+			"Draft should default to false, got %v",
+			cmd.Draft,
+		)
 	}
 	if cmd.Force {
-		t.Errorf("Force should default to false, got %v", cmd.Force)
+		t.Errorf(
+			"Force should default to false, got %v",
+			cmd.Force,
+		)
 	}
 	if cmd.DryRun {
-		t.Errorf("DryRun should default to false, got %v", cmd.DryRun)
+		t.Errorf(
+			"DryRun should default to false, got %v",
+			cmd.DryRun,
+		)
 	}
 }
 
@@ -688,10 +982,18 @@ func TestPRRemoveCmd_SetFields(t *testing.T) {
 	}
 
 	if cmd.ChangeID != "remove-change" {
-		t.Errorf("ChangeID = %q, want %q", cmd.ChangeID, "remove-change")
+		t.Errorf(
+			"ChangeID = %q, want %q",
+			cmd.ChangeID,
+			"remove-change",
+		)
 	}
 	if cmd.Base != "main" {
-		t.Errorf("Base = %q, want %q", cmd.Base, "main")
+		t.Errorf(
+			"Base = %q, want %q",
+			cmd.Base,
+			"main",
+		)
 	}
 	if !cmd.Draft {
 		t.Error("Draft should be true")
@@ -711,16 +1013,25 @@ func TestPRRemoveCmd_HasRunMethod(t *testing.T) {
 
 	runMethod := val.MethodByName("Run")
 	if !runMethod.IsValid() {
-		t.Fatal("PRRemoveCmd does not have Run method")
+		t.Fatal(
+			"PRRemoveCmd does not have Run method",
+		)
 	}
 
 	runType := runMethod.Type()
 	if runType.NumOut() != 1 {
-		t.Errorf("Run method should return 1 value, got %d", runType.NumOut())
+		t.Errorf(
+			"Run method should return 1 value, got %d",
+			runType.NumOut(),
+		)
 	}
 
-	if runType.NumOut() > 0 && runType.Out(0).Name() != "error" {
-		t.Errorf("Run method should return error, got %s", runType.Out(0).Name())
+	if runType.NumOut() > 0 &&
+		runType.Out(0).Name() != "error" {
+		t.Errorf(
+			"Run method should return error, got %s",
+			runType.Out(0).Name(),
+		)
 	}
 }
 
@@ -731,32 +1042,51 @@ func TestPRCmd_HasRemoveSubcommand(t *testing.T) {
 
 	removeField := val.FieldByName("Remove")
 	if !removeField.IsValid() {
-		t.Error("PRCmd does not have Remove field")
+		t.Error(
+			"PRCmd does not have Remove field",
+		)
 	}
-	if removeField.Type().Name() != "PRRemoveCmd" {
-		t.Errorf("Remove field type = %s, want PRRemoveCmd", removeField.Type().Name())
+	if removeField.Type().
+		Name() !=
+		"PRRemoveCmd" {
+		t.Errorf(
+			"Remove field type = %s, want PRRemoveCmd",
+			removeField.Type().Name(),
+		)
 	}
 }
 
 // TestPRCmd_RemoveHasAliases verifies that the remove subcommand has the correct aliases.
 func TestPRCmd_RemoveHasAliases(t *testing.T) {
 	prCmdType := reflect.TypeOf(PRCmd{})
-	removeField, found := prCmdType.FieldByName("Remove")
+	removeField, found := prCmdType.FieldByName(
+		"Remove",
+	)
 	if !found {
-		t.Fatal("PRCmd does not have Remove field")
+		t.Fatal(
+			"PRCmd does not have Remove field",
+		)
 	}
 
 	tag := removeField.Tag
 	aliases := tag.Get("aliases")
 	if aliases == "" {
-		t.Fatal("Remove field does not have aliases tag")
+		t.Fatal(
+			"Remove field does not have aliases tag",
+		)
 	}
 
 	// Should have both "r" and "remove" aliases
 	if !strings.Contains(aliases, "r") {
-		t.Errorf("Remove aliases should contain 'r', got %q", aliases)
+		t.Errorf(
+			"Remove aliases should contain 'r', got %q",
+			aliases,
+		)
 	}
 	if !strings.Contains(aliases, "remove") {
-		t.Errorf("Remove aliases should contain 'remove', got %q", aliases)
+		t.Errorf(
+			"Remove aliases should contain 'remove', got %q",
+			aliases,
+		)
 	}
 }

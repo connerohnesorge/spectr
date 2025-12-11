@@ -32,7 +32,9 @@ type MenuPicker struct {
 //
 // This default allows callers to create simple menus without specifying a handler
 // when they only need to retrieve the selected index via Run().
-func NewMenuPicker(config MenuConfig) *MenuPicker {
+func NewMenuPicker(
+	config MenuConfig,
+) *MenuPicker {
 	return &MenuPicker{
 		title:   config.Title,
 		choices: config.Choices,
@@ -41,7 +43,9 @@ func NewMenuPicker(config MenuConfig) *MenuPicker {
 			// Default: call custom handler if provided, otherwise just quit.
 			// This enables simple usage patterns where caller only needs the index.
 			if config.SelectHandler != nil {
-				return nil, config.SelectHandler(index)
+				return nil, config.SelectHandler(
+					index,
+				)
 			}
 
 			return nil, tea.Quit
@@ -51,7 +55,9 @@ func NewMenuPicker(config MenuConfig) *MenuPicker {
 
 // WithSelectHandler sets the handler for menu selection.
 // The handler receives the selected index and can return a new model to transition to.
-func (m *MenuPicker) WithSelectHandler(handler func(index int) (tea.Model, tea.Cmd)) *MenuPicker {
+func (m *MenuPicker) WithSelectHandler(
+	handler func(index int) (tea.Model, tea.Cmd),
+) *MenuPicker {
 	m.selectHandler = handler
 
 	return m
@@ -63,7 +69,9 @@ func (m *MenuPicker) Init() tea.Cmd {
 }
 
 // Update implements tea.Model.
-func (m *MenuPicker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *MenuPicker) Update(
+	msg tea.Msg,
+) (tea.Model, tea.Cmd) {
 	keyMsg, ok := msg.(tea.KeyMsg)
 	if !ok {
 		return m, nil
@@ -97,7 +105,9 @@ func (m *MenuPicker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // handleSelection processes the menu selection.
 func (m *MenuPicker) handleSelection() (tea.Model, tea.Cmd) {
 	if m.selectHandler != nil {
-		newModel, cmd := m.selectHandler(m.selected)
+		newModel, cmd := m.selectHandler(
+			m.selected,
+		)
 		if newModel != nil {
 			return newModel, cmd
 		}
@@ -128,13 +138,21 @@ func (m *MenuPicker) View() string {
 		}
 
 		if m.cursor == i {
-			s += selectedStyle.Render(fmt.Sprintf("%s %s", cursor, choice)) + "\n"
+			s += selectedStyle.Render(
+				fmt.Sprintf(
+					"%s %s",
+					cursor,
+					choice,
+				),
+			) + "\n"
 		} else {
 			s += choiceStyle.Render(fmt.Sprintf("%s %s", cursor, choice)) + "\n"
 		}
 	}
 
-	s += "\n" + helpStyle.Render("↑/↓ or j/k: navigate | Enter: select | q: quit")
+	s += "\n" + helpStyle.Render(
+		"↑/↓ or j/k: navigate | Enter: select | q: quit",
+	)
 
 	return s
 }
@@ -154,7 +172,10 @@ func (m *MenuPicker) Run() (int, error) {
 	prog := tea.NewProgram(m)
 	finalModel, err := prog.Run()
 	if err != nil {
-		return -1, fmt.Errorf("error running menu: %w", err)
+		return -1, fmt.Errorf(
+			"error running menu: %w",
+			err,
+		)
 	}
 
 	if fm, ok := finalModel.(*MenuPicker); ok {

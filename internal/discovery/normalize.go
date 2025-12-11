@@ -19,7 +19,9 @@ const pathSeparator = "/"
 //   - /absolute/path/spectr/changes/<id> -> id, "change"
 //   - /absolute/path/spectr/specs/<id> -> id, "spec"
 //   - simple-id -> simple-id, "" (no inferred type)
-func NormalizeItemPath(input string) (id, inferredType string) {
+func NormalizeItemPath(
+	input string,
+) (id, inferredType string) {
 	if input == "" {
 		return "", ""
 	}
@@ -32,8 +34,11 @@ func NormalizeItemPath(input string) (id, inferredType string) {
 		// Extract everything after "spectr/changes/"
 		remainder := normalized[idx+len("spectr/changes/"):]
 		// The ID is the first path component after spectr/changes/
-		changeID := extractFirstPathComponent(remainder)
-		if changeID != "" && changeID != "archive" {
+		changeID := extractFirstPathComponent(
+			remainder,
+		)
+		if changeID != "" &&
+			changeID != "archive" {
 			return changeID, "change"
 		}
 	}
@@ -43,7 +48,9 @@ func NormalizeItemPath(input string) (id, inferredType string) {
 		// Extract everything after "spectr/specs/"
 		remainder := normalized[idx+len("spectr/specs/"):]
 		// The ID is the first path component after spectr/specs/
-		specID := extractFirstPathComponent(remainder)
+		specID := extractFirstPathComponent(
+			remainder,
+		)
 		if specID != "" {
 			return specID, "spec"
 		}
@@ -51,7 +58,10 @@ func NormalizeItemPath(input string) (id, inferredType string) {
 
 	// No recognized pattern - return input as-is with no inferred type
 	// Clean up: remove trailing slashes, get base name if it looks like a path
-	cleaned := strings.TrimSuffix(normalized, pathSeparator)
+	cleaned := strings.TrimSuffix(
+		normalized,
+		pathSeparator,
+	)
 	if cleaned == "" {
 		return input, ""
 	}
@@ -70,9 +80,17 @@ func NormalizeItemPath(input string) (id, inferredType string) {
 // For "my-change/specs/foo/spec.md" returns "my-change"
 // For "my-change" returns "my-change"
 // For "" returns ""
-func extractFirstPathComponent(path string) string {
-	trimmed := strings.TrimPrefix(path, pathSeparator)
-	trimmed = strings.TrimSuffix(trimmed, pathSeparator)
+func extractFirstPathComponent(
+	path string,
+) string {
+	trimmed := strings.TrimPrefix(
+		path,
+		pathSeparator,
+	)
+	trimmed = strings.TrimSuffix(
+		trimmed,
+		pathSeparator,
+	)
 
 	if trimmed == "" {
 		return ""

@@ -41,46 +41,77 @@ func ValidateChangeDeltaSpecs(
 	info, err := os.Stat(specsDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("specs directory not found: %s", specsDir)
+			return nil, fmt.Errorf(
+				"specs directory not found: %s",
+				specsDir,
+			)
 		}
 
-		return nil, fmt.Errorf("failed to access specs directory: %w", err)
+		return nil, fmt.Errorf(
+			"failed to access specs directory: %w",
+			err,
+		)
 	}
 
 	if !info.IsDir() {
-		return nil, fmt.Errorf("specs path is not a directory: %s", specsDir)
+		return nil, fmt.Errorf(
+			"specs path is not a directory: %s",
+			specsDir,
+		)
 	}
 
 	// Find all spec.md files under specs/
 	var specFiles []string
-	err = filepath.Walk(specsDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() && info.Name() == "spec.md" {
-			specFiles = append(specFiles, path)
-		}
+	err = filepath.Walk(
+		specsDir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() &&
+				info.Name() == "spec.md" {
+				specFiles = append(
+					specFiles,
+					path,
+				)
+			}
 
-		return nil
-	})
-
+			return nil
+		},
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to walk specs directory: %w", err)
+		return nil, fmt.Errorf(
+			"failed to walk specs directory: %w",
+			err,
+		)
 	}
 
 	if len(specFiles) == 0 {
-		return nil, fmt.Errorf("no spec.md files found in specs directory: %s", specsDir)
+		return nil, fmt.Errorf(
+			"no spec.md files found in specs directory: %s",
+			specsDir,
+		)
 	}
 
 	// Track all issues across all spec files
 	var allIssues []ValidationIssue
 
 	// Track requirement names for duplicate/conflict detection across all files
-	addedReqs := make(map[string]string)       // normalized name -> file path
-	modifiedReqs := make(map[string]string)    // normalized name -> file path
-	removedReqs := make(map[string]string)     // normalized name -> file path
-	renamedFromReqs := make(map[string]string) // normalized FROM name -> file path
-	renamedToReqs := make(map[string]string)   // normalized TO name -> file path
+	addedReqs := make(
+		map[string]string,
+	) // normalized name -> file path
+	modifiedReqs := make(
+		map[string]string,
+	) // normalized name -> file path
+	removedReqs := make(
+		map[string]string,
+	) // normalized name -> file path
+	renamedFromReqs := make(
+		map[string]string,
+	) // normalized FROM name -> file path
+	renamedToReqs := make(
+		map[string]string,
+	) // normalized TO name -> file path
 
 	// Track total delta count
 	totalDeltas := 0
@@ -96,29 +127,48 @@ func ValidateChangeDeltaSpecs(
 			renamedToReqs,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to validate %s: %w", specPath, err)
+			return nil, fmt.Errorf(
+				"failed to validate %s: %w",
+				specPath,
+				err,
+			)
 		}
 
-		allIssues = append(allIssues, fileIssues...)
+		allIssues = append(
+			allIssues,
+			fileIssues...)
 		totalDeltas += deltaCount
 
 		// Validate delta file against base spec
-		baseSpecIssues, err := validateDeltaAgainstBaseSpec(specPath, specsDir, spectrRoot)
+		baseSpecIssues, err := validateDeltaAgainstBaseSpec(
+			specPath,
+			specsDir,
+			spectrRoot,
+		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to validate %s against base spec: %w", specPath, err)
+			return nil, fmt.Errorf(
+				"failed to validate %s against base spec: %w",
+				specPath,
+				err,
+			)
 		}
-		allIssues = append(allIssues, baseSpecIssues...)
+		allIssues = append(
+			allIssues,
+			baseSpecIssues...)
 	}
 
 	// Check if there are no deltas at all
 	if totalDeltas == 0 {
-		allIssues = append(allIssues, ValidationIssue{
-			Level: LevelError,
-			Path:  specsDir,
-			Line:  1, // Default to line 1 for missing deltas
-			Message: "Change must have at least one delta " +
-				"(ADDED, MODIFIED, REMOVED, or RENAMED requirement)",
-		})
+		allIssues = append(
+			allIssues,
+			ValidationIssue{
+				Level: LevelError,
+				Path:  specsDir,
+				Line:  1, // Default to line 1 for missing deltas
+				Message: "Change must have at least one delta " +
+					"(ADDED, MODIFIED, REMOVED, or RENAMED requirement)",
+			},
+		)
 	}
 
 	// Apply strict mode: convert warnings to errors
@@ -142,7 +192,10 @@ func validateSingleDeltaFile(
 	// Read file
 	content, err := os.ReadFile(specPath)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to read file: %w", err)
+		return nil, 0, fmt.Errorf(
+			"failed to read file: %w",
+			err,
+		)
 	}
 
 	contentStr := string(content)
@@ -163,7 +216,10 @@ func validateSingleDeltaFile(
 	// Process ADDED Requirements
 	if addedContent, hasAdded := sections["ADDED Requirements"]; hasAdded {
 		deltaCount++
-		addedLine := findDeltaSectionLine(lines, "ADDED Requirements")
+		addedLine := findDeltaSectionLine(
+			lines,
+			"ADDED Requirements",
+		)
 		addedIssues := validateAddedRequirements(
 			addedContent,
 			specPath,
@@ -178,7 +234,10 @@ func validateSingleDeltaFile(
 	// Process MODIFIED Requirements
 	if modifiedContent, hasModified := sections["MODIFIED Requirements"]; hasModified {
 		deltaCount++
-		modifiedLine := findDeltaSectionLine(lines, "MODIFIED Requirements")
+		modifiedLine := findDeltaSectionLine(
+			lines,
+			"MODIFIED Requirements",
+		)
 		modifiedIssues := validateModifiedRequirements(
 			modifiedContent,
 			specPath,
@@ -193,7 +252,10 @@ func validateSingleDeltaFile(
 	// Process REMOVED Requirements
 	if removedContent, hasRemoved := sections["REMOVED Requirements"]; hasRemoved {
 		deltaCount++
-		removedLine := findDeltaSectionLine(lines, "REMOVED Requirements")
+		removedLine := findDeltaSectionLine(
+			lines,
+			"REMOVED Requirements",
+		)
 		removedIssues := validateRemovedRequirements(
 			removedContent,
 			specPath,
@@ -208,7 +270,10 @@ func validateSingleDeltaFile(
 	// Process RENAMED Requirements
 	if renamedContent, hasRenamed := sections["RENAMED Requirements"]; hasRenamed {
 		deltaCount++
-		renamedLine := findDeltaSectionLine(lines, "RENAMED Requirements")
+		renamedLine := findDeltaSectionLine(
+			lines,
+			"RENAMED Requirements",
+		)
 		renamedIssues := validateRenamedRequirements(
 			renamedContent,
 			specPath,
@@ -232,18 +297,28 @@ func validateSingleDeltaFile(
 				specPath,
 			)
 			// Find line number of the requirement in ADDED section
-			addedLine := findDeltaSectionLine(lines, "ADDED Requirements")
-			reqLine := findRequirementLineInSection(lines, reqName, addedLine)
-			issues = append(issues, ValidationIssue{
-				Level: LevelError,
-				Path:  specPath,
-				Line:  reqLine,
-				Message: fmt.Sprintf(
-					"Requirement '%s' appears in both ADDED and "+
-						"MODIFIED sections",
-					reqName,
-				),
-			})
+			addedLine := findDeltaSectionLine(
+				lines,
+				"ADDED Requirements",
+			)
+			reqLine := findRequirementLineInSection(
+				lines,
+				reqName,
+				addedLine,
+			)
+			issues = append(
+				issues,
+				ValidationIssue{
+					Level: LevelError,
+					Path:  specPath,
+					Line:  reqLine,
+					Message: fmt.Sprintf(
+						"Requirement '%s' appears in both ADDED and "+
+							"MODIFIED sections",
+						reqName,
+					),
+				},
+			)
 		}
 	}
 
@@ -260,7 +335,9 @@ type RenamedRequirement struct {
 // Expected format:
 // - FROM: ### Requirement: OldName
 // - TO: ### Requirement: NewName
-func parseRenamedRequirements(content string) []RenamedRequirement {
+func parseRenamedRequirements(
+	content string,
+) []RenamedRequirement {
 	var renames []RenamedRequirement
 	lines := strings.Split(content, "\n")
 
@@ -281,13 +358,17 @@ func parseRenamedRequirements(content string) []RenamedRequirement {
 
 		// Check for FROM line
 		if matches := fromRegex.FindStringSubmatch(line); matches != nil {
-			currentFrom = strings.TrimSpace(matches[1])
+			currentFrom = strings.TrimSpace(
+				matches[1],
+			)
 
 			continue
 		}
 
 		// Check for TO line
-		matches := toRegex.FindStringSubmatch(line)
+		matches := toRegex.FindStringSubmatch(
+			line,
+		)
 		if matches == nil {
 			continue
 		}
@@ -296,10 +377,13 @@ func parseRenamedRequirements(content string) []RenamedRequirement {
 
 		// If we have a FROM, pair it with this TO
 		if currentFrom != "" {
-			renames = append(renames, RenamedRequirement{
-				FromName: currentFrom,
-				ToName:   toName,
-			})
+			renames = append(
+				renames,
+				RenamedRequirement{
+					FromName: currentFrom,
+					ToName:   toName,
+				},
+			)
 			currentFrom = "" // Reset for next pair
 		} else {
 			// TO without FROM - add as malformed
@@ -312,10 +396,13 @@ func parseRenamedRequirements(content string) []RenamedRequirement {
 
 	// If we have a FROM without a TO, add as malformed
 	if currentFrom != "" {
-		renames = append(renames, RenamedRequirement{
-			FromName: currentFrom,
-			ToName:   "",
-		})
+		renames = append(
+			renames,
+			RenamedRequirement{
+				FromName: currentFrom,
+				ToName:   "",
+			},
+		)
 	}
 
 	return renames
@@ -344,38 +431,66 @@ func validateDeltaAgainstBaseSpec(
 	// Extract capability name from delta spec path
 	// Path structure: .../changes/<change-id>/specs/<capability>/spec.md
 	// We want to extract <capability>
-	relPath, err := filepath.Rel(specsDir, deltaSpecPath)
+	relPath, err := filepath.Rel(
+		specsDir,
+		deltaSpecPath,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get relative path: %w", err)
+		return nil, fmt.Errorf(
+			"failed to get relative path: %w",
+			err,
+		)
 	}
 
 	// Extract capability (should be the directory name before spec.md)
 	capability := filepath.Dir(relPath)
 	if capability == "." || capability == "" {
-		return nil, fmt.Errorf("invalid delta spec path structure: %s", deltaSpecPath)
+		return nil, fmt.Errorf(
+			"invalid delta spec path structure: %s",
+			deltaSpecPath,
+		)
 	}
 
 	// Construct base spec path
-	baseSpecPath := filepath.Join(spectrRoot, "specs", capability, "spec.md")
+	baseSpecPath := filepath.Join(
+		spectrRoot,
+		"specs",
+		capability,
+		"spec.md",
+	)
 
 	// Check if base spec exists
 	_, err = os.Stat(baseSpecPath)
 	baseExists := err == nil
 
 	// Parse delta spec
-	deltaPlan, err := parsers.ParseDeltaSpec(deltaSpecPath)
+	deltaPlan, err := parsers.ParseDeltaSpec(
+		deltaSpecPath,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse delta spec: %w", err)
+		return nil, fmt.Errorf(
+			"failed to parse delta spec: %w",
+			err,
+		)
 	}
 
 	// Validate delta against base spec
 	if err := ValidatePreMerge(baseSpecPath, deltaPlan, baseExists); err != nil {
 		// Read delta file to find line number
-		content, readErr := os.ReadFile(deltaSpecPath)
+		content, readErr := os.ReadFile(
+			deltaSpecPath,
+		)
 		lineNum := 1
 		if readErr == nil {
-			lines := strings.Split(string(content), "\n")
-			lineNum = findPreMergeErrorLine(lines, err.Error(), deltaPlan)
+			lines := strings.Split(
+				string(content),
+				"\n",
+			)
+			lineNum = findPreMergeErrorLine(
+				lines,
+				err.Error(),
+				deltaPlan,
+			)
 		}
 
 		return []ValidationIssue{
@@ -393,10 +508,16 @@ func validateDeltaAgainstBaseSpec(
 
 // findDeltaSectionLine finds the line number where a delta section header appears
 // Returns 1 if not found
-func findDeltaSectionLine(lines []string, sectionName string) int {
+func findDeltaSectionLine(
+	lines []string,
+	sectionName string,
+) int {
 	sectionHeader := "## " + sectionName
 	for i, line := range lines {
-		if strings.HasPrefix(strings.TrimSpace(line), sectionHeader) {
+		if strings.HasPrefix(
+			strings.TrimSpace(line),
+			sectionHeader,
+		) {
 			return i + 1 // Line numbers are 1-indexed
 		}
 	}
@@ -407,17 +528,28 @@ func findDeltaSectionLine(lines []string, sectionName string) int {
 // findRequirementLineInSection finds the line number where a requirement appears
 // within a specific section (searches from startLine onwards)
 // Returns startLine if not found
-func findRequirementLineInSection(lines []string, reqName string, startLine int) int {
+func findRequirementLineInSection(
+	lines []string,
+	reqName string,
+	startLine int,
+) int {
 	reqHeader := "### Requirement: " + reqName
 	// Start searching from startLine (convert to 0-indexed)
 	searchStart := max(startLine-1, 0)
 
 	for i := searchStart; i < len(lines); i++ {
-		if strings.HasPrefix(strings.TrimSpace(lines[i]), reqHeader) {
+		if strings.HasPrefix(
+			strings.TrimSpace(lines[i]),
+			reqHeader,
+		) {
 			return i + 1 // Line numbers are 1-indexed
 		}
 		// Stop if we hit another section
-		if i > searchStart && strings.HasPrefix(strings.TrimSpace(lines[i]), "## ") {
+		if i > searchStart &&
+			strings.HasPrefix(
+				strings.TrimSpace(lines[i]),
+				"## ",
+			) {
 			break
 		}
 	}
@@ -427,17 +559,27 @@ func findRequirementLineInSection(lines []string, reqName string, startLine int)
 
 // findRenamedPairLine finds the line number of a RENAMED requirement pair
 // Searches for the FROM line
-func findRenamedPairLine(lines []string, fromName string, startLine int) int {
+func findRenamedPairLine(
+	lines []string,
+	fromName string,
+	startLine int,
+) int {
 	searchStart := max(startLine-1, 0)
 
 	for i := searchStart; i < len(lines); i++ {
 		trimmed := strings.TrimSpace(lines[i])
-		if i > searchStart && strings.HasPrefix(trimmed, "## ") {
+		if i > searchStart &&
+			strings.HasPrefix(trimmed, "## ") {
 			break
 		}
 
-		withoutBullet := strings.TrimSpace(strings.TrimPrefix(trimmed, "-"))
-		withoutCode := strings.Trim(withoutBullet, "`")
+		withoutBullet := strings.TrimSpace(
+			strings.TrimPrefix(trimmed, "-"),
+		)
+		withoutCode := strings.Trim(
+			withoutBullet,
+			"`",
+		)
 		if strings.HasPrefix(
 			withoutCode,
 			"FROM: ### Requirement: "+fromName,
@@ -453,7 +595,11 @@ func findRenamedPairLine(lines []string, fromName string, startLine int) int {
 }
 
 // findPreMergeErrorLine finds the line number related to a pre-merge validation error
-func findPreMergeErrorLine(lines []string, errMsg string, _ *parsers.DeltaPlan) int {
+func findPreMergeErrorLine(
+	lines []string,
+	errMsg string,
+	_ *parsers.DeltaPlan,
+) int {
 	// Extract requirement name from error message
 	// Error formats:
 	// - "MODIFIED requirement %q does not exist in base spec"
@@ -462,22 +608,37 @@ func findPreMergeErrorLine(lines []string, errMsg string, _ *parsers.DeltaPlan) 
 	// - "RENAMED TO requirement %q already exists in base spec"
 	// - "ADDED requirement %q already exists in base spec"
 
-	sectionName, reqName := extractSectionAndReqName(errMsg)
+	sectionName, reqName := extractSectionAndReqName(
+		errMsg,
+	)
 
 	if reqName == "" {
 		return 1 // Can't find requirement name, default to line 1
 	}
 
-	sectionLine := findDeltaSectionLine(lines, sectionName)
+	sectionLine := findDeltaSectionLine(
+		lines,
+		sectionName,
+	)
 	if strings.Contains(sectionName, "RENAMED") {
-		return findRenamedPairLine(lines, reqName, sectionLine)
+		return findRenamedPairLine(
+			lines,
+			reqName,
+			sectionLine,
+		)
 	}
 
-	return findRequirementLineInSection(lines, reqName, sectionLine)
+	return findRequirementLineInSection(
+		lines,
+		reqName,
+		sectionLine,
+	)
 }
 
 // extractSectionAndReqName extracts the section name and requirement name from an error message
-func extractSectionAndReqName(errMsg string) (string, string) {
+func extractSectionAndReqName(
+	errMsg string,
+) (string, string) {
 	var sectionName, reqName string
 
 	// Determine section name based on error message
@@ -509,7 +670,10 @@ func extractSectionAndReqName(errMsg string) (string, string) {
 // findMalformedScenarioLineInDelta finds the line number of a malformed scenario in delta file
 // Searches from reqLine onwards
 // Returns reqLine if not found
-func findMalformedScenarioLineInDelta(lines []string, reqLine int) int {
+func findMalformedScenarioLineInDelta(
+	lines []string,
+	reqLine int,
+) int {
 	// Start searching from reqLine (convert to 0-indexed)
 	searchStart := max(reqLine-1, 0)
 
@@ -531,7 +695,10 @@ func findMalformedScenarioLineInDelta(lines []string, reqLine int) int {
 		}
 		// Stop if we hit another requirement or section
 		if i > searchStart {
-			if strings.HasPrefix(line, "### Requirement:") {
+			if strings.HasPrefix(
+				line,
+				"### Requirement:",
+			) {
 				break
 			}
 			if strings.HasPrefix(line, "## ") {
@@ -545,17 +712,22 @@ func findMalformedScenarioLineInDelta(lines []string, reqLine int) int {
 
 // findMalformedRenamedLine finds the line number of a malformed RENAMED requirement
 // Searches from sectionLine onwards for FROM or TO without its pair
-func findMalformedRenamedLine(lines []string, sectionLine int) int {
+func findMalformedRenamedLine(
+	lines []string,
+	sectionLine int,
+) int {
 	searchStart := max(sectionLine-1, 0)
 
 	for i := searchStart; i < len(lines); i++ {
 		line := strings.TrimSpace(lines[i])
 		// Check for FROM or TO lines
-		if strings.Contains(line, "FROM:") || strings.Contains(line, "TO:") {
+		if strings.Contains(line, "FROM:") ||
+			strings.Contains(line, "TO:") {
 			return i + 1 // Line numbers are 1-indexed
 		}
 		// Stop if we hit another section
-		if i > searchStart && strings.HasPrefix(line, "## ") {
+		if i > searchStart &&
+			strings.HasPrefix(line, "## ") {
 			break
 		}
 	}

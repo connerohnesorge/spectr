@@ -41,7 +41,10 @@ func UpdateFileWithMarkers(
 	// Ensure directory exists
 	dir := filepath.Dir(filePath)
 	if err := EnsureDir(dir); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+		return fmt.Errorf(
+			"failed to create directory: %w",
+			err,
+		)
 	}
 
 	// Check if file exists
@@ -49,23 +52,40 @@ func UpdateFileWithMarkers(
 		// Create new file with markers
 		newContent := startMarker + "\n" + content + "\n" + endMarker + "\n"
 
-		return os.WriteFile(filePath, []byte(newContent), filePerm)
+		return os.WriteFile(
+			filePath,
+			[]byte(newContent),
+			filePerm,
+		)
 	}
 
 	// Read existing file
 	existingContent, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
+		return fmt.Errorf(
+			"failed to read file: %w",
+			err,
+		)
 	}
 
 	contentStr := string(existingContent)
 
 	// Find markers
-	startIndex := findMarkerIndex(contentStr, startMarker, 0)
+	startIndex := findMarkerIndex(
+		contentStr,
+		startMarker,
+		0,
+	)
 	endIndex := -1
 	if startIndex != -1 {
-		searchOffset := startIndex + len(startMarker)
-		endIndex = findMarkerIndex(contentStr, endMarker, searchOffset)
+		searchOffset := startIndex + len(
+			startMarker,
+		)
+		endIndex = findMarkerIndex(
+			contentStr,
+			endMarker,
+			searchOffset,
+		)
 	}
 
 	var newContent string
@@ -81,11 +101,18 @@ func UpdateFileWithMarkers(
 			content + newline + endMarker + after
 	}
 
-	return os.WriteFile(filePath, []byte(newContent), filePerm)
+	return os.WriteFile(
+		filePath,
+		[]byte(newContent),
+		filePerm,
+	)
 }
 
 // findMarkerIndex finds the index of a marker in content, starting from offset.
-func findMarkerIndex(content, marker string, offset int) int {
+func findMarkerIndex(
+	content, marker string,
+	offset int,
+) int {
 	if offset >= len(content) {
 		return -1
 	}
@@ -98,44 +125,78 @@ func findMarkerIndex(content, marker string, offset int) int {
 }
 
 // updateSlashCommandBody updates the body of a slash command file.
-func updateSlashCommandBody(filePath, body, frontmatter string) error {
+func updateSlashCommandBody(
+	filePath, body, frontmatter string,
+) error {
 	content, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
+		return fmt.Errorf(
+			"failed to read file: %w",
+			err,
+		)
 	}
 
 	contentStr := string(content)
 
-	startIndex := findMarkerIndex(contentStr, SpectrStartMarker, 0)
+	startIndex := findMarkerIndex(
+		contentStr,
+		SpectrStartMarker,
+		0,
+	)
 	if startIndex == -1 {
-		return fmt.Errorf("start marker not found in %s", filePath)
+		return fmt.Errorf(
+			"start marker not found in %s",
+			filePath,
+		)
 	}
 
-	searchOffset := startIndex + len(SpectrStartMarker)
-	endIndex := findMarkerIndex(contentStr, SpectrEndMarker, searchOffset)
+	searchOffset := startIndex + len(
+		SpectrStartMarker,
+	)
+	endIndex := findMarkerIndex(
+		contentStr,
+		SpectrEndMarker,
+		searchOffset,
+	)
 	if endIndex == -1 {
-		return fmt.Errorf("end marker not found in %s", filePath)
+		return fmt.Errorf(
+			"end marker not found in %s",
+			filePath,
+		)
 	}
 
 	if endIndex < startIndex {
 		return fmt.Errorf(
-			"end marker appears before start marker in %s", filePath)
+			"end marker appears before start marker in %s",
+			filePath,
+		)
 	}
 
 	before := contentStr[:startIndex]
 	after := contentStr[endIndex+len(SpectrEndMarker):]
 
-	hasFrontmatter := strings.HasPrefix(strings.TrimSpace(before), "---")
+	hasFrontmatter := strings.HasPrefix(
+		strings.TrimSpace(before),
+		"---",
+	)
 	if frontmatter != "" && !hasFrontmatter {
-		before = strings.TrimSpace(frontmatter) + newlineDouble +
-			strings.TrimLeft(before, "\n\r")
+		before = strings.TrimSpace(
+			frontmatter,
+		) + newlineDouble +
+			strings.TrimLeft(
+				before,
+				"\n\r",
+			)
 	}
 
 	newContent := before + SpectrStartMarker + newline +
 		body + newline + SpectrEndMarker + after
 
 	if err := os.WriteFile(filePath, []byte(newContent), filePerm); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+		return fmt.Errorf(
+			"failed to write file: %w",
+			err,
+		)
 	}
 
 	return nil
@@ -161,5 +222,6 @@ func expandPath(path string) string {
 // isGlobalPath returns true if the path is a global path
 // (starts with ~/ or /).
 func isGlobalPath(path string) bool {
-	return strings.HasPrefix(path, "~/") || strings.HasPrefix(path, "/")
+	return strings.HasPrefix(path, "~/") ||
+		strings.HasPrefix(path, "/")
 }

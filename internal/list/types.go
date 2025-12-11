@@ -103,7 +103,9 @@ func NewSpecItem(spec SpecInfo) Item {
 
 // FilterByType returns a new ItemList containing only items of the specified
 // type.
-func (il ItemList) FilterByType(itemType ItemType) ItemList {
+func (il ItemList) FilterByType(
+	itemType ItemType,
+) ItemList {
 	var filtered ItemList
 	for _, item := range il {
 		if item.Type == itemType {
@@ -118,8 +120,12 @@ func (il ItemList) FilterByType(itemType ItemType) ItemList {
 func (il ItemList) Changes() []ChangeInfo {
 	var changes []ChangeInfo
 	for _, item := range il {
-		if item.Type == ItemTypeChange && item.Change != nil {
-			changes = append(changes, *item.Change)
+		if item.Type == ItemTypeChange &&
+			item.Change != nil {
+			changes = append(
+				changes,
+				*item.Change,
+			)
 		}
 	}
 
@@ -130,7 +136,8 @@ func (il ItemList) Changes() []ChangeInfo {
 func (il ItemList) Specs() []SpecInfo {
 	var specs []SpecInfo
 	for _, item := range il {
-		if item.Type == ItemTypeSpec && item.Spec != nil {
+		if item.Type == ItemTypeSpec &&
+			item.Spec != nil {
 			specs = append(specs, *item.Spec)
 		}
 	}

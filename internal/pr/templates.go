@@ -150,66 +150,100 @@ var (
 
 func init() {
 	archiveCommitTmpl = template.Must(
-		template.New("archiveCommit").Parse(archiveCommitTemplate),
+		template.New("archiveCommit").
+			Parse(archiveCommitTemplate),
 	)
 	proposalCommitTmpl = template.Must(
-		template.New("proposalCommit").Parse(proposalCommitTemplate),
+		template.New("proposalCommit").
+			Parse(proposalCommitTemplate),
 	)
 	archivePRBodyTmpl = template.Must(
-		template.New("archivePRBody").Parse(archivePRBodyTemplate),
+		template.New("archivePRBody").
+			Parse(archivePRBodyTemplate),
 	)
 	proposalPRBodyTmpl = template.Must(
-		template.New("proposalPRBody").Parse(proposalPRBodyTemplate),
+		template.New("proposalPRBody").
+			Parse(proposalPRBodyTemplate),
 	)
 	removeCommitTmpl = template.Must(
-		template.New("removeCommit").Parse(removeCommitTemplate),
+		template.New("removeCommit").
+			Parse(removeCommitTemplate),
 	)
 	removePRBodyTmpl = template.Must(
-		template.New("removePRBody").Parse(removePRBodyTemplate),
+		template.New("removePRBody").
+			Parse(removePRBodyTemplate),
 	)
 }
 
 // RenderCommitMessage renders the appropriate commit message based on the mode.
-func RenderCommitMessage(data CommitTemplateData) (string, error) {
+func RenderCommitMessage(
+	data CommitTemplateData,
+) (string, error) {
 	var buf bytes.Buffer
 	var err error
 
 	switch data.Mode {
 	case ModeArchive:
-		err = archiveCommitTmpl.Execute(&buf, data)
+		err = archiveCommitTmpl.Execute(
+			&buf,
+			data,
+		)
 	case ModeProposal:
-		err = proposalCommitTmpl.Execute(&buf, data)
+		err = proposalCommitTmpl.Execute(
+			&buf,
+			data,
+		)
 	case ModeRemove:
 		err = removeCommitTmpl.Execute(&buf, data)
 	default:
-		return "", fmt.Errorf("unknown mode: %s", data.Mode)
+		return "", fmt.Errorf(
+			"unknown mode: %s",
+			data.Mode,
+		)
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("render commit message: %w", err)
+		return "", fmt.Errorf(
+			"render commit message: %w",
+			err,
+		)
 	}
 
 	return strings.TrimSpace(buf.String()), nil
 }
 
 // RenderPRBody renders the appropriate PR body based on the mode.
-func RenderPRBody(data PRTemplateData) (string, error) {
+func RenderPRBody(
+	data PRTemplateData,
+) (string, error) {
 	var buf bytes.Buffer
 	var err error
 
 	switch data.Mode {
 	case ModeArchive:
-		err = archivePRBodyTmpl.Execute(&buf, data)
+		err = archivePRBodyTmpl.Execute(
+			&buf,
+			data,
+		)
 	case ModeProposal:
-		err = proposalPRBodyTmpl.Execute(&buf, data)
+		err = proposalPRBodyTmpl.Execute(
+			&buf,
+			data,
+		)
 	case ModeRemove:
 		err = removePRBodyTmpl.Execute(&buf, data)
 	default:
-		return "", fmt.Errorf("unknown mode: %s", data.Mode)
+		return "", fmt.Errorf(
+			"unknown mode: %s",
+			data.Mode,
+		)
 	}
 
 	if err != nil {
-		return "", fmt.Errorf("render PR body: %w", err)
+		return "", fmt.Errorf(
+			"render PR body: %w",
+			err,
+		)
 	}
 
 	return strings.TrimSpace(buf.String()), nil
@@ -219,11 +253,20 @@ func RenderPRBody(data PRTemplateData) (string, error) {
 func GetPRTitle(changeID, mode string) string {
 	switch mode {
 	case ModeArchive:
-		return fmt.Sprintf("spectr(archive): %s", changeID)
+		return fmt.Sprintf(
+			"spectr(archive): %s",
+			changeID,
+		)
 	case ModeProposal:
-		return fmt.Sprintf("spectr(proposal): %s", changeID)
+		return fmt.Sprintf(
+			"spectr(proposal): %s",
+			changeID,
+		)
 	case ModeRemove:
-		return fmt.Sprintf("spectr(remove): %s", changeID)
+		return fmt.Sprintf(
+			"spectr(remove): %s",
+			changeID,
+		)
 	default:
 		return fmt.Sprintf("spectr: %s", changeID)
 	}

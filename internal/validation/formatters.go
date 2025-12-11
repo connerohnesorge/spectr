@@ -23,10 +23,12 @@ const (
 var (
 	// errorStyle styles [ERROR] labels in red
 	errorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(ColorError)).Bold(true)
+			Foreground(lipgloss.Color(ColorError)).
+			Bold(true)
 	// warningStyle styles [WARNING] labels in yellow
 	warningStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(ColorWarning)).Bold(true)
+			Foreground(lipgloss.Color(ColorWarning)).
+			Bold(true)
 )
 
 // isTTY returns true if stdout is a terminal
@@ -83,9 +85,17 @@ type BulkResult struct {
 func PrintJSONReport(
 	report *ValidationReport,
 ) {
-	data, err := json.MarshalIndent(report, "", "  ")
+	data, err := json.MarshalIndent(
+		report,
+		"",
+		"  ",
+	)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+		fmt.Fprintf(
+			os.Stderr,
+			"Error marshaling JSON: %v\n",
+			err,
+		)
 
 		return
 	}
@@ -104,7 +114,11 @@ func PrintHumanReport(
 	}
 
 	issueCount := len(report.Issues)
-	fmt.Printf("✗ %s has %d issue(s):\n", itemName, issueCount)
+	fmt.Printf(
+		"✗ %s has %d issue(s):\n",
+		itemName,
+		issueCount,
+	)
 
 	for _, issue := range report.Issues {
 		fmt.Printf(
@@ -118,9 +132,17 @@ func PrintHumanReport(
 
 // PrintBulkJSONResults prints bulk validation results as JSON
 func PrintBulkJSONResults(results []BulkResult) {
-	data, err := json.MarshalIndent(results, "", "  ")
+	data, err := json.MarshalIndent(
+		results,
+		"",
+		"  ",
+	)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+		fmt.Fprintf(
+			os.Stderr,
+			"Error marshaling JSON: %v\n",
+			err,
+		)
 
 		return
 	}
@@ -140,7 +162,11 @@ func PrintBulkHumanResults(results []BulkResult) {
 
 	for _, result := range results {
 		if result.Valid {
-			fmt.Printf("✓ %s (%s)\n", result.Name, result.Type)
+			fmt.Printf(
+				"✓ %s (%s)\n",
+				result.Name,
+				result.Type,
+			)
 			passCount++
 		} else {
 			// Add blank line before each failed item (except the first)
@@ -186,7 +212,8 @@ func PrintBulkHumanResults(results []BulkResult) {
 
 // printGroupedIssues prints issues grouped by their file path with indentation
 func printGroupedIssues(
-	issues []ValidationIssue, errorCount, warningCount *int,
+	issues []ValidationIssue,
+	errorCount, warningCount *int,
 ) {
 	// Group issues by file path
 	grouped := make(map[string][]ValidationIssue)
@@ -197,7 +224,10 @@ func printGroupedIssues(
 		if _, exists := grouped[relPath]; !exists {
 			order = append(order, relPath)
 		}
-		grouped[relPath] = append(grouped[relPath], issue)
+		grouped[relPath] = append(
+			grouped[relPath],
+			issue,
+		)
 
 		// Count errors and warnings
 		switch issue.Level {

@@ -35,7 +35,9 @@ type WorktreeInfo struct {
 
 // CreateWorktree creates a new git worktree in a temporary directory.
 // It creates a new branch based on the specified base branch.
-func CreateWorktree(config WorktreeConfig) (*WorktreeInfo, error) {
+func CreateWorktree(
+	config WorktreeConfig,
+) (*WorktreeInfo, error) {
 	if config.BranchName == "" {
 		return nil, &specterrs.BranchNameRequiredError{}
 	}
@@ -48,17 +50,31 @@ func CreateWorktree(config WorktreeConfig) (*WorktreeInfo, error) {
 
 	suffix, err := randomHex(randomSuffixBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate random suffix: %w", err)
+		return nil, fmt.Errorf(
+			"failed to generate random suffix: %w",
+			err,
+		)
 	}
-	tempDir := filepath.Join(os.TempDir(), fmt.Sprintf("spectr-pr-%s", suffix))
+	tempDir := filepath.Join(
+		os.TempDir(),
+		fmt.Sprintf("spectr-pr-%s", suffix),
+	)
 
 	cmd := exec.Command(
-		gitCmd, "worktree", "add", tempDir,
-		"-b", config.BranchName, config.BaseBranch,
+		gitCmd,
+		"worktree",
+		"add",
+		tempDir,
+		"-b",
+		config.BranchName,
+		config.BaseBranch,
 	)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, handleWorktreeError(output, config)
+		return nil, handleWorktreeError(
+			output,
+			config,
+		)
 	}
 
 	return &WorktreeInfo{
@@ -69,24 +85,46 @@ func CreateWorktree(config WorktreeConfig) (*WorktreeInfo, error) {
 }
 
 // handleWorktreeError processes worktree creation errors.
-func handleWorktreeError(output []byte, config WorktreeConfig) error {
+func handleWorktreeError(
+	output []byte,
+	config WorktreeConfig,
+) error {
 	outputStr := strings.TrimSpace(string(output))
-	if strings.Contains(outputStr, "already exists") {
+	if strings.Contains(
+		outputStr,
+		"already exists",
+	) {
 		return fmt.Errorf(
-			"branch '%s' already exists: %s", config.BranchName, outputStr,
+			"branch '%s' already exists: %s",
+			config.BranchName,
+			outputStr,
 		)
 	}
-	if strings.Contains(outputStr, "not a valid branch name") ||
-		strings.Contains(outputStr, "invalid reference") {
+	if strings.Contains(
+		outputStr,
+		"not a valid branch name",
+	) ||
+		strings.Contains(
+			outputStr,
+			"invalid reference",
+		) {
 		return fmt.Errorf(
-			"base branch '%s' not found: %s", config.BaseBranch, outputStr,
+			"base branch '%s' not found: %s",
+			config.BaseBranch,
+			outputStr,
 		)
 	}
-	if strings.Contains(outputStr, "not a git repository") {
+	if strings.Contains(
+		outputStr,
+		"not a git repository",
+	) {
 		return &specterrs.NotInGitRepositoryError{}
 	}
 
-	return fmt.Errorf("failed to create worktree: %s", outputStr)
+	return fmt.Errorf(
+		"failed to create worktree: %s",
+		outputStr,
+	)
 }
 
 // CleanupWorktree removes a git worktree and its associated branch.
@@ -98,14 +136,21 @@ func CleanupWorktree(info *WorktreeInfo) error {
 
 	var errs []string
 	if info.Path != "" {
-		errs = append(errs, removeWorktree(info.Path)...)
+		errs = append(
+			errs,
+			removeWorktree(info.Path)...)
 	}
 	if info.BranchName != "" {
-		errs = append(errs, deleteBranch(info.BranchName)...)
+		errs = append(
+			errs,
+			deleteBranch(info.BranchName)...)
 	}
 
 	if len(errs) > 0 {
-		return fmt.Errorf("cleanup errors: %s", strings.Join(errs, "; "))
+		return fmt.Errorf(
+			"cleanup errors: %s",
+			strings.Join(errs, "; "),
+		)
 	}
 
 	return nil
@@ -113,20 +158,40 @@ func CleanupWorktree(info *WorktreeInfo) error {
 
 // removeWorktree removes a worktree, ignoring errors if already removed.
 func removeWorktree(path string) []string {
-	cmd := exec.Command(gitCmd, "worktree", "remove", path, "--force")
+	cmd := exec.Command(
+		gitCmd,
+		"worktree",
+		"remove",
+		path,
+		"--force",
+	)
 	output, err := cmd.CombinedOutput()
 	if err == nil {
 		return nil
 	}
 	outputStr := strings.TrimSpace(string(output))
-	isNotWT := strings.Contains(outputStr, "is not a working tree")
-	noFile := strings.Contains(outputStr, "No such file or directory")
-	notExist := strings.Contains(outputStr, "does not exist")
+	isNotWT := strings.Contains(
+		outputStr,
+		"is not a working tree",
+	)
+	noFile := strings.Contains(
+		outputStr,
+		"No such file or directory",
+	)
+	notExist := strings.Contains(
+		outputStr,
+		"does not exist",
+	)
 	if isNotWT || noFile || notExist {
 		return nil
 	}
 
-	return []string{fmt.Sprintf("failed to remove worktree: %s", outputStr)}
+	return []string{
+		fmt.Sprintf(
+			"failed to remove worktree: %s",
+			outputStr,
+		),
+	}
 }
 
 // randomHex generates a random hex string of the specified byte length.

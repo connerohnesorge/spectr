@@ -116,7 +116,9 @@ const (
 //   - Title: Low (hidden below 80 columns to prioritize Tasks)
 //
 // Column order is always: ID | Title | Deltas | Tasks (when visible)
-func calculateChangesColumns(width int) []table.Column {
+func calculateChangesColumns(
+	width int,
+) []table.Column {
 	// Calculate available width for content (accounting for table borders/padding)
 	// Table has approximately 4 chars of padding/borders per column
 	const paddingPerColumn = 4
@@ -125,52 +127,112 @@ func calculateChangesColumns(width int) []table.Column {
 	case width >= breakpointFull:
 		// Full width (110+): all 4 columns at default widths
 		return []table.Column{
-			{Title: columnTitleID, Width: changeIDWidth},
-			{Title: columnTitleTitle, Width: changeTitleWidth},
-			{Title: columnTitleDeltas, Width: changeDeltaWidth},
-			{Title: columnTitleTasks, Width: changeTasksWidth},
+			{
+				Title: columnTitleID,
+				Width: changeIDWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: changeTitleWidth,
+			},
+			{
+				Title: columnTitleDeltas,
+				Width: changeDeltaWidth,
+			},
+			{
+				Title: columnTitleTasks,
+				Width: changeTasksWidth,
+			},
 		}
 
 	case width >= breakpointMedium:
 		// Medium width (90-109): all 4 columns visible, Title narrowed
-		titleWidth := max(width-changeIDWidth-changeDeltaWidth-
-			changeTasksWidth-(paddingPerColumn*4), 20)
+		titleWidth := max(
+			width-changeIDWidth-changeDeltaWidth-
+				changeTasksWidth-(paddingPerColumn*4),
+			20,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: changeIDWidth},
-			{Title: columnTitleTitle, Width: titleWidth},
-			{Title: columnTitleDeltas, Width: changeDeltaWidth},
-			{Title: columnTitleTasks, Width: changeTasksWidth},
+			{
+				Title: columnTitleID,
+				Width: changeIDWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: titleWidth,
+			},
+			{
+				Title: columnTitleDeltas,
+				Width: changeDeltaWidth,
+			},
+			{
+				Title: columnTitleTasks,
+				Width: changeTasksWidth,
+			},
 		}
 
 	case width >= breakpointHideTitle:
 		// Width 80-89: all 4 columns, Title very narrow (15-20 chars)
-		titleWidth := max(width-changeIDWidth-changeDeltaWidth-
-			changeTasksWidth-(paddingPerColumn*4), 15)
+		titleWidth := max(
+			width-changeIDWidth-changeDeltaWidth-
+				changeTasksWidth-(paddingPerColumn*4),
+			15,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: changeIDWidth},
-			{Title: columnTitleTitle, Width: titleWidth},
-			{Title: columnTitleDeltas, Width: changeDeltaWidth},
-			{Title: columnTitleTasks, Width: changeTasksWidth},
+			{
+				Title: columnTitleID,
+				Width: changeIDWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: titleWidth,
+			},
+			{
+				Title: columnTitleDeltas,
+				Width: changeDeltaWidth,
+			},
+			{
+				Title: columnTitleTasks,
+				Width: changeTasksWidth,
+			},
 		}
 
 	case width >= breakpointNarrow:
 		// Width 70-79: 3 columns - ID, Deltas, Tasks (Title hidden)
 		return []table.Column{
-			{Title: columnTitleID, Width: changeIDWidth},
-			{Title: columnTitleDeltas, Width: changeDeltaWidth},
-			{Title: columnTitleTasks, Width: changeTasksWidth},
+			{
+				Title: columnTitleID,
+				Width: changeIDWidth,
+			},
+			{
+				Title: columnTitleDeltas,
+				Width: changeDeltaWidth,
+			},
+			{
+				Title: columnTitleTasks,
+				Width: changeTasksWidth,
+			},
 		}
 
 	default:
 		// Minimal width (<70): 2 columns - ID, Tasks only
 		idWidth := 20
-		tasksWidth := max(width-idWidth-(paddingPerColumn*2), 10)
+		tasksWidth := max(
+			width-idWidth-(paddingPerColumn*2),
+			10,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: idWidth},
-			{Title: columnTitleTasks, Width: tasksWidth},
+			{
+				Title: columnTitleID,
+				Width: idWidth,
+			},
+			{
+				Title: columnTitleTasks,
+				Width: tasksWidth,
+			},
 		}
 	}
 }
@@ -181,48 +243,92 @@ func calculateChangesColumns(width int) []table.Column {
 //   - ID: Essential (always shown)
 //   - Title: High (always shown, width adjustable)
 //   - Requirements: Medium (width reduced or hidden below 70 columns)
-func calculateSpecsColumns(width int) []table.Column {
+func calculateSpecsColumns(
+	width int,
+) []table.Column {
 	const paddingPerColumn = 4
 
 	switch {
 	case width >= breakpointFull:
 		// Full width: all columns at default widths
 		return []table.Column{
-			{Title: columnTitleID, Width: specIDWidth},
-			{Title: columnTitleTitle, Width: specTitleWidth},
-			{Title: columnTitleRequirements, Width: specRequirementsWidth},
+			{
+				Title: columnTitleID,
+				Width: specIDWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: specTitleWidth,
+			},
+			{
+				Title: columnTitleRequirements,
+				Width: specRequirementsWidth,
+			},
 		}
 
 	case width >= breakpointMedium:
 		// Medium width: all columns visible, Title narrowed
-		titleWidth := max(width-specIDWidth-specRequirementsWidth-
-			(paddingPerColumn*3), 25)
+		titleWidth := max(
+			width-specIDWidth-specRequirementsWidth-
+				(paddingPerColumn*3),
+			25,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: specIDWidth},
-			{Title: columnTitleTitle, Width: titleWidth},
-			{Title: columnTitleRequirements, Width: specRequirementsWidth},
+			{
+				Title: columnTitleID,
+				Width: specIDWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: titleWidth,
+			},
+			{
+				Title: columnTitleRequirements,
+				Width: specRequirementsWidth,
+			},
 		}
 
 	case width >= breakpointNarrow:
 		// Narrow width: Requirements column narrowed significantly
 		reqWidth := 8
-		titleWidth := max(width-specIDWidth-reqWidth-(paddingPerColumn*3), 20)
+		titleWidth := max(
+			width-specIDWidth-reqWidth-(paddingPerColumn*3),
+			20,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: specIDWidth},
-			{Title: columnTitleTitle, Width: titleWidth},
-			{Title: columnTitleRequirements, Width: reqWidth},
+			{
+				Title: columnTitleID,
+				Width: specIDWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: titleWidth,
+			},
+			{
+				Title: columnTitleRequirements,
+				Width: reqWidth,
+			},
 		}
 
 	default:
 		// Minimal width: hide Requirements, compress ID and Title
 		idWidth := 25
-		titleWidth := max(width-idWidth-(paddingPerColumn*2), 15)
+		titleWidth := max(
+			width-idWidth-(paddingPerColumn*2),
+			15,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: idWidth},
-			{Title: columnTitleTitle, Width: titleWidth},
+			{
+				Title: columnTitleID,
+				Width: idWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: titleWidth,
+			},
 		}
 	}
 }
@@ -234,51 +340,104 @@ func calculateSpecsColumns(width int) []table.Column {
 //   - Type: High (always shown at fixed 8 width)
 //   - Title: High (width adjustable)
 //   - Details: Low (hidden below 90 columns)
-func calculateUnifiedColumns(width int) []table.Column {
+func calculateUnifiedColumns(
+	width int,
+) []table.Column {
 	const paddingPerColumn = 4
 
 	switch {
 	case width >= breakpointFull:
 		// Full width: all columns at default widths
 		return []table.Column{
-			{Title: columnTitleID, Width: unifiedIDWidth},
-			{Title: columnTitleType, Width: unifiedTypeWidth},
-			{Title: columnTitleTitle, Width: unifiedTitleWidth},
-			{Title: columnTitleDetails, Width: unifiedDetailsWidth},
+			{
+				Title: columnTitleID,
+				Width: unifiedIDWidth,
+			},
+			{
+				Title: columnTitleType,
+				Width: unifiedTypeWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: unifiedTitleWidth,
+			},
+			{
+				Title: columnTitleDetails,
+				Width: unifiedDetailsWidth,
+			},
 		}
 
 	case width >= breakpointMedium:
 		// Medium width: all columns visible, Title narrowed
-		titleWidth := max(width-unifiedIDWidth-unifiedTypeWidth-
-			unifiedDetailsWidth-(paddingPerColumn*4), 25)
+		titleWidth := max(
+			width-unifiedIDWidth-unifiedTypeWidth-
+				unifiedDetailsWidth-(paddingPerColumn*4),
+			25,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: unifiedIDWidth},
-			{Title: columnTitleType, Width: unifiedTypeWidth},
-			{Title: columnTitleTitle, Width: titleWidth},
-			{Title: columnTitleDetails, Width: unifiedDetailsWidth},
+			{
+				Title: columnTitleID,
+				Width: unifiedIDWidth,
+			},
+			{
+				Title: columnTitleType,
+				Width: unifiedTypeWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: titleWidth,
+			},
+			{
+				Title: columnTitleDetails,
+				Width: unifiedDetailsWidth,
+			},
 		}
 
 	case width >= breakpointNarrow:
 		// Narrow width: hide Details column
-		titleWidth := max(width-unifiedIDWidth-unifiedTypeWidth-
-			(paddingPerColumn*3), 20)
+		titleWidth := max(
+			width-unifiedIDWidth-unifiedTypeWidth-
+				(paddingPerColumn*3),
+			20,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: unifiedIDWidth},
-			{Title: columnTitleType, Width: unifiedTypeWidth},
-			{Title: columnTitleTitle, Width: titleWidth},
+			{
+				Title: columnTitleID,
+				Width: unifiedIDWidth,
+			},
+			{
+				Title: columnTitleType,
+				Width: unifiedTypeWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: titleWidth,
+			},
 		}
 
 	default:
 		// Minimal width: hide Details, compress ID and Title
 		idWidth := 20
-		titleWidth := max(width-idWidth-unifiedTypeWidth-(paddingPerColumn*3), 15)
+		titleWidth := max(
+			width-idWidth-unifiedTypeWidth-(paddingPerColumn*3),
+			15,
+		)
 
 		return []table.Column{
-			{Title: columnTitleID, Width: idWidth},
-			{Title: columnTitleType, Width: unifiedTypeWidth},
-			{Title: columnTitleTitle, Width: titleWidth},
+			{
+				Title: columnTitleID,
+				Width: idWidth,
+			},
+			{
+				Title: columnTitleType,
+				Width: unifiedTypeWidth,
+			},
+			{
+				Title: columnTitleTitle,
+				Width: titleWidth,
+			},
 		}
 	}
 }
@@ -286,7 +445,10 @@ func calculateUnifiedColumns(width int) []table.Column {
 // calculateTitleTruncate returns the appropriate title truncation limit
 // based on the view type and terminal width. The truncation is set slightly
 // below the column width to account for any table rendering overhead.
-func calculateTitleTruncate(viewType string, width int) int {
+func calculateTitleTruncate(
+	viewType string,
+	width int,
+) int {
 	const truncateBuffer = 2 // Leave 2 chars buffer for clean truncation
 
 	switch viewType {
@@ -325,14 +487,23 @@ func calculateTitleTruncate(viewType string, width int) int {
 }
 
 // hasHiddenColumns returns true if any columns are hidden at the current width
-func hasHiddenColumns(viewType string, width int) bool {
+func hasHiddenColumns(
+	viewType string,
+	width int,
+) bool {
 	switch viewType {
 	case itemTypeChange:
-		return len(calculateChangesColumns(width)) < 4 // Full has 4 columns
+		return len(
+			calculateChangesColumns(width),
+		) < 4 // Full has 4 columns
 	case itemTypeSpec:
-		return len(calculateSpecsColumns(width)) < 3 // Full has 3 columns
+		return len(
+			calculateSpecsColumns(width),
+		) < 3 // Full has 3 columns
 	case itemTypeAll:
-		return len(calculateUnifiedColumns(width)) < 4 // Full has 4 columns
+		return len(
+			calculateUnifiedColumns(width),
+		) < 4 // Full has 4 columns
 	default:
 		return false
 	}
@@ -357,15 +528,24 @@ func buildChangesRows(
 			// Full: ID, Title, Deltas, Tasks
 			rows[i] = table.Row{
 				change.ID,
-				tui.TruncateString(change.Title, titleTruncate),
-				fmt.Sprintf("%d", change.DeltaCount),
+				tui.TruncateString(
+					change.Title,
+					titleTruncate,
+				),
+				fmt.Sprintf(
+					"%d",
+					change.DeltaCount,
+				),
 				tasksStatus,
 			}
 		case 3:
 			// 3 columns without Title: ID, Deltas, Tasks
 			rows[i] = table.Row{
 				change.ID,
-				fmt.Sprintf("%d", change.DeltaCount),
+				fmt.Sprintf(
+					"%d",
+					change.DeltaCount,
+				),
 				tasksStatus,
 			}
 		default:
@@ -394,14 +574,23 @@ func buildSpecsRows(
 			// Full: ID, Title, Requirements
 			rows[i] = table.Row{
 				spec.ID,
-				tui.TruncateString(spec.Title, titleTruncate),
-				fmt.Sprintf("%d", spec.RequirementCount),
+				tui.TruncateString(
+					spec.Title,
+					titleTruncate,
+				),
+				fmt.Sprintf(
+					"%d",
+					spec.RequirementCount,
+				),
 			}
 		default:
 			// Minimal: ID, Title only
 			rows[i] = table.Row{
 				spec.ID,
-				tui.TruncateString(spec.Title, titleTruncate),
+				tui.TruncateString(
+					spec.Title,
+					titleTruncate,
+				),
 			}
 		}
 	}
@@ -423,7 +612,8 @@ func buildUnifiedRows(
 		case ItemTypeChange:
 			typeStr = "CHANGE"
 			if item.Change != nil {
-				details = fmt.Sprintf("Tasks: %d/%d 🔺 %d",
+				details = fmt.Sprintf(
+					"Tasks: %d/%d 🔺 %d",
 					item.Change.TaskStatus.Completed,
 					item.Change.TaskStatus.Total,
 					item.Change.DeltaCount,
@@ -432,7 +622,10 @@ func buildUnifiedRows(
 		case ItemTypeSpec:
 			typeStr = "SPEC"
 			if item.Spec != nil {
-				details = fmt.Sprintf("Reqs: %d", item.Spec.RequirementCount)
+				details = fmt.Sprintf(
+					"Reqs: %d",
+					item.Spec.RequirementCount,
+				)
 			}
 		}
 
@@ -442,7 +635,10 @@ func buildUnifiedRows(
 			rows[i] = table.Row{
 				item.ID(),
 				typeStr,
-				tui.TruncateString(item.Title(), titleTruncate),
+				tui.TruncateString(
+					item.Title(),
+					titleTruncate,
+				),
 				details,
 			}
 		default:
@@ -450,7 +646,10 @@ func buildUnifiedRows(
 			rows[i] = table.Row{
 				item.ID(),
 				typeStr,
-				tui.TruncateString(item.Title(), titleTruncate),
+				tui.TruncateString(
+					item.Title(),
+					titleTruncate,
+				),
 			}
 		}
 	}
@@ -493,7 +692,9 @@ func (interactiveModel) Init() tea.Cmd {
 }
 
 // Update handles messages
-func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m interactiveModel) Update(
+	msg tea.Msg,
+) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch typedMsg := msg.(type) {
@@ -580,7 +781,8 @@ func (m interactiveModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // or selecting in selection mode
 func (m interactiveModel) handleEnter() interactiveModel {
 	cursor := m.table.Cursor()
-	if cursor < 0 || cursor >= len(m.table.Rows()) {
+	if cursor < 0 ||
+		cursor >= len(m.table.Rows()) {
 		return m
 	}
 
@@ -616,7 +818,8 @@ func (m interactiveModel) handleEnter() interactiveModel {
 func (m interactiveModel) handleEdit() (interactiveModel, tea.Cmd) {
 	// Get the selected row
 	cursor := m.table.Cursor()
-	if cursor < 0 || cursor >= len(m.table.Rows()) {
+	if cursor < 0 ||
+		cursor >= len(m.table.Rows()) {
 		return m, nil
 	}
 
@@ -655,27 +858,43 @@ func (m interactiveModel) handleEdit() (interactiveModel, tea.Cmd) {
 	// Check if EDITOR is set
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
-		m.err = &specterrs.EditorNotSetError{Operation: "edit"}
+		m.err = &specterrs.EditorNotSetError{
+			Operation: "edit",
+		}
 
 		return m, nil
 	}
 
 	// Construct file path based on type
-	filePath := m.getEditFilePath(itemID, editItemType)
+	filePath := m.getEditFilePath(
+		itemID,
+		editItemType,
+	)
 
 	// Verify file exists
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		m.err = fmt.Errorf("file not found: %s", filePath)
+	if _, err := os.Stat(filePath); os.IsNotExist(
+		err,
+	) {
+		m.err = fmt.Errorf(
+			"file not found: %s",
+			filePath,
+		)
 
 		return m, nil
 	}
 
 	// Launch editor - use tea.ExecProcess to handle editor lifecycle
-	c := exec.Command(editor, filePath) //nolint:gosec
+	c := exec.Command(
+		editor,
+		filePath,
+	) //nolint:gosec
 
-	return m, tea.ExecProcess(c, func(err error) tea.Msg {
-		return editorFinishedMsg{err: err}
-	})
+	return m, tea.ExecProcess(
+		c,
+		func(err error) tea.Msg {
+			return editorFinishedMsg{err: err}
+		},
+	)
 }
 
 // handleToggleFilter toggles between showing all items,
@@ -707,7 +926,8 @@ func (m interactiveModel) handleToggleFilter() interactiveModel {
 // handleArchive handles the 'a' key press for archiving a change
 func (m interactiveModel) handleArchive() (interactiveModel, tea.Cmd) {
 	cursor := m.table.Cursor()
-	if cursor < 0 || cursor >= len(m.table.Rows()) {
+	if cursor < 0 ||
+		cursor >= len(m.table.Rows()) {
 		return m, nil
 	}
 
@@ -751,7 +971,8 @@ func (m interactiveModel) handlePR() (interactiveModel, tea.Cmd) {
 
 	// Get selected row
 	cursor := m.table.Cursor()
-	if cursor < 0 || cursor >= len(m.table.Rows()) {
+	if cursor < 0 ||
+		cursor >= len(m.table.Rows()) {
 		return m, nil
 	}
 
@@ -768,7 +989,9 @@ func (m interactiveModel) handlePR() (interactiveModel, tea.Cmd) {
 
 // rebuildUnifiedTable rebuilds the table based on current filter
 // and terminal width (for responsive columns)
-func rebuildUnifiedTable(m interactiveModel) interactiveModel {
+func rebuildUnifiedTable(
+	m interactiveModel,
+) interactiveModel {
 	var items ItemList
 	if m.filterType == nil {
 		items = m.allItems
@@ -783,9 +1006,16 @@ func rebuildUnifiedTable(m interactiveModel) interactiveModel {
 		width = breakpointFull
 	}
 	columns := calculateUnifiedColumns(width)
-	titleTruncate := calculateTitleTruncate(itemTypeAll, width)
+	titleTruncate := calculateTitleTruncate(
+		itemTypeAll,
+		width,
+	)
 
-	rows := buildUnifiedRows(items, titleTruncate, len(columns))
+	rows := buildUnifiedRows(
+		items,
+		titleTruncate,
+		len(columns),
+	)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -875,9 +1105,15 @@ type editorFinishedMsg struct {
 }
 
 // rowMatchesQuery checks if any column in the row contains the query
-func rowMatchesQuery(row table.Row, query string) bool {
+func rowMatchesQuery(
+	row table.Row,
+	query string,
+) bool {
 	for _, col := range row {
-		if strings.Contains(strings.ToLower(col), query) {
+		if strings.Contains(
+			strings.ToLower(col),
+			query,
+		) {
 			return true
 		}
 	}
@@ -909,7 +1145,9 @@ func (m interactiveModel) handleSearchModeInput(
 		return m, nil, true
 	default:
 		// Update text input and filter
-		m.searchInput, cmd = m.searchInput.Update(keyMsg)
+		m.searchInput, cmd = m.searchInput.Update(
+			keyMsg,
+		)
 		m.searchQuery = m.searchInput.Value()
 		m = m.applyFilter()
 
@@ -975,14 +1213,23 @@ func (m interactiveModel) rebuildTableForWidth() interactiveModel {
 }
 
 // rebuildChangesTable rebuilds the changes table with responsive columns
-func (m interactiveModel) rebuildChangesTable(width int) interactiveModel {
+func (m interactiveModel) rebuildChangesTable(
+	width int,
+) interactiveModel {
 	if len(m.changesData) == 0 {
 		return m
 	}
 
 	columns := calculateChangesColumns(width)
-	titleTruncate := calculateTitleTruncate(itemTypeChange, width)
-	rows := buildChangesRows(m.changesData, titleTruncate, len(columns))
+	titleTruncate := calculateTitleTruncate(
+		itemTypeChange,
+		width,
+	)
+	rows := buildChangesRows(
+		m.changesData,
+		titleTruncate,
+		len(columns),
+	)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -999,14 +1246,23 @@ func (m interactiveModel) rebuildChangesTable(width int) interactiveModel {
 }
 
 // rebuildSpecsTable rebuilds the specs table with responsive columns
-func (m interactiveModel) rebuildSpecsTable(width int) interactiveModel {
+func (m interactiveModel) rebuildSpecsTable(
+	width int,
+) interactiveModel {
 	if len(m.specsData) == 0 {
 		return m
 	}
 
 	columns := calculateSpecsColumns(width)
-	titleTruncate := calculateTitleTruncate(itemTypeSpec, width)
-	rows := buildSpecsRows(m.specsData, titleTruncate, len(columns))
+	titleTruncate := calculateTitleTruncate(
+		itemTypeSpec,
+		width,
+	)
+	rows := buildSpecsRows(
+		m.specsData,
+		titleTruncate,
+		len(columns),
+	)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -1043,12 +1299,19 @@ func (m interactiveModel) getEditFilePath(
 // View renders the model
 func (m interactiveModel) View() string {
 	if m.quitting {
-		if m.archiveRequested && m.selectedID != "" {
-			return fmt.Sprintf("Archiving: %s\n", m.selectedID)
+		if m.archiveRequested &&
+			m.selectedID != "" {
+			return fmt.Sprintf(
+				"Archiving: %s\n",
+				m.selectedID,
+			)
 		}
 
 		if m.prRequested && m.selectedID != "" {
-			return fmt.Sprintf("PR mode: %s\n", m.selectedID)
+			return fmt.Sprintf(
+				"PR mode: %s\n",
+				m.selectedID,
+			)
 		}
 
 		// In stdout mode, output just the ID for piping
@@ -1059,11 +1322,17 @@ func (m interactiveModel) View() string {
 		// In selection mode, just show selected ID without clipboard
 		// message.
 		if m.selectionMode && m.selectedID != "" {
-			return fmt.Sprintf("Selected: %s\n", m.selectedID)
+			return fmt.Sprintf(
+				"Selected: %s\n",
+				m.selectedID,
+			)
 		}
 
 		if m.copied && m.err == nil {
-			return fmt.Sprintf("✓ Copied: %s\n", m.selectedID)
+			return fmt.Sprintf(
+				"✓ Copied: %s\n",
+				m.selectedID,
+			)
 		} else if m.err != nil {
 			return fmt.Sprintf(
 				"Copied: %s\nError: %v\n",
@@ -1078,7 +1347,10 @@ func (m interactiveModel) View() string {
 	// Display search input if search mode is active
 	var view string
 	if m.searchMode {
-		view = fmt.Sprintf("Search: %s\n\n", m.searchInput.View())
+		view = fmt.Sprintf(
+			"Search: %s\n\n",
+			m.searchInput.View(),
+		)
 	}
 
 	// Choose which footer to display based on showHelp state
@@ -1088,7 +1360,11 @@ func (m interactiveModel) View() string {
 	}
 
 	// Append hidden columns hint if columns are hidden due to narrow terminal
-	if m.terminalWidth > 0 && hasHiddenColumns(m.itemType, m.terminalWidth) {
+	if m.terminalWidth > 0 &&
+		hasHiddenColumns(
+			m.itemType,
+			m.terminalWidth,
+		) {
 		footer += " | (some columns hidden)"
 	}
 
@@ -1096,7 +1372,10 @@ func (m interactiveModel) View() string {
 
 	// Display error message if present, but keep TUI active
 	if m.err != nil {
-		view += fmt.Sprintf("\nError: %v\n", m.err)
+		view += fmt.Sprintf(
+			"\nError: %v\n",
+			m.err,
+		)
 	}
 
 	return view
@@ -1119,10 +1398,19 @@ func RunInteractiveChanges(
 	// Use default full-width columns initially (terminalWidth=0 means unknown)
 	//
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
-	columns := calculateChangesColumns(breakpointFull)
-	titleTruncate := calculateTitleTruncate(itemTypeChange, breakpointFull)
+	columns := calculateChangesColumns(
+		breakpointFull,
+	)
+	titleTruncate := calculateTitleTruncate(
+		itemTypeChange,
+		breakpointFull,
+	)
 
-	rows := buildChangesRows(changes, titleTruncate, len(columns))
+	rows := buildChangesRows(
+		changes,
+		titleTruncate,
+		len(columns),
+	)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -1154,7 +1442,10 @@ func RunInteractiveChanges(
 	p := tea.NewProgram(m)
 	finalModel, runErr := p.Run()
 	if runErr != nil {
-		return "", "", fmt.Errorf(errInteractiveModeFormat, runErr)
+		return "", "", fmt.Errorf(
+			errInteractiveModeFormat,
+			runErr,
+		)
 	}
 
 	// Check if there was an error during execution
@@ -1170,7 +1461,8 @@ func RunInteractiveChanges(
 		}
 
 		// Return archive ID if archive was requested
-		if fm.archiveRequested && fm.selectedID != "" {
+		if fm.archiveRequested &&
+			fm.selectedID != "" {
 			return fm.selectedID, "", nil
 		}
 
@@ -1196,10 +1488,19 @@ func RunInteractiveArchive(
 
 	// Use default full-width columns initially (terminalWidth=0 means unknown)
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
-	columns := calculateChangesColumns(breakpointFull)
-	titleTruncate := calculateTitleTruncate(itemTypeChange, breakpointFull)
+	columns := calculateChangesColumns(
+		breakpointFull,
+	)
+	titleTruncate := calculateTitleTruncate(
+		itemTypeChange,
+		breakpointFull,
+	)
 
-	rows := buildChangesRows(changes, titleTruncate, len(columns))
+	rows := buildChangesRows(
+		changes,
+		titleTruncate,
+		len(columns),
+	)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -1230,7 +1531,10 @@ func RunInteractiveArchive(
 	p := tea.NewProgram(m)
 	finalModel, err := p.Run()
 	if err != nil {
-		return "", fmt.Errorf(errInteractiveModeFormat, err)
+		return "", fmt.Errorf(
+			errInteractiveModeFormat,
+			err,
+		)
 	}
 
 	// Check if there was an error during execution
@@ -1255,7 +1559,11 @@ func RunInteractiveArchive(
 }
 
 // RunInteractiveSpecs runs the interactive table for specs
-func RunInteractiveSpecs(specs []SpecInfo, projectPath string, stdoutMode bool) error {
+func RunInteractiveSpecs(
+	specs []SpecInfo,
+	projectPath string,
+	stdoutMode bool,
+) error {
 	if len(specs) == 0 {
 		return nil
 	}
@@ -1263,10 +1571,19 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string, stdoutMode bool) 
 	// Use default full-width columns initially (terminalWidth=0 means unknown)
 	//
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
-	columns := calculateSpecsColumns(breakpointFull)
-	titleTruncate := calculateTitleTruncate(itemTypeSpec, breakpointFull)
+	columns := calculateSpecsColumns(
+		breakpointFull,
+	)
+	titleTruncate := calculateTitleTruncate(
+		itemTypeSpec,
+		breakpointFull,
+	)
 
-	rows := buildSpecsRows(specs, titleTruncate, len(columns))
+	rows := buildSpecsRows(
+		specs,
+		titleTruncate,
+		len(columns),
+	)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -1298,7 +1615,10 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string, stdoutMode bool) 
 	p := tea.NewProgram(m)
 	finalModel, err := p.Run()
 	if err != nil {
-		return fmt.Errorf(errInteractiveModeFormat, err)
+		return fmt.Errorf(
+			errInteractiveModeFormat,
+			err,
+		)
 	}
 
 	// Check if there was an error during execution
@@ -1318,17 +1638,30 @@ func RunInteractiveSpecs(specs []SpecInfo, projectPath string, stdoutMode bool) 
 
 // RunInteractiveAll runs the interactive table for all items
 // (changes and specs)
-func RunInteractiveAll(items ItemList, projectPath string, stdoutMode bool) error {
+func RunInteractiveAll(
+	items ItemList,
+	projectPath string,
+	stdoutMode bool,
+) error {
 	if len(items) == 0 {
 		return nil
 	}
 
 	// Use default full-width columns initially (terminalWidth=0 means unknown)
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
-	columns := calculateUnifiedColumns(breakpointFull)
-	titleTruncate := calculateTitleTruncate(itemTypeAll, breakpointFull)
+	columns := calculateUnifiedColumns(
+		breakpointFull,
+	)
+	titleTruncate := calculateTitleTruncate(
+		itemTypeAll,
+		breakpointFull,
+	)
 
-	rows := buildUnifiedRows(items, titleTruncate, len(columns))
+	rows := buildUnifiedRows(
+		items,
+		titleTruncate,
+		len(columns),
+	)
 
 	t := table.New(
 		table.WithColumns(columns),
@@ -1361,11 +1694,15 @@ func RunInteractiveAll(items ItemList, projectPath string, stdoutMode bool) erro
 	p := tea.NewProgram(m)
 	finalModel, err := p.Run()
 	if err != nil {
-		return fmt.Errorf(errInteractiveModeFormat, err)
+		return fmt.Errorf(
+			errInteractiveModeFormat,
+			err,
+		)
 	}
 
 	// Check if there was an error during execution
-	if fm, ok := finalModel.(interactiveModel); ok && fm.err != nil {
+	if fm, ok := finalModel.(interactiveModel); ok &&
+		fm.err != nil {
 		// Don't return error, just warn - clipboard failure shouldn't
 		// stop the command
 		fmt.Fprintf(

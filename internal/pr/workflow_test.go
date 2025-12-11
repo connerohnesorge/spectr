@@ -54,7 +54,9 @@ func TestPRConfig_Struct(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Verify struct fields are set correctly
 			if tt.config.ChangeID == "" {
-				t.Error("ChangeID should not be empty")
+				t.Error(
+					"ChangeID should not be empty",
+				)
 			}
 
 			// Test that struct is properly initialized
@@ -70,28 +72,60 @@ func TestPRConfig_Struct(t *testing.T) {
 			}
 
 			if cfg.ChangeID != tt.config.ChangeID {
-				t.Errorf("ChangeID = %q, want %q", cfg.ChangeID, tt.config.ChangeID)
+				t.Errorf(
+					"ChangeID = %q, want %q",
+					cfg.ChangeID,
+					tt.config.ChangeID,
+				)
 			}
 			if cfg.Mode != tt.config.Mode {
-				t.Errorf("Mode = %q, want %q", cfg.Mode, tt.config.Mode)
+				t.Errorf(
+					"Mode = %q, want %q",
+					cfg.Mode,
+					tt.config.Mode,
+				)
 			}
 			if cfg.BaseBranch != tt.config.BaseBranch {
-				t.Errorf("BaseBranch = %q, want %q", cfg.BaseBranch, tt.config.BaseBranch)
+				t.Errorf(
+					"BaseBranch = %q, want %q",
+					cfg.BaseBranch,
+					tt.config.BaseBranch,
+				)
 			}
 			if cfg.Draft != tt.config.Draft {
-				t.Errorf("Draft = %v, want %v", cfg.Draft, tt.config.Draft)
+				t.Errorf(
+					"Draft = %v, want %v",
+					cfg.Draft,
+					tt.config.Draft,
+				)
 			}
 			if cfg.Force != tt.config.Force {
-				t.Errorf("Force = %v, want %v", cfg.Force, tt.config.Force)
+				t.Errorf(
+					"Force = %v, want %v",
+					cfg.Force,
+					tt.config.Force,
+				)
 			}
 			if cfg.DryRun != tt.config.DryRun {
-				t.Errorf("DryRun = %v, want %v", cfg.DryRun, tt.config.DryRun)
+				t.Errorf(
+					"DryRun = %v, want %v",
+					cfg.DryRun,
+					tt.config.DryRun,
+				)
 			}
 			if cfg.SkipSpecs != tt.config.SkipSpecs {
-				t.Errorf("SkipSpecs = %v, want %v", cfg.SkipSpecs, tt.config.SkipSpecs)
+				t.Errorf(
+					"SkipSpecs = %v, want %v",
+					cfg.SkipSpecs,
+					tt.config.SkipSpecs,
+				)
 			}
 			if cfg.ProjectRoot != tt.config.ProjectRoot {
-				t.Errorf("ProjectRoot = %q, want %q", cfg.ProjectRoot, tt.config.ProjectRoot)
+				t.Errorf(
+					"ProjectRoot = %q, want %q",
+					cfg.ProjectRoot,
+					tt.config.ProjectRoot,
+				)
 			}
 		})
 	}
@@ -152,22 +186,46 @@ func TestPRResult_Struct(t *testing.T) {
 			}
 
 			if res.PRURL != tt.result.PRURL {
-				t.Errorf("PRURL = %q, want %q", res.PRURL, tt.result.PRURL)
+				t.Errorf(
+					"PRURL = %q, want %q",
+					res.PRURL,
+					tt.result.PRURL,
+				)
 			}
 			if res.BranchName != tt.result.BranchName {
-				t.Errorf("BranchName = %q, want %q", res.BranchName, tt.result.BranchName)
+				t.Errorf(
+					"BranchName = %q, want %q",
+					res.BranchName,
+					tt.result.BranchName,
+				)
 			}
 			if res.ArchivePath != tt.result.ArchivePath {
-				t.Errorf("ArchivePath = %q, want %q", res.ArchivePath, tt.result.ArchivePath)
+				t.Errorf(
+					"ArchivePath = %q, want %q",
+					res.ArchivePath,
+					tt.result.ArchivePath,
+				)
 			}
 			if res.Platform != tt.result.Platform {
-				t.Errorf("Platform = %v, want %v", res.Platform, tt.result.Platform)
+				t.Errorf(
+					"Platform = %v, want %v",
+					res.Platform,
+					tt.result.Platform,
+				)
 			}
 			if res.ManualURL != tt.result.ManualURL {
-				t.Errorf("ManualURL = %q, want %q", res.ManualURL, tt.result.ManualURL)
+				t.Errorf(
+					"ManualURL = %q, want %q",
+					res.ManualURL,
+					tt.result.ManualURL,
+				)
 			}
 			if res.Counts.Added != tt.result.Counts.Added {
-				t.Errorf("Counts.Added = %d, want %d", res.Counts.Added, tt.result.Counts.Added)
+				t.Errorf(
+					"Counts.Added = %d, want %d",
+					res.Counts.Added,
+					tt.result.Counts.Added,
+				)
 			}
 			if res.Counts.Modified != tt.result.Counts.Modified {
 				t.Errorf(
@@ -196,77 +254,131 @@ func TestPRResult_Struct(t *testing.T) {
 
 // TestCopyDir tests directory copying functionality.
 func TestCopyDir(t *testing.T) {
-	t.Run("copy directory with files", func(t *testing.T) {
-		// Create source directory
-		srcDir := t.TempDir()
-		dstDir := filepath.Join(t.TempDir(), "destination")
+	t.Run(
+		"copy directory with files",
+		func(t *testing.T) {
+			// Create source directory
+			srcDir := t.TempDir()
+			dstDir := filepath.Join(
+				t.TempDir(),
+				"destination",
+			)
 
-		// Create test files in source
-		testFiles := map[string]string{
-			"file1.txt":         "content of file1",
-			"file2.md":          "# Markdown content",
-			"subdir/nested.txt": "nested file content",
-			"subdir/deep/a.txt": "deeply nested",
-			"another/file.json": `{"key": "value"}`,
-		}
-
-		for path, content := range testFiles {
-			fullPath := filepath.Join(srcDir, path)
-			if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
-				t.Fatalf("Failed to create directory: %v", err)
+			// Create test files in source
+			testFiles := map[string]string{
+				"file1.txt":         "content of file1",
+				"file2.md":          "# Markdown content",
+				"subdir/nested.txt": "nested file content",
+				"subdir/deep/a.txt": "deeply nested",
+				"another/file.json": `{"key": "value"}`,
 			}
-			if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
-				t.Fatalf("Failed to write file %s: %v", path, err)
+
+			for path, content := range testFiles {
+				fullPath := filepath.Join(
+					srcDir,
+					path,
+				)
+				if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+					t.Fatalf(
+						"Failed to create directory: %v",
+						err,
+					)
+				}
+				if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+					t.Fatalf(
+						"Failed to write file %s: %v",
+						path,
+						err,
+					)
+				}
 			}
-		}
 
-		// Copy directory
-		if err := copyDir(srcDir, dstDir); err != nil {
-			t.Fatalf("copyDir() error = %v", err)
-		}
+			// Copy directory
+			if err := copyDir(srcDir, dstDir); err != nil {
+				t.Fatalf(
+					"copyDir() error = %v",
+					err,
+				)
+			}
 
-		// Verify all files were copied
-		for path, expectedContent := range testFiles {
-			fullPath := filepath.Join(dstDir, path)
-			content, err := os.ReadFile(fullPath)
+			// Verify all files were copied
+			for path, expectedContent := range testFiles {
+				fullPath := filepath.Join(
+					dstDir,
+					path,
+				)
+				content, err := os.ReadFile(
+					fullPath,
+				)
+				if err != nil {
+					t.Errorf(
+						"Failed to read copied file %s: %v",
+						path,
+						err,
+					)
+
+					continue
+				}
+				if string(
+					content,
+				) != expectedContent {
+					t.Errorf(
+						"File %s content = %q, want %q",
+						path,
+						string(content),
+						expectedContent,
+					)
+				}
+			}
+		},
+	)
+
+	t.Run(
+		"copy empty directory",
+		func(t *testing.T) {
+			srcDir := t.TempDir()
+			dstDir := filepath.Join(
+				t.TempDir(),
+				"empty-dest",
+			)
+
+			if err := copyDir(srcDir, dstDir); err != nil {
+				t.Fatalf(
+					"copyDir() error = %v",
+					err,
+				)
+			}
+
+			// Verify destination exists
+			info, err := os.Stat(dstDir)
 			if err != nil {
-				t.Errorf("Failed to read copied file %s: %v", path, err)
-
-				continue
+				t.Fatalf(
+					"Destination directory should exist: %v",
+					err,
+				)
 			}
-			if string(content) != expectedContent {
-				t.Errorf("File %s content = %q, want %q", path, string(content), expectedContent)
+			if !info.IsDir() {
+				t.Error(
+					"Destination should be a directory",
+				)
 			}
-		}
-	})
+		},
+	)
 
-	t.Run("copy empty directory", func(t *testing.T) {
-		srcDir := t.TempDir()
-		dstDir := filepath.Join(t.TempDir(), "empty-dest")
+	t.Run(
+		"non-existent source directory",
+		func(t *testing.T) {
+			srcDir := "/nonexistent/source/directory/xyz123"
+			dstDir := t.TempDir()
 
-		if err := copyDir(srcDir, dstDir); err != nil {
-			t.Fatalf("copyDir() error = %v", err)
-		}
-
-		// Verify destination exists
-		info, err := os.Stat(dstDir)
-		if err != nil {
-			t.Fatalf("Destination directory should exist: %v", err)
-		}
-		if !info.IsDir() {
-			t.Error("Destination should be a directory")
-		}
-	})
-
-	t.Run("non-existent source directory", func(t *testing.T) {
-		srcDir := "/nonexistent/source/directory/xyz123"
-		dstDir := t.TempDir()
-
-		err := copyDir(srcDir, dstDir)
-		if err == nil {
-			t.Error("copyDir() expected error for non-existent source, got nil")
-		}
-	})
+			err := copyDir(srcDir, dstDir)
+			if err == nil {
+				t.Error(
+					"copyDir() expected error for non-existent source, got nil",
+				)
+			}
+		},
+	)
 }
 
 // TestExtractURLFromOutput tests URL extraction from CLI output.
@@ -345,9 +457,15 @@ Second: https://example.com/second`,
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := extractURLFromOutput(tt.output)
+			result := extractURLFromOutput(
+				tt.output,
+			)
 			if result != tt.expected {
-				t.Errorf("extractURLFromOutput() = %q, want %q", result, tt.expected)
+				t.Errorf(
+					"extractURLFromOutput() = %q, want %q",
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -399,9 +517,14 @@ This PR includes:
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			filePath, err := writeTempBodyFile(tt.body)
+			filePath, err := writeTempBodyFile(
+				tt.body,
+			)
 			if err != nil {
-				t.Fatalf("writeTempBodyFile() error = %v", err)
+				t.Fatalf(
+					"writeTempBodyFile() error = %v",
+					err,
+				)
 			}
 
 			// Ensure cleanup
@@ -410,19 +533,31 @@ This PR includes:
 			// Verify file exists
 			info, err := os.Stat(filePath)
 			if err != nil {
-				t.Fatalf("Temp file should exist: %v", err)
+				t.Fatalf(
+					"Temp file should exist: %v",
+					err,
+				)
 			}
 			if info.IsDir() {
-				t.Error("Should be a file, not a directory")
+				t.Error(
+					"Should be a file, not a directory",
+				)
 			}
 
 			// Verify content
 			content, err := os.ReadFile(filePath)
 			if err != nil {
-				t.Fatalf("Failed to read temp file: %v", err)
+				t.Fatalf(
+					"Failed to read temp file: %v",
+					err,
+				)
 			}
 			if string(content) != tt.body {
-				t.Errorf("File content = %q, want %q", string(content), tt.body)
+				t.Errorf(
+					"File content = %q, want %q",
+					string(content),
+					tt.body,
+				)
 			}
 		})
 	}
@@ -469,20 +604,32 @@ func TestWorkflowContext_Struct(t *testing.T) {
 			}
 
 			if ctx.platformInfo.Platform != tt.ctx.platformInfo.Platform {
-				t.Errorf("Platform = %v, want %v",
-					ctx.platformInfo.Platform, tt.ctx.platformInfo.Platform)
+				t.Errorf(
+					"Platform = %v, want %v",
+					ctx.platformInfo.Platform,
+					tt.ctx.platformInfo.Platform,
+				)
 			}
 			if ctx.platformInfo.CLITool != tt.ctx.platformInfo.CLITool {
-				t.Errorf("CLITool = %q, want %q",
-					ctx.platformInfo.CLITool, tt.ctx.platformInfo.CLITool)
+				t.Errorf(
+					"CLITool = %q, want %q",
+					ctx.platformInfo.CLITool,
+					tt.ctx.platformInfo.CLITool,
+				)
 			}
 			if ctx.baseBranch != tt.ctx.baseBranch {
-				t.Errorf("baseBranch = %q, want %q",
-					ctx.baseBranch, tt.ctx.baseBranch)
+				t.Errorf(
+					"baseBranch = %q, want %q",
+					ctx.baseBranch,
+					tt.ctx.baseBranch,
+				)
 			}
 			if ctx.branchName != tt.ctx.branchName {
-				t.Errorf("branchName = %q, want %q",
-					ctx.branchName, tt.ctx.branchName)
+				t.Errorf(
+					"branchName = %q, want %q",
+					ctx.branchName,
+					tt.ctx.branchName,
+				)
 			}
 		})
 	}
@@ -490,67 +637,116 @@ func TestWorkflowContext_Struct(t *testing.T) {
 
 // TestCopyFile tests single file copying functionality.
 func TestCopyFile(t *testing.T) {
-	t.Run("copy regular file", func(t *testing.T) {
-		srcDir := t.TempDir()
-		dstDir := t.TempDir()
+	t.Run(
+		"copy regular file",
+		func(t *testing.T) {
+			srcDir := t.TempDir()
+			dstDir := t.TempDir()
 
-		srcPath := filepath.Join(srcDir, "source.txt")
-		dstPath := filepath.Join(dstDir, "dest.txt")
+			srcPath := filepath.Join(
+				srcDir,
+				"source.txt",
+			)
+			dstPath := filepath.Join(
+				dstDir,
+				"dest.txt",
+			)
 
-		content := "This is the file content\nwith multiple lines"
-		if err := os.WriteFile(srcPath, []byte(content), 0644); err != nil {
-			t.Fatalf("Failed to write source file: %v", err)
-		}
+			content := "This is the file content\nwith multiple lines"
+			if err := os.WriteFile(srcPath, []byte(content), 0644); err != nil {
+				t.Fatalf(
+					"Failed to write source file: %v",
+					err,
+				)
+			}
 
-		if err := copyFile(srcPath, dstPath); err != nil {
-			t.Fatalf("copyFile() error = %v", err)
-		}
+			if err := copyFile(srcPath, dstPath); err != nil {
+				t.Fatalf(
+					"copyFile() error = %v",
+					err,
+				)
+			}
 
-		// Verify content
-		result, err := os.ReadFile(dstPath)
-		if err != nil {
-			t.Fatalf("Failed to read dest file: %v", err)
-		}
-		if string(result) != content {
-			t.Errorf("copyFile() content = %q, want %q", string(result), content)
-		}
-	})
+			// Verify content
+			result, err := os.ReadFile(dstPath)
+			if err != nil {
+				t.Fatalf(
+					"Failed to read dest file: %v",
+					err,
+				)
+			}
+			if string(result) != content {
+				t.Errorf(
+					"copyFile() content = %q, want %q",
+					string(result),
+					content,
+				)
+			}
+		},
+	)
 
-	t.Run("copy file preserves permissions", func(t *testing.T) {
-		srcDir := t.TempDir()
-		dstDir := t.TempDir()
+	t.Run(
+		"copy file preserves permissions",
+		func(t *testing.T) {
+			srcDir := t.TempDir()
+			dstDir := t.TempDir()
 
-		srcPath := filepath.Join(srcDir, "source.sh")
-		dstPath := filepath.Join(dstDir, "dest.sh")
+			srcPath := filepath.Join(
+				srcDir,
+				"source.sh",
+			)
+			dstPath := filepath.Join(
+				dstDir,
+				"dest.sh",
+			)
 
-		content := "#!/bin/bash\necho hello"
-		if err := os.WriteFile(srcPath, []byte(content), 0755); err != nil {
-			t.Fatalf("Failed to write source file: %v", err)
-		}
+			content := "#!/bin/bash\necho hello"
+			if err := os.WriteFile(srcPath, []byte(content), 0755); err != nil {
+				t.Fatalf(
+					"Failed to write source file: %v",
+					err,
+				)
+			}
 
-		if err := copyFile(srcPath, dstPath); err != nil {
-			t.Fatalf("copyFile() error = %v", err)
-		}
+			if err := copyFile(srcPath, dstPath); err != nil {
+				t.Fatalf(
+					"copyFile() error = %v",
+					err,
+				)
+			}
 
-		// Verify permissions (mode bits might differ slightly by umask)
-		srcInfo, _ := os.Stat(srcPath)
-		dstInfo, _ := os.Stat(dstPath)
+			// Verify permissions (mode bits might differ slightly by umask)
+			srcInfo, _ := os.Stat(srcPath)
+			dstInfo, _ := os.Stat(dstPath)
 
-		// Check executable bit is preserved
-		srcExec := srcInfo.Mode() & 0111
-		dstExec := dstInfo.Mode() & 0111
-		if srcExec != dstExec {
-			t.Errorf("copyFile() exec bits = %o, want %o", dstExec, srcExec)
-		}
-	})
+			// Check executable bit is preserved
+			srcExec := srcInfo.Mode() & 0111
+			dstExec := dstInfo.Mode() & 0111
+			if srcExec != dstExec {
+				t.Errorf(
+					"copyFile() exec bits = %o, want %o",
+					dstExec,
+					srcExec,
+				)
+			}
+		},
+	)
 
-	t.Run("copy non-existent file", func(t *testing.T) {
-		srcPath := "/nonexistent/file.txt"
-		dstPath := filepath.Join(t.TempDir(), "dest.txt")
+	t.Run(
+		"copy non-existent file",
+		func(t *testing.T) {
+			srcPath := "/nonexistent/file.txt"
+			dstPath := filepath.Join(
+				t.TempDir(),
+				"dest.txt",
+			)
 
-		err := copyFile(srcPath, dstPath)
-		if err == nil {
-			t.Error("copyFile() expected error for non-existent source, got nil")
-		}
-	})
+			err := copyFile(srcPath, dstPath)
+			if err == nil {
+				t.Error(
+					"copyFile() expected error for non-existent source, got nil",
+				)
+			}
+		},
+	)
 }

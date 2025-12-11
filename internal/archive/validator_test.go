@@ -29,13 +29,21 @@ More content.
 - **THEN** another result
 `
 
-	err := ValidatePostMerge(validSpec, "test-path")
+	err := ValidatePostMerge(
+		validSpec,
+		"test-path",
+	)
 	if err != nil {
-		t.Errorf("Expected no error, got: %v", err)
+		t.Errorf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidatePostMerge_DuplicateRequirements(t *testing.T) {
+func TestValidatePostMerge_DuplicateRequirements(
+	t *testing.T,
+) {
 	invalidSpec := `# Test Spec
 
 ## Requirements
@@ -55,16 +63,29 @@ Different content.
 - **THEN** result
 `
 
-	err := ValidatePostMerge(invalidSpec, "test-path")
+	err := ValidatePostMerge(
+		invalidSpec,
+		"test-path",
+	)
 	if err == nil {
-		t.Error("Expected error for duplicate requirements")
+		t.Error(
+			"Expected error for duplicate requirements",
+		)
 	}
-	if !strings.Contains(err.Error(), "duplicate requirement") {
-		t.Errorf("Expected duplicate error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"duplicate requirement",
+	) {
+		t.Errorf(
+			"Expected duplicate error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidatePostMerge_MissingScenario(t *testing.T) {
+func TestValidatePostMerge_MissingScenario(
+	t *testing.T,
+) {
 	invalidSpec := `# Test Spec
 
 ## Requirements
@@ -73,36 +94,66 @@ func TestValidatePostMerge_MissingScenario(t *testing.T) {
 This requirement has no scenarios.
 `
 
-	err := ValidatePostMerge(invalidSpec, "test-path")
+	err := ValidatePostMerge(
+		invalidSpec,
+		"test-path",
+	)
 	if err == nil {
-		t.Error("Expected error for missing scenarios")
+		t.Error(
+			"Expected error for missing scenarios",
+		)
 	}
-	if !strings.Contains(err.Error(), "no scenarios") {
-		t.Errorf("Expected scenario error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"no scenarios",
+	) {
+		t.Errorf(
+			"Expected scenario error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidatePreMerge_NewSpec_OnlyAddedAllowed(t *testing.T) {
+func TestValidatePreMerge_NewSpec_OnlyAddedAllowed(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 	basePath := filepath.Join(tmpDir, "base.md")
 
 	// Delta with MODIFIED (not allowed for new spec)
 	deltaPlan := &parsers.DeltaPlan{
 		Modified: []parsers.RequirementBlock{
-			{Name: "Something", Raw: "### Requirement: Something\n"},
+			{
+				Name: "Something",
+				Raw:  "### Requirement: Something\n",
+			},
 		},
 	}
 
-	err := ValidatePreMerge(basePath, deltaPlan, false)
+	err := ValidatePreMerge(
+		basePath,
+		deltaPlan,
+		false,
+	)
 	if err == nil {
-		t.Error("Expected error for MODIFIED on new spec")
+		t.Error(
+			"Expected error for MODIFIED on new spec",
+		)
 	}
-	if !strings.Contains(err.Error(), "only ADDED requirements") {
-		t.Errorf("Expected specific error message, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"only ADDED requirements",
+	) {
+		t.Errorf(
+			"Expected specific error message, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidatePreMerge_ModifiedRequirementExists(t *testing.T) {
+func TestValidatePreMerge_ModifiedRequirementExists(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create base spec
@@ -132,13 +183,22 @@ Content.
 		},
 	}
 
-	err := ValidatePreMerge(basePath, deltaPlan, true)
+	err := ValidatePreMerge(
+		basePath,
+		deltaPlan,
+		true,
+	)
 	if err != nil {
-		t.Errorf("Expected no error, got: %v", err)
+		t.Errorf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidatePreMerge_ModifiedRequirementDoesNotExist(t *testing.T) {
+func TestValidatePreMerge_ModifiedRequirementDoesNotExist(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create base spec
@@ -161,20 +221,37 @@ Content.
 	// Invalid: Try to modify non-existent requirement
 	deltaPlan := &parsers.DeltaPlan{
 		Modified: []parsers.RequirementBlock{
-			{Name: "Nonexistent Feature", Raw: "### Requirement: Nonexistent Feature\n"},
+			{
+				Name: "Nonexistent Feature",
+				Raw:  "### Requirement: Nonexistent Feature\n",
+			},
 		},
 	}
 
-	err := ValidatePreMerge(basePath, deltaPlan, true)
+	err := ValidatePreMerge(
+		basePath,
+		deltaPlan,
+		true,
+	)
 	if err == nil {
-		t.Error("Expected error for non-existent MODIFIED requirement")
+		t.Error(
+			"Expected error for non-existent MODIFIED requirement",
+		)
 	}
-	if !strings.Contains(err.Error(), "does not exist") {
-		t.Errorf("Expected 'does not exist' error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"does not exist",
+	) {
+		t.Errorf(
+			"Expected 'does not exist' error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidatePreMerge_AddedRequirementAlreadyExists(t *testing.T) {
+func TestValidatePreMerge_AddedRequirementAlreadyExists(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create base spec
@@ -197,20 +274,37 @@ Content.
 	// Invalid: Try to add requirement that already exists
 	deltaPlan := &parsers.DeltaPlan{
 		Added: []parsers.RequirementBlock{
-			{Name: "Existing Feature", Raw: "### Requirement: Existing Feature\n"},
+			{
+				Name: "Existing Feature",
+				Raw:  "### Requirement: Existing Feature\n",
+			},
 		},
 	}
 
-	err := ValidatePreMerge(basePath, deltaPlan, true)
+	err := ValidatePreMerge(
+		basePath,
+		deltaPlan,
+		true,
+	)
 	if err == nil {
-		t.Error("Expected error for ADDED requirement that already exists")
+		t.Error(
+			"Expected error for ADDED requirement that already exists",
+		)
 	}
-	if !strings.Contains(err.Error(), "already exists") {
-		t.Errorf("Expected 'already exists' error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"already exists",
+	) {
+		t.Errorf(
+			"Expected 'already exists' error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidatePreMerge_RenamedRequirements(t *testing.T) {
+func TestValidatePreMerge_RenamedRequirements(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create base spec
@@ -237,30 +331,47 @@ Content.
 		},
 	}
 
-	err := ValidatePreMerge(basePath, deltaPlan, true)
+	err := ValidatePreMerge(
+		basePath,
+		deltaPlan,
+		true,
+	)
 	if err != nil {
-		t.Errorf("Expected no error, got: %v", err)
+		t.Errorf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestCheckDuplicatesAndConflicts_NoDuplicates(t *testing.T) {
+func TestCheckDuplicatesAndConflicts_NoDuplicates(
+	t *testing.T,
+) {
 	deltaPlan := &parsers.DeltaPlan{
 		Added: []parsers.RequirementBlock{
 			{Name: "Feature One", Raw: "content"},
 			{Name: "Feature Two", Raw: "content"},
 		},
 		Modified: []parsers.RequirementBlock{
-			{Name: "Feature Three", Raw: "content"},
+			{
+				Name: "Feature Three",
+				Raw:  "content",
+			},
 		},
 	}
 
 	err := CheckDuplicatesAndConflicts(deltaPlan)
 	if err != nil {
-		t.Errorf("Expected no error, got: %v", err)
+		t.Errorf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestCheckDuplicatesAndConflicts_DuplicateInAdded(t *testing.T) {
+func TestCheckDuplicatesAndConflicts_DuplicateInAdded(
+	t *testing.T,
+) {
 	deltaPlan := &parsers.DeltaPlan{
 		Added: []parsers.RequirementBlock{
 			{Name: "Duplicate", Raw: "content"},
@@ -270,50 +381,89 @@ func TestCheckDuplicatesAndConflicts_DuplicateInAdded(t *testing.T) {
 
 	err := CheckDuplicatesAndConflicts(deltaPlan)
 	if err == nil {
-		t.Error("Expected error for duplicate in ADDED section")
+		t.Error(
+			"Expected error for duplicate in ADDED section",
+		)
 	}
-	if !strings.Contains(err.Error(), "duplicate") {
-		t.Errorf("Expected duplicate error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"duplicate",
+	) {
+		t.Errorf(
+			"Expected duplicate error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestCheckDuplicatesAndConflicts_CrossSectionConflict(t *testing.T) {
+func TestCheckDuplicatesAndConflicts_CrossSectionConflict(
+	t *testing.T,
+) {
 	deltaPlan := &parsers.DeltaPlan{
 		Added: []parsers.RequirementBlock{
-			{Name: "Conflicting Feature", Raw: "content"},
+			{
+				Name: "Conflicting Feature",
+				Raw:  "content",
+			},
 		},
 		Modified: []parsers.RequirementBlock{
-			{Name: "Conflicting Feature", Raw: "content"},
+			{
+				Name: "Conflicting Feature",
+				Raw:  "content",
+			},
 		},
 	}
 
 	err := CheckDuplicatesAndConflicts(deltaPlan)
 	if err == nil {
-		t.Error("Expected error for cross-section conflict")
+		t.Error(
+			"Expected error for cross-section conflict",
+		)
 	}
-	if !strings.Contains(err.Error(), "ADDED and MODIFIED") {
-		t.Errorf("Expected cross-section conflict error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"ADDED and MODIFIED",
+	) {
+		t.Errorf(
+			"Expected cross-section conflict error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestCheckDuplicatesAndConflicts_ModifiedAndRemoved(t *testing.T) {
+func TestCheckDuplicatesAndConflicts_ModifiedAndRemoved(
+	t *testing.T,
+) {
 	deltaPlan := &parsers.DeltaPlan{
 		Modified: []parsers.RequirementBlock{
-			{Name: "Conflicting Feature", Raw: "content"},
+			{
+				Name: "Conflicting Feature",
+				Raw:  "content",
+			},
 		},
 		Removed: []string{"Conflicting Feature"},
 	}
 
 	err := CheckDuplicatesAndConflicts(deltaPlan)
 	if err == nil {
-		t.Error("Expected error for MODIFIED and REMOVED conflict")
+		t.Error(
+			"Expected error for MODIFIED and REMOVED conflict",
+		)
 	}
-	if !strings.Contains(err.Error(), "MODIFIED and REMOVED") {
-		t.Errorf("Expected cross-section conflict error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"MODIFIED and REMOVED",
+	) {
+		t.Errorf(
+			"Expected cross-section conflict error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestCheckDuplicatesAndConflicts_AddedAndRenamedTo(t *testing.T) {
+func TestCheckDuplicatesAndConflicts_AddedAndRenamedTo(
+	t *testing.T,
+) {
 	deltaPlan := &parsers.DeltaPlan{
 		Added: []parsers.RequirementBlock{
 			{Name: "New Name", Raw: "content"},
@@ -325,9 +475,17 @@ func TestCheckDuplicatesAndConflicts_AddedAndRenamedTo(t *testing.T) {
 
 	err := CheckDuplicatesAndConflicts(deltaPlan)
 	if err == nil {
-		t.Error("Expected error for ADDED and RENAMED TO conflict")
+		t.Error(
+			"Expected error for ADDED and RENAMED TO conflict",
+		)
 	}
-	if !strings.Contains(err.Error(), "ADDED and RENAMED TO") {
-		t.Errorf("Expected cross-section conflict error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"ADDED and RENAMED TO",
+	) {
+		t.Errorf(
+			"Expected cross-section conflict error, got: %v",
+			err,
+		)
 	}
 }

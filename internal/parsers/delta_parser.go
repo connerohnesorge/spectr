@@ -28,7 +28,9 @@ type RenameOp struct {
 
 // ParseDeltaSpec parses a delta spec file and extracts operations
 // Returns a DeltaPlan with ADDED, MODIFIED, REMOVED, and RENAMED reqs
-func ParseDeltaSpec(filePath string) (*DeltaPlan, error) {
+func ParseDeltaSpec(
+	filePath string,
+) (*DeltaPlan, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -48,35 +50,61 @@ func ParseDeltaSpec(filePath string) (*DeltaPlan, error) {
 	}
 
 	// Parse each section
-	plan.Added = parseDeltaSection(string(content), "ADDED")
-	plan.Modified = parseDeltaSection(string(content), "MODIFIED")
-	plan.Removed = parseRemovedSection(string(content))
-	plan.Renamed = parseRenamedSection(string(content))
+	plan.Added = parseDeltaSection(
+		string(content),
+		"ADDED",
+	)
+	plan.Modified = parseDeltaSection(
+		string(content),
+		"MODIFIED",
+	)
+	plan.Removed = parseRemovedSection(
+		string(content),
+	)
+	plan.Renamed = parseRenamedSection(
+		string(content),
+	)
 
 	return plan, nil
 }
 
 // parseDeltaSection extracts requirements from a delta section
-func parseDeltaSection(content, sectionType string) []RequirementBlock {
-	sectionContent := extractSectionContent(content, sectionType)
+func parseDeltaSection(
+	content, sectionType string,
+) []RequirementBlock {
+	sectionContent := extractSectionContent(
+		content,
+		sectionType,
+	)
 	if sectionContent == "" {
 		return nil
 	}
 
-	return parseRequirementsFromSection(sectionContent)
+	return parseRequirementsFromSection(
+		sectionContent,
+	)
 }
 
 // extractSectionContent extracts content from a section header
-func extractSectionContent(content, sectionType string) string {
-	pattern := fmt.Sprintf(`(?m)^##\s+%s\s+Requirements\s*$`, sectionType)
+func extractSectionContent(
+	content, sectionType string,
+) string {
+	pattern := fmt.Sprintf(
+		`(?m)^##\s+%s\s+Requirements\s*$`,
+		sectionType,
+	)
 	sectionPattern := regexp.MustCompile(pattern)
-	matches := sectionPattern.FindStringIndex(content)
+	matches := sectionPattern.FindStringIndex(
+		content,
+	)
 	if matches == nil {
 		return ""
 	}
 
 	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(`(?m)^##\s+`)
+	nextSectionPattern := regexp.MustCompile(
+		`(?m)^##\s+`,
+	)
 	nextMatches := nextSectionPattern.FindStringIndex(
 		content[sectionStart:],
 	)
@@ -95,14 +123,20 @@ func parseRequirementsFromSection(
 	var requirements []RequirementBlock
 	var currentReq *RequirementBlock
 
-	reqPattern := regexp.MustCompile(`^###\s+Requirement:\s*(.+)$`)
+	reqPattern := regexp.MustCompile(
+		`^###\s+Requirement:\s*(.+)$`,
+	)
 	h3Pattern := regexp.MustCompile(`^###\s+`)
 
-	scanner := bufio.NewScanner(strings.NewReader(sectionContent))
+	scanner := bufio.NewScanner(
+		strings.NewReader(sectionContent),
+	)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if matches := reqPattern.FindStringSubmatch(line); len(matches) > 1 {
+		if matches := reqPattern.FindStringSubmatch(line); len(
+			matches,
+		) > 1 {
 			currentReq = saveAndStartNewRequirement(
 				&requirements,
 				currentReq,
@@ -113,7 +147,11 @@ func parseRequirementsFromSection(
 			continue
 		}
 
-		if isNonRequirementH3(line, h3Pattern, reqPattern) {
+		if isNonRequirementH3(
+			line,
+			h3Pattern,
+			reqPattern,
+		) {
 			currentReq = saveCurrentRequirement(
 				&requirements,
 				currentReq,
@@ -126,7 +164,10 @@ func parseRequirementsFromSection(
 	}
 
 	// Save the last requirement
-	saveCurrentRequirement(&requirements, currentReq)
+	saveCurrentRequirement(
+		&requirements,
+		currentReq,
+	)
 
 	return requirements
 }
@@ -138,7 +179,10 @@ func saveAndStartNewRequirement(
 	line, name string,
 ) *RequirementBlock {
 	if currentReq != nil {
-		*requirements = append(*requirements, *currentReq)
+		*requirements = append(
+			*requirements,
+			*currentReq,
+		)
 	}
 
 	return &RequirementBlock{
@@ -154,7 +198,10 @@ func saveCurrentRequirement(
 	currentReq *RequirementBlock,
 ) *RequirementBlock {
 	if currentReq != nil {
-		*requirements = append(*requirements, *currentReq)
+		*requirements = append(
+			*requirements,
+			*currentReq,
+		)
 	}
 
 	return nil
@@ -165,31 +212,45 @@ func isNonRequirementH3(
 	line string,
 	h3Pattern, reqPattern *regexp.Regexp,
 ) bool {
-	return h3Pattern.MatchString(line) && !reqPattern.MatchString(line)
+	return h3Pattern.MatchString(line) &&
+		!reqPattern.MatchString(line)
 }
 
 // appendLineToRequirement appends a line to the current requirement
-func appendLineToRequirement(currentReq *RequirementBlock, line string) {
+func appendLineToRequirement(
+	currentReq *RequirementBlock,
+	line string,
+) {
 	if currentReq != nil {
 		currentReq.Raw += line + "\n"
 	}
 }
 
 // parseRemovedSection extracts requirement names from REMOVED section
-func parseRemovedSection(content string) []string {
+func parseRemovedSection(
+	content string,
+) []string {
 	var removed []string
 
 	// Find the REMOVED section header
-	sectionPattern := regexp.MustCompile(`(?m)^##\s+REMOVED\s+Requirements\s*$`)
-	matches := sectionPattern.FindStringIndex(content)
+	sectionPattern := regexp.MustCompile(
+		`(?m)^##\s+REMOVED\s+Requirements\s*$`,
+	)
+	matches := sectionPattern.FindStringIndex(
+		content,
+	)
 	if matches == nil {
 		return removed
 	}
 
 	// Extract content from this section until next ## header or end of file
 	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(`(?m)^##\s+`)
-	nextMatches := nextSectionPattern.FindStringIndex(content[sectionStart:])
+	nextSectionPattern := regexp.MustCompile(
+		`(?m)^##\s+`,
+	)
+	nextMatches := nextSectionPattern.FindStringIndex(
+		content[sectionStart:],
+	)
 
 	var sectionContent string
 	if nextMatches != nil {
@@ -199,13 +260,22 @@ func parseRemovedSection(content string) []string {
 	}
 
 	// Parse requirement headers within this section
-	reqPattern := regexp.MustCompile(`^###\s+Requirement:\s*(.+)$`)
+	reqPattern := regexp.MustCompile(
+		`^###\s+Requirement:\s*(.+)$`,
+	)
 
-	scanner := bufio.NewScanner(strings.NewReader(sectionContent))
+	scanner := bufio.NewScanner(
+		strings.NewReader(sectionContent),
+	)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if matches := reqPattern.FindStringSubmatch(line); len(matches) > 1 {
-			removed = append(removed, strings.TrimSpace(matches[1]))
+		if matches := reqPattern.FindStringSubmatch(line); len(
+			matches,
+		) > 1 {
+			removed = append(
+				removed,
+				strings.TrimSpace(matches[1]),
+			)
 		}
 	}
 
@@ -213,20 +283,30 @@ func parseRemovedSection(content string) []string {
 }
 
 // parseRenamedSection extracts FROM/TO pairs from RENAMED section
-func parseRenamedSection(content string) []RenameOp {
+func parseRenamedSection(
+	content string,
+) []RenameOp {
 	var renamed []RenameOp
 
 	// Find the RENAMED section header
-	sectionPattern := regexp.MustCompile(`(?m)^##\s+RENAMED\s+Requirements\s*$`)
-	matches := sectionPattern.FindStringIndex(content)
+	sectionPattern := regexp.MustCompile(
+		`(?m)^##\s+RENAMED\s+Requirements\s*$`,
+	)
+	matches := sectionPattern.FindStringIndex(
+		content,
+	)
 	if matches == nil {
 		return renamed
 	}
 
 	// Extract content from this section until next ## header or end of file
 	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(`(?m)^##\s+`)
-	nextMatches := nextSectionPattern.FindStringIndex(content[sectionStart:])
+	nextSectionPattern := regexp.MustCompile(
+		`(?m)^##\s+`,
+	)
+	nextMatches := nextSectionPattern.FindStringIndex(
+		content[sectionStart:],
+	)
 
 	var sectionContent string
 	if nextMatches != nil {
@@ -247,20 +327,29 @@ func parseRenamedSection(content string) []RenameOp {
 	)
 
 	var currentFrom string
-	scanner := bufio.NewScanner(strings.NewReader(sectionContent))
+	scanner := bufio.NewScanner(
+		strings.NewReader(sectionContent),
+	)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 
 		// Check for FROM line
-		if matches := fromPattern.FindStringSubmatch(line); len(matches) > 1 {
-			currentFrom = strings.TrimSpace(matches[1])
+		if matches := fromPattern.FindStringSubmatch(line); len(
+			matches,
+		) > 1 {
+			currentFrom = strings.TrimSpace(
+				matches[1],
+			)
 
 			continue
 		}
 
 		// Check for TO line
-		matches := toPattern.FindStringSubmatch(line)
-		if len(matches) <= 1 || currentFrom == "" {
+		matches := toPattern.FindStringSubmatch(
+			line,
+		)
+		if len(matches) <= 1 ||
+			currentFrom == "" {
 			continue
 		}
 
@@ -281,10 +370,20 @@ func (dp *DeltaPlan) HasDeltas() bool {
 	hasRemoved := len(dp.Removed) > 0
 	hasRenamed := len(dp.Renamed) > 0
 
-	return hasAdded || hasModified || hasRemoved || hasRenamed
+	return hasAdded || hasModified ||
+		hasRemoved ||
+		hasRenamed
 }
 
 // CountOperations returns the total number of delta operations
 func (dp *DeltaPlan) CountOperations() int {
-	return len(dp.Added) + len(dp.Modified) + len(dp.Removed) + len(dp.Renamed)
+	return len(
+		dp.Added,
+	) + len(
+		dp.Modified,
+	) + len(
+		dp.Removed,
+	) + len(
+		dp.Renamed,
+	)
 }

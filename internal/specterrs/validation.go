@@ -39,7 +39,11 @@ func (e *DeltaSpecParseError) Error() string {
 		)
 	}
 
-	return fmt.Sprintf("failed to parse delta spec %s: %v", e.SpecPath, e.Err)
+	return fmt.Sprintf(
+		"failed to parse delta spec %s: %v",
+		e.SpecPath,
+		e.Err,
+	)
 }
 
 func (e *DeltaSpecParseError) Unwrap() error {

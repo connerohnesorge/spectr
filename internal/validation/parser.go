@@ -16,19 +16,27 @@ type Requirement struct {
 
 // ExtractSections returns a map of section headers (## headers) to their content
 // Example: "## Purpose" -> "This is the purpose..."
-func ExtractSections(content string) map[string]string {
+func ExtractSections(
+	content string,
+) map[string]string {
 	sections := make(map[string]string)
-	scanner := bufio.NewScanner(strings.NewReader(content))
+	scanner := bufio.NewScanner(
+		strings.NewReader(content),
+	)
 
 	var currentSection string
 	var currentContent strings.Builder
-	sectionHeaderRegex := regexp.MustCompile(`^##\s+(.+)$`)
+	sectionHeaderRegex := regexp.MustCompile(
+		`^##\s+(.+)$`,
+	)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Check if this is a section header (## header)
-		matches := sectionHeaderRegex.FindStringSubmatch(line)
+		matches := sectionHeaderRegex.FindStringSubmatch(
+			line,
+		)
 		if matches != nil {
 			// Save previous section if exists
 			if currentSection != "" {
@@ -38,7 +46,9 @@ func ExtractSections(content string) map[string]string {
 			}
 
 			// Start new section
-			currentSection = strings.TrimSpace(matches[1])
+			currentSection = strings.TrimSpace(
+				matches[1],
+			)
 			currentContent.Reset()
 		} else if currentSection != "" {
 			// Add line to current section content
@@ -49,7 +59,9 @@ func ExtractSections(content string) map[string]string {
 
 	// Save last section
 	if currentSection != "" {
-		sections[currentSection] = strings.TrimSpace(currentContent.String())
+		sections[currentSection] = strings.TrimSpace(
+			currentContent.String(),
+		)
 	}
 
 	return sections
@@ -57,12 +69,18 @@ func ExtractSections(content string) map[string]string {
 
 // ExtractRequirements returns all requirements found in content
 // Looks for ### Requirement: headers
-func ExtractRequirements(content string) []Requirement {
+func ExtractRequirements(
+	content string,
+) []Requirement {
 	// Initialize to empty slice instead of nil
 	requirements := make([]Requirement, 0)
-	scanner := bufio.NewScanner(strings.NewReader(content))
+	scanner := bufio.NewScanner(
+		strings.NewReader(content),
+	)
 
-	requirementHeaderRegex := regexp.MustCompile(`^###\s+Requirement:\s*(.+)$`)
+	requirementHeaderRegex := regexp.MustCompile(
+		`^###\s+Requirement:\s*(.+)$`,
+	)
 	var currentRequirement *Requirement
 	var currentContent strings.Builder
 
@@ -70,7 +88,9 @@ func ExtractRequirements(content string) []Requirement {
 		line := scanner.Text()
 
 		// Check if this is a requirement header
-		matches := requirementHeaderRegex.FindStringSubmatch(line)
+		matches := requirementHeaderRegex.FindStringSubmatch(
+			line,
+		)
 		if matches != nil {
 			saveCurrentRequirement(
 				currentRequirement,
@@ -80,7 +100,9 @@ func ExtractRequirements(content string) []Requirement {
 
 			// Start new requirement
 			currentRequirement = &Requirement{
-				Name: strings.TrimSpace(matches[1]),
+				Name: strings.TrimSpace(
+					matches[1],
+				),
 			}
 			currentContent.Reset()
 
@@ -93,7 +115,11 @@ func ExtractRequirements(content string) []Requirement {
 
 		// Check if we should stop collecting
 		if shouldStopRequirement(line) {
-			closeRequirement(currentRequirement, &currentContent, &requirements)
+			closeRequirement(
+				currentRequirement,
+				&currentContent,
+				&requirements,
+			)
 			currentRequirement = nil
 
 			continue
@@ -105,7 +131,11 @@ func ExtractRequirements(content string) []Requirement {
 	}
 
 	// Save last requirement
-	saveCurrentRequirement(currentRequirement, &currentContent, &requirements)
+	saveCurrentRequirement(
+		currentRequirement,
+		&currentContent,
+		&requirements,
+	)
 
 	return requirements
 }
@@ -119,7 +149,9 @@ func saveCurrentRequirement(
 	if req == nil {
 		return
 	}
-	req.Content = strings.TrimSpace(content.String())
+	req.Content = strings.TrimSpace(
+		content.String(),
+	)
 	req.Scenarios = ExtractScenarios(req.Content)
 	*requirements = append(*requirements, *req)
 }
@@ -128,13 +160,15 @@ func saveCurrentRequirement(
 func shouldStopRequirement(line string) bool {
 	// Stop if we hit another ### header (non-requirement)
 	// But allow #### headers (scenarios) to pass through
-	if strings.HasPrefix(line, "###") && !strings.HasPrefix(line, "####") {
+	if strings.HasPrefix(line, "###") &&
+		!strings.HasPrefix(line, "####") {
 		return true
 	}
 
 	// Stop if we hit a ## header (section boundary)
 	// But make sure it's not a ### or #### header
-	if strings.HasPrefix(line, "##") && !strings.HasPrefix(line, "###") {
+	if strings.HasPrefix(line, "##") &&
+		!strings.HasPrefix(line, "###") {
 		return true
 	}
 
@@ -147,17 +181,23 @@ func closeRequirement(
 	content *strings.Builder,
 	requirements *[]Requirement,
 ) {
-	req.Content = strings.TrimSpace(content.String())
+	req.Content = strings.TrimSpace(
+		content.String(),
+	)
 	req.Scenarios = ExtractScenarios(req.Content)
 	*requirements = append(*requirements, *req)
 	content.Reset()
 }
 
 // ExtractScenarios finds all #### Scenario: blocks in a requirement
-func ExtractScenarios(requirementBlock string) []string {
+func ExtractScenarios(
+	requirementBlock string,
+) []string {
 	// Initialize to empty slice instead of nil
 	scenarios := make([]string, 0)
-	scanner := bufio.NewScanner(strings.NewReader(requirementBlock))
+	scanner := bufio.NewScanner(
+		strings.NewReader(requirementBlock),
+	)
 
 	scenarioHeaderRegex := regexp.MustCompile(
 		`^####\s+Scenario:\s*(.+)$`,
@@ -169,12 +209,18 @@ func ExtractScenarios(requirementBlock string) []string {
 		line := scanner.Text()
 
 		// Check if this is a scenario header (#### Scenario:)
-		matches := scenarioHeaderRegex.FindStringSubmatch(line)
+		matches := scenarioHeaderRegex.FindStringSubmatch(
+			line,
+		)
 		if matches != nil {
 			// Save previous scenario if exists
 			if inScenario {
-				scenarios = append(scenarios,
-					strings.TrimSpace(currentScenario.String()))
+				scenarios = append(
+					scenarios,
+					strings.TrimSpace(
+						currentScenario.String(),
+					),
+				)
 			}
 
 			// Start new scenario with the header line
@@ -193,7 +239,10 @@ func ExtractScenarios(requirementBlock string) []string {
 
 		// Check if we should stop collecting (hit header boundary)
 		if shouldStopScenario(line) {
-			closeScenario(&currentScenario, &scenarios)
+			closeScenario(
+				&currentScenario,
+				&scenarios,
+			)
 			inScenario = false
 
 			continue
@@ -208,7 +257,9 @@ func ExtractScenarios(requirementBlock string) []string {
 	if inScenario {
 		scenarios = append(
 			scenarios,
-			strings.TrimSpace(currentScenario.String()),
+			strings.TrimSpace(
+				currentScenario.String(),
+			),
 		)
 	}
 
@@ -231,21 +282,31 @@ func shouldStopScenario(line string) bool {
 }
 
 // closeScenario finalizes and appends a scenario
-func closeScenario(scenario *strings.Builder, scenarios *[]string) {
-	*scenarios = append(*scenarios, strings.TrimSpace(scenario.String()))
+func closeScenario(
+	scenario *strings.Builder,
+	scenarios *[]string,
+) {
+	*scenarios = append(
+		*scenarios,
+		strings.TrimSpace(scenario.String()),
+	)
 	scenario.Reset()
 }
 
 // ContainsShallOrMust checks if text contains SHALL or MUST (case-insensitive)
 func ContainsShallOrMust(text string) bool {
-	shallMustRegex := regexp.MustCompile(`(?i)\b(shall|must)\b`)
+	shallMustRegex := regexp.MustCompile(
+		`(?i)\b(shall|must)\b`,
+	)
 
 	return shallMustRegex.MatchString(text)
 }
 
 // NormalizeRequirementName normalizes requirement names for duplicate detection
 // Trims whitespace, converts to lowercase, and removes extra spaces
-func NormalizeRequirementName(name string) string {
+func NormalizeRequirementName(
+	name string,
+) string {
 	// Trim leading/trailing whitespace
 	normalized := strings.TrimSpace(name)
 
@@ -254,7 +315,10 @@ func NormalizeRequirementName(name string) string {
 
 	// Replace multiple spaces with single space
 	spaceRegex := regexp.MustCompile(`\s+`)
-	normalized = spaceRegex.ReplaceAllString(normalized, " ")
+	normalized = spaceRegex.ReplaceAllString(
+		normalized,
+		" ",
+	)
 
 	return normalized
 }

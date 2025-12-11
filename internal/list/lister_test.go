@@ -11,13 +11,20 @@ import (
 
 func TestListChanges(t *testing.T) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, 0755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Create test change with all components
-	changeDir := filepath.Join(changesDir, "add-feature")
+	changeDir := filepath.Join(
+		changesDir,
+		"add-feature",
+	)
 	if err := os.MkdirAll(filepath.Join(changeDir, "specs", "test-spec"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -57,24 +64,42 @@ More details here.`
 	}
 
 	if len(changes) != 1 {
-		t.Fatalf("Expected 1 change, got %d", len(changes))
+		t.Fatalf(
+			"Expected 1 change, got %d",
+			len(changes),
+		)
 	}
 
 	change := changes[0]
 	if change.ID != "add-feature" {
-		t.Errorf("Expected ID 'add-feature', got %q", change.ID)
+		t.Errorf(
+			"Expected ID 'add-feature', got %q",
+			change.ID,
+		)
 	}
 	if change.Title != "Add Amazing Feature" {
-		t.Errorf("Expected title 'Add Amazing Feature', got %q", change.Title)
+		t.Errorf(
+			"Expected title 'Add Amazing Feature', got %q",
+			change.Title,
+		)
 	}
 	if change.DeltaCount != 2 {
-		t.Errorf("Expected delta count 2, got %d", change.DeltaCount)
+		t.Errorf(
+			"Expected delta count 2, got %d",
+			change.DeltaCount,
+		)
 	}
 	if change.TaskStatus.Total != 3 {
-		t.Errorf("Expected 3 total tasks, got %d", change.TaskStatus.Total)
+		t.Errorf(
+			"Expected 3 total tasks, got %d",
+			change.TaskStatus.Total,
+		)
 	}
 	if change.TaskStatus.Completed != 2 {
-		t.Errorf("Expected 2 completed tasks, got %d", change.TaskStatus.Completed)
+		t.Errorf(
+			"Expected 2 completed tasks, got %d",
+			change.TaskStatus.Completed,
+		)
 	}
 }
 
@@ -86,14 +111,24 @@ func TestListChanges_NoChanges(t *testing.T) {
 		t.Fatalf("ListChanges failed: %v", err)
 	}
 	if len(changes) != 0 {
-		t.Errorf("Expected empty list, got %d changes", len(changes))
+		t.Errorf(
+			"Expected empty list, got %d changes",
+			len(changes),
+		)
 	}
 }
 
 func TestListChanges_FallbackTitle(t *testing.T) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
-	changeDir := filepath.Join(changesDir, "test-change")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
+	changeDir := filepath.Join(
+		changesDir,
+		"test-change",
+	)
 	if err := os.MkdirAll(changeDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -111,19 +146,32 @@ func TestListChanges_FallbackTitle(t *testing.T) {
 	}
 
 	if len(changes) != 1 {
-		t.Fatalf("Expected 1 change, got %d", len(changes))
+		t.Fatalf(
+			"Expected 1 change, got %d",
+			len(changes),
+		)
 	}
 
 	// Should fall back to ID as title
 	if changes[0].Title != "test-change" {
-		t.Errorf("Expected fallback title 'test-change', got %q", changes[0].Title)
+		t.Errorf(
+			"Expected fallback title 'test-change', got %q",
+			changes[0].Title,
+		)
 	}
 }
 
 func TestListSpecs(t *testing.T) {
 	tmpDir := t.TempDir()
-	specsDir := filepath.Join(tmpDir, "spectr", "specs")
-	specDir := filepath.Join(specsDir, "authentication")
+	specsDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"specs",
+	)
+	specDir := filepath.Join(
+		specsDir,
+		"authentication",
+	)
 	if err := os.MkdirAll(specDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -151,18 +199,30 @@ Reset feature
 	}
 
 	if len(specs) != 1 {
-		t.Fatalf("Expected 1 spec, got %d", len(specs))
+		t.Fatalf(
+			"Expected 1 spec, got %d",
+			len(specs),
+		)
 	}
 
 	spec := specs[0]
 	if spec.ID != "authentication" {
-		t.Errorf("Expected ID 'authentication', got %q", spec.ID)
+		t.Errorf(
+			"Expected ID 'authentication', got %q",
+			spec.ID,
+		)
 	}
 	if spec.Title != "Authentication" {
-		t.Errorf("Expected title 'Authentication', got %q", spec.Title)
+		t.Errorf(
+			"Expected title 'Authentication', got %q",
+			spec.Title,
+		)
 	}
 	if spec.RequirementCount != 3 {
-		t.Errorf("Expected 3 requirements, got %d", spec.RequirementCount)
+		t.Errorf(
+			"Expected 3 requirements, got %d",
+			spec.RequirementCount,
+		)
 	}
 }
 
@@ -174,14 +234,24 @@ func TestListSpecs_NoSpecs(t *testing.T) {
 		t.Fatalf("ListSpecs failed: %v", err)
 	}
 	if len(specs) != 0 {
-		t.Errorf("Expected empty list, got %d specs", len(specs))
+		t.Errorf(
+			"Expected empty list, got %d specs",
+			len(specs),
+		)
 	}
 }
 
 func TestListSpecs_FallbackTitle(t *testing.T) {
 	tmpDir := t.TempDir()
-	specsDir := filepath.Join(tmpDir, "spectr", "specs")
-	specDir := filepath.Join(specsDir, "test-spec")
+	specsDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"specs",
+	)
+	specDir := filepath.Join(
+		specsDir,
+		"test-spec",
+	)
 	if err := os.MkdirAll(specDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -201,12 +271,18 @@ func TestListSpecs_FallbackTitle(t *testing.T) {
 	}
 
 	if len(specs) != 1 {
-		t.Fatalf("Expected 1 spec, got %d", len(specs))
+		t.Fatalf(
+			"Expected 1 spec, got %d",
+			len(specs),
+		)
 	}
 
 	// Should fall back to ID as title
 	if specs[0].Title != "test-spec" {
-		t.Errorf("Expected fallback title 'test-spec', got %q", specs[0].Title)
+		t.Errorf(
+			"Expected fallback title 'test-spec', got %q",
+			specs[0].Title,
+		)
 	}
 }
 
@@ -214,8 +290,15 @@ func TestListAll(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create a change
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
-	changeDir := filepath.Join(changesDir, "add-feature")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
+	changeDir := filepath.Join(
+		changesDir,
+		"add-feature",
+	)
 	if err := os.MkdirAll(filepath.Join(changeDir, "specs", "test-spec"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -238,8 +321,15 @@ func TestListAll(t *testing.T) {
 	}
 
 	// Create a spec
-	specsDir := filepath.Join(tmpDir, "spectr", "specs")
-	specDir := filepath.Join(specsDir, "authentication")
+	specsDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"specs",
+	)
+	specDir := filepath.Join(
+		specsDir,
+		"authentication",
+	)
 	if err := os.MkdirAll(specDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -259,22 +349,37 @@ func TestListAll(t *testing.T) {
 	}
 
 	if len(items) != 2 {
-		t.Fatalf("Expected 2 items, got %d", len(items))
+		t.Fatalf(
+			"Expected 2 items, got %d",
+			len(items),
+		)
 	}
 
 	// Verify sorting by ID (add-feature comes before authentication)
 	if items[0].ID() != "add-feature" {
-		t.Errorf("Expected first item to be 'add-feature', got %q", items[0].ID())
+		t.Errorf(
+			"Expected first item to be 'add-feature', got %q",
+			items[0].ID(),
+		)
 	}
 	if items[0].Type != ItemTypeChange {
-		t.Errorf("Expected first item to be a change, got %v", items[0].Type)
+		t.Errorf(
+			"Expected first item to be a change, got %v",
+			items[0].Type,
+		)
 	}
 
 	if items[1].ID() != "authentication" {
-		t.Errorf("Expected second item to be 'authentication', got %q", items[1].ID())
+		t.Errorf(
+			"Expected second item to be 'authentication', got %q",
+			items[1].ID(),
+		)
 	}
 	if items[1].Type != ItemTypeSpec {
-		t.Errorf("Expected second item to be a spec, got %v", items[1].Type)
+		t.Errorf(
+			"Expected second item to be a spec, got %v",
+			items[1].Type,
+		)
 	}
 }
 
@@ -282,8 +387,15 @@ func TestListAll_FilterByType(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create a change
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
-	changeDir := filepath.Join(changesDir, "add-feature")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
+	changeDir := filepath.Join(
+		changesDir,
+		"add-feature",
+	)
 	if err := os.MkdirAll(changeDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -294,8 +406,15 @@ func TestListAll_FilterByType(t *testing.T) {
 	}
 
 	// Create a spec
-	specsDir := filepath.Join(tmpDir, "spectr", "specs")
-	specDir := filepath.Join(specsDir, "authentication")
+	specsDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"specs",
+	)
+	specDir := filepath.Join(
+		specsDir,
+		"authentication",
+	)
 	if err := os.MkdirAll(specDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -316,15 +435,24 @@ func TestListAll_FilterByType(t *testing.T) {
 		SortByID:   true,
 	})
 	if err != nil {
-		t.Fatalf("ListAll with change filter failed: %v", err)
+		t.Fatalf(
+			"ListAll with change filter failed: %v",
+			err,
+		)
 	}
 
 	if len(items) != 1 {
-		t.Fatalf("Expected 1 item (change), got %d", len(items))
+		t.Fatalf(
+			"Expected 1 item (change), got %d",
+			len(items),
+		)
 	}
 
 	if items[0].Type != ItemTypeChange {
-		t.Errorf("Expected change item, got %v", items[0].Type)
+		t.Errorf(
+			"Expected change item, got %v",
+			items[0].Type,
+		)
 	}
 
 	// Test filtering for specs only
@@ -334,15 +462,24 @@ func TestListAll_FilterByType(t *testing.T) {
 		SortByID:   true,
 	})
 	if err != nil {
-		t.Fatalf("ListAll with spec filter failed: %v", err)
+		t.Fatalf(
+			"ListAll with spec filter failed: %v",
+			err,
+		)
 	}
 
 	if len(items) != 1 {
-		t.Fatalf("Expected 1 item (spec), got %d", len(items))
+		t.Fatalf(
+			"Expected 1 item (spec), got %d",
+			len(items),
+		)
 	}
 
 	if items[0].Type != ItemTypeSpec {
-		t.Errorf("Expected spec item, got %v", items[0].Type)
+		t.Errorf(
+			"Expected spec item, got %v",
+			items[0].Type,
+		)
 	}
 }
 
@@ -350,7 +487,11 @@ func TestListAll_NoSorting(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create multiple changes with IDs that sort differently
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	for _, id := range []string{"zebra-change", "alpha-change"} {
 		changeDir := filepath.Join(changesDir, id)
 		if err := os.MkdirAll(changeDir, 0755); err != nil {
@@ -370,11 +511,17 @@ func TestListAll_NoSorting(t *testing.T) {
 		SortByID: false,
 	})
 	if err != nil {
-		t.Fatalf("ListAll without sorting failed: %v", err)
+		t.Fatalf(
+			"ListAll without sorting failed: %v",
+			err,
+		)
 	}
 
 	if len(items) != 2 {
-		t.Fatalf("Expected 2 items, got %d", len(items))
+		t.Fatalf(
+			"Expected 2 items, got %d",
+			len(items),
+		)
 	}
 
 	// Without sorting, order depends on filesystem readdir order
@@ -384,8 +531,11 @@ func TestListAll_NoSorting(t *testing.T) {
 		ids[item.ID()] = true
 	}
 
-	if !ids["zebra-change"] || !ids["alpha-change"] {
-		t.Error("Expected both zebra-change and alpha-change to be present")
+	if !ids["zebra-change"] ||
+		!ids["alpha-change"] {
+		t.Error(
+			"Expected both zebra-change and alpha-change to be present",
+		)
 	}
 }
 
@@ -395,11 +545,17 @@ func TestListAll_Empty(t *testing.T) {
 
 	items, err := lister.ListAll(nil)
 	if err != nil {
-		t.Fatalf("ListAll on empty directory failed: %v", err)
+		t.Fatalf(
+			"ListAll on empty directory failed: %v",
+			err,
+		)
 	}
 
 	if len(items) != 0 {
-		t.Errorf("Expected empty list, got %d items", len(items))
+		t.Errorf(
+			"Expected empty list, got %d items",
+			len(items),
+		)
 	}
 }
 
@@ -412,31 +568,53 @@ func isGitAvailable() bool {
 
 // isInGitRepo checks if we're currently in a git repository.
 func isInGitRepo() bool {
-	cmd := exec.Command("git", "rev-parse", "--git-dir")
+	cmd := exec.Command(
+		"git",
+		"rev-parse",
+		"--git-dir",
+	)
 
 	return cmd.Run() == nil
 }
 
 // hasOriginRemote checks if the origin remote is configured.
 func hasOriginRemote() bool {
-	cmd := exec.Command("git", "remote", "get-url", "origin")
+	cmd := exec.Command(
+		"git",
+		"remote",
+		"get-url",
+		"origin",
+	)
 
 	return cmd.Run() == nil
 }
 
-func TestFilterChangesNotOnRef_EmptySlice(t *testing.T) {
+func TestFilterChangesNotOnRef_EmptySlice(
+	t *testing.T,
+) {
 	// Test with empty changes slice - should return empty slice without error
 	var changes []ChangeInfo
-	result, err := FilterChangesNotOnRef(changes, "origin/main")
+	result, err := FilterChangesNotOnRef(
+		changes,
+		"origin/main",
+	)
 	if err != nil {
-		t.Fatalf("FilterChangesNotOnRef with empty slice failed: %v", err)
+		t.Fatalf(
+			"FilterChangesNotOnRef with empty slice failed: %v",
+			err,
+		)
 	}
 	if len(result) != 0 {
-		t.Errorf("Expected empty result, got %d changes", len(result))
+		t.Errorf(
+			"Expected empty result, got %d changes",
+			len(result),
+		)
 	}
 }
 
-func TestFilterChangesNotOnRef_Integration(t *testing.T) {
+func TestFilterChangesNotOnRef_Integration(
+	t *testing.T,
+) {
 	if !isGitAvailable() {
 		t.Skip("git is not available")
 	}
@@ -448,20 +626,35 @@ func TestFilterChangesNotOnRef_Integration(t *testing.T) {
 	}
 
 	// Change to the repo root for consistent path resolution
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	cmd := exec.Command(
+		"git",
+		"rev-parse",
+		"--show-toplevel",
+	)
 	output, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("failed to get repo root: %v", err)
+		t.Fatalf(
+			"failed to get repo root: %v",
+			err,
+		)
 	}
-	repoRoot := string(output[:len(output)-1]) // trim newline
+	repoRoot := string(
+		output[:len(output)-1],
+	) // trim newline
 
 	oldWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(oldWd) }()
 	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatalf("failed to change to repo root: %v", err)
+		t.Fatalf(
+			"failed to change to repo root: %v",
+			err,
+		)
 	}
 
 	// Create test changes - some that exist on origin/main and some that don't
@@ -488,7 +681,9 @@ func TestFilterChangesNotOnRef_Integration(t *testing.T) {
 			},
 			ref:            "origin/main",
 			expectFiltered: 1,
-			expectContains: []string{"nonexistent-test-change-xyz-12345"},
+			expectContains: []string{
+				"nonexistent-test-change-xyz-12345",
+			},
 		},
 		{
 			name:           "all changes already merged",
@@ -500,13 +695,23 @@ func TestFilterChangesNotOnRef_Integration(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := FilterChangesNotOnRef(tc.changes, tc.ref)
+			result, err := FilterChangesNotOnRef(
+				tc.changes,
+				tc.ref,
+			)
 			if err != nil {
-				t.Fatalf("FilterChangesNotOnRef failed: %v", err)
+				t.Fatalf(
+					"FilterChangesNotOnRef failed: %v",
+					err,
+				)
 			}
 
 			if len(result) != tc.expectFiltered {
-				t.Errorf("Expected %d filtered changes, got %d", tc.expectFiltered, len(result))
+				t.Errorf(
+					"Expected %d filtered changes, got %d",
+					tc.expectFiltered,
+					len(result),
+				)
 			}
 
 			// Check expected IDs are in the result
@@ -520,14 +725,19 @@ func TestFilterChangesNotOnRef_Integration(t *testing.T) {
 					}
 				}
 				if !found {
-					t.Errorf("Expected change %q to be in result, but it wasn't", expectedID)
+					t.Errorf(
+						"Expected change %q to be in result, but it wasn't",
+						expectedID,
+					)
 				}
 			}
 		})
 	}
 }
 
-func TestFilterChangesNotOnRef_MixedChanges(t *testing.T) {
+func TestFilterChangesNotOnRef_MixedChanges(
+	t *testing.T,
+) {
 	if !isGitAvailable() {
 		t.Skip("git is not available")
 	}
@@ -539,47 +749,82 @@ func TestFilterChangesNotOnRef_MixedChanges(t *testing.T) {
 	}
 
 	// Change to the repo root for consistent path resolution
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	cmd := exec.Command(
+		"git",
+		"rev-parse",
+		"--show-toplevel",
+	)
 	output, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("failed to get repo root: %v", err)
+		t.Fatalf(
+			"failed to get repo root: %v",
+			err,
+		)
 	}
-	repoRoot := string(output[:len(output)-1]) // trim newline
+	repoRoot := string(
+		output[:len(output)-1],
+	) // trim newline
 
 	oldWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(oldWd) }()
 	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatalf("failed to change to repo root: %v", err)
+		t.Fatalf(
+			"failed to change to repo root: %v",
+			err,
+		)
 	}
 
 	// Test with a mix of changes - one that exists (archive) and ones that don't
 	changes := []ChangeInfo{
-		{ID: "archive", Title: "Archive", DeltaCount: 0, TaskStatus: parsers.TaskStatus{}},
+		{
+			ID:         "archive",
+			Title:      "Archive",
+			DeltaCount: 0,
+			TaskStatus: parsers.TaskStatus{},
+		},
 		{
 			ID:         "nonexistent-change-abc",
 			Title:      "Non-existent 1",
 			DeltaCount: 1,
-			TaskStatus: parsers.TaskStatus{Total: 2, Completed: 1},
+			TaskStatus: parsers.TaskStatus{
+				Total:     2,
+				Completed: 1,
+			},
 		},
 		{
 			ID:         "another-fake-change-xyz",
 			Title:      "Non-existent 2",
 			DeltaCount: 2,
-			TaskStatus: parsers.TaskStatus{Total: 3, Completed: 0},
+			TaskStatus: parsers.TaskStatus{
+				Total:     3,
+				Completed: 0,
+			},
 		},
 	}
 
-	result, err := FilterChangesNotOnRef(changes, "origin/main")
+	result, err := FilterChangesNotOnRef(
+		changes,
+		"origin/main",
+	)
 	if err != nil {
-		t.Fatalf("FilterChangesNotOnRef failed: %v", err)
+		t.Fatalf(
+			"FilterChangesNotOnRef failed: %v",
+			err,
+		)
 	}
 
 	// "archive" exists on origin/main, so only the two fake changes should remain
 	if len(result) != 2 {
-		t.Errorf("Expected 2 filtered changes (non-existent ones), got %d", len(result))
+		t.Errorf(
+			"Expected 2 filtered changes (non-existent ones), got %d",
+			len(result),
+		)
 		for _, c := range result {
 			t.Logf("  - %s", c.ID)
 		}
@@ -588,7 +833,9 @@ func TestFilterChangesNotOnRef_MixedChanges(t *testing.T) {
 	// Verify archive is NOT in the result
 	for _, change := range result {
 		if change.ID == "archive" {
-			t.Error("archive should have been filtered out (it exists on origin/main)")
+			t.Error(
+				"archive should have been filtered out (it exists on origin/main)",
+			)
 		}
 	}
 
@@ -604,14 +851,20 @@ func TestFilterChangesNotOnRef_MixedChanges(t *testing.T) {
 		}
 	}
 	if !foundAbc {
-		t.Error("nonexistent-change-abc should be in the result")
+		t.Error(
+			"nonexistent-change-abc should be in the result",
+		)
 	}
 	if !foundXyz {
-		t.Error("another-fake-change-xyz should be in the result")
+		t.Error(
+			"another-fake-change-xyz should be in the result",
+		)
 	}
 }
 
-func TestFilterChangesNotOnRef_PreservesChangeInfo(t *testing.T) {
+func TestFilterChangesNotOnRef_PreservesChangeInfo(
+	t *testing.T,
+) {
 	if !isGitAvailable() {
 		t.Skip("git is not available")
 	}
@@ -623,20 +876,35 @@ func TestFilterChangesNotOnRef_PreservesChangeInfo(t *testing.T) {
 	}
 
 	// Change to the repo root for consistent path resolution
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	cmd := exec.Command(
+		"git",
+		"rev-parse",
+		"--show-toplevel",
+	)
 	output, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("failed to get repo root: %v", err)
+		t.Fatalf(
+			"failed to get repo root: %v",
+			err,
+		)
 	}
-	repoRoot := string(output[:len(output)-1]) // trim newline
+	repoRoot := string(
+		output[:len(output)-1],
+	) // trim newline
 
 	oldWd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
+		t.Fatalf(
+			"failed to get working directory: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir(oldWd) }()
 	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatalf("failed to change to repo root: %v", err)
+		t.Fatalf(
+			"failed to change to repo root: %v",
+			err,
+		)
 	}
 
 	// Create a change with full info to verify it's preserved
@@ -644,27 +912,47 @@ func TestFilterChangesNotOnRef_PreservesChangeInfo(t *testing.T) {
 		ID:         "test-change-preserve-info-xyz",
 		Title:      "Test Change with Full Info",
 		DeltaCount: 5,
-		TaskStatus: parsers.TaskStatus{Total: 10, Completed: 7},
+		TaskStatus: parsers.TaskStatus{
+			Total:     10,
+			Completed: 7,
+		},
 	}
 
 	changes := []ChangeInfo{originalChange}
 
-	result, err := FilterChangesNotOnRef(changes, "origin/main")
+	result, err := FilterChangesNotOnRef(
+		changes,
+		"origin/main",
+	)
 	if err != nil {
-		t.Fatalf("FilterChangesNotOnRef failed: %v", err)
+		t.Fatalf(
+			"FilterChangesNotOnRef failed: %v",
+			err,
+		)
 	}
 
 	if len(result) != 1 {
-		t.Fatalf("Expected 1 filtered change, got %d", len(result))
+		t.Fatalf(
+			"Expected 1 filtered change, got %d",
+			len(result),
+		)
 	}
 
 	// Verify all fields are preserved
 	filteredChange := result[0]
 	if filteredChange.ID != originalChange.ID {
-		t.Errorf("ID mismatch: got %q, want %q", filteredChange.ID, originalChange.ID)
+		t.Errorf(
+			"ID mismatch: got %q, want %q",
+			filteredChange.ID,
+			originalChange.ID,
+		)
 	}
 	if filteredChange.Title != originalChange.Title {
-		t.Errorf("Title mismatch: got %q, want %q", filteredChange.Title, originalChange.Title)
+		t.Errorf(
+			"Title mismatch: got %q, want %q",
+			filteredChange.Title,
+			originalChange.Title,
+		)
 	}
 	if filteredChange.DeltaCount != originalChange.DeltaCount {
 		t.Errorf(

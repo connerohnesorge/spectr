@@ -51,29 +51,35 @@ var (
 	// Section header style: bold, cyan
 	headerStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("6")) // Cyan
+			Foreground(lipgloss.Color("6"))
+		// Cyan
 
 	// Summary bullet style: cyan
 	summaryBulletStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("6")) // Cyan
+				Foreground(lipgloss.Color("6"))
+		// Cyan
 
 	// Active change indicator style: yellow
 	activeChangeStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("3")) // Yellow
+				Foreground(lipgloss.Color("3"))
+		// Yellow
 
 	// Completed change indicator style: green
 	completedChangeStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("2")) // Green
+				Foreground(lipgloss.Color("2"))
+		// Green
 
 	// Spec indicator style: blue
 	specStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("4")) // Blue
+			Foreground(lipgloss.Color("4"))
+		// Blue
 
 	// Percentage style: dim
 
 	// Footer hint style: dim
 	footerStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("240")) // Dim
+			Foreground(lipgloss.Color("240"))
+	// Dim
 )
 
 // FormatDashboardText formats the dashboard data as
@@ -89,49 +95,76 @@ var (
 // - Footer with navigation hints
 //
 // Empty sections (e.g., no completed changes) are automatically hidden.
-func FormatDashboardText(data *DashboardData) string {
+func FormatDashboardText(
+	data *DashboardData,
+) string {
 	var sections []string
 
 	// Header: Dashboard title
 	sections = append(sections, dashboardTitle)
 	sections = append(sections, "")
-	sections = append(sections, doubleLineSeparator)
+	sections = append(
+		sections,
+		doubleLineSeparator,
+	)
 	sections = append(sections, "")
 
 	// Section 1: Summary
-	sections = append(sections, formatSummarySection(data.Summary))
+	sections = append(
+		sections,
+		formatSummarySection(data.Summary),
+	)
 	sections = append(sections, "")
 
 	// Section 2: Active Changes (only if there are active changes)
 	if len(data.ActiveChanges) > 0 {
-		sections = append(sections,
-			formatActiveChangesSection(data.ActiveChanges))
+		sections = append(
+			sections,
+			formatActiveChangesSection(
+				data.ActiveChanges,
+			),
+		)
 		sections = append(sections, "")
 	}
 
 	// Section 3: Completed Changes (only if there are completed changes)
 	if len(data.CompletedChanges) > 0 {
-		sections = append(sections,
-			formatCompletedChangesSection(data.CompletedChanges))
+		sections = append(
+			sections,
+			formatCompletedChangesSection(
+				data.CompletedChanges,
+			),
+		)
 		sections = append(sections, "")
 	}
 
 	// Section 4: Specifications (only if there are specs)
 	if len(data.Specs) > 0 {
-		sections = append(sections, formatSpecsSection(data.Specs))
+		sections = append(
+			sections,
+			formatSpecsSection(data.Specs),
+		)
 		sections = append(sections, "")
 	}
 
 	// Footer: Double-line separator and hints
-	sections = append(sections, doubleLineSeparator)
+	sections = append(
+		sections,
+		doubleLineSeparator,
+	)
 	sections = append(sections, "")
-	sections = append(sections, footerStyle.Render(footerHint))
+	sections = append(
+		sections,
+		footerStyle.Render(footerHint),
+	)
 
 	return strings.Join(sections, "\n")
 }
 
 // formatSummarySection creates the summary section with aggregate metrics
-func formatSummarySection(summary SummaryMetrics) string {
+func formatSummarySection(
+	summary SummaryMetrics,
+) string {
 	var lines []string
 
 	lines = append(lines, summaryHeader)
@@ -147,7 +180,8 @@ func formatSummarySection(summary SummaryMetrics) string {
 	lines = append(lines, specsLine)
 
 	// Active Changes: X in progress
-	activeLine := fmt.Sprintf("%s %s Active Changes: %d in progress",
+	activeLine := fmt.Sprintf(
+		"%s %s Active Changes: %d in progress",
 		indentation,
 		summaryBulletStyle.Render(summaryBullet),
 		summary.ActiveChanges,
@@ -155,7 +189,8 @@ func formatSummarySection(summary SummaryMetrics) string {
 	lines = append(lines, activeLine)
 
 	// Completed Changes: X
-	completedLine := fmt.Sprintf("%s %s Completed Changes: %d",
+	completedLine := fmt.Sprintf(
+		"%s %s Completed Changes: %d",
 		indentation,
 		summaryBulletStyle.Render(summaryBullet),
 		summary.CompletedChanges,
@@ -168,7 +203,8 @@ func formatSummarySection(summary SummaryMetrics) string {
 		taskPercentage = (summary.CompletedTasks * percentageMultiplier) /
 			summary.TotalTasks
 	}
-	taskLine := fmt.Sprintf("%s %s Task Progress: %d/%d (%d%% complete)",
+	taskLine := fmt.Sprintf(
+		"%s %s Task Progress: %d/%d (%d%% complete)",
 		indentation,
 		summaryBulletStyle.Render(summaryBullet),
 		summary.CompletedTasks,
@@ -182,23 +218,33 @@ func formatSummarySection(summary SummaryMetrics) string {
 
 // formatActiveChangesSection creates the active changes section
 // with progress bars
-func formatActiveChangesSection(changes []ChangeProgress) string {
+func formatActiveChangesSection(
+	changes []ChangeProgress,
+) string {
 	lines := make([]string, 0, 2+len(changes))
 
 	// Section header
-	lines = append(lines, headerStyle.Render(activeChangesHeader))
+	lines = append(
+		lines,
+		headerStyle.Render(activeChangesHeader),
+	)
 	lines = append(lines, singleLineSeparator)
 
 	// Each active change: ◉ id [progress bar] percentage%
 	for _, change := range changes {
 		// Render progress bar using progress.RenderBar()
-		progressBar := RenderBar(change.Progress.Completed,
-			change.Progress.Total)
+		progressBar := RenderBar(
+			change.Progress.Completed,
+			change.Progress.Total,
+		)
 
 		// Format: "  ◉ change-id              [████████░░░░░░░░░░░░] 37%"
-		line := fmt.Sprintf("%s %s %-*s %s",
+		line := fmt.Sprintf(
+			"%s %s %-*s %s",
 			indentation,
-			activeChangeStyle.Render(activeChangeCircle),
+			activeChangeStyle.Render(
+				activeChangeCircle,
+			),
 			changeIDWidth,
 			change.ID,
 			progressBar,
@@ -211,18 +257,28 @@ func formatActiveChangesSection(changes []ChangeProgress) string {
 
 // formatCompletedChangesSection creates the completed changes
 // section with checkmarks
-func formatCompletedChangesSection(changes []CompletedChange) string {
+func formatCompletedChangesSection(
+	changes []CompletedChange,
+) string {
 	lines := make([]string, 0, 2+len(changes))
 
 	// Section header
-	lines = append(lines, headerStyle.Render(completedChangesHeader))
+	lines = append(
+		lines,
+		headerStyle.Render(
+			completedChangesHeader,
+		),
+	)
 	lines = append(lines, singleLineSeparator)
 
 	// Each completed change: ✓ id
 	for _, change := range changes {
-		line := fmt.Sprintf("%s %s %s",
+		line := fmt.Sprintf(
+			"%s %s %s",
 			indentation,
-			completedChangeStyle.Render(completedCheckmark),
+			completedChangeStyle.Render(
+				completedCheckmark,
+			),
 			change.ID,
 		)
 		lines = append(lines, line)
@@ -236,12 +292,16 @@ func formatSpecsSection(specs []SpecInfo) string {
 	lines := make([]string, 0, 2+len(specs))
 
 	// Section header
-	lines = append(lines, headerStyle.Render(specsHeader))
+	lines = append(
+		lines,
+		headerStyle.Render(specsHeader),
+	)
 	lines = append(lines, singleLineSeparator)
 
 	// Each spec: ▪ id                  X requirements
 	for _, spec := range specs {
-		line := fmt.Sprintf("%s %s %-*s %d requirements",
+		line := fmt.Sprintf(
+			"%s %s %-*s %d requirements",
 			indentation,
 			specStyle.Render(specSquare),
 			specIDWidth,
@@ -270,9 +330,15 @@ func formatSpecsSection(specs []SpecInfo) string {
 // The JSON is formatted with indentation for human readability.
 //
 // Returns the formatted JSON string and any marshaling error.
-func FormatDashboardJSON(data *DashboardData) (string, error) {
+func FormatDashboardJSON(
+	data *DashboardData,
+) (string, error) {
 	// Marshal with indentation for readability
-	jsonBytes, err := json.MarshalIndent(data, "", "  ")
+	jsonBytes, err := json.MarshalIndent(
+		data,
+		"",
+		"  ",
+	)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to marshal dashboard data to JSON: %w",

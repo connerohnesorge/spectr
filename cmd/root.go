@@ -8,7 +8,7 @@ import (
 // CLI represents the root command structure for Kong
 type CLI struct {
 	Init       InitCmd                   `cmd:"" help:"Initialize Spectr"`
-	List       ListCmd                   `cmd:"" aliases:"ls" help:"List items"`
+	List       ListCmd                   `cmd:"" help:"List items"           aliases:"ls"`
 	Validate   ValidateCmd               `cmd:"" help:"Validate items"`
 	Accept     AcceptCmd                 `cmd:"" help:"Accept tasks.md"`
 	Archive    archive.ArchiveCmd        `cmd:"" help:"Archive a change"`

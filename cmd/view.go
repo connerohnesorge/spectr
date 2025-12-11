@@ -60,16 +60,24 @@ func (c *ViewCmd) Run() error {
 			)
 		}
 		// Handle other discovery/parsing failures
-		return fmt.Errorf("failed to collect dashboard data: %w", err)
+		return fmt.Errorf(
+			"failed to collect dashboard data: %w",
+			err,
+		)
 	}
 
 	// Format and output the dashboard
 	var output string
 	if c.JSON {
 		// JSON format for machine consumption
-		output, err = view.FormatDashboardJSON(data)
+		output, err = view.FormatDashboardJSON(
+			data,
+		)
 		if err != nil {
-			return fmt.Errorf("failed to format JSON: %w", err)
+			return fmt.Errorf(
+				"failed to format JSON: %w",
+				err,
+			)
 		}
 	} else {
 		// Human-readable text format with colors and progress bars

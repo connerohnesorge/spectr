@@ -30,7 +30,9 @@ func DetermineItemType(
 	projectPath, itemName string,
 	typeFlag *string,
 ) (ItemTypeInfo, error) {
-	changes, err := discovery.GetActiveChangeIDs(projectPath)
+	changes, err := discovery.GetActiveChangeIDs(
+		projectPath,
+	)
 	if err != nil {
 		return ItemTypeInfo{}, fmt.Errorf(
 			"failed to discover changes: %w",
@@ -38,7 +40,9 @@ func DetermineItemType(
 		)
 	}
 
-	specs, err := discovery.GetSpecIDs(projectPath)
+	specs, err := discovery.GetSpecIDs(
+		projectPath,
+	)
 	if err != nil {
 		return ItemTypeInfo{}, fmt.Errorf(
 			"failed to discover specs: %w",
@@ -47,21 +51,29 @@ func DetermineItemType(
 	}
 
 	info := ItemTypeInfo{
-		IsChange: containsString(changes, itemName),
-		IsSpec:   containsString(specs, itemName),
+		IsChange: containsString(
+			changes,
+			itemName,
+		),
+		IsSpec: containsString(specs, itemName),
 	}
 
 	// Handle explicit type flag
 	if typeFlag != nil {
 		info.ItemType = *typeFlag
-		if info.ItemType == ItemTypeChange && !info.IsChange {
+		if info.ItemType == ItemTypeChange &&
+			!info.IsChange {
 			return info, fmt.Errorf(
 				"change '%s' not found",
 				itemName,
 			)
 		}
-		if info.ItemType == ItemTypeSpec && !info.IsSpec {
-			return info, fmt.Errorf("spec '%s' not found", itemName)
+		if info.ItemType == ItemTypeSpec &&
+			!info.IsSpec {
+			return info, fmt.Errorf(
+				"spec '%s' not found",
+				itemName,
+			)
 		}
 
 		return info, nil
@@ -76,7 +88,10 @@ func DetermineItemType(
 		)
 	}
 	if !info.IsChange && !info.IsSpec {
-		return info, fmt.Errorf("item '%s' not found", itemName)
+		return info, fmt.Errorf(
+			"item '%s' not found",
+			itemName,
+		)
 	}
 	if info.IsChange {
 		info.ItemType = ItemTypeChange
@@ -100,7 +115,9 @@ func ValidateItemByType(
 			itemName,
 		)
 
-		return validator.ValidateChange(changePath)
+		return validator.ValidateChange(
+			changePath,
+		)
 	}
 
 	specPath := filepath.Join(
@@ -123,7 +140,9 @@ func ValidateSingleItem(
 	var err error
 
 	if item.ItemType == ItemTypeChange {
-		report, err = validator.ValidateChange(item.Path)
+		report, err = validator.ValidateChange(
+			item.Path,
+		)
 	} else {
 		report, err = validator.ValidateSpec(item.Path)
 	}
@@ -146,6 +165,9 @@ func ValidateSingleItem(
 }
 
 // containsString checks if a slice contains a string
-func containsString(slice []string, item string) bool {
+func containsString(
+	slice []string,
+	item string,
+) bool {
 	return slices.Contains(slice, item)
 }

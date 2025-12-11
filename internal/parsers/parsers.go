@@ -13,7 +13,9 @@ import (
 
 // ExtractTitle extracts the title from a markdown file by finding
 // the first H1 heading and removing "Change:" or "Spec:" prefix if present
-func ExtractTitle(filePath string) (string, error) {
+func ExtractTitle(
+	filePath string,
+) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
@@ -31,7 +33,10 @@ func ExtractTitle(filePath string) (string, error) {
 		title = strings.TrimSpace(title)
 
 		// Remove "Change:" or "Spec:" prefix
-		title = strings.TrimPrefix(title, "Change:")
+		title = strings.TrimPrefix(
+			title,
+			"Change:",
+		)
 		title = strings.TrimPrefix(title, "Spec:")
 		title = strings.TrimSpace(title)
 
@@ -49,7 +54,9 @@ type TaskStatus struct {
 }
 
 // ReadTasksJson reads and parses a tasks.json file
-func ReadTasksJson(filePath string) (*TasksFile, error) {
+func ReadTasksJson(
+	filePath string,
+) (*TasksFile, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
@@ -65,7 +72,9 @@ func ReadTasksJson(filePath string) (*TasksFile, error) {
 
 // CountTasks counts tasks in a change directory, checking tasks.json first
 // and falling back to tasks.md if tasks.json doesn't exist
-func CountTasks(changeDir string) (TaskStatus, error) {
+func CountTasks(
+	changeDir string,
+) (TaskStatus, error) {
 	// First, try to read tasks.json
 	tasksJsonPath := changeDir + "/tasks.json"
 	if _, err := os.Stat(tasksJsonPath); err == nil {
@@ -79,8 +88,14 @@ func CountTasks(changeDir string) (TaskStatus, error) {
 }
 
 // countTasksFromJson counts tasks from a tasks.json file
-func countTasksFromJson(filePath string) (TaskStatus, error) {
-	status := TaskStatus{Total: 0, Completed: 0, InProgress: 0}
+func countTasksFromJson(
+	filePath string,
+) (TaskStatus, error) {
+	status := TaskStatus{
+		Total:      0,
+		Completed:  0,
+		InProgress: 0,
+	}
 
 	tasksFile, err := ReadTasksJson(filePath)
 	if err != nil {
@@ -103,8 +118,14 @@ func countTasksFromJson(filePath string) (TaskStatus, error) {
 }
 
 // countTasksFromMarkdown counts tasks from a tasks.md file
-func countTasksFromMarkdown(filePath string) (TaskStatus, error) {
-	status := TaskStatus{Total: 0, Completed: 0, InProgress: 0}
+func countTasksFromMarkdown(
+	filePath string,
+) (TaskStatus, error) {
+	status := TaskStatus{
+		Total:      0,
+		Completed:  0,
+		InProgress: 0,
+	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -114,17 +135,23 @@ func countTasksFromMarkdown(filePath string) (TaskStatus, error) {
 	defer func() { _ = file.Close() }()
 
 	// Regex to match task lines: - [ ] or - [x] (case-insensitive)
-	taskPattern := regexp.MustCompile(`^\s*-\s*\[([xX ])\]`)
+	taskPattern := regexp.MustCompile(
+		`^\s*-\s*\[([xX ])\]`,
+	)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		matches := taskPattern.FindStringSubmatch(line)
+		matches := taskPattern.FindStringSubmatch(
+			line,
+		)
 		if len(matches) <= 1 {
 			continue
 		}
 		status.Total++
-		marker := strings.ToLower(strings.TrimSpace(matches[1]))
+		marker := strings.ToLower(
+			strings.TrimSpace(matches[1]),
+		)
 		if marker == "x" {
 			status.Completed++
 		}
@@ -140,39 +167,50 @@ func CountDeltas(changeDir string) (int, error) {
 	specsDir := changeDir + "/specs"
 
 	// Check if specs directory exists
-	if _, err := os.Stat(specsDir); os.IsNotExist(err) {
+	if _, err := os.Stat(specsDir); os.IsNotExist(
+		err,
+	) {
 		return 0, nil
 	}
 
 	// Walk through all spec files in the specs directory
-	err := walkSpecFiles(specsDir, func(filePath string) error {
-		file, err := os.Open(filePath)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = file.Close() }()
-
-		// Match delta section headers
-		deltaPattern := regexp.MustCompile(
-			`^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements`,
-		)
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if deltaPattern.MatchString(line) {
-				count++
+	err := walkSpecFiles(
+		specsDir,
+		func(filePath string) error {
+			file, err := os.Open(filePath)
+			if err != nil {
+				return err
 			}
-		}
+			defer func() { _ = file.Close() }()
 
-		return scanner.Err()
-	})
+			// Match delta section headers
+			deltaPattern := regexp.MustCompile(
+				`^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements`,
+			)
+
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				line := strings.TrimSpace(
+					scanner.Text(),
+				)
+				if deltaPattern.MatchString(
+					line,
+				) {
+					count++
+				}
+			}
+
+			return scanner.Err()
+		},
+	)
 
 	return count, err
 }
 
 // CountRequirements counts the number of requirements in a spec.md file
-func CountRequirements(specPath string) (int, error) {
+func CountRequirements(
+	specPath string,
+) (int, error) {
 	file, err := os.Open(specPath)
 	if err != nil {
 		return 0, err
@@ -180,7 +218,9 @@ func CountRequirements(specPath string) (int, error) {
 	defer func() { _ = file.Close() }()
 
 	count := 0
-	reqPattern := regexp.MustCompile(`^###\s+Requirement:`)
+	reqPattern := regexp.MustCompile(
+		`^###\s+Requirement:`,
+	)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -194,7 +234,10 @@ func CountRequirements(specPath string) (int, error) {
 }
 
 // walkSpecFiles walks through all spec.md files in a directory tree
-func walkSpecFiles(root string, fn func(string) error) error {
+func walkSpecFiles(
+	root string,
+	fn func(string) error,
+) error {
 	entries, err := os.ReadDir(root)
 	if err != nil {
 		return err

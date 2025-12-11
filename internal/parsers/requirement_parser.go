@@ -20,7 +20,9 @@ type RequirementBlock struct {
 // Returns a slice of RequirementBlock with their names and full content.
 //
 //nolint:revive // function-length - parser is clearest as single function
-func ParseRequirements(filePath string) ([]RequirementBlock, error) {
+func ParseRequirements(
+	filePath string,
+) ([]RequirementBlock, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -29,7 +31,9 @@ func ParseRequirements(filePath string) ([]RequirementBlock, error) {
 
 	var requirements []RequirementBlock
 	var currentReq *RequirementBlock
-	reqPattern := regexp.MustCompile(`^###\s+Requirement:\s*(.+)$`)
+	reqPattern := regexp.MustCompile(
+		`^###\s+Requirement:\s*(.+)$`,
+	)
 	h2Pattern := regexp.MustCompile(`^##\s+`)
 
 	scanner := bufio.NewScanner(file)
@@ -37,11 +41,16 @@ func ParseRequirements(filePath string) ([]RequirementBlock, error) {
 		line := scanner.Text()
 
 		// Check if this is a new requirement header
-		matches := reqPattern.FindStringSubmatch(line)
+		matches := reqPattern.FindStringSubmatch(
+			line,
+		)
 		if len(matches) > 1 {
 			// Save previous requirement if exists
 			if currentReq != nil {
-				requirements = append(requirements, *currentReq)
+				requirements = append(
+					requirements,
+					*currentReq,
+				)
 			}
 
 			// Start new requirement
@@ -58,7 +67,10 @@ func ParseRequirements(filePath string) ([]RequirementBlock, error) {
 		// Check if we hit a new section (## header) - ends current requirement
 		if h2Pattern.MatchString(line) {
 			if currentReq != nil {
-				requirements = append(requirements, *currentReq)
+				requirements = append(
+					requirements,
+					*currentReq,
+				)
 				currentReq = nil
 			}
 
@@ -73,7 +85,10 @@ func ParseRequirements(filePath string) ([]RequirementBlock, error) {
 
 	// Don't forget the last requirement
 	if currentReq != nil {
-		requirements = append(requirements, *currentReq)
+		requirements = append(
+			requirements,
+			*currentReq,
+		)
 	}
 
 	return requirements, scanner.Err()
@@ -82,14 +97,22 @@ func ParseRequirements(filePath string) ([]RequirementBlock, error) {
 // ParseScenarios extracts scenario blocks from requirement content.
 //
 // Returns a slice of scenario names found in the requirement.
-func ParseScenarios(requirementContent string) []string {
+func ParseScenarios(
+	requirementContent string,
+) []string {
 	var scenarios []string
-	scenarioPattern := regexp.MustCompile(`^####\s+Scenario:\s*(.+)$`)
+	scenarioPattern := regexp.MustCompile(
+		`^####\s+Scenario:\s*(.+)$`,
+	)
 
-	scanner := bufio.NewScanner(strings.NewReader(requirementContent))
+	scanner := bufio.NewScanner(
+		strings.NewReader(requirementContent),
+	)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		matches := scenarioPattern.FindStringSubmatch(line)
+		matches := scenarioPattern.FindStringSubmatch(
+			line,
+		)
 		if len(matches) > 1 {
 			scenarios = append(
 				scenarios,
@@ -104,6 +127,10 @@ func ParseScenarios(requirementContent string) []string {
 // NormalizeRequirementName normalizes requirement names for matching.
 //
 // Trims whitespace and converts to lowercase for case-insensitive comparison
-func NormalizeRequirementName(name string) string {
-	return strings.ToLower(strings.TrimSpace(name))
+func NormalizeRequirementName(
+	name string,
+) string {
+	return strings.ToLower(
+		strings.TrimSpace(name),
+	)
 }

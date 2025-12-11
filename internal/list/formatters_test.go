@@ -32,7 +32,9 @@ func TestFormatChangesText(t *testing.T) {
 					},
 				},
 			},
-			expected: []string{"add-feature  3/5 tasks"},
+			expected: []string{
+				"add-feature  3/5 tasks",
+			},
 		},
 		{
 			name: "Multiple changes sorted",
@@ -75,14 +77,26 @@ func TestFormatChangesText(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := FormatChangesText(tt.changes)
+			result := FormatChangesText(
+				tt.changes,
+			)
 			lines := strings.Split(result, "\n")
 			if len(lines) != len(tt.expected) {
-				t.Errorf("Expected %d lines, got %d", len(tt.expected), len(lines))
+				t.Errorf(
+					"Expected %d lines, got %d",
+					len(tt.expected),
+					len(lines),
+				)
 			}
 			for i, expected := range tt.expected {
-				if i < len(lines) && lines[i] != expected {
-					t.Errorf("Line %d: expected %q, got %q", i, expected, lines[i])
+				if i < len(lines) &&
+					lines[i] != expected {
+					t.Errorf(
+						"Line %d: expected %q, got %q",
+						i,
+						expected,
+						lines[i],
+					)
 				}
 			}
 		})
@@ -95,13 +109,19 @@ func TestFormatChangesLong(t *testing.T) {
 			ID:         "update-docs",
 			Title:      "Update Docs",
 			DeltaCount: 1,
-			TaskStatus: parsers.TaskStatus{Total: 2, Completed: 1},
+			TaskStatus: parsers.TaskStatus{
+				Total:     2,
+				Completed: 1,
+			},
 		},
 		{
 			ID:         "add-feature",
 			Title:      "Add Feature",
 			DeltaCount: 2,
-			TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+			TaskStatus: parsers.TaskStatus{
+				Total:     5,
+				Completed: 3,
+			},
 		},
 	}
 
@@ -109,21 +129,37 @@ func TestFormatChangesLong(t *testing.T) {
 	lines := strings.Split(result, "\n")
 
 	// Should be sorted alphabetically
-	if !strings.Contains(lines[0], "add-feature") {
-		t.Error("First line should contain add-feature")
+	if !strings.Contains(
+		lines[0],
+		"add-feature",
+	) {
+		t.Error(
+			"First line should contain add-feature",
+		)
 	}
-	if !strings.Contains(lines[1], "update-docs") {
-		t.Error("Second line should contain update-docs")
+	if !strings.Contains(
+		lines[1],
+		"update-docs",
+	) {
+		t.Error(
+			"Second line should contain update-docs",
+		)
 	}
 
 	// Check format includes all components
-	if !strings.Contains(lines[0], "Add Feature") {
+	if !strings.Contains(
+		lines[0],
+		"Add Feature",
+	) {
 		t.Error("Should contain title")
 	}
 	if !strings.Contains(lines[0], "[deltas 2]") {
 		t.Error("Should contain delta count")
 	}
-	if !strings.Contains(lines[0], "[tasks 3/5]") {
+	if !strings.Contains(
+		lines[0],
+		"[tasks 3/5]",
+	) {
 		t.Error("Should contain task status")
 	}
 }
@@ -134,19 +170,28 @@ func TestFormatChangesJSON(t *testing.T) {
 			ID:         "update-docs",
 			Title:      "Update Docs",
 			DeltaCount: 1,
-			TaskStatus: parsers.TaskStatus{Total: 2, Completed: 1},
+			TaskStatus: parsers.TaskStatus{
+				Total:     2,
+				Completed: 1,
+			},
 		},
 		{
 			ID:         "add-feature",
 			Title:      "Add Feature",
 			DeltaCount: 2,
-			TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+			TaskStatus: parsers.TaskStatus{
+				Total:     5,
+				Completed: 3,
+			},
 		},
 	}
 
 	result, err := FormatChangesJSON(changes)
 	if err != nil {
-		t.Fatalf("FormatChangesJSON failed: %v", err)
+		t.Fatalf(
+			"FormatChangesJSON failed: %v",
+			err,
+		)
 	}
 
 	// Parse JSON to verify structure
@@ -157,22 +202,32 @@ func TestFormatChangesJSON(t *testing.T) {
 
 	// Check sorting
 	if parsed[0].ID != "add-feature" {
-		t.Error("First item should be add-feature (sorted)")
+		t.Error(
+			"First item should be add-feature (sorted)",
+		)
 	}
 	if parsed[1].ID != "update-docs" {
-		t.Error("Second item should be update-docs (sorted)")
+		t.Error(
+			"Second item should be update-docs (sorted)",
+		)
 	}
 
 	// Verify data integrity
-	if parsed[0].Title != "Add Feature" || parsed[0].DeltaCount != 2 {
+	if parsed[0].Title != "Add Feature" ||
+		parsed[0].DeltaCount != 2 {
 		t.Error("Data mismatch in JSON output")
 	}
 }
 
 func TestFormatChangesJSON_Empty(t *testing.T) {
-	result, err := FormatChangesJSON(make([]ChangeInfo, 0))
+	result, err := FormatChangesJSON(
+		make([]ChangeInfo, 0),
+	)
 	if err != nil {
-		t.Fatalf("FormatChangesJSON failed: %v", err)
+		t.Fatalf(
+			"FormatChangesJSON failed: %v",
+			err,
+		)
 	}
 	if result != "[]" {
 		t.Errorf("Expected '[]', got %q", result)
@@ -193,18 +248,38 @@ func TestFormatSpecsText(t *testing.T) {
 		{
 			name: "Single spec",
 			specs: []SpecInfo{
-				{ID: "auth", Title: "Authentication", RequirementCount: 5},
+				{
+					ID:               "auth",
+					Title:            "Authentication",
+					RequirementCount: 5,
+				},
 			},
 			expected: []string{"auth"},
 		},
 		{
 			name: "Multiple specs sorted",
 			specs: []SpecInfo{
-				{ID: "database", Title: "Database", RequirementCount: 8},
-				{ID: "api", Title: "API", RequirementCount: 12},
-				{ID: "auth", Title: "Authentication", RequirementCount: 5},
+				{
+					ID:               "database",
+					Title:            "Database",
+					RequirementCount: 8,
+				},
+				{
+					ID:               "api",
+					Title:            "API",
+					RequirementCount: 12,
+				},
+				{
+					ID:               "auth",
+					Title:            "Authentication",
+					RequirementCount: 5,
+				},
 			},
-			expected: []string{"api", "auth", "database"},
+			expected: []string{
+				"api",
+				"auth",
+				"database",
+			},
 		},
 	}
 
@@ -213,11 +288,21 @@ func TestFormatSpecsText(t *testing.T) {
 			result := FormatSpecsText(tt.specs)
 			lines := strings.Split(result, "\n")
 			if len(lines) != len(tt.expected) {
-				t.Errorf("Expected %d lines, got %d", len(tt.expected), len(lines))
+				t.Errorf(
+					"Expected %d lines, got %d",
+					len(tt.expected),
+					len(lines),
+				)
 			}
 			for i, expected := range tt.expected {
-				if i < len(lines) && lines[i] != expected {
-					t.Errorf("Line %d: expected %q, got %q", i, expected, lines[i])
+				if i < len(lines) &&
+					lines[i] != expected {
+					t.Errorf(
+						"Line %d: expected %q, got %q",
+						i,
+						expected,
+						lines[i],
+					)
 				}
 			}
 		})
@@ -226,8 +311,16 @@ func TestFormatSpecsText(t *testing.T) {
 
 func TestFormatSpecsLong(t *testing.T) {
 	specs := []SpecInfo{
-		{ID: "database", Title: "Database", RequirementCount: 8},
-		{ID: "api", Title: "API", RequirementCount: 12},
+		{
+			ID:               "database",
+			Title:            "Database",
+			RequirementCount: 8,
+		},
+		{
+			ID:               "api",
+			Title:            "API",
+			RequirementCount: 12,
+		},
 	}
 
 	result := FormatSpecsLong(specs)
@@ -238,27 +331,45 @@ func TestFormatSpecsLong(t *testing.T) {
 		t.Error("First line should contain api")
 	}
 	if !strings.Contains(lines[1], "database") {
-		t.Error("Second line should contain database")
+		t.Error(
+			"Second line should contain database",
+		)
 	}
 
 	// Check format includes all components
 	if !strings.Contains(lines[0], "API") {
 		t.Error("Should contain title")
 	}
-	if !strings.Contains(lines[0], "[requirements 12]") {
-		t.Error("Should contain requirement count")
+	if !strings.Contains(
+		lines[0],
+		"[requirements 12]",
+	) {
+		t.Error(
+			"Should contain requirement count",
+		)
 	}
 }
 
 func TestFormatSpecsJSON(t *testing.T) {
 	specs := []SpecInfo{
-		{ID: "database", Title: "Database", RequirementCount: 8},
-		{ID: "api", Title: "API", RequirementCount: 12},
+		{
+			ID:               "database",
+			Title:            "Database",
+			RequirementCount: 8,
+		},
+		{
+			ID:               "api",
+			Title:            "API",
+			RequirementCount: 12,
+		},
 	}
 
 	result, err := FormatSpecsJSON(specs)
 	if err != nil {
-		t.Fatalf("FormatSpecsJSON failed: %v", err)
+		t.Fatalf(
+			"FormatSpecsJSON failed: %v",
+			err,
+		)
 	}
 
 	// Parse JSON to verify structure
@@ -269,22 +380,32 @@ func TestFormatSpecsJSON(t *testing.T) {
 
 	// Check sorting
 	if parsed[0].ID != "api" {
-		t.Error("First item should be api (sorted)")
+		t.Error(
+			"First item should be api (sorted)",
+		)
 	}
 	if parsed[1].ID != "database" {
-		t.Error("Second item should be database (sorted)")
+		t.Error(
+			"Second item should be database (sorted)",
+		)
 	}
 
 	// Verify data integrity
-	if parsed[0].Title != "API" || parsed[0].RequirementCount != 12 {
+	if parsed[0].Title != "API" ||
+		parsed[0].RequirementCount != 12 {
 		t.Error("Data mismatch in JSON output")
 	}
 }
 
 func TestFormatSpecsJSON_Empty(t *testing.T) {
-	result, err := FormatSpecsJSON(make([]SpecInfo, 0))
+	result, err := FormatSpecsJSON(
+		make([]SpecInfo, 0),
+	)
 	if err != nil {
-		t.Fatalf("FormatSpecsJSON failed: %v", err)
+		t.Fatalf(
+			"FormatSpecsJSON failed: %v",
+			err,
+		)
 	}
 	if result != "[]" {
 		t.Errorf("Expected '[]', got %q", result)
@@ -309,7 +430,10 @@ func TestFormatAllText(t *testing.T) {
 					ID:         "update-docs",
 					Title:      "Update Docs",
 					DeltaCount: 1,
-					TaskStatus: parsers.TaskStatus{Total: 2, Completed: 1},
+					TaskStatus: parsers.TaskStatus{
+						Total:     2,
+						Completed: 1,
+					},
 				}),
 				NewSpecItem(SpecInfo{
 					ID:               "api",
@@ -320,7 +444,10 @@ func TestFormatAllText(t *testing.T) {
 					ID:         "add-feature",
 					Title:      "Add Feature",
 					DeltaCount: 2,
-					TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+					TaskStatus: parsers.TaskStatus{
+						Total:     5,
+						Completed: 3,
+					},
 				}),
 			},
 			expected: []string{
@@ -336,11 +463,21 @@ func TestFormatAllText(t *testing.T) {
 			result := FormatAllText(tt.items)
 			lines := strings.Split(result, "\n")
 			if len(lines) != len(tt.expected) {
-				t.Errorf("Expected %d lines, got %d", len(tt.expected), len(lines))
+				t.Errorf(
+					"Expected %d lines, got %d",
+					len(tt.expected),
+					len(lines),
+				)
 			}
 			for i, expected := range tt.expected {
-				if i < len(lines) && lines[i] != expected {
-					t.Errorf("Line %d: expected %q, got %q", i, expected, lines[i])
+				if i < len(lines) &&
+					lines[i] != expected {
+					t.Errorf(
+						"Line %d: expected %q, got %q",
+						i,
+						expected,
+						lines[i],
+					)
 				}
 			}
 		})
@@ -353,7 +490,10 @@ func TestFormatAllLong(t *testing.T) {
 			ID:         "add-feature",
 			Title:      "Add Feature",
 			DeltaCount: 2,
-			TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+			TaskStatus: parsers.TaskStatus{
+				Total:     5,
+				Completed: 3,
+			},
 		}),
 		NewSpecItem(SpecInfo{
 			ID:               "api",
@@ -366,8 +506,13 @@ func TestFormatAllLong(t *testing.T) {
 	lines := strings.Split(result, "\n")
 
 	// Should be sorted alphabetically
-	if !strings.Contains(lines[0], "add-feature") {
-		t.Error("First line should contain add-feature")
+	if !strings.Contains(
+		lines[0],
+		"add-feature",
+	) {
+		t.Error(
+			"First line should contain add-feature",
+		)
 	}
 	if !strings.Contains(lines[1], "api") {
 		t.Error("Second line should contain api")
@@ -375,20 +520,28 @@ func TestFormatAllLong(t *testing.T) {
 
 	// Check format includes type indicators
 	if !strings.Contains(lines[0], "[CHANGE]") {
-		t.Error("Should contain [CHANGE] indicator")
+		t.Error(
+			"Should contain [CHANGE] indicator",
+		)
 	}
 	if !strings.Contains(lines[1], "[SPEC]") {
 		t.Error("Should contain [SPEC] indicator")
 	}
 
 	// Check format includes all components for change
-	if !strings.Contains(lines[0], "Add Feature") {
+	if !strings.Contains(
+		lines[0],
+		"Add Feature",
+	) {
 		t.Error("Should contain change title")
 	}
 	if !strings.Contains(lines[0], "[deltas 2]") {
 		t.Error("Should contain delta count")
 	}
-	if !strings.Contains(lines[0], "[tasks 3/5]") {
+	if !strings.Contains(
+		lines[0],
+		"[tasks 3/5]",
+	) {
 		t.Error("Should contain task status")
 	}
 
@@ -396,8 +549,13 @@ func TestFormatAllLong(t *testing.T) {
 	if !strings.Contains(lines[1], "API") {
 		t.Error("Should contain spec title")
 	}
-	if !strings.Contains(lines[1], "[requirements 12]") {
-		t.Error("Should contain requirement count")
+	if !strings.Contains(
+		lines[1],
+		"[requirements 12]",
+	) {
+		t.Error(
+			"Should contain requirement count",
+		)
 	}
 }
 
@@ -407,7 +565,10 @@ func TestFormatAllJSON(t *testing.T) {
 			ID:         "update-docs",
 			Title:      "Update Docs",
 			DeltaCount: 1,
-			TaskStatus: parsers.TaskStatus{Total: 2, Completed: 1},
+			TaskStatus: parsers.TaskStatus{
+				Total:     2,
+				Completed: 1,
+			},
 		}),
 		NewSpecItem(SpecInfo{
 			ID:               "api",
@@ -429,18 +590,26 @@ func TestFormatAllJSON(t *testing.T) {
 
 	// Check sorting
 	if parsed[0].ID() != "api" {
-		t.Error("First item should be api (sorted)")
+		t.Error(
+			"First item should be api (sorted)",
+		)
 	}
 	if parsed[1].ID() != "update-docs" {
-		t.Error("Second item should be update-docs (sorted)")
+		t.Error(
+			"Second item should be update-docs (sorted)",
+		)
 	}
 
 	// Verify data integrity
-	if parsed[0].Type != ItemTypeSpec || parsed[0].Spec == nil {
+	if parsed[0].Type != ItemTypeSpec ||
+		parsed[0].Spec == nil {
 		t.Error("First item should be spec type")
 	}
-	if parsed[1].Type != ItemTypeChange || parsed[1].Change == nil {
-		t.Error("Second item should be change type")
+	if parsed[1].Type != ItemTypeChange ||
+		parsed[1].Change == nil {
+		t.Error(
+			"Second item should be change type",
+		)
 	}
 }
 

@@ -210,9 +210,15 @@ func TestDetectPlatform(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DetectPlatform(tt.remoteURL)
+			got, err := DetectPlatform(
+				tt.remoteURL,
+			)
 			if err != nil {
-				t.Fatalf("DetectPlatform(%q) error = %v", tt.remoteURL, err)
+				t.Fatalf(
+					"DetectPlatform(%q) error = %v",
+					tt.remoteURL,
+					err,
+				)
 			}
 
 			if got.Platform != tt.wantPlatform {
@@ -259,7 +265,9 @@ func TestDetectPlatform(t *testing.T) {
 	}
 }
 
-func TestDetectPlatform_InvalidURLs(t *testing.T) {
+func TestDetectPlatform_InvalidURLs(
+	t *testing.T,
+) {
 	tests := []struct {
 		name      string
 		remoteURL string
@@ -306,13 +314,22 @@ func TestDetectPlatform_InvalidURLs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := DetectPlatform(tt.remoteURL)
 			if err == nil {
-				t.Fatalf("DetectPlatform(%q) expected error, got nil", tt.remoteURL)
+				t.Fatalf(
+					"DetectPlatform(%q) expected error, got nil",
+					tt.remoteURL,
+				)
 			}
 
-			if tt.wantErr != "" && !strings.Contains(err.Error(), tt.wantErr) {
+			if tt.wantErr != "" &&
+				!strings.Contains(
+					err.Error(),
+					tt.wantErr,
+				) {
 				t.Errorf(
 					"DetectPlatform(%q) error = %v, want error containing %q",
-					tt.remoteURL, err, tt.wantErr,
+					tt.remoteURL,
+					err,
+					tt.wantErr,
 				)
 			}
 		})
@@ -371,25 +388,44 @@ func TestParseRemoteURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			host, path, err := parseRemoteURL(tt.url)
+			host, path, err := parseRemoteURL(
+				tt.url,
+			)
 
 			if tt.wantErr {
 				if err == nil {
-					t.Errorf("parseRemoteURL(%q) expected error, got nil", tt.url)
+					t.Errorf(
+						"parseRemoteURL(%q) expected error, got nil",
+						tt.url,
+					)
 				}
 
 				return
 			}
 
 			if err != nil {
-				t.Fatalf("parseRemoteURL(%q) unexpected error: %v", tt.url, err)
+				t.Fatalf(
+					"parseRemoteURL(%q) unexpected error: %v",
+					tt.url,
+					err,
+				)
 			}
 
 			if host != tt.wantHost {
-				t.Errorf("parseRemoteURL(%q) host = %v, want %v", tt.url, host, tt.wantHost)
+				t.Errorf(
+					"parseRemoteURL(%q) host = %v, want %v",
+					tt.url,
+					host,
+					tt.wantHost,
+				)
 			}
 			if path != tt.wantPath {
-				t.Errorf("parseRemoteURL(%q) path = %v, want %v", tt.url, path, tt.wantPath)
+				t.Errorf(
+					"parseRemoteURL(%q) path = %v, want %v",
+					tt.url,
+					path,
+					tt.wantPath,
+				)
 			}
 		})
 	}
@@ -442,13 +478,25 @@ func TestExtractOwnerRepo(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			owner, repo := extractOwnerRepo(tt.path)
+			owner, repo := extractOwnerRepo(
+				tt.path,
+			)
 
 			if owner != tt.wantOwner {
-				t.Errorf("extractOwnerRepo(%q) owner = %v, want %v", tt.path, owner, tt.wantOwner)
+				t.Errorf(
+					"extractOwnerRepo(%q) owner = %v, want %v",
+					tt.path,
+					owner,
+					tt.wantOwner,
+				)
 			}
 			if repo != tt.wantRepo {
-				t.Errorf("extractOwnerRepo(%q) repo = %v, want %v", tt.path, repo, tt.wantRepo)
+				t.Errorf(
+					"extractOwnerRepo(%q) repo = %v, want %v",
+					tt.path,
+					repo,
+					tt.wantRepo,
+				)
 			}
 		})
 	}
@@ -461,22 +509,62 @@ func TestDetectPlatformFromHost(t *testing.T) {
 		wantPlatform Platform
 	}{
 		// GitHub
-		{name: "GitHub.com", host: "github.com", wantPlatform: PlatformGitHub},
-		{name: "GitHub Enterprise", host: "github.mycompany.com", wantPlatform: PlatformGitHub},
-		{name: "GitHub uppercase", host: "GITHUB.COM", wantPlatform: PlatformGitHub},
+		{
+			name:         "GitHub.com",
+			host:         "github.com",
+			wantPlatform: PlatformGitHub,
+		},
+		{
+			name:         "GitHub Enterprise",
+			host:         "github.mycompany.com",
+			wantPlatform: PlatformGitHub,
+		},
+		{
+			name:         "GitHub uppercase",
+			host:         "GITHUB.COM",
+			wantPlatform: PlatformGitHub,
+		},
 
 		// GitLab
-		{name: "GitLab.com", host: "gitlab.com", wantPlatform: PlatformGitLab},
-		{name: "GitLab self-hosted", host: "gitlab.mycompany.com", wantPlatform: PlatformGitLab},
-		{name: "GitLab uppercase", host: "GITLAB.COM", wantPlatform: PlatformGitLab},
+		{
+			name:         "GitLab.com",
+			host:         "gitlab.com",
+			wantPlatform: PlatformGitLab,
+		},
+		{
+			name:         "GitLab self-hosted",
+			host:         "gitlab.mycompany.com",
+			wantPlatform: PlatformGitLab,
+		},
+		{
+			name:         "GitLab uppercase",
+			host:         "GITLAB.COM",
+			wantPlatform: PlatformGitLab,
+		},
 
 		// Gitea/Forgejo
-		{name: "Gitea.io", host: "gitea.io", wantPlatform: PlatformGitea},
-		{name: "Gitea self-hosted", host: "gitea.mycompany.com", wantPlatform: PlatformGitea},
-		{name: "Forgejo", host: "forgejo.example.com", wantPlatform: PlatformGitea},
+		{
+			name:         "Gitea.io",
+			host:         "gitea.io",
+			wantPlatform: PlatformGitea,
+		},
+		{
+			name:         "Gitea self-hosted",
+			host:         "gitea.mycompany.com",
+			wantPlatform: PlatformGitea,
+		},
+		{
+			name:         "Forgejo",
+			host:         "forgejo.example.com",
+			wantPlatform: PlatformGitea,
+		},
 
 		// Bitbucket
-		{name: "Bitbucket.org", host: "bitbucket.org", wantPlatform: PlatformBitbucket},
+		{
+			name:         "Bitbucket.org",
+			host:         "bitbucket.org",
+			wantPlatform: PlatformBitbucket,
+		},
 		{
 			name:         "Bitbucket self-hosted",
 			host:         "bitbucket.mycompany.com",
@@ -484,15 +572,28 @@ func TestDetectPlatformFromHost(t *testing.T) {
 		},
 
 		// Unknown
-		{name: "Unknown host", host: "unknown.example.com", wantPlatform: PlatformUnknown},
-		{name: "Custom git server", host: "git.mycompany.com", wantPlatform: PlatformUnknown},
+		{
+			name:         "Unknown host",
+			host:         "unknown.example.com",
+			wantPlatform: PlatformUnknown,
+		},
+		{
+			name:         "Custom git server",
+			host:         "git.mycompany.com",
+			wantPlatform: PlatformUnknown,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := detectPlatformFromHost(tt.host)
 			if got != tt.wantPlatform {
-				t.Errorf("detectPlatformFromHost(%q) = %v, want %v", tt.host, got, tt.wantPlatform)
+				t.Errorf(
+					"detectPlatformFromHost(%q) = %v, want %v",
+					tt.host,
+					got,
+					tt.wantPlatform,
+				)
 			}
 		})
 	}
@@ -511,12 +612,20 @@ func TestGetCLITool(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(string(tt.platform), func(t *testing.T) {
-			got := getCLITool(tt.platform)
-			if got != tt.want {
-				t.Errorf("getCLITool(%v) = %v, want %v", tt.platform, got, tt.want)
-			}
-		})
+		t.Run(
+			string(tt.platform),
+			func(t *testing.T) {
+				got := getCLITool(tt.platform)
+				if got != tt.want {
+					t.Errorf(
+						"getCLITool(%v) = %v, want %v",
+						tt.platform,
+						got,
+						tt.want,
+					)
+				}
+			},
+		)
 	}
 }
 
@@ -527,15 +636,34 @@ func TestBuildRepoURL(t *testing.T) {
 		repo  string
 		want  string
 	}{
-		{"github.com", "owner", "repo", "https://github.com/owner/repo"},
-		{"gitlab.com", "group/subgroup", "repo", "https://gitlab.com/group/subgroup/repo"},
-		{"bitbucket.org", "workspace", "project", "https://bitbucket.org/workspace/project"},
+		{
+			"github.com",
+			"owner",
+			"repo",
+			"https://github.com/owner/repo",
+		},
+		{
+			"gitlab.com",
+			"group/subgroup",
+			"repo",
+			"https://gitlab.com/group/subgroup/repo",
+		},
+		{
+			"bitbucket.org",
+			"workspace",
+			"project",
+			"https://bitbucket.org/workspace/project",
+		},
 	}
 
 	for _, tt := range tests {
 		name := tt.host + "/" + tt.owner + "/" + tt.repo
 		t.Run(name, func(t *testing.T) {
-			got := buildRepoURL(tt.host, tt.owner, tt.repo)
+			got := buildRepoURL(
+				tt.host,
+				tt.owner,
+				tt.repo,
+			)
 			if got != tt.want {
 				t.Errorf(
 					"buildRepoURL(%q, %q, %q) = %v, want %v",

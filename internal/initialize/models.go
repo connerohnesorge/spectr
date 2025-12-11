@@ -3,10 +3,10 @@ package initialize
 // InitCmd represents the init command with all its flags
 type InitCmd struct {
 	Path           string   `arg:"" optional:"" help:"Project path"`
-	PathFlag       string   `name:"path" short:"p" help:"Alt project path"`
-	Tools          []string `name:"tools" short:"t" help:"Tools list"`
-	NonInteractive bool     `name:"non-interactive" help:"Non-interactive"`
-	CIWorkflow     bool     `name:"ci-workflow" help:"Create CI workflow file"`
+	PathFlag       string   `                   help:"Alt project path"        name:"path"            short:"p"`
+	Tools          []string `                   help:"Tools list"              name:"tools"           short:"t"`
+	NonInteractive bool     `                   help:"Non-interactive"         name:"non-interactive"`
+	CIWorkflow     bool     `                   help:"Create CI workflow file" name:"ci-workflow"`
 }
 
 // ProjectConfig holds the overall project configuration during init

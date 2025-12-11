@@ -35,7 +35,9 @@ type ValidationReport struct {
 }
 
 // NewValidationReport creates a new ValidationReport from a list of issues
-func NewValidationReport(issuesParam []ValidationIssue) *ValidationReport {
+func NewValidationReport(
+	issuesParam []ValidationIssue,
+) *ValidationReport {
 	// Initialize issues slice to empty slice if nil
 	issues := issuesParam
 	if issues == nil {

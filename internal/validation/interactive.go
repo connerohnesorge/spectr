@@ -45,10 +45,16 @@ var menuChoices = []string{
 }
 
 // RunInteractiveValidation runs the interactive validation TUI
-func RunInteractiveValidation(projectPath string, strict bool, jsonOutput bool) error {
+func RunInteractiveValidation(
+	projectPath string,
+	strict bool,
+	jsonOutput bool,
+) error {
 	// Check if running in a TTY
 	if !isatty.IsTerminal(os.Stdout.Fd()) {
-		return fmt.Errorf("interactive mode requires a TTY")
+		return fmt.Errorf(
+			"interactive mode requires a TTY",
+		)
 	}
 
 	// Show menu and get selection
@@ -63,7 +69,12 @@ func RunInteractiveValidation(projectPath string, strict bool, jsonOutput bool) 
 	}
 
 	// Handle selection
-	return handleMenuSelection(selection, projectPath, strict, jsonOutput)
+	return handleMenuSelection(
+		selection,
+		projectPath,
+		strict,
+		jsonOutput,
+	)
 }
 
 // showValidationMenu displays the validation menu and returns the selection
@@ -77,7 +88,11 @@ func showValidationMenu() (int, error) {
 }
 
 // handleMenuSelection processes the menu selection
-func handleMenuSelection(selection int, projectPath string, strict, jsonOutput bool) error {
+func handleMenuSelection(
+	selection int,
+	projectPath string,
+	strict, jsonOutput bool,
+) error {
 	var items []ValidationItem
 	var err error
 
@@ -89,23 +104,40 @@ func handleMenuSelection(selection int, projectPath string, strict, jsonOutput b
 	case menuSelectionSpecs:
 		items, err = GetSpecItems(projectPath)
 	case menuSelectionPickItem:
-		return runItemPicker(projectPath, strict, jsonOutput)
+		return runItemPicker(
+			projectPath,
+			strict,
+			jsonOutput,
+		)
 	default:
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error loading items: %w", err)
+		return fmt.Errorf(
+			"error loading items: %w",
+			err,
+		)
 	}
 
-	return runValidationAndPrint(items, strict, jsonOutput)
+	return runValidationAndPrint(
+		items,
+		strict,
+		jsonOutput,
+	)
 }
 
 // runItemPicker shows the item picker and validates the selected item
-func runItemPicker(projectPath string, strict, jsonOutput bool) error {
+func runItemPicker(
+	projectPath string,
+	strict, jsonOutput bool,
+) error {
 	items, err := GetAllItems(projectPath)
 	if err != nil {
-		return fmt.Errorf("error loading items: %w", err)
+		return fmt.Errorf(
+			"error loading items: %w",
+			err,
+		)
 	}
 
 	if len(items) == 0 {
@@ -117,24 +149,36 @@ func runItemPicker(projectPath string, strict, jsonOutput bool) error {
 	// Build table rows
 	columns := []table.Column{
 		{Title: "Name", Width: validationIDWidth},
-		{Title: "Type", Width: validationTypeWidth},
-		{Title: "Path", Width: validationPathWidth},
+		{
+			Title: "Type",
+			Width: validationTypeWidth,
+		},
+		{
+			Title: "Path",
+			Width: validationPathWidth,
+		},
 	}
 
 	rows := make([]table.Row, len(items))
 	// Build name-to-index map for O(1) lookup in handler
-	nameToIndex := make(map[string]int, len(items))
+	nameToIndex := make(
+		map[string]int,
+		len(items),
+	)
 	for i, item := range items {
 		rows[i] = table.Row{
 			item.Name,
 			item.ItemType,
-			tui.TruncateString(item.Path, validationPathTruncate),
+			tui.TruncateString(
+				item.Path,
+				validationPathTruncate,
+			),
 		}
 		nameToIndex[item.Name] = i
 	}
 
 	// Create picker with enter action for selection
-	var selectedIdx = -1
+	selectedIdx := -1
 	picker := tui.NewTablePicker(tui.TableConfig{
 		Columns:     columns,
 		Rows:        rows,
@@ -164,22 +208,32 @@ func runItemPicker(projectPath string, strict, jsonOutput bool) error {
 
 	result, err := picker.Run()
 	if err != nil {
-		return fmt.Errorf("error running item picker: %w", err)
+		return fmt.Errorf(
+			"error running item picker: %w",
+			err,
+		)
 	}
 
-	if result == nil || result.Cancelled || selectedIdx < 0 {
-
+	if result == nil || result.Cancelled ||
+		selectedIdx < 0 {
 		return nil
 	}
 
 	// Validate the selected item
 	selectedItem := items[selectedIdx]
 
-	return runValidationAndPrint([]ValidationItem{selectedItem}, strict, jsonOutput)
+	return runValidationAndPrint(
+		[]ValidationItem{selectedItem},
+		strict,
+		jsonOutput,
+	)
 }
 
 // runValidationAndPrint validates items and prints results
-func runValidationAndPrint(items []ValidationItem, strict, jsonOutput bool) error {
+func runValidationAndPrint(
+	items []ValidationItem,
+	strict, jsonOutput bool,
+) error {
 	if len(items) == 0 {
 		fmt.Println("No items to validate")
 
@@ -207,7 +261,10 @@ func validateItems(
 	hasFailures := false
 
 	for _, item := range items {
-		result, err := ValidateSingleItem(validator, item)
+		result, err := ValidateSingleItem(
+			validator,
+			item,
+		)
 		results = append(results, result)
 
 		if err != nil || !result.Valid {

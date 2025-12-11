@@ -14,7 +14,8 @@ type OpencodeProvider struct {
 // NewOpencodeProvider creates a new OpenCode provider.
 func NewOpencodeProvider() *OpencodeProvider {
 	proposalPath, applyPath := StandardCommandPaths(
-		".opencode/command", ".md",
+		".opencode/command",
+		".md",
 	)
 
 	return &OpencodeProvider{

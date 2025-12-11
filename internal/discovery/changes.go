@@ -10,8 +10,14 @@ import (
 
 // GetActiveChanges finds all active changes in spectr/changes/,
 // excluding archive directory
-func GetActiveChanges(projectPath string) ([]string, error) {
-	changesDir := filepath.Join(projectPath, "spectr", "changes")
+func GetActiveChanges(
+	projectPath string,
+) ([]string, error) {
+	changesDir := filepath.Join(
+		projectPath,
+		"spectr",
+		"changes",
+	)
 
 	// Check if changes directory exists
 	_, err := os.Stat(changesDir)
@@ -21,7 +27,10 @@ func GetActiveChanges(projectPath string) ([]string, error) {
 
 	entries, err := os.ReadDir(changesDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read changes directory: %w", err)
+		return nil, fmt.Errorf(
+			"failed to read changes directory: %w",
+			err,
+		)
 	}
 
 	var changes []string
@@ -42,10 +51,17 @@ func GetActiveChanges(projectPath string) ([]string, error) {
 		}
 
 		// Check if proposal.md exists
-		proposalPath := filepath.Join(changesDir, entry.Name(), "proposal.md")
+		proposalPath := filepath.Join(
+			changesDir,
+			entry.Name(),
+			"proposal.md",
+		)
 		_, err = os.Stat(proposalPath)
 		if err == nil {
-			changes = append(changes, entry.Name())
+			changes = append(
+				changes,
+				entry.Name(),
+			)
 		}
 	}
 
@@ -59,7 +75,9 @@ func GetActiveChanges(projectPath string) ([]string, error) {
 // (directory names under spectr/changes/, excluding archive/)
 // Returns empty slice (not error) if the directory doesn't exist
 // Results are sorted alphabetically for consistency
-func GetActiveChangeIDs(projectRoot string) ([]string, error) {
+func GetActiveChangeIDs(
+	projectRoot string,
+) ([]string, error) {
 	return GetActiveChanges(projectRoot)
 }
 
@@ -81,16 +99,26 @@ type ResolveResult struct {
 // Returns an error if:
 // - No changes match the partial ID
 // - Multiple changes match the partial ID (ambiguous)
-func ResolveChangeID(partialID, projectRoot string) (ResolveResult, error) {
-	changes, err := GetActiveChangeIDs(projectRoot)
+func ResolveChangeID(
+	partialID, projectRoot string,
+) (ResolveResult, error) {
+	changes, err := GetActiveChangeIDs(
+		projectRoot,
+	)
 	if err != nil {
 		return ResolveResult{},
-			fmt.Errorf("get active changes: %w", err)
+			fmt.Errorf(
+				"get active changes: %w",
+				err,
+			)
 	}
 
 	if len(changes) == 0 {
 		return ResolveResult{},
-			fmt.Errorf("no change found matching '%s'", partialID)
+			fmt.Errorf(
+				"no change found matching '%s'",
+				partialID,
+			)
 	}
 
 	partialLower := strings.ToLower(partialID)
@@ -108,8 +136,14 @@ func ResolveChangeID(partialID, projectRoot string) (ResolveResult, error) {
 	// Try prefix matching (case-insensitive)
 	var prefixMatches []string
 	for _, change := range changes {
-		if strings.HasPrefix(strings.ToLower(change), partialLower) {
-			prefixMatches = append(prefixMatches, change)
+		if strings.HasPrefix(
+			strings.ToLower(change),
+			partialLower,
+		) {
+			prefixMatches = append(
+				prefixMatches,
+				change,
+			)
 		}
 	}
 
@@ -131,8 +165,14 @@ func ResolveChangeID(partialID, projectRoot string) (ResolveResult, error) {
 	// Try substring matching (case-insensitive) as fallback
 	var substringMatches []string
 	for _, change := range changes {
-		if strings.Contains(strings.ToLower(change), partialLower) {
-			substringMatches = append(substringMatches, change)
+		if strings.Contains(
+			strings.ToLower(change),
+			partialLower,
+		) {
+			substringMatches = append(
+				substringMatches,
+				change,
+			)
 		}
 	}
 

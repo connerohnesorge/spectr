@@ -5,7 +5,9 @@ import (
 )
 
 // newListerForArchive creates a lister for the archive package
-func newListerForArchive(projectPath string) *list.Lister {
+func newListerForArchive(
+	projectPath string,
+) *list.Lister {
 	return list.NewLister(projectPath)
 }
 
@@ -15,5 +17,8 @@ func runInteractiveArchiveForArchiver(
 	changes []list.ChangeInfo,
 	projectPath string,
 ) (string, error) {
-	return list.RunInteractiveArchive(changes, projectPath)
+	return list.RunInteractiveArchive(
+		changes,
+		projectPath,
+	)
 }

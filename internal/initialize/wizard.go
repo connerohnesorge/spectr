@@ -99,11 +99,15 @@ var (
 )
 
 // NewWizardModel creates a new wizard model
-func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
+func NewWizardModel(
+	cmd *InitCmd,
+) (*WizardModel, error) {
 	// Use the resolved path from InitCmd
 	projectPath := cmd.Path
 	if projectPath == "" {
-		return nil, fmt.Errorf("project path is required")
+		return nil, fmt.Errorf(
+			"project path is required",
+		)
 	}
 
 	// Get all providers from the new registry, sorted by priority
@@ -115,7 +119,9 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 
 	// Detect which providers are already configured and pre-select them
 	for _, provider := range allProviders {
-		isConfigured := provider.IsConfigured(projectPath)
+		isConfigured := provider.IsConfigured(
+			projectPath,
+		)
 		configuredProviders[provider.ID()] = isConfigured
 
 		// Pre-select already-configured providers
@@ -131,7 +137,9 @@ func NewWizardModel(cmd *InitCmd) (*WizardModel, error) {
 		"workflows",
 		"spectr-ci.yml",
 	)
-	ciWorkflowConfigured := FileExists(ciWorkflowPath)
+	ciWorkflowConfigured := FileExists(
+		ciWorkflowPath,
+	)
 
 	// Pre-select CI workflow if already configured
 	ciWorkflowEnabled := ciWorkflowConfigured
@@ -163,7 +171,9 @@ func (WizardModel) Init() tea.Cmd {
 }
 
 // Update is the Bubbletea Update function
-func (m WizardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m WizardModel) Update(
+	msg tea.Msg,
+) (tea.Model, tea.Cmd) {
 	switch typedMsg := msg.(type) {
 	case tea.KeyMsg:
 		switch m.step {
@@ -213,7 +223,9 @@ func (m WizardModel) View() string {
 // Keyboard handlers
 // ============================================================================
 
-func (m WizardModel) handleIntroKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m WizardModel) handleIntroKeys(
+	msg tea.KeyMsg,
+) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "q", "ctrl+c":
 		return m, tea.Quit
@@ -226,7 +238,9 @@ func (m WizardModel) handleIntroKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m WizardModel) handleSelectKeys(
+	msg tea.KeyMsg,
+) (tea.Model, tea.Cmd) {
 	// Handle search mode input
 	if m.searchMode {
 		return m.handleSearchModeInput(msg)
@@ -262,7 +276,9 @@ func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 	case "n":
 		// Deselect all
-		m.selectedProviders = make(map[string]bool)
+		m.selectedProviders = make(
+			map[string]bool,
+		)
 	case "/":
 		// Enter search mode
 		m.searchMode = true
@@ -275,7 +291,9 @@ func (m WizardModel) handleSelectKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 // handleSearchModeInput handles keyboard input when in search mode
-func (m WizardModel) handleSearchModeInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m WizardModel) handleSearchModeInput(
+	msg tea.KeyMsg,
+) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	//nolint:exhaustive // Only handling specific keys, default handles text input
@@ -319,7 +337,9 @@ func (m WizardModel) handleSearchModeInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) 
 		return m, nil
 	default:
 		// Handle text input for search
-		m.searchInput, cmd = m.searchInput.Update(msg)
+		m.searchInput, cmd = m.searchInput.Update(
+			msg,
+		)
 		m.searchQuery = m.searchInput.Value()
 		m.applyProviderFilter()
 
@@ -345,14 +365,18 @@ func (m *WizardModel) applyProviderFilter() {
 	// Adjust cursor position to stay within bounds
 	if len(m.filteredProviders) > 0 {
 		if m.cursor >= len(m.filteredProviders) {
-			m.cursor = len(m.filteredProviders) - 1
+			m.cursor = len(
+				m.filteredProviders,
+			) - 1
 		}
 	} else {
 		m.cursor = 0
 	}
 }
 
-func (m WizardModel) handleReviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m WizardModel) handleReviewKeys(
+	msg tea.KeyMsg,
+) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "q", "ctrl+c":
 		return m, tea.Quit
@@ -381,7 +405,9 @@ func (m WizardModel) handleReviewKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m WizardModel) handleCompleteKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m WizardModel) handleCompleteKeys(
+	msg tea.KeyMsg,
+) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case keyQuit, keyCtrlC, keyEnter:
 		return m, tea.Quit
@@ -390,7 +416,9 @@ func (m WizardModel) handleCompleteKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if m.err == nil {
 			// Copy the populate context prompt to clipboard
 			// CopyToClipboard uses OSC 52 fallback, so it never fails
-			_ = tui.CopyToClipboard(PopulateContextPrompt)
+			_ = tui.CopyToClipboard(
+				PopulateContextPrompt,
+			)
 
 			return m, tea.Quit
 		}
@@ -415,24 +443,37 @@ func (m WizardModel) renderIntro() string {
 	b.WriteString(newlineDouble)
 
 	// Welcome message
-	b.WriteString(titleStyle.Render("Welcome to Spectr Initialization"))
+	b.WriteString(
+		titleStyle.Render(
+			"Welcome to Spectr Initialization",
+		),
+	)
 	b.WriteString(newlineDouble)
 
 	b.WriteString(
 		"This wizard will help you initialize Spectr in " +
 			"your project.\n\n",
 	)
-	b.WriteString("Spectr provides a structured approach to:\n")
-	b.WriteString("  • Creating and managing change proposals\n")
+	b.WriteString(
+		"Spectr provides a structured approach to:\n",
+	)
+	b.WriteString(
+		"  • Creating and managing change proposals\n",
+	)
 	b.WriteString(
 		"  • Documenting project architecture and " +
 			"specifications\n",
 	)
-	b.WriteString("  • Integrating with AI coding assistants\n\n")
+	b.WriteString(
+		"  • Integrating with AI coding assistants\n\n",
+	)
 
 	b.WriteString(
 		infoStyle.Render(
-			fmt.Sprintf("Project path: %s", m.projectPath),
+			fmt.Sprintf(
+				"Project path: %s",
+				m.projectPath,
+			),
 		),
 	)
 	b.WriteString(newlineDouble)
@@ -450,14 +491,20 @@ func (m WizardModel) renderIntro() string {
 func (m WizardModel) renderSelect() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("Select AI Tools to Configure"))
+	b.WriteString(
+		titleStyle.Render(
+			"Select AI Tools to Configure",
+		),
+	)
 	b.WriteString(newlineDouble)
 
 	b.WriteString(
 		"Choose which AI coding tools you want to configure " +
 			"with Spectr.\n",
 	)
-	b.WriteString("You can come back later to add more tools.\n\n")
+	b.WriteString(
+		"You can come back later to add more tools.\n\n",
+	)
 
 	// Show search input if search mode is active
 	if m.searchMode {
@@ -468,9 +515,13 @@ func (m WizardModel) renderSelect() string {
 	}
 
 	// Render filtered providers or show no match message
-	if len(m.filteredProviders) == 0 && m.searchQuery != "" {
+	if len(m.filteredProviders) == 0 &&
+		m.searchQuery != "" {
 		b.WriteString(dimmedStyle.Render(
-			fmt.Sprintf("  No providers match '%s'\n", m.searchQuery),
+			fmt.Sprintf(
+				"  No providers match '%s'\n",
+				m.searchQuery,
+			),
 		))
 	} else {
 		b.WriteString(m.renderProviderGroup(m.filteredProviders, 0))
@@ -504,7 +555,10 @@ func (m WizardModel) renderSelect() string {
 	return b.String()
 }
 
-func (m WizardModel) renderProviderGroup(providersList []providers.Provider, offset int) string {
+func (m WizardModel) renderProviderGroup(
+	providersList []providers.Provider,
+	offset int,
+) string {
 	var b strings.Builder
 
 	for i, provider := range providersList {
@@ -530,18 +584,26 @@ func (m WizardModel) renderProviderGroup(providersList []providers.Provider, off
 		// Add configured indicator if provider is already configured
 		configuredIndicator := ""
 		if m.configuredProviders[provider.ID()] {
-			configuredIndicator = subtleStyle.Render(" (configured)")
+			configuredIndicator = subtleStyle.Render(
+				" (configured)",
+			)
 		}
 
 		switch {
 		case m.cursor == actualIndex:
-			b.WriteString(cursorStyle.Render(line))
+			b.WriteString(
+				cursorStyle.Render(line),
+			)
 			b.WriteString(configuredIndicator)
 		case m.selectedProviders[provider.ID()]:
-			b.WriteString(selectedStyle.Render(line))
+			b.WriteString(
+				selectedStyle.Render(line),
+			)
 			b.WriteString(configuredIndicator)
 		default:
-			b.WriteString(dimmedStyle.Render(line))
+			b.WriteString(
+				dimmedStyle.Render(line),
+			)
 			b.WriteString(configuredIndicator)
 		}
 
@@ -554,10 +616,16 @@ func (m WizardModel) renderProviderGroup(providersList []providers.Provider, off
 func (m WizardModel) renderReview() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("Review Your Selections"))
+	b.WriteString(
+		titleStyle.Render(
+			"Review Your Selections",
+		),
+	)
 	b.WriteString("\n\n")
 
-	selectedCount := len(m.getSelectedProviderIDs())
+	selectedCount := len(
+		m.getSelectedProviderIDs(),
+	)
 	m.renderSelectedProviders(&b, selectedCount)
 
 	// CI workflow option
@@ -568,7 +636,9 @@ func (m WizardModel) renderReview() string {
 	}
 	configuredNote := ""
 	if m.ciWorkflowConfigured {
-		configuredNote = subtleStyle.Render(" (configured)")
+		configuredNote = subtleStyle.Render(
+			" (configured)",
+		)
 	}
 	b.WriteString(fmt.Sprintf(
 		"  %s Spectr CI Validation%s\n",
@@ -600,9 +670,15 @@ func (m WizardModel) renderSelectedProviders(
 	count int,
 ) {
 	if count == 0 {
-		b.WriteString(errorStyle.Render("⚠ No tools selected"))
+		b.WriteString(
+			errorStyle.Render(
+				"⚠ No tools selected",
+			),
+		)
 		b.WriteString(doubleNewline)
-		b.WriteString("You haven't selected any tools to configure.\n")
+		b.WriteString(
+			"You haven't selected any tools to configure.\n",
+		)
 		b.WriteString(
 			"Spectr will still be initialized, but no tool " +
 				"integrations will be set up.\n\n",
@@ -611,9 +687,11 @@ func (m WizardModel) renderSelectedProviders(
 		return
 	}
 
-	fmt.Fprintf(b,
+	fmt.Fprintf(
+		b,
 		"You have selected %d tool(s) to configure:\n\n",
-		count)
+		count,
+	)
 
 	for _, provider := range m.allProviders {
 		if !m.selectedProviders[provider.ID()] {
@@ -627,18 +705,33 @@ func (m WizardModel) renderSelectedProviders(
 }
 
 // renderCreationPlan displays what files will be created
-func (m WizardModel) renderCreationPlan(b *strings.Builder, count int) {
-	b.WriteString("The following will be created:\n")
-	b.WriteString(infoStyle.Render("  • spectr/project.md"))
-	b.WriteString(" - Project documentation template" + newline)
-	b.WriteString(infoStyle.Render("  • spectr/AGENTS.md"))
-	b.WriteString(" - AI agent instructions" + newline)
+func (m WizardModel) renderCreationPlan(
+	b *strings.Builder,
+	count int,
+) {
+	b.WriteString(
+		"The following will be created:\n",
+	)
+	b.WriteString(
+		infoStyle.Render("  • spectr/project.md"),
+	)
+	b.WriteString(
+		" - Project documentation template" + newline,
+	)
+	b.WriteString(
+		infoStyle.Render("  • spectr/AGENTS.md"),
+	)
+	b.WriteString(
+		" - AI agent instructions" + newline,
+	)
 
 	if count > 0 {
-		b.WriteString(infoStyle.Render(fmt.Sprintf(
-			"  • Tool configurations for %d selected tools",
-			count,
-		)))
+		b.WriteString(
+			infoStyle.Render(fmt.Sprintf(
+				"  • Tool configurations for %d selected tools",
+				count,
+			)),
+		)
 		b.WriteString(newline)
 	}
 
@@ -647,21 +740,39 @@ func (m WizardModel) renderCreationPlan(b *strings.Builder, count int) {
 		if m.ciWorkflowConfigured {
 			status = "Update"
 		}
-		b.WriteString(infoStyle.Render("  • .github/workflows/spectr-ci.yml"))
-		fmt.Fprintf(b, " - %s CI workflow for Spectr validation\n", status)
+		b.WriteString(
+			infoStyle.Render(
+				"  • .github/workflows/spectr-ci.yml",
+			),
+		)
+		fmt.Fprintf(
+			b,
+			" - %s CI workflow for Spectr validation\n",
+			status,
+		)
 	}
 }
 
 func (WizardModel) renderExecute() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("Initializing Spectr..."))
+	b.WriteString(
+		titleStyle.Render(
+			"Initializing Spectr...",
+		),
+	)
 	b.WriteString(doubleNewline)
 
-	b.WriteString(infoStyle.Render("⏳ Setting up your project..."))
+	b.WriteString(
+		infoStyle.Render(
+			"⏳ Setting up your project...",
+		),
+	)
 	b.WriteString(doubleNewline)
 
-	b.WriteString("This will only take a moment." + newline)
+	b.WriteString(
+		"This will only take a moment." + newline,
+	)
 
 	return b.String()
 }
@@ -675,7 +786,11 @@ func (m WizardModel) renderComplete() string {
 		return b.String()
 	}
 
-	b.WriteString(successStyle.Render("✓ Spectr Initialized Successfully!"))
+	b.WriteString(
+		successStyle.Render(
+			"✓ Spectr Initialized Successfully!",
+		),
+	)
 	b.WriteString("\n\n")
 
 	if m.executionResult != nil {
@@ -684,38 +799,61 @@ func (m WizardModel) renderComplete() string {
 
 	b.WriteString(FormatNextStepsMessage())
 	b.WriteString(newline)
-	b.WriteString(subtleStyle.Render("c: copy prompt  q: quit" + newline))
+	b.WriteString(
+		subtleStyle.Render(
+			"c: copy prompt  q: quit" + newline,
+		),
+	)
 
 	return b.String()
 }
 
 // renderError displays initialization errors
-func (m WizardModel) renderError(b *strings.Builder) {
-	b.WriteString(errorStyle.Render("✗ Initialization Failed"))
+func (m WizardModel) renderError(
+	b *strings.Builder,
+) {
+	b.WriteString(
+		errorStyle.Render(
+			"✗ Initialization Failed",
+		),
+	)
 	b.WriteString(doubleNewline)
-	b.WriteString(errorStyle.Render(m.err.Error()))
+	b.WriteString(
+		errorStyle.Render(m.err.Error()),
+	)
 	b.WriteString(doubleNewline)
 
-	if m.executionResult != nil && len(m.executionResult.Errors) > 0 {
+	if m.executionResult != nil &&
+		len(m.executionResult.Errors) > 0 {
 		b.WriteString("Errors:" + newline)
 		for _, err := range m.executionResult.Errors {
-			b.WriteString(errorStyle.Render("  • "))
+			b.WriteString(
+				errorStyle.Render("  • "),
+			)
 			b.WriteString(err)
 			b.WriteString(newline)
 		}
 		b.WriteString(newline)
 	}
 
-	b.WriteString(subtleStyle.Render("Press 'q' to quit\n"))
+	b.WriteString(
+		subtleStyle.Render("Press 'q' to quit\n"),
+	)
 }
 
 // renderExecutionResults displays created/updated files and warnings
-func (m WizardModel) renderExecutionResults(b *strings.Builder) {
+func (m WizardModel) renderExecutionResults(
+	b *strings.Builder,
+) {
 	if len(m.executionResult.CreatedFiles) > 0 {
-		b.WriteString(successStyle.Render("Created files:"))
+		b.WriteString(
+			successStyle.Render("Created files:"),
+		)
 		b.WriteString(newline)
 		for _, file := range m.executionResult.CreatedFiles {
-			b.WriteString(infoStyle.Render("  ✓ "))
+			b.WriteString(
+				infoStyle.Render("  ✓ "),
+			)
 			b.WriteString(file)
 			b.WriteString(newline)
 		}
@@ -723,10 +861,14 @@ func (m WizardModel) renderExecutionResults(b *strings.Builder) {
 	}
 
 	if len(m.executionResult.UpdatedFiles) > 0 {
-		b.WriteString(successStyle.Render("Updated files:"))
+		b.WriteString(
+			successStyle.Render("Updated files:"),
+		)
 		b.WriteString(newline)
 		for _, file := range m.executionResult.UpdatedFiles {
-			b.WriteString(infoStyle.Render("  ↻ "))
+			b.WriteString(
+				infoStyle.Render("  ↻ "),
+			)
 			b.WriteString(file)
 			b.WriteString(newline)
 		}
@@ -734,10 +876,14 @@ func (m WizardModel) renderExecutionResults(b *strings.Builder) {
 	}
 
 	if len(m.executionResult.Errors) > 0 {
-		b.WriteString(errorStyle.Render("Warnings:"))
+		b.WriteString(
+			errorStyle.Render("Warnings:"),
+		)
 		b.WriteString(newline)
 		for _, err := range m.executionResult.Errors {
-			b.WriteString(errorStyle.Render("  ⚠ "))
+			b.WriteString(
+				errorStyle.Render("  ⚠ "),
+			)
 			b.WriteString(err)
 			b.WriteString(newline)
 		}
@@ -761,7 +907,11 @@ func (m WizardModel) getSelectedProviderIDs() []string {
 }
 
 // executeInit runs the initialization and sends result
-func executeInit(projectPath string, selectedProviders []string, ciWorkflowEnabled bool) tea.Cmd {
+func executeInit(
+	projectPath string,
+	selectedProviders []string,
+	ciWorkflowEnabled bool,
+) tea.Cmd {
 	return func() tea.Msg {
 		// Create a minimal InitCmd for the executor
 		cmd := &InitCmd{
@@ -771,11 +921,17 @@ func executeInit(projectPath string, selectedProviders []string, ciWorkflowEnabl
 		if err != nil {
 			return ExecutionCompleteMsg{
 				result: nil,
-				err:    fmt.Errorf("failed to create executor: %w", err),
+				err: fmt.Errorf(
+					"failed to create executor: %w",
+					err,
+				),
 			}
 		}
 
-		result, err := executor.Execute(selectedProviders, ciWorkflowEnabled)
+		result, err := executor.Execute(
+			selectedProviders,
+			ciWorkflowEnabled,
+		)
 
 		return ExecutionCompleteMsg{
 			result: result,

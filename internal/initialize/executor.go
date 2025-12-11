@@ -19,11 +19,15 @@ type InitExecutor struct {
 }
 
 // NewInitExecutor creates a new initialization executor
-func NewInitExecutor(cmd *InitCmd) (*InitExecutor, error) {
+func NewInitExecutor(
+	cmd *InitCmd,
+) (*InitExecutor, error) {
 	// Use the resolved path from InitCmd
 	projectPath := cmd.Path
 	if projectPath == "" {
-		return nil, fmt.Errorf("project path is required")
+		return nil, fmt.Errorf(
+			"project path is required",
+		)
 	}
 
 	// Check if path exists
@@ -72,8 +76,14 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 2. Create spectr/ directory structure
-	spectrDir := filepath.Join(e.projectPath, "spectr")
-	err := e.createDirectoryStructure(spectrDir, result)
+	spectrDir := filepath.Join(
+		e.projectPath,
+		"spectr",
+	)
+	err := e.createDirectoryStructure(
+		spectrDir,
+		result,
+	)
 	if err != nil {
 		return result, fmt.Errorf(
 			"failed to create directory structure: %w",
@@ -86,7 +96,10 @@ func (e *InitExecutor) Execute(
 	if err != nil {
 		result.Errors = append(
 			result.Errors,
-			fmt.Sprintf("failed to create project.md: %v", err),
+			fmt.Sprintf(
+				"failed to create project.md: %v",
+				err,
+			),
 		)
 	}
 
@@ -95,16 +108,26 @@ func (e *InitExecutor) Execute(
 	if err != nil {
 		result.Errors = append(
 			result.Errors,
-			fmt.Sprintf("failed to create AGENTS.md: %v", err),
+			fmt.Sprintf(
+				"failed to create AGENTS.md: %v",
+				err,
+			),
 		)
 	}
 
 	// 5. Configure selected providers
-	err = e.configureProviders(selectedProviderIDs, spectrDir, result)
+	err = e.configureProviders(
+		selectedProviderIDs,
+		spectrDir,
+		result,
+	)
 	if err != nil {
 		result.Errors = append(
 			result.Errors,
-			fmt.Sprintf("failed to configure tools: %v", err),
+			fmt.Sprintf(
+				"failed to configure tools: %v",
+				err,
+			),
 		)
 	}
 
@@ -114,7 +137,10 @@ func (e *InitExecutor) Execute(
 		if err != nil {
 			result.Errors = append(
 				result.Errors,
-				fmt.Sprintf("failed to create CI workflow: %v", err),
+				fmt.Sprintf(
+					"failed to create CI workflow: %v",
+					err,
+				),
 			)
 		}
 	}
@@ -143,7 +169,10 @@ func (*InitExecutor) createDirectoryStructure(
 					err,
 				)
 			}
-			result.CreatedFiles = append(result.CreatedFiles, dir+"/")
+			result.CreatedFiles = append(
+				result.CreatedFiles,
+				dir+"/",
+			)
 		}
 	}
 
@@ -155,7 +184,10 @@ func (e *InitExecutor) createProjectMd(
 	spectrDir string,
 	result *ExecutionResult,
 ) error {
-	projectFile := filepath.Join(spectrDir, "project.md")
+	projectFile := filepath.Join(
+		spectrDir,
+		"project.md",
+	)
 
 	// Check if it already exists
 	if FileExists(projectFile) {
@@ -171,22 +203,38 @@ func (e *InitExecutor) createProjectMd(
 	projectName := filepath.Base(e.projectPath)
 
 	// Render template
-	content, err := e.tm.RenderProject(ProjectContext{
-		ProjectName: projectName,
-		Description: "Add your project description here",
-		TechStack:   []string{"Add", "Your", "Technologies", "Here"},
-		Conventions: "",
-	})
+	content, err := e.tm.RenderProject(
+		ProjectContext{
+			ProjectName: projectName,
+			Description: "Add your project description here",
+			TechStack: []string{
+				"Add",
+				"Your",
+				"Technologies",
+				"Here",
+			},
+			Conventions: "",
+		},
+	)
 	if err != nil {
-		return fmt.Errorf("failed to render project template: %w", err)
+		return fmt.Errorf(
+			"failed to render project template: %w",
+			err,
+		)
 	}
 
 	// Write file
 	if err := os.WriteFile(projectFile, []byte(content), filePerm); err != nil {
-		return fmt.Errorf("failed to write project.md: %w", err)
+		return fmt.Errorf(
+			"failed to write project.md: %w",
+			err,
+		)
 	}
 
-	result.CreatedFiles = append(result.CreatedFiles, "spectr/project.md")
+	result.CreatedFiles = append(
+		result.CreatedFiles,
+		"spectr/project.md",
+	)
 
 	return nil
 }
@@ -196,7 +244,10 @@ func (e *InitExecutor) createAgentsMd(
 	spectrDir string,
 	result *ExecutionResult,
 ) error {
-	agentsFile := filepath.Join(spectrDir, "AGENTS.md")
+	agentsFile := filepath.Join(
+		spectrDir,
+		"AGENTS.md",
+	)
 
 	// Check if it already exists
 	if FileExists(agentsFile) {
@@ -209,17 +260,28 @@ func (e *InitExecutor) createAgentsMd(
 	}
 
 	// Render template
-	content, err := e.tm.RenderAgents(providers.DefaultTemplateContext())
+	content, err := e.tm.RenderAgents(
+		providers.DefaultTemplateContext(),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to render agents template: %w", err)
+		return fmt.Errorf(
+			"failed to render agents template: %w",
+			err,
+		)
 	}
 
 	// Write file
 	if err := os.WriteFile(agentsFile, []byte(content), filePerm); err != nil {
-		return fmt.Errorf("failed to write AGENTS.md: %w", err)
+		return fmt.Errorf(
+			"failed to write AGENTS.md: %w",
+			err,
+		)
 	}
 
-	result.CreatedFiles = append(result.CreatedFiles, "spectr/AGENTS.md")
+	result.CreatedFiles = append(
+		result.CreatedFiles,
+		"spectr/AGENTS.md",
+	)
 
 	return nil
 }
@@ -240,20 +302,29 @@ func (e *InitExecutor) configureProviders(
 		if provider == nil {
 			result.Errors = append(
 				result.Errors,
-				fmt.Sprintf("provider %s not found", providerID),
+				fmt.Sprintf(
+					"provider %s not found",
+					providerID,
+				),
 			)
 
 			continue
 		}
 
 		// Check if already configured
-		wasConfigured := provider.IsConfigured(e.projectPath)
+		wasConfigured := provider.IsConfigured(
+			e.projectPath,
+		)
 
 		// Configure the provider (handles both instruction file + slash commands)
 		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
 			result.Errors = append(
 				result.Errors,
-				fmt.Sprintf("failed to configure %s: %v", provider.Name(), err),
+				fmt.Sprintf(
+					"failed to configure %s: %v",
+					provider.Name(),
+					err,
+				),
 			)
 
 			continue
@@ -262,7 +333,9 @@ func (e *InitExecutor) configureProviders(
 		// Track created/updated files
 		filePaths := provider.GetFilePaths()
 		if wasConfigured {
-			result.UpdatedFiles = append(result.UpdatedFiles, filePaths...)
+			result.UpdatedFiles = append(
+				result.UpdatedFiles,
+				filePaths...)
 		} else {
 			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
 		}
@@ -272,30 +345,51 @@ func (e *InitExecutor) configureProviders(
 }
 
 // createCIWorkflow creates the .github/workflows/spectr-ci.yml file
-func (e *InitExecutor) createCIWorkflow(result *ExecutionResult) error {
+func (e *InitExecutor) createCIWorkflow(
+	result *ExecutionResult,
+) error {
 	// Ensure .github/workflows directory exists
-	workflowDir := filepath.Join(e.projectPath, ".github", "workflows")
+	workflowDir := filepath.Join(
+		e.projectPath,
+		".github",
+		"workflows",
+	)
 	if err := EnsureDir(workflowDir); err != nil {
-		return fmt.Errorf("failed to create workflows directory: %w", err)
+		return fmt.Errorf(
+			"failed to create workflows directory: %w",
+			err,
+		)
 	}
 
-	workflowFile := filepath.Join(workflowDir, "spectr-ci.yml")
+	workflowFile := filepath.Join(
+		workflowDir,
+		"spectr-ci.yml",
+	)
 	wasConfigured := FileExists(workflowFile)
 
 	// Render the CI workflow template
 	content, err := e.tm.RenderCIWorkflow()
 	if err != nil {
-		return fmt.Errorf("failed to render CI workflow template: %w", err)
+		return fmt.Errorf(
+			"failed to render CI workflow template: %w",
+			err,
+		)
 	}
 
 	// Write the workflow file
 	if err := os.WriteFile(workflowFile, []byte(content), filePerm); err != nil {
-		return fmt.Errorf("failed to write CI workflow file: %w", err)
+		return fmt.Errorf(
+			"failed to write CI workflow file: %w",
+			err,
+		)
 	}
 
 	// Track in results
 	if wasConfigured {
-		result.UpdatedFiles = append(result.UpdatedFiles, ".github/workflows/spectr-ci.yml")
+		result.UpdatedFiles = append(
+			result.UpdatedFiles,
+			".github/workflows/spectr-ci.yml",
+		)
 	} else {
 		result.CreatedFiles = append(result.CreatedFiles, ".github/workflows/spectr-ci.yml")
 	}

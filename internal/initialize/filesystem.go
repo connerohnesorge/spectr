@@ -35,7 +35,8 @@ func ExpandPath(path string) (string, error) {
 	expandedPath := path
 
 	// Handle home directory expansion
-	if path == "~" || strings.HasPrefix(path, "~/") {
+	if path == "~" ||
+		strings.HasPrefix(path, "~/") {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			return "",
@@ -50,7 +51,10 @@ func ExpandPath(path string) (string, error) {
 		}
 
 		// Replace ~ with home directory
-		expandedPath = filepath.Join(homeDir, path[2:])
+		expandedPath = filepath.Join(
+			homeDir,
+			path[2:],
+		)
 	}
 
 	// Convert to absolute path
@@ -79,7 +83,10 @@ func EnsureDir(path string) error {
 	// Expand path to handle ~ and relative paths
 	expandedPath, err := ExpandPath(path)
 	if err != nil {
-		return fmt.Errorf("failed to expand path: %w", err)
+		return fmt.Errorf(
+			"failed to expand path: %w",
+			err,
+		)
 	}
 
 	// Create directory with parent directories, idempotent
@@ -102,7 +109,10 @@ func EnsureDir(path string) error {
 //
 // Use BackupFile before calling WriteFile if you want to preserve
 // existing files.
-func WriteFile(path string, content []byte) error {
+func WriteFile(
+	path string,
+	content []byte,
+) error {
 	if path == "" {
 		return &specterrs.EmptyPathError{}
 	}
@@ -110,12 +120,18 @@ func WriteFile(path string, content []byte) error {
 	// Expand path to handle ~ and relative paths
 	expandedPath, err := ExpandPath(path)
 	if err != nil {
-		return fmt.Errorf("failed to expand path: %w", err)
+		return fmt.Errorf(
+			"failed to expand path: %w",
+			err,
+		)
 	}
 
 	// Check if file already exists (conflict detection)
 	if FileExists(expandedPath) {
-		return fmt.Errorf("file already exists: %s", expandedPath)
+		return fmt.Errorf(
+			"file already exists: %s",
+			expandedPath,
+		)
 	}
 
 	// Ensure parent directory exists
@@ -129,7 +145,11 @@ func WriteFile(path string, content []byte) error {
 	}
 
 	// Write file
-	err = os.WriteFile(expandedPath, content, filePerms)
+	err = os.WriteFile(
+		expandedPath,
+		content,
+		filePerms,
+	)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to write file %s: %w",
@@ -163,7 +183,9 @@ func FileExists(path string) bool {
 // It looks for the "spectr/project.md" file in the project directory.
 //
 // Returns true if the project is already initialized, false otherwise.
-func IsSpectrInitialized(projectPath string) bool {
+func IsSpectrInitialized(
+	projectPath string,
+) bool {
 	if projectPath == "" {
 		return false
 	}
@@ -175,7 +197,11 @@ func IsSpectrInitialized(projectPath string) bool {
 	}
 
 	// Check for spectr/project.md
-	projectFile := filepath.Join(expandedPath, "spectr", "project.md")
+	projectFile := filepath.Join(
+		expandedPath,
+		"spectr",
+		"project.md",
+	)
 
 	return FileExists(projectFile)
 }
@@ -195,7 +221,10 @@ func BackupFile(path string) error {
 	// Expand path to handle ~ and relative paths
 	expandedPath, err := ExpandPath(path)
 	if err != nil {
-		return fmt.Errorf("failed to expand path: %w", err)
+		return fmt.Errorf(
+			"failed to expand path: %w",
+			err,
+		)
 	}
 
 	// Only backup if file exists
@@ -206,18 +235,33 @@ func BackupFile(path string) error {
 	// Read existing file content
 	content, err := os.ReadFile(expandedPath)
 	if err != nil {
-		return fmt.Errorf("failed to read file for backup: %w", err)
+		return fmt.Errorf(
+			"failed to read file for backup: %w",
+			err,
+		)
 	}
 
 	// Generate backup filename with timestamp
 	// (including nanoseconds for uniqueness)
-	timestamp := time.Now().Format("20060102_150405.000000000")
-	backupPath := fmt.Sprintf("%s.backup.%s", expandedPath, timestamp)
+	timestamp := time.Now().
+		Format("20060102_150405.000000000")
+	backupPath := fmt.Sprintf(
+		"%s.backup.%s",
+		expandedPath,
+		timestamp,
+	)
 
 	// Write backup file
-	err = os.WriteFile(backupPath, content, filePerms)
+	err = os.WriteFile(
+		backupPath,
+		content,
+		filePerms,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to create backup file: %w", err)
+		return fmt.Errorf(
+			"failed to create backup file: %w",
+			err,
+		)
 	}
 
 	return nil

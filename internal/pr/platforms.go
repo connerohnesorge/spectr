@@ -68,7 +68,9 @@ func createPR(
 }
 
 // doCreatePR is the internal implementation of createPR.
-func doCreatePR(input createPRInput) (prURL, manualURL string, err error) {
+func doCreatePR(
+	input createPRInput,
+) (prURL, manualURL string, err error) {
 	args := prCreateArgs{
 		branchName:   input.branchName,
 		baseBranch:   input.baseBranch,
@@ -78,7 +80,10 @@ func doCreatePR(input createPRInput) (prURL, manualURL string, err error) {
 		worktreePath: input.worktreePath,
 	}
 
-	result, err := createPRForPlatform(input.platform, args)
+	result, err := createPRForPlatform(
+		input.platform,
+		args,
+	)
 	if err != nil {
 		return "", "", err
 	}
@@ -106,7 +111,9 @@ func createPRForPlatform(
 		return createBitbucketPR(platform, args)
 
 	case git.PlatformUnknown:
-		return nil, &specterrs.UnknownPlatformError{Platform: "unknown"}
+		return nil, &specterrs.UnknownPlatformError{
+			Platform: "unknown",
+		}
 	}
 
 	return nil, fmt.Errorf(
@@ -117,7 +124,9 @@ func createPRForPlatform(
 
 // createGitHubPR creates a GitHub pull request using the gh CLI.
 // It writes the PR body to a temp file and uses --body-file.
-func createGitHubPR(args prCreateArgs) (*prResult, error) {
+func createGitHubPR(
+	args prCreateArgs,
+) (*prResult, error) {
 	fmt.Println("Creating GitHub pull request...")
 
 	// Write PR body to temp file for gh CLI
@@ -156,8 +165,12 @@ func createGitHubPR(args prCreateArgs) (*prResult, error) {
 
 // createGitLabMR creates a GitLab merge request using the glab CLI.
 // GitLab uses --description instead of --body-file.
-func createGitLabMR(args prCreateArgs) (*prResult, error) {
-	fmt.Println("Creating GitLab merge request...")
+func createGitLabMR(
+	args prCreateArgs,
+) (*prResult, error) {
+	fmt.Println(
+		"Creating GitLab merge request...",
+	)
 
 	cmdArgs := []string{
 		"mr", "create",
@@ -182,13 +195,17 @@ func createGitLabMR(args prCreateArgs) (*prResult, error) {
 	}
 
 	return &prResult{
-		prURL: extractURLFromOutput(string(output)),
+		prURL: extractURLFromOutput(
+			string(output),
+		),
 	}, nil
 }
 
 // createGiteaPR creates a Gitea pull request using the tea CLI.
 // Gitea uses --description and --base for the target branch.
-func createGiteaPR(args prCreateArgs) (*prResult, error) {
+func createGiteaPR(
+	args prCreateArgs,
+) (*prResult, error) {
 	fmt.Println("Creating Gitea pull request...")
 
 	cmdArgs := []string{
@@ -210,7 +227,9 @@ func createGiteaPR(args prCreateArgs) (*prResult, error) {
 	}
 
 	return &prResult{
-		prURL: extractURLFromOutput(string(output)),
+		prURL: extractURLFromOutput(
+			string(output),
+		),
 	}, nil
 }
 
@@ -228,8 +247,13 @@ func createBitbucketPR(
 	)
 
 	fmt.Println()
-	fmt.Println("PR creation not automated for Bitbucket.")
-	fmt.Printf("Create manually at: %s\n", manualURL)
+	fmt.Println(
+		"PR creation not automated for Bitbucket.",
+	)
+	fmt.Printf(
+		"Create manually at: %s\n",
+		manualURL,
+	)
 
 	return &prResult{
 		manualURL: manualURL,
@@ -238,23 +262,37 @@ func createBitbucketPR(
 
 // writeTempBodyFile writes the PR body to a temporary file.
 // The caller is responsible for removing the file when done.
-func writeTempBodyFile(body string) (string, error) {
-	bodyFile, err := os.CreateTemp("", "spectr-pr-body-*.md")
+func writeTempBodyFile(
+	body string,
+) (string, error) {
+	bodyFile, err := os.CreateTemp(
+		"",
+		"spectr-pr-body-*.md",
+	)
 	if err != nil {
-		return "", fmt.Errorf("create temp file for PR body: %w", err)
+		return "", fmt.Errorf(
+			"create temp file for PR body: %w",
+			err,
+		)
 	}
 
 	if _, err := bodyFile.WriteString(body); err != nil {
 		_ = bodyFile.Close()
 		_ = os.Remove(bodyFile.Name())
 
-		return "", fmt.Errorf("write PR body: %w", err)
+		return "", fmt.Errorf(
+			"write PR body: %w",
+			err,
+		)
 	}
 
 	if err := bodyFile.Close(); err != nil {
 		_ = os.Remove(bodyFile.Name())
 
-		return "", fmt.Errorf("close PR body file: %w", err)
+		return "", fmt.Errorf(
+			"close PR body file: %w",
+			err,
+		)
 	}
 
 	return bodyFile.Name(), nil

@@ -13,7 +13,8 @@ type CrushProvider struct {
 // NewCrushProvider creates a new Crush provider.
 func NewCrushProvider() *CrushProvider {
 	proposalPath, applyPath := StandardCommandPaths(
-		".crush/commands", ".md",
+		".crush/commands",
+		".md",
 	)
 
 	return &CrushProvider{

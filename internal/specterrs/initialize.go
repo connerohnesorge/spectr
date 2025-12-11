@@ -35,7 +35,10 @@ func (e *InitializationCompletedWithErrorsError) Error() string {
 		return "initialization completed with 1 error"
 	}
 
-	return fmt.Sprintf("initialization completed with %d errors", e.ErrorCount)
+	return fmt.Sprintf(
+		"initialization completed with %d errors",
+		e.ErrorCount,
+	)
 }
 
 func (e *InitializationCompletedWithErrorsError) Unwrap() []error {

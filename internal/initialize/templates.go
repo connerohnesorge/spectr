@@ -21,9 +21,15 @@ type TemplateManager struct {
 // embedded templates loaded
 func NewTemplateManager() (*TemplateManager, error) {
 	// Parse all embedded templates
-	tmpl, err := template.ParseFS(templateFS, "templates/**/*.tmpl")
+	tmpl, err := template.ParseFS(
+		templateFS,
+		"templates/**/*.tmpl",
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse templates: %w", err)
+		return nil, fmt.Errorf(
+			"failed to parse templates: %w",
+			err,
+		)
 	}
 
 	return &TemplateManager{
@@ -32,12 +38,21 @@ func NewTemplateManager() (*TemplateManager, error) {
 }
 
 // RenderProject renders the project.md template with the given context
-func (tm *TemplateManager) RenderProject(ctx ProjectContext) (string, error) {
+func (tm *TemplateManager) RenderProject(
+	ctx ProjectContext,
+) (string, error) {
 	var buf bytes.Buffer
 	// Template names in ParseFS include the full path from the embed directive
-	err := tm.templates.ExecuteTemplate(&buf, "project.md.tmpl", ctx)
+	err := tm.templates.ExecuteTemplate(
+		&buf,
+		"project.md.tmpl",
+		ctx,
+	)
 	if err != nil {
-		return "", fmt.Errorf("failed to render project template: %w", err)
+		return "", fmt.Errorf(
+			"failed to render project template: %w",
+			err,
+		)
 	}
 
 	return buf.String(), nil
@@ -49,9 +64,16 @@ func (tm *TemplateManager) RenderAgents(
 	ctx providers.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(&buf, "AGENTS.md.tmpl", ctx)
+	err := tm.templates.ExecuteTemplate(
+		&buf,
+		"AGENTS.md.tmpl",
+		ctx,
+	)
 	if err != nil {
-		return "", fmt.Errorf("failed to render agents template: %w", err)
+		return "", fmt.Errorf(
+			"failed to render agents template: %w",
+			err,
+		)
 	}
 
 	return buf.String(), nil
@@ -87,9 +109,16 @@ func (tm *TemplateManager) RenderSlashCommand(
 	commandType string,
 	ctx providers.TemplateContext,
 ) (string, error) {
-	templateName := fmt.Sprintf("slash-%s.md.tmpl", commandType)
+	templateName := fmt.Sprintf(
+		"slash-%s.md.tmpl",
+		commandType,
+	)
 	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(&buf, templateName, ctx)
+	err := tm.templates.ExecuteTemplate(
+		&buf,
+		templateName,
+		ctx,
+	)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to render slash command template %s: %w",
@@ -105,9 +134,16 @@ func (tm *TemplateManager) RenderSlashCommand(
 // This template has no variables and returns the CI workflow configuration
 func (tm *TemplateManager) RenderCIWorkflow() (string, error) {
 	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(&buf, "spectr-ci.yml.tmpl", nil)
+	err := tm.templates.ExecuteTemplate(
+		&buf,
+		"spectr-ci.yml.tmpl",
+		nil,
+	)
 	if err != nil {
-		return "", fmt.Errorf("failed to render CI workflow template: %w", err)
+		return "", fmt.Errorf(
+			"failed to render CI workflow template: %w",
+			err,
+		)
 	}
 
 	return buf.String(), nil

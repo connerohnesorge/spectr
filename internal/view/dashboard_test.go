@@ -13,7 +13,10 @@ func TestCollectData(t *testing.T) {
 
 	// Verify the project exists
 	if _, err := os.Stat(filepath.Join(projectPath, "spectr")); err != nil {
-		t.Skipf("Skipping test: spectr directory not found at %s", projectPath)
+		t.Skipf(
+			"Skipping test: spectr directory not found at %s",
+			projectPath,
+		)
 	}
 
 	data, err := CollectData(projectPath)
@@ -28,30 +31,57 @@ func TestCollectData(t *testing.T) {
 
 	// Basic validation - summary metrics should be non-negative
 	if data.Summary.TotalSpecs < 0 {
-		t.Errorf("TotalSpecs should be >= 0, got %d", data.Summary.TotalSpecs)
+		t.Errorf(
+			"TotalSpecs should be >= 0, got %d",
+			data.Summary.TotalSpecs,
+		)
 	}
 	if data.Summary.TotalRequirements < 0 {
-		t.Errorf("TotalRequirements should be >= 0, got %d", data.Summary.TotalRequirements)
+		t.Errorf(
+			"TotalRequirements should be >= 0, got %d",
+			data.Summary.TotalRequirements,
+		)
 	}
 	if data.Summary.ActiveChanges < 0 {
-		t.Errorf("ActiveChanges should be >= 0, got %d", data.Summary.ActiveChanges)
+		t.Errorf(
+			"ActiveChanges should be >= 0, got %d",
+			data.Summary.ActiveChanges,
+		)
 	}
 	if data.Summary.CompletedChanges < 0 {
-		t.Errorf("CompletedChanges should be >= 0, got %d", data.Summary.CompletedChanges)
+		t.Errorf(
+			"CompletedChanges should be >= 0, got %d",
+			data.Summary.CompletedChanges,
+		)
 	}
 
 	// Verify counts match slice lengths
-	if data.Summary.ActiveChanges != len(data.ActiveChanges) {
-		t.Errorf("ActiveChanges count mismatch: summary=%d, slice=%d",
-			data.Summary.ActiveChanges, len(data.ActiveChanges))
+	if data.Summary.ActiveChanges != len(
+		data.ActiveChanges,
+	) {
+		t.Errorf(
+			"ActiveChanges count mismatch: summary=%d, slice=%d",
+			data.Summary.ActiveChanges,
+			len(data.ActiveChanges),
+		)
 	}
-	if data.Summary.CompletedChanges != len(data.CompletedChanges) {
-		t.Errorf("CompletedChanges count mismatch: summary=%d, slice=%d",
-			data.Summary.CompletedChanges, len(data.CompletedChanges))
+	if data.Summary.CompletedChanges != len(
+		data.CompletedChanges,
+	) {
+		t.Errorf(
+			"CompletedChanges count mismatch: summary=%d, slice=%d",
+			data.Summary.CompletedChanges,
+			len(data.CompletedChanges),
+		)
 	}
-	if data.Summary.TotalSpecs != len(data.Specs) {
-		t.Errorf("TotalSpecs count mismatch: summary=%d, slice=%d",
-			data.Summary.TotalSpecs, len(data.Specs))
+	if data.Summary.TotalSpecs != len(
+		data.Specs,
+	) {
+		t.Errorf(
+			"TotalSpecs count mismatch: summary=%d, slice=%d",
+			data.Summary.TotalSpecs,
+			len(data.Specs),
+		)
 	}
 
 	// Verify sorting of active changes (ascending percentage)
@@ -59,8 +89,13 @@ func TestCollectData(t *testing.T) {
 		prev := data.ActiveChanges[i-1]
 		curr := data.ActiveChanges[i]
 		if prev.Progress.Percentage > curr.Progress.Percentage {
-			t.Errorf("ActiveChanges not sorted by percentage: %s (%d%%) > %s (%d%%)",
-				prev.ID, prev.Progress.Percentage, curr.ID, curr.Progress.Percentage)
+			t.Errorf(
+				"ActiveChanges not sorted by percentage: %s (%d%%) > %s (%d%%)",
+				prev.ID,
+				prev.Progress.Percentage,
+				curr.ID,
+				curr.Progress.Percentage,
+			)
 		}
 	}
 
@@ -69,8 +104,13 @@ func TestCollectData(t *testing.T) {
 		prev := data.Specs[i-1]
 		curr := data.Specs[i]
 		if prev.RequirementCount < curr.RequirementCount {
-			t.Errorf("Specs not sorted by requirement count: %s (%d) < %s (%d)",
-				prev.ID, prev.RequirementCount, curr.ID, curr.RequirementCount)
+			t.Errorf(
+				"Specs not sorted by requirement count: %s (%d) < %s (%d)",
+				prev.ID,
+				prev.RequirementCount,
+				curr.ID,
+				curr.RequirementCount,
+			)
 		}
 	}
 
@@ -79,18 +119,26 @@ func TestCollectData(t *testing.T) {
 		prev := data.CompletedChanges[i-1]
 		curr := data.CompletedChanges[i]
 		if prev.ID > curr.ID {
-			t.Errorf("CompletedChanges not sorted alphabetically: %s > %s",
-				prev.ID, curr.ID)
+			t.Errorf(
+				"CompletedChanges not sorted alphabetically: %s > %s",
+				prev.ID,
+				curr.ID,
+			)
 		}
 	}
 
-	t.Log("Dashboard data collected successfully:")
+	t.Log(
+		"Dashboard data collected successfully:",
+	)
 	t.Logf(
 		"  Specs: %d (with %d requirements)",
 		data.Summary.TotalSpecs,
 		data.Summary.TotalRequirements,
 	)
-	t.Logf("  Active Changes: %d", data.Summary.ActiveChanges)
+	t.Logf(
+		"  Active Changes: %d",
+		data.Summary.ActiveChanges,
+	)
 	for _, change := range data.ActiveChanges {
 		t.Logf(
 			"    - %s: %d/%d tasks (%d%%)",
@@ -100,11 +148,18 @@ func TestCollectData(t *testing.T) {
 			change.Progress.Percentage,
 		)
 	}
-	t.Logf("  Completed Changes: %d", data.Summary.CompletedChanges)
+	t.Logf(
+		"  Completed Changes: %d",
+		data.Summary.CompletedChanges,
+	)
 	for _, change := range data.CompletedChanges {
 		t.Logf("    - %s", change.ID)
 	}
-	t.Logf("  Tasks: %d/%d completed", data.Summary.CompletedTasks, data.Summary.TotalTasks)
+	t.Logf(
+		"  Tasks: %d/%d completed",
+		data.Summary.CompletedTasks,
+		data.Summary.TotalTasks,
+	)
 }
 
 func TestCalculatePercentage(t *testing.T) {
@@ -124,10 +179,18 @@ func TestCalculatePercentage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := calculatePercentage(tt.completed, tt.total)
+			result := calculatePercentage(
+				tt.completed,
+				tt.total,
+			)
 			if result != tt.expected {
-				t.Errorf("calculatePercentage(%d, %d) = %d; want %d",
-					tt.completed, tt.total, result, tt.expected)
+				t.Errorf(
+					"calculatePercentage(%d, %d) = %d; want %d",
+					tt.completed,
+					tt.total,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -139,86 +202,150 @@ func TestCollectData_EmptyProject(t *testing.T) {
 	tempDir := t.TempDir()
 	spectrDir := filepath.Join(tempDir, "spectr")
 	if err := os.MkdirAll(spectrDir, 0755); err != nil {
-		t.Fatalf("Failed to create spectr directory: %v", err)
+		t.Fatalf(
+			"Failed to create spectr directory: %v",
+			err,
+		)
 	}
 
 	// Create empty subdirectories
 	if err := os.MkdirAll(filepath.Join(spectrDir, "changes"), 0755); err != nil {
-		t.Fatalf("Failed to create changes directory: %v", err)
+		t.Fatalf(
+			"Failed to create changes directory: %v",
+			err,
+		)
 	}
 	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0755); err != nil {
-		t.Fatalf("Failed to create specs directory: %v", err)
+		t.Fatalf(
+			"Failed to create specs directory: %v",
+			err,
+		)
 	}
 
 	// Collect data
 	data, err := CollectData(tempDir)
 	if err != nil {
-		t.Fatalf("CollectData failed on empty project: %v", err)
+		t.Fatalf(
+			"CollectData failed on empty project: %v",
+			err,
+		)
 	}
 
 	// Verify all metrics are zero
 	if data.Summary.TotalSpecs != 0 {
-		t.Errorf("Expected TotalSpecs=0, got %d", data.Summary.TotalSpecs)
+		t.Errorf(
+			"Expected TotalSpecs=0, got %d",
+			data.Summary.TotalSpecs,
+		)
 	}
 	if data.Summary.TotalRequirements != 0 {
-		t.Errorf("Expected TotalRequirements=0, got %d", data.Summary.TotalRequirements)
+		t.Errorf(
+			"Expected TotalRequirements=0, got %d",
+			data.Summary.TotalRequirements,
+		)
 	}
 	if data.Summary.ActiveChanges != 0 {
-		t.Errorf("Expected ActiveChanges=0, got %d", data.Summary.ActiveChanges)
+		t.Errorf(
+			"Expected ActiveChanges=0, got %d",
+			data.Summary.ActiveChanges,
+		)
 	}
 	if data.Summary.CompletedChanges != 0 {
-		t.Errorf("Expected CompletedChanges=0, got %d", data.Summary.CompletedChanges)
+		t.Errorf(
+			"Expected CompletedChanges=0, got %d",
+			data.Summary.CompletedChanges,
+		)
 	}
 	if data.Summary.TotalTasks != 0 {
-		t.Errorf("Expected TotalTasks=0, got %d", data.Summary.TotalTasks)
+		t.Errorf(
+			"Expected TotalTasks=0, got %d",
+			data.Summary.TotalTasks,
+		)
 	}
 	if data.Summary.CompletedTasks != 0 {
-		t.Errorf("Expected CompletedTasks=0, got %d", data.Summary.CompletedTasks)
+		t.Errorf(
+			"Expected CompletedTasks=0, got %d",
+			data.Summary.CompletedTasks,
+		)
 	}
 
 	// Verify slices are initialized but empty
 	if len(data.ActiveChanges) != 0 {
-		t.Errorf("Expected empty ActiveChanges, got %d items", len(data.ActiveChanges))
+		t.Errorf(
+			"Expected empty ActiveChanges, got %d items",
+			len(data.ActiveChanges),
+		)
 	}
 	if len(data.CompletedChanges) != 0 {
-		t.Errorf("Expected empty CompletedChanges, got %d items", len(data.CompletedChanges))
+		t.Errorf(
+			"Expected empty CompletedChanges, got %d items",
+			len(data.CompletedChanges),
+		)
 	}
 	if len(data.Specs) != 0 {
-		t.Errorf("Expected empty Specs, got %d items", len(data.Specs))
+		t.Errorf(
+			"Expected empty Specs, got %d items",
+			len(data.Specs),
+		)
 	}
 
-	t.Log("Empty project correctly handled with all zero metrics")
+	t.Log(
+		"Empty project correctly handled with all zero metrics",
+	)
 }
 
 // TestCollectData_OnlyActiveChanges tests a project with only active changes
-func TestCollectData_OnlyActiveChanges(t *testing.T) {
+func TestCollectData_OnlyActiveChanges(
+	t *testing.T,
+) {
 	// Create a temporary directory with only active changes
 	tempDir := t.TempDir()
 	spectrDir := filepath.Join(tempDir, "spectr")
-	changesDir := filepath.Join(spectrDir, "changes")
+	changesDir := filepath.Join(
+		spectrDir,
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, 0755); err != nil {
-		t.Fatalf("Failed to create changes directory: %v", err)
+		t.Fatalf(
+			"Failed to create changes directory: %v",
+			err,
+		)
 	}
 	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0755); err != nil {
-		t.Fatalf("Failed to create specs directory: %v", err)
+		t.Fatalf(
+			"Failed to create specs directory: %v",
+			err,
+		)
 	}
 
 	// Create a test change with tasks
-	changeDir := filepath.Join(changesDir, "test-change")
+	changeDir := filepath.Join(
+		changesDir,
+		"test-change",
+	)
 	if err := os.MkdirAll(changeDir, 0755); err != nil {
-		t.Fatalf("Failed to create change directory: %v", err)
+		t.Fatalf(
+			"Failed to create change directory: %v",
+			err,
+		)
 	}
 
 	// Write a proposal.md
 	proposalContent := "# Test Change\n\n## Why\nTest\n\n## What Changes\n- Test\n"
 	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
-		t.Fatalf("Failed to write proposal.md: %v", err)
+		t.Fatalf(
+			"Failed to write proposal.md: %v",
+			err,
+		)
 	}
 
 	// Write tasks.md with some tasks
 	tasksContent := "## 1. Implementation\n- [x] 1.1 Task one\n- [ ] 1.2 Task two\n- [ ] 1.3 Task three\n"
 	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
-		t.Fatalf("Failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"Failed to write tasks.md: %v",
+			err,
+		)
 	}
 
 	// Collect data
@@ -229,67 +356,119 @@ func TestCollectData_OnlyActiveChanges(t *testing.T) {
 
 	// Verify metrics
 	if data.Summary.ActiveChanges != 1 {
-		t.Errorf("Expected ActiveChanges=1, got %d", data.Summary.ActiveChanges)
+		t.Errorf(
+			"Expected ActiveChanges=1, got %d",
+			data.Summary.ActiveChanges,
+		)
 	}
 	if data.Summary.CompletedChanges != 0 {
-		t.Errorf("Expected CompletedChanges=0, got %d", data.Summary.CompletedChanges)
+		t.Errorf(
+			"Expected CompletedChanges=0, got %d",
+			data.Summary.CompletedChanges,
+		)
 	}
 	if data.Summary.TotalSpecs != 0 {
-		t.Errorf("Expected TotalSpecs=0, got %d", data.Summary.TotalSpecs)
+		t.Errorf(
+			"Expected TotalSpecs=0, got %d",
+			data.Summary.TotalSpecs,
+		)
 	}
 	if data.Summary.TotalTasks != 3 {
-		t.Errorf("Expected TotalTasks=3, got %d", data.Summary.TotalTasks)
+		t.Errorf(
+			"Expected TotalTasks=3, got %d",
+			data.Summary.TotalTasks,
+		)
 	}
 	if data.Summary.CompletedTasks != 1 {
-		t.Errorf("Expected CompletedTasks=1, got %d", data.Summary.CompletedTasks)
+		t.Errorf(
+			"Expected CompletedTasks=1, got %d",
+			data.Summary.CompletedTasks,
+		)
 	}
 
 	// Verify slices
 	if len(data.ActiveChanges) != 1 {
-		t.Fatalf("Expected 1 active change, got %d", len(data.ActiveChanges))
+		t.Fatalf(
+			"Expected 1 active change, got %d",
+			len(data.ActiveChanges),
+		)
 	}
 	if data.ActiveChanges[0].ID != "test-change" {
-		t.Errorf("Expected change ID='test-change', got '%s'", data.ActiveChanges[0].ID)
+		t.Errorf(
+			"Expected change ID='test-change', got '%s'",
+			data.ActiveChanges[0].ID,
+		)
 	}
 	if len(data.CompletedChanges) != 0 {
-		t.Errorf("Expected 0 completed changes, got %d", len(data.CompletedChanges))
+		t.Errorf(
+			"Expected 0 completed changes, got %d",
+			len(data.CompletedChanges),
+		)
 	}
 	if len(data.Specs) != 0 {
-		t.Errorf("Expected 0 specs, got %d", len(data.Specs))
+		t.Errorf(
+			"Expected 0 specs, got %d",
+			len(data.Specs),
+		)
 	}
 
-	t.Log("Project with only active changes correctly handled")
+	t.Log(
+		"Project with only active changes correctly handled",
+	)
 }
 
 // TestCollectData_OnlyCompletedChanges tests a project with only completed changes
-func TestCollectData_OnlyCompletedChanges(t *testing.T) {
+func TestCollectData_OnlyCompletedChanges(
+	t *testing.T,
+) {
 	// Create a temporary directory with a change that has all tasks completed
 	tempDir := t.TempDir()
 	spectrDir := filepath.Join(tempDir, "spectr")
-	changesDir := filepath.Join(spectrDir, "changes")
+	changesDir := filepath.Join(
+		spectrDir,
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, 0755); err != nil {
-		t.Fatalf("Failed to create changes directory: %v", err)
+		t.Fatalf(
+			"Failed to create changes directory: %v",
+			err,
+		)
 	}
 	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0755); err != nil {
-		t.Fatalf("Failed to create specs directory: %v", err)
+		t.Fatalf(
+			"Failed to create specs directory: %v",
+			err,
+		)
 	}
 
 	// Create a test change with all tasks completed
-	changeDir := filepath.Join(changesDir, "test-completed")
+	changeDir := filepath.Join(
+		changesDir,
+		"test-completed",
+	)
 	if err := os.MkdirAll(changeDir, 0755); err != nil {
-		t.Fatalf("Failed to create change directory: %v", err)
+		t.Fatalf(
+			"Failed to create change directory: %v",
+			err,
+		)
 	}
 
 	// Write a proposal.md
 	proposalContent := "# Test Completed\n\n## Why\nTest\n\n## What Changes\n- Test\n"
 	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
-		t.Fatalf("Failed to write proposal.md: %v", err)
+		t.Fatalf(
+			"Failed to write proposal.md: %v",
+			err,
+		)
 	}
 
 	// Write tasks.md with all tasks completed
 	tasksContent := "## 1. Implementation\n- [x] 1.1 Task one\n- [x] 1.2 Task two\n- [x] 1.3 Task three\n"
 	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
-		t.Fatalf("Failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"Failed to write tasks.md: %v",
+			err,
+		)
 	}
 
 	// Collect data
@@ -300,69 +479,120 @@ func TestCollectData_OnlyCompletedChanges(t *testing.T) {
 
 	// Verify metrics
 	if data.Summary.ActiveChanges != 0 {
-		t.Errorf("Expected ActiveChanges=0, got %d", data.Summary.ActiveChanges)
+		t.Errorf(
+			"Expected ActiveChanges=0, got %d",
+			data.Summary.ActiveChanges,
+		)
 	}
 	if data.Summary.CompletedChanges != 1 {
-		t.Errorf("Expected CompletedChanges=1, got %d", data.Summary.CompletedChanges)
+		t.Errorf(
+			"Expected CompletedChanges=1, got %d",
+			data.Summary.CompletedChanges,
+		)
 	}
 	if data.Summary.TotalSpecs != 0 {
-		t.Errorf("Expected TotalSpecs=0, got %d", data.Summary.TotalSpecs)
+		t.Errorf(
+			"Expected TotalSpecs=0, got %d",
+			data.Summary.TotalSpecs,
+		)
 	}
 	// Completed changes don't add to the summary task counts (see dashboard.go line 80-81)
 	if data.Summary.TotalTasks != 0 {
-		t.Errorf("Expected TotalTasks=0, got %d", data.Summary.TotalTasks)
+		t.Errorf(
+			"Expected TotalTasks=0, got %d",
+			data.Summary.TotalTasks,
+		)
 	}
 	if data.Summary.CompletedTasks != 0 {
-		t.Errorf("Expected CompletedTasks=0, got %d", data.Summary.CompletedTasks)
+		t.Errorf(
+			"Expected CompletedTasks=0, got %d",
+			data.Summary.CompletedTasks,
+		)
 	}
 
 	// Verify slices
 	if len(data.ActiveChanges) != 0 {
-		t.Errorf("Expected 0 active changes, got %d", len(data.ActiveChanges))
+		t.Errorf(
+			"Expected 0 active changes, got %d",
+			len(data.ActiveChanges),
+		)
 	}
 	if len(data.CompletedChanges) != 1 {
-		t.Fatalf("Expected 1 completed change, got %d", len(data.CompletedChanges))
+		t.Fatalf(
+			"Expected 1 completed change, got %d",
+			len(data.CompletedChanges),
+		)
 	}
 	if data.CompletedChanges[0].ID != "test-completed" {
-		t.Errorf("Expected change ID='test-completed', got '%s'",
-			data.CompletedChanges[0].ID)
+		t.Errorf(
+			"Expected change ID='test-completed', got '%s'",
+			data.CompletedChanges[0].ID,
+		)
 	}
 	if len(data.Specs) != 0 {
-		t.Errorf("Expected 0 specs, got %d", len(data.Specs))
+		t.Errorf(
+			"Expected 0 specs, got %d",
+			len(data.Specs),
+		)
 	}
 
-	t.Log("Project with only completed changes correctly handled")
+	t.Log(
+		"Project with only completed changes correctly handled",
+	)
 }
 
 // TestCollectData_ChangeWithZeroTasks tests a change with no tasks
-func TestCollectData_ChangeWithZeroTasks(t *testing.T) {
+func TestCollectData_ChangeWithZeroTasks(
+	t *testing.T,
+) {
 	// Create a temporary directory with a change that has no tasks
 	tempDir := t.TempDir()
 	spectrDir := filepath.Join(tempDir, "spectr")
-	changesDir := filepath.Join(spectrDir, "changes")
+	changesDir := filepath.Join(
+		spectrDir,
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, 0755); err != nil {
-		t.Fatalf("Failed to create changes directory: %v", err)
+		t.Fatalf(
+			"Failed to create changes directory: %v",
+			err,
+		)
 	}
 	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0755); err != nil {
-		t.Fatalf("Failed to create specs directory: %v", err)
+		t.Fatalf(
+			"Failed to create specs directory: %v",
+			err,
+		)
 	}
 
 	// Create a test change with no tasks
-	changeDir := filepath.Join(changesDir, "test-no-tasks")
+	changeDir := filepath.Join(
+		changesDir,
+		"test-no-tasks",
+	)
 	if err := os.MkdirAll(changeDir, 0755); err != nil {
-		t.Fatalf("Failed to create change directory: %v", err)
+		t.Fatalf(
+			"Failed to create change directory: %v",
+			err,
+		)
 	}
 
 	// Write a proposal.md
 	proposalContent := "# Test No Tasks\n\n## Why\nTest\n\n## What Changes\n- Test\n"
 	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
-		t.Fatalf("Failed to write proposal.md: %v", err)
+		t.Fatalf(
+			"Failed to write proposal.md: %v",
+			err,
+		)
 	}
 
 	// Write tasks.md with no actual tasks (just a header)
 	tasksContent := "## 1. Implementation\n\n(No tasks yet)\n"
 	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
-		t.Fatalf("Failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"Failed to write tasks.md: %v",
+			err,
+		)
 	}
 
 	// Collect data
@@ -374,29 +604,51 @@ func TestCollectData_ChangeWithZeroTasks(t *testing.T) {
 	// Verify metrics
 	// Changes with zero tasks are categorized as "completed" (see dashboard.go line 57-59)
 	if data.Summary.ActiveChanges != 0 {
-		t.Errorf("Expected ActiveChanges=0, got %d", data.Summary.ActiveChanges)
+		t.Errorf(
+			"Expected ActiveChanges=0, got %d",
+			data.Summary.ActiveChanges,
+		)
 	}
 	if data.Summary.CompletedChanges != 1 {
-		t.Errorf("Expected CompletedChanges=1, got %d", data.Summary.CompletedChanges)
+		t.Errorf(
+			"Expected CompletedChanges=1, got %d",
+			data.Summary.CompletedChanges,
+		)
 	}
 	if data.Summary.TotalTasks != 0 {
-		t.Errorf("Expected TotalTasks=0, got %d", data.Summary.TotalTasks)
+		t.Errorf(
+			"Expected TotalTasks=0, got %d",
+			data.Summary.TotalTasks,
+		)
 	}
 	if data.Summary.CompletedTasks != 0 {
-		t.Errorf("Expected CompletedTasks=0, got %d", data.Summary.CompletedTasks)
+		t.Errorf(
+			"Expected CompletedTasks=0, got %d",
+			data.Summary.CompletedTasks,
+		)
 	}
 
 	// Verify the change is in completed list
 	if len(data.ActiveChanges) != 0 {
-		t.Errorf("Expected 0 active changes, got %d", len(data.ActiveChanges))
+		t.Errorf(
+			"Expected 0 active changes, got %d",
+			len(data.ActiveChanges),
+		)
 	}
 	if len(data.CompletedChanges) != 1 {
-		t.Fatalf("Expected 1 completed change, got %d", len(data.CompletedChanges))
+		t.Fatalf(
+			"Expected 1 completed change, got %d",
+			len(data.CompletedChanges),
+		)
 	}
 	if data.CompletedChanges[0].ID != "test-no-tasks" {
-		t.Errorf("Expected change ID='test-no-tasks', got '%s'",
-			data.CompletedChanges[0].ID)
+		t.Errorf(
+			"Expected change ID='test-no-tasks', got '%s'",
+			data.CompletedChanges[0].ID,
+		)
 	}
 
-	t.Log("Change with zero tasks correctly categorized as completed")
+	t.Log(
+		"Change with zero tasks correctly categorized as completed",
+	)
 }

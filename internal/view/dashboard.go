@@ -27,7 +27,9 @@ import (
 // Returns DashboardData structure or error if discovery fails.
 //
 //nolint:revive // cognitive-complexity justified for data collection
-func CollectData(projectPath string) (*DashboardData, error) {
+func CollectData(
+	projectPath string,
+) (*DashboardData, error) {
 	var (
 		proposalPath string
 		taskStatus   parsers.TaskStatus
@@ -41,16 +43,16 @@ func CollectData(projectPath string) (*DashboardData, error) {
 	}
 
 	// Discover all changes
-	changeIDs, err := discovery.GetActiveChanges(projectPath)
+	changeIDs, err := discovery.GetActiveChanges(
+		projectPath,
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	// Process each change
 	for _, changeID := range changeIDs {
-		var (
-			title string
-		)
+		var title string
 		changeDir := filepath.Join(
 			projectPath,
 			"spectr",
@@ -59,15 +61,22 @@ func CollectData(projectPath string) (*DashboardData, error) {
 		)
 
 		// Parse title from proposal.md
-		proposalPath = filepath.Join(changeDir, "proposal.md")
-		title, err = parsers.ExtractTitle(proposalPath)
+		proposalPath = filepath.Join(
+			changeDir,
+			"proposal.md",
+		)
+		title, err = parsers.ExtractTitle(
+			proposalPath,
+		)
 		if err != nil {
 			// Skip changes that can't be parsed, use ID as fallback title
 			title = changeID
 		}
 
 		// Parse task counts from tasks.json or tasks.md
-		taskStatus, err = parsers.CountTasks(changeDir)
+		taskStatus, err = parsers.CountTasks(
+			changeDir,
+		)
 		if err != nil {
 			// If tasks can't be read, assume zero tasks
 			taskStatus = parsers.TaskStatus{
@@ -123,24 +132,36 @@ func CollectData(projectPath string) (*DashboardData, error) {
 	}
 
 	// Discover all specs
-	specIDs, err := discovery.GetSpecs(projectPath)
+	specIDs, err := discovery.GetSpecs(
+		projectPath,
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	// Process each spec
 	for _, specID := range specIDs {
-		specPath := filepath.Join(projectPath, "spectr", "specs", specID, "spec.md")
+		specPath := filepath.Join(
+			projectPath,
+			"spectr",
+			"specs",
+			specID,
+			"spec.md",
+		)
 
 		// Parse title from spec.md
-		title, err := parsers.ExtractTitle(specPath)
+		title, err := parsers.ExtractTitle(
+			specPath,
+		)
 		if err != nil {
 			// Skip specs that can't be parsed, use ID as fallback title
 			title = specID
 		}
 
 		// Count requirements
-		reqCount, err := parsers.CountRequirements(specPath)
+		reqCount, err := parsers.CountRequirements(
+			specPath,
+		)
 		if err != nil {
 			// If requirement count fails, assume zero
 			reqCount = 0
@@ -159,19 +180,25 @@ func CollectData(projectPath string) (*DashboardData, error) {
 	}
 
 	// Sort active changes by completion percentage (ascending), then by ID (alphabetical)
-	sort.Slice(data.ActiveChanges, func(i, j int) bool {
-		// Sort by percentage first (ascending - lower completion first)
-		if data.ActiveChanges[i].Progress.Percentage != data.ActiveChanges[j].Progress.Percentage {
-			return data.ActiveChanges[i].Progress.Percentage < data.ActiveChanges[j].Progress.Percentage
-		}
-		// Tie-breaker: alphabetical by ID
-		return data.ActiveChanges[i].ID < data.ActiveChanges[j].ID
-	})
+	sort.Slice(
+		data.ActiveChanges,
+		func(i, j int) bool {
+			// Sort by percentage first (ascending - lower completion first)
+			if data.ActiveChanges[i].Progress.Percentage != data.ActiveChanges[j].Progress.Percentage {
+				return data.ActiveChanges[i].Progress.Percentage < data.ActiveChanges[j].Progress.Percentage
+			}
+			// Tie-breaker: alphabetical by ID
+			return data.ActiveChanges[i].ID < data.ActiveChanges[j].ID
+		},
+	)
 
 	// Sort completed changes alphabetically by ID
-	sort.Slice(data.CompletedChanges, func(i, j int) bool {
-		return data.CompletedChanges[i].ID < data.CompletedChanges[j].ID
-	})
+	sort.Slice(
+		data.CompletedChanges,
+		func(i, j int) bool {
+			return data.CompletedChanges[i].ID < data.CompletedChanges[j].ID
+		},
+	)
 
 	// Sort specs by requirement count (descending), then by ID (alphabetical)
 	sort.Slice(data.Specs, func(i, j int) bool {
@@ -194,10 +221,18 @@ func CollectData(projectPath string) (*DashboardData, error) {
 //   - calculatePercentage(3, 8) returns 37
 //   - calculatePercentage(0, 10) returns 0
 //   - calculatePercentage(5, 0) returns 0
-func calculatePercentage(completed, total int) int {
+func calculatePercentage(
+	completed, total int,
+) int {
 	if total == 0 {
 		return 0
 	}
 	// Round to nearest integer
-	return int(float64(completed) / float64(total) * 100.0)
+	return int(
+		float64(
+			completed,
+		) / float64(
+			total,
+		) * 100.0,
+	)
 }

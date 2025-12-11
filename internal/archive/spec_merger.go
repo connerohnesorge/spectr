@@ -25,24 +25,38 @@ func MergeSpec(
 	counts := OperationCounts{}
 
 	// Parse delta operations
-	deltaPlan, err := parsers.ParseDeltaSpec(deltaSpecPath)
+	deltaPlan, err := parsers.ParseDeltaSpec(
+		deltaSpecPath,
+	)
 	if err != nil {
-		return "", counts, fmt.Errorf("parse delta spec: %w", err)
+		return "", counts, fmt.Errorf(
+			"parse delta spec: %w",
+			err,
+		)
 	}
 
 	if !deltaPlan.HasDeltas() {
-		return "", counts, fmt.Errorf("delta spec has no operations")
+		return "", counts, fmt.Errorf(
+			"delta spec has no operations",
+		)
 	}
 
 	// If spec doesn't exist, create skeleton and only allow ADDED operations
 	if !specExists {
-		if len(deltaPlan.Modified) > 0 || len(deltaPlan.Removed) > 0 || len(deltaPlan.Renamed) > 0 {
+		if len(deltaPlan.Modified) > 0 ||
+			len(deltaPlan.Removed) > 0 ||
+			len(deltaPlan.Renamed) > 0 {
 			return "", counts, fmt.Errorf(
 				"target spec does not exist; only ADDED requirements are allowed for new specs",
 			)
 		}
-		skeleton := generateSpecSkeleton(baseSpecPath)
-		merged, addCount := applyAdded(skeleton, deltaPlan.Added)
+		skeleton := generateSpecSkeleton(
+			baseSpecPath,
+		)
+		merged, addCount := applyAdded(
+			skeleton,
+			deltaPlan.Added,
+		)
 		counts.Added = addCount
 
 		return merged, counts, nil
@@ -51,37 +65,62 @@ func MergeSpec(
 	// Load existing spec
 	baseContent, err := os.ReadFile(baseSpecPath)
 	if err != nil {
-		return "", counts, fmt.Errorf("read base spec: %w", err)
+		return "", counts, fmt.Errorf(
+			"read base spec: %w",
+			err,
+		)
 	}
 
 	// Parse existing requirements
-	baseReqs, err := parsers.ParseRequirements(baseSpecPath)
+	baseReqs, err := parsers.ParseRequirements(
+		baseSpecPath,
+	)
 	if err != nil {
-		return "", counts, fmt.Errorf("parse base spec: %w", err)
+		return "", counts, fmt.Errorf(
+			"parse base spec: %w",
+			err,
+		)
 	}
 
 	// Build requirement map (normalized name -> block)
-	reqMap := make(map[string]parsers.RequirementBlock)
+	reqMap := make(
+		map[string]parsers.RequirementBlock,
+	)
 	for _, req := range baseReqs {
-		normalized := parsers.NormalizeRequirementName(req.Name)
+		normalized := parsers.NormalizeRequirementName(
+			req.Name,
+		)
 		reqMap[normalized] = req
 	}
 
 	// Apply operations in order: RENAMED -> REMOVED -> MODIFIED -> ADDED
-	reqMap, renameCount := applyRenamed(reqMap, deltaPlan.Renamed)
+	reqMap, renameCount := applyRenamed(
+		reqMap,
+		deltaPlan.Renamed,
+	)
 	counts.Renamed = renameCount
 
-	reqMap, removeCount := applyRemoved(reqMap, deltaPlan.Removed)
+	reqMap, removeCount := applyRemoved(
+		reqMap,
+		deltaPlan.Removed,
+	)
 	counts.Removed = removeCount
 
-	reqMap, modifyCount := applyModified(reqMap, deltaPlan.Modified)
+	reqMap, modifyCount := applyModified(
+		reqMap,
+		deltaPlan.Modified,
+	)
 	counts.Modified = modifyCount
 
 	// ADDED requirements will be appended at the end
 	counts.Added = len(deltaPlan.Added)
 
 	// Reconstruct spec
-	merged := reconstructSpec(string(baseContent), reqMap, deltaPlan.Added)
+	merged := reconstructSpec(
+		string(baseContent),
+		reqMap,
+		deltaPlan.Added,
+	)
 
 	return merged, counts, nil
 }
@@ -93,8 +132,12 @@ func applyRenamed(
 ) (map[string]parsers.RequirementBlock, int) {
 	count := 0
 	for _, op := range renames {
-		fromNorm := parsers.NormalizeRequirementName(op.From)
-		toNorm := parsers.NormalizeRequirementName(op.To)
+		fromNorm := parsers.NormalizeRequirementName(
+			op.From,
+		)
+		toNorm := parsers.NormalizeRequirementName(
+			op.To,
+		)
 
 		req, exists := reqMap[fromNorm]
 		if !exists {
@@ -127,7 +170,9 @@ func applyRemoved(
 ) (map[string]parsers.RequirementBlock, int) {
 	count := 0
 	for _, name := range removed {
-		normalized := parsers.NormalizeRequirementName(name)
+		normalized := parsers.NormalizeRequirementName(
+			name,
+		)
 		if _, exists := reqMap[normalized]; exists {
 			delete(reqMap, normalized)
 			count++
@@ -144,7 +189,9 @@ func applyModified(
 ) (map[string]parsers.RequirementBlock, int) {
 	count := 0
 	for _, mod := range modified {
-		normalized := parsers.NormalizeRequirementName(mod.Name)
+		normalized := parsers.NormalizeRequirementName(
+			mod.Name,
+		)
 		if _, exists := reqMap[normalized]; exists {
 			reqMap[normalized] = mod
 			count++
@@ -168,7 +215,12 @@ func applyAdded(
 	result.WriteString("\n")
 
 	for _, req := range added {
-		result.WriteString(strings.TrimRight(req.Raw, newlineChar))
+		result.WriteString(
+			strings.TrimRight(
+				req.Raw,
+				newlineChar,
+			),
+		)
 		result.WriteString("\n\n")
 	}
 
@@ -183,10 +235,15 @@ func reconstructSpec(
 	added []parsers.RequirementBlock,
 ) string {
 	// Split spec into: preamble, requirements section, after
-	preamble, reqsContent, after := splitSpec(baseContent)
+	preamble, reqsContent, after := splitSpec(
+		baseContent,
+	)
 
 	// Extract original requirement order from base content
-	orderedReqs := extractOrderedRequirements(reqsContent, reqMap)
+	orderedReqs := extractOrderedRequirements(
+		reqsContent,
+		reqMap,
+	)
 
 	// Build requirements section
 	var reqsBuilder strings.Builder
@@ -195,7 +252,10 @@ func reconstructSpec(
 			reqsBuilder.WriteString(newlineChar)
 		}
 		reqsBuilder.WriteString(
-			strings.TrimRight(orderedReqs[i].Raw, newlineChar),
+			strings.TrimRight(
+				orderedReqs[i].Raw,
+				newlineChar,
+			),
 		)
 		reqsBuilder.WriteString(newlineChar)
 	}
@@ -203,7 +263,12 @@ func reconstructSpec(
 	// Add new requirements at the end
 	for _, req := range added {
 		reqsBuilder.WriteString(newlineChar)
-		reqsBuilder.WriteString(strings.TrimRight(req.Raw, newlineChar))
+		reqsBuilder.WriteString(
+			strings.TrimRight(
+				req.Raw,
+				newlineChar,
+			),
+		)
 		reqsBuilder.WriteString(newlineChar)
 	}
 
@@ -216,16 +281,25 @@ func reconstructSpec(
 	// Normalize blank lines (collapse 3+ newlines to 2)
 	output := result.String()
 	multiNewline := regexp.MustCompile(`\n{3,}`)
-	output = multiNewline.ReplaceAllString(output, "\n\n")
+	output = multiNewline.ReplaceAllString(
+		output,
+		"\n\n",
+	)
 
 	return output
 }
 
 // splitSpec splits spec into preamble, requirements section content, and after
-func splitSpec(content string) (preamble, requirements, after string) {
+func splitSpec(
+	content string,
+) (preamble, requirements, after string) {
 	// Find ## Requirements header
-	reqHeaderPattern := regexp.MustCompile(`(?m)^##\s+Requirements\s*$`)
-	match := reqHeaderPattern.FindStringIndex(content)
+	reqHeaderPattern := regexp.MustCompile(
+		`(?m)^##\s+Requirements\s*$`,
+	)
+	match := reqHeaderPattern.FindStringIndex(
+		content,
+	)
 	if match == nil {
 		// No requirements section, return everything as preamble
 		return content, "", ""
@@ -234,9 +308,13 @@ func splitSpec(content string) (preamble, requirements, after string) {
 	preamble = content[:match[1]] + "\n\n"
 
 	// Find next ## header after Requirements
-	nextHeaderPattern := regexp.MustCompile(`(?m)^##\s+`)
+	nextHeaderPattern := regexp.MustCompile(
+		`(?m)^##\s+`,
+	)
 	remainingContent := content[match[1]:]
-	nextMatch := nextHeaderPattern.FindStringIndex(remainingContent)
+	nextMatch := nextHeaderPattern.FindStringIndex(
+		remainingContent,
+	)
 
 	if nextMatch != nil {
 		requirements = remainingContent[:nextMatch[0]]
@@ -256,10 +334,19 @@ func extractOrderedRequirements(
 	reqMap map[string]parsers.RequirementBlock,
 ) []parsers.RequirementBlock {
 	// Find requirement headers in order
-	reqPattern := regexp.MustCompile(`(?m)^###\s+Requirement:\s*(.+)$`)
-	matches := reqPattern.FindAllStringSubmatch(reqsContent, -1)
+	reqPattern := regexp.MustCompile(
+		`(?m)^###\s+Requirement:\s*(.+)$`,
+	)
+	matches := reqPattern.FindAllStringSubmatch(
+		reqsContent,
+		-1,
+	)
 
-	ordered := make([]parsers.RequirementBlock, 0, len(matches))
+	ordered := make(
+		[]parsers.RequirementBlock,
+		0,
+		len(matches),
+	)
 
 	for _, match := range matches {
 		if len(match) <= 1 {
@@ -267,7 +354,9 @@ func extractOrderedRequirements(
 		}
 
 		name := strings.TrimSpace(match[1])
-		normalized := parsers.NormalizeRequirementName(name)
+		normalized := parsers.NormalizeRequirementName(
+			name,
+		)
 		req, exists := reqMap[normalized]
 		if !exists {
 			continue
@@ -287,18 +376,27 @@ func extractOrderedRequirements(
 }
 
 // generateSpecSkeleton creates a new spec skeleton for a capability
-func generateSpecSkeleton(targetPath string) string {
+func generateSpecSkeleton(
+	targetPath string,
+) string {
 	// Extract capability name from path
 	// (e.g., "spectr/specs/archive-workflow/spec.md" ->
 	// "Archive-Workflow")
 	parts := strings.Split(targetPath, "/")
 	capability := "Capability"
 	if len(parts) >= 2 {
-		capability = formatCapabilityName(parts[len(parts)-2])
+		capability = formatCapabilityName(
+			parts[len(parts)-2],
+		)
 	}
 
 	var skeleton strings.Builder
-	skeleton.WriteString(fmt.Sprintf("# %s Specification\n\n", capability))
+	skeleton.WriteString(
+		fmt.Sprintf(
+			"# %s Specification\n\n",
+			capability,
+		),
+	)
 	skeleton.WriteString("## Requirements\n")
 
 	return skeleton.String()
@@ -309,7 +407,9 @@ func formatCapabilityName(kebab string) string {
 	words := strings.Split(kebab, "-")
 	for i, word := range words {
 		if len(word) > 0 {
-			words[i] = strings.ToUpper(word[:1]) + word[1:]
+			words[i] = strings.ToUpper(
+				word[:1],
+			) + word[1:]
 		}
 	}
 

@@ -35,7 +35,9 @@ func (c *InitCmd) Run() error {
 	}
 
 	// Expand and validate path
-	expandedPath, err := initialize.ExpandPath(projectPath)
+	expandedPath, err := initialize.ExpandPath(
+		projectPath,
+	)
 	if err != nil {
 		return fmt.Errorf("invalid path: %w", err)
 	}
@@ -44,7 +46,10 @@ func (c *InitCmd) Run() error {
 	c.Path = expandedPath
 
 	// Check if already initialized
-	if c.NonInteractive && initialize.IsSpectrInitialized(expandedPath) {
+	if c.NonInteractive &&
+		initialize.IsSpectrInitialized(
+			expandedPath,
+		) {
 		return fmt.Errorf(
 			"init failed: Spectr is already initialized in %s",
 			expandedPath,
@@ -61,15 +66,26 @@ func (c *InitCmd) Run() error {
 }
 
 func runInteractiveInit(c *InitCmd) error {
-	model, err := initialize.NewWizardModel(&c.InitCmd)
+	model, err := initialize.NewWizardModel(
+		&c.InitCmd,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to create wizard: %w", err)
+		return fmt.Errorf(
+			"failed to create wizard: %w",
+			err,
+		)
 	}
 
-	p := tea.NewProgram(model, tea.WithAltScreen())
+	p := tea.NewProgram(
+		model,
+		tea.WithAltScreen(),
+	)
 	finalModel, err := p.Run()
 	if err != nil {
-		return fmt.Errorf("wizard failed: %w", err)
+		return fmt.Errorf(
+			"wizard failed: %w",
+			err,
+		)
 	}
 
 	// Check if there were errors during execution
@@ -95,19 +111,33 @@ func runNonInteractiveInit(c *InitCmd) error {
 	// Validate provider IDs
 	for _, id := range selectedProviders {
 		if providers.Get(id) == nil {
-			return fmt.Errorf("invalid provider ID: %s", id)
+			return fmt.Errorf(
+				"invalid provider ID: %s",
+				id,
+			)
 		}
 	}
 
 	// Create executor and run
-	executor, err := initialize.NewInitExecutor(&c.InitCmd)
+	executor, err := initialize.NewInitExecutor(
+		&c.InitCmd,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to create executor: %w", err)
+		return fmt.Errorf(
+			"failed to create executor: %w",
+			err,
+		)
 	}
 
-	result, err := executor.Execute(selectedProviders, c.CIWorkflow)
+	result, err := executor.Execute(
+		selectedProviders,
+		c.CIWorkflow,
+	)
 	if err != nil {
-		return fmt.Errorf("initialization failed: %w", err)
+		return fmt.Errorf(
+			"initialization failed: %w",
+			err,
+		)
 	}
 
 	return printInitResults(c.Path, result)
@@ -117,7 +147,9 @@ func printInitResults(
 	projectPath string,
 	result *initialize.ExecutionResult,
 ) error {
-	fmt.Println("Spectr initialized successfully!")
+	fmt.Println(
+		"Spectr initialized successfully!",
+	)
 	fmt.Printf("Project: %s\n\n", projectPath)
 
 	if len(result.CreatedFiles) > 0 {

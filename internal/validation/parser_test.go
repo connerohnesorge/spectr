@@ -72,8 +72,15 @@ Content 2`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ExtractSections(tt.content)
-			if !reflect.DeepEqual(result, tt.expected) {
-				t.Errorf("ExtractSections() = %v, want %v", result, tt.expected)
+			if !reflect.DeepEqual(
+				result,
+				tt.expected,
+			) {
+				t.Errorf(
+					"ExtractSections() = %v, want %v",
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -217,9 +224,18 @@ This is valid.`,
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ExtractRequirements(tt.content)
-			if !reflect.DeepEqual(result, tt.expected) {
-				t.Errorf("ExtractRequirements() = %v, want %v", result, tt.expected)
+			result := ExtractRequirements(
+				tt.content,
+			)
+			if !reflect.DeepEqual(
+				result,
+				tt.expected,
+			) {
+				t.Errorf(
+					"ExtractRequirements() = %v, want %v",
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -302,8 +318,15 @@ Content`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ExtractScenarios(tt.content)
-			if !reflect.DeepEqual(result, tt.expected) {
-				t.Errorf("ExtractScenarios() = %v, want %v", result, tt.expected)
+			if !reflect.DeepEqual(
+				result,
+				tt.expected,
+			) {
+				t.Errorf(
+					"ExtractScenarios() = %v, want %v",
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -371,7 +394,12 @@ func TestContainsShallOrMust(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ContainsShallOrMust(tt.text)
 			if result != tt.expected {
-				t.Errorf("ContainsShallOrMust(%q) = %v, want %v", tt.text, result, tt.expected)
+				t.Errorf(
+					"ContainsShallOrMust(%q) = %v, want %v",
+					tt.text,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -437,7 +465,9 @@ func TestNormalizeRequirementName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := NormalizeRequirementName(tt.input)
+			result := NormalizeRequirementName(
+				tt.input,
+			)
 			if result != tt.expected {
 				t.Errorf(
 					"NormalizeRequirementName(%q) = %q, want %q",
@@ -477,12 +507,18 @@ The system MUST support password reset.
 
 	sections := ExtractSections(content)
 	if len(sections) != 2 {
-		t.Errorf("Expected 2 sections, got %d", len(sections))
+		t.Errorf(
+			"Expected 2 sections, got %d",
+			len(sections),
+		)
 	}
 
 	requirements := ExtractRequirements(content)
 	if len(requirements) != 2 {
-		t.Errorf("Expected 2 requirements, got %d", len(requirements))
+		t.Errorf(
+			"Expected 2 requirements, got %d",
+			len(requirements),
+		)
 	}
 
 	if len(requirements[0].Scenarios) != 2 {
@@ -499,16 +535,26 @@ The system MUST support password reset.
 		)
 	}
 
-	if !ContainsShallOrMust(requirements[0].Content) {
-		t.Error("Expected first requirement to contain SHALL/MUST")
+	if !ContainsShallOrMust(
+		requirements[0].Content,
+	) {
+		t.Error(
+			"Expected first requirement to contain SHALL/MUST",
+		)
 	}
 
-	if !ContainsShallOrMust(requirements[1].Content) {
-		t.Error("Expected second requirement to contain SHALL/MUST")
+	if !ContainsShallOrMust(
+		requirements[1].Content,
+	) {
+		t.Error(
+			"Expected second requirement to contain SHALL/MUST",
+		)
 	}
 }
 
-func TestDuplicateDetectionViaNormalization(t *testing.T) {
+func TestDuplicateDetectionViaNormalization(
+	t *testing.T,
+) {
 	names := []string{
 		"User Authentication",
 		"  User Authentication  ",
@@ -534,7 +580,9 @@ func TestDuplicateDetectionViaNormalization(t *testing.T) {
 	}
 }
 
-func TestMalformedMarkdownGracefulHandling(t *testing.T) {
+func TestMalformedMarkdownGracefulHandling(
+	t *testing.T,
+) {
 	content := `## Section
 ### Requirement: Valid
 Content here

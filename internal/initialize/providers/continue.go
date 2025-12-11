@@ -13,7 +13,8 @@ type ContinueProvider struct {
 // NewContinueProvider creates a new Continue provider.
 func NewContinueProvider() *ContinueProvider {
 	proposalPath, applyPath := StandardCommandPaths(
-		".continue/commands", ".md",
+		".continue/commands",
+		".md",
 	)
 
 	return &ContinueProvider{

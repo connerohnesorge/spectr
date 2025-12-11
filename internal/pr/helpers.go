@@ -19,7 +19,9 @@ const dirPerm = 0755
 func checkCLITool(tool string) error {
 	_, err := exec.LookPath(tool)
 	if err != nil {
-		suggestions := getCLIInstallSuggestion(tool)
+		suggestions := getCLIInstallSuggestion(
+			tool,
+		)
 
 		return fmt.Errorf(
 			"CLI tool '%s' not found in PATH; %s",
@@ -51,12 +53,17 @@ func executeArchiveInWorktree(
 	config PRConfig,
 	worktreePath string,
 ) (archive.ArchiveResult, error) {
-	fmt.Println("Running archive operation in worktree...")
+	fmt.Println(
+		"Running archive operation in worktree...",
+	)
 
 	// Copy the change from source to worktree first
 	if err := copyChangeToWorktree(config, worktreePath); err != nil {
 		return archive.ArchiveResult{},
-			fmt.Errorf("copy change to worktree: %w", err)
+			fmt.Errorf(
+				"copy change to worktree: %w",
+				err,
+			)
 	}
 
 	// Create archive command
@@ -68,7 +75,10 @@ func executeArchiveInWorktree(
 
 	// Execute archive within the worktree and capture results.
 	// The ArchiveResult contains path, operation counts, and capabilities.
-	result, err := archive.Archive(archiveCmd, worktreePath)
+	result, err := archive.Archive(
+		archiveCmd,
+		worktreePath,
+	)
 	if err != nil {
 		return archive.ArchiveResult{}, err
 	}
@@ -77,48 +87,80 @@ func executeArchiveInWorktree(
 }
 
 // copyChangeToWorktree copies the change directory from source to worktree.
-func copyChangeToWorktree(config PRConfig, worktreePath string) error {
+func copyChangeToWorktree(
+	config PRConfig,
+	worktreePath string,
+) error {
 	projectRoot := config.ProjectRoot
 	if projectRoot == "" {
 		var err error
 		projectRoot, err = git.GetRepoRoot()
 		if err != nil {
-			return fmt.Errorf("get repo root: %w", err)
+			return fmt.Errorf(
+				"get repo root: %w",
+				err,
+			)
 		}
 	}
 
 	sourceDir := filepath.Join(
-		projectRoot, "spectr", "changes", config.ChangeID,
+		projectRoot,
+		"spectr",
+		"changes",
+		config.ChangeID,
 	)
 	targetDir := filepath.Join(
-		worktreePath, "spectr", "changes", config.ChangeID,
+		worktreePath,
+		"spectr",
+		"changes",
+		config.ChangeID,
 	)
 
-	fmt.Printf("Copying change to worktree: %s\n", config.ChangeID)
+	fmt.Printf(
+		"Copying change to worktree: %s\n",
+		config.ChangeID,
+	)
 
 	// Create target directory structure
 	if err := os.MkdirAll(filepath.Dir(targetDir), dirPerm); err != nil {
-		return fmt.Errorf("create target directory: %w", err)
+		return fmt.Errorf(
+			"create target directory: %w",
+			err,
+		)
 	}
 
 	// Copy directory recursively
 	if err := copyDir(sourceDir, targetDir); err != nil {
-		return fmt.Errorf("copy directory: %w", err)
+		return fmt.Errorf(
+			"copy directory: %w",
+			err,
+		)
 	}
 
 	return nil
 }
 
 // removeChangeInWorktree removes the change directory within the worktree.
-func removeChangeInWorktree(config PRConfig, worktreePath string) error {
+func removeChangeInWorktree(
+	config PRConfig,
+	worktreePath string,
+) error {
 	changeDir := filepath.Join(
-		worktreePath, "spectr", "changes", config.ChangeID,
+		worktreePath,
+		"spectr",
+		"changes",
+		config.ChangeID,
 	)
 
-	fmt.Printf("Removing change in worktree: %s\n", config.ChangeID)
+	fmt.Printf(
+		"Removing change in worktree: %s\n",
+		config.ChangeID,
+	)
 
 	// Verify the directory exists before attempting removal
-	if _, err := os.Stat(changeDir); os.IsNotExist(err) {
+	if _, err := os.Stat(changeDir); os.IsNotExist(
+		err,
+	) {
 		return fmt.Errorf(
 			"change directory does not exist in worktree: %s",
 			changeDir,
@@ -127,7 +169,10 @@ func removeChangeInWorktree(config PRConfig, worktreePath string) error {
 
 	// Remove the entire change directory
 	if err := os.RemoveAll(changeDir); err != nil {
-		return fmt.Errorf("remove change directory: %w", err)
+		return fmt.Errorf(
+			"remove change directory: %w",
+			err,
+		)
 	}
 
 	return nil
@@ -150,8 +195,14 @@ func copyDir(src, dst string) error {
 	}
 
 	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		dstPath := filepath.Join(dst, entry.Name())
+		srcPath := filepath.Join(
+			src,
+			entry.Name(),
+		)
+		dstPath := filepath.Join(
+			dst,
+			entry.Name(),
+		)
 
 		if entry.IsDir() {
 			if err := copyDir(srcPath, dstPath); err != nil {
@@ -196,11 +247,17 @@ func copyFile(src, dst string) error {
 }
 
 // stageAndCommit stages the spectr/ directory and creates a commit.
-func stageAndCommit(worktreePath, commitMsg string) error {
+func stageAndCommit(
+	worktreePath, commitMsg string,
+) error {
 	fmt.Println("Staging changes...")
 
 	// git add spectr/
-	addCmd := exec.Command("git", "add", "spectr/")
+	addCmd := exec.Command(
+		"git",
+		"add",
+		"spectr/",
+	)
 	addCmd.Dir = worktreePath
 
 	output, err := addCmd.CombinedOutput()
@@ -214,7 +271,12 @@ func stageAndCommit(worktreePath, commitMsg string) error {
 	fmt.Println("Creating commit...")
 
 	// git commit
-	commitCmd := exec.Command("git", "commit", "-m", commitMsg)
+	commitCmd := exec.Command(
+		"git",
+		"commit",
+		"-m",
+		commitMsg,
+	)
 	commitCmd.Dir = worktreePath
 
 	output, err = commitCmd.CombinedOutput()
@@ -229,10 +291,18 @@ func stageAndCommit(worktreePath, commitMsg string) error {
 }
 
 // pushBranch pushes the branch to origin.
-func pushBranch(worktreePath, branchName string) error {
+func pushBranch(
+	worktreePath, branchName string,
+) error {
 	fmt.Printf("Pushing branch: %s\n", branchName)
 
-	cmd := exec.Command("git", "push", "-u", "origin", branchName)
+	cmd := exec.Command(
+		"git",
+		"push",
+		"-u",
+		"origin",
+		branchName,
+	)
 	cmd.Dir = worktreePath
 
 	output, err := cmd.CombinedOutput()

@@ -17,18 +17,18 @@ import (
 // interactive table mode with clipboard support.
 type ListCmd struct {
 	// Specs determines whether to list specifications instead of changes
-	Specs bool `name:"specs" help:"List specifications instead of changes"`
+	Specs bool `name:"specs"       help:"List specifications instead of changes"`
 	// All determines whether to list both changes and specs in unified mode
-	All bool `name:"all" help:"List both changes and specs in unified mode"`
+	All bool `name:"all"         help:"List both changes and specs in unified mode"`
 	// Long enables detailed output with titles and counts
-	Long bool `name:"long" help:"Show detailed output with titles and counts"`
+	Long bool `name:"long"        help:"Show detailed output with titles and counts"`
 	// JSON enables JSON output format
-	JSON bool `name:"json" help:"Output as JSON"`
+	JSON bool `name:"json"        help:"Output as JSON"`
 	// Interactive enables interactive table mode with clipboard
-	Interactive bool `short:"I" name:"interactive" help:"Interactive mode"`
+	Interactive bool `name:"interactive" help:"Interactive mode"                            short:"I"`
 	// Stdout prints selected ID to stdout instead of clipboard.
 	// Requires -I (interactive mode).
-	Stdout bool `name:"stdout" help:"Print ID to stdout (requires -I)"`
+	Stdout bool `name:"stdout"      help:"Print ID to stdout (requires -I)"`
 }
 
 // Run executes the list command.
@@ -92,11 +92,17 @@ func (c *ListCmd) Run() error {
 
 // listChanges retrieves and displays changes in the requested format.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
+func (c *ListCmd) listChanges(
+	lister *list.Lister,
+	projectPath string,
+) error {
 	// Retrieve all changes from the project
 	changes, err := lister.ListChanges()
 	if err != nil {
-		return fmt.Errorf("failed to list changes: %w", err)
+		return fmt.Errorf(
+			"failed to list changes: %w",
+			err,
+		)
 	}
 
 	// Handle interactive mode - shows a navigable table
@@ -108,7 +114,9 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 		}
 
 		archiveID, prID, err := list.RunInteractiveChanges(
-			changes, projectPath, c.Stdout,
+			changes,
+			projectPath,
+			c.Stdout,
 		)
 		if err != nil {
 			return err
@@ -116,12 +124,18 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 
 		// If an archive was requested, run the archive workflow
 		if archiveID != "" {
-			return c.runArchiveWorkflow(archiveID, projectPath)
+			return c.runArchiveWorkflow(
+				archiveID,
+				projectPath,
+			)
 		}
 
 		// If PR mode was requested, run the PR workflow
 		if prID != "" {
-			return c.runPRWorkflow(prID, projectPath)
+			return c.runPRWorkflow(
+				prID,
+				projectPath,
+			)
 		}
 
 		return nil
@@ -133,9 +147,14 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 	case c.JSON:
 		// JSON format for machine consumption
 		var err error
-		output, err = list.FormatChangesJSON(changes)
+		output, err = list.FormatChangesJSON(
+			changes,
+		)
 		if err != nil {
-			return fmt.Errorf("failed to format JSON: %w", err)
+			return fmt.Errorf(
+				"failed to format JSON: %w",
+				err,
+			)
 		}
 	case c.Long:
 		// Long format with detailed information
@@ -152,7 +171,9 @@ func (c *ListCmd) listChanges(lister *list.Lister, projectPath string) error {
 }
 
 // runArchiveWorkflow executes the archive workflow for a change.
-func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
+func (*ListCmd) runArchiveWorkflow(
+	changeID, projectPath string,
+) error {
 	// Create archive command with the selected change ID
 	archiveCmd := &archive.ArchiveCmd{
 		ChangeID: changeID,
@@ -163,14 +184,19 @@ func (*ListCmd) runArchiveWorkflow(changeID, projectPath string) error {
 	// Run the archive workflow
 	// Result is discarded for interactive usage - already prints to terminal
 	if _, err := archive.Archive(archiveCmd, projectPath); err != nil {
-		return fmt.Errorf("archive workflow failed: %w", err)
+		return fmt.Errorf(
+			"archive workflow failed: %w",
+			err,
+		)
 	}
 
 	return nil
 }
 
 // runPRWorkflow executes the PR proposal workflow for a change.
-func (*ListCmd) runPRWorkflow(changeID, projectPath string) error {
+func (*ListCmd) runPRWorkflow(
+	changeID, projectPath string,
+) error {
 	config := pr.PRConfig{
 		ChangeID:    changeID,
 		Mode:        pr.ModeProposal,
@@ -179,7 +205,10 @@ func (*ListCmd) runPRWorkflow(changeID, projectPath string) error {
 
 	result, err := pr.ExecutePR(config)
 	if err != nil {
-		return fmt.Errorf("pr workflow failed: %w", err)
+		return fmt.Errorf(
+			"pr workflow failed: %w",
+			err,
+		)
 	}
 
 	// Print the PR result
@@ -187,7 +216,10 @@ func (*ListCmd) runPRWorkflow(changeID, projectPath string) error {
 	fmt.Printf("Branch: %s\n", result.BranchName)
 
 	if result.PRURL != "" {
-		fmt.Printf("\nPR created: %s\n", result.PRURL)
+		fmt.Printf(
+			"\nPR created: %s\n",
+			result.PRURL,
+		)
 	} else if result.ManualURL != "" {
 		fmt.Printf("\nCreate PR manually: %s\n", result.ManualURL)
 	}
@@ -197,11 +229,17 @@ func (*ListCmd) runPRWorkflow(changeID, projectPath string) error {
 
 // listSpecs retrieves and displays specifications in the requested format.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listSpecs(lister *list.Lister, projectPath string) error {
+func (c *ListCmd) listSpecs(
+	lister *list.Lister,
+	projectPath string,
+) error {
 	// Retrieve all specifications from the project
 	specs, err := lister.ListSpecs()
 	if err != nil {
-		return fmt.Errorf("failed to list specs: %w", err)
+		return fmt.Errorf(
+			"failed to list specs: %w",
+			err,
+		)
 	}
 
 	// Handle interactive mode - shows a navigable table
@@ -212,7 +250,11 @@ func (c *ListCmd) listSpecs(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		return list.RunInteractiveSpecs(specs, projectPath, c.Stdout)
+		return list.RunInteractiveSpecs(
+			specs,
+			projectPath,
+			c.Stdout,
+		)
 	}
 
 	// Format output based on flags
@@ -223,7 +265,10 @@ func (c *ListCmd) listSpecs(lister *list.Lister, projectPath string) error {
 		var err error
 		output, err = list.FormatSpecsJSON(specs)
 		if err != nil {
-			return fmt.Errorf("failed to format JSON: %w", err)
+			return fmt.Errorf(
+				"failed to format JSON: %w",
+				err,
+			)
 		}
 	case c.Long:
 		// Long format with detailed information
@@ -241,11 +286,17 @@ func (c *ListCmd) listSpecs(lister *list.Lister, projectPath string) error {
 
 // listAll retrieves and displays both changes and specs in unified format.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listAll(lister *list.Lister, projectPath string) error {
+func (c *ListCmd) listAll(
+	lister *list.Lister,
+	projectPath string,
+) error {
 	// Retrieve all items (changes and specs) from the project
 	items, err := lister.ListAll(nil)
 	if err != nil {
-		return fmt.Errorf("failed to list all items: %w", err)
+		return fmt.Errorf(
+			"failed to list all items: %w",
+			err,
+		)
 	}
 
 	// Handle interactive mode - shows a unified navigable table
@@ -256,7 +307,11 @@ func (c *ListCmd) listAll(lister *list.Lister, projectPath string) error {
 			return nil
 		}
 
-		return list.RunInteractiveAll(items, projectPath, c.Stdout)
+		return list.RunInteractiveAll(
+			items,
+			projectPath,
+			c.Stdout,
+		)
 	}
 
 	// Format output based on flags
@@ -267,7 +322,10 @@ func (c *ListCmd) listAll(lister *list.Lister, projectPath string) error {
 		var err error
 		output, err = list.FormatAllJSON(items)
 		if err != nil {
-			return fmt.Errorf("failed to format JSON: %w", err)
+			return fmt.Errorf(
+				"failed to format JSON: %w",
+				err,
+			)
 		}
 	case c.Long:
 		// Long format with detailed information

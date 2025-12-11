@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Implementation",
+      "description": "Add `PriorityOpencode` constant to `internal/initialize/providers/constants.go`",
+      "status": "pending"
+    },
+    {
+      "id": "1.2",
+      "section": "Implementation",
+      "description": "Create `internal/initialize/providers/opencode.go` with OpenCode provider implementation",
+      "status": "pending"
+    },
+    {
+      "id": "1.3",
+      "section": "Implementation",
+      "description": "Create `internal/initialize/providers/opencode_test.go` with provider tests",
+      "status": "pending"
+    },
+    {
+      "id": "1.4",
+      "section": "Implementation",
+      "description": "Run `go test ./...` to verify tests pass",
+      "status": "pending"
+    },
+    {
+      "id": "1.5",
+      "section": "Implementation",
+      "description": "Run `golangci-lint run` to ensure code quality",
+      "status": "pending"
+    },
+    {
+      "id": "1.6",
+      "section": "Implementation",
+      "description": "Sync the new spec to `spectr/specs/support-opencode/spec.md`",
+      "status": "pending"
+    }
+  ]
+}

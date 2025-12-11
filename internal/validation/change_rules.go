@@ -410,10 +410,7 @@ func findDeltaSectionLine(lines []string, sectionName string) int {
 func findRequirementLineInSection(lines []string, reqName string, startLine int) int {
 	reqHeader := "### Requirement: " + reqName
 	// Start searching from startLine (convert to 0-indexed)
-	searchStart := startLine - 1
-	if searchStart < 0 {
-		searchStart = 0
-	}
+	searchStart := max(startLine-1, 0)
 
 	for i := searchStart; i < len(lines); i++ {
 		if strings.HasPrefix(strings.TrimSpace(lines[i]), reqHeader) {
@@ -431,10 +428,7 @@ func findRequirementLineInSection(lines []string, reqName string, startLine int)
 // findRenamedPairLine finds the line number of a RENAMED requirement pair
 // Searches for the FROM line
 func findRenamedPairLine(lines []string, fromName string, startLine int) int {
-	searchStart := startLine - 1
-	if searchStart < 0 {
-		searchStart = 0
-	}
+	searchStart := max(startLine-1, 0)
 
 	for i := searchStart; i < len(lines); i++ {
 		trimmed := strings.TrimSpace(lines[i])
@@ -459,7 +453,7 @@ func findRenamedPairLine(lines []string, fromName string, startLine int) int {
 }
 
 // findPreMergeErrorLine finds the line number related to a pre-merge validation error
-func findPreMergeErrorLine(lines []string, errMsg string, deltaPlan *parsers.DeltaPlan) int {
+func findPreMergeErrorLine(lines []string, errMsg string, _ *parsers.DeltaPlan) int {
 	// Extract requirement name from error message
 	// Error formats:
 	// - "MODIFIED requirement %q does not exist in base spec"
@@ -517,10 +511,7 @@ func extractSectionAndReqName(errMsg string) (string, string) {
 // Returns reqLine if not found
 func findMalformedScenarioLineInDelta(lines []string, reqLine int) int {
 	// Start searching from reqLine (convert to 0-indexed)
-	searchStart := reqLine - 1
-	if searchStart < 0 {
-		searchStart = 0
-	}
+	searchStart := max(reqLine-1, 0)
 
 	// Look for common malformations
 	malformedPatterns := []string{
@@ -555,10 +546,7 @@ func findMalformedScenarioLineInDelta(lines []string, reqLine int) int {
 // findMalformedRenamedLine finds the line number of a malformed RENAMED requirement
 // Searches from sectionLine onwards for FROM or TO without its pair
 func findMalformedRenamedLine(lines []string, sectionLine int) int {
-	searchStart := sectionLine - 1
-	if searchStart < 0 {
-		searchStart = 0
-	}
+	searchStart := max(sectionLine-1, 0)
 
 	for i := searchStart; i < len(lines); i++ {
 		line := strings.TrimSpace(lines[i])

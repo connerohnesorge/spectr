@@ -313,7 +313,7 @@ func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
 	// Create change directories with proposal.md
 	for _, change := range changes {
 		changeDir := filepath.Join(changesDir, change)
-		err := os.MkdirAll(changeDir, testDirPerm)
+		err = os.MkdirAll(changeDir, testDirPerm)
 		assert.NoError(t, err)
 
 		proposalPath := filepath.Join(changeDir, "proposal.md")

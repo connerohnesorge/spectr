@@ -66,15 +66,12 @@ func RenderBar(completed, total int) string {
 
 	// Calculate filled width (0-20 characters)
 	ratio := float64(completed) / float64(total)
-	filledWidth := int(math.Round(ratio * float64(progressBarWidth)))
-
-	// Ensure filled width is within bounds
-	if filledWidth < 0 {
-		filledWidth = 0
-	}
-	if filledWidth > progressBarWidth {
-		filledWidth = progressBarWidth
-	}
+	filledWidth := min(
+		// Ensure filled width is within bounds
+		max(
+			int(math.Round(ratio*float64(progressBarWidth))),
+			0,
+		), progressBarWidth)
 
 	// Build filled portion
 	filledPortion := ""

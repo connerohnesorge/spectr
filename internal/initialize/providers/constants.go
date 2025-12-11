@@ -21,6 +21,7 @@ const (
 	PriorityKilocode    = 14
 	PriorityContinue    = 15
 	PriorityCrush       = 16
+	PriorityOpencode    = 17
 )
 
 // default frontmatter templates for slash commands.

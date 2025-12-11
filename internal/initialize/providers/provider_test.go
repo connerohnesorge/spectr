@@ -426,3 +426,41 @@ func TestCodexProvider(t *testing.T) {
 		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
 	}
 }
+
+func TestOpencodeProvider(t *testing.T) {
+	p := NewOpencodeProvider()
+
+	if p.ID() != "opencode" {
+		t.Errorf("ID() = %s, want opencode", p.ID())
+	}
+	if p.Name() != "OpenCode" {
+		t.Errorf("Name() = %s, want OpenCode", p.Name())
+	}
+	if p.Priority() != PriorityOpencode {
+		t.Errorf("Priority() = %d, want %d", p.Priority(), PriorityOpencode)
+	}
+	if p.ConfigFile() != "" {
+		t.Errorf("ConfigFile() = %s, want empty string", p.ConfigFile())
+	}
+	if p.HasConfigFile() {
+		t.Error("HasConfigFile() = true, want false")
+	}
+	if !p.HasSlashCommands() {
+		t.Error("HasSlashCommands() = false, want true")
+	}
+	if p.CommandFormat() != FormatMarkdown {
+		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
+	}
+	if p.GetProposalCommandPath() != ".opencode/command/spectr/proposal.md" {
+		t.Errorf(
+			"GetProposalCommandPath() = %s, want .opencode/command/spectr/proposal.md",
+			p.GetProposalCommandPath(),
+		)
+	}
+	if p.GetApplyCommandPath() != ".opencode/command/spectr/apply.md" {
+		t.Errorf(
+			"GetApplyCommandPath() = %s, want .opencode/command/spectr/apply.md",
+			p.GetApplyCommandPath(),
+		)
+	}
+}

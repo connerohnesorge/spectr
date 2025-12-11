@@ -997,7 +997,7 @@ The `spectr archive` command performs an atomic operation:
    - Ensures requirements have scenarios
 
 2. **Delta Merging**
-   - Reads each delta spec in `changes/<id>/specs/`
+   - Reads each delta spec in `spectr/changes/<id>/specs/`
    - For each capability:
      - **ADDED**: Appends to `specs/<capability>/spec.md`
      - **MODIFIED**: Replaces entire requirement block
@@ -1005,7 +1005,7 @@ The `spectr archive` command performs an atomic operation:
      - **RENAMED**: Updates requirement header
 
 3. **Archive Move**
-   - Creates `changes/archive/YYYY-MM-DD-<id>/`
+   - Creates `spectr/changes/archive/YYYY-MM-DD-<id>/`
    - Moves entire change directory
    - Preserves all history (proposal, tasks, design, deltas)
 

@@ -4,29 +4,21 @@
 package cmd
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // filePerm is the standard file permission for created files (rw-r--r--)
 const filePerm = 0644
-
-// Regex patterns for parsing tasks.md - compiled once at package level
-var (
-	sectionPattern = regexp.MustCompile(`^##\s+\d+\.\s+(.+)$`)
-	taskPattern    = regexp.MustCompile(`^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$`)
-)
 
 // AcceptCmd represents the accept command for converting tasks.md to
 // tasks.json. This command parses the human-readable tasks.md file and
@@ -175,62 +167,35 @@ func (c *AcceptCmd) resolveChangeID(projectRoot string) (string, error) {
 	return selectChangeInteractive(projectRoot)
 }
 
-// parseTaskFromMatch creates a Task from regex match results.
-func parseTaskFromMatch(matches []string, section string) parsers.Task {
-	checkbox := matches[1]
-	taskID := matches[2]
-	description := strings.TrimSpace(matches[3])
-
-	var status parsers.TaskStatusValue
-	if checkbox == " " {
-		status = parsers.TaskStatusPending
-	} else {
-		status = parsers.TaskStatusCompleted
-	}
-
-	return parsers.Task{
-		ID:          taskID,
-		Section:     section,
-		Description: description,
-		Status:      status,
-	}
-}
-
 // parseTasksMd parses tasks.md and returns a slice of Task structs.
-// It extracts section headers (## lines), task IDs, descriptions, and status
-// from the markdown structure.
+// It uses the markdown package to extract section headers, task IDs,
+// descriptions, and status from the markdown structure.
 func parseTasksMd(path string) ([]parsers.Task, error) {
-	file, err := os.Open(path)
+	tasksWithIDs, err := markdown.ExtractTasksWithIDsFromFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer func() { _ = file.Close() }()
-
-	var tasks []parsers.Task
-	var currentSection string
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Check for section header (e.g., "## 1. Core Accept Command")
-		if matches := sectionPattern.FindStringSubmatch(line); matches != nil {
-			currentSection = strings.TrimSpace(matches[1])
-
-			continue
-		}
-
-		// Check for task line (e.g., "- [ ] 1.1 Create `cmd/accept.go`...")
-		matches := taskPattern.FindStringSubmatch(line)
-		if matches == nil {
-			continue
-		}
-
-		tasks = append(tasks, parseTaskFromMatch(matches, currentSection))
+		return nil, err
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
+	// Return nil for empty results to maintain backwards compatibility
+	if len(tasksWithIDs) == 0 {
+		return nil, nil
+	}
+
+	tasks := make([]parsers.Task, len(tasksWithIDs))
+	for i, t := range tasksWithIDs {
+		var status parsers.TaskStatusValue
+		if t.Checked {
+			status = parsers.TaskStatusCompleted
+		} else {
+			status = parsers.TaskStatusPending
+		}
+
+		tasks[i] = parsers.Task{
+			ID:          t.ID,
+			Section:     t.Section,
+			Description: t.Description,
+			Status:      status,
+		}
 	}
 
 	return tasks, nil

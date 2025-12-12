@@ -89,6 +89,7 @@ type ResolveResult struct {
 }
 
 // ResolveChangeID resolves a partial change ID to a full change ID.
+//
 // The resolution algorithm:
 //  1. Exact match: returns immediately if partialID exactly matches a change ID
 //  2. Prefix match: finds all change IDs that start with partialID

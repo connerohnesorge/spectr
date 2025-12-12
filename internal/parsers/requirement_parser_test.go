@@ -84,37 +84,60 @@ No actual requirement blocks here.
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			filePath := filepath.Join(tmpDir, "spec.md")
+			filePath := filepath.Join(
+				tmpDir,
+				"spec.md",
+			)
 			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
 				t.Fatal(err)
 			}
 
-			reqs, err := ParseRequirements(filePath)
+			reqs, err := ParseRequirements(
+				filePath,
+			)
 			if err != nil {
-				t.Fatalf("ParseRequirements failed: %v", err)
+				t.Fatalf(
+					"ParseRequirements failed: %v",
+					err,
+				)
 			}
 
 			if len(reqs) != tt.expected {
-				t.Errorf("Expected %d requirements, got %d", tt.expected, len(reqs))
+				t.Errorf(
+					"Expected %d requirements, got %d",
+					tt.expected,
+					len(reqs),
+				)
 			}
 
 			// Verify that each requirement has a name and raw content
 			for i, req := range reqs {
 				if req.Name == "" {
-					t.Errorf("Requirement %d has empty name", i)
+					t.Errorf(
+						"Requirement %d has empty name",
+						i,
+					)
 				}
 				if req.Raw == "" {
-					t.Errorf("Requirement %d has empty raw content", i)
+					t.Errorf(
+						"Requirement %d has empty raw content",
+						i,
+					)
 				}
 				if req.HeaderLine == "" {
-					t.Errorf("Requirement %d has empty header line", i)
+					t.Errorf(
+						"Requirement %d has empty header line",
+						i,
+					)
 				}
 			}
 		})
 	}
 }
 
-func TestParseRequirements_MultipleH2Sections(t *testing.T) {
+func TestParseRequirements_MultipleH2Sections(
+	t *testing.T,
+) {
 	content := `# Test Spec
 
 ## Requirements
@@ -140,20 +163,34 @@ Content for second feature.
 
 	reqs, err := ParseRequirements(filePath)
 	if err != nil {
-		t.Fatalf("ParseRequirements failed: %v", err)
+		t.Fatalf(
+			"ParseRequirements failed: %v",
+			err,
+		)
 	}
 
 	// Should parse requirements from all sections
 	if len(reqs) != 2 {
-		t.Errorf("Expected 2 requirements, got %d", len(reqs))
+		t.Errorf(
+			"Expected 2 requirements, got %d",
+			len(reqs),
+		)
 	}
 
-	if len(reqs) > 0 && reqs[0].Name != "First Feature" {
-		t.Errorf("Expected first requirement name 'First Feature', got %q", reqs[0].Name)
+	if len(reqs) > 0 &&
+		reqs[0].Name != "First Feature" {
+		t.Errorf(
+			"Expected first requirement name 'First Feature', got %q",
+			reqs[0].Name,
+		)
 	}
 
-	if len(reqs) > 1 && reqs[1].Name != "Second Feature" {
-		t.Errorf("Expected second requirement name 'Second Feature', got %q", reqs[1].Name)
+	if len(reqs) > 1 &&
+		reqs[1].Name != "Second Feature" {
+		t.Errorf(
+			"Expected second requirement name 'Second Feature', got %q",
+			reqs[1].Name,
+		)
 	}
 }
 
@@ -187,7 +224,10 @@ Description.
 - **WHEN** error
 - **THEN** handle
 `,
-			expected: []string{"Happy path", "Error path"},
+			expected: []string{
+				"Happy path",
+				"Error path",
+			},
 		},
 		{
 			name: "No scenarios",
@@ -210,10 +250,20 @@ Description without scenarios.
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			scenarios := ParseScenarios(tt.content)
+			scenarios := ParseScenarios(
+				tt.content,
+			)
 
-			if len(scenarios) != len(tt.expected) {
-				t.Errorf("Expected %d scenarios, got %d", len(tt.expected), len(scenarios))
+			if len(
+				scenarios,
+			) != len(
+				tt.expected,
+			) {
+				t.Errorf(
+					"Expected %d scenarios, got %d",
+					len(tt.expected),
+					len(scenarios),
+				)
 			}
 
 			for i, expected := range tt.expected {
@@ -221,7 +271,12 @@ Description without scenarios.
 					break
 				}
 				if scenarios[i] != expected {
-					t.Errorf("Scenario %d: expected %q, got %q", i, expected, scenarios[i])
+					t.Errorf(
+						"Scenario %d: expected %q, got %q",
+						i,
+						expected,
+						scenarios[i],
+					)
 				}
 			}
 		})
@@ -242,9 +297,15 @@ func TestNormalizeRequirementName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			result := NormalizeRequirementName(tt.input)
+			result := NormalizeRequirementName(
+				tt.input,
+			)
 			if result != tt.expected {
-				t.Errorf("Expected %q, got %q", tt.expected, result)
+				t.Errorf(
+					"Expected %q, got %q",
+					tt.expected,
+					result,
+				)
 			}
 		})
 	}

@@ -13,7 +13,8 @@ type CodeBuddyProvider struct {
 // NewCodeBuddyProvider creates a new CodeBuddy provider.
 func NewCodeBuddyProvider() *CodeBuddyProvider {
 	proposalPath, applyPath := StandardCommandPaths(
-		".codebuddy/commands", ".md",
+		".codebuddy/commands",
+		".md",
 	)
 
 	return &CodeBuddyProvider{

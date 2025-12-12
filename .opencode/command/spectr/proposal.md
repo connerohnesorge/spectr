@@ -3,7 +3,6 @@ description: Scaffold a new Spectr change and validate strictly.
 ---
 
 <!-- spectr:START -->
-
 # Guardrails
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
@@ -24,7 +23,6 @@ description: Scaffold a new Spectr change and validate strictly.
 - Read existing specs at `spectr/specs/<capability>/spec.md` to understand current state.
 - Search existing requirements with `rg -n "Requirement:|Scenario:" spectr/specs` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so proposals align with current implementation realities.
-
 
 <!-- spectr:END -->
 

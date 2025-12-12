@@ -21,12 +21,21 @@ func ValidatePreArchive(
 	// Derive spectrRoot from changeDir
 	// changeDir format: /path/to/project/spectr/changes/<change-id>
 	// spectrRoot should be: /path/to/project/spectr
-	spectrRoot := filepath.Dir(filepath.Dir(changeDir))
+	spectrRoot := filepath.Dir(
+		filepath.Dir(changeDir),
+	)
 
 	// Use existing change validation from validation package
-	report, err := validation.ValidateChangeDeltaSpecs(changeDir, spectrRoot, strictMode)
+	report, err := validation.ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		strictMode,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("validate change delta specs: %w", err)
+		return nil, fmt.Errorf(
+			"validate change delta specs: %w",
+			err,
+		)
 	}
 
 	return report, nil
@@ -34,11 +43,16 @@ func ValidatePreArchive(
 
 // ValidatePostMerge validates a merged spec for correctness
 // Ensures the merged spec has valid structure and no duplicate requirements
-func ValidatePostMerge(mergedContent, _ string) error {
+func ValidatePostMerge(
+	mergedContent, _ string,
+) error {
 	// Write to temp file for validation
 	tmpFile, err := os.CreateTemp("", "spec-*.md")
 	if err != nil {
-		return fmt.Errorf("create temp file: %w", err)
+		return fmt.Errorf(
+			"create temp file: %w",
+			err,
+		)
 	}
 	defer func() {
 		_ = tmpFile.Close()
@@ -47,24 +61,37 @@ func ValidatePostMerge(mergedContent, _ string) error {
 
 	_, err = tmpFile.WriteString(mergedContent)
 	if err != nil {
-		return fmt.Errorf("write temp file: %w", err)
+		return fmt.Errorf(
+			"write temp file: %w",
+			err,
+		)
 	}
 
 	err = tmpFile.Close()
 	if err != nil {
-		return fmt.Errorf("close temp file: %w", err)
+		return fmt.Errorf(
+			"close temp file: %w",
+			err,
+		)
 	}
 
 	// Parse requirements from merged spec
-	reqs, err := parsers.ParseRequirements(tmpFile.Name())
+	reqs, err := parsers.ParseRequirements(
+		tmpFile.Name(),
+	)
 	if err != nil {
-		return fmt.Errorf("parse merged spec: %w", err)
+		return fmt.Errorf(
+			"parse merged spec: %w",
+			err,
+		)
 	}
 
 	// Check for duplicate requirement names (normalized)
 	seen := make(map[string]bool)
 	for _, req := range reqs {
-		normalized := parsers.NormalizeRequirementName(req.Name)
+		normalized := parsers.NormalizeRequirementName(
+			req.Name,
+		)
 		if seen[normalized] {
 			return fmt.Errorf(
 				"duplicate requirement name in merged spec: %q",
@@ -76,9 +103,14 @@ func ValidatePostMerge(mergedContent, _ string) error {
 
 	// Check that each requirement has at least one scenario
 	for _, req := range reqs {
-		scenarios := parsers.ParseScenarios(req.Raw)
+		scenarios := parsers.ParseScenarios(
+			req.Raw,
+		)
 		if len(scenarios) == 0 {
-			return fmt.Errorf("requirement %q has no scenarios", req.Name)
+			return fmt.Errorf(
+				"requirement %q has no scenarios",
+				req.Name,
+			)
 		}
 	}
 
@@ -92,13 +124,23 @@ func ValidatePostMerge(mergedContent, _ string) error {
 // This is a wrapper around validation.ValidatePreMerge for backward compatibility.
 //
 //nolint:revive // specExists is a legitimate control parameter
-func ValidatePreMerge(baseSpecPath string, deltaPlan *parsers.DeltaPlan, specExists bool) error {
-	return validation.ValidatePreMerge(baseSpecPath, deltaPlan, specExists)
+func ValidatePreMerge(
+	baseSpecPath string,
+	deltaPlan *parsers.DeltaPlan,
+	specExists bool,
+) error {
+	return validation.ValidatePreMerge(
+		baseSpecPath,
+		deltaPlan,
+		specExists,
+	)
 }
 
 // CheckDuplicatesAndConflicts validates that there are no
 // duplicate requirements within delta sections and no cross-section conflicts
-func CheckDuplicatesAndConflicts(deltaPlan *parsers.DeltaPlan) error {
+func CheckDuplicatesAndConflicts(
+	deltaPlan *parsers.DeltaPlan,
+) error {
 	// Check for duplicates within ADDED
 	if err := checkDuplicatesInSection(
 		deltaPlan.Added,
@@ -130,7 +172,9 @@ type nameSets struct {
 	renamedTo   map[string]bool
 }
 
-func buildNameSets(deltaPlan *parsers.DeltaPlan) nameSets {
+func buildNameSets(
+	deltaPlan *parsers.DeltaPlan,
+) nameSets {
 	sets := nameSets{
 		added:       make(map[string]bool),
 		modified:    make(map[string]bool),
@@ -159,7 +203,9 @@ func buildNameSets(deltaPlan *parsers.DeltaPlan) nameSets {
 	return sets
 }
 
-func checkCrossSectionConflicts(sets nameSets) error {
+func checkCrossSectionConflicts(
+	sets nameSets,
+) error {
 	// ADDED cannot conflict with MODIFIED, REMOVED, or RENAMED TO
 	for name := range sets.added {
 		if sets.modified[name] {
@@ -225,7 +271,9 @@ func checkDuplicatesInSection(
 ) error {
 	seen := make(map[string]bool)
 	for _, req := range reqs {
-		normalized := parsers.NormalizeRequirementName(req.Name)
+		normalized := parsers.NormalizeRequirementName(
+			req.Name,
+		)
 		if seen[normalized] {
 			return &specterrs.DuplicateRequirementError{
 				RequirementName: req.Name,

@@ -10,21 +10,34 @@ import (
 func TestNewTemplateManager(t *testing.T) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 	if tm == nil {
-		t.Fatal("NewTemplateManager() returned nil")
+		t.Fatal(
+			"NewTemplateManager() returned nil",
+		)
 	}
 	if tm.templates == nil {
-		t.Fatal("TemplateManager.templates is nil")
+		t.Fatal(
+			"TemplateManager.templates is nil",
+		)
 	}
 }
 
+//
 //nolint:revive // cognitive-complexity - comprehensive test coverage
-func TestTemplateManager_RenderProject(t *testing.T) {
+func TestTemplateManager_RenderProject(
+	t *testing.T,
+) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 
 	tests := []struct {
@@ -38,7 +51,10 @@ func TestTemplateManager_RenderProject(t *testing.T) {
 			ctx: ProjectContext{
 				ProjectName: "MyProject",
 				Description: "A test project",
-				TechStack:   []string{"Go", "PostgreSQL"},
+				TechStack: []string{
+					"Go",
+					"PostgreSQL",
+				},
 			},
 			want: []string{
 				"# MyProject Context",
@@ -67,7 +83,9 @@ func TestTemplateManager_RenderProject(t *testing.T) {
 			ctx: ProjectContext{
 				ProjectName: "SingleTech",
 				Description: "One technology",
-				TechStack:   []string{"TypeScript"},
+				TechStack: []string{
+					"TypeScript",
+				},
 			},
 			want: []string{
 				"# SingleTech Context",
@@ -81,7 +99,11 @@ func TestTemplateManager_RenderProject(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tm.RenderProject(tt.ctx)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RenderProject() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"RenderProject() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 
 				return
 			}
@@ -92,25 +114,41 @@ func TestTemplateManager_RenderProject(t *testing.T) {
 			// Check that all expected strings are in the output
 			for _, want := range tt.want {
 				if !strings.Contains(got, want) {
-					t.Errorf("RenderProject() missing expected string %q in output:\n%s", want, got)
+					t.Errorf(
+						"RenderProject() missing expected string %q in output:\n%s",
+						want,
+						got,
+					)
 				}
 			}
 
 			// Verify basic structure
-			if !strings.Contains(got, "## Tech Stack") {
-				t.Error("RenderProject() missing '## Tech Stack' section")
+			if !strings.Contains(
+				got,
+				"## Tech Stack",
+			) {
+				t.Error(
+					"RenderProject() missing '## Tech Stack' section",
+				)
 			}
 		})
 	}
 }
 
-func TestTemplateManager_RenderAgents(t *testing.T) {
+func TestTemplateManager_RenderAgents(
+	t *testing.T,
+) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 
-	got, err := tm.RenderAgents(providers.DefaultTemplateContext())
+	got, err := tm.RenderAgents(
+		providers.DefaultTemplateContext(),
+	)
 	if err != nil {
 		t.Fatalf("RenderAgents() error = %v", err)
 	}
@@ -135,7 +173,10 @@ func TestTemplateManager_RenderAgents(t *testing.T) {
 
 	for _, section := range expectedSections {
 		if !strings.Contains(got, section) {
-			t.Errorf("RenderAgents() missing expected section %q", section)
+			t.Errorf(
+				"RenderAgents() missing expected section %q",
+				section,
+			)
 		}
 	}
 
@@ -148,15 +189,25 @@ func TestTemplateManager_RenderAgents(t *testing.T) {
 	}
 }
 
-func TestTemplateManager_RenderInstructionPointer(t *testing.T) {
+func TestTemplateManager_RenderInstructionPointer(
+	t *testing.T,
+) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 
-	got, err := tm.RenderInstructionPointer(providers.DefaultTemplateContext())
+	got, err := tm.RenderInstructionPointer(
+		providers.DefaultTemplateContext(),
+	)
 	if err != nil {
-		t.Fatalf("RenderInstructionPointer() error = %v", err)
+		t.Fatalf(
+			"RenderInstructionPointer() error = %v",
+			err,
+		)
 	}
 
 	// Check for key content in instruction pointer
@@ -170,7 +221,10 @@ func TestTemplateManager_RenderInstructionPointer(t *testing.T) {
 
 	for _, content := range expectedContent {
 		if !strings.Contains(got, content) {
-			t.Errorf("RenderInstructionPointer() missing expected content %q", content)
+			t.Errorf(
+				"RenderInstructionPointer() missing expected content %q",
+				content,
+			)
 		}
 	}
 
@@ -200,10 +254,15 @@ func TestTemplateManager_RenderInstructionPointer(t *testing.T) {
 	}
 }
 
-func TestTemplateManager_RenderSlashCommand(t *testing.T) {
+func TestTemplateManager_RenderSlashCommand(
+	t *testing.T,
+) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 
 	tests := []struct {
@@ -252,9 +311,16 @@ func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tm.RenderSlashCommand(tt.commandType, providers.DefaultTemplateContext())
+			got, err := tm.RenderSlashCommand(
+				tt.commandType,
+				providers.DefaultTemplateContext(),
+			)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RenderSlashCommand() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"RenderSlashCommand() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 
 				return
 			}
@@ -275,15 +341,23 @@ func TestTemplateManager_RenderSlashCommand(t *testing.T) {
 	}
 }
 
-func TestTemplateManager_RenderCIWorkflow(t *testing.T) {
+func TestTemplateManager_RenderCIWorkflow(
+	t *testing.T,
+) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 
 	got, err := tm.RenderCIWorkflow()
 	if err != nil {
-		t.Fatalf("RenderCIWorkflow() error = %v", err)
+		t.Fatalf(
+			"RenderCIWorkflow() error = %v",
+			err,
+		)
 	}
 
 	// Check for key content in CI workflow
@@ -301,15 +375,23 @@ func TestTemplateManager_RenderCIWorkflow(t *testing.T) {
 
 	for _, content := range expectedContent {
 		if !strings.Contains(got, content) {
-			t.Errorf("RenderCIWorkflow() missing expected content %q", content)
+			t.Errorf(
+				"RenderCIWorkflow() missing expected content %q",
+				content,
+			)
 		}
 	}
 }
 
-func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
+func TestTemplateManager_AllTemplatesCompile(
+	t *testing.T,
+) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 
 	// Test that all templates can be rendered without errors
@@ -321,83 +403,152 @@ func TestTemplateManager_AllTemplatesCompile(t *testing.T) {
 		}
 		_, err := tm.RenderProject(ctx)
 		if err != nil {
-			t.Errorf("Project template failed to render: %v", err)
+			t.Errorf(
+				"Project template failed to render: %v",
+				err,
+			)
 		}
 	})
 
 	t.Run("agents template", func(t *testing.T) {
-		_, err := tm.RenderAgents(providers.DefaultTemplateContext())
+		_, err := tm.RenderAgents(
+			providers.DefaultTemplateContext(),
+		)
 		if err != nil {
-			t.Errorf("Agents template failed to render: %v", err)
+			t.Errorf(
+				"Agents template failed to render: %v",
+				err,
+			)
 		}
 	})
 
-	t.Run("instruction pointer template", func(t *testing.T) {
-		_, err := tm.RenderInstructionPointer(providers.DefaultTemplateContext())
-		if err != nil {
-			t.Errorf("Instruction pointer template failed to render: %v", err)
-		}
-	})
+	t.Run(
+		"instruction pointer template",
+		func(t *testing.T) {
+			_, err := tm.RenderInstructionPointer(
+				providers.DefaultTemplateContext(),
+			)
+			if err != nil {
+				t.Errorf(
+					"Instruction pointer template failed to render: %v",
+					err,
+				)
+			}
+		},
+	)
 
 	t.Run("slash commands", func(t *testing.T) {
 		commands := []string{"proposal", "apply"}
 		for _, cmd := range commands {
-			_, err := tm.RenderSlashCommand(cmd, providers.DefaultTemplateContext())
+			_, err := tm.RenderSlashCommand(
+				cmd,
+				providers.DefaultTemplateContext(),
+			)
 			if err != nil {
-				t.Errorf("Slash command %s failed to render: %v", cmd, err)
+				t.Errorf(
+					"Slash command %s failed to render: %v",
+					cmd,
+					err,
+				)
 			}
 		}
 	})
 
-	t.Run("ci workflow template", func(t *testing.T) {
-		_, err := tm.RenderCIWorkflow()
-		if err != nil {
-			t.Errorf("CI workflow template failed to render: %v", err)
-		}
-	})
+	t.Run(
+		"ci workflow template",
+		func(t *testing.T) {
+			_, err := tm.RenderCIWorkflow()
+			if err != nil {
+				t.Errorf(
+					"CI workflow template failed to render: %v",
+					err,
+				)
+			}
+		},
+	)
 }
 
+//
 //nolint:revive // cognitive-complexity - comprehensive test coverage
-func TestTemplateManager_VariableSubstitution(t *testing.T) {
+func TestTemplateManager_VariableSubstitution(
+	t *testing.T,
+) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 
-	t.Run("project variables are substituted", func(t *testing.T) {
-		ctx := ProjectContext{
-			ProjectName: "VariableTest",
-			Description: "Testing variable substitution",
-			TechStack:   []string{"Go", "React", "PostgreSQL"},
-		}
-		got, err := tm.RenderProject(ctx)
-		if err != nil {
-			t.Fatalf("RenderProject() error = %v", err)
-		}
+	t.Run(
+		"project variables are substituted",
+		func(t *testing.T) {
+			ctx := ProjectContext{
+				ProjectName: "VariableTest",
+				Description: "Testing variable substitution",
+				TechStack: []string{
+					"Go",
+					"React",
+					"PostgreSQL",
+				},
+			}
+			got, err := tm.RenderProject(ctx)
+			if err != nil {
+				t.Fatalf(
+					"RenderProject() error = %v",
+					err,
+				)
+			}
 
-		// Verify no template syntax remains
-		if strings.Contains(got, "{{") || strings.Contains(got, "}}") {
-			t.Error("Template contains unreplaced template syntax")
-		}
+			// Verify no template syntax remains
+			if strings.Contains(got, "{{") ||
+				strings.Contains(got, "}}") {
+				t.Error(
+					"Template contains unreplaced template syntax",
+				)
+			}
 
-		// Verify all variables were substituted
-		if !strings.Contains(got, "VariableTest") {
-			t.Error("ProjectName not substituted")
-		}
-		if !strings.Contains(got, "Testing variable substitution") {
-			t.Error("Description not substituted")
-		}
-		if !strings.Contains(got, "Go") || !strings.Contains(got, "React") ||
-			!strings.Contains(got, "PostgreSQL") {
-			t.Error("TechStack items not substituted")
-		}
-	})
+			// Verify all variables were substituted
+			if !strings.Contains(
+				got,
+				"VariableTest",
+			) {
+				t.Error(
+					"ProjectName not substituted",
+				)
+			}
+			if !strings.Contains(
+				got,
+				"Testing variable substitution",
+			) {
+				t.Error(
+					"Description not substituted",
+				)
+			}
+			if !strings.Contains(got, "Go") ||
+				!strings.Contains(got, "React") ||
+				!strings.Contains(
+					got,
+					"PostgreSQL",
+				) {
+				t.Error(
+					"TechStack items not substituted",
+				)
+			}
+		},
+	)
 }
 
-func TestTemplateManager_EmptyTechStack(t *testing.T) {
+func TestTemplateManager_EmptyTechStack(
+	t *testing.T,
+) {
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("NewTemplateManager() error = %v", err)
+		t.Fatalf(
+			"NewTemplateManager() error = %v",
+			err,
+		)
 	}
 
 	// Test with nil tech stack
@@ -408,22 +559,32 @@ func TestTemplateManager_EmptyTechStack(t *testing.T) {
 	}
 	got, err := tm.RenderProject(ctx)
 	if err != nil {
-		t.Fatalf("RenderProject() with nil TechStack error = %v", err)
+		t.Fatalf(
+			"RenderProject() with nil TechStack error = %v",
+			err,
+		)
 	}
 
 	// Should still have the Tech Stack section
 	if !strings.Contains(got, "## Tech Stack") {
-		t.Error("Missing Tech Stack section with nil slice")
+		t.Error(
+			"Missing Tech Stack section with nil slice",
+		)
 	}
 
 	// Test with empty slice
 	ctx.TechStack = make([]string, 0)
 	got, err = tm.RenderProject(ctx)
 	if err != nil {
-		t.Fatalf("RenderProject() with empty TechStack error = %v", err)
+		t.Fatalf(
+			"RenderProject() with empty TechStack error = %v",
+			err,
+		)
 	}
 
 	if !strings.Contains(got, "## Tech Stack") {
-		t.Error("Missing Tech Stack section with empty slice")
+		t.Error(
+			"Missing Tech Stack section with empty slice",
+		)
 	}
 }

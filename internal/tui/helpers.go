@@ -34,7 +34,9 @@ func CopyToClipboard(text string) error {
 	}
 
 	// Fallback to OSC 52 for SSH sessions
-	encoded := base64.StdEncoding.EncodeToString([]byte(text))
+	encoded := base64.StdEncoding.EncodeToString(
+		[]byte(text),
+	)
 	osc52 := "\x1b]52;c;" + encoded + "\x07"
 	fmt.Print(osc52)
 

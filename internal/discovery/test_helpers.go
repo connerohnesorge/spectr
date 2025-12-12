@@ -23,7 +23,10 @@ func createChangeDir(
 	if err := os.MkdirAll(changeDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
-	proposalPath := filepath.Join(changeDir, "proposal.md")
+	proposalPath := filepath.Join(
+		changeDir,
+		"proposal.md",
+	)
 	if err := os.WriteFile(
 		proposalPath,
 		[]byte(content),
@@ -46,7 +49,10 @@ func verifyChangesExcluded(
 	}
 	for _, exc := range excluded {
 		if changeMap[exc] {
-			t.Errorf("Change %s should be excluded but was found", exc)
+			t.Errorf(
+				"Change %s should be excluded but was found",
+				exc,
+			)
 		}
 	}
 }
@@ -61,7 +67,10 @@ func verifyOrdering(
 	t.Helper()
 	for i, exp := range expected {
 		if i >= len(actual) {
-			t.Errorf("Not enough %ss returned", itemType)
+			t.Errorf(
+				"Not enough %ss returned",
+				itemType,
+			)
 
 			break
 		}

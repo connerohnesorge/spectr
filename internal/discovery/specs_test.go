@@ -9,7 +9,11 @@ import (
 func TestGetSpecs(t *testing.T) {
 	// Create temporary test directory
 	tmpDir := t.TempDir()
-	specsDir := filepath.Join(tmpDir, "spectr", "specs")
+	specsDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"specs",
+	)
 
 	// Create test structure
 	if err := os.MkdirAll(specsDir, testDirPerm); err != nil {
@@ -17,13 +21,20 @@ func TestGetSpecs(t *testing.T) {
 	}
 
 	// Create specs
-	testSpecs := []string{"auth", "api", "database"}
+	testSpecs := []string{
+		"auth",
+		"api",
+		"database",
+	}
 	for _, name := range testSpecs {
 		specDir := filepath.Join(specsDir, name)
 		if err := os.MkdirAll(specDir, testDirPerm); err != nil {
 			t.Fatal(err)
 		}
-		specPath := filepath.Join(specDir, "spec.md")
+		specPath := filepath.Join(
+			specDir,
+			"spec.md",
+		)
 		if err := os.WriteFile(
 			specPath,
 			[]byte("# Test Spec"),
@@ -34,7 +45,10 @@ func TestGetSpecs(t *testing.T) {
 	}
 
 	// Create hidden directory (should be excluded)
-	hiddenDir := filepath.Join(specsDir, ".hidden")
+	hiddenDir := filepath.Join(
+		specsDir,
+		".hidden",
+	)
 	if err := os.MkdirAll(hiddenDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
@@ -47,7 +61,10 @@ func TestGetSpecs(t *testing.T) {
 	}
 
 	// Create directory without spec.md (should be excluded)
-	emptyDir := filepath.Join(specsDir, "incomplete")
+	emptyDir := filepath.Join(
+		specsDir,
+		"incomplete",
+	)
 	if err := os.MkdirAll(emptyDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +76,11 @@ func TestGetSpecs(t *testing.T) {
 	}
 
 	if len(specs) != len(testSpecs) {
-		t.Errorf("Expected %d specs, got %d", len(testSpecs), len(specs))
+		t.Errorf(
+			"Expected %d specs, got %d",
+			len(testSpecs),
+			len(specs),
+		)
 	}
 
 	// Verify all expected specs are found
@@ -69,7 +90,10 @@ func TestGetSpecs(t *testing.T) {
 	}
 	for _, expected := range testSpecs {
 		if !specMap[expected] {
-			t.Errorf("Expected spec %s not found", expected)
+			t.Errorf(
+				"Expected spec %s not found",
+				expected,
+			)
 		}
 	}
 }
@@ -78,17 +102,27 @@ func TestGetSpecs_EmptyDirectory(t *testing.T) {
 	tmpDir := t.TempDir()
 	specs, err := GetSpecs(tmpDir)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if len(specs) != 0 {
-		t.Errorf("Expected empty result, got %d specs", len(specs))
+		t.Errorf(
+			"Expected empty result, got %d specs",
+			len(specs),
+		)
 	}
 }
 
 func TestGetSpecIDs(t *testing.T) {
 	// Create temporary test directory
 	tmpDir := t.TempDir()
-	specsDir := filepath.Join(tmpDir, "spectr", "specs")
+	specsDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"specs",
+	)
 
 	// Create test structure
 	if err := os.MkdirAll(specsDir, testDirPerm); err != nil {
@@ -96,13 +130,20 @@ func TestGetSpecIDs(t *testing.T) {
 	}
 
 	// Create specs in non-alphabetical order to test sorting
-	testSpecs := []string{"zebra-spec", "auth", "database"}
+	testSpecs := []string{
+		"zebra-spec",
+		"auth",
+		"database",
+	}
 	for _, name := range testSpecs {
 		specDir := filepath.Join(specsDir, name)
 		if err := os.MkdirAll(specDir, testDirPerm); err != nil {
 			t.Fatal(err)
 		}
-		specPath := filepath.Join(specDir, "spec.md")
+		specPath := filepath.Join(
+			specDir,
+			"spec.md",
+		)
 		if err := os.WriteFile(
 			specPath,
 			[]byte("# Test Spec"),
@@ -119,11 +160,19 @@ func TestGetSpecIDs(t *testing.T) {
 	}
 
 	if len(specs) != len(testSpecs) {
-		t.Errorf("Expected %d specs, got %d", len(testSpecs), len(specs))
+		t.Errorf(
+			"Expected %d specs, got %d",
+			len(testSpecs),
+			len(specs),
+		)
 	}
 
 	// Verify sorting (should be: auth, database, zebra-spec)
-	expectedSorted := []string{"auth", "database", "zebra-spec"}
+	expectedSorted := []string{
+		"auth",
+		"database",
+		"zebra-spec",
+	}
 	for i, expected := range expectedSorted {
 		if i >= len(specs) {
 			t.Error("Not enough specs returned")
@@ -145,16 +194,28 @@ func TestGetSpecIDs_EmptyDirectory(t *testing.T) {
 	tmpDir := t.TempDir()
 	specs, err := GetSpecIDs(tmpDir)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if len(specs) != 0 {
-		t.Errorf("Expected empty result, got %d specs", len(specs))
+		t.Errorf(
+			"Expected empty result, got %d specs",
+			len(specs),
+		)
 	}
 }
 
-func TestGetActiveChangeIDs_MissingProposalMd(t *testing.T) {
+func TestGetActiveChangeIDs_MissingProposalMd(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 
 	// Create test structure
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
@@ -162,7 +223,10 @@ func TestGetActiveChangeIDs_MissingProposalMd(t *testing.T) {
 	}
 
 	// Create a change directory WITHOUT proposal.md
-	changeDir := filepath.Join(changesDir, "incomplete-change")
+	changeDir := filepath.Join(
+		changesDir,
+		"incomplete-change",
+	)
 	if err := os.MkdirAll(changeDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +234,10 @@ func TestGetActiveChangeIDs_MissingProposalMd(t *testing.T) {
 	// Test that it's excluded
 	changes, err := GetActiveChangeIDs(tmpDir)
 	if err != nil {
-		t.Fatalf("GetActiveChangeIDs failed: %v", err)
+		t.Fatalf(
+			"GetActiveChangeIDs failed: %v",
+			err,
+		)
 	}
 
 	if len(changes) != 0 {
@@ -183,7 +250,11 @@ func TestGetActiveChangeIDs_MissingProposalMd(t *testing.T) {
 
 func TestGetSpecIDs_MissingSpecMd(t *testing.T) {
 	tmpDir := t.TempDir()
-	specsDir := filepath.Join(tmpDir, "spectr", "specs")
+	specsDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"specs",
+	)
 
 	// Create test structure
 	if err := os.MkdirAll(specsDir, testDirPerm); err != nil {
@@ -191,7 +262,10 @@ func TestGetSpecIDs_MissingSpecMd(t *testing.T) {
 	}
 
 	// Create a spec directory WITHOUT spec.md
-	specDir := filepath.Join(specsDir, "incomplete-spec")
+	specDir := filepath.Join(
+		specsDir,
+		"incomplete-spec",
+	)
 	if err := os.MkdirAll(specDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
@@ -203,6 +277,9 @@ func TestGetSpecIDs_MissingSpecMd(t *testing.T) {
 	}
 
 	if len(specs) != 0 {
-		t.Errorf("Expected 0 specs (no spec.md), got %d", len(specs))
+		t.Errorf(
+			"Expected 0 specs (no spec.md), got %d",
+			len(specs),
+		)
 	}
 }

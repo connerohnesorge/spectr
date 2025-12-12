@@ -13,7 +13,8 @@ type AiderProvider struct {
 // NewAiderProvider creates a new Aider provider.
 func NewAiderProvider() *AiderProvider {
 	proposalPath, applyPath := StandardCommandPaths(
-		".aider/commands", ".md",
+		".aider/commands",
+		".md",
 	)
 
 	return &AiderProvider{

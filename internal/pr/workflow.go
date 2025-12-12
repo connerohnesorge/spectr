@@ -44,10 +44,15 @@ type PRResult struct {
 // 4. Stage, commit, push
 // 5. Create PR
 // 6. Cleanup worktree
-func ExecutePR(config PRConfig) (*PRResult, error) {
+func ExecutePR(
+	config PRConfig,
+) (*PRResult, error) {
 	// Validate prerequisites
 	if err := validatePrerequisites(config); err != nil {
-		return nil, fmt.Errorf("prerequisite check failed: %w", err)
+		return nil, fmt.Errorf(
+			"prerequisite check failed: %w",
+			err,
+		)
 	}
 
 	// Prepare workflow context
@@ -71,16 +76,26 @@ type workflowContext struct {
 }
 
 // prepareWorkflowContext prepares the context needed for the workflow.
-func prepareWorkflowContext(config PRConfig) (*workflowContext, error) {
+func prepareWorkflowContext(
+	config PRConfig,
+) (*workflowContext, error) {
 	// Get origin URL and detect platform
 	originURL, err := git.GetOriginURL()
 	if err != nil {
-		return nil, fmt.Errorf("get origin URL: %w", err)
+		return nil, fmt.Errorf(
+			"get origin URL: %w",
+			err,
+		)
 	}
 
-	platformInfo, err := git.DetectPlatform(originURL)
+	platformInfo, err := git.DetectPlatform(
+		originURL,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("detect platform: %w", err)
+		return nil, fmt.Errorf(
+			"detect platform: %w",
+			err,
+		)
 	}
 
 	// Check CLI tool availability (skip for Bitbucket which has no CLI)
@@ -91,9 +106,14 @@ func prepareWorkflowContext(config PRConfig) (*workflowContext, error) {
 	}
 
 	// Get base branch (auto-detect or use provided)
-	baseBranch, err := git.GetBaseBranch(config.BaseBranch)
+	baseBranch, err := git.GetBaseBranch(
+		config.BaseBranch,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("determine base branch: %w", err)
+		return nil, fmt.Errorf(
+			"determine base branch: %w",
+			err,
+		)
 	}
 
 	// Generate mode-specific branch name:
@@ -111,7 +131,11 @@ func prepareWorkflowContext(config PRConfig) (*workflowContext, error) {
 	default:
 		branchPrefix = "spectr"
 	}
-	branchName := fmt.Sprintf("%s/%s", branchPrefix, config.ChangeID)
+	branchName := fmt.Sprintf(
+		"%s/%s",
+		branchPrefix,
+		config.ChangeID,
+	)
 
 	// Handle existing branch
 	if err := handleExistingBranch(config, branchName); err != nil {
@@ -131,10 +155,16 @@ func prepareWorkflowContext(config PRConfig) (*workflowContext, error) {
 }
 
 // handleExistingBranch handles the case where the branch already exists.
-func handleExistingBranch(config PRConfig, branchName string) error {
+func handleExistingBranch(
+	config PRConfig,
+	branchName string,
+) error {
 	exists, err := git.BranchExists(branchName)
 	if err != nil {
-		return fmt.Errorf("check branch existence: %w", err)
+		return fmt.Errorf(
+			"check branch existence: %w",
+			err,
+		)
 	}
 
 	if !exists {
@@ -149,12 +179,18 @@ func handleExistingBranch(config PRConfig, branchName string) error {
 	}
 
 	if config.DryRun {
-		fmt.Printf("[dry-run] Would delete remote branch: %s\n", branchName)
+		fmt.Printf(
+			"[dry-run] Would delete remote branch: %s\n",
+			branchName,
+		)
 
 		return nil
 	}
 
-	fmt.Printf("Deleting existing remote branch: %s\n", branchName)
+	fmt.Printf(
+		"Deleting existing remote branch: %s\n",
+		branchName,
+	)
 
 	return git.DeleteRemoteBranch(branchName)
 }
@@ -162,7 +198,9 @@ func handleExistingBranch(config PRConfig, branchName string) error {
 // fetchOrigin fetches the origin remote.
 func fetchOrigin(config PRConfig) error {
 	if config.DryRun {
-		fmt.Println("[dry-run] Would fetch origin")
+		fmt.Println(
+			"[dry-run] Would fetch origin",
+		)
 
 		return nil
 	}
@@ -177,22 +215,33 @@ func fetchOrigin(config PRConfig) error {
 }
 
 // executeWorkflow executes the main PR workflow.
-func executeWorkflow(config PRConfig, ctx *workflowContext) (*PRResult, error) {
+func executeWorkflow(
+	config PRConfig,
+	ctx *workflowContext,
+) (*PRResult, error) {
 	result := &PRResult{
 		BranchName: ctx.branchName,
 		Platform:   ctx.platformInfo.Platform,
 	}
 
 	// Create worktree
-	fmt.Printf("Creating worktree on branch: %s (based on %s)\n",
-		ctx.branchName, ctx.baseBranch)
+	fmt.Printf(
+		"Creating worktree on branch: %s (based on %s)\n",
+		ctx.branchName,
+		ctx.baseBranch,
+	)
 
-	worktreeInfo, err := git.CreateWorktree(git.WorktreeConfig{
-		BranchName: ctx.branchName,
-		BaseBranch: ctx.baseBranch,
-	})
+	worktreeInfo, err := git.CreateWorktree(
+		git.WorktreeConfig{
+			BranchName: ctx.branchName,
+			BaseBranch: ctx.baseBranch,
+		},
+	)
 	if err != nil {
-		return nil, fmt.Errorf("create worktree: %w", err)
+		return nil, fmt.Errorf(
+			"create worktree: %w",
+			err,
+		)
 	}
 
 	// Ensure cleanup happens
@@ -209,7 +258,12 @@ func executeWorkflow(config PRConfig, ctx *workflowContext) (*PRResult, error) {
 	}
 
 	// Create PR
-	return createPRAndFinalize(config, ctx, result, worktreeInfo.Path)
+	return createPRAndFinalize(
+		config,
+		ctx,
+		result,
+		worktreeInfo.Path,
+	)
 }
 
 // cleanupWorktree cleans up the worktree.
@@ -217,7 +271,10 @@ func cleanupWorktree(info *git.WorktreeInfo) {
 	fmt.Println("Cleaning up worktree...")
 
 	if err := git.CleanupWorktree(info); err != nil {
-		fmt.Printf("Warning: worktree cleanup failed: %v\n", err)
+		fmt.Printf(
+			"Warning: worktree cleanup failed: %v\n",
+			err,
+		)
 	}
 }
 
@@ -229,9 +286,15 @@ func executeOperation(
 ) error {
 	switch config.Mode {
 	case ModeArchive:
-		archiveResult, err := executeArchiveInWorktree(config, worktreePath)
+		archiveResult, err := executeArchiveInWorktree(
+			config,
+			worktreePath,
+		)
 		if err != nil {
-			return fmt.Errorf("archive operation failed: %w", err)
+			return fmt.Errorf(
+				"archive operation failed: %w",
+				err,
+			)
 		}
 		result.ArchivePath = archiveResult.ArchivePath
 		result.Counts = archiveResult.Counts
@@ -239,21 +302,33 @@ func executeOperation(
 
 	case ModeProposal:
 		if err := copyChangeToWorktree(config, worktreePath); err != nil {
-			return fmt.Errorf("copy operation failed: %w", err)
+			return fmt.Errorf(
+				"copy operation failed: %w",
+				err,
+			)
 		}
 
 	case ModeRemove:
 		// Copy change to worktree first so git can track the deletion
 		if err := copyChangeToWorktree(config, worktreePath); err != nil {
-			return fmt.Errorf("copy operation failed: %w", err)
+			return fmt.Errorf(
+				"copy operation failed: %w",
+				err,
+			)
 		}
 		// Remove the change directory
 		if err := removeChangeInWorktree(config, worktreePath); err != nil {
-			return fmt.Errorf("remove operation failed: %w", err)
+			return fmt.Errorf(
+				"remove operation failed: %w",
+				err,
+			)
 		}
 
 	default:
-		return fmt.Errorf("unknown mode: %s", config.Mode)
+		return fmt.Errorf(
+			"unknown mode: %s",
+			config.Mode,
+		)
 	}
 
 	return nil
@@ -274,14 +349,22 @@ func commitAndPush(
 		Counts:      result.Counts,
 	}
 
-	commitMsg, err := RenderCommitMessage(commitData)
+	commitMsg, err := RenderCommitMessage(
+		commitData,
+	)
 	if err != nil {
-		return fmt.Errorf("render commit message: %w", err)
+		return fmt.Errorf(
+			"render commit message: %w",
+			err,
+		)
 	}
 
 	// Stage and commit
 	if err := stageAndCommit(worktreePath, commitMsg); err != nil {
-		return fmt.Errorf("stage and commit: %w", err)
+		return fmt.Errorf(
+			"stage and commit: %w",
+			err,
+		)
 	}
 
 	// Push branch
@@ -310,11 +393,20 @@ func createPRAndFinalize(
 
 	prBody, err := RenderPRBody(prData)
 	if err != nil {
-		return nil, fmt.Errorf("render PR body: %w", err)
+		return nil, fmt.Errorf(
+			"render PR body: %w",
+			err,
+		)
 	}
 
-	prTitle := GetPRTitle(config.ChangeID, config.Mode)
-	baseBranchName := strings.TrimPrefix(ctx.baseBranch, "origin/")
+	prTitle := GetPRTitle(
+		config.ChangeID,
+		config.Mode,
+	)
+	baseBranchName := strings.TrimPrefix(
+		ctx.baseBranch,
+		"origin/",
+	)
 
 	// Create PR
 	prURL, manualURL, err := createPR(
@@ -327,7 +419,10 @@ func createPRAndFinalize(
 		worktreePath,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("create PR: %w", err)
+		return nil, fmt.Errorf(
+			"create PR: %w",
+			err,
+		)
 	}
 
 	result.PRURL = prURL
@@ -337,11 +432,16 @@ func createPRAndFinalize(
 }
 
 // validatePrerequisites checks all prerequisites before starting the workflow.
-func validatePrerequisites(config PRConfig) error {
+func validatePrerequisites(
+	config PRConfig,
+) error {
 	// Check we're in a git repository
 	repoRoot, err := git.GetRepoRoot()
 	if err != nil {
-		return fmt.Errorf("not in a git repository: %w", err)
+		return fmt.Errorf(
+			"not in a git repository: %w",
+			err,
+		)
 	}
 
 	// Use provided project root or detected repo root
@@ -361,7 +461,9 @@ func validatePrerequisites(config PRConfig) error {
 	}
 
 	// Check change exists
-	changes, err := discovery.GetActiveChangeIDs(projectRoot)
+	changes, err := discovery.GetActiveChangeIDs(
+		projectRoot,
+	)
 	if err != nil {
 		return fmt.Errorf("list changes: %w", err)
 	}
@@ -383,7 +485,9 @@ func validatePrerequisites(config PRConfig) error {
 	}
 
 	// Check mode is valid
-	if config.Mode != ModeArchive && config.Mode != ModeProposal && config.Mode != ModeRemove {
+	if config.Mode != ModeArchive &&
+		config.Mode != ModeProposal &&
+		config.Mode != ModeRemove {
 		return fmt.Errorf(
 			"invalid mode '%s'; must be 'archive', 'proposal', or 'remove'",
 			config.Mode,

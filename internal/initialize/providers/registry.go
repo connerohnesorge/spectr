@@ -21,7 +21,12 @@ func Register(p Provider) {
 	defer registryLock.Unlock()
 
 	if _, exists := registry[p.ID()]; exists {
-		panic(fmt.Sprintf("provider %q already registered", p.ID()))
+		panic(
+			fmt.Sprintf(
+				"provider %q already registered",
+				p.ID(),
+			),
+		)
 	}
 
 	registry[p.ID()] = p
@@ -41,7 +46,11 @@ func All() []Provider {
 	registryLock.RLock()
 	defer registryLock.RUnlock()
 
-	providers := make([]Provider, 0, len(registry))
+	providers := make(
+		[]Provider,
+		0,
+		len(registry),
+	)
 	for _, p := range registry {
 		providers = append(providers, p)
 	}
@@ -149,7 +158,10 @@ func NewRegistryFromGlobal() *Registry {
 // Register adds a provider to this registry.
 func (r *Registry) Register(p Provider) error {
 	if _, exists := r.providers[p.ID()]; exists {
-		return fmt.Errorf("provider %q already registered", p.ID())
+		return fmt.Errorf(
+			"provider %q already registered",
+			p.ID(),
+		)
 	}
 
 	r.providers[p.ID()] = p
@@ -164,7 +176,11 @@ func (r *Registry) Get(id string) Provider {
 
 // All returns all providers in this registry sorted by priority.
 func (r *Registry) All() []Provider {
-	providers := make([]Provider, 0, len(r.providers))
+	providers := make(
+		[]Provider,
+		0,
+		len(r.providers),
+	)
 	for _, p := range r.providers {
 		providers = append(providers, p)
 	}

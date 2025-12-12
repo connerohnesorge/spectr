@@ -9,17 +9,28 @@ import (
 )
 
 // GetSpecs finds all specs in spectr/specs/ that contain spec.md
-func GetSpecs(projectPath string) ([]string, error) {
-	specsDir := filepath.Join(projectPath, "spectr", "specs")
+func GetSpecs(
+	projectPath string,
+) ([]string, error) {
+	specsDir := filepath.Join(
+		projectPath,
+		"spectr",
+		"specs",
+	)
 
 	// Check if specs directory exists
-	if _, err := os.Stat(specsDir); os.IsNotExist(err) {
+	if _, err := os.Stat(specsDir); os.IsNotExist(
+		err,
+	) {
 		return make([]string, 0), nil
 	}
 
 	entries, err := os.ReadDir(specsDir)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read specs directory: %w", err)
+		return nil, fmt.Errorf(
+			"failed to read specs directory: %w",
+			err,
+		)
 	}
 
 	var specs []string
@@ -35,7 +46,11 @@ func GetSpecs(projectPath string) ([]string, error) {
 		}
 
 		// Check if spec.md exists
-		specPath := filepath.Join(specsDir, entry.Name(), "spec.md")
+		specPath := filepath.Join(
+			specsDir,
+			entry.Name(),
+			"spec.md",
+		)
 		if _, err := os.Stat(specPath); err == nil {
 			specs = append(specs, entry.Name())
 		}
@@ -50,6 +65,8 @@ func GetSpecs(projectPath string) ([]string, error) {
 // GetSpecIDs returns a list of spec IDs (directory names under spectr/specs/)
 // Returns empty slice (not error) if the directory doesn't exist
 // Results are sorted alphabetically for consistency
-func GetSpecIDs(projectRoot string) ([]string, error) {
+func GetSpecIDs(
+	projectRoot string,
+) ([]string, error) {
 	return GetSpecs(projectRoot)
 }

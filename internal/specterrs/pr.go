@@ -28,7 +28,10 @@ func (e *PRPrerequisiteError) Error() string {
 		)
 	}
 
-	return fmt.Sprintf("PR prerequisite failed (%s)", e.Check)
+	return fmt.Sprintf(
+		"PR prerequisite failed (%s)",
+		e.Check,
+	)
 }
 
 func (e *PRPrerequisiteError) Unwrap() error {

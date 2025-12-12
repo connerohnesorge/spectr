@@ -31,7 +31,9 @@ type TablePicker struct {
 }
 
 // NewTablePicker creates a new TablePicker with the given configuration.
-func NewTablePicker(config TableConfig) *TablePicker {
+func NewTablePicker(
+	config TableConfig,
+) *TablePicker {
 	height := config.Height
 	if height == 0 {
 		height = DefaultTableHeight
@@ -63,7 +65,10 @@ func NewTablePicker(config TableConfig) *TablePicker {
 			Key:         "q",
 			Description: "quit",
 			Handler: func(_ table.Row) (tea.Cmd, *ActionResult) {
-				return tea.Quit, &ActionResult{Quit: true, Cancelled: true}
+				return tea.Quit, &ActionResult{
+					Quit:      true,
+					Cancelled: true,
+				}
 			},
 		}
 	}
@@ -74,7 +79,10 @@ func NewTablePicker(config TableConfig) *TablePicker {
 			Key:         keyCtrlC,
 			Description: "",
 			Handler: func(_ table.Row) (tea.Cmd, *ActionResult) {
-				return tea.Quit, &ActionResult{Quit: true, Cancelled: true}
+				return tea.Quit, &ActionResult{
+					Quit:      true,
+					Cancelled: true,
+				}
 			},
 		}
 	}
@@ -90,29 +98,40 @@ func NewTablePicker(config TableConfig) *TablePicker {
 }
 
 // WithAction adds a key action to the picker.
-func (p *TablePicker) WithAction(key, description string, handler ActionHandler) *TablePicker {
+func (p *TablePicker) WithAction(
+	key, description string,
+	handler ActionHandler,
+) *TablePicker {
 	p.actions[key] = Action{
 		Key:         key,
 		Description: description,
 		Handler:     handler,
 	}
 	// Regenerate help text
-	p.helpText = p.generateHelpText(len(p.table.Rows()))
+	p.helpText = p.generateHelpText(
+		len(p.table.Rows()),
+	)
 
 	return p
 }
 
 // WithProjectPath sets the project path for file operations.
-func (p *TablePicker) WithProjectPath(path string) *TablePicker {
+func (p *TablePicker) WithProjectPath(
+	path string,
+) *TablePicker {
 	p.projectPath = path
 	// Regenerate help text
-	p.helpText = p.generateHelpText(len(p.table.Rows()))
+	p.helpText = p.generateHelpText(
+		len(p.table.Rows()),
+	)
 
 	return p
 }
 
 // generateHelpText generates help text from registered actions.
-func (p *TablePicker) generateHelpText(rowCount int) string {
+func (p *TablePicker) generateHelpText(
+	rowCount int,
+) string {
 	var parts []string
 
 	// Always add navigation first
@@ -133,7 +152,14 @@ func (p *TablePicker) generateHelpText(rowCount int) string {
 	for _, key := range keys {
 		action := p.actions[key]
 		if action.Description != "" {
-			parts = append(parts, fmt.Sprintf("%s: %s", key, action.Description))
+			parts = append(
+				parts,
+				fmt.Sprintf(
+					"%s: %s",
+					key,
+					action.Description,
+				),
+			)
 		}
 	}
 
@@ -141,23 +167,49 @@ func (p *TablePicker) generateHelpText(rowCount int) string {
 
 	// Add footer
 	var footerParts []string
-	footerParts = append(footerParts, fmt.Sprintf("showing: %d", rowCount))
+	footerParts = append(
+		footerParts,
+		fmt.Sprintf("showing: %d", rowCount),
+	)
 	if p.projectPath != "" {
-		footerParts = append(footerParts, fmt.Sprintf("project: %s", p.projectPath))
+		footerParts = append(
+			footerParts,
+			fmt.Sprintf(
+				"project: %s",
+				p.projectPath,
+			),
+		)
 	}
 	if p.footerExtra != "" {
-		footerParts = append(footerParts, p.footerExtra)
+		footerParts = append(
+			footerParts,
+			p.footerExtra,
+		)
 	}
 
-	return helpLine + "\n" + strings.Join(footerParts, " | ")
+	return helpLine + "\n" + strings.Join(
+		footerParts,
+		" | ",
+	)
 }
 
 // generateMinimalFooter generates minimal footer with item count, project path, and help hint.
-func (p *TablePicker) generateMinimalFooter(rowCount int) string {
+func (p *TablePicker) generateMinimalFooter(
+	rowCount int,
+) string {
 	var parts []string
-	parts = append(parts, fmt.Sprintf("showing: %d", rowCount))
+	parts = append(
+		parts,
+		fmt.Sprintf("showing: %d", rowCount),
+	)
 	if p.projectPath != "" {
-		parts = append(parts, fmt.Sprintf("project: %s", p.projectPath))
+		parts = append(
+			parts,
+			fmt.Sprintf(
+				"project: %s",
+				p.projectPath,
+			),
+		)
 	}
 	if p.footerExtra != "" {
 		parts = append(parts, p.footerExtra)
@@ -169,7 +221,9 @@ func (p *TablePicker) generateMinimalFooter(rowCount int) string {
 
 // UpdateHelpText regenerates the help text with the current row count.
 func (p *TablePicker) UpdateHelpText() {
-	p.helpText = p.generateHelpText(len(p.table.Rows()))
+	p.helpText = p.generateHelpText(
+		len(p.table.Rows()),
+	)
 }
 
 // SetRows updates the table rows and regenerates help text.
@@ -179,7 +233,9 @@ func (p *TablePicker) SetRows(rows []table.Row) {
 }
 
 // SetFooterExtra sets additional footer text.
-func (p *TablePicker) SetFooterExtra(extra string) {
+func (p *TablePicker) SetFooterExtra(
+	extra string,
+) {
 	p.footerExtra = extra
 	p.UpdateHelpText()
 }
@@ -190,7 +246,9 @@ func (p *TablePicker) Init() tea.Cmd {
 }
 
 // Update implements tea.Model.
-func (p *TablePicker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (p *TablePicker) Update(
+	msg tea.Msg,
+) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
@@ -204,7 +262,9 @@ func (p *TablePicker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Auto-hide help on navigation keys
-		if keyStr == "up" || keyStr == "down" || keyStr == "j" || keyStr == "k" {
+		if keyStr == "up" || keyStr == "down" ||
+			keyStr == "j" ||
+			keyStr == "k" {
 			p.showHelp = false
 		}
 
@@ -221,7 +281,9 @@ func (p *TablePicker) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 // handleAction executes an action handler and processes the result.
-func (p *TablePicker) handleAction(action Action) (tea.Model, tea.Cmd) {
+func (p *TablePicker) handleAction(
+	action Action,
+) (tea.Model, tea.Cmd) {
 	// Get selected row
 	row := p.getSelectedRow()
 
@@ -265,7 +327,10 @@ func (p *TablePicker) View() string {
 
 	view := p.table.View() + "\n" + footer + "\n"
 	if p.err != nil {
-		view += fmt.Sprintf("\nError: %v\n", p.err)
+		view += fmt.Sprintf(
+			"\nError: %v\n",
+			p.err,
+		)
 	}
 
 	return view
@@ -277,20 +342,34 @@ func (p *TablePicker) renderQuitView() string {
 		return "Cancelled.\n"
 	}
 
-	if p.result.ArchiveRequested && p.result.ID != "" {
-		return fmt.Sprintf("Archiving: %s\n", p.result.ID)
+	if p.result.ArchiveRequested &&
+		p.result.ID != "" {
+		return fmt.Sprintf(
+			"Archiving: %s\n",
+			p.result.ID,
+		)
 	}
 
 	if p.result.Copied && p.result.Error == nil {
-		return fmt.Sprintf("✓ Copied: %s\n", p.result.ID)
+		return fmt.Sprintf(
+			"✓ Copied: %s\n",
+			p.result.ID,
+		)
 	}
 
 	if p.result.Error != nil {
 		if p.result.ID != "" {
-			return fmt.Sprintf("Copied: %s\nError: %v\n", p.result.ID, p.result.Error)
+			return fmt.Sprintf(
+				"Copied: %s\nError: %v\n",
+				p.result.ID,
+				p.result.Error,
+			)
 		}
 
-		return fmt.Sprintf("Error: %v\n", p.result.Error)
+		return fmt.Sprintf(
+			"Error: %v\n",
+			p.result.Error,
+		)
 	}
 
 	if p.result.Cancelled {
@@ -327,7 +406,10 @@ func (p *TablePicker) Run() (*ActionResult, error) {
 	prog := tea.NewProgram(p)
 	finalModel, err := prog.Run()
 	if err != nil {
-		return nil, fmt.Errorf("error running interactive mode: %w", err)
+		return nil, fmt.Errorf(
+			"error running interactive mode: %w",
+			err,
+		)
 	}
 
 	if fm, ok := finalModel.(*TablePicker); ok {

@@ -43,7 +43,10 @@ func applyGradient(
 		return text
 	}
 
-	startColor, endColor, err := parseColorPair(colorA, colorB)
+	startColor, endColor, err := parseColorPair(
+		colorA,
+		colorB,
+	)
 	if err != nil {
 		return text // Fallback to unstyled text
 	}
@@ -53,7 +56,12 @@ func applyGradient(
 		return text
 	}
 
-	return renderGradientText(lines, startColor, endColor, totalChars)
+	return renderGradientText(
+		lines,
+		startColor,
+		endColor,
+		totalChars,
+	)
 }
 
 // parseColorPair parses both gradient colors or returns an error
@@ -98,7 +106,10 @@ func renderGradientText(
 		}
 
 		for _, char := range line {
-			ratio := calculateColorRatio(charIndex, totalChars)
+			ratio := calculateColorRatio(
+				charIndex,
+				totalChars,
+			)
 			styledChar := styleCharacter(
 				char,
 				startColor,
@@ -114,12 +125,18 @@ func renderGradientText(
 }
 
 // calculateColorRatio determines interpolation ratio for a position
-func calculateColorRatio(charIndex, totalChars int) float64 {
+func calculateColorRatio(
+	charIndex, totalChars int,
+) float64 {
 	if totalChars == 1 {
 		return singleCharacterRatio
 	}
 
-	return float64(charIndex) / float64(totalChars-1)
+	return float64(
+		charIndex,
+	) / float64(
+		totalChars-1,
+	)
 }
 
 // styleCharacter applies gradient color to a single character
@@ -128,7 +145,10 @@ func styleCharacter(
 	startColor, endColor colorful.Color,
 	ratio float64,
 ) string {
-	interpolated := startColor.BlendLab(endColor, ratio)
+	interpolated := startColor.BlendLab(
+		endColor,
+		ratio,
+	)
 	hexColor := interpolated.Hex()
 
 	return lipgloss.NewStyle().
@@ -138,13 +158,16 @@ func styleCharacter(
 
 // parseColor converts a lipgloss color to a colorful.Color.
 // Supports hex format (#RRGGBB) and ANSI 256 color codes.
-func parseColor(color string) (colorful.Color, error) {
+func parseColor(
+	color string,
+) (colorful.Color, error) {
 	if strings.HasPrefix(color, "#") {
 		return colorful.Hex(color)
 	}
 
 	colorCode, err := strconv.Atoi(color)
-	if err == nil && colorCode >= 0 && colorCode <= ansiMaxColorCode {
+	if err == nil && colorCode >= 0 &&
+		colorCode <= ansiMaxColorCode {
 		return ansi256ToRGB(colorCode), nil
 	}
 
@@ -160,11 +183,13 @@ func ansi256ToRGB(code int) colorful.Color {
 		return getStandardColor(code)
 	}
 
-	if code >= ansiCubeStart && code <= ansiCubeEnd {
+	if code >= ansiCubeStart &&
+		code <= ansiCubeEnd {
 		return getColorCubeColor(code)
 	}
 
-	if code >= ansiGrayscaleStart && code <= ansiGrayscaleEnd {
+	if code >= ansiGrayscaleStart &&
+		code <= ansiGrayscaleEnd {
 		return getGrayscaleColor(code)
 	}
 
@@ -179,26 +204,86 @@ func ansi256ToRGB(code int) colorful.Color {
 // getStandardColor returns one of the 16 standard ANSI colors
 func getStandardColor(code int) colorful.Color {
 	standardColors := [ansiStandardMax]colorful.Color{
-		{R: zeroBrightness, G: zeroBrightness, B: zeroBrightness},
-		{R: standardColorDim, G: zeroBrightness, B: zeroBrightness},
-		{R: zeroBrightness, G: standardColorDim, B: zeroBrightness},
-		{R: standardColorDim, G: standardColorDim, B: zeroBrightness},
-		{R: zeroBrightness, G: zeroBrightness, B: standardColorDim},
-		{R: standardColorDim, G: zeroBrightness, B: standardColorDim},
-		{R: zeroBrightness, G: standardColorDim, B: standardColorDim},
+		{
+			R: zeroBrightness,
+			G: zeroBrightness,
+			B: zeroBrightness,
+		},
+		{
+			R: standardColorDim,
+			G: zeroBrightness,
+			B: zeroBrightness,
+		},
+		{
+			R: zeroBrightness,
+			G: standardColorDim,
+			B: zeroBrightness,
+		},
+		{
+			R: standardColorDim,
+			G: standardColorDim,
+			B: zeroBrightness,
+		},
+		{
+			R: zeroBrightness,
+			G: zeroBrightness,
+			B: standardColorDim,
+		},
+		{
+			R: standardColorDim,
+			G: zeroBrightness,
+			B: standardColorDim,
+		},
+		{
+			R: zeroBrightness,
+			G: standardColorDim,
+			B: standardColorDim,
+		},
 		{
 			R: standardColorBright,
 			G: standardColorBright,
 			B: standardColorBright,
 		},
-		{R: standardColorDim, G: standardColorDim, B: standardColorDim},
-		{R: fullBrightness, G: zeroBrightness, B: zeroBrightness},
-		{R: zeroBrightness, G: fullBrightness, B: zeroBrightness},
-		{R: fullBrightness, G: fullBrightness, B: zeroBrightness},
-		{R: zeroBrightness, G: zeroBrightness, B: fullBrightness},
-		{R: fullBrightness, G: zeroBrightness, B: fullBrightness},
-		{R: zeroBrightness, G: fullBrightness, B: fullBrightness},
-		{R: fullBrightness, G: fullBrightness, B: fullBrightness},
+		{
+			R: standardColorDim,
+			G: standardColorDim,
+			B: standardColorDim,
+		},
+		{
+			R: fullBrightness,
+			G: zeroBrightness,
+			B: zeroBrightness,
+		},
+		{
+			R: zeroBrightness,
+			G: fullBrightness,
+			B: zeroBrightness,
+		},
+		{
+			R: fullBrightness,
+			G: fullBrightness,
+			B: zeroBrightness,
+		},
+		{
+			R: zeroBrightness,
+			G: zeroBrightness,
+			B: fullBrightness,
+		},
+		{
+			R: fullBrightness,
+			G: zeroBrightness,
+			B: fullBrightness,
+		},
+		{
+			R: zeroBrightness,
+			G: fullBrightness,
+			B: fullBrightness,
+		},
+		{
+			R: fullBrightness,
+			G: fullBrightness,
+			B: fullBrightness,
+		},
 	}
 
 	return standardColors[code]
@@ -220,7 +305,13 @@ func getColorCubeColor(code int) colorful.Color {
 
 // getGrayscaleColor returns a color from the 24-step grayscale ramp
 func getGrayscaleColor(code int) colorful.Color {
-	gray := float64(code-ansiGrayscaleStart) / ansiGrayscaleSteps
+	gray := float64(
+		code-ansiGrayscaleStart,
+	) / ansiGrayscaleSteps
 
-	return colorful.Color{R: gray, G: gray, B: gray}
+	return colorful.Color{
+		R: gray,
+		G: gray,
+		B: gray,
+	}
 }

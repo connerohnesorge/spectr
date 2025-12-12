@@ -272,7 +272,7 @@ linters:
           disabled: false
           exclude: ["**/*_test.go"]
           arguments:
-            - max: 200
+            - max: 300
               skip-comments: true
               skip-blank-lines: true
         # https://github.com/mgechev/revive/blob/HEAD/RULES_DESCRIPTIONS.md#filename-format

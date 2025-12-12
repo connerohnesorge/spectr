@@ -21,7 +21,8 @@ type GeminiProvider struct {
 // NewGeminiProvider creates a new Gemini CLI provider.
 func NewGeminiProvider() *GeminiProvider {
 	proposalPath, applyPath := StandardCommandPaths(
-		".gemini/commands", ".toml",
+		".gemini/commands",
+		".toml",
 	)
 
 	return &GeminiProvider{
@@ -45,9 +46,15 @@ func (p *GeminiProvider) Configure(
 	tm TemplateRenderer,
 ) error {
 	if p.HasSlashCommands() {
-		err := p.configureSlashCommands(projectPath, tm)
+		err := p.configureSlashCommands(
+			projectPath,
+			tm,
+		)
 		if err != nil {
-			return fmt.Errorf("failed to configure slash commands: %w", err)
+			return fmt.Errorf(
+				"failed to configure slash commands: %w",
+				err,
+			)
 		}
 	}
 
@@ -75,7 +82,12 @@ func (p *GeminiProvider) configureSlashCommands(
 
 	var err error
 	for _, cmd := range commands {
-		err = p.configureTOMLCommand(projectPath, cmd.name, cmd.description, tm)
+		err = p.configureTOMLCommand(
+			projectPath,
+			cmd.name,
+			cmd.description,
+			tm,
+		)
 		if err != nil {
 			return err
 		}
@@ -89,14 +101,27 @@ func (p *GeminiProvider) configureTOMLCommand(
 	projectPath, cmd, description string,
 	tm TemplateRenderer,
 ) error {
-	filePath := p.getTOMLCommandPath(projectPath, cmd)
+	filePath := p.getTOMLCommandPath(
+		projectPath,
+		cmd,
+	)
 
-	prompt, err := tm.RenderSlashCommand(cmd, DefaultTemplateContext())
+	prompt, err := tm.RenderSlashCommand(
+		cmd,
+		DefaultTemplateContext(),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to render slash command %s: %w", cmd, err)
+		return fmt.Errorf(
+			"failed to render slash command %s: %w",
+			cmd,
+			err,
+		)
 	}
 
-	content := p.generateTOMLContent(description, prompt)
+	content := p.generateTOMLContent(
+		description,
+		prompt,
+	)
 
 	dir := filepath.Dir(filePath)
 	err = EnsureDir(dir)
@@ -108,7 +133,11 @@ func (p *GeminiProvider) configureTOMLCommand(
 		)
 	}
 
-	err = os.WriteFile(filePath, []byte(content), filePerm)
+	err = os.WriteFile(
+		filePath,
+		[]byte(content),
+		filePerm,
+	)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to write TOML command file %s: %w",
@@ -121,7 +150,9 @@ func (p *GeminiProvider) configureTOMLCommand(
 }
 
 // getTOMLCommandPath returns the full path for a TOML command file.
-func (p *GeminiProvider) getTOMLCommandPath(projectPath, cmd string) string {
+func (p *GeminiProvider) getTOMLCommandPath(
+	projectPath, cmd string,
+) string {
 	var relPath string
 	switch cmd {
 	case "proposal":
@@ -138,13 +169,25 @@ func (*GeminiProvider) generateTOMLContent(
 	description, prompt string,
 ) string {
 	// Escape the prompt for TOML multiline string
-	escapedPrompt := strings.ReplaceAll(prompt, `\`, `\\`)
-	escapedPrompt = strings.ReplaceAll(escapedPrompt, `"`, `\"`)
+	escapedPrompt := strings.ReplaceAll(
+		prompt,
+		`\`,
+		`\\`,
+	)
+	escapedPrompt = strings.ReplaceAll(
+		escapedPrompt,
+		`"`,
+		`\"`,
+	)
 
-	return fmt.Sprintf(`# Spectr command for Gemini CLI
+	return fmt.Sprintf(
+		`# Spectr command for Gemini CLI
 description = "%s"
 prompt = """
 %s
 """
-`, description, escapedPrompt)
+`,
+		description,
+		escapedPrompt,
+	)
 }

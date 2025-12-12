@@ -7,7 +7,9 @@ import (
 	"testing"
 )
 
-func TestValidateSpecFile_ValidSpec(t *testing.T) {
+func TestValidateSpecFile_ValidSpec(
+	t *testing.T,
+) {
 	// Create a valid spec file
 	content := `# Test Specification
 
@@ -28,32 +30,58 @@ The system SHALL provide user authentication functionality.
 	// Write to temp file
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
 	// Validate the spec
-	report, err := ValidateSpecFile(specPath, false)
+	report, err := ValidateSpecFile(
+		specPath,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should be valid with no issues
 	if !report.Valid {
-		t.Errorf("Expected valid report, got invalid with %d errors, %d warnings",
-			report.Summary.Errors, report.Summary.Warnings)
+		t.Errorf(
+			"Expected valid report, got invalid with %d errors, %d warnings",
+			report.Summary.Errors,
+			report.Summary.Warnings,
+		)
 		for _, issue := range report.Issues {
-			t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+			t.Logf(
+				"  %s: %s - %s",
+				issue.Level,
+				issue.Path,
+				issue.Message,
+			)
 		}
 	}
 
 	if len(report.Issues) != 0 {
-		t.Errorf("Expected 0 issues, got %d", len(report.Issues))
+		t.Errorf(
+			"Expected 0 issues, got %d",
+			len(report.Issues),
+		)
 	}
 }
 
-func TestValidateSpecFile_MissingRequirements(t *testing.T) {
+func TestValidateSpecFile_MissingRequirements(
+	t *testing.T,
+) {
 	content := `# Test Specification
 
 Some content here but no Requirements section.
@@ -61,40 +89,66 @@ Some content here but no Requirements section.
 
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
-	report, err := ValidateSpecFile(specPath, false)
+	report, err := ValidateSpecFile(
+		specPath,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should be invalid due to missing Requirements
 	if report.Valid {
-		t.Error("Expected invalid report due to missing Requirements section")
+		t.Error(
+			"Expected invalid report due to missing Requirements section",
+		)
 	}
 
 	if report.Summary.Errors != 1 {
-		t.Errorf("Expected 1 error, got %d", report.Summary.Errors)
+		t.Errorf(
+			"Expected 1 error, got %d",
+			report.Summary.Errors,
+		)
 	}
 
 	// Check that the error message is correct
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "Requirements") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"Requirements",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected error about missing Requirements section")
+		t.Error(
+			"Expected error about missing Requirements section",
+		)
 	}
 }
 
-func TestValidateSpecFile_RequirementWithoutShallOrMust(t *testing.T) {
+func TestValidateSpecFile_RequirementWithoutShallOrMust(
+	t *testing.T,
+) {
 	content := `# Test Specification
 
 ## Requirements
@@ -109,40 +163,66 @@ The system provides some feature.
 
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
-	report, err := ValidateSpecFile(specPath, false)
+	report, err := ValidateSpecFile(
+		specPath,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should be valid (warnings don't make it invalid in non-strict mode)
 	if !report.Valid {
-		t.Error("Expected valid report (warnings don't invalidate in normal mode)")
+		t.Error(
+			"Expected valid report (warnings don't invalidate in normal mode)",
+		)
 	}
 
 	if report.Summary.Warnings != 1 {
-		t.Errorf("Expected 1 warning, got %d", report.Summary.Warnings)
+		t.Errorf(
+			"Expected 1 warning, got %d",
+			report.Summary.Warnings,
+		)
 	}
 
 	// Check that the warning message is correct
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelWarning && strings.Contains(issue.Message, "SHALL or MUST") {
+		if issue.Level == LevelWarning &&
+			strings.Contains(
+				issue.Message,
+				"SHALL or MUST",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected warning about missing SHALL or MUST")
+		t.Error(
+			"Expected warning about missing SHALL or MUST",
+		)
 	}
 }
 
-func TestValidateSpecFile_RequirementWithoutScenarios(t *testing.T) {
+func TestValidateSpecFile_RequirementWithoutScenarios(
+	t *testing.T,
+) {
 	content := `# Test Specification
 
 ## Requirements
@@ -153,40 +233,66 @@ The system SHALL provide some feature.
 
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
-	report, err := ValidateSpecFile(specPath, false)
+	report, err := ValidateSpecFile(
+		specPath,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should be valid (warnings don't make it invalid in non-strict mode)
 	if !report.Valid {
-		t.Error("Expected valid report (warnings don't invalidate in normal mode)")
+		t.Error(
+			"Expected valid report (warnings don't invalidate in normal mode)",
+		)
 	}
 
 	if report.Summary.Warnings != 1 {
-		t.Errorf("Expected 1 warning, got %d", report.Summary.Warnings)
+		t.Errorf(
+			"Expected 1 warning, got %d",
+			report.Summary.Warnings,
+		)
 	}
 
 	// Check that the warning message is correct
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelWarning && strings.Contains(issue.Message, "at least one scenario") {
+		if issue.Level == LevelWarning &&
+			strings.Contains(
+				issue.Message,
+				"at least one scenario",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected warning about missing scenarios")
+		t.Error(
+			"Expected warning about missing scenarios",
+		)
 	}
 }
 
-func TestValidateSpecFile_InvalidScenarioFormat(t *testing.T) {
+func TestValidateSpecFile_InvalidScenarioFormat(
+	t *testing.T,
+) {
 	content := `# Test Specification
 
 ## Requirements
@@ -201,46 +307,78 @@ The system SHALL provide some feature.
 
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
-	report, err := ValidateSpecFile(specPath, false)
+	report, err := ValidateSpecFile(
+		specPath,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should be invalid due to malformed scenario (##### instead of ####)
 	if report.Valid {
-		t.Error("Expected invalid report due to malformed scenario format")
+		t.Error(
+			"Expected invalid report due to malformed scenario format",
+		)
 	}
 
 	if report.Summary.Errors == 0 {
-		t.Errorf("Expected at least 1 error, got %d", report.Summary.Errors)
+		t.Errorf(
+			"Expected at least 1 error, got %d",
+			report.Summary.Errors,
+		)
 	}
 
 	// Check that there's an error about scenario format
 	foundFormatError := false
 	foundMissingScenarioWarning := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "#### Scenario:") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"#### Scenario:",
+			) {
 			foundFormatError = true
 		}
-		if issue.Level == LevelWarning && strings.Contains(issue.Message, "at least one scenario") {
+		if issue.Level == LevelWarning &&
+			strings.Contains(
+				issue.Message,
+				"at least one scenario",
+			) {
 			foundMissingScenarioWarning = true
 		}
 	}
 
 	if !foundFormatError {
-		t.Error("Expected error about incorrect scenario format")
+		t.Error(
+			"Expected error about incorrect scenario format",
+		)
 	}
 	if !foundMissingScenarioWarning {
-		t.Error("Expected warning about missing scenarios (since malformed ones don't count)")
+		t.Error(
+			"Expected warning about missing scenarios (since malformed ones don't count)",
+		)
 	}
 }
 
-func TestValidateSpecFile_StrictMode(t *testing.T) {
+func TestValidateSpecFile_StrictMode(
+	t *testing.T,
+) {
 	// This spec has a warning (missing SHALL/MUST in requirement)
 	content := `# Test Specification
 
@@ -256,26 +394,44 @@ The system provides some feature.
 
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
 	// Validate in strict mode
-	report, err := ValidateSpecFile(specPath, true)
+	report, err := ValidateSpecFile(
+		specPath,
+		true,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should be invalid in strict mode (warnings become errors)
 	if report.Valid {
-		t.Error("Expected invalid report in strict mode (warnings become errors)")
+		t.Error(
+			"Expected invalid report in strict mode (warnings become errors)",
+		)
 	}
 
 	// In strict mode, warnings are converted to errors
 	// 1 warning: missing SHALL/MUST in requirement
 	if report.Summary.Errors != 1 {
-		t.Errorf("Expected 1 error in strict mode, got %d", report.Summary.Errors)
+		t.Errorf(
+			"Expected 1 error in strict mode, got %d",
+			report.Summary.Errors,
+		)
 	}
 
 	if report.Summary.Warnings != 0 {
@@ -286,20 +442,35 @@ The system provides some feature.
 	}
 }
 
-func TestValidateSpecFile_FileNotFound(t *testing.T) {
+func TestValidateSpecFile_FileNotFound(
+	t *testing.T,
+) {
 	nonexistentPath := "/tmp/nonexistent-spec-file-12345.md"
 
-	_, err := ValidateSpecFile(nonexistentPath, false)
+	_, err := ValidateSpecFile(
+		nonexistentPath,
+		false,
+	)
 	if err == nil {
-		t.Error("Expected error for nonexistent file, got nil")
+		t.Error(
+			"Expected error for nonexistent file, got nil",
+		)
 	}
 
-	if !strings.Contains(err.Error(), "failed to read spec file") {
-		t.Errorf("Expected file read error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"failed to read spec file",
+	) {
+		t.Errorf(
+			"Expected file read error, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidateSpecFile_MultipleIssues(t *testing.T) {
+func TestValidateSpecFile_MultipleIssues(
+	t *testing.T,
+) {
 	content := `# Test Specification
 
 ## Requirements
@@ -320,19 +491,34 @@ The system MUST provide feature three.
 
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
-	report, err := ValidateSpecFile(specPath, false)
+	report, err := ValidateSpecFile(
+		specPath,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should be valid (only warnings, no errors)
 	if !report.Valid {
-		t.Error("Expected valid report (warnings don't invalidate)")
+		t.Error(
+			"Expected valid report (warnings don't invalidate)",
+		)
 	}
 
 	// Expect:
@@ -344,14 +530,24 @@ The system MUST provide feature three.
 	expectedWarnings := 3
 
 	if report.Summary.Errors != expectedErrors {
-		t.Errorf("Expected %d errors, got %d", expectedErrors, report.Summary.Errors)
+		t.Errorf(
+			"Expected %d errors, got %d",
+			expectedErrors,
+			report.Summary.Errors,
+		)
 	}
 
 	if report.Summary.Warnings != expectedWarnings {
-		t.Errorf("Expected %d warnings, got %d", expectedWarnings, report.Summary.Warnings)
+		t.Errorf(
+			"Expected %d warnings, got %d",
+			expectedWarnings,
+			report.Summary.Warnings,
+		)
 	}
 
-	if len(report.Issues) != expectedErrors+expectedWarnings {
+	if len(
+		report.Issues,
+	) != expectedErrors+expectedWarnings {
 		t.Errorf(
 			"Expected %d total issues, got %d",
 			expectedErrors+expectedWarnings,
@@ -360,7 +556,9 @@ The system MUST provide feature three.
 	}
 }
 
-func TestValidateSpecFile_BoldScenarioFormat(t *testing.T) {
+func TestValidateSpecFile_BoldScenarioFormat(
+	t *testing.T,
+) {
 	content := `# Test Specification
 
 ## Requirements
@@ -375,24 +573,43 @@ The system SHALL provide some feature.
 
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
-	report, err := ValidateSpecFile(specPath, false)
+	report, err := ValidateSpecFile(
+		specPath,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should have error about malformed scenario
 	if report.Valid {
-		t.Error("Expected invalid report due to malformed scenario format")
+		t.Error(
+			"Expected invalid report due to malformed scenario format",
+		)
 	}
 
 	foundFormatError := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "#### Scenario:") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"#### Scenario:",
+			) {
 			foundFormatError = true
 
 			break
@@ -400,11 +617,15 @@ The system SHALL provide some feature.
 	}
 
 	if !foundFormatError {
-		t.Error("Expected error about incorrect scenario format (bold instead of header)")
+		t.Error(
+			"Expected error about incorrect scenario format (bold instead of header)",
+		)
 	}
 }
 
-func TestValidateSpecFile_BulletScenarioFormat(t *testing.T) {
+func TestValidateSpecFile_BulletScenarioFormat(
+	t *testing.T,
+) {
 	content := `# Test Specification
 
 ## Requirements
@@ -419,24 +640,43 @@ The system SHALL provide some feature.
 
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
-	err := os.WriteFile(specPath, []byte(content), 0644)
+	err := os.WriteFile(
+		specPath,
+		[]byte(content),
+		0644,
+	)
 	if err != nil {
-		t.Fatalf("Failed to create test file: %v", err)
+		t.Fatalf(
+			"Failed to create test file: %v",
+			err,
+		)
 	}
 
-	report, err := ValidateSpecFile(specPath, false)
+	report, err := ValidateSpecFile(
+		specPath,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateSpecFile returned error: %v", err)
+		t.Fatalf(
+			"ValidateSpecFile returned error: %v",
+			err,
+		)
 	}
 
 	// Should have error about malformed scenario
 	if report.Valid {
-		t.Error("Expected invalid report due to malformed scenario format")
+		t.Error(
+			"Expected invalid report due to malformed scenario format",
+		)
 	}
 
 	foundFormatError := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "#### Scenario:") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"#### Scenario:",
+			) {
 			foundFormatError = true
 
 			break
@@ -444,6 +684,8 @@ The system SHALL provide some feature.
 	}
 
 	if !foundFormatError {
-		t.Error("Expected error about incorrect scenario format (bullet instead of header)")
+		t.Error(
+			"Expected error about incorrect scenario format (bullet instead of header)",
+		)
 	}
 }

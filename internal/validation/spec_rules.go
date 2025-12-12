@@ -11,11 +11,17 @@ import (
 // for filesystem issues
 //
 //nolint:revive // strictMode is intentional control flag
-func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
+func ValidateSpecFile(
+	path string,
+	strictMode bool,
+) (*ValidationReport, error) {
 	// Read the file
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read spec file: %w", err)
+		return nil, fmt.Errorf(
+			"failed to read spec file: %w",
+			err,
+		)
 	}
 
 	contentStr := string(content)
@@ -38,33 +44,52 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 
 	// Rule 2-5: Validate requirements (only if Requirements section exists)
 	if hasRequirements {
-		requirements := ExtractRequirements(requirementsContent)
-		requirementsLine := findSectionLine(lines, "Requirements")
+		requirements := ExtractRequirements(
+			requirementsContent,
+		)
+		requirementsLine := findSectionLine(
+			lines,
+			"Requirements",
+		)
 
 		for _, req := range requirements {
-			reqPath := fmt.Sprintf("%s: Requirement '%s'", path, req.Name)
-			reqLine := findRequirementLine(lines, req.Name, requirementsLine)
+			reqPath := fmt.Sprintf(
+				"%s: Requirement '%s'",
+				path,
+				req.Name,
+			)
+			reqLine := findRequirementLine(
+				lines,
+				req.Name,
+				requirementsLine,
+			)
 
 			// Rule 2: Check for SHALL or MUST (WARNING if missing)
 			if !ContainsShallOrMust(req.Content) {
-				issues = append(issues, ValidationIssue{
-					Level: LevelWarning,
-					Path:  reqPath,
-					Line:  reqLine,
-					Message: "Requirement should contain SHALL or " +
-						"MUST to indicate normative requirement",
-				})
+				issues = append(
+					issues,
+					ValidationIssue{
+						Level: LevelWarning,
+						Path:  reqPath,
+						Line:  reqLine,
+						Message: "Requirement should contain SHALL or " +
+							"MUST to indicate normative requirement",
+					},
+				)
 			}
 
 			// Rule 3: Check for at least one scenario (WARNING)
 			if len(req.Scenarios) == 0 {
-				issues = append(issues, ValidationIssue{
-					Level: LevelWarning,
-					Path:  reqPath,
-					Line:  reqLine,
-					Message: "Requirement should have " +
-						"at least one scenario",
-				})
+				issues = append(
+					issues,
+					ValidationIssue{
+						Level: LevelWarning,
+						Path:  reqPath,
+						Line:  reqLine,
+						Message: "Requirement should have " +
+							"at least one scenario",
+					},
+				)
 			}
 
 			// Rule 4: Check scenario format (ERROR if wrong format)
@@ -73,15 +98,23 @@ func ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error) {
 			// match #### Scenario: format, they won't be extracted
 			// We need to explicitly check for malformed scenarios
 			if len(req.Scenarios) == 0 &&
-				hasMalformedScenarios(req.Content) {
-				malformedLine := findMalformedScenarioLine(lines, reqLine)
-				issues = append(issues, ValidationIssue{
-					Level: LevelError,
-					Path:  reqPath,
-					Line:  malformedLine,
-					Message: "Scenarios must use '#### Scenario:' " +
-						"format (4 hashtags followed by 'Scenario:')",
-				})
+				hasMalformedScenarios(
+					req.Content,
+				) {
+				malformedLine := findMalformedScenarioLine(
+					lines,
+					reqLine,
+				)
+				issues = append(
+					issues,
+					ValidationIssue{
+						Level: LevelError,
+						Path:  reqPath,
+						Line:  malformedLine,
+						Message: "Scenarios must use '#### Scenario:' " +
+							"format (4 hashtags followed by 'Scenario:')",
+					},
+				)
 			}
 		}
 	}
@@ -124,12 +157,18 @@ func hasMalformedScenarios(content string) bool {
 	}
 
 	// Check for ##### Scenario: (5 hashtags - wrong)
-	if containsPattern(content, "##### Scenario:") {
+	if containsPattern(
+		content,
+		"##### Scenario:",
+	) {
 		return true
 	}
 
 	// Check for ###### Scenario: (6 hashtags - wrong)
-	if containsPattern(content, "###### Scenario:") {
+	if containsPattern(
+		content,
+		"###### Scenario:",
+	) {
 		return true
 	}
 
@@ -147,17 +186,25 @@ func hasMalformedScenarios(content string) bool {
 }
 
 // containsPattern checks if content contains the given pattern
-func containsPattern(content, pattern string) bool {
+func containsPattern(
+	content, pattern string,
+) bool {
 	return len(content) > 0 && len(pattern) > 0 &&
 		strings.Contains(content, pattern)
 }
 
 // findSectionLine finds the line number where a section header appears
 // Returns 1 if not found
-func findSectionLine(lines []string, sectionName string) int {
+func findSectionLine(
+	lines []string,
+	sectionName string,
+) int {
 	sectionHeader := "## " + sectionName
 	for i, line := range lines {
-		if strings.HasPrefix(strings.TrimSpace(line), sectionHeader) {
+		if strings.HasPrefix(
+			strings.TrimSpace(line),
+			sectionHeader,
+		) {
 			return i + 1 // Line numbers are 1-indexed
 		}
 	}
@@ -168,7 +215,11 @@ func findSectionLine(lines []string, sectionName string) int {
 // findRequirementLine finds the line number where a requirement appears
 // Searches from startLine onwards
 // Returns startLine if not found
-func findRequirementLine(lines []string, reqName string, startLine int) int {
+func findRequirementLine(
+	lines []string,
+	reqName string,
+	startLine int,
+) int {
 	reqHeader := "### Requirement: " + reqName
 	// Start searching from startLine (convert to 0-indexed)
 	searchStart := startLine - 1
@@ -188,7 +239,10 @@ func findRequirementLine(lines []string, reqName string, startLine int) int {
 // findMalformedScenarioLine finds the line number of a malformed scenario
 // Searches from reqLine onwards
 // Returns reqLine if not found
-func findMalformedScenarioLine(lines []string, reqLine int) int {
+func findMalformedScenarioLine(
+	lines []string,
+	reqLine int,
+) int {
 	// Start searching from reqLine (convert to 0-indexed)
 	searchStart := reqLine - 1
 	if searchStart < 0 {

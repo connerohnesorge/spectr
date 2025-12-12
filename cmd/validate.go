@@ -14,13 +14,13 @@ import (
 // ValidateCmd represents the validate command
 type ValidateCmd struct {
 	ItemName      *string `arg:"" optional:"" predictor:"item"`
-	Strict        bool    `name:"strict" help:"Treat warnings as errors"`
-	JSON          bool    `name:"json" help:"Output as JSON"`
-	All           bool    `name:"all" help:"Validate all"`
-	Changes       bool    `name:"changes" help:"Validate changes"`
-	Specs         bool    `name:"specs" help:"Validate specs"`
-	Type          *string `name:"type" enum:"change,spec" predictor:"itemType"`
-	NoInteractive bool    `name:"no-interactive" help:"No prompts"`
+	Strict        bool    `                                        name:"strict"         help:"Treat warnings as errors"`                    //nolint:lll,revive
+	JSON          bool    `                                        name:"json"           help:"Output as JSON"`                              //nolint:lll,revive
+	All           bool    `                                        name:"all"            help:"Validate all"`                                //nolint:lll,revive
+	Changes       bool    `                                        name:"changes"        help:"Validate changes"`                            //nolint:lll,revive
+	Specs         bool    `                                        name:"specs"          help:"Validate specs"`                              //nolint:lll,revive
+	Type          *string `                   predictor:"itemType" name:"type"                                           enum:"change,spec"` //nolint:lll,revive
+	NoInteractive bool    `                                        name:"no-interactive" help:"No prompts"`                                  //nolint:lll,revive
 }
 
 // Run executes the validate command
@@ -28,7 +28,10 @@ func (c *ValidateCmd) Run() error {
 	// Get current working directory
 	projectPath, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed to get current directory: %w", err)
+		return fmt.Errorf(
+			"failed to get current directory: %w",
+			err,
+		)
 	}
 
 	// Check if bulk validation flags are set
@@ -43,12 +46,17 @@ func (c *ValidateCmd) Run() error {
 		}
 		// Launch interactive mode
 		return validation.RunInteractiveValidation(
-			projectPath, c.Strict, c.JSON,
+			projectPath,
+			c.Strict,
+			c.JSON,
 		)
 	}
 
 	// Direct validation
-	return c.runDirectValidation(projectPath, *c.ItemName)
+	return c.runDirectValidation(
+		projectPath,
+		*c.ItemName,
+	)
 }
 
 // runDirectValidation validates a single item (change or spec)
@@ -56,7 +64,9 @@ func (c *ValidateCmd) runDirectValidation(
 	projectPath, itemName string,
 ) error {
 	// Normalize the item path to extract ID and infer type
-	normalizedID, inferredType := discovery.NormalizeItemPath(itemName)
+	normalizedID, inferredType := discovery.NormalizeItemPath(
+		itemName,
+	)
 
 	// Use inferred type if available, otherwise fall back to explicit type flag
 	typeHint := c.Type
@@ -81,7 +91,10 @@ func (c *ValidateCmd) runDirectValidation(
 		info.ItemType,
 	)
 	if err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+		return fmt.Errorf(
+			"validation failed: %w",
+			err,
+		)
 	}
 
 	// Print report
@@ -103,11 +116,15 @@ func (c *ValidateCmd) runDirectValidation(
 }
 
 // runBulkValidation validates multiple items based on flags
-func (c *ValidateCmd) runBulkValidation(projectPath string) error {
+func (c *ValidateCmd) runBulkValidation(
+	projectPath string,
+) error {
 	validator := validation.NewValidator(c.Strict)
 
 	// Determine what to validate
-	items, err := c.getItemsToValidate(projectPath)
+	items, err := c.getItemsToValidate(
+		projectPath,
+	)
 	if err != nil {
 		return err
 	}
@@ -117,7 +134,10 @@ func (c *ValidateCmd) runBulkValidation(projectPath string) error {
 	}
 
 	// Validate all items
-	results, hasFailures := c.validateAllItems(validator, items)
+	results, hasFailures := c.validateAllItems(
+		validator,
+		items,
+	)
 
 	// Print results
 	if c.JSON {
@@ -127,7 +147,9 @@ func (c *ValidateCmd) runBulkValidation(projectPath string) error {
 	}
 
 	if hasFailures {
-		return &specterrs.MultiValidationFailedError{ItemCount: len(items)}
+		return &specterrs.MultiValidationFailedError{
+			ItemCount: len(items),
+		}
 	}
 
 	return nil
@@ -141,9 +163,13 @@ func (c *ValidateCmd) getItemsToValidate(
 	case c.All:
 		return validation.GetAllItems(projectPath)
 	case c.Changes:
-		return validation.GetChangeItems(projectPath)
+		return validation.GetChangeItems(
+			projectPath,
+		)
 	case c.Specs:
-		return validation.GetSpecItems(projectPath)
+		return validation.GetSpecItems(
+			projectPath,
+		)
 	default:
 		return nil, nil
 	}
@@ -165,11 +191,18 @@ func (*ValidateCmd) validateAllItems(
 	validator *validation.Validator,
 	items []validation.ValidationItem,
 ) ([]validation.BulkResult, bool) {
-	results := make([]validation.BulkResult, 0, len(items))
+	results := make(
+		[]validation.BulkResult,
+		0,
+		len(items),
+	)
 	hasFailures := false
 
 	for _, item := range items {
-		result, err := validation.ValidateSingleItem(validator, item)
+		result, err := validation.ValidateSingleItem(
+			validator,
+			item,
+		)
 		results = append(results, result)
 
 		if err != nil || !result.Valid {

@@ -10,7 +10,11 @@ import (
 func TestGetActiveChanges(t *testing.T) {
 	// Create temporary test directory
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 
 	// Create test structure
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
@@ -18,13 +22,23 @@ func TestGetActiveChanges(t *testing.T) {
 	}
 
 	// Create active changes
-	testChanges := []string{"add-feature", "fix-bug", "update-docs"}
+	testChanges := []string{
+		"add-feature",
+		"fix-bug",
+		"update-docs",
+	}
 	for _, name := range testChanges {
-		changeDir := filepath.Join(changesDir, name)
+		changeDir := filepath.Join(
+			changesDir,
+			name,
+		)
 		if err := os.MkdirAll(changeDir, testDirPerm); err != nil {
 			t.Fatal(err)
 		}
-		proposalPath := filepath.Join(changeDir, "proposal.md")
+		proposalPath := filepath.Join(
+			changeDir,
+			"proposal.md",
+		)
 		if err := os.WriteFile(
 			proposalPath,
 			[]byte("# Test"),
@@ -35,7 +49,11 @@ func TestGetActiveChanges(t *testing.T) {
 	}
 
 	// Create archive directory (should be excluded)
-	archiveDir := filepath.Join(changesDir, "archive", "old-change")
+	archiveDir := filepath.Join(
+		changesDir,
+		"archive",
+		"old-change",
+	)
 	if err := os.MkdirAll(archiveDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +66,10 @@ func TestGetActiveChanges(t *testing.T) {
 	}
 
 	// Create hidden directory (should be excluded)
-	hiddenDir := filepath.Join(changesDir, ".hidden")
+	hiddenDir := filepath.Join(
+		changesDir,
+		".hidden",
+	)
 	if err := os.MkdirAll(hiddenDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +82,10 @@ func TestGetActiveChanges(t *testing.T) {
 	}
 
 	// Create directory without proposal.md (should be excluded)
-	emptyDir := filepath.Join(changesDir, "incomplete")
+	emptyDir := filepath.Join(
+		changesDir,
+		"incomplete",
+	)
 	if err := os.MkdirAll(emptyDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
@@ -69,11 +93,18 @@ func TestGetActiveChanges(t *testing.T) {
 	// Test discovery
 	changes, err := GetActiveChanges(tmpDir)
 	if err != nil {
-		t.Fatalf("GetActiveChanges failed: %v", err)
+		t.Fatalf(
+			"GetActiveChanges failed: %v",
+			err,
+		)
 	}
 
 	if len(changes) != len(testChanges) {
-		t.Errorf("Expected %d changes, got %d", len(testChanges), len(changes))
+		t.Errorf(
+			"Expected %d changes, got %d",
+			len(testChanges),
+			len(changes),
+		)
 	}
 
 	// Verify all expected changes are found
@@ -83,46 +114,77 @@ func TestGetActiveChanges(t *testing.T) {
 	}
 	for _, expected := range testChanges {
 		if !changeMap[expected] {
-			t.Errorf("Expected change %s not found", expected)
+			t.Errorf(
+				"Expected change %s not found",
+				expected,
+			)
 		}
 	}
 
 	// Verify archived and hidden changes are not included
 	if changeMap["old-change"] {
-		t.Error("Archived change should not be included")
+		t.Error(
+			"Archived change should not be included",
+		)
 	}
 	if changeMap[".hidden"] {
-		t.Error("Hidden directory should not be included")
+		t.Error(
+			"Hidden directory should not be included",
+		)
 	}
 	if changeMap["incomplete"] {
-		t.Error("Incomplete change should not be included")
+		t.Error(
+			"Incomplete change should not be included",
+		)
 	}
 }
 
-func TestGetActiveChanges_EmptyDirectory(t *testing.T) {
+func TestGetActiveChanges_EmptyDirectory(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 	changes, err := GetActiveChanges(tmpDir)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if len(changes) != 0 {
-		t.Errorf("Expected empty result, got %d changes", len(changes))
+		t.Errorf(
+			"Expected empty result, got %d changes",
+			len(changes),
+		)
 	}
 }
-func TestGetActiveChangeIDs_EmptyDirectory(t *testing.T) {
+
+func TestGetActiveChangeIDs_EmptyDirectory(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 	changes, err := GetActiveChangeIDs(tmpDir)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if len(changes) != 0 {
-		t.Errorf("Expected empty result, got %d changes", len(changes))
+		t.Errorf(
+			"Expected empty result, got %d changes",
+			len(changes),
+		)
 	}
 }
+
 func TestGetActiveChangeIDs(t *testing.T) {
 	// Create temporary test directory
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 
 	// Create test structure
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
@@ -136,24 +198,44 @@ func TestGetActiveChangeIDs(t *testing.T) {
 		"middle-feature",
 	}
 	for _, name := range testChanges {
-		createChangeDir(t, changesDir, name, "# Test")
+		createChangeDir(
+			t,
+			changesDir,
+			name,
+			"# Test",
+		)
 	}
 
 	// Create archive directory (should be excluded)
-	archiveDir := filepath.Join(changesDir, "archive")
+	archiveDir := filepath.Join(
+		changesDir,
+		"archive",
+	)
 	if err := os.MkdirAll(archiveDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
-	createChangeDir(t, archiveDir, "archived-change", "# Archived")
+	createChangeDir(
+		t,
+		archiveDir,
+		"archived-change",
+		"# Archived",
+	)
 
 	// Test GetActiveChangeIDs
 	changes, err := GetActiveChangeIDs(tmpDir)
 	if err != nil {
-		t.Fatalf("GetActiveChangeIDs failed: %v", err)
+		t.Fatalf(
+			"GetActiveChangeIDs failed: %v",
+			err,
+		)
 	}
 
 	if len(changes) != len(testChanges) {
-		t.Errorf("Expected %d changes, got %d", len(testChanges), len(changes))
+		t.Errorf(
+			"Expected %d changes, got %d",
+			len(testChanges),
+			len(changes),
+		)
 	}
 
 	// Verify sorting
@@ -163,204 +245,419 @@ func TestGetActiveChangeIDs(t *testing.T) {
 		"middle-feature",
 		"zebra-feature",
 	}
-	verifyOrdering(t, changes, expectedSorted, "change")
+	verifyOrdering(
+		t,
+		changes,
+		expectedSorted,
+		"change",
+	)
 
 	// Verify archive is excluded
-	verifyChangesExcluded(t, changes, []string{"archived-change"})
+	verifyChangesExcluded(
+		t,
+		changes,
+		[]string{"archived-change"},
+	)
 }
 
-func TestResolveChangeID_ExactMatch(t *testing.T) {
+func TestResolveChangeID_ExactMatch(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
-	createChangeDir(t, changesDir, "add-feature", "# Test")
-	createChangeDir(t, changesDir, "add-feature-extended", "# Test")
+	createChangeDir(
+		t,
+		changesDir,
+		"add-feature",
+		"# Test",
+	)
+	createChangeDir(
+		t,
+		changesDir,
+		"add-feature-extended",
+		"# Test",
+	)
 
-	result, err := ResolveChangeID("add-feature", tmpDir)
+	result, err := ResolveChangeID(
+		"add-feature",
+		tmpDir,
+	)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if result.ChangeID != "add-feature" {
-		t.Errorf("Expected 'add-feature', got '%s'", result.ChangeID)
+		t.Errorf(
+			"Expected 'add-feature', got '%s'",
+			result.ChangeID,
+		)
 	}
 	if result.PartialMatch {
-		t.Error("Expected PartialMatch to be false for exact match")
+		t.Error(
+			"Expected PartialMatch to be false for exact match",
+		)
 	}
 }
 
-func TestResolveChangeID_UniquePrefixMatch(t *testing.T) {
+func TestResolveChangeID_UniquePrefixMatch(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
-	createChangeDir(t, changesDir, "refactor-unified-interactive-tui", "# Test")
-	createChangeDir(t, changesDir, "add-feature", "# Test")
+	createChangeDir(
+		t,
+		changesDir,
+		"refactor-unified-interactive-tui",
+		"# Test",
+	)
+	createChangeDir(
+		t,
+		changesDir,
+		"add-feature",
+		"# Test",
+	)
 
-	result, err := ResolveChangeID("refactor", tmpDir)
+	result, err := ResolveChangeID(
+		"refactor",
+		tmpDir,
+	)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if result.ChangeID != "refactor-unified-interactive-tui" {
-		t.Errorf("Expected 'refactor-unified-interactive-tui', got '%s'", result.ChangeID)
+		t.Errorf(
+			"Expected 'refactor-unified-interactive-tui', got '%s'",
+			result.ChangeID,
+		)
 	}
 	if !result.PartialMatch {
-		t.Error("Expected PartialMatch to be true for prefix match")
+		t.Error(
+			"Expected PartialMatch to be true for prefix match",
+		)
 	}
 }
 
-func TestResolveChangeID_UniqueSubstringMatch(t *testing.T) {
+func TestResolveChangeID_UniqueSubstringMatch(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
-	createChangeDir(t, changesDir, "refactor-unified-interactive-tui", "# Test")
-	createChangeDir(t, changesDir, "add-feature", "# Test")
+	createChangeDir(
+		t,
+		changesDir,
+		"refactor-unified-interactive-tui",
+		"# Test",
+	)
+	createChangeDir(
+		t,
+		changesDir,
+		"add-feature",
+		"# Test",
+	)
 
-	result, err := ResolveChangeID("unified", tmpDir)
+	result, err := ResolveChangeID(
+		"unified",
+		tmpDir,
+	)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if result.ChangeID != "refactor-unified-interactive-tui" {
-		t.Errorf("Expected 'refactor-unified-interactive-tui', got '%s'", result.ChangeID)
+		t.Errorf(
+			"Expected 'refactor-unified-interactive-tui', got '%s'",
+			result.ChangeID,
+		)
 	}
 	if !result.PartialMatch {
-		t.Error("Expected PartialMatch to be true for substring match")
+		t.Error(
+			"Expected PartialMatch to be true for substring match",
+		)
 	}
 }
 
-func TestResolveChangeID_MultiplePrefixMatches(t *testing.T) {
+func TestResolveChangeID_MultiplePrefixMatches(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
-	createChangeDir(t, changesDir, "add-feature", "# Test")
-	createChangeDir(t, changesDir, "add-hotkey", "# Test")
+	createChangeDir(
+		t,
+		changesDir,
+		"add-feature",
+		"# Test",
+	)
+	createChangeDir(
+		t,
+		changesDir,
+		"add-hotkey",
+		"# Test",
+	)
 
 	_, err := ResolveChangeID("add", tmpDir)
 	if err == nil {
-		t.Fatal("Expected error for ambiguous prefix match")
+		t.Fatal(
+			"Expected error for ambiguous prefix match",
+		)
 	}
 
 	expectedMsg := "ambiguous ID 'add' matches multiple changes: add-feature, add-hotkey"
 	if err.Error() != expectedMsg {
-		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+		t.Errorf(
+			"Expected error message '%s', got '%s'",
+			expectedMsg,
+			err.Error(),
+		)
 	}
 }
 
-func TestResolveChangeID_MultipleSubstringMatches(t *testing.T) {
+func TestResolveChangeID_MultipleSubstringMatches(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
-	createChangeDir(t, changesDir, "add-search-hotkey", "# Test")
-	createChangeDir(t, changesDir, "update-search-ui", "# Test")
+	createChangeDir(
+		t,
+		changesDir,
+		"add-search-hotkey",
+		"# Test",
+	)
+	createChangeDir(
+		t,
+		changesDir,
+		"update-search-ui",
+		"# Test",
+	)
 
 	_, err := ResolveChangeID("search", tmpDir)
 	if err == nil {
-		t.Fatal("Expected error for ambiguous substring match")
+		t.Fatal(
+			"Expected error for ambiguous substring match",
+		)
 	}
 
 	expectedMsg := "ambiguous ID 'search' matches multiple changes: add-search-hotkey, update-search-ui"
 	if err.Error() != expectedMsg {
-		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+		t.Errorf(
+			"Expected error message '%s', got '%s'",
+			expectedMsg,
+			err.Error(),
+		)
 	}
 }
 
 func TestResolveChangeID_NoMatch(t *testing.T) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
-	createChangeDir(t, changesDir, "add-feature", "# Test")
+	createChangeDir(
+		t,
+		changesDir,
+		"add-feature",
+		"# Test",
+	)
 
-	_, err := ResolveChangeID("nonexistent", tmpDir)
+	_, err := ResolveChangeID(
+		"nonexistent",
+		tmpDir,
+	)
 	if err == nil {
 		t.Fatal("Expected error for no match")
 	}
 
 	expectedMsg := "no change found matching 'nonexistent'"
 	if err.Error() != expectedMsg {
-		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+		t.Errorf(
+			"Expected error message '%s', got '%s'",
+			expectedMsg,
+			err.Error(),
+		)
 	}
 }
 
-func TestResolveChangeID_CaseInsensitive(t *testing.T) {
+func TestResolveChangeID_CaseInsensitive(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
-	createChangeDir(t, changesDir, "refactor-unified-interactive-tui", "# Test")
+	createChangeDir(
+		t,
+		changesDir,
+		"refactor-unified-interactive-tui",
+		"# Test",
+	)
 
 	// Test uppercase prefix
-	result, err := ResolveChangeID("REFACTOR", tmpDir)
+	result, err := ResolveChangeID(
+		"REFACTOR",
+		tmpDir,
+	)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if result.ChangeID != "refactor-unified-interactive-tui" {
-		t.Errorf("Expected 'refactor-unified-interactive-tui', got '%s'", result.ChangeID)
+		t.Errorf(
+			"Expected 'refactor-unified-interactive-tui', got '%s'",
+			result.ChangeID,
+		)
 	}
 
 	// Test mixed case substring
-	result, err = ResolveChangeID("Unified", tmpDir)
+	result, err = ResolveChangeID(
+		"Unified",
+		tmpDir,
+	)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if result.ChangeID != "refactor-unified-interactive-tui" {
-		t.Errorf("Expected 'refactor-unified-interactive-tui', got '%s'", result.ChangeID)
+		t.Errorf(
+			"Expected 'refactor-unified-interactive-tui', got '%s'",
+			result.ChangeID,
+		)
 	}
 }
 
-func TestResolveChangeID_PrefixPreferredOverSubstring(t *testing.T) {
+func TestResolveChangeID_PrefixPreferredOverSubstring(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
-	createChangeDir(t, changesDir, "add-feature", "# Test")
-	createChangeDir(t, changesDir, "update-add-button", "# Test")
+	createChangeDir(
+		t,
+		changesDir,
+		"add-feature",
+		"# Test",
+	)
+	createChangeDir(
+		t,
+		changesDir,
+		"update-add-button",
+		"# Test",
+	)
 
 	result, err := ResolveChangeID("add", tmpDir)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 	if result.ChangeID != "add-feature" {
-		t.Errorf("Expected 'add-feature' (prefix match), got '%s'", result.ChangeID)
+		t.Errorf(
+			"Expected 'add-feature' (prefix match), got '%s'",
+			result.ChangeID,
+		)
 	}
 	if !result.PartialMatch {
-		t.Error("Expected PartialMatch to be true")
+		t.Error(
+			"Expected PartialMatch to be true",
+		)
 	}
 }
 
-func TestResolveChangeID_EmptyChanges(t *testing.T) {
+func TestResolveChangeID_EmptyChanges(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+	)
 	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
 		t.Fatal(err)
 	}
 
 	_, err := ResolveChangeID("anything", tmpDir)
 	if err == nil {
-		t.Fatal("Expected error for empty changes directory")
+		t.Fatal(
+			"Expected error for empty changes directory",
+		)
 	}
 
 	expectedMsg := "no change found matching 'anything'"
 	if err.Error() != expectedMsg {
-		t.Errorf("Expected error message '%s', got '%s'", expectedMsg, err.Error())
+		t.Errorf(
+			"Expected error message '%s', got '%s'",
+			expectedMsg,
+			err.Error(),
+		)
 	}
 }

@@ -9,7 +9,11 @@ import (
 )
 
 func TestNewMenuPicker(t *testing.T) {
-	choices := []string{"Option 1", "Option 2", "Option 3"}
+	choices := []string{
+		"Option 1",
+		"Option 2",
+		"Option 3",
+	}
 
 	config := MenuConfig{
 		Title:   "Test Menu",
@@ -23,15 +27,27 @@ func TestNewMenuPicker(t *testing.T) {
 	}
 
 	if menu.title != "Test Menu" {
-		t.Errorf("title = %q, want %q", menu.title, "Test Menu")
+		t.Errorf(
+			"title = %q, want %q",
+			menu.title,
+			"Test Menu",
+		)
 	}
 
 	if len(menu.choices) != 3 {
-		t.Errorf("choices length = %d, want %d", len(menu.choices), 3)
+		t.Errorf(
+			"choices length = %d, want %d",
+			len(menu.choices),
+			3,
+		)
 	}
 
 	if menu.cursor != 0 {
-		t.Errorf("initial cursor = %d, want %d", menu.cursor, 0)
+		t.Errorf(
+			"initial cursor = %d, want %d",
+			menu.cursor,
+			0,
+		)
 	}
 }
 
@@ -49,7 +65,11 @@ func TestMenuPicker_Navigation(t *testing.T) {
 	menu = model.(*MenuPicker)
 
 	if menu.cursor != 1 {
-		t.Errorf("After down, cursor = %d, want %d", menu.cursor, 1)
+		t.Errorf(
+			"After down, cursor = %d, want %d",
+			menu.cursor,
+			1,
+		)
 	}
 
 	// Test up navigation
@@ -58,24 +78,42 @@ func TestMenuPicker_Navigation(t *testing.T) {
 	menu = model.(*MenuPicker)
 
 	if menu.cursor != 0 {
-		t.Errorf("After up, cursor = %d, want %d", menu.cursor, 0)
+		t.Errorf(
+			"After up, cursor = %d, want %d",
+			menu.cursor,
+			0,
+		)
 	}
 
 	// Test vim-style navigation
-	jMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}}
+	jMsg := tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune{'j'},
+	}
 	model, _ = menu.Update(jMsg)
 	menu = model.(*MenuPicker)
 
 	if menu.cursor != 1 {
-		t.Errorf("After 'j', cursor = %d, want %d", menu.cursor, 1)
+		t.Errorf(
+			"After 'j', cursor = %d, want %d",
+			menu.cursor,
+			1,
+		)
 	}
 
-	kMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}}
+	kMsg := tea.KeyMsg{
+		Type:  tea.KeyRunes,
+		Runes: []rune{'k'},
+	}
 	model, _ = menu.Update(kMsg)
 	menu = model.(*MenuPicker)
 
 	if menu.cursor != 0 {
-		t.Errorf("After 'k', cursor = %d, want %d", menu.cursor, 0)
+		t.Errorf(
+			"After 'k', cursor = %d, want %d",
+			menu.cursor,
+			0,
+		)
 	}
 }
 
@@ -93,7 +131,10 @@ func TestMenuPicker_Boundaries(t *testing.T) {
 	menu = model.(*MenuPicker)
 
 	if menu.cursor != 0 {
-		t.Errorf("Cursor should stay at 0, got %d", menu.cursor)
+		t.Errorf(
+			"Cursor should stay at 0, got %d",
+			menu.cursor,
+		)
 	}
 
 	// Go to bottom
@@ -102,7 +143,10 @@ func TestMenuPicker_Boundaries(t *testing.T) {
 	menu = model.(*MenuPicker)
 
 	if menu.cursor != 1 {
-		t.Errorf("Cursor should be at 1, got %d", menu.cursor)
+		t.Errorf(
+			"Cursor should be at 1, got %d",
+			menu.cursor,
+		)
 	}
 
 	// Try to go down past end
@@ -110,7 +154,10 @@ func TestMenuPicker_Boundaries(t *testing.T) {
 	menu = model.(*MenuPicker)
 
 	if menu.cursor != 1 {
-		t.Errorf("Cursor should stay at 1, got %d", menu.cursor)
+		t.Errorf(
+			"Cursor should stay at 1, got %d",
+			menu.cursor,
+		)
 	}
 }
 
@@ -124,8 +171,17 @@ func TestMenuPicker_Quit(t *testing.T) {
 		name string
 		key  tea.KeyMsg
 	}{
-		{"q key", tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}}},
-		{"ctrl+c", tea.KeyMsg{Type: tea.KeyCtrlC}},
+		{
+			"q key",
+			tea.KeyMsg{
+				Type:  tea.KeyRunes,
+				Runes: []rune{'q'},
+			},
+		},
+		{
+			"ctrl+c",
+			tea.KeyMsg{Type: tea.KeyCtrlC},
+		},
 		{"esc", tea.KeyMsg{Type: tea.KeyEsc}},
 	}
 
@@ -136,11 +192,15 @@ func TestMenuPicker_Quit(t *testing.T) {
 			menu = model.(*MenuPicker)
 
 			if !menu.quitting {
-				t.Error("Expected quitting to be true")
+				t.Error(
+					"Expected quitting to be true",
+				)
 			}
 
 			if cmd == nil {
-				t.Error("Expected tea.Quit command")
+				t.Error(
+					"Expected tea.Quit command",
+				)
 			}
 		})
 	}
@@ -178,11 +238,17 @@ func TestMenuPicker_Selection(t *testing.T) {
 	}
 
 	if selectedIdx != 1 {
-		t.Errorf("Expected selectedIdx = 1, got %d", selectedIdx)
+		t.Errorf(
+			"Expected selectedIdx = 1, got %d",
+			selectedIdx,
+		)
 	}
 
 	if menu.Selected() != 1 {
-		t.Errorf("Expected Selected() = 1, got %d", menu.Selected())
+		t.Errorf(
+			"Expected Selected() = 1, got %d",
+			menu.Selected(),
+		)
 	}
 }
 
@@ -202,15 +268,21 @@ func TestMenuPicker_View(t *testing.T) {
 
 	// Check choices
 	if !strings.Contains(view, "Option A") {
-		t.Error("View should contain first choice")
+		t.Error(
+			"View should contain first choice",
+		)
 	}
 	if !strings.Contains(view, "Option B") {
-		t.Error("View should contain second choice")
+		t.Error(
+			"View should contain second choice",
+		)
 	}
 
 	// Check help text
 	if !strings.Contains(view, "navigate") {
-		t.Error("View should contain navigation help")
+		t.Error(
+			"View should contain navigation help",
+		)
 	}
 	if !strings.Contains(view, "Enter") {
 		t.Error("View should contain Enter help")
@@ -228,18 +300,25 @@ func TestMenuPicker_QuitView(t *testing.T) {
 
 	view := menu.View()
 	if view != "" {
-		t.Errorf("Quit view should be empty, got %q", view)
+		t.Errorf(
+			"Quit view should be empty, got %q",
+			view,
+		)
 	}
 }
 
-func TestMenuPicker_WithSelectHandler(t *testing.T) {
+func TestMenuPicker_WithSelectHandler(
+	t *testing.T,
+) {
 	config := MenuConfig{
 		Title:   "Test",
 		Choices: []string{"A"},
 	}
 
 	called := false
-	menu := NewMenuPicker(config).WithSelectHandler(func(idx int) (tea.Model, tea.Cmd) {
+	menu := NewMenuPicker(
+		config,
+	).WithSelectHandler(func(idx int) (tea.Model, tea.Cmd) {
 		called = true
 
 		return nil, tea.Quit
@@ -250,6 +329,8 @@ func TestMenuPicker_WithSelectHandler(t *testing.T) {
 	menu.Update(enterMsg)
 
 	if !called {
-		t.Error("Expected custom handler to be called")
+		t.Error(
+			"Expected custom handler to be called",
+		)
 	}
 }

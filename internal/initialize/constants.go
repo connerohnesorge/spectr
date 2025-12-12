@@ -13,13 +13,17 @@ const (
 	// Common strings
 	newlineDouble = "\n\n"
 
-	// Marker constants for managing config file updates
+	// Marker constants for managing config/prompt file updates
 	SpectrStartMarker = "<!-- spectr:START -->"
 	SpectrEndMarker   = "<!-- spectr:END -->"
 
 	// PopulateContextPrompt is the suggested prompt for users to populate
 	// their project context.
-	PopulateContextPrompt = "Review spectr/project.md and help me fill in " +
-		"our project's tech stack, conventions, and description. " +
-		"Ask me questions to understand the codebase."
+	//
+	// This prompt is also used to populate the user's clipboard when/if
+	// they choose to copy the prompt to their clipboard in the init UI.
+	PopulateContextPrompt = `Review spectr/project.md and help me fill in 
+   our project's tech stack, conventions, and description.
+
+   Ask me questions to understand the codebase.`
 )

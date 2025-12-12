@@ -27,7 +27,11 @@ func CreateValidationItems(
 	for _, id := range ids {
 		var path string
 		if itemType == ItemTypeSpec {
-			path = filepath.Join(basePath, id, "spec.md")
+			path = filepath.Join(
+				basePath,
+				id,
+				"spec.md",
+			)
 		} else {
 			path = filepath.Join(basePath, id)
 		}
@@ -62,7 +66,9 @@ func GetAllItems(
 func GetChangeItems(
 	projectPath string,
 ) ([]ValidationItem, error) {
-	changeIDs, err := discovery.GetActiveChangeIDs(projectPath)
+	changeIDs, err := discovery.GetActiveChangeIDs(
+		projectPath,
+	)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to discover changes: %w",
@@ -70,7 +76,11 @@ func GetChangeItems(
 		)
 	}
 
-	basePath := filepath.Join(projectPath, SpectrDir, "changes")
+	basePath := filepath.Join(
+		projectPath,
+		SpectrDir,
+		"changes",
+	)
 
 	return CreateValidationItems(
 		projectPath,
@@ -84,12 +94,21 @@ func GetChangeItems(
 func GetSpecItems(
 	projectPath string,
 ) ([]ValidationItem, error) {
-	specIDs, err := discovery.GetSpecIDs(projectPath)
+	specIDs, err := discovery.GetSpecIDs(
+		projectPath,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to discover specs: %w", err)
+		return nil, fmt.Errorf(
+			"failed to discover specs: %w",
+			err,
+		)
 	}
 
-	basePath := filepath.Join(projectPath, SpectrDir, "specs")
+	basePath := filepath.Join(
+		projectPath,
+		SpectrDir,
+		"specs",
+	)
 
 	return CreateValidationItems(
 		projectPath,

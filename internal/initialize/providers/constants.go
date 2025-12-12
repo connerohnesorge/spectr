@@ -54,8 +54,14 @@ func StandardCommandPaths(
 	dir, ext string,
 ) (proposalPath, applyPath string) {
 	spectrDir := filepath.Join(dir, "spectr")
-	proposalPath = filepath.Join(spectrDir, "proposal"+ext)
-	applyPath = filepath.Join(spectrDir, "apply"+ext)
+	proposalPath = filepath.Join(
+		spectrDir,
+		"proposal"+ext,
+	)
+	applyPath = filepath.Join(
+		spectrDir,
+		"apply"+ext,
+	)
 
 	return proposalPath, applyPath
 }
@@ -67,8 +73,14 @@ func StandardCommandPaths(
 func PrefixedCommandPaths(
 	dir, ext string,
 ) (proposalPath, applyPath string) {
-	proposalPath = filepath.Join(dir, "spectr-proposal"+ext)
-	applyPath = filepath.Join(dir, "spectr-apply"+ext)
+	proposalPath = filepath.Join(
+		dir,
+		"spectr-proposal"+ext,
+	)
+	applyPath = filepath.Join(
+		dir,
+		"spectr-apply"+ext,
+	)
 
 	return proposalPath, applyPath
 }

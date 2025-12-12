@@ -7,7 +7,9 @@ import (
 )
 
 // TestFormatDashboardText_FullDashboard tests the complete dashboard output
-func TestFormatDashboardText_FullDashboard(t *testing.T) {
+func TestFormatDashboardText_FullDashboard(
+	t *testing.T,
+) {
 	data := &DashboardData{
 		Summary: SummaryMetrics{
 			TotalSpecs:        5,
@@ -94,7 +96,9 @@ func TestFormatDashboardText_FullDashboard(t *testing.T) {
 }
 
 // TestFormatDashboardText_EmptyDashboard tests dashboard with no data
-func TestFormatDashboardText_EmptyDashboard(t *testing.T) {
+func TestFormatDashboardText_EmptyDashboard(
+	t *testing.T,
+) {
 	data := &DashboardData{
 		Summary: SummaryMetrics{
 			TotalSpecs:        0,
@@ -104,40 +108,74 @@ func TestFormatDashboardText_EmptyDashboard(t *testing.T) {
 			TotalTasks:        0,
 			CompletedTasks:    0,
 		},
-		ActiveChanges:    make([]ChangeProgress, 0),
-		CompletedChanges: make([]CompletedChange, 0),
-		Specs:            make([]SpecInfo, 0),
+		ActiveChanges: make(
+			[]ChangeProgress,
+			0,
+		),
+		CompletedChanges: make(
+			[]CompletedChange,
+			0,
+		),
+		Specs: make([]SpecInfo, 0),
 	}
 
 	output := FormatDashboardText(data)
 
 	// Should still have header and footer
-	if !strings.Contains(output, "Spectr Dashboard") {
+	if !strings.Contains(
+		output,
+		"Spectr Dashboard",
+	) {
 		t.Error("Expected dashboard title")
 	}
-	if !strings.Contains(output, "Use spectr list --changes or spectr list --specs") {
+	if !strings.Contains(
+		output,
+		"Use spectr list --changes or spectr list --specs",
+	) {
 		t.Error("Expected footer hint")
 	}
 
 	// Should NOT have section headers for empty sections
-	if strings.Contains(output, "Active Changes\n────") {
-		t.Error("Should not show Active Changes section when empty")
+	if strings.Contains(
+		output,
+		"Active Changes\n────",
+	) {
+		t.Error(
+			"Should not show Active Changes section when empty",
+		)
 	}
-	if strings.Contains(output, "Completed Changes\n────") {
-		t.Error("Should not show Completed Changes section when empty")
+	if strings.Contains(
+		output,
+		"Completed Changes\n────",
+	) {
+		t.Error(
+			"Should not show Completed Changes section when empty",
+		)
 	}
-	if strings.Contains(output, "Specifications\n────") {
-		t.Error("Should not show Specifications section when empty")
+	if strings.Contains(
+		output,
+		"Specifications\n────",
+	) {
+		t.Error(
+			"Should not show Specifications section when empty",
+		)
 	}
 
 	// Should have summary with zero values
-	if !strings.Contains(output, "0 specs, 0 requirements") {
-		t.Error("Expected zero specs/requirements in summary")
+	if !strings.Contains(
+		output,
+		"0 specs, 0 requirements",
+	) {
+		t.Error(
+			"Expected zero specs/requirements in summary",
+		)
 	}
 }
 
 // TestFormatDashboardText_OnlyActiveChanges tests dashboard with only active changes
-func TestFormatDashboardText_OnlyActiveChanges(t *testing.T) {
+func TestFormatDashboardText_OnlyActiveChanges(
+	t *testing.T,
+) {
 	data := &DashboardData{
 		Summary: SummaryMetrics{
 			TotalSpecs:        0,
@@ -158,14 +196,20 @@ func TestFormatDashboardText_OnlyActiveChanges(t *testing.T) {
 				},
 			},
 		},
-		CompletedChanges: make([]CompletedChange, 0),
-		Specs:            make([]SpecInfo, 0),
+		CompletedChanges: make(
+			[]CompletedChange,
+			0,
+		),
+		Specs: make([]SpecInfo, 0),
 	}
 
 	output := FormatDashboardText(data)
 
 	// Should have active changes section
-	if !strings.Contains(output, "Active Changes") {
+	if !strings.Contains(
+		output,
+		"Active Changes",
+	) {
 		t.Error("Expected Active Changes section")
 	}
 	if !strings.Contains(output, "test-change") {
@@ -173,16 +217,28 @@ func TestFormatDashboardText_OnlyActiveChanges(t *testing.T) {
 	}
 
 	// Should NOT have completed changes or specs sections
-	if strings.Contains(output, "Completed Changes\n────") {
-		t.Error("Should not show Completed Changes section when empty")
+	if strings.Contains(
+		output,
+		"Completed Changes\n────",
+	) {
+		t.Error(
+			"Should not show Completed Changes section when empty",
+		)
 	}
-	if strings.Contains(output, "Specifications\n────") {
-		t.Error("Should not show Specifications section when empty")
+	if strings.Contains(
+		output,
+		"Specifications\n────",
+	) {
+		t.Error(
+			"Should not show Specifications section when empty",
+		)
 	}
 }
 
 // TestFormatDashboardText_OnlyCompletedChanges tests dashboard with only completed changes
-func TestFormatDashboardText_OnlyCompletedChanges(t *testing.T) {
+func TestFormatDashboardText_OnlyCompletedChanges(
+	t *testing.T,
+) {
 	data := &DashboardData{
 		Summary: SummaryMetrics{
 			TotalSpecs:        0,
@@ -194,8 +250,14 @@ func TestFormatDashboardText_OnlyCompletedChanges(t *testing.T) {
 		},
 		ActiveChanges: make([]ChangeProgress, 0),
 		CompletedChanges: []CompletedChange{
-			{ID: "change-one", Title: "Change One"},
-			{ID: "change-two", Title: "Change Two"},
+			{
+				ID:    "change-one",
+				Title: "Change One",
+			},
+			{
+				ID:    "change-two",
+				Title: "Change Two",
+			},
 		},
 		Specs: make([]SpecInfo, 0),
 	}
@@ -203,8 +265,13 @@ func TestFormatDashboardText_OnlyCompletedChanges(t *testing.T) {
 	output := FormatDashboardText(data)
 
 	// Should have completed changes section
-	if !strings.Contains(output, "Completed Changes") {
-		t.Error("Expected Completed Changes section")
+	if !strings.Contains(
+		output,
+		"Completed Changes",
+	) {
+		t.Error(
+			"Expected Completed Changes section",
+		)
 	}
 	if !strings.Contains(output, "change-one") {
 		t.Error("Expected change-one in output")
@@ -214,16 +281,28 @@ func TestFormatDashboardText_OnlyCompletedChanges(t *testing.T) {
 	}
 
 	// Should NOT have active changes or specs sections
-	if strings.Contains(output, "Active Changes\n────") {
-		t.Error("Should not show Active Changes section when empty")
+	if strings.Contains(
+		output,
+		"Active Changes\n────",
+	) {
+		t.Error(
+			"Should not show Active Changes section when empty",
+		)
 	}
-	if strings.Contains(output, "Specifications\n────") {
-		t.Error("Should not show Specifications section when empty")
+	if strings.Contains(
+		output,
+		"Specifications\n────",
+	) {
+		t.Error(
+			"Should not show Specifications section when empty",
+		)
 	}
 }
 
 // TestFormatDashboardText_OnlySpecs tests dashboard with only specifications
-func TestFormatDashboardText_OnlySpecs(t *testing.T) {
+func TestFormatDashboardText_OnlySpecs(
+	t *testing.T,
+) {
 	data := &DashboardData{
 		Summary: SummaryMetrics{
 			TotalSpecs:        2,
@@ -233,18 +312,35 @@ func TestFormatDashboardText_OnlySpecs(t *testing.T) {
 			TotalTasks:        0,
 			CompletedTasks:    0,
 		},
-		ActiveChanges:    make([]ChangeProgress, 0),
-		CompletedChanges: make([]CompletedChange, 0),
+		ActiveChanges: make(
+			[]ChangeProgress,
+			0,
+		),
+		CompletedChanges: make(
+			[]CompletedChange,
+			0,
+		),
 		Specs: []SpecInfo{
-			{ID: "spec-one", Title: "Spec One", RequirementCount: 10},
-			{ID: "spec-two", Title: "Spec Two", RequirementCount: 10},
+			{
+				ID:               "spec-one",
+				Title:            "Spec One",
+				RequirementCount: 10,
+			},
+			{
+				ID:               "spec-two",
+				Title:            "Spec Two",
+				RequirementCount: 10,
+			},
 		},
 	}
 
 	output := FormatDashboardText(data)
 
 	// Should have specs section
-	if !strings.Contains(output, "Specifications") {
+	if !strings.Contains(
+		output,
+		"Specifications",
+	) {
 		t.Error("Expected Specifications section")
 	}
 	if !strings.Contains(output, "spec-one") {
@@ -253,16 +349,31 @@ func TestFormatDashboardText_OnlySpecs(t *testing.T) {
 	if !strings.Contains(output, "spec-two") {
 		t.Error("Expected spec-two in output")
 	}
-	if !strings.Contains(output, "10 requirements") {
-		t.Error("Expected requirement count in output")
+	if !strings.Contains(
+		output,
+		"10 requirements",
+	) {
+		t.Error(
+			"Expected requirement count in output",
+		)
 	}
 
 	// Should NOT have active or completed changes sections
-	if strings.Contains(output, "Active Changes\n────") {
-		t.Error("Should not show Active Changes section when empty")
+	if strings.Contains(
+		output,
+		"Active Changes\n────",
+	) {
+		t.Error(
+			"Should not show Active Changes section when empty",
+		)
 	}
-	if strings.Contains(output, "Completed Changes\n────") {
-		t.Error("Should not show Completed Changes section when empty")
+	if strings.Contains(
+		output,
+		"Completed Changes\n────",
+	) {
+		t.Error(
+			"Should not show Completed Changes section when empty",
+		)
 	}
 }
 
@@ -299,7 +410,9 @@ func TestFormatSummarySection(t *testing.T) {
 }
 
 // TestFormatActiveChangesSection tests active changes formatting
-func TestFormatActiveChangesSection(t *testing.T) {
+func TestFormatActiveChangesSection(
+	t *testing.T,
+) {
 	changes := []ChangeProgress{
 		{
 			ID:    "change-one",
@@ -342,13 +455,23 @@ func TestFormatActiveChangesSection(t *testing.T) {
 }
 
 // TestFormatCompletedChangesSection tests completed changes formatting
-func TestFormatCompletedChangesSection(t *testing.T) {
+func TestFormatCompletedChangesSection(
+	t *testing.T,
+) {
 	changes := []CompletedChange{
-		{ID: "completed-one", Title: "Completed One"},
-		{ID: "completed-two", Title: "Completed Two"},
+		{
+			ID:    "completed-one",
+			Title: "Completed One",
+		},
+		{
+			ID:    "completed-two",
+			Title: "Completed Two",
+		},
 	}
 
-	output := formatCompletedChangesSection(changes)
+	output := formatCompletedChangesSection(
+		changes,
+	)
 
 	expectedElements := []string{
 		"Completed Changes",
@@ -371,8 +494,16 @@ func TestFormatCompletedChangesSection(t *testing.T) {
 // TestFormatSpecsSection tests specifications formatting
 func TestFormatSpecsSection(t *testing.T) {
 	specs := []SpecInfo{
-		{ID: "spec-alpha", Title: "Spec Alpha", RequirementCount: 15},
-		{ID: "spec-beta", Title: "Spec Beta", RequirementCount: 8},
+		{
+			ID:               "spec-alpha",
+			Title:            "Spec Alpha",
+			RequirementCount: 15,
+		},
+		{
+			ID:               "spec-beta",
+			Title:            "Spec Beta",
+			RequirementCount: 8,
+		},
 	}
 
 	output := formatSpecsSection(specs)
@@ -398,7 +529,9 @@ func TestFormatSpecsSection(t *testing.T) {
 }
 
 // TestFormatDashboardJSON_FullDashboard tests JSON formatting with all sections
-func TestFormatDashboardJSON_FullDashboard(t *testing.T) {
+func TestFormatDashboardJSON_FullDashboard(
+	t *testing.T,
+) {
 	data := &DashboardData{
 		Summary: SummaryMetrics{
 			TotalSpecs:        5,
@@ -450,7 +583,10 @@ func TestFormatDashboardJSON_FullDashboard(t *testing.T) {
 
 	output, err := FormatDashboardJSON(data)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 
 	// Verify it's valid JSON by checking for key elements
@@ -491,7 +627,9 @@ func TestFormatDashboardJSON_FullDashboard(t *testing.T) {
 }
 
 // TestFormatDashboardJSON_EmptyDashboard tests JSON formatting with no data
-func TestFormatDashboardJSON_EmptyDashboard(t *testing.T) {
+func TestFormatDashboardJSON_EmptyDashboard(
+	t *testing.T,
+) {
 	data := &DashboardData{
 		Summary: SummaryMetrics{
 			TotalSpecs:        0,
@@ -501,14 +639,23 @@ func TestFormatDashboardJSON_EmptyDashboard(t *testing.T) {
 			TotalTasks:        0,
 			CompletedTasks:    0,
 		},
-		ActiveChanges:    make([]ChangeProgress, 0),
-		CompletedChanges: make([]CompletedChange, 0),
-		Specs:            make([]SpecInfo, 0),
+		ActiveChanges: make(
+			[]ChangeProgress,
+			0,
+		),
+		CompletedChanges: make(
+			[]CompletedChange,
+			0,
+		),
+		Specs: make([]SpecInfo, 0),
 	}
 
 	output, err := FormatDashboardJSON(data)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 
 	// Verify empty arrays are represented as []
@@ -533,7 +680,9 @@ func TestFormatDashboardJSON_EmptyDashboard(t *testing.T) {
 }
 
 // TestFormatDashboardJSON_ValidJSON tests that output is valid JSON
-func TestFormatDashboardJSON_ValidJSON(t *testing.T) {
+func TestFormatDashboardJSON_ValidJSON(
+	t *testing.T,
+) {
 	data := &DashboardData{
 		Summary: SummaryMetrics{
 			TotalSpecs:        1,
@@ -554,7 +703,10 @@ func TestFormatDashboardJSON_ValidJSON(t *testing.T) {
 				},
 			},
 		},
-		CompletedChanges: make([]CompletedChange, 0),
+		CompletedChanges: make(
+			[]CompletedChange,
+			0,
+		),
 		Specs: []SpecInfo{
 			{
 				ID:               "test-spec",
@@ -566,21 +718,34 @@ func TestFormatDashboardJSON_ValidJSON(t *testing.T) {
 
 	output, err := FormatDashboardJSON(data)
 	if err != nil {
-		t.Fatalf("Expected no error, got: %v", err)
+		t.Fatalf(
+			"Expected no error, got: %v",
+			err,
+		)
 	}
 
 	// Unmarshal back to verify it's valid JSON
 	var parsedData DashboardData
 	if err := json.Unmarshal([]byte(output), &parsedData); err != nil {
-		t.Fatalf("Failed to parse output as JSON: %v\nOutput:\n%s", err, output)
+		t.Fatalf(
+			"Failed to parse output as JSON: %v\nOutput:\n%s",
+			err,
+			output,
+		)
 	}
 
 	// Verify data integrity
 	if parsedData.Summary.TotalSpecs != 1 {
-		t.Errorf("Expected TotalSpecs=1, got %d", parsedData.Summary.TotalSpecs)
+		t.Errorf(
+			"Expected TotalSpecs=1, got %d",
+			parsedData.Summary.TotalSpecs,
+		)
 	}
 	if len(parsedData.ActiveChanges) != 1 {
-		t.Errorf("Expected 1 active change, got %d", len(parsedData.ActiveChanges))
+		t.Errorf(
+			"Expected 1 active change, got %d",
+			len(parsedData.ActiveChanges),
+		)
 	}
 	if parsedData.ActiveChanges[0].ID != "test-change" {
 		t.Errorf(

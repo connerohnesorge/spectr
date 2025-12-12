@@ -13,7 +13,8 @@ type QoderProvider struct {
 // NewQoderProvider creates a new Qoder provider.
 func NewQoderProvider() *QoderProvider {
 	proposalPath, applyPath := StandardCommandPaths(
-		".qoder/commands", ".md",
+		".qoder/commands",
+		".md",
 	)
 
 	return &QoderProvider{

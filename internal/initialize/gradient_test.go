@@ -54,12 +54,19 @@ func TestApplyGradient(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := applyGradient(tt.text, tt.colorA, tt.colorB)
+			result := applyGradient(
+				tt.text,
+				tt.colorA,
+				tt.colorB,
+			)
 
 			// Basic sanity checks
 			if tt.text == "" {
 				if result != "" {
-					t.Errorf("expected empty result for empty input, got: %q", result)
+					t.Errorf(
+						"expected empty result for empty input, got: %q",
+						result,
+					)
 				}
 
 				return
@@ -72,46 +79,96 @@ func TestApplyGradient(t *testing.T) {
 			}
 
 			// Result should contain the original text structure (same number of lines)
-			originalLines := strings.Split(tt.text, "\n")
-			resultLines := strings.Split(plainResult, "\n")
+			originalLines := strings.Split(
+				tt.text,
+				"\n",
+			)
+			resultLines := strings.Split(
+				plainResult,
+				"\n",
+			)
 
-			if len(resultLines) != len(originalLines) {
-				t.Errorf("expected %d lines, got %d", len(originalLines), len(resultLines))
+			if len(
+				resultLines,
+			) != len(
+				originalLines,
+			) {
+				t.Errorf(
+					"expected %d lines, got %d",
+					len(originalLines),
+					len(resultLines),
+				)
 			}
 
 			// Verify the text content is preserved
-			originalText := strings.ReplaceAll(tt.text, "\n", "")
-			resultText := strings.ReplaceAll(plainResult, "\n", "")
+			originalText := strings.ReplaceAll(
+				tt.text,
+				"\n",
+				"",
+			)
+			resultText := strings.ReplaceAll(
+				plainResult,
+				"\n",
+				"",
+			)
 
 			if originalText != resultText {
-				t.Errorf("expected text content %q, got %q", originalText, resultText)
+				t.Errorf(
+					"expected text content %q, got %q",
+					originalText,
+					resultText,
+				)
 			}
 
 			// The function should always return something (even if just the original text)
 			if result == "" && tt.text != "" {
-				t.Error("expected non-empty result for non-empty input")
+				t.Error(
+					"expected non-empty result for non-empty input",
+				)
 			}
 		})
 	}
 }
 
-func TestApplyGradientInvalidColors(t *testing.T) {
+func TestApplyGradientInvalidColors(
+	t *testing.T,
+) {
 	// Test with invalid color codes - should fallback gracefully
-	result := applyGradient("TEST", lipgloss.Color("invalid"), lipgloss.Color("#0000FF"))
+	result := applyGradient(
+		"TEST",
+		lipgloss.Color("invalid"),
+		lipgloss.Color("#0000FF"),
+	)
 	if result != "TEST" {
-		t.Errorf("expected fallback to original text for invalid color, got: %q", result)
+		t.Errorf(
+			"expected fallback to original text for invalid color, got: %q",
+			result,
+		)
 	}
 
-	result = applyGradient("TEST", lipgloss.Color("#FF0000"), lipgloss.Color("also-invalid"))
+	result = applyGradient(
+		"TEST",
+		lipgloss.Color("#FF0000"),
+		lipgloss.Color("also-invalid"),
+	)
 	if result != "TEST" {
-		t.Errorf("expected fallback to original text for invalid color, got: %q", result)
+		t.Errorf(
+			"expected fallback to original text for invalid color, got: %q",
+			result,
+		)
 	}
 }
 
-func TestApplyGradientPreservesStructure(t *testing.T) {
+func TestApplyGradientPreservesStructure(
+	t *testing.T,
+) {
 	// Test that newlines and empty lines are preserved
 	input := "LINE1\n\nLINE3\n\n\nLINE6"
-	result := applyGradient(input, lipgloss.Color("#FF0000"), lipgloss.Color("#0000FF"))
+	result := applyGradient(
+		input,
+		lipgloss.Color("#FF0000"),
+		lipgloss.Color("#0000FF"),
+	)
 
 	plainResult := stripAnsiCodes(result)
 	if plainResult == "" {
@@ -119,7 +176,11 @@ func TestApplyGradientPreservesStructure(t *testing.T) {
 	}
 
 	if plainResult != input {
-		t.Errorf("expected structure preserved.\nInput:  %q\nResult: %q", input, plainResult)
+		t.Errorf(
+			"expected structure preserved.\nInput:  %q\nResult: %q",
+			input,
+			plainResult,
+		)
 	}
 }
 
@@ -135,7 +196,8 @@ func stripAnsiCodes(s string) string {
 			continue
 		}
 		if inEscape {
-			if (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') {
+			if (r >= 'A' && r <= 'Z') ||
+				(r >= 'a' && r <= 'z') {
 				inEscape = false
 			}
 

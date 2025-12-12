@@ -45,7 +45,10 @@ func (c *VersionCmd) Run() error {
 		// JSON format for machine consumption
 		jsonBytes, err := info.JSON()
 		if err != nil {
-			return fmt.Errorf("failed to marshal JSON: %w", err)
+			return fmt.Errorf(
+				"failed to marshal JSON: %w",
+				err,
+			)
 		}
 		fmt.Println(string(jsonBytes))
 	case c.Short:

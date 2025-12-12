@@ -36,7 +36,10 @@ func UpdateFileWithMarkers(
 ) error {
 	expandedPath, err := ExpandPath(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to expand path: %w", err)
+		return fmt.Errorf(
+			"failed to expand path: %w",
+			err,
+		)
 	}
 
 	var existingContent string
@@ -45,16 +48,29 @@ func UpdateFileWithMarkers(
 		// Read existing content
 		data, err := os.ReadFile(expandedPath)
 		if err != nil {
-			return fmt.Errorf("failed to read existing file: %w", err)
+			return fmt.Errorf(
+				"failed to read existing file: %w",
+				err,
+			)
 		}
 		existingContent = string(data)
 
 		// Find markers
-		startIndex := findMarkerIndex(existingContent, startMarker, 0)
+		startIndex := findMarkerIndex(
+			existingContent,
+			startMarker,
+			0,
+		)
 		var endIndex int
 		if startIndex != -1 {
-			startPos := startIndex + len(startMarker)
-			endIndex = findMarkerIndex(existingContent, endMarker, startPos)
+			startPos := startIndex + len(
+				startMarker,
+			)
+			endIndex = findMarkerIndex(
+				existingContent,
+				endMarker,
+				startPos,
+			)
 		} else {
 			endIndex = findMarkerIndex(existingContent, endMarker, 0)
 		}
@@ -99,13 +115,19 @@ func UpdateFileWithMarkers(
 	// Ensure parent directory exists
 	dir := filepath.Dir(expandedPath)
 	if err := EnsureDir(dir); err != nil {
-		return fmt.Errorf("failed to create parent directory: %w", err)
+		return fmt.Errorf(
+			"failed to create parent directory: %w",
+			err,
+		)
 	}
 
 	// Write file
 	fileData := []byte(existingContent)
 	if err := os.WriteFile(expandedPath, fileData, filePerm); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+		return fmt.Errorf(
+			"failed to write file: %w",
+			err,
+		)
 	}
 
 	return nil
@@ -119,23 +141,38 @@ func UpdateFileWithMarkers(
 //   - content: The file content to search
 //   - marker: The marker string to find
 //   - fromIndex: The index to start searching from
-func findMarkerIndex(content, marker string, fromIndex int) int {
-	currentIndex := strings.Index(content[fromIndex:], marker)
+func findMarkerIndex(
+	content, marker string,
+	fromIndex int,
+) int {
+	currentIndex := strings.Index(
+		content[fromIndex:],
+		marker,
+	)
 	if currentIndex == -1 {
 		return -1
 	}
 	currentIndex += fromIndex
 
 	for currentIndex != -1 {
-		if isMarkerOnOwnLine(content, currentIndex, len(marker)) {
+		if isMarkerOnOwnLine(
+			content,
+			currentIndex,
+			len(marker),
+		) {
 			return currentIndex
 		}
 
-		nextIndex := strings.Index(content[currentIndex+len(marker):], marker)
+		nextIndex := strings.Index(
+			content[currentIndex+len(marker):],
+			marker,
+		)
 		if nextIndex == -1 {
 			return -1
 		}
-		currentIndex = currentIndex + len(marker) + nextIndex
+		currentIndex = currentIndex + len(
+			marker,
+		) + nextIndex
 	}
 
 	return -1
@@ -149,12 +186,16 @@ func findMarkerIndex(content, marker string, fromIndex int) int {
 //   - content: The file content
 //   - markerIndex: The index where the marker starts
 //   - markerLength: The length of the marker string
-func isMarkerOnOwnLine(content string, markerIndex, markerLength int) bool {
+func isMarkerOnOwnLine(
+	content string,
+	markerIndex, markerLength int,
+) bool {
 	// Check left side (from marker backwards to newline)
 	leftIndex := markerIndex - 1
 	for leftIndex >= 0 && content[leftIndex] != '\n' {
 		char := content[leftIndex]
-		if char != ' ' && char != '\t' && char != '\r' {
+		if char != ' ' && char != '\t' &&
+			char != '\r' {
 			return false
 		}
 		leftIndex--
@@ -164,7 +205,8 @@ func isMarkerOnOwnLine(content string, markerIndex, markerLength int) bool {
 	rightIndex := markerIndex + markerLength
 	for rightIndex < len(content) && content[rightIndex] != '\n' {
 		char := content[rightIndex]
-		if char != ' ' && char != '\t' && char != '\r' {
+		if char != ' ' && char != '\t' &&
+			char != '\r' {
 			return false
 		}
 		rightIndex++

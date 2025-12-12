@@ -13,7 +13,8 @@ type ClineProvider struct {
 // NewClineProvider creates a new Cline provider.
 func NewClineProvider() *ClineProvider {
 	proposalPath, applyPath := StandardCommandPaths(
-		".clinerules/commands", ".md",
+		".clinerules/commands",
+		".md",
 	)
 
 	return &ClineProvider{

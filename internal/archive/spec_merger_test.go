@@ -7,7 +7,9 @@ import (
 	"testing"
 )
 
-func TestMergeSpec_AddedOnly_NewSpec(t *testing.T) {
+func TestMergeSpec_AddedOnly_NewSpec(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create delta spec with ADDED requirements
@@ -29,27 +31,48 @@ The system SHALL support new functionality.
 
 	// Merge with non-existent base spec
 	basePath := filepath.Join(tmpDir, "base.md")
-	merged, counts, err := MergeSpec(basePath, deltaPath, false)
+	merged, counts, err := MergeSpec(
+		basePath,
+		deltaPath,
+		false,
+	)
 	if err != nil {
 		t.Fatalf("MergeSpec failed: %v", err)
 	}
 
 	if counts.Added != 1 {
-		t.Errorf("Expected 1 added requirement, got %d", counts.Added)
+		t.Errorf(
+			"Expected 1 added requirement, got %d",
+			counts.Added,
+		)
 	}
 
 	if !strings.Contains(merged, "# ") {
-		t.Error("Merged spec should contain H1 header")
+		t.Error(
+			"Merged spec should contain H1 header",
+		)
 	}
-	if !strings.Contains(merged, "## Requirements") {
-		t.Error("Merged spec should contain Requirements section")
+	if !strings.Contains(
+		merged,
+		"## Requirements",
+	) {
+		t.Error(
+			"Merged spec should contain Requirements section",
+		)
 	}
-	if !strings.Contains(merged, "### Requirement: New Feature") {
-		t.Error("Merged spec should contain new requirement")
+	if !strings.Contains(
+		merged,
+		"### Requirement: New Feature",
+	) {
+		t.Error(
+			"Merged spec should contain new requirement",
+		)
 	}
 }
 
-func TestMergeSpec_ModifiedOnly_ExistingSpec(t *testing.T) {
+func TestMergeSpec_ModifiedOnly_ExistingSpec(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create base spec
@@ -86,20 +109,37 @@ The system SHALL have updated behavior.
 		t.Fatal(err)
 	}
 
-	merged, counts, err := MergeSpec(basePath, deltaPath, true)
+	merged, counts, err := MergeSpec(
+		basePath,
+		deltaPath,
+		true,
+	)
 	if err != nil {
 		t.Fatalf("MergeSpec failed: %v", err)
 	}
 
 	if counts.Modified != 1 {
-		t.Errorf("Expected 1 modified requirement, got %d", counts.Modified)
+		t.Errorf(
+			"Expected 1 modified requirement, got %d",
+			counts.Modified,
+		)
 	}
 
-	if !strings.Contains(merged, "updated behavior") {
-		t.Error("Merged spec should contain updated content")
+	if !strings.Contains(
+		merged,
+		"updated behavior",
+	) {
+		t.Error(
+			"Merged spec should contain updated content",
+		)
 	}
-	if strings.Contains(merged, "original behavior") {
-		t.Error("Merged spec should not contain original content")
+	if strings.Contains(
+		merged,
+		"original behavior",
+	) {
+		t.Error(
+			"Merged spec should not contain original content",
+		)
 	}
 }
 
@@ -143,20 +183,31 @@ Should be removed.
 		t.Fatal(err)
 	}
 
-	merged, counts, err := MergeSpec(basePath, deltaPath, true)
+	merged, counts, err := MergeSpec(
+		basePath,
+		deltaPath,
+		true,
+	)
 	if err != nil {
 		t.Fatalf("MergeSpec failed: %v", err)
 	}
 
 	if counts.Removed != 1 {
-		t.Errorf("Expected 1 removed requirement, got %d", counts.Removed)
+		t.Errorf(
+			"Expected 1 removed requirement, got %d",
+			counts.Removed,
+		)
 	}
 
 	if !strings.Contains(merged, "Keep This") {
-		t.Error("Merged spec should contain kept requirement")
+		t.Error(
+			"Merged spec should contain kept requirement",
+		)
 	}
 	if strings.Contains(merged, "Remove This") {
-		t.Error("Merged spec should not contain removed requirement")
+		t.Error(
+			"Merged spec should not contain removed requirement",
+		)
 	}
 }
 
@@ -193,20 +244,37 @@ Content here.
 		t.Fatal(err)
 	}
 
-	merged, counts, err := MergeSpec(basePath, deltaPath, true)
+	merged, counts, err := MergeSpec(
+		basePath,
+		deltaPath,
+		true,
+	)
 	if err != nil {
 		t.Fatalf("MergeSpec failed: %v", err)
 	}
 
 	if counts.Renamed != 1 {
-		t.Errorf("Expected 1 renamed requirement, got %d", counts.Renamed)
+		t.Errorf(
+			"Expected 1 renamed requirement, got %d",
+			counts.Renamed,
+		)
 	}
 
-	if !strings.Contains(merged, "### Requirement: New Name") {
-		t.Error("Merged spec should contain new name")
+	if !strings.Contains(
+		merged,
+		"### Requirement: New Name",
+	) {
+		t.Error(
+			"Merged spec should contain new name",
+		)
 	}
-	if strings.Contains(merged, "### Requirement: Old Name") {
-		t.Error("Merged spec should not contain old name")
+	if strings.Contains(
+		merged,
+		"### Requirement: Old Name",
+	) {
+		t.Error(
+			"Merged spec should not contain old name",
+		)
 	}
 }
 
@@ -287,39 +355,74 @@ Updated content.
 		t.Fatal(err)
 	}
 
-	merged, counts, err := MergeSpec(basePath, deltaPath, true)
+	merged, counts, err := MergeSpec(
+		basePath,
+		deltaPath,
+		true,
+	)
 	if err != nil {
 		t.Fatalf("MergeSpec failed: %v", err)
 	}
 
 	if counts.Added != 1 {
-		t.Errorf("Expected 1 added, got %d", counts.Added)
+		t.Errorf(
+			"Expected 1 added, got %d",
+			counts.Added,
+		)
 	}
 	if counts.Modified != 1 {
-		t.Errorf("Expected 1 modified, got %d", counts.Modified)
+		t.Errorf(
+			"Expected 1 modified, got %d",
+			counts.Modified,
+		)
 	}
 	if counts.Removed != 1 {
-		t.Errorf("Expected 1 removed, got %d", counts.Removed)
+		t.Errorf(
+			"Expected 1 removed, got %d",
+			counts.Removed,
+		)
 	}
 	if counts.Renamed != 1 {
-		t.Errorf("Expected 1 renamed, got %d", counts.Renamed)
+		t.Errorf(
+			"Expected 1 renamed, got %d",
+			counts.Renamed,
+		)
 	}
 
 	// Verify content
-	if !strings.Contains(merged, "Keep Unchanged") {
-		t.Error("Should contain unchanged requirement")
+	if !strings.Contains(
+		merged,
+		"Keep Unchanged",
+	) {
+		t.Error(
+			"Should contain unchanged requirement",
+		)
 	}
-	if !strings.Contains(merged, "Updated content") {
-		t.Error("Should contain updated requirement")
+	if !strings.Contains(
+		merged,
+		"Updated content",
+	) {
+		t.Error(
+			"Should contain updated requirement",
+		)
 	}
 	if strings.Contains(merged, "Remove This") {
-		t.Error("Should not contain removed requirement")
+		t.Error(
+			"Should not contain removed requirement",
+		)
 	}
-	if !strings.Contains(merged, "Renamed Feature") {
-		t.Error("Should contain renamed requirement")
+	if !strings.Contains(
+		merged,
+		"Renamed Feature",
+	) {
+		t.Error(
+			"Should contain renamed requirement",
+		)
 	}
 	if !strings.Contains(merged, "Brand New") {
-		t.Error("Should contain added requirement")
+		t.Error(
+			"Should contain added requirement",
+		)
 	}
 }
 
@@ -374,26 +477,47 @@ Updated content B.
 		t.Fatal(err)
 	}
 
-	merged, _, err := MergeSpec(basePath, deltaPath, true)
+	merged, _, err := MergeSpec(
+		basePath,
+		deltaPath,
+		true,
+	)
 	if err != nil {
 		t.Fatalf("MergeSpec failed: %v", err)
 	}
 
 	// Check order is preserved
-	firstIdx := strings.Index(merged, "### Requirement: First")
-	secondIdx := strings.Index(merged, "### Requirement: Second")
-	thirdIdx := strings.Index(merged, "### Requirement: Third")
+	firstIdx := strings.Index(
+		merged,
+		"### Requirement: First",
+	)
+	secondIdx := strings.Index(
+		merged,
+		"### Requirement: Second",
+	)
+	thirdIdx := strings.Index(
+		merged,
+		"### Requirement: Third",
+	)
 
-	if firstIdx < 0 || secondIdx < 0 || thirdIdx < 0 {
-		t.Fatal("Missing requirements in merged spec")
+	if firstIdx < 0 || secondIdx < 0 ||
+		thirdIdx < 0 {
+		t.Fatal(
+			"Missing requirements in merged spec",
+		)
 	}
 
-	if firstIdx >= secondIdx || secondIdx >= thirdIdx {
-		t.Error("Requirement order was not preserved")
+	if firstIdx >= secondIdx ||
+		secondIdx >= thirdIdx {
+		t.Error(
+			"Requirement order was not preserved",
+		)
 	}
 }
 
-func TestMergeSpec_ErrorOnNewSpecWithModified(t *testing.T) {
+func TestMergeSpec_ErrorOnNewSpecWithModified(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create delta spec with MODIFIED (not allowed for new specs)
@@ -414,12 +538,24 @@ Content.
 	}
 
 	basePath := filepath.Join(tmpDir, "base.md")
-	_, _, err := MergeSpec(basePath, deltaPath, false)
+	_, _, err := MergeSpec(
+		basePath,
+		deltaPath,
+		false,
+	)
 	if err == nil {
-		t.Error("Expected error for MODIFIED on new spec")
+		t.Error(
+			"Expected error for MODIFIED on new spec",
+		)
 	}
-	if !strings.Contains(err.Error(), "only ADDED requirements are allowed") {
-		t.Errorf("Expected specific error message, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"only ADDED requirements are allowed",
+	) {
+		t.Errorf(
+			"Expected specific error message, got: %v",
+			err,
+		)
 	}
 }
 
@@ -438,9 +574,15 @@ Just a regular spec.
 	}
 
 	basePath := filepath.Join(tmpDir, "base.md")
-	_, _, err := MergeSpec(basePath, deltaPath, false)
+	_, _, err := MergeSpec(
+		basePath,
+		deltaPath,
+		false,
+	)
 	if err == nil {
-		t.Error("Expected error for spec with no deltas")
+		t.Error(
+			"Expected error for spec with no deltas",
+		)
 	}
 }
 
@@ -457,9 +599,15 @@ func TestFormatCapabilityName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			result := formatCapabilityName(tt.input)
+			result := formatCapabilityName(
+				tt.input,
+			)
 			if result != tt.expected {
-				t.Errorf("Expected %q, got %q", tt.expected, result)
+				t.Errorf(
+					"Expected %q, got %q",
+					tt.expected,
+					result,
+				)
 			}
 		})
 	}

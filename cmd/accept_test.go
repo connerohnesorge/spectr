@@ -203,30 +203,50 @@ func TestParseTasksMd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create temp file with markdown content
 			tmpDir := t.TempDir()
-			tasksMdPath := filepath.Join(tmpDir, "tasks.md")
+			tasksMdPath := filepath.Join(
+				tmpDir,
+				"tasks.md",
+			)
 
 			if err := os.WriteFile(tasksMdPath, []byte(tt.markdown), 0644); err != nil {
-				t.Fatalf("failed to write test file: %v", err)
+				t.Fatalf(
+					"failed to write test file: %v",
+					err,
+				)
 			}
 
 			// Parse the file
 			got, err := parseTasksMd(tasksMdPath)
 			if err != nil {
-				t.Fatalf("parseTasksMd() error = %v", err)
+				t.Fatalf(
+					"parseTasksMd() error = %v",
+					err,
+				)
 			}
 
 			// Compare results
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("parseTasksMd() mismatch\ngot:  %+v\nwant: %+v", got, tt.expected)
+			if !reflect.DeepEqual(
+				got,
+				tt.expected,
+			) {
+				t.Errorf(
+					"parseTasksMd() mismatch\ngot:  %+v\nwant: %+v",
+					got,
+					tt.expected,
+				)
 			}
 		})
 	}
 }
 
 func TestParseTasksMdFileNotFound(t *testing.T) {
-	_, err := parseTasksMd("/nonexistent/path/tasks.md")
+	_, err := parseTasksMd(
+		"/nonexistent/path/tasks.md",
+	)
 	if err == nil {
-		t.Error("parseTasksMd() expected error for nonexistent file, got nil")
+		t.Error(
+			"parseTasksMd() expected error for nonexistent file, got nil",
+		)
 	}
 }
 
@@ -272,32 +292,56 @@ func TestWriteTasksJson(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			tasksJSONPath := filepath.Join(tmpDir, "tasks.json")
+			tasksJSONPath := filepath.Join(
+				tmpDir,
+				"tasks.json",
+			)
 
 			// Write the tasks
 			if err := writeTasksJSON(tasksJSONPath, tt.tasks); err != nil {
-				t.Fatalf("writeTasksJson() error = %v", err)
+				t.Fatalf(
+					"writeTasksJson() error = %v",
+					err,
+				)
 			}
 
 			// Read back and verify
-			data, err := os.ReadFile(tasksJSONPath)
+			data, err := os.ReadFile(
+				tasksJSONPath,
+			)
 			if err != nil {
-				t.Fatalf("failed to read written file: %v", err)
+				t.Fatalf(
+					"failed to read written file: %v",
+					err,
+				)
 			}
 
 			var tasksFile parsers.TasksFile
 			if err := json.Unmarshal(data, &tasksFile); err != nil {
-				t.Fatalf("failed to unmarshal JSON: %v", err)
+				t.Fatalf(
+					"failed to unmarshal JSON: %v",
+					err,
+				)
 			}
 
 			// Verify version is 1
 			if tasksFile.Version != 1 {
-				t.Errorf("version = %d, want 1", tasksFile.Version)
+				t.Errorf(
+					"version = %d, want 1",
+					tasksFile.Version,
+				)
 			}
 
 			// Verify tasks match
-			if !reflect.DeepEqual(tasksFile.Tasks, tt.tasks) {
-				t.Errorf("tasks mismatch\ngot:  %+v\nwant: %+v", tasksFile.Tasks, tt.tasks)
+			if !reflect.DeepEqual(
+				tasksFile.Tasks,
+				tt.tasks,
+			) {
+				t.Errorf(
+					"tasks mismatch\ngot:  %+v\nwant: %+v",
+					tasksFile.Tasks,
+					tt.tasks,
+				)
 			}
 		})
 	}
@@ -305,14 +349,25 @@ func TestWriteTasksJson(t *testing.T) {
 
 func TestWriteTasksJsonIndentation(t *testing.T) {
 	tmpDir := t.TempDir()
-	tasksJSONPath := filepath.Join(tmpDir, "tasks.json")
+	tasksJSONPath := filepath.Join(
+		tmpDir,
+		"tasks.json",
+	)
 
 	tasks := []parsers.Task{
-		{ID: "1.1", Section: "Test", Description: "Task", Status: parsers.TaskStatusPending},
+		{
+			ID:          "1.1",
+			Section:     "Test",
+			Description: "Task",
+			Status:      parsers.TaskStatusPending,
+		},
 	}
 
 	if err := writeTasksJSON(tasksJSONPath, tasks); err != nil {
-		t.Fatalf("writeTasksJson() error = %v", err)
+		t.Fatalf(
+			"writeTasksJson() error = %v",
+			err,
+		)
 	}
 
 	data, err := os.ReadFile(tasksJSONPath)
@@ -325,13 +380,18 @@ func TestWriteTasksJsonIndentation(t *testing.T) {
 	// Verify indentation uses 2 spaces (not tabs, not 4 spaces)
 	expectedIndent := "  \"version\""
 	if !contains(content, expectedIndent) {
-		t.Error("JSON indentation incorrect, expected 2-space indent")
+		t.Error(
+			"JSON indentation incorrect, expected 2-space indent",
+		)
 	}
 
 	// Verify it's valid JSON with proper structure
 	var parsed map[string]any
 	if err := json.Unmarshal(data, &parsed); err != nil {
-		t.Errorf("output is not valid JSON: %v", err)
+		t.Errorf(
+			"output is not valid JSON: %v",
+			err,
+		)
 	}
 
 	// Verify required top-level keys exist
@@ -343,17 +403,30 @@ func TestWriteTasksJsonIndentation(t *testing.T) {
 	}
 }
 
-func TestWriteTasksJsonFilePermissions(t *testing.T) {
+func TestWriteTasksJsonFilePermissions(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	tasksJsonPath := filepath.Join(tmpDir, "tasks.json")
+	tasksJsonPath := filepath.Join(
+		tmpDir,
+		"tasks.json",
+	)
 
 	tasks := []parsers.Task{
-		{ID: "1.1", Section: "Test", Description: "Task", Status: parsers.TaskStatusPending},
+		{
+			ID:          "1.1",
+			Section:     "Test",
+			Description: "Task",
+			Status:      parsers.TaskStatusPending,
+		},
 	}
 
 	err := writeTasksJSON(tasksJsonPath, tasks)
 	if err != nil {
-		t.Fatalf("writeTasksJson() error = %v", err)
+		t.Fatalf(
+			"writeTasksJson() error = %v",
+			err,
+		)
 	}
 
 	info, err := os.Stat(tasksJsonPath)
@@ -364,7 +437,11 @@ func TestWriteTasksJsonFilePermissions(t *testing.T) {
 	// Verify file permissions are 0644
 	expectedPerm := os.FileMode(0644)
 	if info.Mode().Perm() != expectedPerm {
-		t.Errorf("file permissions = %o, want %o", info.Mode().Perm(), expectedPerm)
+		t.Errorf(
+			"file permissions = %o, want %o",
+			info.Mode().Perm(),
+			expectedPerm,
+		)
 	}
 }
 
@@ -375,19 +452,27 @@ func TestAcceptCmdStructure(t *testing.T) {
 	// Check ChangeID field exists
 	changeIDField := val.FieldByName("ChangeID")
 	if !changeIDField.IsValid() {
-		t.Error("AcceptCmd does not have ChangeID field")
+		t.Error(
+			"AcceptCmd does not have ChangeID field",
+		)
 	}
 
 	// Check DryRun field exists
 	dryRunField := val.FieldByName("DryRun")
 	if !dryRunField.IsValid() {
-		t.Error("AcceptCmd does not have DryRun field")
+		t.Error(
+			"AcceptCmd does not have DryRun field",
+		)
 	}
 
 	// Check NoInteractive field exists
-	noInteractiveField := val.FieldByName("NoInteractive")
+	noInteractiveField := val.FieldByName(
+		"NoInteractive",
+	)
 	if !noInteractiveField.IsValid() {
-		t.Error("AcceptCmd does not have NoInteractive field")
+		t.Error(
+			"AcceptCmd does not have NoInteractive field",
+		)
 	}
 }
 
@@ -397,18 +482,24 @@ func TestCLIHasAcceptCommand(t *testing.T) {
 	acceptField := val.FieldByName("Accept")
 
 	if !acceptField.IsValid() {
-		t.Fatal("CLI struct does not have Accept field")
+		t.Fatal(
+			"CLI struct does not have Accept field",
+		)
 	}
 
 	// Check the type
 	if acceptField.Type().Name() != "AcceptCmd" {
-		t.Errorf("Accept field type: got %s, want AcceptCmd", acceptField.Type().Name())
+		t.Errorf(
+			"Accept field type: got %s, want AcceptCmd",
+			acceptField.Type().Name(),
+		)
 	}
 }
 
 // contains is a helper function to check if a string contains a substring
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
+	return len(s) >= len(substr) &&
+		(s == substr || len(s) > 0 && containsHelper(s, substr))
 }
 
 func containsHelper(s, substr string) bool {

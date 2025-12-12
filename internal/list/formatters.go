@@ -16,7 +16,9 @@ const (
 )
 
 // FormatChangesText formats changes as simple text list (IDs only)
-func FormatChangesText(changes []ChangeInfo) string {
+func FormatChangesText(
+	changes []ChangeInfo,
+) string {
 	if len(changes) == 0 {
 		return noItemsFoundMsg
 	}
@@ -49,7 +51,9 @@ func FormatChangesText(changes []ChangeInfo) string {
 }
 
 // FormatChangesLong formats changes with detailed information
-func FormatChangesLong(changes []ChangeInfo) string {
+func FormatChangesLong(
+	changes []ChangeInfo,
+) string {
 	if len(changes) == 0 {
 		return noItemsFoundMsg
 	}
@@ -61,7 +65,8 @@ func FormatChangesLong(changes []ChangeInfo) string {
 
 	lines := make([]string, 0, len(changes))
 	for _, change := range changes {
-		line := fmt.Sprintf("%s: %s [deltas %d] [tasks %d/%d]",
+		line := fmt.Sprintf(
+			"%s: %s [deltas %d] [tasks %d/%d]",
 			change.ID,
 			change.Title,
 			change.DeltaCount,
@@ -75,7 +80,9 @@ func FormatChangesLong(changes []ChangeInfo) string {
 }
 
 // FormatChangesJSON formats changes as JSON array
-func FormatChangesJSON(changes []ChangeInfo) (string, error) {
+func FormatChangesJSON(
+	changes []ChangeInfo,
+) (string, error) {
 	if len(changes) == 0 {
 		return "[]", nil
 	}
@@ -85,9 +92,16 @@ func FormatChangesJSON(changes []ChangeInfo) (string, error) {
 		return changes[i].ID < changes[j].ID
 	})
 
-	data, err := json.MarshalIndent(changes, "", "  ")
+	data, err := json.MarshalIndent(
+		changes,
+		"",
+		"  ",
+	)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal JSON: %w", err)
+		return "", fmt.Errorf(
+			"failed to marshal JSON: %w",
+			err,
+		)
 	}
 
 	return string(data), nil
@@ -125,7 +139,8 @@ func FormatSpecsLong(specs []SpecInfo) string {
 
 	lines := make([]string, 0, len(specs))
 	for _, spec := range specs {
-		line := fmt.Sprintf("%s: %s [requirements %d]",
+		line := fmt.Sprintf(
+			"%s: %s [requirements %d]",
 			spec.ID,
 			spec.Title,
 			spec.RequirementCount,
@@ -137,7 +152,9 @@ func FormatSpecsLong(specs []SpecInfo) string {
 }
 
 // FormatSpecsJSON formats specs as JSON array
-func FormatSpecsJSON(specs []SpecInfo) (string, error) {
+func FormatSpecsJSON(
+	specs []SpecInfo,
+) (string, error) {
 	if len(specs) == 0 {
 		return "[]", nil
 	}
@@ -147,9 +164,16 @@ func FormatSpecsJSON(specs []SpecInfo) (string, error) {
 		return specs[i].ID < specs[j].ID
 	})
 
-	data, err := json.MarshalIndent(specs, "", "  ")
+	data, err := json.MarshalIndent(
+		specs,
+		"",
+		"  ",
+	)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal JSON: %w", err)
+		return "", fmt.Errorf(
+			"failed to marshal JSON: %w",
+			err,
+		)
 	}
 
 	return string(data), nil

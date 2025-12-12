@@ -42,17 +42,27 @@ func TestExtractTitle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			filePath := filepath.Join(tmpDir, "test.md")
+			filePath := filepath.Join(
+				tmpDir,
+				"test.md",
+			)
 			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
 				t.Fatal(err)
 			}
 
 			title, err := ExtractTitle(filePath)
 			if err != nil {
-				t.Fatalf("ExtractTitle failed: %v", err)
+				t.Fatalf(
+					"ExtractTitle failed: %v",
+					err,
+				)
 			}
 			if title != tt.expected {
-				t.Errorf("Expected title %q, got %q", tt.expected, title)
+				t.Errorf(
+					"Expected title %q, got %q",
+					tt.expected,
+					title,
+				)
 			}
 		})
 	}
@@ -71,7 +81,10 @@ func TestExtractTitle_NoHeading(t *testing.T) {
 		t.Fatalf("ExtractTitle failed: %v", err)
 	}
 	if title != "" {
-		t.Errorf("Expected empty title, got %q", title)
+		t.Errorf(
+			"Expected empty title, got %q",
+			title,
+		)
 	}
 }
 
@@ -132,7 +145,10 @@ Not a task line`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			filePath := filepath.Join(tmpDir, "tasks.md")
+			filePath := filepath.Join(
+				tmpDir,
+				"tasks.md",
+			)
 			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
 				t.Fatal(err)
 			}
@@ -140,13 +156,24 @@ Not a task line`,
 			// CountTasks now takes a directory path, not a file path
 			status, err := CountTasks(tmpDir)
 			if err != nil {
-				t.Fatalf("CountTasks failed: %v", err)
+				t.Fatalf(
+					"CountTasks failed: %v",
+					err,
+				)
 			}
 			if status.Total != tt.expectedTotal {
-				t.Errorf("Expected total %d, got %d", tt.expectedTotal, status.Total)
+				t.Errorf(
+					"Expected total %d, got %d",
+					tt.expectedTotal,
+					status.Total,
+				)
 			}
 			if status.Completed != tt.expectedCompleted {
-				t.Errorf("Expected completed %d, got %d", tt.expectedCompleted, status.Completed)
+				t.Errorf(
+					"Expected completed %d, got %d",
+					tt.expectedCompleted,
+					status.Completed,
+				)
 			}
 		})
 	}
@@ -158,9 +185,14 @@ func TestCountTasks_MissingFile(t *testing.T) {
 
 	status, err := CountTasks(tmpDir)
 	if err != nil {
-		t.Fatalf("CountTasks should not error on missing file: %v", err)
+		t.Fatalf(
+			"CountTasks should not error on missing file: %v",
+			err,
+		)
 	}
-	if status.Total != 0 || status.Completed != 0 || status.InProgress != 0 {
+	if status.Total != 0 ||
+		status.Completed != 0 ||
+		status.InProgress != 0 {
 		t.Errorf(
 			"Expected zero status, got total=%d, completed=%d, inProgress=%d",
 			status.Total,
@@ -172,8 +204,15 @@ func TestCountTasks_MissingFile(t *testing.T) {
 
 func TestCountDeltas(t *testing.T) {
 	tmpDir := t.TempDir()
-	changeDir := filepath.Join(tmpDir, "test-change")
-	specsDir := filepath.Join(changeDir, "specs", "test-spec")
+	changeDir := filepath.Join(
+		tmpDir,
+		"test-change",
+	)
+	specsDir := filepath.Join(
+		changeDir,
+		"specs",
+		"test-spec",
+	)
 	if err := os.MkdirAll(specsDir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -199,7 +238,10 @@ func TestCountDeltas(t *testing.T) {
 		t.Fatalf("CountDeltas failed: %v", err)
 	}
 	if count != 3 {
-		t.Errorf("Expected 3 deltas, got %d", count)
+		t.Errorf(
+			"Expected 3 deltas, got %d",
+			count,
+		)
 	}
 }
 
@@ -207,10 +249,16 @@ func TestCountDeltas_NoSpecs(t *testing.T) {
 	tmpDir := t.TempDir()
 	count, err := CountDeltas(tmpDir)
 	if err != nil {
-		t.Fatalf("CountDeltas should not error on missing specs: %v", err)
+		t.Fatalf(
+			"CountDeltas should not error on missing specs: %v",
+			err,
+		)
 	}
 	if count != 0 {
-		t.Errorf("Expected 0 deltas, got %d", count)
+		t.Errorf(
+			"Expected 0 deltas, got %d",
+			count,
+		)
 	}
 }
 
@@ -237,14 +285,22 @@ Description
 
 	count, err := CountRequirements(specPath)
 	if err != nil {
-		t.Fatalf("CountRequirements failed: %v", err)
+		t.Fatalf(
+			"CountRequirements failed: %v",
+			err,
+		)
 	}
 	if count != 3 {
-		t.Errorf("Expected 3 requirements, got %d", count)
+		t.Errorf(
+			"Expected 3 requirements, got %d",
+			count,
+		)
 	}
 }
 
-func TestCountRequirements_NoRequirements(t *testing.T) {
+func TestCountRequirements_NoRequirements(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 	specPath := filepath.Join(tmpDir, "spec.md")
 
@@ -258,16 +314,25 @@ Some content without requirements
 
 	count, err := CountRequirements(specPath)
 	if err != nil {
-		t.Fatalf("CountRequirements failed: %v", err)
+		t.Fatalf(
+			"CountRequirements failed: %v",
+			err,
+		)
 	}
 	if count != 0 {
-		t.Errorf("Expected 0 requirements, got %d", count)
+		t.Errorf(
+			"Expected 0 requirements, got %d",
+			count,
+		)
 	}
 }
 
 func TestReadTasksJson(t *testing.T) {
 	tmpDir := t.TempDir()
-	tasksJsonPath := filepath.Join(tmpDir, "tasks.json")
+	tasksJsonPath := filepath.Join(
+		tmpDir,
+		"tasks.json",
+	)
 
 	content := `{
 	"version": 1,
@@ -287,19 +352,34 @@ func TestReadTasksJson(t *testing.T) {
 	}
 
 	if tasksFile.Version != 1 {
-		t.Errorf("Expected version 1, got %d", tasksFile.Version)
+		t.Errorf(
+			"Expected version 1, got %d",
+			tasksFile.Version,
+		)
 	}
 	if len(tasksFile.Tasks) != 3 {
-		t.Errorf("Expected 3 tasks, got %d", len(tasksFile.Tasks))
+		t.Errorf(
+			"Expected 3 tasks, got %d",
+			len(tasksFile.Tasks),
+		)
 	}
 	if tasksFile.Tasks[0].Status != TaskStatusCompleted {
-		t.Errorf("Expected first task status to be completed, got %s", tasksFile.Tasks[0].Status)
+		t.Errorf(
+			"Expected first task status to be completed, got %s",
+			tasksFile.Tasks[0].Status,
+		)
 	}
 	if tasksFile.Tasks[1].Status != TaskStatusInProgress {
-		t.Errorf("Expected second task status to be in_progress, got %s", tasksFile.Tasks[1].Status)
+		t.Errorf(
+			"Expected second task status to be in_progress, got %s",
+			tasksFile.Tasks[1].Status,
+		)
 	}
 	if tasksFile.Tasks[2].Status != TaskStatusPending {
-		t.Errorf("Expected third task status to be pending, got %s", tasksFile.Tasks[2].Status)
+		t.Errorf(
+			"Expected third task status to be pending, got %s",
+			tasksFile.Tasks[2].Status,
+		)
 	}
 }
 
@@ -367,20 +447,34 @@ func TestCountTasks_FromJson(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			filePath := filepath.Join(tmpDir, "tasks.json")
+			filePath := filepath.Join(
+				tmpDir,
+				"tasks.json",
+			)
 			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
 				t.Fatal(err)
 			}
 
 			status, err := CountTasks(tmpDir)
 			if err != nil {
-				t.Fatalf("CountTasks failed: %v", err)
+				t.Fatalf(
+					"CountTasks failed: %v",
+					err,
+				)
 			}
 			if status.Total != tt.expectedTotal {
-				t.Errorf("Expected total %d, got %d", tt.expectedTotal, status.Total)
+				t.Errorf(
+					"Expected total %d, got %d",
+					tt.expectedTotal,
+					status.Total,
+				)
 			}
 			if status.Completed != tt.expectedCompleted {
-				t.Errorf("Expected completed %d, got %d", tt.expectedCompleted, status.Completed)
+				t.Errorf(
+					"Expected completed %d, got %d",
+					tt.expectedCompleted,
+					status.Completed,
+				)
 			}
 			if status.InProgress != tt.expectedInProgress {
 				t.Errorf(
@@ -393,7 +487,9 @@ func TestCountTasks_FromJson(t *testing.T) {
 	}
 }
 
-func TestCountTasks_JsonPreferredOverMarkdown(t *testing.T) {
+func TestCountTasks_JsonPreferredOverMarkdown(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create both tasks.json and tasks.md
@@ -428,9 +524,15 @@ func TestCountTasks_JsonPreferredOverMarkdown(t *testing.T) {
 
 	// Expect counts from JSON (2 total, 1 completed) not MD (5 total, 2 completed)
 	if status.Total != 2 {
-		t.Errorf("Expected total 2 (from JSON), got %d", status.Total)
+		t.Errorf(
+			"Expected total 2 (from JSON), got %d",
+			status.Total,
+		)
 	}
 	if status.Completed != 1 {
-		t.Errorf("Expected completed 1 (from JSON), got %d", status.Completed)
+		t.Errorf(
+			"Expected completed 1 (from JSON), got %d",
+			status.Completed,
+		)
 	}
 }

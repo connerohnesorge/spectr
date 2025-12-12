@@ -5,6 +5,7 @@ func init() {
 }
 
 // AntigravityProvider implements the Provider interface for Antigravity.
+//
 // Antigravity uses AGENTS.md and .agent/workflows/ for slash commands.
 type AntigravityProvider struct {
 	BaseProvider
@@ -13,7 +14,8 @@ type AntigravityProvider struct {
 // NewAntigravityProvider creates a new Antigravity provider.
 func NewAntigravityProvider() *AntigravityProvider {
 	proposalPath, applyPath := PrefixedCommandPaths(
-		".agent/workflows", ".md",
+		".agent/workflows",
+		".md",
 	)
 
 	return &AntigravityProvider{

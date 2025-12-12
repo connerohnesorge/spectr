@@ -38,10 +38,12 @@ func GetBuildInfo() BuildInfo {
 
 // String returns a formatted multi-line representation of build info.
 func (b BuildInfo) String() string {
-	return fmt.Sprintf("Version:  %s\nCommit:   %s\nDate:     %s",
+	return fmt.Sprintf(
+		"Version:  %s\nCommit:   %s\nDate:     %s",
 		b.Version,
 		b.Commit,
-		b.Date)
+		b.Date,
+	)
 }
 
 // JSON returns the build info as JSON bytes.

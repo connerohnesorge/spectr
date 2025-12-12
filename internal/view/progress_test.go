@@ -81,45 +81,83 @@ func TestRenderBar(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := RenderBar(tt.completed, tt.total)
+			result := RenderBar(
+				tt.completed,
+				tt.total,
+			)
 
 			// Strip ANSI color codes for testing
 			// (lipgloss adds escape codes that we can't easily predict)
 			// So we'll just verify the bar structure and percentage
 
 			// Check that result contains the percentage
-			if !strings.Contains(result, tt.wantPerc) {
-				t.Errorf("RenderBar(%d, %d) percentage = got result not containing %q, result = %q",
-					tt.completed, tt.total, tt.wantPerc, result)
+			if !strings.Contains(
+				result,
+				tt.wantPerc,
+			) {
+				t.Errorf(
+					"RenderBar(%d, %d) percentage = got result not containing %q, result = %q",
+					tt.completed,
+					tt.total,
+					tt.wantPerc,
+					result,
+				)
 			}
 
 			// Check that result contains brackets
 			if !strings.HasPrefix(result, "[") {
-				t.Errorf("RenderBar(%d, %d) should start with '[', got %q",
-					tt.completed, tt.total, result)
+				t.Errorf(
+					"RenderBar(%d, %d) should start with '[', got %q",
+					tt.completed,
+					tt.total,
+					result,
+				)
 			}
 
 			// Count filled and empty characters (ignoring ANSI codes)
 			// This is a simple approach - count the actual unicode characters
-			filledCount := strings.Count(result, filledChar)
-			emptyCount := strings.Count(result, emptyChar)
+			filledCount := strings.Count(
+				result,
+				filledChar,
+			)
+			emptyCount := strings.Count(
+				result,
+				emptyChar,
+			)
 
 			if filledCount != tt.wantFilled {
-				t.Errorf("RenderBar(%d, %d) filled characters = %d, want %d (result: %q)",
-					tt.completed, tt.total, filledCount, tt.wantFilled, result)
+				t.Errorf(
+					"RenderBar(%d, %d) filled characters = %d, want %d (result: %q)",
+					tt.completed,
+					tt.total,
+					filledCount,
+					tt.wantFilled,
+					result,
+				)
 			}
 
 			expectedEmpty := progressBarWidth - tt.wantFilled
 			if emptyCount != expectedEmpty {
-				t.Errorf("RenderBar(%d, %d) empty characters = %d, want %d (result: %q)",
-					tt.completed, tt.total, emptyCount, expectedEmpty, result)
+				t.Errorf(
+					"RenderBar(%d, %d) empty characters = %d, want %d (result: %q)",
+					tt.completed,
+					tt.total,
+					emptyCount,
+					expectedEmpty,
+					result,
+				)
 			}
 
 			// Total bar width should always be progressBarWidth (20)
 			totalChars := filledCount + emptyCount
 			if totalChars != progressBarWidth {
-				t.Errorf("RenderBar(%d, %d) total bar characters = %d, want %d",
-					tt.completed, tt.total, totalChars, progressBarWidth)
+				t.Errorf(
+					"RenderBar(%d, %d) total bar characters = %d, want %d",
+					tt.completed,
+					tt.total,
+					totalChars,
+					progressBarWidth,
+				)
 			}
 		})
 	}
@@ -140,18 +178,29 @@ func TestRenderBarEdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Should not panic
-			result := RenderBar(tt.completed, tt.total)
+			result := RenderBar(
+				tt.completed,
+				tt.total,
+			)
 
 			// Should return a non-empty string
 			if result == "" {
-				t.Errorf("RenderBar(%d, %d) returned empty string",
-					tt.completed, tt.total)
+				t.Errorf(
+					"RenderBar(%d, %d) returned empty string",
+					tt.completed,
+					tt.total,
+				)
 			}
 
 			// Should contain brackets and percentage
-			if !strings.Contains(result, "[") || !strings.Contains(result, "%") {
-				t.Errorf("RenderBar(%d, %d) missing expected format, got %q",
-					tt.completed, tt.total, result)
+			if !strings.Contains(result, "[") ||
+				!strings.Contains(result, "%") {
+				t.Errorf(
+					"RenderBar(%d, %d) missing expected format, got %q",
+					tt.completed,
+					tt.total,
+					result,
+				)
 			}
 		})
 	}

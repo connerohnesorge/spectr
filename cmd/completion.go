@@ -15,38 +15,46 @@ import (
 // It scans the spectr/changes/ directory for active changes, excluding
 // the archive directory. Returns nil on error.
 func PredictChangeIDs() complete.Predictor {
-	return complete.PredictFunc(func(_ complete.Args) []string {
-		projectPath, err := os.Getwd()
-		if err != nil {
-			return nil
-		}
+	return complete.PredictFunc(
+		func(_ complete.Args) []string {
+			projectPath, err := os.Getwd()
+			if err != nil {
+				return nil
+			}
 
-		changeIDs, err := discovery.GetActiveChangeIDs(projectPath)
-		if err != nil {
-			return nil
-		}
+			changeIDs, err := discovery.GetActiveChangeIDs(
+				projectPath,
+			)
+			if err != nil {
+				return nil
+			}
 
-		return changeIDs
-	})
+			return changeIDs
+		},
+	)
 }
 
 // PredictSpecIDs returns a predictor that suggests spec IDs.
 // It scans the spectr/specs/ directory for specification directories.
 // Returns nil on error.
 func PredictSpecIDs() complete.Predictor {
-	return complete.PredictFunc(func(_ complete.Args) []string {
-		projectPath, err := os.Getwd()
-		if err != nil {
-			return nil
-		}
+	return complete.PredictFunc(
+		func(_ complete.Args) []string {
+			projectPath, err := os.Getwd()
+			if err != nil {
+				return nil
+			}
 
-		specIDs, err := discovery.GetSpecIDs(projectPath)
-		if err != nil {
-			return nil
-		}
+			specIDs, err := discovery.GetSpecIDs(
+				projectPath,
+			)
+			if err != nil {
+				return nil
+			}
 
-		return specIDs
-	})
+			return specIDs
+		},
+	)
 }
 
 // PredictItemTypes returns a predictor that suggests item types.
@@ -59,24 +67,32 @@ func PredictItemTypes() complete.Predictor {
 // This is useful for commands that accept either type of item.
 // Combines results from both changes and specs directories.
 func PredictItems() complete.Predictor {
-	return complete.PredictFunc(func(_ complete.Args) []string {
-		projectPath, err := os.Getwd()
-		if err != nil {
-			return nil
-		}
+	return complete.PredictFunc(
+		func(_ complete.Args) []string {
+			projectPath, err := os.Getwd()
+			if err != nil {
+				return nil
+			}
 
-		var items []string
+			var items []string
 
-		changeIDs, err := discovery.GetActiveChangeIDs(projectPath)
-		if err == nil {
-			items = append(items, changeIDs...)
-		}
+			changeIDs, err := discovery.GetActiveChangeIDs(
+				projectPath,
+			)
+			if err == nil {
+				items = append(
+					items,
+					changeIDs...)
+			}
 
-		specIDs, err := discovery.GetSpecIDs(projectPath)
-		if err == nil {
-			items = append(items, specIDs...)
-		}
+			specIDs, err := discovery.GetSpecIDs(
+				projectPath,
+			)
+			if err == nil {
+				items = append(items, specIDs...)
+			}
 
-		return items
-	})
+			return items
+		},
+	)
 }

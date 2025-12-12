@@ -14,11 +14,22 @@ const (
 )
 
 // TestDetermineItemType_ChangeOnly tests when item exists only as a change
-func TestDetermineItemType_ChangeOnly(t *testing.T) {
+func TestDetermineItemType_ChangeOnly(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"add-feature"}, nil)
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+		nil,
+	)
 
-	info, err := DetermineItemType(tmpDir, "add-feature", nil)
+	info, err := DetermineItemType(
+		tmpDir,
+		"add-feature",
+		nil,
+	)
 	assert.NoError(t, err)
 	assert.True(t, info.IsChange)
 	assert.False(t, info.IsSpec)
@@ -26,11 +37,22 @@ func TestDetermineItemType_ChangeOnly(t *testing.T) {
 }
 
 // TestDetermineItemType_SpecOnly tests when item exists only as a spec
-func TestDetermineItemType_SpecOnly(t *testing.T) {
+func TestDetermineItemType_SpecOnly(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, nil, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		nil,
+		[]string{"user-auth"},
+	)
 
-	info, err := DetermineItemType(tmpDir, "user-auth", nil)
+	info, err := DetermineItemType(
+		tmpDir,
+		"user-auth",
+		nil,
+	)
 	assert.NoError(t, err)
 	assert.False(t, info.IsChange)
 	assert.True(t, info.IsSpec)
@@ -38,119 +60,248 @@ func TestDetermineItemType_SpecOnly(t *testing.T) {
 }
 
 // TestDetermineItemType_BothExists tests when item exists as both change and spec
-func TestDetermineItemType_BothExists(t *testing.T) {
+func TestDetermineItemType_BothExists(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"user-auth"}, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"user-auth"},
+		[]string{"user-auth"},
+	)
 
 	// Without type flag should error
-	_, err := DetermineItemType(tmpDir, "user-auth", nil)
+	_, err := DetermineItemType(
+		tmpDir,
+		"user-auth",
+		nil,
+	)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "exists as both change and spec")
-	assert.Contains(t, err.Error(), "use --type flag")
+	assert.Contains(
+		t,
+		err.Error(),
+		"exists as both change and spec",
+	)
+	assert.Contains(
+		t,
+		err.Error(),
+		"use --type flag",
+	)
 }
 
 // TestDetermineItemType_NotFound tests when item doesn't exist
-func TestDetermineItemType_NotFound(t *testing.T) {
+func TestDetermineItemType_NotFound(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"add-feature"}, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+		[]string{"user-auth"},
+	)
 
-	_, err := DetermineItemType(tmpDir, "nonexistent", nil)
+	_, err := DetermineItemType(
+		tmpDir,
+		"nonexistent",
+		nil,
+	)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
 }
 
 // TestDetermineItemType_ExplicitTypeChange tests explicit --type=change flag
-func TestDetermineItemType_ExplicitTypeChange(t *testing.T) {
+func TestDetermineItemType_ExplicitTypeChange(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"add-feature"}, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+		[]string{"user-auth"},
+	)
 
 	typeFlag := ItemTypeChange
-	info, err := DetermineItemType(tmpDir, "add-feature", &typeFlag)
+	info, err := DetermineItemType(
+		tmpDir,
+		"add-feature",
+		&typeFlag,
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, ItemTypeChange, info.ItemType)
 }
 
 // TestDetermineItemType_ExplicitTypeSpec tests explicit --type=spec flag
-func TestDetermineItemType_ExplicitTypeSpec(t *testing.T) {
+func TestDetermineItemType_ExplicitTypeSpec(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"add-feature"}, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+		[]string{"user-auth"},
+	)
 
 	typeFlag := ItemTypeSpec
-	info, err := DetermineItemType(tmpDir, "user-auth", &typeFlag)
+	info, err := DetermineItemType(
+		tmpDir,
+		"user-auth",
+		&typeFlag,
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, ItemTypeSpec, info.ItemType)
 }
 
 // TestDetermineItemType_ExplicitTypeOverridesBoth tests that explicit type flag
 // disambiguates when item exists as both
-func TestDetermineItemType_ExplicitTypeOverridesBoth(t *testing.T) {
+func TestDetermineItemType_ExplicitTypeOverridesBoth(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"user-auth"}, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"user-auth"},
+		[]string{"user-auth"},
+	)
 
 	// With type=change flag should succeed
 	typeFlag := ItemTypeChange
-	info, err := DetermineItemType(tmpDir, "user-auth", &typeFlag)
+	info, err := DetermineItemType(
+		tmpDir,
+		"user-auth",
+		&typeFlag,
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, ItemTypeChange, info.ItemType)
 
 	// With type=spec flag should succeed
 	typeFlag = ItemTypeSpec
-	info, err = DetermineItemType(tmpDir, "user-auth", &typeFlag)
+	info, err = DetermineItemType(
+		tmpDir,
+		"user-auth",
+		&typeFlag,
+	)
 	assert.NoError(t, err)
 	assert.Equal(t, ItemTypeSpec, info.ItemType)
 }
 
 // TestDetermineItemType_ExplicitTypeNotFound tests explicit type flag when item not found
-func TestDetermineItemType_ExplicitTypeNotFound(t *testing.T) {
+func TestDetermineItemType_ExplicitTypeNotFound(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"add-feature"}, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+		[]string{"user-auth"},
+	)
 
 	// Request spec that doesn't exist
 	typeFlag := ItemTypeSpec
-	_, err := DetermineItemType(tmpDir, "nonexistent", &typeFlag)
+	_, err := DetermineItemType(
+		tmpDir,
+		"nonexistent",
+		&typeFlag,
+	)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "spec 'nonexistent' not found")
+	assert.Contains(
+		t,
+		err.Error(),
+		"spec 'nonexistent' not found",
+	)
 
 	// Request change that doesn't exist
 	typeFlag = ItemTypeChange
-	_, err = DetermineItemType(tmpDir, "nonexistent", &typeFlag)
+	_, err = DetermineItemType(
+		tmpDir,
+		"nonexistent",
+		&typeFlag,
+	)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "change 'nonexistent' not found")
+	assert.Contains(
+		t,
+		err.Error(),
+		"change 'nonexistent' not found",
+	)
 }
 
 // TestDetermineItemType_ExplicitTypeWrongType tests explicit type flag when item exists as different type
-func TestDetermineItemType_ExplicitTypeWrongType(t *testing.T) {
+func TestDetermineItemType_ExplicitTypeWrongType(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"add-feature"}, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+		[]string{"user-auth"},
+	)
 
 	// Item exists as change but request as spec
 	typeFlag := ItemTypeSpec
-	_, err := DetermineItemType(tmpDir, "add-feature", &typeFlag)
+	_, err := DetermineItemType(
+		tmpDir,
+		"add-feature",
+		&typeFlag,
+	)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "spec 'add-feature' not found")
+	assert.Contains(
+		t,
+		err.Error(),
+		"spec 'add-feature' not found",
+	)
 
 	// Item exists as spec but request as change
 	typeFlag = ItemTypeChange
-	_, err = DetermineItemType(tmpDir, "user-auth", &typeFlag)
+	_, err = DetermineItemType(
+		tmpDir,
+		"user-auth",
+		&typeFlag,
+	)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "change 'user-auth' not found")
+	assert.Contains(
+		t,
+		err.Error(),
+		"change 'user-auth' not found",
+	)
 }
 
 // TestDetermineItemType_DiscoveryFailure tests handling of discovery errors
-func TestDetermineItemType_DiscoveryFailure(t *testing.T) {
+func TestDetermineItemType_DiscoveryFailure(
+	t *testing.T,
+) {
 	// Use non-existent directory to trigger discovery failure
-	_, err := DetermineItemType("/nonexistent/path", "test", nil)
+	_, err := DetermineItemType(
+		"/nonexistent/path",
+		"test",
+		nil,
+	)
 	assert.Error(t, err)
 }
 
 // TestValidateItemByType_Change tests validating a change by type
 func TestValidateItemByType_Change(t *testing.T) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"add-feature"}, nil)
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+		nil,
+	)
 	createValidChange(t, tmpDir, "add-feature")
 
 	validator := NewValidator(false)
-	report, err := ValidateItemByType(validator, tmpDir, "add-feature", ItemTypeChange)
+	report, err := ValidateItemByType(
+		validator,
+		tmpDir,
+		"add-feature",
+		ItemTypeChange,
+	)
 
 	assert.NoError(t, err)
 	assert.NotZero(t, report)
@@ -160,11 +311,21 @@ func TestValidateItemByType_Change(t *testing.T) {
 // TestValidateItemByType_Spec tests validating a spec by type
 func TestValidateItemByType_Spec(t *testing.T) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, nil, []string{"user-auth"})
+	setupTestProject(
+		t,
+		tmpDir,
+		nil,
+		[]string{"user-auth"},
+	)
 	createValidSpec(t, tmpDir, "user-auth")
 
 	validator := NewValidator(false)
-	report, err := ValidateItemByType(validator, tmpDir, "user-auth", ItemTypeSpec)
+	report, err := ValidateItemByType(
+		validator,
+		tmpDir,
+		"user-auth",
+		ItemTypeSpec,
+	)
 
 	assert.NoError(t, err)
 	assert.NotZero(t, report)
@@ -172,13 +333,25 @@ func TestValidateItemByType_Spec(t *testing.T) {
 }
 
 // TestValidateItemByType_InvalidChange tests validating an invalid change
-func TestValidateItemByType_InvalidChange(t *testing.T) {
+func TestValidateItemByType_InvalidChange(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"bad-change"}, nil)
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"bad-change"},
+		nil,
+	)
 	createInvalidChange(t, tmpDir, "bad-change")
 
 	validator := NewValidator(true) // strict mode
-	report, err := ValidateItemByType(validator, tmpDir, "bad-change", ItemTypeChange)
+	report, err := ValidateItemByType(
+		validator,
+		tmpDir,
+		"bad-change",
+		ItemTypeChange,
+	)
 
 	// Should get an error or invalid report
 	if err == nil {
@@ -189,8 +362,17 @@ func TestValidateItemByType_InvalidChange(t *testing.T) {
 // TestValidateSingleItem_Change tests validating a single change item
 func TestValidateSingleItem_Change(t *testing.T) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, []string{"add-feature"}, nil)
-	changePath := createValidChange(t, tmpDir, "add-feature")
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+		nil,
+	)
+	changePath := createValidChange(
+		t,
+		tmpDir,
+		"add-feature",
+	)
 
 	item := ValidationItem{
 		Name:     "add-feature",
@@ -199,7 +381,10 @@ func TestValidateSingleItem_Change(t *testing.T) {
 	}
 
 	validator := NewValidator(false)
-	result, err := ValidateSingleItem(validator, item)
+	result, err := ValidateSingleItem(
+		validator,
+		item,
+	)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "add-feature", result.Name)
@@ -210,8 +395,17 @@ func TestValidateSingleItem_Change(t *testing.T) {
 // TestValidateSingleItem_Spec tests validating a single spec item
 func TestValidateSingleItem_Spec(t *testing.T) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, nil, []string{"user-auth"})
-	specPath := createValidSpec(t, tmpDir, "user-auth")
+	setupTestProject(
+		t,
+		tmpDir,
+		nil,
+		[]string{"user-auth"},
+	)
+	specPath := createValidSpec(
+		t,
+		tmpDir,
+		"user-auth",
+	)
 
 	item := ValidationItem{
 		Name:     "user-auth",
@@ -220,7 +414,10 @@ func TestValidateSingleItem_Spec(t *testing.T) {
 	}
 
 	validator := NewValidator(false)
-	result, err := ValidateSingleItem(validator, item)
+	result, err := ValidateSingleItem(
+		validator,
+		item,
+	)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "user-auth", result.Name)
@@ -230,7 +427,9 @@ func TestValidateSingleItem_Spec(t *testing.T) {
 }
 
 // TestValidateSingleItem_ValidationError tests handling of validation errors
-func TestValidateSingleItem_ValidationError(t *testing.T) {
+func TestValidateSingleItem_ValidationError(
+	t *testing.T,
+) {
 	item := ValidationItem{
 		Name:     "nonexistent",
 		ItemType: ItemTypeSpec,
@@ -238,7 +437,10 @@ func TestValidateSingleItem_ValidationError(t *testing.T) {
 	}
 
 	validator := NewValidator(false)
-	result, err := ValidateSingleItem(validator, item)
+	result, err := ValidateSingleItem(
+		validator,
+		item,
+	)
 
 	assert.Error(t, err)
 	assert.Equal(t, "nonexistent", result.Name)
@@ -248,14 +450,30 @@ func TestValidateSingleItem_ValidationError(t *testing.T) {
 }
 
 // TestValidateSingleItem_InvalidContent tests validation of invalid content
-func TestValidateSingleItem_InvalidContent(t *testing.T) {
+func TestValidateSingleItem_InvalidContent(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	setupTestProject(t, tmpDir, nil, []string{"bad-spec"})
+	setupTestProject(
+		t,
+		tmpDir,
+		nil,
+		[]string{"bad-spec"},
+	)
 
 	// Create invalid spec
-	specDir := filepath.Join(tmpDir, SpectrDir, "specs", "bad-spec")
+	specDir := filepath.Join(
+		tmpDir,
+		SpectrDir,
+		"specs",
+		"bad-spec",
+	)
 	specPath := filepath.Join(specDir, "spec.md")
-	err := os.WriteFile(specPath, []byte("# Bad Spec\nNo proper content"), testFilePerm)
+	err := os.WriteFile(
+		specPath,
+		[]byte("# Bad Spec\nNo proper content"),
+		testFilePerm,
+	)
 	assert.NoError(t, err)
 
 	item := ValidationItem{
@@ -265,7 +483,10 @@ func TestValidateSingleItem_InvalidContent(t *testing.T) {
 	}
 
 	validator := NewValidator(true) // strict mode
-	result, err := ValidateSingleItem(validator, item)
+	result, err := ValidateSingleItem(
+		validator,
+		item,
+	)
 
 	// Should succeed in running validation but report should be invalid
 	assert.NoError(t, err)
@@ -284,16 +505,29 @@ func TestContainsString(t *testing.T) {
 		expected bool
 	}{
 		{"found at start", slice, "apple", true},
-		{"found in middle", slice, "banana", true},
+		{
+			"found in middle",
+			slice,
+			"banana",
+			true,
+		},
 		{"found at end", slice, "cherry", true},
 		{"not found", slice, "grape", false},
 		{"empty string", slice, "", false},
-		{"empty slice", make([]string, 0), "apple", false},
+		{
+			"empty slice",
+			make([]string, 0),
+			"apple",
+			false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := containsString(tt.slice, tt.item)
+			result := containsString(
+				tt.slice,
+				tt.item,
+			)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -302,27 +536,49 @@ func TestContainsString(t *testing.T) {
 // Helper functions for test setup
 
 // setupTestProject creates a basic spectr project structure
-func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
+func setupTestProject(
+	t *testing.T,
+	tmpDir string,
+	changes, specs []string,
+) {
 	t.Helper()
 
 	// Create changes directory
-	changesDir := filepath.Join(tmpDir, SpectrDir, "changes")
+	changesDir := filepath.Join(
+		tmpDir,
+		SpectrDir,
+		"changes",
+	)
 	err := os.MkdirAll(changesDir, testDirPerm)
 	assert.NoError(t, err)
 
 	// Create change directories with proposal.md
 	for _, change := range changes {
-		changeDir := filepath.Join(changesDir, change)
-		err := os.MkdirAll(changeDir, testDirPerm)
+		changeDir := filepath.Join(
+			changesDir,
+			change,
+		)
+		err = os.MkdirAll(changeDir, testDirPerm)
 		assert.NoError(t, err)
 
-		proposalPath := filepath.Join(changeDir, "proposal.md")
-		err = os.WriteFile(proposalPath, []byte("# Test Proposal"), testFilePerm)
+		proposalPath := filepath.Join(
+			changeDir,
+			"proposal.md",
+		)
+		err = os.WriteFile(
+			proposalPath,
+			[]byte("# Test Proposal"),
+			testFilePerm,
+		)
 		assert.NoError(t, err)
 	}
 
 	// Create specs directory
-	specsDir := filepath.Join(tmpDir, SpectrDir, "specs")
+	specsDir := filepath.Join(
+		tmpDir,
+		SpectrDir,
+		"specs",
+	)
 	err = os.MkdirAll(specsDir, testDirPerm)
 	assert.NoError(t, err)
 
@@ -332,17 +588,32 @@ func setupTestProject(t *testing.T, tmpDir string, changes, specs []string) {
 		err := os.MkdirAll(specDir, testDirPerm)
 		assert.NoError(t, err)
 
-		specPath := filepath.Join(specDir, "spec.md")
-		err = os.WriteFile(specPath, []byte("# Test Spec"), testFilePerm)
+		specPath := filepath.Join(
+			specDir,
+			"spec.md",
+		)
+		err = os.WriteFile(
+			specPath,
+			[]byte("# Test Spec"),
+			testFilePerm,
+		)
 		assert.NoError(t, err)
 	}
 }
 
 // createValidChange creates a valid change for testing
-func createValidChange(t *testing.T, tmpDir, changeName string) string {
+func createValidChange(
+	t *testing.T,
+	tmpDir, changeName string,
+) string {
 	t.Helper()
 
-	changeDir := filepath.Join(tmpDir, SpectrDir, "changes", changeName)
+	changeDir := filepath.Join(
+		tmpDir,
+		SpectrDir,
+		"changes",
+		changeName,
+	)
 
 	// Create proposal.md
 	proposalContent := `# Change: Add Feature
@@ -356,8 +627,15 @@ This adds a new feature for testing.
 ## Impact
 - Affects specs: user-auth
 `
-	proposalPath := filepath.Join(changeDir, "proposal.md")
-	err := os.WriteFile(proposalPath, []byte(proposalContent), testFilePerm)
+	proposalPath := filepath.Join(
+		changeDir,
+		"proposal.md",
+	)
+	err := os.WriteFile(
+		proposalPath,
+		[]byte(proposalContent),
+		testFilePerm,
+	)
 	assert.NoError(t, err)
 
 	// Create tasks.md
@@ -365,12 +643,23 @@ This adds a new feature for testing.
 - [ ] Task 1
 - [ ] Task 2
 `
-	tasksPath := filepath.Join(changeDir, "tasks.md")
-	err = os.WriteFile(tasksPath, []byte(tasksContent), testFilePerm)
+	tasksPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
+	err = os.WriteFile(
+		tasksPath,
+		[]byte(tasksContent),
+		testFilePerm,
+	)
 	assert.NoError(t, err)
 
 	// Create a valid delta spec
-	specsDir := filepath.Join(changeDir, "specs", "test-spec")
+	specsDir := filepath.Join(
+		changeDir,
+		"specs",
+		"test-spec",
+	)
 	err = os.MkdirAll(specsDir, testDirPerm)
 	assert.NoError(t, err)
 
@@ -385,32 +674,62 @@ The system SHALL provide the new feature.
 - **WHEN** user activates feature
 - **THEN** feature is enabled
 `
-	deltaPath := filepath.Join(specsDir, "spec.md")
-	err = os.WriteFile(deltaPath, []byte(deltaContent), testFilePerm)
+	deltaPath := filepath.Join(
+		specsDir,
+		"spec.md",
+	)
+	err = os.WriteFile(
+		deltaPath,
+		[]byte(deltaContent),
+		testFilePerm,
+	)
 	assert.NoError(t, err)
 
 	return changeDir
 }
 
 // createInvalidChange creates an invalid change for testing
-func createInvalidChange(t *testing.T, tmpDir, changeName string) string {
+func createInvalidChange(
+	t *testing.T,
+	tmpDir, changeName string,
+) string {
 	t.Helper()
 
-	changeDir := filepath.Join(tmpDir, SpectrDir, "changes", changeName)
+	changeDir := filepath.Join(
+		tmpDir,
+		SpectrDir,
+		"changes",
+		changeName,
+	)
 
 	// Create minimal proposal.md that might fail validation
-	proposalPath := filepath.Join(changeDir, "proposal.md")
-	err := os.WriteFile(proposalPath, []byte("# Bad Change"), testFilePerm)
+	proposalPath := filepath.Join(
+		changeDir,
+		"proposal.md",
+	)
+	err := os.WriteFile(
+		proposalPath,
+		[]byte("# Bad Change"),
+		testFilePerm,
+	)
 	assert.NoError(t, err)
 
 	return changeDir
 }
 
 // createValidSpec creates a valid spec for testing
-func createValidSpec(t *testing.T, tmpDir, specName string) string {
+func createValidSpec(
+	t *testing.T,
+	tmpDir, specName string,
+) string {
 	t.Helper()
 
-	specDir := filepath.Join(tmpDir, SpectrDir, "specs", specName)
+	specDir := filepath.Join(
+		tmpDir,
+		SpectrDir,
+		"specs",
+		specName,
+	)
 	err := os.MkdirAll(specDir, testDirPerm)
 	assert.NoError(t, err)
 
@@ -433,7 +752,11 @@ The system SHALL provide user authentication functionality.
 - **THEN** authentication fails and error message is displayed
 `
 	specPath := filepath.Join(specDir, "spec.md")
-	err = os.WriteFile(specPath, []byte(specContent), testFilePerm)
+	err = os.WriteFile(
+		specPath,
+		[]byte(specContent),
+		testFilePerm,
+	)
 	assert.NoError(t, err)
 
 	return specPath

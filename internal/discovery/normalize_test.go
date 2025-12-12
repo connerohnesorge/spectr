@@ -138,7 +138,9 @@ func TestNormalizeItemPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			id, inferredType := NormalizeItemPath(tt.input)
+			id, inferredType := NormalizeItemPath(
+				tt.input,
+			)
 
 			if id != tt.expectedID {
 				t.Errorf(
@@ -206,7 +208,9 @@ func TestExtractFirstPathComponent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := extractFirstPathComponent(tt.input)
+			result := extractFirstPathComponent(
+				tt.input,
+			)
 
 			if result != tt.expected {
 				t.Errorf(

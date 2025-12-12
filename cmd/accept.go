@@ -24,8 +24,12 @@ const filePerm = 0644
 
 // Regex patterns for parsing tasks.md - compiled once at package level
 var (
-	sectionPattern = regexp.MustCompile(`^##\s+\d+\.\s+(.+)$`)
-	taskPattern    = regexp.MustCompile(`^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$`)
+	sectionPattern = regexp.MustCompile(
+		`^##\s+\d+\.\s+(.+)$`,
+	)
+	taskPattern = regexp.MustCompile(
+		`^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$`,
+	)
 )
 
 // AcceptCmd represents the accept command for converting tasks.md to
@@ -33,11 +37,12 @@ var (
 // produces a machine-readable tasks.json file with structured task data.
 type AcceptCmd struct {
 	// ChangeID is the optional change identifier to process
-	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change"`
+	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change"` //nolint:lll,revive
 	// DryRun enables preview mode without writing files
-	DryRun bool `name:"dry-run" help:"Preview without writing"`
+	DryRun bool `                                        help:"Preview without writing" name:"dry-run"` //nolint:lll,revive
+
 	// NoInteractive disables interactive prompts
-	NoInteractive bool `name:"no-interactive" help:"Disable prompts"`
+	NoInteractive bool `                                        help:"Disable prompts"         name:"no-interactive"` //nolint:lll,revive
 }
 
 // Run executes the accept command.
@@ -46,10 +51,15 @@ type AcceptCmd struct {
 func (c *AcceptCmd) Run() error {
 	projectRoot, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed to get current directory: %w", err)
+		return fmt.Errorf(
+			"failed to get current directory: %w",
+			err,
+		)
 	}
 
-	changeID, err := c.resolveChangeID(projectRoot)
+	changeID, err := c.resolveChangeID(
+		projectRoot,
+	)
 	if err != nil {
 		var userCancelledErr *specterrs.UserCancelledError
 		if errors.As(err, &userCancelledErr) {
@@ -65,66 +75,119 @@ func (c *AcceptCmd) Run() error {
 // processChange handles the conversion of tasks.md to tasks.json.
 // It validates that the change directory and tasks.md exist,
 // validates the change, parses the markdown file, and writes the JSON output.
-func (c *AcceptCmd) processChange(projectRoot, changeID string) error {
-	changeDir := filepath.Join(projectRoot, "spectr", "changes", changeID)
-	if _, err := os.Stat(changeDir); os.IsNotExist(err) {
-		return fmt.Errorf("change directory not found: %s", changeDir)
+func (c *AcceptCmd) processChange(
+	projectRoot, changeID string,
+) error {
+	changeDir := filepath.Join(
+		projectRoot,
+		"spectr",
+		"changes",
+		changeID,
+	)
+	_, err := os.Stat(changeDir)
+	if os.IsNotExist(err) {
+		return fmt.Errorf(
+			"change directory not found: %s",
+			changeDir,
+		)
 	}
 
-	tasksMdPath := filepath.Join(changeDir, "tasks.md")
-	if _, err := os.Stat(tasksMdPath); os.IsNotExist(err) {
-		return fmt.Errorf("tasks.md not found in change: %s", tasksMdPath)
+	tasksMdPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
+	_, err = os.Stat(tasksMdPath)
+	if os.IsNotExist(
+		err,
+	) {
+		return fmt.Errorf(
+			"tasks.md not found in change: %s",
+			tasksMdPath,
+		)
 	}
 
 	// Validate the change before conversion
-	if err := c.runValidation(changeDir); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+	err = c.runValidation(changeDir)
+	if err != nil {
+		return fmt.Errorf(
+			"validation failed: %w",
+			err,
+		)
 	}
 
 	tasks, err := parseTasksMd(tasksMdPath)
 	if err != nil {
-		return fmt.Errorf("failed to parse tasks.md: %w", err)
+		return fmt.Errorf(
+			"failed to parse tasks.md: %w",
+			err,
+		)
 	}
 
-	tasksJSONPath := filepath.Join(changeDir, "tasks.json")
+	tasksJSONPath := filepath.Join(
+		changeDir,
+		"tasks.json",
+	)
 
 	if c.DryRun {
-		fmt.Printf("Would convert: %s\n", tasksMdPath)
-		fmt.Printf("Would write to: %s\n", tasksJSONPath)
-		fmt.Printf("Would remove: %s\n", tasksMdPath)
-		fmt.Printf("Found %d tasks\n", len(tasks))
+		fmt.Printf(
+			"Would convert: %s\nwould write to: %s\nWould remove: %s\nFound %d tasks\n", //nolint:lll,revive
+			tasksMdPath,
+			tasksJSONPath,
+			tasksMdPath,
+			len(tasks),
+		)
 
 		return nil
 	}
 
-	if err := writeTasksJSON(tasksJSONPath, tasks); err != nil {
-		return fmt.Errorf("failed to write tasks.json: %w", err)
+	err = writeTasksJSON(tasksJSONPath, tasks)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to write tasks.json: %w",
+			err,
+		)
 	}
 
 	// Remove tasks.md after successful tasks.json creation
-	if err := os.Remove(tasksMdPath); err != nil {
-		return fmt.Errorf("failed to remove tasks.md: %w", err)
+	err = os.Remove(tasksMdPath)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to remove tasks.md: %w",
+			err,
+		)
 	}
 
-	fmt.Printf("Converted %s -> %s\n", tasksMdPath, tasksJSONPath)
-	fmt.Printf("Removed %s\n", tasksMdPath)
-	fmt.Printf("Wrote %d tasks\n", len(tasks))
+	fmt.Printf(
+		"Converted %s -> %s\nRemoved %s\nWrote %d tasks\n",
+		tasksMdPath,
+		tasksJSONPath,
+		tasksMdPath,
+		len(tasks),
+	)
 
 	return nil
 }
 
 // runValidation validates the change before accepting
-func (*AcceptCmd) runValidation(changeDir string) error {
+func (*AcceptCmd) runValidation(
+	changeDir string,
+) error {
 	fmt.Println("Validating change...")
 
-	report, err := archive.ValidatePreArchive(changeDir, true)
+	report, err := archive.ValidatePreArchive(
+		changeDir,
+		true,
+	)
 	if err != nil {
 		return err
 	}
 
 	if !report.Valid {
-		fmt.Printf("Validation failed: %d error(s), %d warning(s)\n",
-			report.Summary.Errors, report.Summary.Warnings)
+		fmt.Printf(
+			"Validation failed: %d error(s), %d warning(s)\n",
+			report.Summary.Errors,
+			report.Summary.Warnings,
+		)
 
 		for _, issue := range report.Issues {
 			fmt.Printf("  [%s] %s: %s\n",
@@ -134,12 +197,16 @@ func (*AcceptCmd) runValidation(changeDir string) error {
 			)
 		}
 
-		return &specterrs.ValidationRequiredError{Operation: "accepting"}
+		return &specterrs.ValidationRequiredError{
+			Operation: "accepting",
+		}
 	}
 
 	if report.Summary.Warnings > 0 {
-		fmt.Printf("Validation passed with %d warning(s)\n",
-			report.Summary.Warnings)
+		fmt.Printf(
+			"Validation passed with %d warning(s)\n",
+			report.Summary.Warnings,
+		)
 	} else {
 		fmt.Println("Validation passed")
 	}
@@ -151,24 +218,36 @@ func (*AcceptCmd) runValidation(changeDir string) error {
 // selection. If a change ID is provided, it uses partial matching to
 // resolve the full ID. Otherwise, it prompts for interactive selection
 // (unless NoInteractive is set).
-func (c *AcceptCmd) resolveChangeID(projectRoot string) (string, error) {
+func (c *AcceptCmd) resolveChangeID(
+	projectRoot string,
+) (string, error) {
 	if c.ChangeID != "" {
 		// Normalize path to extract change ID
-		normalizedID, _ := discovery.NormalizeItemPath(c.ChangeID)
+		normalizedID, _ := discovery.NormalizeItemPath(
+			c.ChangeID,
+		)
 
-		result, err := discovery.ResolveChangeID(normalizedID, projectRoot)
+		result, err := discovery.ResolveChangeID(
+			normalizedID,
+			projectRoot,
+		)
 		if err != nil {
 			return "", err
 		}
 
 		if result.PartialMatch {
-			fmt.Printf("Resolved '%s' -> '%s'\n\n", c.ChangeID, result.ChangeID)
+			fmt.Printf(
+				"Resolved '%s' -> '%s'\n\n",
+				c.ChangeID,
+				result.ChangeID,
+			)
 		}
 
 		return result.ChangeID, nil
 	}
 
 	if c.NoInteractive {
+		// TODO: Define error type for this?
 		return "", errors.New(
 			"usage: spectr accept <change-id> [flags]\n" +
 				"       spectr accept <change-id> --dry-run",
@@ -179,7 +258,10 @@ func (c *AcceptCmd) resolveChangeID(projectRoot string) (string, error) {
 }
 
 // parseTaskFromMatch creates a Task from regex match results.
-func parseTaskFromMatch(matches []string, section string) parsers.Task {
+func parseTaskFromMatch(
+	matches []string,
+	section string,
+) parsers.Task {
 	checkbox := matches[1]
 	taskID := matches[2]
 	description := strings.TrimSpace(matches[3])
@@ -200,12 +282,18 @@ func parseTaskFromMatch(matches []string, section string) parsers.Task {
 }
 
 // parseTasksMd parses tasks.md and returns a slice of Task structs.
+//
 // It extracts section headers (## lines), task IDs, descriptions, and status
 // from the markdown structure.
-func parseTasksMd(path string) ([]parsers.Task, error) {
+func parseTasksMd(
+	path string,
+) ([]parsers.Task, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
+		return nil, fmt.Errorf(
+			"failed to open file: %w",
+			err,
+		)
 	}
 	defer func() { _ = file.Close() }()
 
@@ -218,22 +306,35 @@ func parseTasksMd(path string) ([]parsers.Task, error) {
 
 		// Check for section header (e.g., "## 1. Core Accept Command")
 		if matches := sectionPattern.FindStringSubmatch(line); matches != nil {
-			currentSection = strings.TrimSpace(matches[1])
+			currentSection = strings.TrimSpace(
+				matches[1],
+			)
 
 			continue
 		}
 
 		// Check for task line (e.g., "- [ ] 1.1 Create `cmd/accept.go`...")
-		matches := taskPattern.FindStringSubmatch(line)
+		matches := taskPattern.FindStringSubmatch(
+			line,
+		)
 		if matches == nil {
 			continue
 		}
 
-		tasks = append(tasks, parseTaskFromMatch(matches, currentSection))
+		tasks = append(
+			tasks,
+			parseTaskFromMatch(
+				matches,
+				currentSection,
+			),
+		)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
+		return nil, fmt.Errorf(
+			"error reading file: %w",
+			err,
+		)
 	}
 
 	return tasks, nil
@@ -241,19 +342,32 @@ func parseTasksMd(path string) ([]parsers.Task, error) {
 
 // writeTasksJSON writes tasks to a tasks.json file.
 // The output follows the TasksFile structure defined in parsers/types.go.
-func writeTasksJSON(path string, tasks []parsers.Task) error {
+func writeTasksJSON(
+	path string,
+	tasks []parsers.Task,
+) error {
 	tasksFile := parsers.TasksFile{
 		Version: 1,
 		Tasks:   tasks,
 	}
 
-	jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+	jsonData, err := json.MarshalIndent(
+		tasksFile,
+		"",
+		"  ",
+	)
 	if err != nil {
-		return fmt.Errorf("failed to marshal tasks to JSON: %w", err)
+		return fmt.Errorf(
+			"failed to marshal tasks to JSON: %w",
+			err,
+		)
 	}
 
 	if err := os.WriteFile(path, jsonData, filePerm); err != nil {
-		return fmt.Errorf("failed to write tasks.json: %w", err)
+		return fmt.Errorf(
+			"failed to write tasks.json: %w",
+			err,
+		)
 	}
 
 	return nil

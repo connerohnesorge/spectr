@@ -38,12 +38,18 @@ The system SHALL support another feature.
 	}
 
 	if len(plan.Added) != 2 {
-		t.Errorf("Expected 2 added requirements, got %d", len(plan.Added))
+		t.Errorf(
+			"Expected 2 added requirements, got %d",
+			len(plan.Added),
+		)
 	}
 
 	if len(plan.Added) > 0 {
 		if plan.Added[0].Name != "New Feature" {
-			t.Errorf("Expected first requirement name 'New Feature', got %q", plan.Added[0].Name)
+			t.Errorf(
+				"Expected first requirement name 'New Feature', got %q",
+				plan.Added[0].Name,
+			)
 		}
 	}
 
@@ -52,7 +58,10 @@ The system SHALL support another feature.
 	}
 
 	if plan.Added[1].Name != "Another Feature" {
-		t.Errorf("Expected second requirement name 'Another Feature', got %q", plan.Added[1].Name)
+		t.Errorf(
+			"Expected second requirement name 'Another Feature', got %q",
+			plan.Added[1].Name,
+		)
 	}
 }
 
@@ -81,7 +90,10 @@ The system SHALL have updated behavior.
 	}
 
 	if len(plan.Modified) != 1 {
-		t.Errorf("Expected 1 modified requirement, got %d", len(plan.Modified))
+		t.Errorf(
+			"Expected 1 modified requirement, got %d",
+			len(plan.Modified),
+		)
 	}
 
 	if len(plan.Modified) == 0 {
@@ -89,7 +101,10 @@ The system SHALL have updated behavior.
 	}
 
 	if plan.Modified[0].Name != "Updated Feature" {
-		t.Errorf("Expected requirement name 'Updated Feature', got %q", plan.Modified[0].Name)
+		t.Errorf(
+			"Expected requirement name 'Updated Feature', got %q",
+			plan.Modified[0].Name,
+		)
 	}
 }
 
@@ -118,7 +133,10 @@ func TestParseDeltaSpec_Removed(t *testing.T) {
 	}
 
 	if len(plan.Removed) != 2 {
-		t.Errorf("Expected 2 removed requirements, got %d", len(plan.Removed))
+		t.Errorf(
+			"Expected 2 removed requirements, got %d",
+			len(plan.Removed),
+		)
 	}
 
 	if len(plan.Removed) > 0 {
@@ -135,7 +153,10 @@ func TestParseDeltaSpec_Removed(t *testing.T) {
 	}
 
 	if plan.Removed[1] != "Old Feature" {
-		t.Errorf("Expected second removed requirement 'Old Feature', got %q", plan.Removed[1])
+		t.Errorf(
+			"Expected second removed requirement 'Old Feature', got %q",
+			plan.Removed[1],
+		)
 	}
 }
 
@@ -163,15 +184,24 @@ func TestParseDeltaSpec_Renamed(t *testing.T) {
 	}
 
 	if len(plan.Renamed) != 2 {
-		t.Errorf("Expected 2 renamed requirements, got %d", len(plan.Renamed))
+		t.Errorf(
+			"Expected 2 renamed requirements, got %d",
+			len(plan.Renamed),
+		)
 	}
 
 	if len(plan.Renamed) > 0 {
 		if plan.Renamed[0].From != "Old Name" {
-			t.Errorf("Expected first rename from 'Old Name', got %q", plan.Renamed[0].From)
+			t.Errorf(
+				"Expected first rename from 'Old Name', got %q",
+				plan.Renamed[0].From,
+			)
 		}
 		if plan.Renamed[0].To != "New Name" {
-			t.Errorf("Expected first rename to 'New Name', got %q", plan.Renamed[0].To)
+			t.Errorf(
+				"Expected first rename to 'New Name', got %q",
+				plan.Renamed[0].To,
+			)
 		}
 	}
 
@@ -180,14 +210,22 @@ func TestParseDeltaSpec_Renamed(t *testing.T) {
 	}
 
 	if plan.Renamed[1].From != "Another Old Name" {
-		t.Errorf("Expected second rename from 'Another Old Name', got %q", plan.Renamed[1].From)
+		t.Errorf(
+			"Expected second rename from 'Another Old Name', got %q",
+			plan.Renamed[1].From,
+		)
 	}
 	if plan.Renamed[1].To != "Another New Name" {
-		t.Errorf("Expected second rename to 'Another New Name', got %q", plan.Renamed[1].To)
+		t.Errorf(
+			"Expected second rename to 'Another New Name', got %q",
+			plan.Renamed[1].To,
+		)
 	}
 }
 
-func TestParseDeltaSpec_AllOperations(t *testing.T) {
+func TestParseDeltaSpec_AllOperations(
+	t *testing.T,
+) {
 	content := `# Delta Spec
 
 ## ADDED Requirements
@@ -231,25 +269,43 @@ Modified content.
 	}
 
 	if len(plan.Added) != 1 {
-		t.Errorf("Expected 1 added requirement, got %d", len(plan.Added))
+		t.Errorf(
+			"Expected 1 added requirement, got %d",
+			len(plan.Added),
+		)
 	}
 	if len(plan.Modified) != 1 {
-		t.Errorf("Expected 1 modified requirement, got %d", len(plan.Modified))
+		t.Errorf(
+			"Expected 1 modified requirement, got %d",
+			len(plan.Modified),
+		)
 	}
 	if len(plan.Removed) != 1 {
-		t.Errorf("Expected 1 removed requirement, got %d", len(plan.Removed))
+		t.Errorf(
+			"Expected 1 removed requirement, got %d",
+			len(plan.Removed),
+		)
 	}
 	if len(plan.Renamed) != 1 {
-		t.Errorf("Expected 1 renamed requirement, got %d", len(plan.Renamed))
+		t.Errorf(
+			"Expected 1 renamed requirement, got %d",
+			len(plan.Renamed),
+		)
 	}
 
 	if !plan.HasDeltas() {
-		t.Error("HasDeltas should return true when operations exist")
+		t.Error(
+			"HasDeltas should return true when operations exist",
+		)
 	}
 
 	expectedCount := 4
 	if plan.CountOperations() != expectedCount {
-		t.Errorf("Expected %d total operations, got %d", expectedCount, plan.CountOperations())
+		t.Errorf(
+			"Expected %d total operations, got %d",
+			expectedCount,
+			plan.CountOperations(),
+		)
 	}
 }
 
@@ -277,15 +333,22 @@ This is not a delta operation.
 	}
 
 	if plan.HasDeltas() {
-		t.Error("HasDeltas should return false when no operations exist")
+		t.Error(
+			"HasDeltas should return false when no operations exist",
+		)
 	}
 
 	if plan.CountOperations() != 0 {
-		t.Errorf("Expected 0 operations, got %d", plan.CountOperations())
+		t.Errorf(
+			"Expected 0 operations, got %d",
+			plan.CountOperations(),
+		)
 	}
 }
 
-func TestParseDeltaSpec_EmptySections(t *testing.T) {
+func TestParseDeltaSpec_EmptySections(
+	t *testing.T,
+) {
 	content := `# Delta Spec
 
 ## ADDED Requirements
@@ -309,25 +372,44 @@ func TestParseDeltaSpec_EmptySections(t *testing.T) {
 	}
 
 	if len(plan.Added) != 0 {
-		t.Errorf("Expected 0 added requirements, got %d", len(plan.Added))
+		t.Errorf(
+			"Expected 0 added requirements, got %d",
+			len(plan.Added),
+		)
 	}
 	if len(plan.Modified) != 0 {
-		t.Errorf("Expected 0 modified requirements, got %d", len(plan.Modified))
+		t.Errorf(
+			"Expected 0 modified requirements, got %d",
+			len(plan.Modified),
+		)
 	}
 	if len(plan.Removed) != 0 {
-		t.Errorf("Expected 0 removed requirements, got %d", len(plan.Removed))
+		t.Errorf(
+			"Expected 0 removed requirements, got %d",
+			len(plan.Removed),
+		)
 	}
 	if len(plan.Renamed) != 0 {
-		t.Errorf("Expected 0 renamed requirements, got %d", len(plan.Renamed))
+		t.Errorf(
+			"Expected 0 renamed requirements, got %d",
+			len(plan.Renamed),
+		)
 	}
 }
 
-func TestParseDeltaSpec_MissingFile(t *testing.T) {
+func TestParseDeltaSpec_MissingFile(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	filePath := filepath.Join(tmpDir, "nonexistent.md")
+	filePath := filepath.Join(
+		tmpDir,
+		"nonexistent.md",
+	)
 
 	_, err := ParseDeltaSpec(filePath)
 	if err == nil {
-		t.Error("Expected error for missing file, got nil")
+		t.Error(
+			"Expected error for missing file, got nil",
+		)
 	}
 }

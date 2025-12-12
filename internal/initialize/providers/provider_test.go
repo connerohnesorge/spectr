@@ -25,11 +25,15 @@ func newMockRenderer() *mockTemplateRenderer {
 	}
 }
 
-func (m *mockTemplateRenderer) RenderAgents(_ TemplateContext) (string, error) {
+func (m *mockTemplateRenderer) RenderAgents(
+	_ TemplateContext,
+) (string, error) {
 	return m.agentsContent, nil
 }
 
-func (m *mockTemplateRenderer) RenderInstructionPointer(_ TemplateContext) (string, error) {
+func (m *mockTemplateRenderer) RenderInstructionPointer(
+	_ TemplateContext,
+) (string, error) {
 	return m.instructionPtrContent, nil
 }
 
@@ -44,16 +48,29 @@ func TestClaudeProvider(t *testing.T) {
 	p := NewClaudeProvider()
 
 	if p.ID() != "claude-code" {
-		t.Errorf("ID() = %s, want claude-code", p.ID())
+		t.Errorf(
+			"ID() = %s, want claude-code",
+			p.ID(),
+		)
 	}
 	if p.Name() != "Claude Code" {
-		t.Errorf("Name() = %s, want Claude Code", p.Name())
+		t.Errorf(
+			"Name() = %s, want Claude Code",
+			p.Name(),
+		)
 	}
 	if p.Priority() != PriorityClaudeCode {
-		t.Errorf("Priority() = %d, want %d", p.Priority(), PriorityClaudeCode)
+		t.Errorf(
+			"Priority() = %d, want %d",
+			p.Priority(),
+			PriorityClaudeCode,
+		)
 	}
 	if p.ConfigFile() != "CLAUDE.md" {
-		t.Errorf("ConfigFile() = %s, want CLAUDE.md", p.ConfigFile())
+		t.Errorf(
+			"ConfigFile() = %s, want CLAUDE.md",
+			p.ConfigFile(),
+		)
 	}
 	if p.GetProposalCommandPath() != ".claude/commands/spectr/proposal.md" {
 		t.Errorf(
@@ -68,13 +85,20 @@ func TestClaudeProvider(t *testing.T) {
 		)
 	}
 	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
+		t.Errorf(
+			"CommandFormat() = %d, want FormatMarkdown",
+			p.CommandFormat(),
+		)
 	}
 	if !p.HasConfigFile() {
-		t.Error("HasConfigFile() = false, want true")
+		t.Error(
+			"HasConfigFile() = false, want true",
+		)
 	}
 	if !p.HasSlashCommands() {
-		t.Error("HasSlashCommands() = false, want true")
+		t.Error(
+			"HasSlashCommands() = false, want true",
+		)
 	}
 }
 
@@ -85,10 +109,16 @@ func TestGeminiProvider(t *testing.T) {
 		t.Errorf("ID() = %s, want gemini", p.ID())
 	}
 	if p.Name() != "Gemini CLI" {
-		t.Errorf("Name() = %s, want Gemini CLI", p.Name())
+		t.Errorf(
+			"Name() = %s, want Gemini CLI",
+			p.Name(),
+		)
 	}
 	if p.ConfigFile() != "" {
-		t.Errorf("ConfigFile() = %s, want empty", p.ConfigFile())
+		t.Errorf(
+			"ConfigFile() = %s, want empty",
+			p.ConfigFile(),
+		)
 	}
 	if p.GetProposalCommandPath() != ".gemini/commands/spectr/proposal.toml" {
 		t.Errorf(
@@ -103,13 +133,20 @@ func TestGeminiProvider(t *testing.T) {
 		)
 	}
 	if p.CommandFormat() != FormatTOML {
-		t.Errorf("CommandFormat() = %d, want FormatTOML", p.CommandFormat())
+		t.Errorf(
+			"CommandFormat() = %d, want FormatTOML",
+			p.CommandFormat(),
+		)
 	}
 	if p.HasConfigFile() {
-		t.Error("HasConfigFile() = true, want false")
+		t.Error(
+			"HasConfigFile() = true, want false",
+		)
 	}
 	if !p.HasSlashCommands() {
-		t.Error("HasSlashCommands() = false, want true")
+		t.Error(
+			"HasSlashCommands() = false, want true",
+		)
 	}
 }
 
@@ -120,33 +157,53 @@ func TestCursorProvider(t *testing.T) {
 		t.Errorf("ID() = %s, want cursor", p.ID())
 	}
 	if p.ConfigFile() != "" {
-		t.Errorf("ConfigFile() should be empty for cursor, got %s", p.ConfigFile())
+		t.Errorf(
+			"ConfigFile() should be empty for cursor, got %s",
+			p.ConfigFile(),
+		)
 	}
 	if !p.HasSlashCommands() {
-		t.Error("Cursor should have slash commands")
+		t.Error(
+			"Cursor should have slash commands",
+		)
 	}
 	if p.HasConfigFile() {
-		t.Error("Cursor should not have config file")
+		t.Error(
+			"Cursor should not have config file",
+		)
 	}
 }
 
 func TestBaseProviderConfigure(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "spectr-test-*")
+	tmpDir, err := os.MkdirTemp(
+		"",
+		"spectr-test-*",
+	)
 	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
+		t.Fatalf(
+			"Failed to create temp dir: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	p := NewClaudeProvider()
 	tm := newMockRenderer()
 
-	err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	err = p.Configure(
+		tmpDir,
+		filepath.Join(tmpDir, "spectr"),
+		tm,
+	)
 	if err != nil {
 		t.Fatalf("Configure failed: %v", err)
 	}
 
 	// Check config file was created
-	configPath := filepath.Join(tmpDir, "CLAUDE.md")
+	configPath := filepath.Join(
+		tmpDir,
+		"CLAUDE.md",
+	)
 	if !FileExists(configPath) {
 		t.Error("Config file was not created")
 	}
@@ -154,17 +211,30 @@ func TestBaseProviderConfigure(t *testing.T) {
 	// Check slash command files were created
 	commands := []string{"proposal", "apply"}
 	for _, cmd := range commands {
-		cmdPath := filepath.Join(tmpDir, ".claude/commands/spectr", cmd+".md")
+		cmdPath := filepath.Join(
+			tmpDir,
+			".claude/commands/spectr",
+			cmd+".md",
+		)
 		if !FileExists(cmdPath) {
-			t.Errorf("Slash command file not created: %s", cmdPath)
+			t.Errorf(
+				"Slash command file not created: %s",
+				cmdPath,
+			)
 		}
 	}
 }
 
 func TestBaseProviderIsConfigured(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "spectr-test-*")
+	tmpDir, err := os.MkdirTemp(
+		"",
+		"spectr-test-*",
+	)
 	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
+		t.Fatalf(
+			"Failed to create temp dir: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
@@ -172,19 +242,27 @@ func TestBaseProviderIsConfigured(t *testing.T) {
 
 	// Should not be configured initially
 	if p.IsConfigured(tmpDir) {
-		t.Error("Should not be configured initially")
+		t.Error(
+			"Should not be configured initially",
+		)
 	}
 
 	// Configure it
 	tm := newMockRenderer()
-	err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	err = p.Configure(
+		tmpDir,
+		filepath.Join(tmpDir, "spectr"),
+		tm,
+	)
 	if err != nil {
 		t.Fatalf("Configure failed: %v", err)
 	}
 
 	// Should be configured now
 	if !p.IsConfigured(tmpDir) {
-		t.Error("Should be configured after Configure()")
+		t.Error(
+			"Should be configured after Configure()",
+		)
 	}
 }
 
@@ -200,7 +278,11 @@ func TestBaseProviderGetFilePaths(t *testing.T) {
 	}
 
 	if len(paths) != len(expectedPaths) {
-		t.Errorf("Expected %d paths, got %d", len(expectedPaths), len(paths))
+		t.Errorf(
+			"Expected %d paths, got %d",
+			len(expectedPaths),
+			len(paths),
+		)
 	}
 
 	for _, expected := range expectedPaths {
@@ -213,22 +295,35 @@ func TestBaseProviderGetFilePaths(t *testing.T) {
 			}
 		}
 		if !found {
-			t.Errorf("Expected path %s not found in GetFilePaths()", expected)
+			t.Errorf(
+				"Expected path %s not found in GetFilePaths()",
+				expected,
+			)
 		}
 	}
 }
 
 func TestGeminiProviderConfigure(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "spectr-test-*")
+	tmpDir, err := os.MkdirTemp(
+		"",
+		"spectr-test-*",
+	)
 	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
+		t.Fatalf(
+			"Failed to create temp dir: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	p := NewGeminiProvider()
 	tm := newMockRenderer()
 
-	err = p.Configure(tmpDir, filepath.Join(tmpDir, "spectr"), tm)
+	err = p.Configure(
+		tmpDir,
+		filepath.Join(tmpDir, "spectr"),
+		tm,
+	)
 	if err != nil {
 		t.Fatalf("Configure failed: %v", err)
 	}
@@ -236,28 +331,53 @@ func TestGeminiProviderConfigure(t *testing.T) {
 	// Check TOML files were created
 	commands := []string{"proposal", "apply"}
 	for _, cmd := range commands {
-		cmdPath := filepath.Join(tmpDir, ".gemini/commands/spectr", cmd+".toml")
+		cmdPath := filepath.Join(
+			tmpDir,
+			".gemini/commands/spectr",
+			cmd+".toml",
+		)
 		if !FileExists(cmdPath) {
-			t.Errorf("TOML command file not created: %s", cmdPath)
+			t.Errorf(
+				"TOML command file not created: %s",
+				cmdPath,
+			)
 		}
 
 		// Verify content is TOML format
 		content, err := os.ReadFile(cmdPath)
 		if err != nil {
-			t.Errorf("Failed to read %s: %v", cmdPath, err)
+			t.Errorf(
+				"Failed to read %s: %v",
+				cmdPath,
+				err,
+			)
 
 			continue
 		}
-		if !strings.Contains(string(content), "description =") {
-			t.Errorf("File %s doesn't look like TOML", cmdPath)
+		if !strings.Contains(
+			string(content),
+			"description =",
+		) {
+			t.Errorf(
+				"File %s doesn't look like TOML",
+				cmdPath,
+			)
 		}
-		if !strings.Contains(string(content), "prompt =") {
-			t.Errorf("File %s missing prompt field", cmdPath)
+		if !strings.Contains(
+			string(content),
+			"prompt =",
+		) {
+			t.Errorf(
+				"File %s missing prompt field",
+				cmdPath,
+			)
 		}
 	}
 }
 
-func TestSlashOnlyProviderGetFilePaths(t *testing.T) {
+func TestSlashOnlyProviderGetFilePaths(
+	t *testing.T,
+) {
 	p := NewCursorProvider()
 	paths := p.GetFilePaths()
 
@@ -268,31 +388,53 @@ func TestSlashOnlyProviderGetFilePaths(t *testing.T) {
 	}
 
 	if len(paths) != len(expectedPaths) {
-		t.Errorf("Expected %d paths, got %d", len(expectedPaths), len(paths))
+		t.Errorf(
+			"Expected %d paths, got %d",
+			len(expectedPaths),
+			len(paths),
+		)
 	}
 }
 
-func TestAllProvidersHaveRequiredFields(t *testing.T) {
+func TestAllProvidersHaveRequiredFields(
+	t *testing.T,
+) {
 	allProviders := All()
 
 	for _, p := range allProviders {
 		if p.ID() == "" {
-			t.Error("Found provider with empty ID")
+			t.Error(
+				"Found provider with empty ID",
+			)
 		}
 		if p.Name() == "" {
-			t.Errorf("Provider %s has empty Name", p.ID())
+			t.Errorf(
+				"Provider %s has empty Name",
+				p.ID(),
+			)
 		}
 		if p.Priority() < 1 {
-			t.Errorf("Provider %s has invalid priority: %d", p.ID(), p.Priority())
+			t.Errorf(
+				"Provider %s has invalid priority: %d",
+				p.ID(),
+				p.Priority(),
+			)
 		}
 
 		// All providers should have slash commands
 		if !p.HasSlashCommands() {
-			t.Errorf("Provider %s has no slash commands", p.ID())
+			t.Errorf(
+				"Provider %s has no slash commands",
+				p.ID(),
+			)
 		}
 		// Check that at least one command path is set
-		if p.GetProposalCommandPath() == "" && p.GetApplyCommandPath() == "" {
-			t.Errorf("Provider %s has no command paths set", p.ID())
+		if p.GetProposalCommandPath() == "" &&
+			p.GetApplyCommandPath() == "" {
+			t.Errorf(
+				"Provider %s has no command paths set",
+				p.ID(),
+			)
 		}
 	}
 }
@@ -303,8 +445,12 @@ func TestPrioritiesAreUnique(t *testing.T) {
 
 	for _, p := range allProviders {
 		if existingID, exists := priorities[p.Priority()]; exists {
-			t.Errorf("Duplicate priority %d for providers %s and %s",
-				p.Priority(), existingID, p.ID())
+			t.Errorf(
+				"Duplicate priority %d for providers %s and %s",
+				p.Priority(),
+				existingID,
+				p.ID(),
+			)
 		}
 		priorities[p.Priority()] = p.ID()
 	}
@@ -313,7 +459,10 @@ func TestPrioritiesAreUnique(t *testing.T) {
 func TestExpandPath(t *testing.T) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		t.Fatalf("Failed to get home directory: %v", err)
+		t.Fatalf(
+			"Failed to get home directory: %v",
+			err,
+		)
 	}
 
 	tests := []struct {
@@ -327,9 +476,12 @@ func TestExpandPath(t *testing.T) {
 			expected: ".config/test",
 		},
 		{
-			name:     "Path starting with tilde slash",
-			input:    "~/.config/test",
-			expected: filepath.Join(homeDir, ".config/test"),
+			name:  "Path starting with tilde slash",
+			input: "~/.config/test",
+			expected: filepath.Join(
+				homeDir,
+				".config/test",
+			),
 		},
 		{
 			name:     "Absolute path",
@@ -347,7 +499,12 @@ func TestExpandPath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := expandPath(tt.input)
 			if result != tt.expected {
-				t.Errorf("expandPath(%q) = %q, want %q", tt.input, result, tt.expected)
+				t.Errorf(
+					"expandPath(%q) = %q, want %q",
+					tt.input,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -395,7 +552,12 @@ func TestIsGlobalPath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := isGlobalPath(tt.input)
 			if result != tt.expected {
-				t.Errorf("isGlobalPath(%q) = %v, want %v", tt.input, result, tt.expected)
+				t.Errorf(
+					"isGlobalPath(%q) = %v, want %v",
+					tt.input,
+					result,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -408,22 +570,39 @@ func TestCodexProvider(t *testing.T) {
 		t.Errorf("ID() = %s, want codex", p.ID())
 	}
 	if p.Name() != "Codex CLI" {
-		t.Errorf("Name() = %s, want Codex CLI", p.Name())
+		t.Errorf(
+			"Name() = %s, want Codex CLI",
+			p.Name(),
+		)
 	}
 	if p.Priority() != PriorityCodex {
-		t.Errorf("Priority() = %d, want %d", p.Priority(), PriorityCodex)
+		t.Errorf(
+			"Priority() = %d, want %d",
+			p.Priority(),
+			PriorityCodex,
+		)
 	}
 	if p.ConfigFile() != "AGENTS.md" {
-		t.Errorf("ConfigFile() = %s, want AGENTS.md", p.ConfigFile())
+		t.Errorf(
+			"ConfigFile() = %s, want AGENTS.md",
+			p.ConfigFile(),
+		)
 	}
 	if !p.HasConfigFile() {
-		t.Error("HasConfigFile() = false, want true")
+		t.Error(
+			"HasConfigFile() = false, want true",
+		)
 	}
 	if !p.HasSlashCommands() {
-		t.Error("HasSlashCommands() = false, want true")
+		t.Error(
+			"HasSlashCommands() = false, want true",
+		)
 	}
 	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
+		t.Errorf(
+			"CommandFormat() = %d, want FormatMarkdown",
+			p.CommandFormat(),
+		)
 	}
 }
 
@@ -431,25 +610,45 @@ func TestOpencodeProvider(t *testing.T) {
 	p := NewOpencodeProvider()
 
 	if p.ID() != "opencode" {
-		t.Errorf("ID() = %s, want opencode", p.ID())
+		t.Errorf(
+			"ID() = %s, want opencode",
+			p.ID(),
+		)
 	}
 	if p.Name() != "OpenCode" {
-		t.Errorf("Name() = %s, want OpenCode", p.Name())
+		t.Errorf(
+			"Name() = %s, want OpenCode",
+			p.Name(),
+		)
 	}
 	if p.Priority() != PriorityOpencode {
-		t.Errorf("Priority() = %d, want %d", p.Priority(), PriorityOpencode)
+		t.Errorf(
+			"Priority() = %d, want %d",
+			p.Priority(),
+			PriorityOpencode,
+		)
 	}
 	if p.ConfigFile() != "" {
-		t.Errorf("ConfigFile() = %s, want empty string", p.ConfigFile())
+		t.Errorf(
+			"ConfigFile() = %s, want empty string",
+			p.ConfigFile(),
+		)
 	}
 	if p.HasConfigFile() {
-		t.Error("HasConfigFile() = true, want false")
+		t.Error(
+			"HasConfigFile() = true, want false",
+		)
 	}
 	if !p.HasSlashCommands() {
-		t.Error("HasSlashCommands() = false, want true")
+		t.Error(
+			"HasSlashCommands() = false, want true",
+		)
 	}
 	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf("CommandFormat() = %d, want FormatMarkdown", p.CommandFormat())
+		t.Errorf(
+			"CommandFormat() = %d, want FormatMarkdown",
+			p.CommandFormat(),
+		)
 	}
 	if p.GetProposalCommandPath() != ".opencode/command/spectr/proposal.md" {
 		t.Errorf(

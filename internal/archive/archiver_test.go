@@ -15,12 +15,19 @@ const (
 )
 
 // setupTestProject creates a minimal spectr project structure for testing
-func setupTestProject(t *testing.T, tmpDir string, changes []string) {
+func setupTestProject(
+	t *testing.T,
+	tmpDir string,
+	changes []string,
+) {
 	t.Helper()
 
 	// Create spectr directory structure
 	spectrDir := filepath.Join(tmpDir, "spectr")
-	changesDir := filepath.Join(spectrDir, "changes")
+	changesDir := filepath.Join(
+		spectrDir,
+		"changes",
+	)
 	specsDir := filepath.Join(spectrDir, "specs")
 
 	err := os.MkdirAll(changesDir, testDirPerm)
@@ -34,17 +41,31 @@ func setupTestProject(t *testing.T, tmpDir string, changes []string) {
 
 	// Create project.md
 	projectContent := "# Test Project\n"
-	err = os.WriteFile(filepath.Join(spectrDir, "project.md"), []byte(projectContent), testFilePerm)
+	err = os.WriteFile(
+		filepath.Join(spectrDir, "project.md"),
+		[]byte(projectContent),
+		testFilePerm,
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Create each change with minimal required files
 	for _, changeName := range changes {
-		changeDir := filepath.Join(changesDir, changeName)
-		changeSpecsDir := filepath.Join(changeDir, "specs", "test-feature")
+		changeDir := filepath.Join(
+			changesDir,
+			changeName,
+		)
+		changeSpecsDir := filepath.Join(
+			changeDir,
+			"specs",
+			"test-feature",
+		)
 
-		err = os.MkdirAll(changeSpecsDir, testDirPerm)
+		err = os.MkdirAll(
+			changeSpecsDir,
+			testDirPerm,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -52,7 +73,10 @@ func setupTestProject(t *testing.T, tmpDir string, changes []string) {
 		// Create proposal.md
 		proposalContent := "# Change: " + changeName + "\n\n## Why\nTest change.\n\n## What Changes\n- Test\n\n## Impact\n- specs: test-feature\n"
 		err = os.WriteFile(
-			filepath.Join(changeDir, "proposal.md"),
+			filepath.Join(
+				changeDir,
+				"proposal.md",
+			),
 			[]byte(proposalContent),
 			testFilePerm,
 		)
@@ -62,7 +86,11 @@ func setupTestProject(t *testing.T, tmpDir string, changes []string) {
 
 		// Create tasks.md with completed tasks
 		tasksContent := "## Tasks\n- [x] Task 1\n"
-		err = os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), testFilePerm)
+		err = os.WriteFile(
+			filepath.Join(changeDir, "tasks.md"),
+			[]byte(tasksContent),
+			testFilePerm,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -78,7 +106,10 @@ The system SHALL provide test functionality.
 - **THEN** it passes
 `
 		err = os.WriteFile(
-			filepath.Join(changeSpecsDir, "spec.md"),
+			filepath.Join(
+				changeSpecsDir,
+				"spec.md",
+			),
 			[]byte(deltaSpec),
 			testFilePerm,
 		)
@@ -92,7 +123,13 @@ func TestArchive_PartialIDPrefix(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Setup project with a change that has a long name
-	setupTestProject(t, tmpDir, []string{"refactor-unified-interactive-tui"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{
+			"refactor-unified-interactive-tui",
+		},
+	)
 
 	// Capture stdout to verify the resolution message
 	oldStdout := os.Stdout
@@ -129,31 +166,60 @@ func TestArchive_PartialIDPrefix(t *testing.T) {
 	// Verify the resolution message was printed
 	expectedMsg := "Resolved 'refactor' -> 'refactor-unified-interactive-tui'"
 	if !strings.Contains(output, expectedMsg) {
-		t.Errorf("Expected output to contain '%s', got: %s", expectedMsg, output)
+		t.Errorf(
+			"Expected output to contain '%s', got: %s",
+			expectedMsg,
+			output,
+		)
 	}
 
 	// Verify the change was archived
-	archiveDir := filepath.Join(tmpDir, "spectr", "changes", "archive")
+	archiveDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+		"archive",
+	)
 	entries, err := os.ReadDir(archiveDir)
 	if err != nil {
-		t.Fatalf("Failed to read archive dir: %v", err)
+		t.Fatalf(
+			"Failed to read archive dir: %v",
+			err,
+		)
 	}
 
 	if len(entries) != 1 {
-		t.Fatalf("Expected 1 archived change, got %d", len(entries))
+		t.Fatalf(
+			"Expected 1 archived change, got %d",
+			len(entries),
+		)
 	}
 
 	// Verify the archive name contains the original change ID
-	if !strings.Contains(entries[0].Name(), "refactor-unified-interactive-tui") {
-		t.Errorf("Archive name should contain original ID, got: %s", entries[0].Name())
+	if !strings.Contains(
+		entries[0].Name(),
+		"refactor-unified-interactive-tui",
+	) {
+		t.Errorf(
+			"Archive name should contain original ID, got: %s",
+			entries[0].Name(),
+		)
 	}
 }
 
-func TestArchive_PartialIDSubstring(t *testing.T) {
+func TestArchive_PartialIDSubstring(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Setup project with a change
-	setupTestProject(t, tmpDir, []string{"refactor-unified-interactive-tui"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{
+			"refactor-unified-interactive-tui",
+		},
+	)
 
 	// Capture stdout
 	oldStdout := os.Stdout
@@ -166,7 +232,6 @@ func TestArchive_PartialIDSubstring(t *testing.T) {
 	}
 
 	_, err := Archive(cmd, tmpDir)
-
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
 	}
@@ -188,15 +253,25 @@ func TestArchive_PartialIDSubstring(t *testing.T) {
 
 	expectedMsg := "Resolved 'unified' -> 'refactor-unified-interactive-tui'"
 	if !strings.Contains(output, expectedMsg) {
-		t.Errorf("Expected output to contain '%s', got: %s", expectedMsg, output)
+		t.Errorf(
+			"Expected output to contain '%s', got: %s",
+			expectedMsg,
+			output,
+		)
 	}
 }
 
-func TestArchive_PartialIDAmbiguous(t *testing.T) {
+func TestArchive_PartialIDAmbiguous(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Setup project with multiple changes that match "add"
-	setupTestProject(t, tmpDir, []string{"add-feature", "add-hotkey"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature", "add-hotkey"},
+	)
 
 	cmd := &ArchiveCmd{
 		ChangeID: "add",
@@ -206,11 +281,19 @@ func TestArchive_PartialIDAmbiguous(t *testing.T) {
 	_, err := Archive(cmd, tmpDir)
 
 	if err == nil {
-		t.Fatal("Expected error for ambiguous partial ID")
+		t.Fatal(
+			"Expected error for ambiguous partial ID",
+		)
 	}
 
-	if !strings.Contains(err.Error(), "ambiguous") {
-		t.Errorf("Expected ambiguous error, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"ambiguous",
+	) {
+		t.Errorf(
+			"Expected ambiguous error, got: %v",
+			err,
+		)
 	}
 }
 
@@ -218,7 +301,11 @@ func TestArchive_PartialIDNoMatch(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Setup project with a change that doesn't match
-	setupTestProject(t, tmpDir, []string{"add-feature"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+	)
 
 	cmd := &ArchiveCmd{
 		ChangeID: "nonexistent",
@@ -228,20 +315,35 @@ func TestArchive_PartialIDNoMatch(t *testing.T) {
 	_, err := Archive(cmd, tmpDir)
 
 	if err == nil {
-		t.Fatal("Expected error for non-matching partial ID")
+		t.Fatal(
+			"Expected error for non-matching partial ID",
+		)
 	}
 
 	expectedMsg := "no change found matching 'nonexistent'"
-	if !strings.Contains(err.Error(), expectedMsg) {
-		t.Errorf("Expected '%s' error, got: %v", expectedMsg, err)
+	if !strings.Contains(
+		err.Error(),
+		expectedMsg,
+	) {
+		t.Errorf(
+			"Expected '%s' error, got: %v",
+			expectedMsg,
+			err,
+		)
 	}
 }
 
-func TestArchive_ExactIDNoResolutionMessage(t *testing.T) {
+func TestArchive_ExactIDNoResolutionMessage(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Setup project
-	setupTestProject(t, tmpDir, []string{"add-feature"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"add-feature"},
+	)
 
 	// Capture stdout
 	oldStdout := os.Stdout
@@ -276,14 +378,22 @@ func TestArchive_ExactIDNoResolutionMessage(t *testing.T) {
 
 	// Should NOT contain resolution message for exact match
 	if strings.Contains(output, "Resolved") {
-		t.Error("Should not show resolution message for exact match")
+		t.Error(
+			"Should not show resolution message for exact match",
+		)
 	}
 }
 
-func TestArchive_CaseInsensitiveMatch(t *testing.T) {
+func TestArchive_CaseInsensitiveMatch(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
-	setupTestProject(t, tmpDir, []string{"refactor-unified-tui"})
+	setupTestProject(
+		t,
+		tmpDir,
+		[]string{"refactor-unified-tui"},
+	)
 
 	// Capture stdout
 	oldStdout := os.Stdout
@@ -319,6 +429,9 @@ func TestArchive_CaseInsensitiveMatch(t *testing.T) {
 
 	expectedMsg := "Resolved 'REFACTOR' -> 'refactor-unified-tui'"
 	if !strings.Contains(output, expectedMsg) {
-		t.Errorf("Expected case-insensitive match message, got: %s", output)
+		t.Errorf(
+			"Expected case-insensitive match message, got: %s",
+			output,
+		)
 	}
 }

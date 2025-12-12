@@ -19,20 +19,38 @@ func createChangeDir(
 
 	// Create project root
 	projectRoot := t.TempDir()
-	spectrRoot = filepath.Join(projectRoot, "spectr")
-	changesRoot := filepath.Join(spectrRoot, "changes")
-	specsRoot := filepath.Join(spectrRoot, "specs")
+	spectrRoot = filepath.Join(
+		projectRoot,
+		"spectr",
+	)
+	changesRoot := filepath.Join(
+		spectrRoot,
+		"changes",
+	)
+	specsRoot := filepath.Join(
+		spectrRoot,
+		"specs",
+	)
 
 	// Create change directory
-	changeDir = filepath.Join(changesRoot, "test-change")
+	changeDir = filepath.Join(
+		changesRoot,
+		"test-change",
+	)
 	specsDir := filepath.Join(changeDir, "specs")
 
 	// Create necessary directories
 	if err := os.MkdirAll(specsDir, 0755); err != nil {
-		t.Fatalf("Failed to create specs directory: %v", err)
+		t.Fatalf(
+			"Failed to create specs directory: %v",
+			err,
+		)
 	}
 	if err := os.MkdirAll(specsRoot, 0755); err != nil {
-		t.Fatalf("Failed to create spectr/specs directory: %v", err)
+		t.Fatalf(
+			"Failed to create spectr/specs directory: %v",
+			err,
+		)
 	}
 
 	// Create delta spec files
@@ -41,11 +59,19 @@ func createChangeDir(
 		dir := filepath.Dir(fullPath)
 
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			t.Fatalf("Failed to create directory %s: %v", dir, err)
+			t.Fatalf(
+				"Failed to create directory %s: %v",
+				dir,
+				err,
+			)
 		}
 
 		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
-			t.Fatalf("Failed to write file %s: %v", fullPath, err)
+			t.Fatalf(
+				"Failed to write file %s: %v",
+				fullPath,
+				err,
+			)
 		}
 	}
 
@@ -53,22 +79,40 @@ func createChangeDir(
 }
 
 // Helper function to create a base spec file in the spectr/specs directory
-func createBaseSpec(t *testing.T, spectrRoot, capability, content string) {
+func createBaseSpec(
+	t *testing.T,
+	spectrRoot, capability, content string,
+) {
 	t.Helper()
 
-	specPath := filepath.Join(spectrRoot, "specs", capability, "spec.md")
+	specPath := filepath.Join(
+		spectrRoot,
+		"specs",
+		capability,
+		"spec.md",
+	)
 	dir := filepath.Dir(specPath)
 
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		t.Fatalf("Failed to create directory %s: %v", dir, err)
+		t.Fatalf(
+			"Failed to create directory %s: %v",
+			dir,
+			err,
+		)
 	}
 
 	if err := os.WriteFile(specPath, []byte(content), 0644); err != nil {
-		t.Fatalf("Failed to write base spec %s: %v", specPath, err)
+		t.Fatalf(
+			"Failed to write base spec %s: %v",
+			specPath,
+			err,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_ValidAddedRequirements(t *testing.T) {
+func TestValidateChangeDeltaSpecs_ValidAddedRequirements(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -85,22 +129,42 @@ The system SHALL provide user authentication functionality.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid && len(report.Issues) == 0 {
 		return
 	}
-	t.Errorf("Expected valid report, got invalid with %d errors", report.Summary.Errors)
+	t.Errorf(
+		"Expected valid report, got invalid with %d errors",
+		report.Summary.Errors,
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+		t.Logf(
+			"  %s: %s - %s",
+			issue.Level,
+			issue.Path,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_ValidModifiedRequirements(t *testing.T) {
+func TestValidateChangeDeltaSpecs_ValidModifiedRequirements(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## MODIFIED Requirements
 
@@ -113,10 +177,17 @@ The system MUST provide enhanced user authentication functionality.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
 
 	// Create base spec with the requirement that will be modified
-	createBaseSpec(t, spectrRoot, "auth", `## Requirements
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"auth",
+		`## Requirements
 
 ### Requirement: User Authentication
 The system SHALL provide user authentication functionality.
@@ -124,11 +195,19 @@ The system SHALL provide user authentication functionality.
 #### Scenario: Successful login
 - **WHEN** user provides valid credentials
 - **THEN** user is authenticated
-`)
+`,
+	)
 
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
@@ -136,11 +215,18 @@ The system SHALL provide user authentication functionality.
 	}
 	t.Error("Expected valid report, got invalid")
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+		t.Logf(
+			"  %s: %s - %s",
+			issue.Level,
+			issue.Path,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_ValidRemovedRequirements(t *testing.T) {
+func TestValidateChangeDeltaSpecs_ValidRemovedRequirements(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## REMOVED Requirements
 
@@ -149,10 +235,17 @@ func TestValidateChangeDeltaSpecs_ValidRemovedRequirements(t *testing.T) {
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
 
 	// Create base spec with the requirement that will be removed
-	createBaseSpec(t, spectrRoot, "auth", `## Requirements
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"auth",
+		`## Requirements
 
 ### Requirement: Legacy Authentication
 The system SHALL provide legacy authentication.
@@ -160,11 +253,19 @@ The system SHALL provide legacy authentication.
 #### Scenario: Legacy login
 - **WHEN** user uses legacy credentials
 - **THEN** user is authenticated via legacy method
-`)
+`,
+	)
 
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
@@ -172,11 +273,18 @@ The system SHALL provide legacy authentication.
 	}
 	t.Error("Expected valid report, got invalid")
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+		t.Logf(
+			"  %s: %s - %s",
+			issue.Level,
+			issue.Path,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_ValidRenamedRequirements(t *testing.T) {
+func TestValidateChangeDeltaSpecs_ValidRenamedRequirements(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## RENAMED Requirements
 
@@ -185,10 +293,20 @@ func TestValidateChangeDeltaSpecs_ValidRenamedRequirements(t *testing.T) {
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
@@ -196,11 +314,18 @@ func TestValidateChangeDeltaSpecs_ValidRenamedRequirements(t *testing.T) {
 	}
 	t.Error("Expected valid report, got invalid")
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+		t.Logf(
+			"  %s: %s - %s",
+			issue.Level,
+			issue.Path,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_MultipleSpecFiles(t *testing.T) {
+func TestValidateChangeDeltaSpecs_MultipleSpecFiles(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -222,10 +347,20 @@ The system MUST send email notifications for authentication events.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
@@ -233,11 +368,18 @@ The system MUST send email notifications for authentication events.
 	}
 	t.Error("Expected valid report, got invalid")
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s - %s", issue.Level, issue.Path, issue.Message)
+		t.Logf(
+			"  %s: %s - %s",
+			issue.Level,
+			issue.Path,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_NoDeltas(t *testing.T) {
+func TestValidateChangeDeltaSpecs_NoDeltas(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `# Some content without delta sections
 
@@ -245,34 +387,57 @@ This file doesn't have any ADDED, MODIFIED, REMOVED, or RENAMED sections.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to no deltas")
+		t.Error(
+			"Expected invalid report due to no deltas",
+		)
 	}
 
 	if report.Summary.Errors != 1 {
-		t.Errorf("Expected 1 error, got %d", report.Summary.Errors)
+		t.Errorf(
+			"Expected 1 error, got %d",
+			report.Summary.Errors,
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "at least one delta") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"at least one delta",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected error about missing deltas")
+		t.Error(
+			"Expected error about missing deltas",
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_EmptyDeltaSections(t *testing.T) {
+func TestValidateChangeDeltaSpecs_EmptyDeltaSections(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -280,27 +445,48 @@ func TestValidateChangeDeltaSpecs_EmptyDeltaSections(t *testing.T) {
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to empty delta sections")
+		t.Error(
+			"Expected invalid report due to empty delta sections",
+		)
 	}
 
 	// Should have 2 errors: one for empty ADDED, one for empty MODIFIED
 	if report.Summary.Errors == 2 {
 		return
 	}
-	t.Errorf("Expected 2 errors, got %d", report.Summary.Errors)
+	t.Errorf(
+		"Expected 2 errors, got %d",
+		report.Summary.Errors,
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_AddedWithoutShallMust(t *testing.T) {
+func TestValidateChangeDeltaSpecs_AddedWithoutShallMust(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -313,30 +499,50 @@ The system provides user authentication functionality.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to missing SHALL/MUST")
+		t.Error(
+			"Expected invalid report due to missing SHALL/MUST",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "SHALL or MUST") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"SHALL or MUST",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected error about missing SHALL or MUST")
+		t.Error(
+			"Expected error about missing SHALL or MUST",
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_AddedWithoutScenarios(t *testing.T) {
+func TestValidateChangeDeltaSpecs_AddedWithoutScenarios(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -345,30 +551,50 @@ The system SHALL provide user authentication functionality.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to missing scenarios")
+		t.Error(
+			"Expected invalid report due to missing scenarios",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "at least one scenario") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"at least one scenario",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected error about missing scenarios")
+		t.Error(
+			"Expected error about missing scenarios",
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_ModifiedWithoutShallMust(t *testing.T) {
+func TestValidateChangeDeltaSpecs_ModifiedWithoutShallMust(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## MODIFIED Requirements
 
@@ -381,30 +607,50 @@ The system provides enhanced authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to missing SHALL/MUST")
+		t.Error(
+			"Expected invalid report due to missing SHALL/MUST",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "SHALL or MUST") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"SHALL or MUST",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected error about missing SHALL or MUST")
+		t.Error(
+			"Expected error about missing SHALL or MUST",
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_ModifiedWithoutScenarios(t *testing.T) {
+func TestValidateChangeDeltaSpecs_ModifiedWithoutScenarios(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## MODIFIED Requirements
 
@@ -413,30 +659,50 @@ The system SHALL provide enhanced authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to missing scenarios")
+		t.Error(
+			"Expected invalid report due to missing scenarios",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "at least one scenario") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"at least one scenario",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected error about missing scenarios")
+		t.Error(
+			"Expected error about missing scenarios",
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_DuplicateRequirementNames(t *testing.T) {
+func TestValidateChangeDeltaSpecs_DuplicateRequirementNames(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -456,31 +722,50 @@ The system SHALL also do something else.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to duplicate requirement names")
+		t.Error(
+			"Expected invalid report due to duplicate requirement names",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
 		if issue.Level == LevelError &&
-			strings.Contains(issue.Message, "Duplicate requirement name") {
+			strings.Contains(
+				issue.Message,
+				"Duplicate requirement name",
+			) {
 			found = true
 
 			break
 		}
 	}
 	if !found {
-		t.Error("Expected error about duplicate requirement names")
+		t.Error(
+			"Expected error about duplicate requirement names",
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_CrossSectionConflicts(t *testing.T) {
+func TestValidateChangeDeltaSpecs_CrossSectionConflicts(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -502,19 +787,35 @@ The system SHALL provide enhanced authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to cross-section conflicts")
+		t.Error(
+			"Expected invalid report due to cross-section conflicts",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "both ADDED and MODIFIED") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"both ADDED and MODIFIED",
+			) {
 			found = true
 
 			break
@@ -523,13 +824,21 @@ The system SHALL provide enhanced authentication.
 	if found {
 		return
 	}
-	t.Error("Expected error about cross-section conflict")
+	t.Error(
+		"Expected error about cross-section conflict",
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_MalformedRenamedFormat(t *testing.T) {
+func TestValidateChangeDeltaSpecs_MalformedRenamedFormat(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## RENAMED Requirements
 
@@ -538,20 +847,35 @@ This is missing the TO line
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to malformed RENAMED format")
+		t.Error(
+			"Expected invalid report due to malformed RENAMED format",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
 		if issue.Level == LevelError &&
-			strings.Contains(issue.Message, "Malformed RENAMED requirement") {
+			strings.Contains(
+				issue.Message,
+				"Malformed RENAMED requirement",
+			) {
 			found = true
 
 			break
@@ -560,58 +884,118 @@ This is missing the TO line
 	if found {
 		return
 	}
-	t.Error("Expected error about malformed RENAMED format")
+	t.Error(
+		"Expected error about malformed RENAMED format",
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_MissingSpecsDirectory(t *testing.T) {
+func TestValidateChangeDeltaSpecs_MissingSpecsDirectory(
+	t *testing.T,
+) {
 	// Create a simple temp dir structure
 	projectRoot := t.TempDir()
-	spectrRoot := filepath.Join(projectRoot, "spectr")
-	changesRoot := filepath.Join(spectrRoot, "changes")
-	changeDir := filepath.Join(changesRoot, "test-change")
+	spectrRoot := filepath.Join(
+		projectRoot,
+		"spectr",
+	)
+	changesRoot := filepath.Join(
+		spectrRoot,
+		"changes",
+	)
+	changeDir := filepath.Join(
+		changesRoot,
+		"test-change",
+	)
 
 	if err := os.MkdirAll(changeDir, 0755); err != nil {
-		t.Fatalf("Failed to create change directory: %v", err)
+		t.Fatalf(
+			"Failed to create change directory: %v",
+			err,
+		)
 	}
 	// Don't create specs directory
 
-	_, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	_, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err == nil {
-		t.Error("Expected error for missing specs directory")
+		t.Error(
+			"Expected error for missing specs directory",
+		)
 	}
 
-	if !strings.Contains(err.Error(), "specs directory not found") {
-		t.Errorf("Expected error about missing specs directory, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"specs directory not found",
+	) {
+		t.Errorf(
+			"Expected error about missing specs directory, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_NoSpecFiles(t *testing.T) {
+func TestValidateChangeDeltaSpecs_NoSpecFiles(
+	t *testing.T,
+) {
 	// Create a simple temp dir structure
 	projectRoot := t.TempDir()
-	spectrRoot := filepath.Join(projectRoot, "spectr")
-	changesRoot := filepath.Join(spectrRoot, "changes")
-	changeDir := filepath.Join(changesRoot, "test-change")
+	spectrRoot := filepath.Join(
+		projectRoot,
+		"spectr",
+	)
+	changesRoot := filepath.Join(
+		spectrRoot,
+		"changes",
+	)
+	changeDir := filepath.Join(
+		changesRoot,
+		"test-change",
+	)
 	specsDir := filepath.Join(changeDir, "specs")
 
 	if err := os.MkdirAll(specsDir, 0755); err != nil {
-		t.Fatalf("Failed to create specs directory: %v", err)
+		t.Fatalf(
+			"Failed to create specs directory: %v",
+			err,
+		)
 	}
 
 	// Create empty specs directory
-	_, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	_, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err == nil {
-		t.Error("Expected error for no spec.md files")
+		t.Error(
+			"Expected error for no spec.md files",
+		)
 	}
 
-	if !strings.Contains(err.Error(), "no spec.md files found") {
-		t.Errorf("Expected error about no spec files, got: %v", err)
+	if !strings.Contains(
+		err.Error(),
+		"no spec.md files found",
+	) {
+		t.Errorf(
+			"Expected error about no spec files, got: %v",
+			err,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_MultipleFilesWithConflicts(t *testing.T) {
+func TestValidateChangeDeltaSpecs_MultipleFilesWithConflicts(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -633,19 +1017,35 @@ The system SHALL provide secure authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to duplicate requirement across files")
+		t.Error(
+			"Expected invalid report due to duplicate requirement across files",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "ADDED in multiple files") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"ADDED in multiple files",
+			) {
 			found = true
 
 			break
@@ -654,13 +1054,21 @@ The system SHALL provide secure authentication.
 	if found {
 		return
 	}
-	t.Error("Expected error about duplicate requirement across files")
+	t.Error(
+		"Expected error about duplicate requirement across files",
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_MalformedScenarios(t *testing.T) {
+func TestValidateChangeDeltaSpecs_MalformedScenarios(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -673,29 +1081,50 @@ The system SHALL provide user authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to malformed scenarios")
+		t.Error(
+			"Expected invalid report due to malformed scenarios",
+		)
 	}
 
 	// Should have 2 errors: missing scenario (since malformed ones don't count) + malformed scenario format
 	foundMissingScenario := false
 	foundMalformedFormat := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelError && strings.Contains(issue.Message, "at least one scenario") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"at least one scenario",
+			) {
 			foundMissingScenario = true
 		}
-		if issue.Level == LevelError && strings.Contains(issue.Message, "#### Scenario:") {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"#### Scenario:",
+			) {
 			foundMalformedFormat = true
 		}
 	}
 
-	if foundMissingScenario && foundMalformedFormat {
+	if foundMissingScenario &&
+		foundMalformedFormat {
 		return
 	}
 	t.Errorf(
@@ -704,11 +1133,17 @@ The system SHALL provide user authentication.
 		foundMalformedFormat,
 	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_StrictMode(t *testing.T) {
+func TestValidateChangeDeltaSpecs_StrictMode(
+	t *testing.T,
+) {
 	// In strict mode, any warnings would be converted to errors
 	// Since change validation uses errors by default, this test
 	// ensures strict mode doesn't break anything
@@ -724,26 +1159,47 @@ The system SHALL provide user authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, true)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		true,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if !report.Valid {
-		t.Error("Expected valid report in strict mode for valid change")
+		t.Error(
+			"Expected valid report in strict mode for valid change",
+		)
 		for _, issue := range report.Issues {
-			t.Logf("  %s: %s", issue.Level, issue.Message)
+			t.Logf(
+				"  %s: %s",
+				issue.Level,
+				issue.Message,
+			)
 		}
 	}
 
 	// Verify no warnings (all should be converted to errors if any exist)
 	if report.Summary.Warnings != 0 {
-		t.Errorf("Expected 0 warnings in strict mode, got %d", report.Summary.Warnings)
+		t.Errorf(
+			"Expected 0 warnings in strict mode, got %d",
+			report.Summary.Warnings,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_AllDeltaTypes(t *testing.T) {
+func TestValidateChangeDeltaSpecs_AllDeltaTypes(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -775,10 +1231,17 @@ The system MUST enforce stronger password policies.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
 
 	// Create base spec with requirements for MODIFIED, REMOVED, and RENAMED
-	createBaseSpec(t, spectrRoot, "auth", `## Requirements
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"auth",
+		`## Requirements
 
 ### Requirement: Password Policy
 The system SHALL enforce password policies.
@@ -800,26 +1263,45 @@ The system SHALL provide user login.
 #### Scenario: Login
 - **WHEN** user logs in
 - **THEN** user is authenticated
-`)
+`,
+	)
 
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if !report.Valid {
-		t.Error("Expected valid report with all delta types")
+		t.Error(
+			"Expected valid report with all delta types",
+		)
 		for _, issue := range report.Issues {
-			t.Logf("  %s: %s", issue.Level, issue.Message)
+			t.Logf(
+				"  %s: %s",
+				issue.Level,
+				issue.Message,
+			)
 		}
 	}
 
 	if len(report.Issues) != 0 {
-		t.Errorf("Expected 0 issues, got %d", len(report.Issues))
+		t.Errorf(
+			"Expected 0 issues, got %d",
+			len(report.Issues),
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_DuplicateRenamedFromNames(t *testing.T) {
+func TestValidateChangeDeltaSpecs_DuplicateRenamedFromNames(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## RENAMED Requirements
 
@@ -831,20 +1313,35 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedFromNames(t *testing.T) {
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to duplicate FROM names")
+		t.Error(
+			"Expected invalid report due to duplicate FROM names",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
 		if issue.Level == LevelError &&
-			strings.Contains(issue.Message, "Duplicate FROM requirement name") {
+			strings.Contains(
+				issue.Message,
+				"Duplicate FROM requirement name",
+			) {
 			found = true
 
 			break
@@ -853,13 +1350,21 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedFromNames(t *testing.T) {
 	if found {
 		return
 	}
-	t.Error("Expected error about duplicate FROM names")
+	t.Error(
+		"Expected error about duplicate FROM names",
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(t *testing.T) {
+func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"auth/spec.md": `## RENAMED Requirements
 
@@ -871,25 +1376,43 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(t *testing.T) {
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to duplicate TO names")
+		t.Error(
+			"Expected invalid report due to duplicate TO names",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
 		if issue.Level != LevelError ||
-			!strings.Contains(issue.Message, "Duplicate TO requirement name") {
+			!strings.Contains(
+				issue.Message,
+				"Duplicate TO requirement name",
+			) {
 			continue
 		}
 		found = true
 		if issue.Line != 7 {
-			t.Fatalf("expected duplicate TO issue at line 7, got %d", issue.Line)
+			t.Fatalf(
+				"expected duplicate TO issue at line 7, got %d",
+				issue.Line,
+			)
 		}
 
 		break
@@ -897,13 +1420,22 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(t *testing.T) {
 	if found {
 		return
 	}
-	t.Error("Expected error about duplicate TO names")
+	t.Error(
+		"Expected error about duplicate TO names",
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+		t.Logf(
+			"  %s: %s (line %d)",
+			issue.Level,
+			issue.Message,
+			issue.Line,
+		)
 	}
 }
 
-func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(t *testing.T) {
+func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(
+	t *testing.T,
+) {
 	specs := map[string]string{
 		"alpha/spec.md": `## RENAMED Requirements
 
@@ -917,25 +1449,43 @@ func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(t *testing.T) {
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
-	report, err := ValidateChangeDeltaSpecs(changeDir, spectrRoot, false)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report due to cross-file TO duplicates")
+		t.Error(
+			"Expected invalid report due to cross-file TO duplicates",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
 		if issue.Level != LevelError ||
-			!strings.Contains(issue.Message, "renamed (TO) in multiple files") {
+			!strings.Contains(
+				issue.Message,
+				"renamed (TO) in multiple files",
+			) {
 			continue
 		}
 		found = true
 		if issue.Line != 4 {
-			t.Fatalf("expected cross-file TO issue at line 4, got %d", issue.Line)
+			t.Fatalf(
+				"expected cross-file TO issue at line 4, got %d",
+				issue.Line,
+			)
 		}
 
 		break
@@ -944,13 +1494,22 @@ func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(t *testing.T) {
 	if found {
 		return
 	}
-	t.Error("Expected error about cross-file TO duplicates")
+	t.Error(
+		"Expected error about cross-file TO duplicates",
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s (line %d)", issue.Level, issue.Message, issue.Line)
+		t.Logf(
+			"  %s: %s (line %d)",
+			issue.Level,
+			issue.Message,
+			issue.Line,
+		)
 	}
 }
 
-func TestFindRenamedPairLine_FindsBulletEntries(t *testing.T) {
+func TestFindRenamedPairLine_FindsBulletEntries(
+	t *testing.T,
+) {
 	lines := []string{
 		"## RENAMED Requirements",
 		"",
@@ -959,18 +1518,34 @@ func TestFindRenamedPairLine_FindsBulletEntries(t *testing.T) {
 		"",
 	}
 
-	line := findRenamedPairLine(lines, "Old Name", 1)
+	line := findRenamedPairLine(
+		lines,
+		"Old Name",
+		1,
+	)
 	if line != 3 {
-		t.Fatalf("expected line 3 for FROM entry, got %d", line)
+		t.Fatalf(
+			"expected line 3 for FROM entry, got %d",
+			line,
+		)
 	}
 
-	toLine := findRenamedPairLine(lines, "New Name", 1)
+	toLine := findRenamedPairLine(
+		lines,
+		"New Name",
+		1,
+	)
 	if toLine != 4 {
-		t.Fatalf("expected line 4 for TO entry, got %d", toLine)
+		t.Fatalf(
+			"expected line 4 for TO entry, got %d",
+			toLine,
+		)
 	}
 }
 
-func TestFindPreMergeErrorLine_UsesRenamedBulletLine(t *testing.T) {
+func TestFindPreMergeErrorLine_UsesRenamedBulletLine(
+	t *testing.T,
+) {
 	lines := []string{
 		"## RENAMED Requirements",
 		"",
@@ -981,11 +1556,17 @@ func TestFindPreMergeErrorLine_UsesRenamedBulletLine(t *testing.T) {
 
 	fromErr := `RENAMED FROM requirement "Old Name" does not exist in base spec`
 	if line := findPreMergeErrorLine(lines, fromErr, &parsers.DeltaPlan{}); line != 3 {
-		t.Fatalf("expected FROM error to map to line 3, got %d", line)
+		t.Fatalf(
+			"expected FROM error to map to line 3, got %d",
+			line,
+		)
 	}
 
 	toErr := `RENAMED TO requirement "New Name" already exists in base spec`
 	if line := findPreMergeErrorLine(lines, toErr, &parsers.DeltaPlan{}); line != 4 {
-		t.Fatalf("expected TO error to map to line 4, got %d", line)
+		t.Fatalf(
+			"expected TO error to map to line 4, got %d",
+			line,
+		)
 	}
 }

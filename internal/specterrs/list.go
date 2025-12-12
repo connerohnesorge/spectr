@@ -9,7 +9,11 @@ type IncompatibleFlagsError struct {
 }
 
 func (e *IncompatibleFlagsError) Error() string {
-	return fmt.Sprintf("cannot use %s with %s", e.Flag1, e.Flag2)
+	return fmt.Sprintf(
+		"cannot use %s with %s",
+		e.Flag1,
+		e.Flag2,
+	)
 }
 
 // RequiresFlagError indicates a flag requires another flag to be set.
@@ -19,5 +23,9 @@ type RequiresFlagError struct {
 }
 
 func (e *RequiresFlagError) Error() string {
-	return fmt.Sprintf("%s requires %s", e.Flag, e.RequiredFlag)
+	return fmt.Sprintf(
+		"%s requires %s",
+		e.Flag,
+		e.RequiredFlag,
+	)
 }

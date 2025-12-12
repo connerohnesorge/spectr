@@ -23,7 +23,9 @@ func NewValidator(strictMode bool) *Validator {
 // validator's strictMode setting.
 // Returns a ValidationReport with all issues found, or an error for
 // filesystem issues.
-func (v *Validator) ValidateSpec(path string) (*ValidationReport, error) {
+func (v *Validator) ValidateSpec(
+	path string,
+) (*ValidationReport, error) {
 	// Delegate to the spec validation rule function
 	return ValidateSpecFile(path, v.strictMode)
 }
@@ -41,10 +43,16 @@ func (v *Validator) ValidateChange(
 	// Derive spectrRoot from changeDir
 	// changeDir format: /path/to/project/spectr/changes/<change-id>
 	// spectrRoot should be: /path/to/project/spectr
-	spectrRoot := filepath.Dir(filepath.Dir(changeDir))
+	spectrRoot := filepath.Dir(
+		filepath.Dir(changeDir),
+	)
 
 	// Delegate to the change validation rule function
-	return ValidateChangeDeltaSpecs(changeDir, spectrRoot, v.strictMode)
+	return ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		v.strictMode,
+	)
 }
 
 // CreateReport creates a ValidationReport from a list of issues.

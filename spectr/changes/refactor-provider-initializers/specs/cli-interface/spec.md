@@ -41,6 +41,12 @@ The init system SHALL provide a `MarkdownSlashCommandInitializer` that creates a
 - **AND** the initializer SHALL create the file with YAML frontmatter
 - **AND** the file SHALL contain command content between spectr markers
 
+#### Scenario: Update existing markdown slash command
+- **WHEN** `Configure()` is called and the command file already exists
+- **THEN** the initializer SHALL update content between spectr markers
+- **AND** existing YAML frontmatter SHALL be preserved
+- **AND** user content outside markers SHALL be preserved
+
 #### Scenario: Generic command name support
 - **WHEN** a MarkdownSlashCommandInitializer is created
 - **THEN** it SHALL accept a command name parameter (e.g., "proposal", "apply", "sync")
@@ -54,14 +60,37 @@ The init system SHALL provide a `MarkdownSlashCommandInitializer` that creates a
 The init system SHALL provide a `TOMLSlashCommandInitializer` that creates TOML-format slash command files for providers like Gemini CLI.
 
 #### Scenario: Create TOML slash command
-- **WHEN** `Configure()` is called for a TOML command
+- **WHEN** `Configure()` is called for a TOML command and the file does not exist
 - **THEN** the initializer SHALL create a `.toml` file
 - **AND** the TOML SHALL include `description` field with command description
 - **AND** the TOML SHALL include `prompt` field with command content
 
+#### Scenario: Update existing TOML slash command
+- **WHEN** `Configure()` is called and the TOML file already exists
+- **THEN** the initializer SHALL overwrite the file with updated content
+- **AND** the new TOML SHALL include current `description` and `prompt` fields
+
+#### Scenario: TOML content escaping
+- **WHEN** prompt content contains special TOML characters (backslashes, quotes)
+- **THEN** the initializer SHALL properly escape these characters
+- **AND** the generated TOML SHALL be valid and parseable
+
 #### Scenario: Initializer ID format
 - **WHEN** `ID()` is called on a TOMLSlashCommandInitializer
 - **THEN** it SHALL return `toml-cmd:{path}` (e.g., `toml-cmd:.gemini/commands/spectr/proposal.toml`)
+
+### Requirement: Initializer Independence
+FileInitializers SHALL be independent units with no explicit dependencies on other initializers.
+
+#### Scenario: No dependency declarations
+- **WHEN** a FileInitializer is implemented
+- **THEN** it SHALL NOT declare dependencies on other initializers
+- **AND** it SHALL NOT require other initializers to run first
+
+#### Scenario: Order implies sequence
+- **WHEN** a provider returns initializers from `Initializers()`
+- **THEN** the order in the returned slice SHALL imply execution sequence
+- **AND** the system SHALL NOT enforce or validate dependencies between initializers
 
 ### Requirement: Initializer Helper Functions
 The init system SHALL provide helper functions for common operations on initializer lists, enabling providers to implement interface methods with minimal boilerplate.
@@ -70,6 +99,12 @@ The init system SHALL provide helper functions for common operations on initiali
 - **WHEN** `ConfigureInitializers(inits []FileInitializer, projectPath string, tm TemplateRenderer)` is called
 - **THEN** it SHALL call `Configure()` on each initializer in order
 - **AND** it SHALL stop on the first error and return that error (fail-fast)
+
+#### Scenario: Fail-fast error handling
+- **WHEN** an initializer's `Configure()` returns an error
+- **THEN** `ConfigureInitializers()` SHALL immediately return that error
+- **AND** subsequent initializers SHALL NOT be executed
+- **AND** previously successful initializers' changes SHALL persist (no rollback)
 
 #### Scenario: Check all initializers configured
 - **WHEN** `AreInitializersConfigured(inits []FileInitializer, projectPath string)` is called
@@ -130,3 +165,12 @@ The init system previously defined a `CommandFormat` type with `FormatMarkdown` 
 **Reason**: Command format is now implicit in the initializer type used. `MarkdownSlashCommandInitializer` creates markdown files; `TOMLSlashCommandInitializer` creates TOML files. No explicit format enum needed.
 
 **Migration**: Remove `CommandFormat` type and `CommandFormat()` method from Provider interface. Providers compose the appropriate initializer type instead.
+
+## Additional Removals (Part of Provider Interface Modification)
+
+The following methods are removed as part of the Provider Interface modification above (not standalone requirements):
+
+- **`Configure()` method**: Replaced by `ConfigureInitializers()` helper function. Executor calls helper directly.
+- **`HasConfigFile()` / `HasSlashCommands()` methods**: Tech debt removed. Capabilities explicit in `Initializers()`.
+- **`ConfigFile()` / `GetProposalCommandPath()` / `GetApplyCommandPath()` methods**: Replaced by `GetFilePaths()`.
+- **`WithConfigFile()` / `WithSlashCommands()` registry filters**: Removed from registry. Inspect `Initializers()` if needed.

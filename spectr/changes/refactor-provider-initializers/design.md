@@ -156,6 +156,38 @@ err := ConfigureInitializers(provider.Initializers(), projectPath, tm)
 
 **Why**: Configuration logic centralized in helper function, not interface method.
 
+### Decision 9: Registry Changes
+
+Remove filter methods from registry:
+
+```go
+// REMOVED
+func WithConfigFile() []Provider    // Delete
+func WithSlashCommands() []Provider // Delete
+```
+
+The `All()`, `Get()`, `IDs()`, `Count()` methods remain unchanged.
+
+**Why**: Filtering by capabilities is tech debt. Code that needs capability info can inspect `provider.Initializers()` directly.
+
+### Decision 10: Existing Helpers
+
+Keep useful helpers, remove obsolete ones:
+
+**Keep:**
+- `StandardCommandPaths(dir, ext string)` - Still useful for constructing initializer paths
+- `StandardFrontmatter()` - Convert to exported constants `StandardProposalFrontmatter`, `StandardApplyFrontmatter`
+- `expandPath()`, `isGlobalPath()` - Used internally by initializers
+- `UpdateFileWithMarkers()`, `EnsureDir()`, `FileExists()` - Used by initializers
+
+**Remove:**
+- `configureConfigFile()` - Replaced by InstructionFileInitializer
+- `configureSlashCommands()` - Replaced by slash command initializers
+- `configureSlashCommand()` - Replaced by initializers
+- `updateExistingSlashCommand()`, `createNewSlashCommand()` - Logic moves to initializers
+
+**Why**: Preserve utilities, remove BaseProvider-specific methods.
+
 ## Example Provider Implementation
 
 ```go

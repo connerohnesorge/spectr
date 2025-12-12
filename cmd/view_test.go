@@ -28,7 +28,7 @@ func TestViewCmd_Integration_TextOutput(
 		if cErr != nil {
 			t.Logf(
 				"Warning: Failed to restore working directory: %v",
-				err,
+				cErr,
 			)
 		}
 	}()
@@ -117,7 +117,7 @@ func TestViewCmd_Integration_JSONOutput(
 		if cErr != nil {
 			t.Logf(
 				"Warning: Failed to restore working directory: %v",
-				err,
+				cErr,
 			)
 		}
 	}()
@@ -342,7 +342,7 @@ func TestViewCmd_Integration_MissingSpectrDirectory(
 		if cErr != nil {
 			t.Logf(
 				"Warning: Failed to restore working directory: %v",
-				err,
+				cErr,
 			)
 		}
 	}()

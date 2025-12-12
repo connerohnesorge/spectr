@@ -14,13 +14,13 @@ import (
 // ValidateCmd represents the validate command
 type ValidateCmd struct {
 	ItemName      *string `arg:"" optional:"" predictor:"item"`
-	Strict        bool    `                                        name:"strict"         help:"Treat warnings as errors"`
-	JSON          bool    `                                        name:"json"           help:"Output as JSON"`
-	All           bool    `                                        name:"all"            help:"Validate all"`
-	Changes       bool    `                                        name:"changes"        help:"Validate changes"`
-	Specs         bool    `                                        name:"specs"          help:"Validate specs"`
-	Type          *string `                   predictor:"itemType" name:"type"                                           enum:"change,spec"`
-	NoInteractive bool    `                                        name:"no-interactive" help:"No prompts"`
+	Strict        bool    `                                        name:"strict"         help:"Treat warnings as errors"`                    //nolint:lll,revive
+	JSON          bool    `                                        name:"json"           help:"Output as JSON"`                              //nolint:lll,revive
+	All           bool    `                                        name:"all"            help:"Validate all"`                                //nolint:lll,revive
+	Changes       bool    `                                        name:"changes"        help:"Validate changes"`                            //nolint:lll,revive
+	Specs         bool    `                                        name:"specs"          help:"Validate specs"`                              //nolint:lll,revive
+	Type          *string `                   predictor:"itemType" name:"type"                                           enum:"change,spec"` //nolint:lll,revive
+	NoInteractive bool    `                                        name:"no-interactive" help:"No prompts"`                                  //nolint:lll,revive
 }
 
 // Run executes the validate command

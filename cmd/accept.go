@@ -37,11 +37,12 @@ var (
 // produces a machine-readable tasks.json file with structured task data.
 type AcceptCmd struct {
 	// ChangeID is the optional change identifier to process
-	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change"`
+	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change"` //nolint:lll,revive
 	// DryRun enables preview mode without writing files
-	DryRun bool `                                        help:"Preview without writing" name:"dry-run"`
+	DryRun bool `                                        help:"Preview without writing" name:"dry-run"` //nolint:lll,revive
+
 	// NoInteractive disables interactive prompts
-	NoInteractive bool `                                        help:"Disable prompts"         name:"no-interactive"`
+	NoInteractive bool `                                        help:"Disable prompts"         name:"no-interactive"` //nolint:lll,revive
 }
 
 // Run executes the accept command.
@@ -83,9 +84,8 @@ func (c *AcceptCmd) processChange(
 		"changes",
 		changeID,
 	)
-	if _, err := os.Stat(changeDir); os.IsNotExist(
-		err,
-	) {
+	_, err := os.Stat(changeDir)
+	if os.IsNotExist(err) {
 		return fmt.Errorf(
 			"change directory not found: %s",
 			changeDir,
@@ -96,7 +96,8 @@ func (c *AcceptCmd) processChange(
 		changeDir,
 		"tasks.md",
 	)
-	if _, err := os.Stat(tasksMdPath); os.IsNotExist(
+	_, err = os.Stat(tasksMdPath)
+	if os.IsNotExist(
 		err,
 	) {
 		return fmt.Errorf(
@@ -106,7 +107,8 @@ func (c *AcceptCmd) processChange(
 	}
 
 	// Validate the change before conversion
-	if err := c.runValidation(changeDir); err != nil {
+	err = c.runValidation(changeDir)
+	if err != nil {
 		return fmt.Errorf(
 			"validation failed: %w",
 			err,
@@ -128,23 +130,18 @@ func (c *AcceptCmd) processChange(
 
 	if c.DryRun {
 		fmt.Printf(
-			"Would convert: %s\n",
+			"Would convert: %s\nwould write to: %s\nWould remove: %s\nFound %d tasks\n", //nolint:lll,revive
 			tasksMdPath,
-		)
-		fmt.Printf(
-			"Would write to: %s\n",
 			tasksJSONPath,
-		)
-		fmt.Printf(
-			"Would remove: %s\n",
 			tasksMdPath,
+			len(tasks),
 		)
-		fmt.Printf("Found %d tasks\n", len(tasks))
 
 		return nil
 	}
 
-	if err := writeTasksJSON(tasksJSONPath, tasks); err != nil {
+	err = writeTasksJSON(tasksJSONPath, tasks)
+	if err != nil {
 		return fmt.Errorf(
 			"failed to write tasks.json: %w",
 			err,
@@ -152,7 +149,8 @@ func (c *AcceptCmd) processChange(
 	}
 
 	// Remove tasks.md after successful tasks.json creation
-	if err := os.Remove(tasksMdPath); err != nil {
+	err = os.Remove(tasksMdPath)
+	if err != nil {
 		return fmt.Errorf(
 			"failed to remove tasks.md: %w",
 			err,
@@ -160,12 +158,12 @@ func (c *AcceptCmd) processChange(
 	}
 
 	fmt.Printf(
-		"Converted %s -> %s\n",
+		"Converted %s -> %s\nRemoved %s\nWrote %d tasks\n",
 		tasksMdPath,
 		tasksJSONPath,
+		tasksMdPath,
+		len(tasks),
 	)
-	fmt.Printf("Removed %s\n", tasksMdPath)
-	fmt.Printf("Wrote %d tasks\n", len(tasks))
 
 	return nil
 }
@@ -249,6 +247,7 @@ func (c *AcceptCmd) resolveChangeID(
 	}
 
 	if c.NoInteractive {
+		// TODO: Define error type for this?
 		return "", errors.New(
 			"usage: spectr accept <change-id> [flags]\n" +
 				"       spectr accept <change-id> --dry-run",
@@ -283,6 +282,7 @@ func parseTaskFromMatch(
 }
 
 // parseTasksMd parses tasks.md and returns a slice of Task structs.
+//
 // It extracts section headers (## lines), task IDs, descriptions, and status
 // from the markdown structure.
 func parseTasksMd(

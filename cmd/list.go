@@ -1,5 +1,3 @@
-// Package cmd provides command-line interface implementations for Spectr.
-// This file contains the list command for displaying changes and specs.
 package cmd
 
 import (
@@ -17,18 +15,23 @@ import (
 // interactive table mode with clipboard support.
 type ListCmd struct {
 	// Specs determines whether to list specifications instead of changes
-	Specs bool `name:"specs"       help:"List specifications instead of changes"`
+	Specs bool `name:"specs"       help:"List specifications instead of changes"` //nolint:lll,revive
 	// All determines whether to list both changes and specs in unified mode
-	All bool `name:"all"         help:"List both changes and specs in unified mode"`
+	All bool `name:"all"         help:"List both changes and specs in unified mode"` //nolint:lll,revive
+
 	// Long enables detailed output with titles and counts
-	Long bool `name:"long"        help:"Show detailed output with titles and counts"`
+	Long bool `name:"long"        help:"Show detailed output with titles and counts"` //nolint:lll,revive
+
 	// JSON enables JSON output format
-	JSON bool `name:"json"        help:"Output as JSON"`
+	JSON bool `name:"json"        help:"Output as JSON"` //nolint:lll,revive
+
 	// Interactive enables interactive table mode with clipboard
-	Interactive bool `name:"interactive" help:"Interactive mode"                            short:"I"`
+	Interactive bool `name:"interactive" help:"Interactive mode"                            short:"I"` //nolint:lll,revive
+
 	// Stdout prints selected ID to stdout instead of clipboard.
 	// Requires -I (interactive mode).
-	Stdout bool `name:"stdout"      help:"Print ID to stdout (requires -I)"`
+	Stdout bool `name:"stdout"      help:"Print ID to stdout (requires -I)"` //nolint:lll,revive
+
 }
 
 // Run executes the list command.

@@ -2088,10 +2088,6 @@ func TestHelpToggleInUnifiedMode(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Responsive Column Calculation Tests (Tasks 5.1 and 5.2)
-// =============================================================================
-
 // TestCalculateChangesColumns_FullWidth tests that all 4 columns are returned
 // at full width (110+)
 func TestCalculateChangesColumns_FullWidth(

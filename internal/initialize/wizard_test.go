@@ -513,10 +513,6 @@ func findSubstring(s, substr string) bool {
 	return false
 }
 
-// ============================================================================
-// Tests for 'c' key (copy prompt) functionality
-// ============================================================================
-
 func TestHandleCompleteKeysCopyOnSuccess(
 	t *testing.T,
 ) {
@@ -715,10 +711,6 @@ func TestPopulateContextPromptHasNoSurroundingQuotes(
 	}
 }
 
-// ============================================================================
-// Tests for CI workflow feature
-// ============================================================================
-
 func TestHandleReviewKeysToggleCIWorkflow(
 	t *testing.T,
 ) {
@@ -835,10 +827,6 @@ func TestRenderReviewShowsCIWorkflowConfigured(
 		)
 	}
 }
-
-// ============================================================================
-// Tests for provider search/filter functionality
-// ============================================================================
 
 func TestProviderFilteringLogic(t *testing.T) {
 	cmd := &InitCmd{Path: "/tmp/test-project"}

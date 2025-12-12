@@ -110,18 +110,16 @@ func NewWizardModel(
 		)
 	}
 
-	// Get all providers from the new registry, sorted by priority
 	allProviders := providers.All()
 
-	// Initialize maps for configured and selected providers
 	configuredProviders := make(map[string]bool)
 	selectedProviders := make(map[string]bool)
 
-	// Detect which providers are already configured and pre-select them
 	for _, provider := range allProviders {
 		isConfigured := provider.IsConfigured(
 			projectPath,
 		)
+
 		configuredProviders[provider.ID()] = isConfigured
 
 		// Pre-select already-configured providers
@@ -218,10 +216,6 @@ func (m WizardModel) View() string {
 
 	return ""
 }
-
-// ============================================================================
-// Keyboard handlers
-// ============================================================================
 
 func (m WizardModel) handleIntroKeys(
 	msg tea.KeyMsg,
@@ -426,10 +420,6 @@ func (m WizardModel) handleCompleteKeys(
 
 	return m, nil
 }
-
-// ============================================================================
-// Render functions for each step
-// ============================================================================
 
 func (m WizardModel) renderIntro() string {
 	var b strings.Builder
@@ -890,10 +880,6 @@ func (m WizardModel) renderExecutionResults(
 		b.WriteString(newline)
 	}
 }
-
-// ============================================================================
-// Helper functions
-// ============================================================================
 
 func (m WizardModel) getSelectedProviderIDs() []string {
 	var selected []string

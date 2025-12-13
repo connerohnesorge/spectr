@@ -225,3 +225,49 @@ func isGlobalPath(path string) bool {
 	return strings.HasPrefix(path, "~/") ||
 		strings.HasPrefix(path, "/")
 }
+
+// ConfigureInitializers configures all initializers in order.
+// Stops on first error (fail-fast, no rollback).
+func ConfigureInitializers(
+	inits []FileInitializer,
+	projectPath string,
+	tm TemplateRenderer,
+) error {
+	for _, init := range inits {
+		if err := init.Configure(projectPath, tm); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// AreInitializersConfigured returns true if all initializers are configured.
+func AreInitializersConfigured(
+	inits []FileInitializer,
+	projectPath string,
+) bool {
+	for _, init := range inits {
+		if !init.IsConfigured(projectPath) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// GetInitializerPaths returns all file paths from initializers.
+// Paths are deduplicated.
+func GetInitializerPaths(inits []FileInitializer) []string {
+	seen := make(map[string]bool)
+	var paths []string
+	for _, init := range inits {
+		path := init.FilePath()
+		if !seen[path] {
+			seen[path] = true
+			paths = append(paths, path)
+		}
+	}
+
+	return paths
+}

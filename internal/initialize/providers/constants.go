@@ -37,6 +37,22 @@ description: Implement an approved Spectr change and keep tasks in sync.
 ---`
 )
 
+// Standard frontmatter constants for the new FileInitializer API.
+// These alias the existing frontmatter variables for API consistency.
+const (
+	// StandardProposalFrontmatter is the standard YAML frontmatter
+	// for proposal commands.
+	StandardProposalFrontmatter = `---
+description: Scaffold a new Spectr change and validate strictly.
+---`
+
+	// StandardApplyFrontmatter is the standard YAML frontmatter
+	// for apply commands.
+	StandardApplyFrontmatter = `---
+description: Implement an approved Spectr change and keep tasks in sync.
+---`
+)
+
 // StandardFrontmatter returns the standard frontmatter map for most providers.
 func StandardFrontmatter() map[string]string {
 	return map[string]string{

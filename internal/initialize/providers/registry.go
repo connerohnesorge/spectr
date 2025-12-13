@@ -81,46 +81,6 @@ func Count() int {
 	return len(registry)
 }
 
-// WithConfigFile returns all providers that have an instruction file,
-// sorted by priority.
-func WithConfigFile() []Provider {
-	registryLock.RLock()
-	defer registryLock.RUnlock()
-
-	var providers []Provider
-	for _, p := range registry {
-		if p.HasConfigFile() {
-			providers = append(providers, p)
-		}
-	}
-
-	sort.Slice(providers, func(i, j int) bool {
-		return providers[i].Priority() < providers[j].Priority()
-	})
-
-	return providers
-}
-
-// WithSlashCommands returns all providers that have slash commands,
-// sorted by priority.
-func WithSlashCommands() []Provider {
-	registryLock.RLock()
-	defer registryLock.RUnlock()
-
-	var providers []Provider
-	for _, p := range registry {
-		if p.HasSlashCommands() {
-			providers = append(providers, p)
-		}
-	}
-
-	sort.Slice(providers, func(i, j int) bool {
-		return providers[i].Priority() < providers[j].Priority()
-	})
-
-	return providers
-}
-
 // Reset clears the global registry. Only use in tests.
 func Reset() {
 	registryLock.Lock()

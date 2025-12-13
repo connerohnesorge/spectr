@@ -45,7 +45,10 @@ func (m *mockTemplateRenderer) RenderSlashCommand(
 }
 
 func TestClaudeProvider(t *testing.T) {
-	p := NewClaudeProvider()
+	p := Get("claude-code")
+	if p == nil {
+		t.Fatal("Claude provider not registered")
+	}
 
 	if p.ID() != "claude-code" {
 		t.Errorf(
@@ -66,44 +69,53 @@ func TestClaudeProvider(t *testing.T) {
 			PriorityClaudeCode,
 		)
 	}
-	if p.ConfigFile() != "CLAUDE.md" {
+
+	// Check initializers
+	inits := p.Initializers()
+	if len(inits) != 3 {
 		t.Errorf(
-			"ConfigFile() = %s, want CLAUDE.md",
-			p.ConfigFile(),
+			"Expected 3 initializers, got %d",
+			len(inits),
 		)
 	}
-	if p.GetProposalCommandPath() != ".claude/commands/spectr/proposal.md" {
+
+	// Check file paths
+	paths := p.GetFilePaths()
+	expectedPaths := []string{
+		"CLAUDE.md",
+		".claude/commands/spectr/proposal.md",
+		".claude/commands/spectr/apply.md",
+	}
+	if len(paths) != len(expectedPaths) {
 		t.Errorf(
-			"GetProposalCommandPath() = %s, want .claude/commands/spectr/proposal.md",
-			p.GetProposalCommandPath(),
+			"Expected %d paths, got %d",
+			len(expectedPaths),
+			len(paths),
 		)
 	}
-	if p.GetApplyCommandPath() != ".claude/commands/spectr/apply.md" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .claude/commands/spectr/apply.md",
-			p.GetApplyCommandPath(),
-		)
-	}
-	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
-		)
-	}
-	if !p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = false, want true",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if path == expected {
+				found = true
+
+				break
+			}
+		}
+		if !found {
+			t.Errorf(
+				"Expected path %s not found in GetFilePaths()",
+				expected,
+			)
+		}
 	}
 }
 
 func TestGeminiProvider(t *testing.T) {
-	p := NewGeminiProvider()
+	p := Get("gemini")
+	if p == nil {
+		t.Fatal("Gemini provider not registered")
+	}
 
 	if p.ID() != "gemini" {
 		t.Errorf("ID() = %s, want gemini", p.ID())
@@ -114,67 +126,82 @@ func TestGeminiProvider(t *testing.T) {
 			p.Name(),
 		)
 	}
-	if p.ConfigFile() != "" {
+
+	// Check initializers - Gemini has 2 TOML slash commands, no instruction file
+	inits := p.Initializers()
+	if len(inits) != 2 {
 		t.Errorf(
-			"ConfigFile() = %s, want empty",
-			p.ConfigFile(),
+			"Expected 2 initializers, got %d",
+			len(inits),
 		)
 	}
-	if p.GetProposalCommandPath() != ".gemini/commands/spectr/proposal.toml" {
+
+	// Check file paths
+	paths := p.GetFilePaths()
+	expectedPaths := []string{
+		".gemini/commands/spectr/proposal.toml",
+		".gemini/commands/spectr/apply.toml",
+	}
+	if len(paths) != len(expectedPaths) {
 		t.Errorf(
-			"GetProposalCommandPath() = %s, want .gemini/commands/spectr/proposal.toml",
-			p.GetProposalCommandPath(),
+			"Expected %d paths, got %d",
+			len(expectedPaths),
+			len(paths),
 		)
 	}
-	if p.GetApplyCommandPath() != ".gemini/commands/spectr/apply.toml" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .gemini/commands/spectr/apply.toml",
-			p.GetApplyCommandPath(),
-		)
-	}
-	if p.CommandFormat() != FormatTOML {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatTOML",
-			p.CommandFormat(),
-		)
-	}
-	if p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = true, want false",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if path == expected {
+				found = true
+
+				break
+			}
+		}
+		if !found {
+			t.Errorf(
+				"Expected path %s not found in GetFilePaths()",
+				expected,
+			)
+		}
 	}
 }
 
 func TestCursorProvider(t *testing.T) {
-	p := NewCursorProvider()
+	p := Get("cursor")
+	if p == nil {
+		t.Fatal("Cursor provider not registered")
+	}
 
 	if p.ID() != "cursor" {
 		t.Errorf("ID() = %s, want cursor", p.ID())
 	}
-	if p.ConfigFile() != "" {
+
+	// Check initializers - Cursor has only 2 slash commands, no instruction file
+	inits := p.Initializers()
+	if len(inits) != 2 {
 		t.Errorf(
-			"ConfigFile() should be empty for cursor, got %s",
-			p.ConfigFile(),
+			"Expected 2 initializers, got %d",
+			len(inits),
 		)
 	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"Cursor should have slash commands",
-		)
+
+	// Check file paths - should have only slash command files
+	paths := p.GetFilePaths()
+	expectedPaths := []string{
+		".cursorrules/commands/spectr/proposal.md",
+		".cursorrules/commands/spectr/apply.md",
 	}
-	if p.HasConfigFile() {
-		t.Error(
-			"Cursor should not have config file",
+	if len(paths) != len(expectedPaths) {
+		t.Errorf(
+			"Expected %d paths, got %d",
+			len(expectedPaths),
+			len(paths),
 		)
 	}
 }
 
-func TestBaseProviderConfigure(t *testing.T) {
+func TestProviderConfigure(t *testing.T) {
 	tmpDir, err := os.MkdirTemp(
 		"",
 		"spectr-test-*",
@@ -187,14 +214,14 @@ func TestBaseProviderConfigure(t *testing.T) {
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
-	p := NewClaudeProvider()
+	p := Get("claude-code")
+	if p == nil {
+		t.Fatal("Claude provider not registered")
+	}
+
 	tm := newMockRenderer()
 
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
+	err = ConfigureInitializers(p.Initializers(), tmpDir, tm)
 	if err != nil {
 		t.Fatalf("Configure failed: %v", err)
 	}
@@ -225,7 +252,7 @@ func TestBaseProviderConfigure(t *testing.T) {
 	}
 }
 
-func TestBaseProviderIsConfigured(t *testing.T) {
+func TestProviderIsConfigured(t *testing.T) {
 	tmpDir, err := os.MkdirTemp(
 		"",
 		"spectr-test-*",
@@ -238,7 +265,10 @@ func TestBaseProviderIsConfigured(t *testing.T) {
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
-	p := NewClaudeProvider()
+	p := Get("claude-code")
+	if p == nil {
+		t.Fatal("Claude provider not registered")
+	}
 
 	// Should not be configured initially
 	if p.IsConfigured(tmpDir) {
@@ -249,11 +279,7 @@ func TestBaseProviderIsConfigured(t *testing.T) {
 
 	// Configure it
 	tm := newMockRenderer()
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
+	err = ConfigureInitializers(p.Initializers(), tmpDir, tm)
 	if err != nil {
 		t.Fatalf("Configure failed: %v", err)
 	}
@@ -266,8 +292,12 @@ func TestBaseProviderIsConfigured(t *testing.T) {
 	}
 }
 
-func TestBaseProviderGetFilePaths(t *testing.T) {
-	p := NewClaudeProvider()
+func TestProviderGetFilePaths(t *testing.T) {
+	p := Get("claude-code")
+	if p == nil {
+		t.Fatal("Claude provider not registered")
+	}
+
 	paths := p.GetFilePaths()
 
 	// Should have config file + 2 slash command files
@@ -316,14 +346,14 @@ func TestGeminiProviderConfigure(t *testing.T) {
 	}
 	defer func() { _ = os.RemoveAll(tmpDir) }()
 
-	p := NewGeminiProvider()
+	p := Get("gemini")
+	if p == nil {
+		t.Fatal("Gemini provider not registered")
+	}
+
 	tm := newMockRenderer()
 
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
+	err = ConfigureInitializers(p.Initializers(), tmpDir, tm)
 	if err != nil {
 		t.Fatalf("Configure failed: %v", err)
 	}
@@ -378,7 +408,11 @@ func TestGeminiProviderConfigure(t *testing.T) {
 func TestSlashOnlyProviderGetFilePaths(
 	t *testing.T,
 ) {
-	p := NewCursorProvider()
+	p := Get("cursor")
+	if p == nil {
+		t.Fatal("Cursor provider not registered")
+	}
+
 	paths := p.GetFilePaths()
 
 	// Should have only slash command files (no config file)
@@ -421,18 +455,20 @@ func TestAllProvidersHaveRequiredFields(
 			)
 		}
 
-		// All providers should have slash commands
-		if !p.HasSlashCommands() {
+		// All providers should have initializers
+		inits := p.Initializers()
+		if len(inits) == 0 {
 			t.Errorf(
-				"Provider %s has no slash commands",
+				"Provider %s has no initializers",
 				p.ID(),
 			)
 		}
-		// Check that at least one command path is set
-		if p.GetProposalCommandPath() == "" &&
-			p.GetApplyCommandPath() == "" {
+
+		// All providers should return file paths
+		paths := p.GetFilePaths()
+		if len(paths) == 0 {
 			t.Errorf(
-				"Provider %s has no command paths set",
+				"Provider %s has no file paths",
 				p.ID(),
 			)
 		}
@@ -564,7 +600,10 @@ func TestIsGlobalPath(t *testing.T) {
 }
 
 func TestCodexProvider(t *testing.T) {
-	p := NewCodexProvider()
+	p := Get("codex")
+	if p == nil {
+		t.Fatal("Codex provider not registered")
+	}
 
 	if p.ID() != "codex" {
 		t.Errorf("ID() = %s, want codex", p.ID())
@@ -582,32 +621,44 @@ func TestCodexProvider(t *testing.T) {
 			PriorityCodex,
 		)
 	}
-	if p.ConfigFile() != "AGENTS.md" {
+
+	// Check initializers - Codex has instruction file + 2 slash commands
+	inits := p.Initializers()
+	if len(inits) != 3 {
 		t.Errorf(
-			"ConfigFile() = %s, want AGENTS.md",
-			p.ConfigFile(),
+			"Expected 3 initializers, got %d",
+			len(inits),
 		)
 	}
-	if !p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = false, want true",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
-	}
-	if p.CommandFormat() != FormatMarkdown {
+
+	// Check file paths include AGENTS.md and global paths
+	paths := p.GetFilePaths()
+	if len(paths) != 3 {
 		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
+			"Expected 3 paths, got %d",
+			len(paths),
 		)
+	}
+
+	// Verify AGENTS.md is included
+	foundAgents := false
+	for _, path := range paths {
+		if path == "AGENTS.md" {
+			foundAgents = true
+
+			break
+		}
+	}
+	if !foundAgents {
+		t.Error("Expected AGENTS.md in file paths")
 	}
 }
 
 func TestOpencodeProvider(t *testing.T) {
-	p := NewOpencodeProvider()
+	p := Get("opencode")
+	if p == nil {
+		t.Fatal("OpenCode provider not registered")
+	}
 
 	if p.ID() != "opencode" {
 		t.Errorf(
@@ -628,38 +679,43 @@ func TestOpencodeProvider(t *testing.T) {
 			PriorityOpencode,
 		)
 	}
-	if p.ConfigFile() != "" {
+
+	// Check initializers - OpenCode has only 2 slash commands, no instruction file
+	inits := p.Initializers()
+	if len(inits) != 2 {
 		t.Errorf(
-			"ConfigFile() = %s, want empty string",
-			p.ConfigFile(),
+			"Expected 2 initializers, got %d",
+			len(inits),
 		)
 	}
-	if p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = true, want false",
-		)
+
+	// Check file paths
+	paths := p.GetFilePaths()
+	expectedPaths := []string{
+		".opencode/command/spectr/proposal.md",
+		".opencode/command/spectr/apply.md",
 	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
-	}
-	if p.CommandFormat() != FormatMarkdown {
+	if len(paths) != len(expectedPaths) {
 		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
+			"Expected %d paths, got %d",
+			len(expectedPaths),
+			len(paths),
 		)
 	}
-	if p.GetProposalCommandPath() != ".opencode/command/spectr/proposal.md" {
-		t.Errorf(
-			"GetProposalCommandPath() = %s, want .opencode/command/spectr/proposal.md",
-			p.GetProposalCommandPath(),
-		)
-	}
-	if p.GetApplyCommandPath() != ".opencode/command/spectr/apply.md" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .opencode/command/spectr/apply.md",
-			p.GetApplyCommandPath(),
-		)
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if path == expected {
+				found = true
+
+				break
+			}
+		}
+		if !found {
+			t.Errorf(
+				"Expected path %s not found in GetFilePaths()",
+				expected,
+			)
+		}
 	}
 }

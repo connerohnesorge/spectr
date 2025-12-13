@@ -316,8 +316,8 @@ func (e *InitExecutor) configureProviders(
 			e.projectPath,
 		)
 
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
+		// Configure the provider using its initializers
+		if err := providers.ConfigureInitializers(provider.Initializers(), e.projectPath, e.tm); err != nil {
 			result.Errors = append(
 				result.Errors,
 				fmt.Sprintf(

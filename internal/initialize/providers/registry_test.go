@@ -86,48 +86,6 @@ func TestIDs(t *testing.T) {
 	}
 }
 
-func TestWithConfigFile(t *testing.T) {
-	providers := WithConfigFile()
-
-	// All returned providers should have a config file
-	for _, p := range providers {
-		if !p.HasConfigFile() {
-			t.Errorf(
-				"Provider %s returned by WithConfigFile() but HasConfigFile() = false",
-				p.ID(),
-			)
-		}
-		if p.ConfigFile() == "" {
-			t.Errorf(
-				"Provider %s has empty ConfigFile()",
-				p.ID(),
-			)
-		}
-	}
-}
-
-func TestWithSlashCommands(t *testing.T) {
-	providers := WithSlashCommands()
-
-	// All returned providers should have slash commands
-	for _, p := range providers {
-		if !p.HasSlashCommands() {
-			t.Errorf(
-				"Provider %s returned by WithSlashCommands() but HasSlashCommands() = false",
-				p.ID(),
-			)
-		}
-		// Check that at least one command path is set
-		if p.GetProposalCommandPath() == "" &&
-			p.GetApplyCommandPath() == "" {
-			t.Errorf(
-				"Provider %s has no command paths set",
-				p.ID(),
-			)
-		}
-	}
-}
-
 func TestProviderIDsAreKebabCase(t *testing.T) {
 	allProviders := All()
 
@@ -158,8 +116,13 @@ func TestInstanceRegistry(t *testing.T) {
 		)
 	}
 
-	// Register a provider
-	err := r.Register(NewClaudeProvider())
+	// Register a provider (using the global registry to get a valid provider)
+	claudeProvider := Get("claude-code")
+	if claudeProvider == nil {
+		t.Fatal("Claude provider not found in global registry")
+	}
+
+	err := r.Register(claudeProvider)
 	if err != nil {
 		t.Errorf("Register failed: %v", err)
 	}
@@ -180,7 +143,7 @@ func TestInstanceRegistry(t *testing.T) {
 	}
 
 	// Duplicate registration should fail
-	err = r.Register(NewClaudeProvider())
+	err = r.Register(claudeProvider)
 	if err == nil {
 		t.Error(
 			"Duplicate registration should fail",

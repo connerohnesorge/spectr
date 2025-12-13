@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "FileInitializer Interface & Implementations",
+      "description": "Create `FileInitializer` interface in `internal/initialize/providers/initializer.go`",
+      "status": "done"
+    },
+    {
+      "id": "1.2",
+      "section": "FileInitializer Interface & Implementations",
+      "description": "Create `InstructionFileInitializer` in `internal/initialize/providers/instruction_initializer.go`",
+      "status": "done"
+    },
+    {
+      "id": "1.3",
+      "section": "FileInitializer Interface & Implementations",
+      "description": "Create `MarkdownSlashCommandInitializer` in `internal/initialize/providers/markdown_command_initializer.go`",
+      "status": "done"
+    },
+    {
+      "id": "1.4",
+      "section": "FileInitializer Interface & Implementations",
+      "description": "Create `TOMLSlashCommandInitializer` in `internal/initialize/providers/toml_command_initializer.go`",
+      "status": "done"
+    },
+    {
+      "id": "1.5",
+      "section": "FileInitializer Interface & Implementations",
+      "description": "Add unit tests for each initializer type (create, update, IsConfigured scenarios)",
+      "status": "done"
+    },
+    {
+      "id": "2.1",
+      "section": "Helper Functions",
+      "description": "Add `ConfigureInitializers()` helper function (fail-fast iteration)",
+      "status": "done"
+    },
+    {
+      "id": "2.2",
+      "section": "Helper Functions",
+      "description": "Add `AreInitializersConfigured()` helper function",
+      "status": "done"
+    },
+    {
+      "id": "2.3",
+      "section": "Helper Functions",
+      "description": "Add `GetInitializerPaths()` helper function (with deduplication)",
+      "status": "done"
+    },
+    {
+      "id": "2.4",
+      "section": "Helper Functions",
+      "description": "Add unit tests for helper functions (including fail-fast behavior)",
+      "status": "done"
+    },
+    {
+      "id": "3.1",
+      "section": "Provider Interface Update",
+      "description": "Update `Provider` interface to 6 methods (ID, Name, Priority, Initializers, IsConfigured, GetFilePaths)",
+      "status": "done"
+    },
+    {
+      "id": "3.2",
+      "section": "Provider Interface Update",
+      "description": "Remove `Configure()` method from Provider interface",
+      "status": "done"
+    },
+    {
+      "id": "3.3",
+      "section": "Provider Interface Update",
+      "description": "Remove `HasConfigFile()` and `HasSlashCommands()` methods from Provider interface",
+      "status": "done"
+    },
+    {
+      "id": "3.4",
+      "section": "Provider Interface Update",
+      "description": "Remove `ConfigFile()`, `GetProposalCommandPath()`, `GetApplyCommandPath()` methods",
+      "status": "done"
+    },
+    {
+      "id": "3.5",
+      "section": "Provider Interface Update",
+      "description": "Remove `CommandFormat()` method and `CommandFormat` type",
+      "status": "done"
+    },
+    {
+      "id": "3.6",
+      "section": "Provider Interface Update",
+      "description": "Remove `BaseProvider` struct entirely",
+      "status": "done"
+    },
+    {
+      "id": "4.1",
+      "section": "Registry Updates",
+      "description": "Remove `WithConfigFile()` filter function from registry",
+      "status": "done"
+    },
+    {
+      "id": "4.2",
+      "section": "Registry Updates",
+      "description": "Remove `WithSlashCommands()` filter function from registry",
+      "status": "done"
+    },
+    {
+      "id": "4.3",
+      "section": "Registry Updates",
+      "description": "Update any registry code that depended on removed Provider methods",
+      "status": "done"
+    },
+    {
+      "id": "5.1",
+      "section": "Migrate All 23 Providers (Single Atomic Change)",
+      "description": "Migrate `ClaudeProvider` (reference implementation with instruction file + markdown commands)",
+      "status": "done"
+    },
+    {
+      "id": "5.2",
+      "section": "Migrate All 23 Providers (Single Atomic Change)",
+      "description": "Migrate `GeminiProvider` (TOML commands only, no instruction file)",
+      "status": "done"
+    },
+    {
+      "id": "5.3",
+      "section": "Migrate All 23 Providers (Single Atomic Change)",
+      "description": "Migrate providers with instruction file + markdown commands (Cline, Cursor, Aider, Codebuddy, etc.)",
+      "status": "done"
+    },
+    {
+      "id": "5.4",
+      "section": "Migrate All 23 Providers (Single Atomic Change)",
+      "description": "Migrate providers with markdown commands only (Continue, etc.)",
+      "status": "done"
+    },
+    {
+      "id": "5.5",
+      "section": "Migrate All 23 Providers (Single Atomic Change)",
+      "description": "Migrate providers with global paths (Codex with ~/.codex/)",
+      "status": "done"
+    },
+    {
+      "id": "5.6",
+      "section": "Migrate All 23 Providers (Single Atomic Change)",
+      "description": "Ensure all providers implement 6 methods and use helper functions",
+      "status": "done"
+    },
+    {
+      "id": "6.1",
+      "section": "Executor & Wizard Updates",
+      "description": "Update executor to call `ConfigureInitializers(provider.Initializers(), projectPath, tm)`",
+      "status": "done"
+    },
+    {
+      "id": "6.2",
+      "section": "Executor & Wizard Updates",
+      "description": "Remove wizard filtering logic that used `HasConfigFile()`/`HasSlashCommands()`",
+      "status": "done"
+    },
+    {
+      "id": "6.3",
+      "section": "Executor & Wizard Updates",
+      "description": "Update wizard to show all providers equally (no capability-based filtering)",
+      "status": "done"
+    },
+    {
+      "id": "6.4",
+      "section": "Executor & Wizard Updates",
+      "description": "Update any other code that depended on removed Provider methods",
+      "status": "done"
+    },
+    {
+      "id": "7.1",
+      "section": "Constants & Existing Helpers",
+      "description": "Keep `StandardCommandPaths()` helper if still useful for initializer construction",
+      "status": "done"
+    },
+    {
+      "id": "7.2",
+      "section": "Constants & Existing Helpers",
+      "description": "Keep `StandardFrontmatter()` or convert to constants for initializer use",
+      "status": "done"
+    },
+    {
+      "id": "7.3",
+      "section": "Constants & Existing Helpers",
+      "description": "Keep `expandPath()` and `isGlobalPath()` helpers (used internally by initializers)",
+      "status": "done"
+    },
+    {
+      "id": "7.4",
+      "section": "Constants & Existing Helpers",
+      "description": "Remove unused helpers from old BaseProvider implementation",
+      "status": "done"
+    },
+    {
+      "id": "8.1",
+      "section": "Test Updates",
+      "description": "Update existing provider tests to work with new 6-method interface",
+      "status": "done"
+    },
+    {
+      "id": "8.2",
+      "section": "Test Updates",
+      "description": "Update executor tests to use `ConfigureInitializers()` pattern",
+      "status": "done"
+    },
+    {
+      "id": "8.3",
+      "section": "Test Updates",
+      "description": "Remove tests for removed methods (HasConfigFile, HasSlashCommands, etc.)",
+      "status": "done"
+    },
+    {
+      "id": "8.4",
+      "section": "Test Updates",
+      "description": "Add integration tests for full provider configuration flow",
+      "status": "done"
+    },
+    {
+      "id": "9.1",
+      "section": "Validation & Manual Testing",
+      "description": "Run `spectr validate refactor-provider-initializers --strict`",
+      "status": "done"
+    },
+    {
+      "id": "9.2",
+      "section": "Validation & Manual Testing",
+      "description": "Run `go test ./internal/initialize/...`",
+      "status": "done"
+    },
+    {
+      "id": "9.3",
+      "section": "Validation & Manual Testing",
+      "description": "Run `go build ./...` to ensure no compilation errors",
+      "status": "done"
+    },
+    {
+      "id": "9.4",
+      "section": "Validation & Manual Testing",
+      "description": "Run `golangci-lint run` to check for lint issues",
+      "status": "done"
+    },
+    {
+      "id": "9.5",
+      "section": "Validation & Manual Testing",
+      "description": "Manual test: `spectr init` with multiple providers on fresh project",
+      "status": "pending"
+    },
+    {
+      "id": "9.6",
+      "section": "Validation & Manual Testing",
+      "description": "Manual test: `spectr init` on project with existing configs (update scenario)",
+      "status": "pending"
+    },
+    {
+      "id": "9.7",
+      "section": "Validation & Manual Testing",
+      "description": "Manual test: Verify all generated files have correct content",
+      "status": "pending"
+    }
+  ]
+}

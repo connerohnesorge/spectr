@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -293,34 +294,62 @@ func reconstructSpec(
 func splitSpec(
 	content string,
 ) (preamble, requirements, after string) {
-	// Find ## Requirements header
-	reqHeaderPattern := regexp.MustCompile(
-		`(?m)^##\s+Requirements\s*$`,
-	)
-	match := reqHeaderPattern.FindStringIndex(
-		content,
-	)
-	if match == nil {
+	// Parse the document to find headers
+	doc, err := markdown.ParseDocument([]byte(content))
+	if err != nil {
+		// Fallback: no requirements section, return everything as preamble
+		return content, "", ""
+	}
+
+	// Find ## Requirements header (level 2) and its position
+	var reqHeaderLine int
+	var reqHeaderFound bool
+	var nextH2Line int
+	var nextH2Found bool
+
+	for _, header := range doc.Headers {
+		if header.Level == 2 &&
+			strings.TrimSpace(header.Text) == "Requirements" {
+			reqHeaderLine = header.Line
+			reqHeaderFound = true
+
+			continue
+		}
+		// Find the next H2 header after Requirements
+		if reqHeaderFound && header.Level == 2 && !nextH2Found {
+			nextH2Line = header.Line
+			nextH2Found = true
+
+			break
+		}
+	}
+
+	if !reqHeaderFound {
 		// No requirements section, return everything as preamble
 		return content, "", ""
 	}
 
-	preamble = content[:match[1]] + "\n\n"
+	// Split content by lines to find byte positions
+	lines := strings.Split(content, "\n")
 
-	// Find next ## header after Requirements
-	nextHeaderPattern := regexp.MustCompile(
-		`(?m)^##\s+`,
-	)
-	remainingContent := content[match[1]:]
-	nextMatch := nextHeaderPattern.FindStringIndex(
-		remainingContent,
-	)
+	// Calculate byte offset for the end of Requirements header line
+	var reqHeaderEndOffset int
+	for i := 0; i < reqHeaderLine && i < len(lines); i++ {
+		reqHeaderEndOffset += len(lines[i]) + 1 // +1 for newline
+	}
 
-	if nextMatch != nil {
-		requirements = remainingContent[:nextMatch[0]]
-		after = remainingContent[nextMatch[0]:]
+	preamble = content[:reqHeaderEndOffset] + "\n"
+
+	if nextH2Found {
+		// Calculate byte offset for start of next H2 header
+		var nextH2StartOffset int
+		for i := 0; i < nextH2Line-1 && i < len(lines); i++ {
+			nextH2StartOffset += len(lines[i]) + 1 // +1 for newline
+		}
+		requirements = content[reqHeaderEndOffset:nextH2StartOffset]
+		after = content[nextH2StartOffset:]
 	} else {
-		requirements = remainingContent
+		requirements = content[reqHeaderEndOffset:]
 		after = ""
 	}
 
@@ -333,30 +362,46 @@ func extractOrderedRequirements(
 	reqsContent string,
 	reqMap map[string]parsers.RequirementBlock,
 ) []parsers.RequirementBlock {
-	// Find requirement headers in order
-	reqPattern := regexp.MustCompile(
-		`(?m)^###\s+Requirement:\s*(.+)$`,
-	)
-	matches := reqPattern.FindAllStringSubmatch(
-		reqsContent,
-		-1,
-	)
+	// Parse the requirements section to find H3 headers
+	doc, err := markdown.ParseDocument([]byte(reqsContent))
+	if err != nil {
+		// If parsing fails, return requirements from map in arbitrary order
+		ordered := make(
+			[]parsers.RequirementBlock,
+			0,
+			len(reqMap),
+		)
+		for _, req := range reqMap {
+			ordered = append(ordered, req)
+		}
+
+		return ordered
+	}
 
 	ordered := make(
 		[]parsers.RequirementBlock,
 		0,
-		len(matches),
+		len(reqMap),
 	)
 
-	for _, match := range matches {
-		if len(match) <= 1 {
+	// Find H3 headers that start with "Requirement:" in order
+	for _, header := range doc.Headers {
+		if header.Level != 3 {
 			continue
 		}
 
-		name := strings.TrimSpace(match[1])
-		normalized := parsers.NormalizeRequirementName(
-			name,
+		// Check if header text starts with "Requirement:"
+		text := strings.TrimSpace(header.Text)
+		if !strings.HasPrefix(text, "Requirement:") {
+			continue
+		}
+
+		// Extract the requirement name after "Requirement:"
+		name := strings.TrimSpace(
+			strings.TrimPrefix(text, "Requirement:"),
 		)
+
+		normalized := parsers.NormalizeRequirementName(name)
 		req, exists := reqMap[normalized]
 		if !exists {
 			continue

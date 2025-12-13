@@ -1,11 +1,11 @@
-//nolint:revive // line-length-limit - regex patterns and parsing logic need clarity
+//nolint:revive // line-length-limit - parsing logic need clarity
 package parsers
 
 import (
-	"bufio"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/markdown"
 )
 
 // RequirementBlock represents a requirement with its header and content
@@ -23,75 +23,60 @@ type RequirementBlock struct {
 func ParseRequirements(
 	filePath string,
 ) ([]RequirementBlock, error) {
-	file, err := os.Open(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = file.Close() }()
 
-	var requirements []RequirementBlock
-	var currentReq *RequirementBlock
-	reqPattern := regexp.MustCompile(
-		`^###\s+Requirement:\s*(.+)$`,
-	)
-	h2Pattern := regexp.MustCompile(`^##\s+`)
+	doc, err := markdown.ParseDocument(content)
+	if err != nil {
+		// Return empty slice if content is empty or invalid
+		return []RequirementBlock{}, nil
+	}
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Check if this is a new requirement header
-		matches := reqPattern.FindStringSubmatch(
-			line,
-		)
-		if len(matches) > 1 {
-			// Save previous requirement if exists
-			if currentReq != nil {
-				requirements = append(
-					requirements,
-					*currentReq,
-				)
-			}
-
-			// Start new requirement
-			name := strings.TrimSpace(matches[1])
-			currentReq = &RequirementBlock{
-				HeaderLine: line,
-				Name:       name,
-				Raw:        line + "\n",
-			}
-
-			continue
-		}
-
-		// Check if we hit a new section (## header) - ends current requirement
-		if h2Pattern.MatchString(line) {
-			if currentReq != nil {
-				requirements = append(
-					requirements,
-					*currentReq,
-				)
-				currentReq = nil
-			}
-
-			continue
-		}
-
-		// Append line to current requirement if we're in one
-		if currentReq != nil {
-			currentReq.Raw += line + "\n"
+	// Count requirement headers for pre-allocation
+	reqCount := 0
+	for _, header := range doc.Headers {
+		if header.Level == 3 && strings.HasPrefix(header.Text, "Requirement:") {
+			reqCount++
 		}
 	}
 
-	// Don't forget the last requirement
-	if currentReq != nil {
-		requirements = append(
-			requirements,
-			*currentReq,
-		)
+	requirements := make([]RequirementBlock, 0, reqCount)
+
+	// Find all H3 headers that are requirements
+	for _, header := range doc.Headers {
+		if header.Level != 3 || !strings.HasPrefix(header.Text, "Requirement:") {
+			continue
+		}
+
+		// Extract requirement name (everything after "Requirement:")
+		name := strings.TrimPrefix(header.Text, "Requirement:")
+		name = strings.TrimSpace(name)
+
+		// Build the header line
+		headerLine := "### " + header.Text
+
+		// Get section content from the Sections map
+		sectionContent := ""
+		if section, ok := doc.Sections[header.Text]; ok {
+			sectionContent = section.Content
+		}
+
+		// Build the raw content (header + content)
+		raw := headerLine + "\n"
+		if sectionContent != "" {
+			raw += sectionContent + "\n"
+		}
+
+		requirements = append(requirements, RequirementBlock{
+			HeaderLine: headerLine,
+			Name:       name,
+			Raw:        raw,
+		})
 	}
 
-	return requirements, scanner.Err()
+	return requirements, nil
 }
 
 // ParseScenarios extracts scenario blocks from requirement content.
@@ -100,25 +85,32 @@ func ParseRequirements(
 func ParseScenarios(
 	requirementContent string,
 ) []string {
-	var scenarios []string
-	scenarioPattern := regexp.MustCompile(
-		`^####\s+Scenario:\s*(.+)$`,
-	)
+	doc, err := markdown.ParseDocument([]byte(requirementContent))
+	if err != nil {
+		// Return empty slice if content is empty or invalid
+		return []string{}
+	}
 
-	scanner := bufio.NewScanner(
-		strings.NewReader(requirementContent),
-	)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		matches := scenarioPattern.FindStringSubmatch(
-			line,
-		)
-		if len(matches) > 1 {
-			scenarios = append(
-				scenarios,
-				strings.TrimSpace(matches[1]),
-			)
+	// Count scenario headers for pre-allocation
+	scenarioCount := 0
+	for _, header := range doc.Headers {
+		if header.Level == 4 && strings.HasPrefix(header.Text, "Scenario:") {
+			scenarioCount++
 		}
+	}
+
+	scenarios := make([]string, 0, scenarioCount)
+
+	// Find all H4 headers that are scenarios
+	for _, header := range doc.Headers {
+		if header.Level != 4 || !strings.HasPrefix(header.Text, "Scenario:") {
+			continue
+		}
+
+		// Extract scenario name (everything after "Scenario:")
+		name := strings.TrimPrefix(header.Text, "Scenario:")
+		name = strings.TrimSpace(name)
+		scenarios = append(scenarios, name)
 	}
 
 	return scenarios

@@ -7,8 +7,15 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/markdown"
+)
+
+// Markdown header levels
+const (
+	headerLevelH2 = 2
+	headerLevelH3 = 3
 )
 
 // ExtractTitle extracts the title from a markdown file by finding
@@ -127,37 +134,34 @@ func countTasksFromMarkdown(
 		InProgress: 0,
 	}
 
-	file, err := os.Open(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		// Return zero status if file doesn't exist or can't be read
 		return status, nil
 	}
-	defer func() { _ = file.Close() }()
 
-	// Regex to match task lines: - [ ] or - [x] (case-insensitive)
-	taskPattern := regexp.MustCompile(
-		`^\s*-\s*\[([xX ])\]`,
-	)
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		matches := taskPattern.FindStringSubmatch(
-			line,
-		)
-		if len(matches) <= 1 {
-			continue
-		}
-		status.Total++
-		marker := strings.ToLower(
-			strings.TrimSpace(matches[1]),
-		)
-		if marker == "x" {
-			status.Completed++
-		}
+	doc, err := markdown.ParseDocument(content)
+	if err != nil {
+		// Return zero status if content is empty or invalid
+		return status, nil
 	}
 
-	return status, scanner.Err()
+	// Count all tasks recursively (including nested children)
+	countTasksRecursive(doc.Tasks, &status)
+
+	return status, nil
+}
+
+// countTasksRecursive counts tasks and their children recursively
+func countTasksRecursive(tasks []markdown.Task, status *TaskStatus) {
+	for _, task := range tasks {
+		status.Total++
+		if task.Checked {
+			status.Completed++
+		}
+		// Count nested tasks
+		countTasksRecursive(task.Children, status)
+	}
 }
 
 // CountDeltas counts the number of delta sections
@@ -177,60 +181,74 @@ func CountDeltas(changeDir string) (int, error) {
 	err := walkSpecFiles(
 		specsDir,
 		func(filePath string) error {
-			file, err := os.Open(filePath)
+			content, err := os.ReadFile(filePath)
 			if err != nil {
 				return err
 			}
-			defer func() { _ = file.Close() }()
 
-			// Match delta section headers
-			deltaPattern := regexp.MustCompile(
-				`^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements`,
-			)
+			doc, err := markdown.ParseDocument(content)
+			if err != nil {
+				// Skip files that can't be parsed (empty, binary, etc.)
+				return nil
+			}
 
-			scanner := bufio.NewScanner(file)
-			for scanner.Scan() {
-				line := strings.TrimSpace(
-					scanner.Text(),
-				)
-				if deltaPattern.MatchString(
-					line,
-				) {
+			// Look for H2 headers that match delta patterns
+			for _, header := range doc.Headers {
+				if header.Level != 2 {
+					continue
+				}
+				// Check if header matches delta pattern:
+				// "ADDED Requirements", "MODIFIED Requirements", etc.
+				if isDeltaHeader(header.Text) {
 					count++
 				}
 			}
 
-			return scanner.Err()
+			return nil
 		},
 	)
 
 	return count, err
 }
 
+// isDeltaHeader checks if a header text matches a delta section pattern
+func isDeltaHeader(text string) bool {
+	deltaTypes := []string{"ADDED", "MODIFIED", "REMOVED", "RENAMED"}
+	for _, deltaType := range deltaTypes {
+		if strings.HasPrefix(text, deltaType+" Requirements") {
+			return true
+		}
+	}
+
+	return false
+}
+
 // CountRequirements counts the number of requirements in a spec.md file
 func CountRequirements(
 	specPath string,
 ) (int, error) {
-	file, err := os.Open(specPath)
+	content, err := os.ReadFile(specPath)
 	if err != nil {
 		return 0, err
 	}
-	defer func() { _ = file.Close() }()
+
+	doc, err := markdown.ParseDocument(content)
+	if err != nil {
+		// Return 0 if content is empty or invalid
+		return 0, nil
+	}
 
 	count := 0
-	reqPattern := regexp.MustCompile(
-		`^###\s+Requirement:`,
-	)
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if reqPattern.MatchString(line) {
+	// Look for H3 headers that start with "Requirement:"
+	for _, header := range doc.Headers {
+		isH3 := header.Level == headerLevelH3
+		isReq := strings.HasPrefix(header.Text, "Requirement:")
+		if isH3 && isReq {
 			count++
 		}
 	}
 
-	return count, scanner.Err()
+	return count, nil
 }
 
 // walkSpecFiles walks through all spec.md files in a directory tree

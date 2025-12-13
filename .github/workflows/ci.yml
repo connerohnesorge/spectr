@@ -68,6 +68,8 @@ jobs:
 
   format-check:
     name: Format Check
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

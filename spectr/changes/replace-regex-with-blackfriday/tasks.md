@@ -2,19 +2,21 @@
 
 - [ ] 1.1 Add blackfriday v2 dependency to go.mod
 - [ ] 1.2 Create `internal/markdown/` package directory structure
+- [ ] 1.3 Create `internal/specterrs/markdown.go` with error types (MarkdownParseError, EmptyContentError, BinaryContentError)
 
 ## 2. Core Markdown Package
 
-- [ ] 2.1 Implement `internal/markdown/types.go` with Header, Section, Task types
-- [ ] 2.2 Implement `internal/markdown/parser.go` with Parse() function returning AST
-- [ ] 2.3 Implement `internal/markdown/headers.go` with header extraction (H1-H4)
-- [ ] 2.4 Implement `internal/markdown/sections.go` with section content extraction
-- [ ] 2.5 Implement `internal/markdown/tasks.go` with task checkbox parsing
+- [ ] 2.1 Implement `internal/markdown/types.go` with Document, Header, Section, Task types (all with line numbers)
+- [ ] 2.2 Implement `internal/markdown/parser.go` with ParseDocument(content []byte) (*Document, error) - all-in-one API
+- [ ] 2.3 Implement `internal/markdown/headers.go` with internal header extraction logic (H1-H4)
+- [ ] 2.4 Implement `internal/markdown/sections.go` with internal section content extraction (raw markdown text)
+- [ ] 2.5 Implement `internal/markdown/tasks.go` with task checkbox parsing (full line text, hierarchical Children)
 - [ ] 2.6a Write unit tests for `internal/markdown/parser.go`
 - [ ] 2.6b Write unit tests for `internal/markdown/headers.go`
 - [ ] 2.6c Write unit tests for `internal/markdown/sections.go`
 - [ ] 2.6d Write unit tests for `internal/markdown/tasks.go`
-- [ ] 2.7 Write comparison tests that run both regex and AST parsers, asserting equal output
+- [ ] 2.6e Write unit tests for specterrs markdown error types
+- [ ] 2.7 Write comparison tests that run both regex and AST parsers, asserting equal output (KEEP PERMANENTLY)
 
 ## 3. Replace Parsers Package
 

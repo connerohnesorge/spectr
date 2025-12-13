@@ -23,25 +23,54 @@ The validation system SHALL use blackfriday AST-based parsing instead of regex p
 - **AND** results SHALL match previous `^\s*-\s*\[([xX ])\]` regex behavior
 
 ### Requirement: Markdown Package Architecture
-The system SHALL provide a dedicated `internal/markdown/` package that encapsulates all blackfriday AST operations, exposing a clean API for spec parsing needs.
+The system SHALL provide a dedicated `internal/markdown/` package that encapsulates all blackfriday AST operations, exposing a clean all-in-one API for spec parsing needs.
 
-#### Scenario: Package exposes typed extraction functions
+#### Scenario: Package exposes single parse function
 - **WHEN** code imports the markdown package
-- **THEN** it SHALL have access to `ParseDocument(content []byte) *Document`
-- **AND** it SHALL have access to `ExtractHeaders(doc *Document, level int) []Header`
-- **AND** it SHALL have access to `ExtractSections(doc *Document) map[string]Section`
-- **AND** it SHALL have access to `ExtractTasks(doc *Document) []Task`
+- **THEN** it SHALL have access to `ParseDocument(content []byte) (*Document, error)`
+- **AND** `Document` SHALL contain `Headers []Header`, `Sections map[string]Section`, and `Tasks []Task`
+- **AND** parsing SHALL occur exactly once per call (no caching, no re-parsing)
+- **AND** callers SHALL use only the fields they need from the returned Document
 
 #### Scenario: Types provide source location
 - **WHEN** a Header, Section, or Task is extracted
-- **THEN** the type SHALL include line number information from the AST
-- **AND** error messages SHALL be able to reference specific line numbers
+- **THEN** the type MUST include line number information (1-indexed)
+- **AND** `Header.Line`, `Section.Header.Line`, and `Task.LineNum` SHALL be populated
+- **AND** error messages SHALL reference specific line numbers
 
 #### Scenario: Package hides blackfriday internals
 - **WHEN** consuming code uses the markdown package
 - **THEN** it SHALL NOT need to import blackfriday directly
 - **AND** all blackfriday types SHALL be wrapped in package-specific types
+- **AND** no blackfriday types SHALL appear in the public API
 - **AND** changes to blackfriday version SHALL only affect internal/markdown/
+
+#### Scenario: Section content is raw markdown
+- **WHEN** a Section is extracted
+- **THEN** `Section.Content` SHALL be a string containing raw markdown text
+- **AND** content SHALL be everything between the section header and the next header of same or higher level
+
+#### Scenario: Task hierarchy is preserved
+- **WHEN** nested task checkboxes exist (tasks inside sub-items)
+- **THEN** `Task.Children` SHALL contain nested Task items
+- **AND** the hierarchy SHALL match the markdown list nesting structure
+- **AND** `Task.Line` SHALL contain the complete original line text including checkbox
+
+### Requirement: Markdown Error Types
+The system SHALL provide markdown-specific error types in `internal/specterrs/markdown.go` following the existing specterrs patterns.
+
+#### Scenario: Parse errors use specterrs
+- **WHEN** `ParseDocument` encounters invalid input
+- **THEN** it SHALL return `(nil, error)` where error is a specterrs type
+- **AND** empty/whitespace content SHALL return `*specterrs.EmptyContentError`
+- **AND** binary content SHALL return `*specterrs.BinaryContentError`
+- **AND** other parse failures SHALL return `*specterrs.MarkdownParseError`
+
+#### Scenario: Error types include context
+- **WHEN** a markdown error is returned
+- **THEN** it SHALL include `Path` field if file path is known
+- **AND** it SHALL include `Line` field if line number is known
+- **AND** `MarkdownParseError` SHALL implement `Unwrap()` for underlying errors
 
 ## MODIFIED Requirements
 

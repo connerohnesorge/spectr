@@ -14,6 +14,7 @@ Replacing with blackfriday's AST-based parsing provides:
 - Proper handling of nested elements
 - Better error messages with line numbers
 - Easier extensibility for future spec formats
+- Single parse of markdown, no need to reparse then entire markdown document
 
 ## What Changes
 
@@ -37,8 +38,25 @@ Replacing with blackfriday's AST-based parsing provides:
 - **NOT affected**: `internal/git/platform.go` (URL parsing stays regex)
 - **NOT affected**: Simple utility patterns (`\s+`, `\n{3,}`, `shall|must`)
 
+## Key Design Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Malformed markdown | Accept blackfriday's interpretation | Trust the library; no need for regex equivalence on edge cases |
+| AST caching | Parse once, never reparse | Architecture enforces single parse per file per operation |
+| Line numbers | Hard requirement | Types MUST include line numbers for error messages |
+| Comparison tests | Keep permanently | Maintain as regression suite for future changes |
+| API shape | All-in-one `ParseDocument()` | Single parse returns everything; callers use what they need |
+| Package structure | Multiple files | parser.go, headers.go, sections.go, tasks.go, types.go |
+| AST exposure | Strictly hide internals | No access to raw blackfriday nodes |
+| Section content | Raw markdown text | `Section.Content` is string with original markdown |
+| Task content | Full line text | `Task.Line` contains complete original line |
+| Parse errors | Return error | `ParseDocument` returns `(nil, error)` on invalid input |
+| Nested tasks | Preserve hierarchy | `Task` has `Children []Task` for nested items |
+| Error types | Use specterrs | Add markdown-specific errors to `internal/specterrs/` |
+
 ## Risk Assessment
 
 - **Low risk**: All existing tests continue to pass
 - **Medium risk**: Subtle parsing differences in edge cases (malformed markdown)
-- **Mitigation**: Comprehensive test coverage comparing old vs new parser output
+- **Mitigation**: Comprehensive test coverage comparing old vs new parser output; comparison tests kept permanently

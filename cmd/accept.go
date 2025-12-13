@@ -4,7 +4,6 @@
 package cmd
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
@@ -22,13 +22,19 @@ import (
 // filePerm is the standard file permission for created files (rw-r--r--)
 const filePerm = 0644
 
-// Regex patterns for parsing tasks.md - compiled once at package level
+// Regex patterns for extracting task-specific data from markdown elements.
+// These are ID extraction patterns, not structural parsing patterns.
+// The markdown package handles structural parsing (headers, tasks).
 var (
-	sectionPattern = regexp.MustCompile(
-		`^##\s+\d+\.\s+(.+)$`,
+	// sectionIDPattern extracts section name from numbered H2 headers.
+	// Example: "1. Core Accept Command" -> "Core Accept Command"
+	sectionIDPattern = regexp.MustCompile(
+		`^\d+\.\s+(.+)$`,
 	)
-	taskPattern = regexp.MustCompile(
-		`^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$`,
+	// taskIDPattern extracts task ID and description from task lines.
+	// Example: "1.1 Create cmd/accept.go" -> ["1.1", "Create cmd/accept.go"]
+	taskIDPattern = regexp.MustCompile(
+		`^(\d+\.\d+)\s+(.+)$`,
 	)
 )
 
@@ -257,23 +263,42 @@ func (c *AcceptCmd) resolveChangeID(
 	return selectChangeInteractive(projectRoot)
 }
 
-// parseTaskFromMatch creates a Task from regex match results.
-func parseTaskFromMatch(
-	matches []string,
+// parseTaskFromMarkdown creates a parsers.Task from a markdown.Task.
+// It extracts the task ID and description from the task line text.
+// Returns nil if the task line doesn't match the expected format.
+func parseTaskFromMarkdown(
+	mdTask markdown.Task,
 	section string,
-) parsers.Task {
-	checkbox := matches[1]
-	taskID := matches[2]
-	description := strings.TrimSpace(matches[3])
+) *parsers.Task {
+	// Extract the text after the checkbox from the full line
+	// Line format: "- [ ] 1.1 Description" or "- [x] 1.1 Description"
+	line := strings.TrimSpace(mdTask.Line)
 
-	var status parsers.TaskStatusValue
-	if checkbox == " " {
-		status = parsers.TaskStatusPending
-	} else {
-		status = parsers.TaskStatusCompleted
+	// Remove the list marker and checkbox
+	// Find the checkbox end position
+	checkboxEnd := strings.Index(line, "] ")
+	if checkboxEnd == -1 {
+		return nil
+	}
+	textAfterCheckbox := strings.TrimSpace(line[checkboxEnd+2:])
+
+	// Extract task ID and description using the ID pattern
+	matches := taskIDPattern.FindStringSubmatch(textAfterCheckbox)
+	if matches == nil {
+		return nil
 	}
 
-	return parsers.Task{
+	taskID := matches[1]
+	description := strings.TrimSpace(matches[2])
+
+	var status parsers.TaskStatusValue
+	if mdTask.Checked {
+		status = parsers.TaskStatusCompleted
+	} else {
+		status = parsers.TaskStatusPending
+	}
+
+	return &parsers.Task{
 		ID:          taskID,
 		Section:     section,
 		Description: description,
@@ -282,62 +307,66 @@ func parseTaskFromMatch(
 }
 
 // parseTasksMd parses tasks.md and returns a slice of Task structs.
-//
-// It extracts section headers (## lines), task IDs, descriptions, and status
-// from the markdown structure.
-func parseTasksMd(
-	path string,
-) ([]parsers.Task, error) {
-	file, err := os.Open(path)
+// It uses the markdown package for structural parsing (headers, tasks),
+// then extracts task IDs and descriptions from the parsed elements.
+func parseTasksMd(path string) ([]parsers.Task, error) {
+	content, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to open file: %w",
-			err,
-		)
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
-	defer func() { _ = file.Close() }()
+
+	doc, err := markdown.ParseDocument(content)
+	if err != nil {
+		// Empty file is valid - just return no tasks
+		var emptyErr *specterrs.EmptyContentError
+		if errors.As(err, &emptyErr) {
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("failed to parse markdown: %w", err)
+	}
+
+	// Build section map: line number -> section name (numbered H2 headers)
+	sections := make(map[int]string)
+	for _, h := range doc.Headers {
+		if h.Level != 2 {
+			continue
+		}
+
+		if m := sectionIDPattern.FindStringSubmatch(h.Text); m != nil {
+			sections[h.Line] = strings.TrimSpace(m[1])
+		}
+	}
 
 	var tasks []parsers.Task
-	var currentSection string
+	var processTasks func(mdTasks []markdown.Task)
+	processTasks = func(mdTasks []markdown.Task) {
+		for _, mdTask := range mdTasks {
+			section := findSection(mdTask.LineNum, sections)
+			if task := parseTaskFromMarkdown(mdTask, section); task != nil {
+				tasks = append(tasks, *task)
+			}
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// Check for section header (e.g., "## 1. Core Accept Command")
-		if matches := sectionPattern.FindStringSubmatch(line); matches != nil {
-			currentSection = strings.TrimSpace(
-				matches[1],
-			)
-
-			continue
+			processTasks(mdTask.Children)
 		}
-
-		// Check for task line (e.g., "- [ ] 1.1 Create `cmd/accept.go`...")
-		matches := taskPattern.FindStringSubmatch(
-			line,
-		)
-		if matches == nil {
-			continue
-		}
-
-		tasks = append(
-			tasks,
-			parseTaskFromMatch(
-				matches,
-				currentSection,
-			),
-		)
 	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf(
-			"error reading file: %w",
-			err,
-		)
-	}
+	processTasks(doc.Tasks)
 
 	return tasks, nil
+}
+
+// findSection finds the section name for a task at a given line number.
+func findSection(taskLine int, sections map[int]string) string {
+	var result string
+	var maxLine int
+
+	for line, section := range sections {
+		if line < taskLine && line > maxLine {
+			maxLine, result = line, section
+		}
+	}
+
+	return result
 }
 
 // writeTasksJSON writes tasks to a tasks.json file.

@@ -39,7 +39,7 @@ jobs:
             accept-flake-config = true
 
       - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v2
+        uses: DeterminateSystems/magic-nix-cache-action@v13
 
       - name: Run golangci-lint
         run: nix develop .#ci -c golangci-lint run
@@ -61,7 +61,7 @@ jobs:
             accept-flake-config = true
 
       - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v2
+        uses: DeterminateSystems/magic-nix-cache-action@v13
 
       - name: Run tests with race detection
         run: nix develop .#ci -c gotestsum --format testname -- -race ./... -timeout=2m
@@ -83,7 +83,7 @@ jobs:
             accept-flake-config = true
 
       - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v2
+        uses: DeterminateSystems/magic-nix-cache-action@v13
 
       - name: Check Go formatting (gofmt)
         run: |
@@ -123,7 +123,7 @@ jobs:
             accept-flake-config = true
 
       - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v2
+        uses: DeterminateSystems/magic-nix-cache-action@v13
 
       - name: Build with Nix
         run: nix build .#

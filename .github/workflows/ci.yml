@@ -8,7 +8,7 @@ on:
 
 # Cancel in-progress runs for the same branch
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 concurrency:
@@ -131,3 +131,44 @@ jobs:
 
       - name: Build with Nix
         run: nix build .#
+
+  fix-nix-hashes:
+    name: Fix Nix Hashes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Determinate Nix
+        uses: DeterminateSystems/determinate-nix-action@v3
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/flakehub-cache-action@main
+
+      - name: Build with Nix
+        id: nix-build
+        continue-on-error: true
+        run: nix build .#
+
+      - name: Fix hash mismatches
+        if: steps.nix-build.outcome == 'failure'
+        run: |
+          git stash --include-untracked
+          git fetch --depth=1 origin "$GITHUB_HEAD_REF"
+          git checkout -B "$GITHUB_HEAD_REF" "${{ github.event.pull_request.head.sha }}"
+
+          determinate-nixd fix hashes --auto-apply
+
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add --update --ignore-removal .
+            git commit -m "[dependabot skip] Automatically fix Nix hashes"
+            git push origin "$GITHUB_HEAD_REF"
+          fi
+
+          git checkout -
+          git stash pop || true

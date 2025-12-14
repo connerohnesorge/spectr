@@ -10,27 +10,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/regex"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // filePerm is the standard file permission for created files (rw-r--r--)
 const filePerm = 0644
-
-// Regex patterns for parsing tasks.md - compiled once at package level
-var (
-	sectionPattern = regexp.MustCompile(
-		`^##\s+\d+\.\s+(.+)$`,
-	)
-	taskPattern = regexp.MustCompile(
-		`^-\s+\[([ xX])\]\s+(\d+\.\d+)\s+(.+)$`,
-	)
-)
 
 // AcceptCmd represents the accept command for converting tasks.md to
 // tasks.json. This command parses the human-readable tasks.md file and
@@ -257,15 +247,10 @@ func (c *AcceptCmd) resolveChangeID(
 	return selectChangeInteractive(projectRoot)
 }
 
-// parseTaskFromMatch creates a Task from regex match results.
+// parseTaskFromMatch creates a Task from parsed task components.
 func parseTaskFromMatch(
-	matches []string,
-	section string,
+	checkbox, taskID, description, section string,
 ) parsers.Task {
-	checkbox := matches[1]
-	taskID := matches[2]
-	description := strings.TrimSpace(matches[3])
-
 	var status parsers.TaskStatusValue
 	if checkbox == " " {
 		status = parsers.TaskStatusPending
@@ -276,7 +261,7 @@ func parseTaskFromMatch(
 	return parsers.Task{
 		ID:          taskID,
 		Section:     section,
-		Description: description,
+		Description: strings.TrimSpace(description),
 		Status:      status,
 	}
 }
@@ -305,26 +290,24 @@ func parseTasksMd(
 		line := scanner.Text()
 
 		// Check for section header (e.g., "## 1. Core Accept Command")
-		if matches := sectionPattern.FindStringSubmatch(line); matches != nil {
-			currentSection = strings.TrimSpace(
-				matches[1],
-			)
+		if sectionName, ok := regex.MatchNumberedSection(line); ok {
+			currentSection = strings.TrimSpace(sectionName)
 
 			continue
 		}
 
 		// Check for task line (e.g., "- [ ] 1.1 Create `cmd/accept.go`...")
-		matches := taskPattern.FindStringSubmatch(
-			line,
-		)
-		if matches == nil {
+		match, ok := regex.MatchNumberedTask(line)
+		if !ok {
 			continue
 		}
 
 		tasks = append(
 			tasks,
 			parseTaskFromMatch(
-				matches,
+				match.Checkbox,
+				match.ID,
+				match.Description,
 				currentSection,
 			),
 		)

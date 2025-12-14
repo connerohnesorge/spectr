@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 // DeltaType represents the type of delta operation
@@ -341,56 +341,42 @@ func parseRenamedRequirements(
 	var renames []RenamedRequirement
 	lines := strings.Split(content, "\n")
 
-	fromRegex := regexp.MustCompile(
-		`^\s*-\s*FROM:\s*###\s*Requirement:\s*(.+)$`,
-	)
-	toRegex := regexp.MustCompile(
-		`^\s*-\s*TO:\s*###\s*Requirement:\s*(.+)$`,
-	)
-
 	var currentFrom string
 
 	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if line == "" {
+		trimmedLine := strings.TrimSpace(line)
+		if trimmedLine == "" {
 			continue
 		}
 
-		// Check for FROM line
-		if matches := fromRegex.FindStringSubmatch(line); matches != nil {
-			currentFrom = strings.TrimSpace(
-				matches[1],
-			)
+		// Check for FROM line using regex package
+		if fromName, ok := regex.MatchRenamedFromAlt(line); ok {
+			currentFrom = strings.TrimSpace(fromName)
 
 			continue
 		}
 
-		// Check for TO line
-		matches := toRegex.FindStringSubmatch(
-			line,
-		)
-		if matches == nil {
-			continue
-		}
+		// Check for TO line using regex package
+		if toName, ok := regex.MatchRenamedToAlt(line); ok {
+			toName = strings.TrimSpace(toName)
 
-		toName := strings.TrimSpace(matches[1])
-
-		// If we have a FROM, pair it with this TO
-		if currentFrom != "" {
-			renames = append(
-				renames,
-				RenamedRequirement{
-					FromName: currentFrom,
+			// If we have a FROM, pair it with this TO
+			if currentFrom != "" {
+				renames = append(
+					renames,
+					RenamedRequirement{
+						FromName: currentFrom,
+						ToName:   toName,
+					},
+				)
+				currentFrom = "" // Reset for next pair
+			} else {
+				// TO without FROM - add as malformed
+				renames = append(renames, RenamedRequirement{
+					FromName: "",
 					ToName:   toName,
-				},
-			)
-			currentFrom = "" // Reset for next pair
-		} else {
-			// TO without FROM - add as malformed
-			renames = append(renames, RenamedRequirement{
-				FromName: "",
-				ToName:   toName,
-			})
+				})
+			}
 		}
 	}
 

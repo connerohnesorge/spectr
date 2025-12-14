@@ -177,7 +177,7 @@
           pname = "spectr";
           version = "0.0.7";
           src = self;
-          vendorHash = "sha256-1bQMmXC/wb3dghKgPifjdFBJSASkWgXj70/gfUee+a4=";
+          vendorHash = "sha256-2JgWe9+r692icR+4bhLSePaa/I7oAenUaK1SjyeDsKM=";
           ldflags = [
             "-s"
             "-w"

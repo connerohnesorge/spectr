@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 const (
@@ -293,11 +294,8 @@ func reconstructSpec(
 func splitSpec(
 	content string,
 ) (preamble, requirements, after string) {
-	// Find ## Requirements header
-	reqHeaderPattern := regexp.MustCompile(
-		`(?m)^##\s+Requirements\s*$`,
-	)
-	match := reqHeaderPattern.FindStringIndex(
+	// Find ## Requirements header using pre-compiled pattern
+	match := regex.H2RequirementsSection.FindStringIndex(
 		content,
 	)
 	if match == nil {
@@ -307,12 +305,9 @@ func splitSpec(
 
 	preamble = content[:match[1]] + "\n\n"
 
-	// Find next ## header after Requirements
-	nextHeaderPattern := regexp.MustCompile(
-		`(?m)^##\s+`,
-	)
+	// Find next ## header after Requirements using pre-compiled pattern
 	remainingContent := content[match[1]:]
-	nextMatch := nextHeaderPattern.FindStringIndex(
+	nextMatch := regex.H2NextSection.FindStringIndex(
 		remainingContent,
 	)
 
@@ -333,29 +328,18 @@ func extractOrderedRequirements(
 	reqsContent string,
 	reqMap map[string]parsers.RequirementBlock,
 ) []parsers.RequirementBlock {
-	// Find requirement headers in order
-	reqPattern := regexp.MustCompile(
-		`(?m)^###\s+Requirement:\s*(.+)$`,
-	)
-	matches := reqPattern.FindAllStringSubmatch(
-		reqsContent,
-		-1,
-	)
+	// Find requirement headers in order using pre-compiled pattern
+	names := regex.FindAllH3Requirements(reqsContent)
 
 	ordered := make(
 		[]parsers.RequirementBlock,
 		0,
-		len(matches),
+		len(names),
 	)
 
-	for _, match := range matches {
-		if len(match) <= 1 {
-			continue
-		}
-
-		name := strings.TrimSpace(match[1])
+	for _, name := range names {
 		normalized := parsers.NormalizeRequirementName(
-			name,
+			strings.TrimSpace(name),
 		)
 		req, exists := reqMap[normalized]
 		if !exists {

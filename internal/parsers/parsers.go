@@ -7,8 +7,9 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 // ExtractTitle extracts the title from a markdown file by finding
@@ -134,25 +135,15 @@ func countTasksFromMarkdown(
 	}
 	defer func() { _ = file.Close() }()
 
-	// Regex to match task lines: - [ ] or - [x] (case-insensitive)
-	taskPattern := regexp.MustCompile(
-		`^\s*-\s*\[([xX ])\]`,
-	)
-
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		matches := taskPattern.FindStringSubmatch(
-			line,
-		)
-		if len(matches) <= 1 {
+		state, ok := regex.MatchTaskCheckbox(line)
+		if !ok {
 			continue
 		}
 		status.Total++
-		marker := strings.ToLower(
-			strings.TrimSpace(matches[1]),
-		)
-		if marker == "x" {
+		if regex.IsTaskChecked(state) {
 			status.Completed++
 		}
 	}
@@ -183,19 +174,12 @@ func CountDeltas(changeDir string) (int, error) {
 			}
 			defer func() { _ = file.Close() }()
 
-			// Match delta section headers
-			deltaPattern := regexp.MustCompile(
-				`^##\s+(ADDED|MODIFIED|REMOVED|RENAMED)\s+Requirements`,
-			)
-
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
 				line := strings.TrimSpace(
 					scanner.Text(),
 				)
-				if deltaPattern.MatchString(
-					line,
-				) {
+				if _, ok := regex.MatchH2DeltaSection(line); ok {
 					count++
 				}
 			}
@@ -218,14 +202,11 @@ func CountRequirements(
 	defer func() { _ = file.Close() }()
 
 	count := 0
-	reqPattern := regexp.MustCompile(
-		`^###\s+Requirement:`,
-	)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if reqPattern.MatchString(line) {
+		if _, ok := regex.MatchH3Requirement(line); ok {
 			count++
 		}
 	}

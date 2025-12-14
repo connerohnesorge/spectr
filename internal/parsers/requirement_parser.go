@@ -4,8 +4,9 @@ package parsers
 import (
 	"bufio"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 // RequirementBlock represents a requirement with its header and content
@@ -31,20 +32,13 @@ func ParseRequirements(
 
 	var requirements []RequirementBlock
 	var currentReq *RequirementBlock
-	reqPattern := regexp.MustCompile(
-		`^###\s+Requirement:\s*(.+)$`,
-	)
-	h2Pattern := regexp.MustCompile(`^##\s+`)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Check if this is a new requirement header
-		matches := reqPattern.FindStringSubmatch(
-			line,
-		)
-		if len(matches) > 1 {
+		if name, ok := regex.MatchH3Requirement(line); ok {
 			// Save previous requirement if exists
 			if currentReq != nil {
 				requirements = append(
@@ -54,10 +48,9 @@ func ParseRequirements(
 			}
 
 			// Start new requirement
-			name := strings.TrimSpace(matches[1])
 			currentReq = &RequirementBlock{
 				HeaderLine: line,
-				Name:       name,
+				Name:       strings.TrimSpace(name),
 				Raw:        line + "\n",
 			}
 
@@ -65,7 +58,7 @@ func ParseRequirements(
 		}
 
 		// Check if we hit a new section (## header) - ends current requirement
-		if h2Pattern.MatchString(line) {
+		if regex.IsH2Header(line) {
 			if currentReq != nil {
 				requirements = append(
 					requirements,
@@ -101,22 +94,16 @@ func ParseScenarios(
 	requirementContent string,
 ) []string {
 	var scenarios []string
-	scenarioPattern := regexp.MustCompile(
-		`^####\s+Scenario:\s*(.+)$`,
-	)
 
 	scanner := bufio.NewScanner(
 		strings.NewReader(requirementContent),
 	)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		matches := scenarioPattern.FindStringSubmatch(
-			line,
-		)
-		if len(matches) > 1 {
+		if name, ok := regex.MatchH4Scenario(line); ok {
 			scenarios = append(
 				scenarios,
-				strings.TrimSpace(matches[1]),
+				strings.TrimSpace(name),
 			)
 		}
 	}

@@ -5,6 +5,8 @@ import (
 	"bufio"
 	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 // Requirement represents a parsed requirement with its content and scenarios
@@ -26,18 +28,12 @@ func ExtractSections(
 
 	var currentSection string
 	var currentContent strings.Builder
-	sectionHeaderRegex := regexp.MustCompile(
-		`^##\s+(.+)$`,
-	)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// Check if this is a section header (## header)
-		matches := sectionHeaderRegex.FindStringSubmatch(
-			line,
-		)
-		if matches != nil {
+		if sectionName, ok := regex.MatchH2SectionHeader(line); ok {
 			// Save previous section if exists
 			if currentSection != "" {
 				sections[currentSection] = strings.TrimSpace(
@@ -47,7 +43,7 @@ func ExtractSections(
 
 			// Start new section
 			currentSection = strings.TrimSpace(
-				matches[1],
+				sectionName,
 			)
 			currentContent.Reset()
 		} else if currentSection != "" {
@@ -78,9 +74,6 @@ func ExtractRequirements(
 		strings.NewReader(content),
 	)
 
-	requirementHeaderRegex := regexp.MustCompile(
-		`^###\s+Requirement:\s*(.+)$`,
-	)
 	var currentRequirement *Requirement
 	var currentContent strings.Builder
 
@@ -88,10 +81,7 @@ func ExtractRequirements(
 		line := scanner.Text()
 
 		// Check if this is a requirement header
-		matches := requirementHeaderRegex.FindStringSubmatch(
-			line,
-		)
-		if matches != nil {
+		if reqName, ok := regex.MatchH3Requirement(line); ok {
 			saveCurrentRequirement(
 				currentRequirement,
 				&currentContent,
@@ -101,7 +91,7 @@ func ExtractRequirements(
 			// Start new requirement
 			currentRequirement = &Requirement{
 				Name: strings.TrimSpace(
-					matches[1],
+					reqName,
 				),
 			}
 			currentContent.Reset()
@@ -199,9 +189,6 @@ func ExtractScenarios(
 		strings.NewReader(requirementBlock),
 	)
 
-	scenarioHeaderRegex := regexp.MustCompile(
-		`^####\s+Scenario:\s*(.+)$`,
-	)
 	var currentScenario strings.Builder
 	var inScenario bool
 
@@ -209,10 +196,7 @@ func ExtractScenarios(
 		line := scanner.Text()
 
 		// Check if this is a scenario header (#### Scenario:)
-		matches := scenarioHeaderRegex.FindStringSubmatch(
-			line,
-		)
-		if matches != nil {
+		if _, ok := regex.MatchH4Scenario(line); ok {
 			// Save previous scenario if exists
 			if inScenario {
 				scenarios = append(

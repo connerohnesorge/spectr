@@ -6,10 +6,10 @@ package parsers
 
 import (
 	"bufio"
-	"fmt"
 	"os"
-	"regexp"
 	"strings"
+
+	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 // DeltaPlan represents all delta operations for a spec
@@ -72,7 +72,7 @@ func ParseDeltaSpec(
 func parseDeltaSection(
 	content, sectionType string,
 ) []RequirementBlock {
-	sectionContent := extractSectionContent(
+	sectionContent := regex.FindDeltaSectionContent(
 		content,
 		sectionType,
 	)
@@ -85,37 +85,6 @@ func parseDeltaSection(
 	)
 }
 
-// extractSectionContent extracts content from a section header
-func extractSectionContent(
-	content, sectionType string,
-) string {
-	pattern := fmt.Sprintf(
-		`(?m)^##\s+%s\s+Requirements\s*$`,
-		sectionType,
-	)
-	sectionPattern := regexp.MustCompile(pattern)
-	matches := sectionPattern.FindStringIndex(
-		content,
-	)
-	if matches == nil {
-		return ""
-	}
-
-	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(
-		`(?m)^##\s+`,
-	)
-	nextMatches := nextSectionPattern.FindStringIndex(
-		content[sectionStart:],
-	)
-
-	if nextMatches != nil {
-		return content[sectionStart : sectionStart+nextMatches[0]]
-	}
-
-	return content[sectionStart:]
-}
-
 // parseRequirementsFromSection parses requirement blocks from content
 func parseRequirementsFromSection(
 	sectionContent string,
@@ -123,35 +92,24 @@ func parseRequirementsFromSection(
 	var requirements []RequirementBlock
 	var currentReq *RequirementBlock
 
-	reqPattern := regexp.MustCompile(
-		`^###\s+Requirement:\s*(.+)$`,
-	)
-	h3Pattern := regexp.MustCompile(`^###\s+`)
-
 	scanner := bufio.NewScanner(
 		strings.NewReader(sectionContent),
 	)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if matches := reqPattern.FindStringSubmatch(line); len(
-			matches,
-		) > 1 {
+		if name, ok := regex.MatchH3Requirement(line); ok {
 			currentReq = saveAndStartNewRequirement(
 				&requirements,
 				currentReq,
 				line,
-				matches[1],
+				name,
 			)
 
 			continue
 		}
 
-		if isNonRequirementH3(
-			line,
-			h3Pattern,
-			reqPattern,
-		) {
+		if isNonRequirementH3(line) {
 			currentReq = saveCurrentRequirement(
 				&requirements,
 				currentReq,
@@ -208,12 +166,10 @@ func saveCurrentRequirement(
 }
 
 // isNonRequirementH3 checks if line is an H3 but not a requirement
-func isNonRequirementH3(
-	line string,
-	h3Pattern, reqPattern *regexp.Regexp,
-) bool {
-	return h3Pattern.MatchString(line) &&
-		!reqPattern.MatchString(line)
+func isNonRequirementH3(line string) bool {
+	_, isReq := regex.MatchH3Requirement(line)
+
+	return regex.IsH3Header(line) && !isReq
 }
 
 // appendLineToRequirement appends a line to the current requirement
@@ -232,49 +188,20 @@ func parseRemovedSection(
 ) []string {
 	var removed []string
 
-	// Find the REMOVED section header
-	sectionPattern := regexp.MustCompile(
-		`(?m)^##\s+REMOVED\s+Requirements\s*$`,
-	)
-	matches := sectionPattern.FindStringIndex(
-		content,
-	)
-	if matches == nil {
+	sectionContent := regex.FindDeltaSectionContent(content, "REMOVED")
+	if sectionContent == "" {
 		return removed
 	}
-
-	// Extract content from this section until next ## header or end of file
-	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(
-		`(?m)^##\s+`,
-	)
-	nextMatches := nextSectionPattern.FindStringIndex(
-		content[sectionStart:],
-	)
-
-	var sectionContent string
-	if nextMatches != nil {
-		sectionContent = content[sectionStart : sectionStart+nextMatches[0]]
-	} else {
-		sectionContent = content[sectionStart:]
-	}
-
-	// Parse requirement headers within this section
-	reqPattern := regexp.MustCompile(
-		`^###\s+Requirement:\s*(.+)$`,
-	)
 
 	scanner := bufio.NewScanner(
 		strings.NewReader(sectionContent),
 	)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if matches := reqPattern.FindStringSubmatch(line); len(
-			matches,
-		) > 1 {
+		if name, ok := regex.MatchH3Requirement(line); ok {
 			removed = append(
 				removed,
-				strings.TrimSpace(matches[1]),
+				strings.TrimSpace(name),
 			)
 		}
 	}
@@ -288,44 +215,15 @@ func parseRenamedSection(
 ) []RenameOp {
 	var renamed []RenameOp
 
-	// Find the RENAMED section header
-	sectionPattern := regexp.MustCompile(
-		`(?m)^##\s+RENAMED\s+Requirements\s*$`,
-	)
-	matches := sectionPattern.FindStringIndex(
-		content,
-	)
-	if matches == nil {
+	sectionContent := regex.FindDeltaSectionContent(content, "RENAMED")
+	if sectionContent == "" {
 		return renamed
-	}
-
-	// Extract content from this section until next ## header or end of file
-	sectionStart := matches[1]
-	nextSectionPattern := regexp.MustCompile(
-		`(?m)^##\s+`,
-	)
-	nextMatches := nextSectionPattern.FindStringIndex(
-		content[sectionStart:],
-	)
-
-	var sectionContent string
-	if nextMatches != nil {
-		sectionContent = content[sectionStart : sectionStart+nextMatches[0]]
-	} else {
-		sectionContent = content[sectionStart:]
 	}
 
 	// Parse FROM/TO pairs
 	// Expected format:
 	// - FROM: `### Requirement: Old Name`
 	// - TO: `### Requirement: New Name`
-	fromPattern := regexp.MustCompile(
-		`^-\s*FROM:\s*` + "`" + `###\s+Requirement:\s*(.+?)` + "`" + `\s*$`,
-	)
-	toPattern := regexp.MustCompile(
-		`^-\s*TO:\s*` + "`" + `###\s+Requirement:\s*(.+?)` + "`" + `\s*$`,
-	)
-
 	var currentFrom string
 	scanner := bufio.NewScanner(
 		strings.NewReader(sectionContent),
@@ -333,31 +231,24 @@ func parseRenamedSection(
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 
-		// Check for FROM line
-		if matches := fromPattern.FindStringSubmatch(line); len(
-			matches,
-		) > 1 {
-			currentFrom = strings.TrimSpace(
-				matches[1],
-			)
+		// Check for FROM line (backtick format)
+		if name, ok := regex.MatchRenamedFrom(line); ok {
+			currentFrom = strings.TrimSpace(name)
 
 			continue
 		}
 
-		// Check for TO line
-		matches := toPattern.FindStringSubmatch(
-			line,
-		)
-		if len(matches) <= 1 ||
-			currentFrom == "" {
-			continue
+		// Check for TO line (backtick format)
+		if name, ok := regex.MatchRenamedTo(line); ok {
+			if currentFrom == "" {
+				continue
+			}
+			renamed = append(renamed, RenameOp{
+				From: currentFrom,
+				To:   strings.TrimSpace(name),
+			})
+			currentFrom = ""
 		}
-
-		renamed = append(renamed, RenameOp{
-			From: currentFrom,
-			To:   strings.TrimSpace(matches[1]),
-		})
-		currentFrom = ""
 	}
 
 	return renamed

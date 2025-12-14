@@ -1,3 +1,7 @@
+## 0. Prerequisites
+
+- [x] 0.1 Complete `consolidate-regex-patterns` change (regex patterns now in `internal/regex/`)
+
 ## 1. Setup
 
 - [ ] 1.1 Add blackfriday v2 dependency to go.mod
@@ -16,7 +20,7 @@
 - [ ] 2.6c Write unit tests for `internal/markdown/sections.go`
 - [ ] 2.6d Write unit tests for `internal/markdown/tasks.go`
 - [ ] 2.6e Write unit tests for specterrs markdown error types
-- [ ] 2.7 Write comparison tests that run both regex and AST parsers, asserting equal output (KEEP PERMANENTLY)
+- [ ] 2.7 Write comparison tests with regex patterns embedded in test file (copied from `internal/regex/`), comparing regex vs AST output (KEEP PERMANENTLY - regex package will be removed)
 
 ## 3. Replace Parsers Package
 
@@ -25,7 +29,7 @@
 - [ ] 3.3 Update `internal/parsers/parsers.go` to use markdown package for requirement counting
 - [ ] 3.4 Update `internal/parsers/requirement_parser.go` to use markdown package
 - [ ] 3.5 Update `internal/parsers/delta_parser.go` to use markdown package
-- [ ] 3.6 Remove unused regex imports from parsers package
+- [ ] 3.6 Remove `internal/regex` imports from parsers package
 - [ ] 3.7 Verify all existing parsers tests pass
 
 ## 4. Replace Validation Parser
@@ -34,7 +38,7 @@
 - [ ] 4.2 Update `internal/validation/parser.go` ExtractRequirements() to use markdown package
 - [ ] 4.3 Update `internal/validation/parser.go` ExtractScenarios() to use markdown package
 - [ ] 4.4 Keep ContainsShallOrMust() and NormalizeRequirementName() as-is (not markdown parsing)
-- [ ] 4.5 Remove unused regex imports from validation/parser.go
+- [ ] 4.5 Remove `internal/regex` imports from validation/parser.go
 - [ ] 4.6 Verify all existing validation tests pass
 
 ## 5. Replace Archive Spec Merger
@@ -42,13 +46,13 @@
 - [ ] 5.1 Update `internal/archive/spec_merger.go` splitSpec() to use markdown package
 - [ ] 5.2 Update `internal/archive/spec_merger.go` extractOrderedRequirements() to use markdown package
 - [ ] 5.3 Keep reconstructSpec() newline normalization regex (utility, not markdown)
-- [ ] 5.4 Remove unused regex imports from spec_merger.go
+- [ ] 5.4 Remove `internal/regex` imports from spec_merger.go
 - [ ] 5.5 Verify all existing archive tests pass
 
 ## 6. Replace Accept Command Parser
 
 - [ ] 6.1 Update `cmd/accept.go` task parsing to use markdown package
-- [ ] 6.2 Remove package-level regex variables from accept.go
+- [ ] 6.2 Remove `internal/regex` imports from accept.go
 - [ ] 6.3 Verify accept command tests pass
 
 ## 7. Validation and Cleanup
@@ -57,5 +61,6 @@
 - [ ] 7.2 Run linter (`golangci-lint run`)
 - [ ] 7.3 Test with example spec files in `examples/` directory
 - [ ] 7.4 Test with actual project specs in `spectr/specs/`
-- [ ] 7.5 Update any documentation referencing regex parsing
-- [ ] 7.6 Run performance benchmarks comparing regex vs AST parsing
+- [ ] 7.5 Remove `internal/regex/` package entirely (all consumers now use markdown package, patterns embedded in comparison tests)
+- [ ] 7.6 Update any documentation referencing regex parsing
+- [ ] 7.7 Run performance benchmarks comparing regex vs AST parsing (patterns embedded in benchmark tests)

@@ -9,7 +9,13 @@ Spectr parses markdown specification files to extract:
 - Task checkboxes (`- [ ]`, `- [x]`)
 - Requirement content blocks (everything between headers)
 
-Current implementation uses line-by-line scanning with regex patterns. This works but is fragile and duplicated across multiple packages.
+Following the `consolidate-regex-patterns` change, all markdown-related regex patterns are now consolidated in `internal/regex/`:
+- `headers.go`: H2, H3, H4 header patterns and matchers
+- `tasks.go`: Task checkbox and numbered task patterns
+- `renames.go`: RENAMED section FROM/TO patterns
+- `sections.go`: Section content extraction helpers
+
+While consolidation addressed duplication and pre-compilation, the regex approach still lacks structural understanding of markdown.
 
 ## Goals
 
@@ -192,9 +198,15 @@ func (e *BinaryContentError) Error() string {
 2. Add markdown error types to `internal/specterrs/markdown.go`
 3. Implement `internal/markdown/` package with types and ParseDocument()
 4. Write unit tests for markdown package
-5. Create comparison tests (regex vs AST output) - **keep permanently**
-6. Replace internal implementations one file at a time
-7. Remove unused regex patterns
+5. Create comparison tests with regex patterns **embedded in test file** (copied from `internal/regex/`), comparing regex vs AST output - **keep permanently as regression suite**
+6. Update consumers one file at a time to use markdown package:
+   - `internal/parsers/parsers.go`
+   - `internal/parsers/requirement_parser.go`
+   - `internal/parsers/delta_parser.go`
+   - `internal/validation/parser.go`
+   - `internal/archive/spec_merger.go`
+   - `cmd/accept.go`
+7. Remove `internal/regex/` package entirely after all consumers migrated (comparison tests retain embedded patterns)
 8. Run full test suite
 
 **Rollback**: Revert to commit before change; no database or external state involved.

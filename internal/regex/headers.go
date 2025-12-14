@@ -37,7 +37,7 @@ var (
 )
 
 // MatchH2SectionHeader checks if a line is an H2 section header
-// and extracts the name. Returns the section name (trimmed) and
+// and extracts the name. Returns the section name (raw capture, untrimmed) and
 // true if matched, or empty string and false otherwise.
 func MatchH2SectionHeader(line string) (name string, ok bool) {
 	matches := H2SectionHeader.FindStringSubmatch(line)
@@ -61,8 +61,9 @@ func MatchH2DeltaSection(line string) (deltaType string, ok bool) {
 }
 
 // MatchH3Requirement checks if a line is a requirement header and
-// extracts the name. Returns the requirement name (trimmed) and
+// extracts the name. Returns the requirement name (raw capture, untrimmed) and
 // true if matched, or empty string and false otherwise.
+// Callers should use strings.TrimSpace() on the name if trimming is needed.
 func MatchH3Requirement(line string) (name string, ok bool) {
 	matches := H3Requirement.FindStringSubmatch(line)
 	if len(matches) < 2 {
@@ -73,8 +74,9 @@ func MatchH3Requirement(line string) (name string, ok bool) {
 }
 
 // MatchH4Scenario checks if a line is a scenario header and extracts the name.
-// Returns the scenario name (trimmed) and true if matched,
+// Returns the scenario name (raw capture, untrimmed) and true if matched,
 // or empty string and false otherwise.
+// Callers should use strings.TrimSpace() on the name if trimming is needed.
 func MatchH4Scenario(line string) (name string, ok bool) {
 	matches := H4Scenario.FindStringSubmatch(line)
 	if len(matches) < 2 {

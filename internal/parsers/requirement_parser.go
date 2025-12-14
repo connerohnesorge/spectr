@@ -19,72 +19,41 @@ type RequirementBlock struct {
 // ParseRequirements parses all requirement blocks from a spec file.
 //
 // Returns a slice of RequirementBlock with their names and full content.
-//
-//nolint:revive // function-length - parser is clearest as single function
+// Uses AST-based parsing via markdown.ParseDocument for accurate extraction.
 func ParseRequirements(
 	filePath string,
 ) ([]RequirementBlock, error) {
-	file, err := os.Open(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = file.Close() }()
 
-	var requirements []RequirementBlock
-	var currentReq *RequirementBlock
+	doc, err := markdown.ParseDocument(content)
+	if err != nil {
+		return nil, err
+	}
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
+	// Get requirement names in document order
+	names := doc.GetRequirementNames()
+	requirements := make([]RequirementBlock, 0, len(names))
 
-		// Check if this is a new requirement header
-		if name, ok := markdown.MatchH3Requirement(line); ok {
-			// Save previous requirement if exists
-			if currentReq != nil {
-				requirements = append(
-					requirements,
-					*currentReq,
-				)
-			}
-
-			// Start new requirement
-			currentReq = &RequirementBlock{
-				HeaderLine: line,
-				Name:       strings.TrimSpace(name),
-				Raw:        line + "\n",
-			}
-
+	for _, name := range names {
+		req := doc.GetRequirement(name)
+		if req == nil {
 			continue
 		}
 
-		// Check if we hit a new section (## header) - ends current requirement
-		if markdown.IsH2Header(line) {
-			if currentReq != nil {
-				requirements = append(
-					requirements,
-					*currentReq,
-				)
-				currentReq = nil
-			}
+		headerLine := "### Requirement: " + req.Name
+		raw := headerLine + "\n" + req.Content
 
-			continue
-		}
-
-		// Append line to current requirement if we're in one
-		if currentReq != nil {
-			currentReq.Raw += line + "\n"
-		}
+		requirements = append(requirements, RequirementBlock{
+			HeaderLine: headerLine,
+			Name:       req.Name,
+			Raw:        raw,
+		})
 	}
 
-	// Don't forget the last requirement
-	if currentReq != nil {
-		requirements = append(
-			requirements,
-			*currentReq,
-		)
-	}
-
-	return requirements, scanner.Err()
+	return requirements, nil
 }
 
 // ParseScenarios extracts scenario blocks from requirement content.

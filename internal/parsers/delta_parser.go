@@ -26,207 +26,102 @@ type RenameOp struct {
 	To   string
 }
 
-// ParseDeltaSpec parses a delta spec file and extracts operations
-// Returns a DeltaPlan with ADDED, MODIFIED, REMOVED, and RENAMED reqs
+// ParseDeltaSpec parses a delta spec file and extracts operations.
+// Returns a DeltaPlan with ADDED, MODIFIED, REMOVED, and RENAMED reqs.
+// Uses AST-based parsing via markdown.ParseDocument for accurate extraction.
 func ParseDeltaSpec(
 	filePath string,
 ) (*DeltaPlan, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = file.Close() }()
-
-	plan := &DeltaPlan{
-		Added:    make([]RequirementBlock, 0),
-		Modified: make([]RequirementBlock, 0),
-		Removed:  make([]string, 0),
-		Renamed:  make([]RenameOp, 0),
-	}
-
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	// Parse each section
-	plan.Added = parseDeltaSection(
-		string(content),
-		"ADDED",
-	)
-	plan.Modified = parseDeltaSection(
-		string(content),
-		"MODIFIED",
-	)
-	plan.Removed = parseRemovedSection(
-		string(content),
-	)
-	plan.Renamed = parseRenamedSection(
-		string(content),
-	)
+	doc, err := markdown.ParseDocument(content)
+	if err != nil {
+		return nil, err
+	}
+
+	plan := &DeltaPlan{
+		Added:    extractRequirementsFromDeltaSection(doc, "ADDED"),
+		Modified: extractRequirementsFromDeltaSection(doc, "MODIFIED"),
+		Removed:  extractRemovedFromDoc(doc),
+		Renamed:  extractRenamedFromDoc(doc),
+	}
 
 	return plan, nil
 }
 
-// parseDeltaSection extracts requirements from a delta section
-func parseDeltaSection(
-	content, sectionType string,
+// extractRequirementsFromDeltaSection extracts requirements from a delta section.
+func extractRequirementsFromDeltaSection(
+	doc *markdown.Document,
+	deltaType string,
 ) []RequirementBlock {
-	sectionContent := markdown.FindDeltaSectionContent(
-		content,
-		sectionType,
-	)
-	if sectionContent == "" {
+	section := doc.GetDeltaSection(deltaType)
+	if section == nil || section.Content == "" {
 		return nil
 	}
 
-	return parseRequirementsFromSection(
-		sectionContent,
-	)
-}
-
-// parseRequirementsFromSection parses requirement blocks from content
-func parseRequirementsFromSection(
-	sectionContent string,
-) []RequirementBlock {
-	var requirements []RequirementBlock
-	var currentReq *RequirementBlock
-
-	scanner := bufio.NewScanner(
-		strings.NewReader(sectionContent),
-	)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if name, ok := markdown.MatchH3Requirement(line); ok {
-			currentReq = saveAndStartNewRequirement(
-				&requirements,
-				currentReq,
-				line,
-				name,
-			)
-
-			continue
-		}
-
-		if isNonRequirementH3(line) {
-			currentReq = saveCurrentRequirement(
-				&requirements,
-				currentReq,
-			)
-
-			continue
-		}
-
-		appendLineToRequirement(currentReq, line)
+	// Parse the section content to extract requirements
+	sectionDoc, err := markdown.ParseDocument([]byte(section.Content))
+	if err != nil {
+		return nil
 	}
 
-	// Save the last requirement
-	saveCurrentRequirement(
-		&requirements,
-		currentReq,
-	)
+	names := sectionDoc.GetRequirementNames()
+	requirements := make([]RequirementBlock, 0, len(names))
+
+	for _, name := range names {
+		req := sectionDoc.GetRequirement(name)
+		if req == nil {
+			continue
+		}
+
+		headerLine := "### Requirement: " + req.Name
+		raw := headerLine + "\n" + req.Content
+
+		requirements = append(requirements, RequirementBlock{
+			HeaderLine: headerLine,
+			Name:       req.Name,
+			Raw:        raw,
+		})
+	}
 
 	return requirements
 }
 
-// saveAndStartNewRequirement saves current req and starts a new one
-func saveAndStartNewRequirement(
-	requirements *[]RequirementBlock,
-	currentReq *RequirementBlock,
-	line, name string,
-) *RequirementBlock {
-	if currentReq != nil {
-		*requirements = append(
-			*requirements,
-			*currentReq,
-		)
+// extractRemovedFromDoc extracts requirement names from REMOVED section.
+func extractRemovedFromDoc(doc *markdown.Document) []string {
+	section := doc.GetDeltaSection("REMOVED")
+	if section == nil || section.Content == "" {
+		return nil
 	}
 
-	return &RequirementBlock{
-		HeaderLine: line,
-		Name:       strings.TrimSpace(name),
-		Raw:        line + "\n",
+	// Parse the section content to extract requirement names
+	sectionDoc, err := markdown.ParseDocument([]byte(section.Content))
+	if err != nil {
+		return nil
 	}
+
+	return sectionDoc.GetRequirementNames()
 }
 
-// saveCurrentRequirement saves the current requirement if it exists
-func saveCurrentRequirement(
-	requirements *[]RequirementBlock,
-	currentReq *RequirementBlock,
-) *RequirementBlock {
-	if currentReq != nil {
-		*requirements = append(
-			*requirements,
-			*currentReq,
-		)
-	}
-
-	return nil
-}
-
-// isNonRequirementH3 checks if line is an H3 but not a requirement
-func isNonRequirementH3(line string) bool {
-	_, isReq := markdown.MatchH3Requirement(line)
-
-	return markdown.IsH3Header(line) && !isReq
-}
-
-// appendLineToRequirement appends a line to the current requirement
-func appendLineToRequirement(
-	currentReq *RequirementBlock,
-	line string,
-) {
-	if currentReq != nil {
-		currentReq.Raw += line + "\n"
-	}
-}
-
-// parseRemovedSection extracts requirement names from REMOVED section
-func parseRemovedSection(
-	content string,
-) []string {
-	var removed []string
-
-	sectionContent := markdown.FindDeltaSectionContent(content, "REMOVED")
-	if sectionContent == "" {
-		return removed
-	}
-
-	scanner := bufio.NewScanner(
-		strings.NewReader(sectionContent),
-	)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if name, ok := markdown.MatchH3Requirement(line); ok {
-			removed = append(
-				removed,
-				strings.TrimSpace(name),
-			)
-		}
-	}
-
-	return removed
-}
-
-// parseRenamedSection extracts FROM/TO pairs from RENAMED section
-func parseRenamedSection(
-	content string,
-) []RenameOp {
-	var renamed []RenameOp
-
-	sectionContent := markdown.FindDeltaSectionContent(content, "RENAMED")
-	if sectionContent == "" {
-		return renamed
+// extractRenamedFromDoc extracts FROM/TO pairs from RENAMED section.
+func extractRenamedFromDoc(doc *markdown.Document) []RenameOp {
+	section := doc.GetDeltaSection("RENAMED")
+	if section == nil || section.Content == "" {
+		return nil
 	}
 
 	// Parse FROM/TO pairs
 	// Expected format:
 	// - FROM: `### Requirement: Old Name`
 	// - TO: `### Requirement: New Name`
+	var renamed []RenameOp
 	var currentFrom string
+
 	scanner := bufio.NewScanner(
-		strings.NewReader(sectionContent),
+		strings.NewReader(section.Content),
 	)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())

@@ -117,11 +117,14 @@ func MergeSpec(
 	counts.Added = len(deltaPlan.Added)
 
 	// Reconstruct spec
-	merged := reconstructSpec(
+	merged, err := reconstructSpec(
 		string(baseContent),
 		reqMap,
 		deltaPlan.Added,
 	)
+	if err != nil {
+		return "", counts, fmt.Errorf("reconstruct spec: %w", err)
+	}
 
 	return merged, counts, nil
 }
@@ -229,22 +232,28 @@ func applyAdded(
 }
 
 // reconstructSpec rebuilds the spec from preamble,
-// updated requirements, and added requirements
+// updated requirements, and added requirements.
 func reconstructSpec(
 	baseContent string,
 	reqMap map[string]parsers.RequirementBlock,
 	added []parsers.RequirementBlock,
-) string {
+) (string, error) {
 	// Split spec into: preamble, requirements section, after
-	preamble, reqsContent, after := splitSpec(
+	preamble, reqsContent, after, err := splitSpec(
 		baseContent,
 	)
+	if err != nil {
+		return "", fmt.Errorf("split spec: %w", err)
+	}
 
 	// Extract original requirement order from base content
-	orderedReqs := extractOrderedRequirements(
+	orderedReqs, err := extractOrderedRequirements(
 		reqsContent,
 		reqMap,
 	)
+	if err != nil {
+		return "", fmt.Errorf("extract ordered requirements: %w", err)
+	}
 
 	// Build requirements section
 	var reqsBuilder strings.Builder
@@ -287,41 +296,34 @@ func reconstructSpec(
 		"\n\n",
 	)
 
-	return output
+	return output, nil
 }
 
-// splitSpec splits spec into preamble, requirements section content, and after
+// splitSpec splits spec into preamble, requirements section content, and after.
+// Uses AST-based parsing via markdown.ParseDocument for accurate section detection.
 func splitSpec(
 	content string,
-) (preamble, requirements, after string) {
-	lines := strings.Split(content, "\n")
-	var requirementsStart, requirementsEnd int
-	foundRequirements := false
-
-	// Find ## Requirements header
-	for i, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if name, ok := markdown.MatchH2SectionHeader(trimmed); ok {
-			if name == "Requirements" {
-				requirementsStart = i
-				foundRequirements = true
-
-				break
-			}
-		}
+) (preamble, requirements, after string, err error) {
+	doc, err := markdown.ParseDocument([]byte(content))
+	if err != nil {
+		return "", "", "", fmt.Errorf("parse spec content: %w", err)
 	}
 
-	if !foundRequirements {
-		// No requirements section, return everything as preamble
-		return content, "", ""
+	reqSection := doc.GetSection("Requirements")
+	if reqSection == nil {
+		return "", "", "", fmt.Errorf("no Requirements section found")
 	}
 
-	// Find next ## header after Requirements
-	requirementsEnd = len(lines)
-	for i := requirementsStart + 1; i < len(lines); i++ {
-		trimmed := strings.TrimSpace(lines[i])
-		if markdown.IsH2Header(trimmed) {
-			requirementsEnd = i
+	lines := doc.Lines
+	// Header.Line is 1-indexed, convert to 0-indexed
+	requirementsStart := reqSection.Header.Line - 1
+
+	// Find next H2 header after Requirements
+	requirementsEnd := len(lines)
+	for _, h := range doc.H2Headers {
+		// h.Line is 1-indexed
+		if h.Line > reqSection.Header.Line {
+			requirementsEnd = h.Line - 1
 
 			break
 		}
@@ -343,18 +345,22 @@ func splitSpec(
 		after = strings.Join(lines[requirementsEnd:], "\n")
 	}
 
-	return preamble, requirements, after
+	return preamble, requirements, after, nil
 }
 
-// extractOrderedRequirements preserves requirement ordering
-// from original content
+// extractOrderedRequirements preserves requirement ordering from original content.
+// Uses AST-based parsing via markdown.ParseDocument for accurate extraction.
 func extractOrderedRequirements(
 	reqsContent string,
 	reqMap map[string]parsers.RequirementBlock,
-) []parsers.RequirementBlock {
-	// Find requirement headers in order using markdown package
-	names := markdown.FindAllH3Requirements(reqsContent)
+) ([]parsers.RequirementBlock, error) {
+	// Parse section content to get requirement names in order
+	doc, err := markdown.ParseDocument([]byte(reqsContent))
+	if err != nil {
+		return nil, fmt.Errorf("parse requirements content: %w", err)
+	}
 
+	names := doc.GetRequirementNames()
 	ordered := make(
 		[]parsers.RequirementBlock,
 		0,
@@ -380,7 +386,7 @@ func extractOrderedRequirements(
 		ordered = append(ordered, req)
 	}
 
-	return ordered
+	return ordered, nil
 }
 
 // generateSpecSkeleton creates a new spec skeleton for a capability

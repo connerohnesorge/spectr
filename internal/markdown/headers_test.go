@@ -1,4 +1,4 @@
-package regex
+package markdown
 
 import (
 	"testing"
@@ -32,7 +32,7 @@ func TestMatchH2SectionHeader(t *testing.T) {
 		{
 			name:     "section with trailing spaces",
 			input:    "## Notes   ",
-			wantName: "Notes   ",
+			wantName: "Notes",
 			wantOk:   true,
 		},
 		{
@@ -230,8 +230,8 @@ func TestMatchH3Requirement(t *testing.T) {
 		{
 			name:     "requirement with only spaces after colon",
 			input:    "### Requirement:   ",
-			wantName: " ",
-			wantOk:   true,
+			wantName: "",
+			wantOk:   false,
 		},
 	}
 
@@ -358,77 +358,71 @@ func TestIsH3Header(t *testing.T) {
 	}
 }
 
-func TestH2RequirementsSectionPattern(t *testing.T) {
+func TestFindRequirementHeaders(t *testing.T) {
 	tests := []struct {
 		name    string
 		content string
-		want    bool
+		want    []string
 	}{
 		{
-			name:    "simple requirements section",
-			content: "## Requirements\nSome content",
-			want:    true,
+			name: "multiple requirements",
+			content: `## Requirements
+
+### Requirement: First Req
+Content.
+
+### Requirement: Second Req
+More content.
+
+### Requirement: Third Req
+Even more.`,
+			want: []string{"First Req", "Second Req", "Third Req"},
 		},
 		{
-			name:    "requirements with trailing space",
-			content: "## Requirements \nSome content",
-			want:    true,
+			name:    "no requirements",
+			content: "## Purpose\nContent",
+			want:    nil,
 		},
 		{
-			name:    "in middle of content",
-			content: "# Title\n\n## Purpose\n\n## Requirements\n\n### Requirement: Name",
-			want:    true,
+			name: "single requirement",
+			content: `### Requirement: Only One
+Content here.`,
+			want: []string{"Only One"},
 		},
 		{
-			name:    "delta section not matched",
-			content: "## ADDED Requirements\nSome content",
-			want:    false,
+			name: "requirements with special chars",
+			content: `### Requirement: API-v2.0
+### Requirement: Feature_Test
+### Requirement: Name (v1)`,
+			want: []string{"API-v2.0", "Feature_Test", "Name (v1)"},
 		},
 		{
-			name:    "no requirements section",
-			content: "## Purpose\nSome content",
-			want:    false,
+			name:    "empty content",
+			content: "",
+			want:    nil,
+		},
+		{
+			name: "scenarios not matched",
+			content: `### Requirement: MyReq
+#### Scenario: Test
+Content`,
+			want: []string{"MyReq"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := H2RequirementsSection.MatchString(tt.content)
-			if got != tt.want {
-				t.Errorf("H2RequirementsSection.MatchString() = %v, want %v", got, tt.want)
+			got := FindRequirementHeaders(tt.content)
+			if len(got) != len(tt.want) {
+				t.Errorf("FindRequirementHeaders() len = %d, want %d", len(got), len(tt.want))
+				t.Errorf("got: %v, want: %v", got, tt.want)
+
+				return
 			}
-		})
-	}
-}
-
-func TestH2NextSectionPattern(t *testing.T) {
-	tests := []struct {
-		name    string
-		content string
-		want    bool
-	}{
-		{
-			name:    "finds H2",
-			content: "## Section",
-			want:    true,
-		},
-		{
-			name:    "multiline with H2",
-			content: "Some text\n## Next Section",
-			want:    true,
-		},
-		{
-			name:    "no H2",
-			content: "### Requirement\n#### Scenario",
-			want:    false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := H2NextSection.MatchString(tt.content)
-			if got != tt.want {
-				t.Errorf("H2NextSection.MatchString() = %v, want %v", got, tt.want)
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("[%d] = %q, want %q", i, got[i], tt.want[i])
+				}
 			}
 		})
 	}

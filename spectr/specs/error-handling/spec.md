@@ -1,5 +1,8 @@
 # Error Handling Specification
 
+## Purpose
+This specification defines the error handling strategy for the Spectr cli.
+
 ## Requirements
 
 ### Requirement: Centralized Error Package

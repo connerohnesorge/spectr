@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/connerohnesorge/spectr/internal/regex"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 )
 
 // Requirement represents a parsed requirement with its content and scenarios
@@ -33,7 +33,7 @@ func ExtractSections(
 		line := scanner.Text()
 
 		// Check if this is a section header (## header)
-		if sectionName, ok := regex.MatchH2SectionHeader(line); ok {
+		if sectionName, ok := markdown.MatchH2SectionHeader(line); ok {
 			// Save previous section if exists
 			if currentSection != "" {
 				sections[currentSection] = strings.TrimSpace(
@@ -81,7 +81,7 @@ func ExtractRequirements(
 		line := scanner.Text()
 
 		// Check if this is a requirement header
-		if reqName, ok := regex.MatchH3Requirement(line); ok {
+		if reqName, ok := markdown.MatchH3Requirement(line); ok {
 			saveCurrentRequirement(
 				currentRequirement,
 				&currentContent,
@@ -196,7 +196,7 @@ func ExtractScenarios(
 		line := scanner.Text()
 
 		// Check if this is a scenario header (#### Scenario:)
-		if _, ok := regex.MatchH4Scenario(line); ok {
+		if _, ok := markdown.MatchH4Scenario(line); ok {
 			// Save previous scenario if exists
 			if inScenario {
 				scenarios = append(

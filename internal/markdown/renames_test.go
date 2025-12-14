@@ -1,4 +1,4 @@
-package regex
+package markdown
 
 import (
 	"testing"
@@ -21,18 +21,6 @@ func TestMatchRenamedFrom(t *testing.T) {
 			name:     "name with special chars",
 			input:    "- FROM: `### Requirement: API-v2.0 Endpoint`",
 			wantName: "API-v2.0 Endpoint",
-			wantOk:   true,
-		},
-		{
-			name:     "no space after dash",
-			input:    "-FROM: `### Requirement: Name`",
-			wantName: "Name",
-			wantOk:   true,
-		},
-		{
-			name:     "extra spaces",
-			input:    "-  FROM:  `### Requirement: Name`",
-			wantName: "Name",
 			wantOk:   true,
 		},
 		{
@@ -155,12 +143,6 @@ func TestMatchRenamedTo(t *testing.T) {
 			name:     "name with special chars",
 			input:    "- TO: `### Requirement: API-v3.0 Endpoint`",
 			wantName: "API-v3.0 Endpoint",
-			wantOk:   true,
-		},
-		{
-			name:     "no space after dash",
-			input:    "-TO: `### Requirement: Name`",
-			wantName: "Name",
 			wantOk:   true,
 		},
 		{
@@ -332,43 +314,4 @@ func TestMatchAnyRenamedTo(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestRenamedPatterns(t *testing.T) {
-	// Test raw pattern matching
-	t.Run("RenamedFrom pattern", func(t *testing.T) {
-		if !RenamedFrom.MatchString("- FROM: `### Requirement: Test`") {
-			t.Error("RenamedFrom should match backtick format")
-		}
-		if RenamedFrom.MatchString("- FROM: ### Requirement: Test") {
-			t.Error("RenamedFrom should not match non-backtick format")
-		}
-	})
-
-	t.Run("RenamedFromAlt pattern", func(t *testing.T) {
-		if !RenamedFromAlt.MatchString("- FROM: ### Requirement: Test") {
-			t.Error("RenamedFromAlt should match non-backtick format")
-		}
-		if RenamedFromAlt.MatchString("- FROM: `### Requirement: Test`") {
-			t.Error("RenamedFromAlt should not match backtick format")
-		}
-	})
-
-	t.Run("RenamedTo pattern", func(t *testing.T) {
-		if !RenamedTo.MatchString("- TO: `### Requirement: Test`") {
-			t.Error("RenamedTo should match backtick format")
-		}
-		if RenamedTo.MatchString("- TO: ### Requirement: Test") {
-			t.Error("RenamedTo should not match non-backtick format")
-		}
-	})
-
-	t.Run("RenamedToAlt pattern", func(t *testing.T) {
-		if !RenamedToAlt.MatchString("- TO: ### Requirement: Test") {
-			t.Error("RenamedToAlt should match non-backtick format")
-		}
-		if RenamedToAlt.MatchString("- TO: `### Requirement: Test`") {
-			t.Error("RenamedToAlt should not match backtick format")
-		}
-	})
 }

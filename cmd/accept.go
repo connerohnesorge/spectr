@@ -14,8 +14,8 @@ import (
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
-	"github.com/connerohnesorge/spectr/internal/regex"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
@@ -290,22 +290,31 @@ func parseTasksMd(
 		line := scanner.Text()
 
 		// Check for section header (e.g., "## 1. Core Accept Command")
-		if sectionName, ok := regex.MatchNumberedSection(line); ok {
+		if sectionName, ok := markdown.MatchNumberedSection(line); ok {
 			currentSection = strings.TrimSpace(sectionName)
 
 			continue
 		}
 
 		// Check for task line (e.g., "- [ ] 1.1 Create `cmd/accept.go`...")
-		match, ok := regex.MatchNumberedTask(line)
+		match, ok := markdown.MatchNumberedTask(line)
 		if !ok {
 			continue
+		}
+
+		// Convert markdown.NumberedTask to format expected
+		// by parseTaskFromMatch
+		var checkbox string
+		if match.Checked {
+			checkbox = "x"
+		} else {
+			checkbox = " "
 		}
 
 		tasks = append(
 			tasks,
 			parseTaskFromMatch(
-				match.Checkbox,
+				checkbox,
 				match.ID,
 				match.Description,
 				currentSection,

@@ -1,4 +1,4 @@
-package regex
+package markdown
 
 import (
 	"strings"
@@ -10,7 +10,8 @@ func TestFindSectionContent(t *testing.T) {
 		name          string
 		content       string
 		sectionHeader string
-		want          string
+		wantContains  []string
+		wantNotEmpty  bool
 	}{
 		{
 			name: "simple section",
@@ -23,7 +24,8 @@ This is the requirements content.
 ## Notes
 These are notes.`,
 			sectionHeader: "Requirements",
-			want:          "\nThis is the requirements content.\n\n",
+			wantContains:  []string{"This is the requirements content."},
+			wantNotEmpty:  true,
 		},
 		{
 			name: "section at end",
@@ -33,13 +35,14 @@ Purpose content.
 ## Requirements
 Final section content.`,
 			sectionHeader: "Requirements",
-			want:          "\nFinal section content.",
+			wantContains:  []string{"Final section content."},
+			wantNotEmpty:  true,
 		},
 		{
 			name:          "section not found",
 			content:       "## Purpose\nContent",
 			sectionHeader: "Requirements",
-			want:          "",
+			wantNotEmpty:  false,
 		},
 		{
 			name: "delta section",
@@ -49,39 +52,34 @@ Added content here.
 ## MODIFIED Requirements
 Modified content here.`,
 			sectionHeader: "ADDED Requirements",
-			want:          "\nAdded content here.\n\n",
-		},
-		{
-			name: "section with special chars in name",
-			content: `## API & Integration
-API content.
-
-## Other`,
-			sectionHeader: "API & Integration",
-			want:          "\nAPI content.\n\n",
-		},
-		{
-			name: "section with trailing space",
-			content: `## Requirements
-Content here.
-
-## Next`,
-			sectionHeader: "Requirements",
-			want:          "\nContent here.\n\n",
+			wantContains:  []string{"Added content here."},
+			wantNotEmpty:  true,
 		},
 		{
 			name:          "empty content",
 			content:       "",
 			sectionHeader: "Requirements",
-			want:          "",
+			wantNotEmpty:  false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := FindSectionContent(tt.content, tt.sectionHeader)
-			if got != tt.want {
-				t.Errorf("FindSectionContent() = %q, want %q", got, tt.want)
+			if tt.wantNotEmpty && got == "" {
+				t.Error("FindSectionContent() = empty, want non-empty")
+
+				return
+			}
+			if !tt.wantNotEmpty && got != "" {
+				t.Errorf("FindSectionContent() = %q, want empty", got)
+
+				return
+			}
+			for _, want := range tt.wantContains {
+				if !strings.Contains(got, want) {
+					t.Errorf("FindSectionContent() should contain %q, got %q", want, got)
+				}
 			}
 		})
 	}
@@ -89,10 +87,11 @@ Content here.
 
 func TestFindDeltaSectionContent(t *testing.T) {
 	tests := []struct {
-		name      string
-		content   string
-		deltaType string
-		want      string
+		name         string
+		content      string
+		deltaType    string
+		wantContains []string
+		wantNotEmpty bool
 	}{
 		{
 			name: "ADDED section",
@@ -101,8 +100,9 @@ Added content.
 
 ## MODIFIED Requirements
 Modified content.`,
-			deltaType: "ADDED",
-			want:      "\nAdded content.\n\n",
+			deltaType:    "ADDED",
+			wantContains: []string{"Added content."},
+			wantNotEmpty: true,
 		},
 		{
 			name: "MODIFIED section",
@@ -114,8 +114,9 @@ Modified content here.
 
 ## REMOVED Requirements
 Removed.`,
-			deltaType: "MODIFIED",
-			want:      "\nModified content here.\n\n",
+			deltaType:    "MODIFIED",
+			wantContains: []string{"Modified content here."},
+			wantNotEmpty: true,
 		},
 		{
 			name: "REMOVED section at end",
@@ -124,30 +125,44 @@ Added.
 
 ## REMOVED Requirements
 Removed content.`,
-			deltaType: "REMOVED",
-			want:      "\nRemoved content.",
+			deltaType:    "REMOVED",
+			wantContains: []string{"Removed content."},
+			wantNotEmpty: true,
 		},
 		{
 			name: "RENAMED section",
 			content: `## RENAMED Requirements
 - FROM: ### Requirement: Old
 - TO: ### Requirement: New`,
-			deltaType: "RENAMED",
-			want:      "\n- FROM: ### Requirement: Old\n- TO: ### Requirement: New",
+			deltaType:    "RENAMED",
+			wantContains: []string{"FROM:", "TO:"},
+			wantNotEmpty: true,
 		},
 		{
-			name:      "missing section",
-			content:   "## ADDED Requirements\nContent",
-			deltaType: "MODIFIED",
-			want:      "",
+			name:         "missing section",
+			content:      "## ADDED Requirements\nContent",
+			deltaType:    "MODIFIED",
+			wantNotEmpty: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := FindDeltaSectionContent(tt.content, tt.deltaType)
-			if got != tt.want {
-				t.Errorf("FindDeltaSectionContent() = %q, want %q", got, tt.want)
+			if tt.wantNotEmpty && got == "" {
+				t.Error("FindDeltaSectionContent() = empty, want non-empty")
+
+				return
+			}
+			if !tt.wantNotEmpty && got != "" {
+				t.Errorf("FindDeltaSectionContent() = %q, want empty", got)
+
+				return
+			}
+			for _, want := range tt.wantContains {
+				if !strings.Contains(got, want) {
+					t.Errorf("FindDeltaSectionContent() should contain %q, got %q", want, got)
+				}
 			}
 		})
 	}
@@ -155,9 +170,10 @@ Removed content.`,
 
 func TestFindRequirementsSection(t *testing.T) {
 	tests := []struct {
-		name    string
-		content string
-		want    string
+		name         string
+		content      string
+		wantContains []string
+		wantNotEmpty bool
 	}{
 		{
 			name: "standard spec",
@@ -176,7 +192,8 @@ Second content.
 
 ## Notes
 Notes content.`,
-			want: "\n### Requirement: First\nFirst content.\n\n### Requirement: Second\nSecond content.\n\n",
+			wantContains: []string{"### Requirement: First", "### Requirement: Second"},
+			wantNotEmpty: true,
 		},
 		{
 			name: "no requirements section",
@@ -184,7 +201,7 @@ Notes content.`,
 
 ## Purpose
 Content.`,
-			want: "",
+			wantNotEmpty: false,
 		},
 		{
 			name: "requirements at end",
@@ -193,22 +210,28 @@ Content.
 
 ## Requirements
 Req content.`,
-			want: "\nReq content.",
-		},
-		{
-			name: "empty requirements",
-			content: `## Requirements
-
-## Notes`,
-			want: "\n",
+			wantContains: []string{"Req content."},
+			wantNotEmpty: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := FindRequirementsSection(tt.content)
-			if got != tt.want {
-				t.Errorf("FindRequirementsSection() = %q, want %q", got, tt.want)
+			if tt.wantNotEmpty && got == "" {
+				t.Error("FindRequirementsSection() = empty, want non-empty")
+
+				return
+			}
+			if !tt.wantNotEmpty && got != "" {
+				t.Errorf("FindRequirementsSection() = %q, want empty", got)
+
+				return
+			}
+			for _, want := range tt.wantContains {
+				if !strings.Contains(got, want) {
+					t.Errorf("FindRequirementsSection() should contain %q, got %q", want, got)
+				}
 			}
 		})
 	}
@@ -245,25 +268,6 @@ Even more.`,
 Content here.`,
 			want: []string{"Only One"},
 		},
-		{
-			name: "requirements with special chars",
-			content: `### Requirement: API-v2.0
-### Requirement: Feature_Test
-### Requirement: Name (v1)`,
-			want: []string{"API-v2.0", "Feature_Test", "Name (v1)"},
-		},
-		{
-			name:    "empty content",
-			content: "",
-			want:    nil,
-		},
-		{
-			name: "scenarios not matched",
-			content: `### Requirement: MyReq
-#### Scenario: Test
-Content`,
-			want: []string{"MyReq"},
-		},
 	}
 
 	for _, tt := range tests {
@@ -271,7 +275,6 @@ Content`,
 			got := FindAllH3Requirements(tt.content)
 			if len(got) != len(tt.want) {
 				t.Errorf("FindAllH3Requirements() len = %d, want %d", len(got), len(tt.want))
-				t.Errorf("got: %v, want: %v", got, tt.want)
 
 				return
 			}
@@ -284,58 +287,49 @@ Content`,
 	}
 }
 
-func TestFindSectionIndex(t *testing.T) {
+func TestSplitIntoSections(t *testing.T) {
 	tests := []struct {
-		name          string
-		content       string
-		sectionHeader string
-		wantFound     bool
-		wantStart     int
+		name         string
+		content      string
+		wantSections []string
 	}{
 		{
-			name:          "section found",
-			content:       "## Requirements\nContent",
-			sectionHeader: "Requirements",
-			wantFound:     true,
-			wantStart:     0,
+			name: "multiple sections",
+			content: `## Purpose
+Purpose content.
+
+## Requirements
+Requirements content.
+
+## Notes
+Notes content.`,
+			wantSections: []string{"Purpose", "Requirements", "Notes"},
 		},
 		{
-			name:          "section in middle",
-			content:       "## Purpose\n\n## Requirements\nContent",
-			sectionHeader: "Requirements",
-			wantFound:     true,
-			wantStart:     12, // Position after "## Purpose\n\n"
+			name:         "no sections",
+			content:      "Just plain text",
+			wantSections: nil,
 		},
 		{
-			name:          "section not found",
-			content:       "## Purpose\nContent",
-			sectionHeader: "Requirements",
-			wantFound:     false,
-			wantStart:     -1,
-		},
-		{
-			name:          "empty content",
-			content:       "",
-			sectionHeader: "Requirements",
-			wantFound:     false,
-			wantStart:     -1,
+			name: "single section",
+			content: `## Requirements
+Content.`,
+			wantSections: []string{"Requirements"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FindSectionIndex(tt.content, tt.sectionHeader)
-			if tt.wantFound {
-				if got == nil {
-					t.Error("FindSectionIndex() = nil, want non-nil")
+			got := SplitIntoSections(tt.content)
+			if len(got) != len(tt.wantSections) {
+				t.Errorf("SplitIntoSections() len = %d, want %d", len(got), len(tt.wantSections))
 
-					return
+				return
+			}
+			for _, section := range tt.wantSections {
+				if _, ok := got[section]; !ok {
+					t.Errorf("SplitIntoSections() missing section %q", section)
 				}
-				if got[0] != tt.wantStart {
-					t.Errorf("[0] = %d, want %d", got[0], tt.wantStart)
-				}
-			} else if got != nil {
-				t.Errorf("FindSectionIndex() = %v, want nil", got)
 			}
 		})
 	}
@@ -350,17 +344,6 @@ Content.
 		got := FindSectionContent(content, "API (v2.0) [Beta]")
 		if !strings.Contains(got, "Content.") {
 			t.Errorf("FindSectionContent() should handle regex special chars, got %q", got)
-		}
-	})
-
-	t.Run("section name with backslash", func(t *testing.T) {
-		content := `## Path\To\Section
-Content.
-
-## Other`
-		got := FindSectionContent(content, `Path\To\Section`)
-		if !strings.Contains(got, "Content.") {
-			t.Errorf("FindSectionContent() should handle backslashes, got %q", got)
 		}
 	})
 

@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/connerohnesorge/spectr/internal/regex"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 )
 
 // ExtractTitle extracts the title from a markdown file by finding
@@ -138,12 +138,12 @@ func countTasksFromMarkdown(
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		state, ok := regex.MatchTaskCheckbox(line)
+		state, ok := markdown.MatchTaskCheckbox(line)
 		if !ok {
 			continue
 		}
 		status.Total++
-		if regex.IsTaskChecked(state) {
+		if markdown.IsTaskChecked(state) {
 			status.Completed++
 		}
 	}
@@ -179,7 +179,7 @@ func CountDeltas(changeDir string) (int, error) {
 				line := strings.TrimSpace(
 					scanner.Text(),
 				)
-				if _, ok := regex.MatchH2DeltaSection(line); ok {
+				if _, ok := markdown.MatchH2DeltaSection(line); ok {
 					count++
 				}
 			}
@@ -206,7 +206,7 @@ func CountRequirements(
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if _, ok := regex.MatchH3Requirement(line); ok {
+		if _, ok := markdown.MatchH3Requirement(line); ok {
 			count++
 		}
 	}

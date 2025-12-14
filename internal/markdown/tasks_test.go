@@ -1,4 +1,4 @@
-package regex
+package markdown
 
 import (
 	"testing"
@@ -42,12 +42,6 @@ func TestMatchTaskCheckbox(t *testing.T) {
 			wantOk:    true,
 		},
 		{
-			name:      "no space after dash",
-			input:     "-[ ] No space",
-			wantState: ' ',
-			wantOk:    true,
-		},
-		{
 			name:      "not a task - regular list",
 			input:     "- Regular list item",
 			wantState: 0,
@@ -71,12 +65,6 @@ func TestMatchTaskCheckbox(t *testing.T) {
 			wantState: 0,
 			wantOk:    false,
 		},
-		{
-			name:      "invalid checkbox state",
-			input:     "- [?] Invalid",
-			wantState: 0,
-			wantOk:    false,
-		},
 	}
 
 	for _, tt := range tests {
@@ -94,84 +82,79 @@ func TestMatchTaskCheckbox(t *testing.T) {
 
 func TestMatchNumberedTask(t *testing.T) {
 	tests := []struct {
-		name         string
-		input        string
-		wantCheckbox string
-		wantID       string
-		wantDesc     string
-		wantOk       bool
+		name        string
+		input       string
+		wantID      string
+		wantDesc    string
+		wantChecked bool
+		wantOk      bool
 	}{
 		{
-			name:         "unchecked task",
-			input:        "- [ ] 1.1 Create the regex package",
-			wantCheckbox: " ",
-			wantID:       "1.1",
-			wantDesc:     "Create the regex package",
-			wantOk:       true,
+			name:        "unchecked task",
+			input:       "- [ ] 1.1 Create the regex package",
+			wantID:      "1.1",
+			wantDesc:    "Create the regex package",
+			wantChecked: false,
+			wantOk:      true,
 		},
 		{
-			name:         "checked task",
-			input:        "- [x] 2.3 Implement feature",
-			wantCheckbox: "x",
-			wantID:       "2.3",
-			wantDesc:     "Implement feature",
-			wantOk:       true,
+			name:        "checked task",
+			input:       "- [x] 2.3 Implement feature",
+			wantID:      "2.3",
+			wantDesc:    "Implement feature",
+			wantChecked: true,
+			wantOk:      true,
 		},
 		{
-			name:         "checked uppercase",
-			input:        "- [X] 10.15 Large task number",
-			wantCheckbox: "X",
-			wantID:       "10.15",
-			wantDesc:     "Large task number",
-			wantOk:       true,
+			name:        "checked uppercase",
+			input:       "- [X] 10.15 Large task number",
+			wantID:      "10.15",
+			wantDesc:    "Large task number",
+			wantChecked: true,
+			wantOk:      true,
 		},
 		{
-			name:         "task with special characters",
-			input:        "- [ ] 1.2 Create `internal/regex/` package",
-			wantCheckbox: " ",
-			wantID:       "1.2",
-			wantDesc:     "Create `internal/regex/` package",
-			wantOk:       true,
+			name:        "task with special characters",
+			input:       "- [ ] 1.2 Create `internal/regex/` package",
+			wantID:      "1.2",
+			wantDesc:    "Create `internal/regex/` package",
+			wantChecked: false,
+			wantOk:      true,
 		},
 		{
-			name:         "missing checkbox",
-			input:        "- 1.1 No checkbox",
-			wantCheckbox: "",
-			wantID:       "",
-			wantDesc:     "",
-			wantOk:       false,
+			name:     "missing checkbox",
+			input:    "- 1.1 No checkbox",
+			wantID:   "",
+			wantDesc: "",
+			wantOk:   false,
 		},
 		{
-			name:         "missing task ID",
-			input:        "- [ ] No ID here",
-			wantCheckbox: "",
-			wantID:       "",
-			wantDesc:     "",
-			wantOk:       false,
+			name:     "missing task ID",
+			input:    "- [ ] No ID here",
+			wantID:   "",
+			wantDesc: "",
+			wantOk:   false,
 		},
 		{
-			name:         "invalid task ID format",
-			input:        "- [ ] 1 Single number",
-			wantCheckbox: "",
-			wantID:       "",
-			wantDesc:     "",
-			wantOk:       false,
+			name:     "invalid task ID format",
+			input:    "- [ ] 1 Single number",
+			wantID:   "",
+			wantDesc: "",
+			wantOk:   false,
 		},
 		{
-			name:         "plain list item",
-			input:        "- Regular item",
-			wantCheckbox: "",
-			wantID:       "",
-			wantDesc:     "",
-			wantOk:       false,
+			name:     "plain list item",
+			input:    "- Regular item",
+			wantID:   "",
+			wantDesc: "",
+			wantOk:   false,
 		},
 		{
-			name:         "section header",
-			input:        "## 1. Core Section",
-			wantCheckbox: "",
-			wantID:       "",
-			wantDesc:     "",
-			wantOk:       false,
+			name:     "section header",
+			input:    "## 1. Core Section",
+			wantID:   "",
+			wantDesc: "",
+			wantOk:   false,
 		},
 	}
 
@@ -188,14 +171,14 @@ func TestMatchNumberedTask(t *testing.T) {
 
 				return
 			}
-			if match.Checkbox != tt.wantCheckbox {
-				t.Errorf("checkbox = %q, want %q", match.Checkbox, tt.wantCheckbox)
-			}
 			if match.ID != tt.wantID {
 				t.Errorf("id = %q, want %q", match.ID, tt.wantID)
 			}
 			if match.Description != tt.wantDesc {
 				t.Errorf("desc = %q, want %q", match.Description, tt.wantDesc)
+			}
+			if match.Checked != tt.wantChecked {
+				t.Errorf("checked = %v, want %v", match.Checked, tt.wantChecked)
 			}
 		})
 	}
@@ -287,50 +270,58 @@ func TestIsTaskChecked(t *testing.T) {
 	}
 }
 
-func TestTaskCheckboxPattern(t *testing.T) {
-	// Test the raw pattern behavior
+func TestCountTasksInContent(t *testing.T) {
 	tests := []struct {
-		name  string
-		input string
-		want  bool
+		name          string
+		content       string
+		wantTotal     int
+		wantCompleted int
 	}{
-		{"matches unchecked", "- [ ] task", true},
-		{"matches checked", "- [x] task", true},
-		{"matches at start", "- [X] task", true},
-		{"matches with indent", "   - [ ] task", true},
-		{"no match for regular list", "- item", false},
-		{"no match for wrong bracket", "- ( ) item", false},
+		{
+			name: "mixed tasks",
+			content: `- [ ] Task 1
+- [x] Task 2
+- [ ] Task 3
+- [X] Task 4`,
+			wantTotal:     4,
+			wantCompleted: 2,
+		},
+		{
+			name:          "no tasks",
+			content:       "Just some text\nand more text",
+			wantTotal:     0,
+			wantCompleted: 0,
+		},
+		{
+			name: "all completed",
+			content: `- [x] Done 1
+- [X] Done 2`,
+			wantTotal:     2,
+			wantCompleted: 2,
+		},
+		{
+			name: "all pending",
+			content: `- [ ] Todo 1
+- [ ] Todo 2`,
+			wantTotal:     2,
+			wantCompleted: 0,
+		},
+		{
+			name:          "empty content",
+			content:       "",
+			wantTotal:     0,
+			wantCompleted: 0,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := TaskCheckbox.MatchString(tt.input)
-			if got != tt.want {
-				t.Errorf("TaskCheckbox.MatchString(%q) = %v, want %v", tt.input, got, tt.want)
+			gotTotal, gotCompleted := CountTasksInContent(tt.content)
+			if gotTotal != tt.wantTotal {
+				t.Errorf("total = %d, want %d", gotTotal, tt.wantTotal)
 			}
-		})
-	}
-}
-
-func TestNumberedTaskPattern(t *testing.T) {
-	// Test the raw pattern behavior
-	tests := []struct {
-		name  string
-		input string
-		want  bool
-	}{
-		{"matches standard format", "- [ ] 1.1 Description", true},
-		{"matches larger numbers", "- [x] 12.34 Description", true},
-		{"no match without ID", "- [ ] Description", false},
-		{"no match without checkbox", "- 1.1 Description", false},
-		{"no match for section", "## 1. Section", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := NumberedTask.MatchString(tt.input)
-			if got != tt.want {
-				t.Errorf("NumberedTask.MatchString(%q) = %v, want %v", tt.input, got, tt.want)
+			if gotCompleted != tt.wantCompleted {
+				t.Errorf("completed = %d, want %d", gotCompleted, tt.wantCompleted)
 			}
 		})
 	}

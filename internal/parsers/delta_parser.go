@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/connerohnesorge/spectr/internal/regex"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 )
 
 // DeltaPlan represents all delta operations for a spec
@@ -72,7 +72,7 @@ func ParseDeltaSpec(
 func parseDeltaSection(
 	content, sectionType string,
 ) []RequirementBlock {
-	sectionContent := regex.FindDeltaSectionContent(
+	sectionContent := markdown.FindDeltaSectionContent(
 		content,
 		sectionType,
 	)
@@ -98,7 +98,7 @@ func parseRequirementsFromSection(
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if name, ok := regex.MatchH3Requirement(line); ok {
+		if name, ok := markdown.MatchH3Requirement(line); ok {
 			currentReq = saveAndStartNewRequirement(
 				&requirements,
 				currentReq,
@@ -167,9 +167,9 @@ func saveCurrentRequirement(
 
 // isNonRequirementH3 checks if line is an H3 but not a requirement
 func isNonRequirementH3(line string) bool {
-	_, isReq := regex.MatchH3Requirement(line)
+	_, isReq := markdown.MatchH3Requirement(line)
 
-	return regex.IsH3Header(line) && !isReq
+	return markdown.IsH3Header(line) && !isReq
 }
 
 // appendLineToRequirement appends a line to the current requirement
@@ -188,7 +188,7 @@ func parseRemovedSection(
 ) []string {
 	var removed []string
 
-	sectionContent := regex.FindDeltaSectionContent(content, "REMOVED")
+	sectionContent := markdown.FindDeltaSectionContent(content, "REMOVED")
 	if sectionContent == "" {
 		return removed
 	}
@@ -198,7 +198,7 @@ func parseRemovedSection(
 	)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if name, ok := regex.MatchH3Requirement(line); ok {
+		if name, ok := markdown.MatchH3Requirement(line); ok {
 			removed = append(
 				removed,
 				strings.TrimSpace(name),
@@ -215,7 +215,7 @@ func parseRenamedSection(
 ) []RenameOp {
 	var renamed []RenameOp
 
-	sectionContent := regex.FindDeltaSectionContent(content, "RENAMED")
+	sectionContent := markdown.FindDeltaSectionContent(content, "RENAMED")
 	if sectionContent == "" {
 		return renamed
 	}
@@ -232,14 +232,14 @@ func parseRenamedSection(
 		line := strings.TrimSpace(scanner.Text())
 
 		// Check for FROM line (backtick format)
-		if name, ok := regex.MatchRenamedFrom(line); ok {
+		if name, ok := markdown.MatchRenamedFrom(line); ok {
 			currentFrom = strings.TrimSpace(name)
 
 			continue
 		}
 
 		// Check for TO line (backtick format)
-		if name, ok := regex.MatchRenamedTo(line); ok {
+		if name, ok := markdown.MatchRenamedTo(line); ok {
 			if currentFrom == "" {
 				continue
 			}

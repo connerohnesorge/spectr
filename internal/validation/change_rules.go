@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
-	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 // DeltaType represents the type of delta operation
@@ -349,15 +349,15 @@ func parseRenamedRequirements(
 			continue
 		}
 
-		// Check for FROM line using regex package
-		if fromName, ok := regex.MatchRenamedFromAlt(line); ok {
+		// Check for FROM line using markdown package
+		if fromName, ok := markdown.MatchRenamedFromAlt(line); ok {
 			currentFrom = strings.TrimSpace(fromName)
 
 			continue
 		}
 
-		// Check for TO line using regex package
-		if toName, ok := regex.MatchRenamedToAlt(line); ok {
+		// Check for TO line using markdown package
+		if toName, ok := markdown.MatchRenamedToAlt(line); ok {
 			toName = strings.TrimSpace(toName)
 
 			// If we have a FROM, pair it with this TO

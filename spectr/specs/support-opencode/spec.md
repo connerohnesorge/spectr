@@ -1,5 +1,8 @@
 # Support Opencode Specification
 
+## Purpose
+This document describes the requirements for the OpenCode provider.
+
 ## Requirements
 
 ### Requirement: OpenCode Provider Configuration

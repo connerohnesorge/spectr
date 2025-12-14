@@ -13,4 +13,5 @@
 //   - list.go: List command errors
 //   - environment.go: Environment configuration errors
 //   - pr.go: Pull request workflow errors
+//   - markdown.go: Markdown parsing errors
 package specterrs

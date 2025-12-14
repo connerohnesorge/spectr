@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/connerohnesorge/spectr/internal/regex"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 )
 
 // RequirementBlock represents a requirement with its header and content
@@ -38,7 +38,7 @@ func ParseRequirements(
 		line := scanner.Text()
 
 		// Check if this is a new requirement header
-		if name, ok := regex.MatchH3Requirement(line); ok {
+		if name, ok := markdown.MatchH3Requirement(line); ok {
 			// Save previous requirement if exists
 			if currentReq != nil {
 				requirements = append(
@@ -58,7 +58,7 @@ func ParseRequirements(
 		}
 
 		// Check if we hit a new section (## header) - ends current requirement
-		if regex.IsH2Header(line) {
+		if markdown.IsH2Header(line) {
 			if currentReq != nil {
 				requirements = append(
 					requirements,
@@ -100,7 +100,7 @@ func ParseScenarios(
 	)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if name, ok := regex.MatchH4Scenario(line); ok {
+		if name, ok := markdown.MatchH4Scenario(line); ok {
 			scenarios = append(
 				scenarios,
 				strings.TrimSpace(name),

@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
-	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 const (
@@ -294,29 +294,53 @@ func reconstructSpec(
 func splitSpec(
 	content string,
 ) (preamble, requirements, after string) {
-	// Find ## Requirements header using pre-compiled pattern
-	match := regex.H2RequirementsSection.FindStringIndex(
-		content,
-	)
-	if match == nil {
+	lines := strings.Split(content, "\n")
+	var requirementsStart, requirementsEnd int
+	foundRequirements := false
+
+	// Find ## Requirements header
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if name, ok := markdown.MatchH2SectionHeader(trimmed); ok {
+			if name == "Requirements" {
+				requirementsStart = i
+				foundRequirements = true
+
+				break
+			}
+		}
+	}
+
+	if !foundRequirements {
 		// No requirements section, return everything as preamble
 		return content, "", ""
 	}
 
-	preamble = content[:match[1]] + "\n\n"
+	// Find next ## header after Requirements
+	requirementsEnd = len(lines)
+	for i := requirementsStart + 1; i < len(lines); i++ {
+		trimmed := strings.TrimSpace(lines[i])
+		if markdown.IsH2Header(trimmed) {
+			requirementsEnd = i
 
-	// Find next ## header after Requirements using pre-compiled pattern
-	remainingContent := content[match[1]:]
-	nextMatch := regex.H2NextSection.FindStringIndex(
-		remainingContent,
-	)
+			break
+		}
+	}
 
-	if nextMatch != nil {
-		requirements = remainingContent[:nextMatch[0]]
-		after = remainingContent[nextMatch[0]:]
-	} else {
-		requirements = remainingContent
-		after = ""
+	// Build preamble (everything up to and including Requirements header)
+	preamble = strings.Join(lines[:requirementsStart+1], "\n") + "\n\n"
+
+	// Build requirements section content (between header and next section)
+	if requirementsStart+1 < requirementsEnd {
+		requirements = strings.Join(
+			lines[requirementsStart+1:requirementsEnd],
+			"\n",
+		)
+	}
+
+	// Build after section (from next H2 header onwards)
+	if requirementsEnd < len(lines) {
+		after = strings.Join(lines[requirementsEnd:], "\n")
 	}
 
 	return preamble, requirements, after
@@ -328,8 +352,8 @@ func extractOrderedRequirements(
 	reqsContent string,
 	reqMap map[string]parsers.RequirementBlock,
 ) []parsers.RequirementBlock {
-	// Find requirement headers in order using pre-compiled pattern
-	names := regex.FindAllH3Requirements(reqsContent)
+	// Find requirement headers in order using markdown package
+	names := markdown.FindAllH3Requirements(reqsContent)
 
 	ordered := make(
 		[]parsers.RequirementBlock,

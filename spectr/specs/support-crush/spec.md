@@ -1,5 +1,9 @@
 # Support Crush Specification
 
+## Purpose
+
+This document describes the requirements for the Crush provider.
+
 ## Requirements
 
 ### Requirement: Crush Provider Configuration

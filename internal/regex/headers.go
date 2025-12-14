@@ -39,6 +39,7 @@ var (
 // MatchH2SectionHeader checks if a line is an H2 section header
 // and extracts the name. Returns the section name (raw capture, untrimmed) and
 // true if matched, or empty string and false otherwise.
+// Callers should use strings.TrimSpace() on the name if trimming is needed.
 func MatchH2SectionHeader(line string) (name string, ok bool) {
 	matches := H2SectionHeader.FindStringSubmatch(line)
 	if len(matches) < 2 {

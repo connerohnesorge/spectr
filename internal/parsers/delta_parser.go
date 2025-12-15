@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/markdown"
+	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
 // DeltaPlan represents all delta operations for a spec
@@ -29,6 +30,7 @@ type RenameOp struct {
 // ParseDeltaSpec parses a delta spec file and extracts operations.
 // Returns a DeltaPlan with ADDED, MODIFIED, REMOVED, and RENAMED reqs.
 // Uses AST-based parsing via markdown.ParseDocument for accurate extraction.
+// Returns an error if the file cannot be read or parsed.
 func ParseDeltaSpec(
 	filePath string,
 ) (*DeltaPlan, error) {
@@ -39,13 +41,40 @@ func ParseDeltaSpec(
 
 	doc, err := markdown.ParseDocument(content)
 	if err != nil {
-		return nil, err
+		return nil, &specterrs.DeltaSpecParseError{
+			SpecPath: filePath,
+			Err:      err,
+		}
+	}
+
+	added, err := extractRequirementsFromDeltaSection(doc, "ADDED")
+	if err != nil {
+		return nil, &specterrs.DeltaSpecParseError{
+			SpecPath: filePath,
+			Err:      err,
+		}
+	}
+
+	modified, err := extractRequirementsFromDeltaSection(doc, "MODIFIED")
+	if err != nil {
+		return nil, &specterrs.DeltaSpecParseError{
+			SpecPath: filePath,
+			Err:      err,
+		}
+	}
+
+	removed, err := extractRemovedFromDoc(doc)
+	if err != nil {
+		return nil, &specterrs.DeltaSpecParseError{
+			SpecPath: filePath,
+			Err:      err,
+		}
 	}
 
 	plan := &DeltaPlan{
-		Added:    extractRequirementsFromDeltaSection(doc, "ADDED"),
-		Modified: extractRequirementsFromDeltaSection(doc, "MODIFIED"),
-		Removed:  extractRemovedFromDoc(doc),
+		Added:    added,
+		Modified: modified,
+		Removed:  removed,
 		Renamed:  extractRenamedFromDoc(doc),
 	}
 
@@ -53,19 +82,23 @@ func ParseDeltaSpec(
 }
 
 // extractRequirementsFromDeltaSection extracts requirements from a delta section.
+// Returns an error if the section content cannot be parsed.
 func extractRequirementsFromDeltaSection(
 	doc *markdown.Document,
 	deltaType string,
-) []RequirementBlock {
+) ([]RequirementBlock, error) {
 	section := doc.GetDeltaSection(deltaType)
 	if section == nil || section.Content == "" {
-		return nil
+		return nil, nil
 	}
 
 	// Parse the section content to extract requirements
 	sectionDoc, err := markdown.ParseDocument([]byte(section.Content))
 	if err != nil {
-		return nil
+		return nil, &specterrs.DeltaSectionParseError{
+			SectionType: deltaType,
+			Err:         err,
+		}
 	}
 
 	names := sectionDoc.GetRequirementNames()
@@ -87,23 +120,27 @@ func extractRequirementsFromDeltaSection(
 		})
 	}
 
-	return requirements
+	return requirements, nil
 }
 
 // extractRemovedFromDoc extracts requirement names from REMOVED section.
-func extractRemovedFromDoc(doc *markdown.Document) []string {
+// Returns an error if the section content cannot be parsed.
+func extractRemovedFromDoc(doc *markdown.Document) ([]string, error) {
 	section := doc.GetDeltaSection("REMOVED")
 	if section == nil || section.Content == "" {
-		return nil
+		return nil, nil
 	}
 
 	// Parse the section content to extract requirement names
 	sectionDoc, err := markdown.ParseDocument([]byte(section.Content))
 	if err != nil {
-		return nil
+		return nil, &specterrs.DeltaSectionParseError{
+			SectionType: "REMOVED",
+			Err:         err,
+		}
 	}
 
-	return sectionDoc.GetRequirementNames()
+	return sectionDoc.GetRequirementNames(), nil
 }
 
 // extractRenamedFromDoc extracts FROM/TO pairs from RENAMED section.

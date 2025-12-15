@@ -413,3 +413,35 @@ func TestParseDeltaSpec_MissingFile(
 		)
 	}
 }
+
+func TestParseDeltaSpec_EmptyFile(
+	t *testing.T,
+) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "empty.md")
+	if err := os.WriteFile(filePath, []byte("   \n\t\n   "), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ParseDeltaSpec(filePath)
+	if err == nil {
+		t.Error("Expected error for empty file, got nil")
+	}
+}
+
+func TestParseDeltaSpec_BinaryFile(
+	t *testing.T,
+) {
+	tmpDir := t.TempDir()
+	filePath := filepath.Join(tmpDir, "binary.md")
+	// Write binary content with null bytes
+	content := []byte{0x00, 0x01, 0x02, 0x03}
+	if err := os.WriteFile(filePath, content, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := ParseDeltaSpec(filePath)
+	if err == nil {
+		t.Error("Expected error for binary file, got nil")
+	}
+}

@@ -49,3 +49,21 @@ func (e *DeltaSpecParseError) Error() string {
 func (e *DeltaSpecParseError) Unwrap() error {
 	return e.Err
 }
+
+// DeltaSectionParseError indicates a delta section failed to parse.
+type DeltaSectionParseError struct {
+	SectionType string // e.g., "ADDED", "MODIFIED", "REMOVED", "RENAMED"
+	Err         error  // Underlying error
+}
+
+func (e *DeltaSectionParseError) Error() string {
+	return fmt.Sprintf(
+		"failed to parse %s section: %v",
+		e.SectionType,
+		e.Err,
+	)
+}
+
+func (e *DeltaSectionParseError) Unwrap() error {
+	return e.Err
+}

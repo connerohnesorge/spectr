@@ -171,10 +171,6 @@ func generateLargeDoc() []byte {
 	return buf.Bytes()
 }
 
-// =============================================================================
-// Lexer Benchmarks (Task 21.2)
-// =============================================================================
-
 func BenchmarkLexerSmall(b *testing.B) {
 	b.SetBytes(int64(len(smallDoc)))
 	b.ReportAllocs()
@@ -293,10 +289,6 @@ func BenchmarkLexerTokenTypes(b *testing.B) {
 	})
 }
 
-// =============================================================================
-// Parser Benchmarks (Task 21.3)
-// =============================================================================
-
 func BenchmarkParseSmall(b *testing.B) {
 	b.SetBytes(int64(len(smallDoc)))
 	b.ReportAllocs()
@@ -387,10 +379,6 @@ func BenchmarkParseDocumentTypes(b *testing.B) {
 		}
 	})
 }
-
-// =============================================================================
-// Incremental Parsing Benchmarks (Task 21.4)
-// =============================================================================
 
 func BenchmarkParseIncrementalSmallEdit(
 	b *testing.B,
@@ -529,10 +517,6 @@ func BenchmarkParseFullVsIncremental(
 	})
 }
 
-// =============================================================================
-// Position Index Benchmarks (Task 21.5)
-// =============================================================================
-
 func BenchmarkPositionIndexBuild(b *testing.B) {
 	tree, _ := Parse(largeDoc)
 
@@ -639,10 +623,6 @@ func BenchmarkPositionIndexEnclosingSection(
 	}
 }
 
-// =============================================================================
-// Line Index Benchmarks (Task 21.5 continued)
-// =============================================================================
-
 func BenchmarkLineIndexBuild(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -701,10 +681,6 @@ func BenchmarkLineIndexOffsetAt(b *testing.B) {
 		}
 	}
 }
-
-// =============================================================================
-// Pool Benchmarks (Task 21.6)
-// =============================================================================
 
 func BenchmarkPoolTokenGetPut(b *testing.B) {
 	b.ReportAllocs()
@@ -806,10 +782,6 @@ func BenchmarkParseWithPoolStats(b *testing.B) {
 	})
 }
 
-// =============================================================================
-// Printer Benchmarks
-// =============================================================================
-
 func BenchmarkPrintSmall(b *testing.B) {
 	tree, _ := Parse(smallDoc)
 
@@ -862,10 +834,6 @@ func BenchmarkPrintToBuffer(b *testing.B) {
 		_ = PrintTo(&buf, tree)
 	}
 }
-
-// =============================================================================
-// Query Benchmarks
-// =============================================================================
 
 func BenchmarkFind(b *testing.B) {
 	tree, _ := Parse(largeDoc)
@@ -1011,10 +979,6 @@ func BenchmarkExists(b *testing.B) {
 		}
 	})
 }
-
-// =============================================================================
-// Visitor Benchmarks
-// =============================================================================
 
 // benchmarkVisitor is a simple visitor that counts nodes
 type benchmarkVisitor struct {
@@ -1332,10 +1296,6 @@ func BenchmarkVisitorPattern(b *testing.B) {
 	})
 }
 
-// =============================================================================
-// Hash Computation Benchmarks
-// =============================================================================
-
 func BenchmarkHashComputation(b *testing.B) {
 	tree, _ := Parse(largeDoc)
 
@@ -1372,10 +1332,6 @@ func BenchmarkNodeEquality(b *testing.B) {
 	})
 }
 
-// =============================================================================
-// End-to-End Benchmarks
-// =============================================================================
-
 func BenchmarkParseAndPrint(b *testing.B) {
 	b.SetBytes(int64(len(mediumDoc)))
 	b.ReportAllocs()
@@ -1410,10 +1366,6 @@ func BenchmarkParseAndIndex(b *testing.B) {
 		_ = idx.NodeAt(len(mediumDoc) / 2)
 	}
 }
-
-// =============================================================================
-// Memory Allocation Benchmarks
-// =============================================================================
 
 func BenchmarkParseAllocations(b *testing.B) {
 	b.Run("Small", func(b *testing.B) {

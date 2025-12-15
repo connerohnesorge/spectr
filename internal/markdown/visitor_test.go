@@ -7,10 +7,6 @@ import (
 	"testing"
 )
 
-// ============================================================================
-// Walk Tests
-// ============================================================================
-
 func TestWalk_NilNode_ReturnsNil(t *testing.T) {
 	v := &BaseVisitor{}
 	err := Walk(nil, v)
@@ -427,10 +423,6 @@ func TestWalk_CallsCorrectVisitMethod(
 	}
 }
 
-// ============================================================================
-// BaseVisitor Tests
-// ============================================================================
-
 func TestBaseVisitor_AllMethodsReturnNil(
 	t *testing.T,
 ) {
@@ -573,10 +565,6 @@ func TestBaseVisitor_EmbeddingWorksCorrectly(
 		t.Fatalf("Walk returned error: %v", err)
 	}
 }
-
-// ============================================================================
-// VisitorContext Tests
-// ============================================================================
 
 func TestVisitorContext_ParentReturnsCorrectParent(
 	t *testing.T,
@@ -782,10 +770,6 @@ func TestWalkWithContext_SkipChildrenSkipsSubtree(
 		)
 	}
 }
-
-// ============================================================================
-// EnterLeaveVisitor Tests
-// ============================================================================
 
 func TestWalkEnterLeave_CallsEnterBeforeChildren(
 	t *testing.T,
@@ -1140,10 +1124,6 @@ func TestWalkEnterLeave_ErrorInLeaveStopsTraversal(
 	}
 }
 
-// ============================================================================
-// BaseEnterLeaveVisitor Tests
-// ============================================================================
-
 //
 //nolint:revive // cyclomatic: test function necessarily tests many methods
 func TestBaseEnterLeaveVisitor_AllMethodsReturnNil(
@@ -1359,10 +1339,6 @@ func TestBaseEnterLeaveVisitor_AllMethodsReturnNil(
 		)
 	}
 }
-
-// ============================================================================
-// Integration Tests
-// ============================================================================
 
 func TestIntegration_CollectAllRequirements(
 	t *testing.T,
@@ -1596,10 +1572,6 @@ func TestIntegration_BuildHTMLLikeOutput(
 	}
 }
 
-// ============================================================================
-// BaseContextVisitor Tests
-// ============================================================================
-
 func TestBaseContextVisitor_AllMethodsReturnNil(
 	t *testing.T,
 ) {
@@ -1709,10 +1681,6 @@ func TestBaseContextVisitor_AllMethodsReturnNil(
 		)
 	}
 }
-
-// ============================================================================
-// Helper Types for Tests
-// ============================================================================
 
 // recordingVisitor records node types as they are visited
 type recordingVisitor struct {

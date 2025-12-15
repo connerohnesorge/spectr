@@ -10,10 +10,6 @@ func boolPtr(b bool) *bool {
 	return &b
 }
 
-// =============================================================================
-// Node Interface Tests
-// =============================================================================
-
 func TestNodeInterface_Document(t *testing.T) {
 	source := []byte("# Test Document")
 	node := NewNodeBuilder(NodeTypeDocument).
@@ -628,10 +624,6 @@ func TestNodeInterface_Wikilink(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Hash Tests
-// =============================================================================
-
 func TestHash_SameContentSameHash(t *testing.T) {
 	source := []byte("Same content")
 
@@ -898,10 +890,6 @@ func TestHash_IncludesTypeSpecificFields_Wikilink(
 	}
 }
 
-// =============================================================================
-// Immutability Tests
-// =============================================================================
-
 func TestImmutability_ChildrenDefensiveCopy(
 	t *testing.T,
 ) {
@@ -984,10 +972,6 @@ func TestImmutability_NilChildren(t *testing.T) {
 		)
 	}
 }
-
-// =============================================================================
-// NodeBuilder Tests
-// =============================================================================
 
 func TestNodeBuilder_BuildAllNodeTypes(
 	t *testing.T,
@@ -1839,10 +1823,6 @@ func TestNodeBuilder_ToBuilder_Nil(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Equal Tests
-// =============================================================================
-
 func TestEqual_SameNodes(t *testing.T) {
 	source := []byte("test text")
 	node1 := NewNodeBuilder(NodeTypeText).
@@ -2448,10 +2428,6 @@ func TestEqual_TypeSpecific_Wikilink(
 	}
 }
 
-// =============================================================================
-// NodeType String Tests
-// =============================================================================
-
 func TestNodeType_String(t *testing.T) {
 	testCases := []struct {
 		nodeType NodeType
@@ -2490,10 +2466,6 @@ func TestNodeType_String(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// BuilderValidationError Tests
-// =============================================================================
-
 func TestBuilderValidationError_Error(
 	t *testing.T,
 ) {
@@ -2526,10 +2498,6 @@ func TestBuilderValidationError_Error(
 		)
 	}
 }
-
-// =============================================================================
-// Edge Cases
-// =============================================================================
 
 func TestEdgeCase_EmptySource(t *testing.T) {
 	node := NewNodeBuilder(NodeTypeText).
@@ -2657,10 +2625,6 @@ func TestEdgeCase_BuilderReuse(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// bytesEqual Helper Tests
-// =============================================================================
-
 func TestBytesEqual(t *testing.T) {
 	testCases := []struct {
 		name     string
@@ -2707,10 +2671,6 @@ func TestBytesEqual(t *testing.T) {
 		})
 	}
 }
-
-// =============================================================================
-// equalNodes Function Tests
-// =============================================================================
 
 func TestEqualNodes_BothNil(t *testing.T) {
 	if !equalNodes(nil, nil) {

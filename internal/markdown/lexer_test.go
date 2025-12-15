@@ -4,10 +4,6 @@ import (
 	"testing"
 )
 
-// =============================================================================
-// Task 2.18: Comprehensive Lexer Tests
-// =============================================================================
-
 // TestLexer_EmptyInput verifies that empty input returns only EOF.
 func TestLexer_EmptyInput(t *testing.T) {
 	l := newLexer(make([]byte, 0))
@@ -647,10 +643,6 @@ func TestLexer_RepeatedEOF(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Task 2.19: CRLF Normalization Tests
-// =============================================================================
-
 // TestLexer_CRLFNormalization verifies CRLF produces single newline spanning 2 bytes.
 func TestLexer_CRLFNormalization(t *testing.T) {
 	input := "line1\r\nline2"
@@ -910,10 +902,6 @@ func TestLexer_ConsecutiveCRLF(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Task 2.20: Error Token Recovery Tests
-// =============================================================================
-
 // TestLexer_InvalidUTF8ProducesError verifies invalid UTF-8 produces TokenError.
 func TestLexer_InvalidUTF8ProducesError(
 	t *testing.T,
@@ -1113,10 +1101,6 @@ func TestLexer_ErrorHasCorrectOffset(
 		)
 	}
 }
-
-// =============================================================================
-// Task 2.21: State Machine Transition Tests
-// =============================================================================
 
 // TestLexer_FencedCodeBlock verifies fenced code block state transitions.
 // Note: The lexer emits ONE backtick token when seeing ```, then enters
@@ -1735,10 +1719,6 @@ func TestLexer_LongerClosingFence(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Peek/Next Tests
-// =============================================================================
-
 // TestLexer_PeekReturnsSameToken verifies Peek returns same token multiple times.
 func TestLexer_PeekReturnsSameToken(
 	t *testing.T,
@@ -1892,10 +1872,6 @@ func TestLexer_PeekDoesNotAdvance(t *testing.T) {
 		)
 	}
 }
-
-// =============================================================================
-// All() and AllWithErrors() Tests
-// =============================================================================
 
 // TestLexer_All verifies All() returns correct sequence ending with EOF.
 func TestLexer_All(t *testing.T) {
@@ -2106,10 +2082,6 @@ func TestLexer_AllFromMiddle(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Position Tracking Tests
-// =============================================================================
-
 // TestLexer_PositionTracking verifies position updates correctly.
 func TestLexer_PositionTracking(t *testing.T) {
 	input := "ab cd"
@@ -2175,10 +2147,6 @@ func TestLexer_SourceSlicesAreCorrect(
 		}
 	}
 }
-
-// =============================================================================
-// Edge Cases
-// =============================================================================
 
 // TestLexer_OnlyWhitespace verifies input of only whitespace.
 func TestLexer_OnlyWhitespace(t *testing.T) {

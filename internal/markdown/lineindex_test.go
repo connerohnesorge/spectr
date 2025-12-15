@@ -4,10 +4,6 @@ import (
 	"testing"
 )
 
-// =============================================================================
-// Basic Tests
-// =============================================================================
-
 // TestLineIndex_EmptySource verifies behavior with an empty source.
 func TestLineIndex_EmptySource(t *testing.T) {
 	idx := NewLineIndex(make([]byte, 0))
@@ -219,10 +215,6 @@ func TestLineIndex_MixedLineEndings(
 	}
 }
 
-// =============================================================================
-// LineCol Tests
-// =============================================================================
-
 // TestLineCol_OneBased verifies that line numbers are 1-based.
 func TestLineCol_OneBased(t *testing.T) {
 	source := []byte("a\nb\nc")
@@ -341,10 +333,6 @@ func TestLineCol_AfterNewline(t *testing.T) {
 		)
 	}
 }
-
-// =============================================================================
-// Edge Case Tests
-// =============================================================================
 
 // TestLineCol_NegativeOffset verifies behavior with negative offset.
 func TestLineCol_NegativeOffset(t *testing.T) {
@@ -538,10 +526,6 @@ func TestLineIndex_OnlyNewlines(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Lazy Construction Tests
-// =============================================================================
-
 // TestLineIndex_LazyConstruction verifies index is built on first query.
 func TestLineIndex_LazyConstruction(
 	t *testing.T,
@@ -671,10 +655,6 @@ func TestLineIndex_BuildOnOffsetAt(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// PositionAt Tests
-// =============================================================================
-
 // TestPositionAt_ReturnsCorrectStruct verifies PositionAt returns correct Position.
 func TestPositionAt_ReturnsCorrectStruct(
 	t *testing.T,
@@ -761,10 +741,6 @@ func TestPositionAt_PreservesOffset(
 	}
 }
 
-// =============================================================================
-// LineCount Tests
-// =============================================================================
-
 // TestLineCount_Various verifies LineCount with various inputs.
 func TestLineCount_Various(t *testing.T) {
 	tests := []struct {
@@ -808,10 +784,6 @@ func TestLineCount_Various(t *testing.T) {
 		})
 	}
 }
-
-// =============================================================================
-// LineStart Tests
-// =============================================================================
 
 // TestLineStart_Various verifies LineStart with various inputs.
 func TestLineStart_Various(t *testing.T) {
@@ -863,10 +835,6 @@ func TestLineStart_EmptySource(t *testing.T) {
 		)
 	}
 }
-
-// =============================================================================
-// LineEnd Tests
-// =============================================================================
 
 // TestLineEnd_Various verifies LineEnd with various inputs.
 func TestLineEnd_Various(t *testing.T) {
@@ -967,10 +935,6 @@ func TestLineEnd_EmptyLines(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// OffsetAt Tests
-// =============================================================================
-
 // TestOffsetAt_Various verifies OffsetAt with various inputs.
 func TestOffsetAt_Various(t *testing.T) {
 	source := []byte("abc\ndef\nghi")
@@ -1066,10 +1030,6 @@ func TestOffsetAt_RoundTrip(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Position Struct Tests
-// =============================================================================
-
 // TestPosition_ZeroValue verifies Position zero value.
 func TestPosition_ZeroValue(t *testing.T) {
 	var pos Position
@@ -1110,10 +1070,6 @@ func TestPosition_Equality(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Unicode/UTF-8 Tests
-// =============================================================================
-
 // TestLineIndex_Unicode verifies byte-based offsets with UTF-8.
 func TestLineIndex_Unicode(t *testing.T) {
 	// Multi-byte UTF-8 characters
@@ -1149,10 +1105,6 @@ func TestLineIndex_MultiByteCharacters(
 		)
 	}
 }
-
-// =============================================================================
-// Stress/Performance Tests
-// =============================================================================
 
 // TestLineIndex_LargeFile verifies behavior with many lines.
 func TestLineIndex_LargeFile(t *testing.T) {
@@ -1246,10 +1198,6 @@ func TestLineIndex_BinarySearchEfficiency(
 		}
 	}
 }
-
-// =============================================================================
-// Standalone CR Tests
-// =============================================================================
 
 // TestLineIndex_StandaloneCR verifies handling of standalone CR (not followed by LF).
 func TestLineIndex_StandaloneCR(t *testing.T) {

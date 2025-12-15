@@ -7,14 +7,6 @@ import (
 	"testing"
 )
 
-// =============================================================================
-// Task 5.28: Comprehensive Parser Tests
-// =============================================================================
-
-// =============================================================================
-// Empty Document Tests
-// =============================================================================
-
 func TestParse_EmptyDocument(t *testing.T) {
 	doc, errors := Parse([]byte{})
 
@@ -60,10 +52,6 @@ func TestParse_WhitespaceOnlyDocument(
 		)
 	}
 }
-
-// =============================================================================
-// Header Tests (H1-H6)
-// =============================================================================
 
 func TestParse_Headers_AllLevels(t *testing.T) {
 	tests := []struct {
@@ -252,10 +240,6 @@ func TestParse_Headers_MultipleHeaders(
 	}
 }
 
-// =============================================================================
-// Paragraph Tests
-// =============================================================================
-
 func TestParse_Paragraph_Simple(t *testing.T) {
 	doc, errors := Parse(
 		[]byte("This is a simple paragraph."),
@@ -325,10 +309,6 @@ func TestParse_Paragraph_MultipleParagraphs(
 		}
 	}
 }
-
-// =============================================================================
-// Code Fence Tests
-// =============================================================================
 
 func TestParse_CodeFence_Simple(t *testing.T) {
 	// Note: Code fence parsing may produce CodeBlock or Paragraph depending on
@@ -482,10 +462,6 @@ func TestParse_CodeFence_MultipleLines(
 	}
 }
 
-// =============================================================================
-// Blockquote Tests
-// =============================================================================
-
 func TestParse_Blockquote_Simple(t *testing.T) {
 	input := "> This is a quote"
 	doc, errors := Parse([]byte(input))
@@ -540,10 +516,6 @@ func TestParse_Blockquote_MultipleLines(
 		)
 	}
 }
-
-// =============================================================================
-// List Tests
-// =============================================================================
 
 func TestParse_UnorderedList_Dash(t *testing.T) {
 	input := "- Item one\n- Item two\n- Item three"
@@ -810,10 +782,6 @@ func TestParse_TaskCheckbox_UppercaseX(
 	}
 }
 
-// =============================================================================
-// Inline Tests
-// =============================================================================
-
 func TestParse_InlineCode(t *testing.T) {
 	input := "This has `inline code` here"
 	doc, _ := Parse([]byte(input))
@@ -999,10 +967,6 @@ func TestParse_Link_WithTitle(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Reference Link Tests
-// =============================================================================
-
 func TestParse_ReferenceLink_Full(t *testing.T) {
 	input := "[example]: https://example.com\n\nClick [here][example] for more"
 	doc, _ := Parse([]byte(input))
@@ -1119,10 +1083,6 @@ func TestParse_ReferenceLink_CaseInsensitive(
 		)
 	}
 }
-
-// =============================================================================
-// Spectr-Specific Tests
-// =============================================================================
 
 func TestParse_Spectr_Requirement(t *testing.T) {
 	input := "### Requirement: User Authentication"
@@ -1598,10 +1558,6 @@ func TestParse_Wikilink_Full(t *testing.T) {
 	}
 }
 
-// =============================================================================
-// Task 5.29: CommonMark Emphasis Edge Cases
-// =============================================================================
-
 func TestParse_Emphasis_AsteriskMidWord_End(
 	t *testing.T,
 ) {
@@ -1831,10 +1787,6 @@ func TestParse_Emphasis_UnmatchedClosing(
 	// Unmatched * should be text, not emphasis
 }
 
-// =============================================================================
-// Error Recovery Tests
-// =============================================================================
-
 func TestParse_ErrorRecovery_MalformedInput(
 	t *testing.T,
 ) {
@@ -1851,7 +1803,7 @@ func TestParse_ErrorRecovery_MalformedInput(
 
 	for _, input := range inputs {
 		t.Run(
-			input[:minInt(20, len(input))],
+			input[:min(20, len(input))],
 			func(t *testing.T) {
 				doc, _ := Parse([]byte(input))
 
@@ -1906,10 +1858,6 @@ func TestParse_ErrorRecovery_ContinuesAfterError(
 		)
 	}
 }
-
-// =============================================================================
-// Concurrent Access Tests
-// =============================================================================
 
 func TestParse_Concurrent_MultipleGoroutines(
 	t *testing.T,
@@ -1993,10 +1941,6 @@ func TestParse_Concurrent_SameInput(
 	}
 }
 
-// =============================================================================
-// ParseError Tests
-// =============================================================================
-
 func TestParseError_Error(t *testing.T) {
 	err := ParseError{
 		Offset:  42,
@@ -2053,10 +1997,6 @@ func TestParseError_Position(t *testing.T) {
 		)
 	}
 }
-
-// =============================================================================
-// Edge Cases
-// =============================================================================
 
 func TestParse_EdgeCase_OnlyNewlines(
 	t *testing.T,
@@ -2168,16 +2108,4 @@ func TestParse_EdgeCase_WindowsLineEndings(
 			len(children),
 		)
 	}
-}
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-
-	return b
 }

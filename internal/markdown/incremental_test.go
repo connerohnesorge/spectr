@@ -4,14 +4,6 @@ import (
 	"testing"
 )
 
-// =============================================================================
-// Task 6.11: Incremental Parsing Tests
-// =============================================================================
-
-// =============================================================================
-// Basic Incremental Tests
-// =============================================================================
-
 func TestParseIncremental_NoOldTree(
 	t *testing.T,
 ) {
@@ -166,10 +158,6 @@ func TestParseIncremental_SimpleTextReplacement(
 		)
 	}
 }
-
-// =============================================================================
-// EditRegion Tests
-// =============================================================================
 
 func TestComputeEditRegion_NoChange(
 	t *testing.T,
@@ -357,10 +345,6 @@ func TestComputeEditRegion_Replacement(
 	}
 }
 
-// =============================================================================
-// EditRegion Helper Methods Tests
-// =============================================================================
-
 func TestEditRegion_Delta(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -511,10 +495,6 @@ func TestEditRegion_NewLength(t *testing.T) {
 		)
 	}
 }
-
-// =============================================================================
-// Subtree Reuse Tests
-// =============================================================================
 
 func TestIdentifyReusableNodes_NilRoot(
 	t *testing.T,
@@ -709,10 +689,6 @@ func TestMatchAndValidateSubtrees_HashMatching(
 	}
 }
 
-// =============================================================================
-// Large Change Fallback Tests
-// =============================================================================
-
 func TestParseIncremental_LargeChangeTriggersFullReparse(
 	t *testing.T,
 ) {
@@ -777,10 +753,6 @@ func TestParseIncremental_SmallChangeUsesIncremental(
 		t.Fatal("expected non-nil tree")
 	}
 }
-
-// =============================================================================
-// Edge Cases
-// =============================================================================
 
 func TestParseIncremental_EmptyOldSource(
 	t *testing.T,
@@ -941,10 +913,6 @@ func TestParseIncremental_EditInMiddle(
 		)
 	}
 }
-
-// =============================================================================
-// IncrementalParseState Tests
-// =============================================================================
 
 func TestNewIncrementalParseState(t *testing.T) {
 	source := []byte("# Header\n\nParagraph")
@@ -1159,10 +1127,6 @@ func TestIncrementalParseState_UpdateLineIndex_WithNewlines(
 	}
 }
 
-// =============================================================================
-// ParseIncrementalWithState Tests
-// =============================================================================
-
 func TestParseIncrementalWithState_NilState(
 	t *testing.T,
 ) {
@@ -1268,10 +1232,6 @@ func TestParseIncrementalWithState_ModifiedSource(
 	}
 }
 
-// =============================================================================
-// NodeAtOffset Tests
-// =============================================================================
-
 func TestNodeAtOffset_NilRoot(t *testing.T) {
 	result := NodeAtOffset(nil, 0)
 	if result != nil {
@@ -1355,10 +1315,6 @@ func TestNodeAtOffset_FindsInnermostNode(
 	}
 }
 
-// =============================================================================
-// NodesAtOffset Tests
-// =============================================================================
-
 func TestNodesAtOffset_NilRoot(t *testing.T) {
 	result := NodesAtOffset(nil, 0)
 	if result != nil {
@@ -1411,10 +1367,6 @@ func TestNodesAtOffset_ReturnsAllContainingNodes(
 		)
 	}
 }
-
-// =============================================================================
-// AffectedBlockRegion Tests
-// =============================================================================
 
 func TestAffectedBlockRegion_SimpleEdit(
 	t *testing.T,
@@ -1477,10 +1429,6 @@ func TestAffectedBlockRegion_EditAtBlankLine(
 		)
 	}
 }
-
-// =============================================================================
-// isBlockStart Tests
-// =============================================================================
 
 func TestIsBlockStart_Header(t *testing.T) {
 	source := []byte("# Header")
@@ -1556,10 +1504,6 @@ func TestIsBlockStart_OutOfBounds(t *testing.T) {
 		)
 	}
 }
-
-// =============================================================================
-// adjustNodeOffsets Tests
-// =============================================================================
 
 func TestAdjustNodeOffsets_NilNode(t *testing.T) {
 	result := adjustNodeOffsets(
@@ -1763,10 +1707,6 @@ func TestAdjustNodeOffsets_WithChildren(
 	}
 }
 
-// =============================================================================
-// findLinkDefs Tests
-// =============================================================================
-
 func TestFindLinkDefs_NilNode(t *testing.T) {
 	result := findLinkDefs(nil)
 	if result != nil {
@@ -1798,10 +1738,6 @@ func TestFindLinkDefs_WithLinkDefs(_ *testing.T) {
 	// This test just verifies the function doesn't panic
 	_ = result
 }
-
-// =============================================================================
-// AdjustedNode Tests
-// =============================================================================
 
 func TestAdjustedNode_Structure(t *testing.T) {
 	// Test that AdjustedNode struct is properly defined
@@ -1835,10 +1771,6 @@ func TestAdjustedNode_Structure(t *testing.T) {
 		)
 	}
 }
-
-// =============================================================================
-// Integration Tests
-// =============================================================================
 
 func TestParseIncremental_RealWorldScenario(
 	t *testing.T,

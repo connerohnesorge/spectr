@@ -229,7 +229,9 @@ func requirementExists(
 	root Node,
 	name string,
 ) bool {
-	normalizedName := strings.ToLower(name) //nolint:revive // modifies-parameter
+	normalizedName := strings.ToLower(
+		name,
+	) //nolint:revive // modifies-parameter
 	found := false
 
 	_ = Walk(root, &requirementFinder{
@@ -261,7 +263,9 @@ func (f *requirementFinder) VisitRequirement(
 
 // scenarioExists checks if a scenario with the given name exists.
 func scenarioExists(root Node, name string) bool {
-	normalizedName := strings.ToLower(name) //nolint:revive // modifies-parameter
+	normalizedName := strings.ToLower(
+		name,
+	) //nolint:revive // modifies-parameter
 	found := false
 
 	_ = Walk(root, &scenarioFinderForAnchor{

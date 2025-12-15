@@ -3,6 +3,7 @@ package markdown
 
 import (
 	"hash/fnv"
+	"strconv"
 )
 
 // NodeType represents the type of an AST node.
@@ -834,9 +835,7 @@ type BuilderValidationError struct {
 
 func (e *BuilderValidationError) Error() string {
 	if e.Index > 0 {
-		return e.Field + "[" + string(
-			rune('0'+e.Index),
-		) + "]: " + e.Message
+		return e.Field + "[" + strconv.Itoa(e.Index) + "]: " + e.Message
 	}
 
 	return e.Field + ": " + e.Message

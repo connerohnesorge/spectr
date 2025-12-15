@@ -318,7 +318,8 @@ Content of modified section.
 			)
 		}
 
-		if gotEmpty || tt.deltaType != DeltaAdded {
+		if gotEmpty ||
+			tt.deltaType != DeltaAdded {
 			continue
 		}
 

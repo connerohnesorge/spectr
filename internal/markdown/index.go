@@ -154,7 +154,7 @@ func (pi *PositionIndex) NodeAt(
 
 	// Find all nodes containing this offset
 	var best Node
-	var bestDepth = -1
+	bestDepth := -1
 
 	for i := range pi.intervals {
 		iv := &pi.intervals[i]
@@ -322,7 +322,7 @@ func (pi *PositionIndex) EnclosingSection(
 	}
 
 	var best *NodeSection
-	var bestDepth = -1
+	bestDepth := -1
 
 	for i := range pi.intervals {
 		iv := &pi.intervals[i]
@@ -361,7 +361,7 @@ func (pi *PositionIndex) EnclosingRequirement(
 	}
 
 	var best *NodeRequirement
-	var bestDepth = -1
+	bestDepth := -1
 
 	for i := range pi.intervals {
 		iv := &pi.intervals[i]
@@ -398,7 +398,7 @@ func (pi *PositionIndex) EnclosingScenario(
 	}
 
 	var best *NodeScenario
-	var bestDepth = -1
+	bestDepth := -1
 
 	for i := range pi.intervals {
 		iv := &pi.intervals[i]

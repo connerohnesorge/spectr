@@ -443,9 +443,47 @@ func (s *IncrementalParseState) UpdateLineIndex(
 		return
 	}
 
+	// Validate edit offsets to prevent slice bounds panic
+	if edit.StartOffset < 0 || edit.OldEndOffset < 0 || edit.NewEndOffset < 0 {
+		// Invalid negative offsets - rebuild index from scratch
+		s.LineIndex = NewLineIndex(newSource)
+
+		return
+	}
+
+	if edit.StartOffset > edit.OldEndOffset || edit.StartOffset > edit.NewEndOffset {
+		// Invalid offset ordering - rebuild index from scratch
+		s.LineIndex = NewLineIndex(newSource)
+
+		return
+	}
+
+	// Clamp offsets to source bounds
+	oldEndOffset := edit.OldEndOffset
+	if oldEndOffset > len(oldSource) {
+		oldEndOffset = len(oldSource)
+	}
+
+	newEndOffset := edit.NewEndOffset
+	if newEndOffset > len(newSource) {
+		newEndOffset = len(newSource)
+	}
+
+	startOffset := edit.StartOffset
+	if startOffset > len(oldSource) {
+		startOffset = len(oldSource)
+	}
+
+	if startOffset > len(newSource) {
+		// StartOffset beyond newSource - rebuild index from scratch
+		s.LineIndex = NewLineIndex(newSource)
+
+		return
+	}
+
 	// Check if edit contains newlines
-	oldEditContent := oldSource[edit.StartOffset:edit.OldEndOffset]
-	newEditContent := newSource[edit.StartOffset:edit.NewEndOffset]
+	oldEditContent := oldSource[startOffset:oldEndOffset]
+	newEditContent := newSource[startOffset:newEndOffset]
 
 	oldNewlines := bytes.Count(
 		oldEditContent,

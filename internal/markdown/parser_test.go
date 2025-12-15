@@ -1545,7 +1545,9 @@ func TestParse_Wikilink_WithAnchor(t *testing.T) {
 			if string(
 				wikilink.Target(),
 			) == "validation" &&
-				string(wikilink.Anchor()) == "section" {
+				string(
+					wikilink.Anchor(),
+				) == "section" {
 				foundWikilink = true
 			}
 		}

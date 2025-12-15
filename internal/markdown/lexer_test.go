@@ -1839,19 +1839,58 @@ func TestLexer_AlternatingPeekNext(t *testing.T) {
 	}
 }
 
-// TestLexer_PeekDoesNotAdvance verifies Peek doesn't change position.
-func TestLexer_PeekDoesNotAdvance(_ *testing.T) {
+// TestLexer_PeekDoesNotAdvance verifies that while the first Peek call
+// advances internal position to lex a token, subsequent Peek calls return
+// the cached token without further position advancement.
+func TestLexer_PeekDoesNotAdvance(t *testing.T) {
 	l := newLexer([]byte("hello"))
 
-	posBefore := l.Pos()
-	l.Peek()
-	posAfter := l.Pos()
+	// First Peek advances internal position to lex the token
+	tok1 := l.Peek()
+	posAfterFirstPeek := l.Pos()
 
-	// Note: Peek does advance internal position during lexing,
-	// but Next returns the cached token. The important thing is
-	// that repeated Peek returns the same token.
-	_ = posBefore
-	_ = posAfter
+	// Second Peek should return cached token without advancing position
+	tok2 := l.Peek()
+	posAfterSecondPeek := l.Pos()
+
+	// Position should not change between subsequent Peek calls
+	if posAfterFirstPeek != posAfterSecondPeek {
+		t.Errorf(
+			"Position changed between Peek calls: %d vs %d",
+			posAfterFirstPeek,
+			posAfterSecondPeek,
+		)
+	}
+
+	// Tokens should be identical (compare fields since []byte prevents ==)
+	if tok1.Type != tok2.Type {
+		t.Errorf(
+			"Peek returned different Type: %v vs %v",
+			tok1.Type,
+			tok2.Type,
+		)
+	}
+	if tok1.Start != tok2.Start {
+		t.Errorf(
+			"Peek returned different Start: %d vs %d",
+			tok1.Start,
+			tok2.Start,
+		)
+	}
+	if tok1.End != tok2.End {
+		t.Errorf(
+			"Peek returned different End: %d vs %d",
+			tok1.End,
+			tok2.End,
+		)
+	}
+	if string(tok1.Source) != string(tok2.Source) {
+		t.Errorf(
+			"Peek returned different Source: %q vs %q",
+			tok1.Source,
+			tok2.Source,
+		)
+	}
 }
 
 // =============================================================================

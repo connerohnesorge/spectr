@@ -148,7 +148,9 @@ func Parse(source []byte) (Node, []ParseError) {
 	p, ok := parserPool.Get().(*parser)
 	if !ok {
 		p = &parser{
-			linkDefs: make(map[string]linkDefinition),
+			linkDefs: make(
+				map[string]linkDefinition,
+			),
 		}
 	}
 	defer func() {
@@ -1555,7 +1557,7 @@ func (ip *inlineParser) isFlankingDelimiter(
 	count int,
 ) (canOpen, canClose bool) {
 	// Get character before delimiter run
-	var charBefore = ' ' // Default to space (start of text)
+	charBefore := ' ' // Default to space (start of text)
 	if pos > 0 {
 		prevTok := ip.tokens[pos-1]
 		if len(prevTok.Source) > 0 {
@@ -1566,7 +1568,7 @@ func (ip *inlineParser) isFlankingDelimiter(
 	}
 
 	// Get character after delimiter run
-	var charAfter = ' ' // Default to space (end of text)
+	charAfter := ' ' // Default to space (end of text)
 	afterPos := pos + count
 	if afterPos < len(ip.tokens) {
 		nextTok := ip.tokens[afterPos]
@@ -1610,7 +1612,7 @@ func (ip *inlineParser) applyUnderscoreRestriction(
 	canOpen, canClose bool,
 ) (bool, bool) {
 	// Get character before
-	var charBefore = ' '
+	charBefore := ' '
 	if pos > 0 {
 		prevTok := ip.tokens[pos-1]
 		if len(prevTok.Source) > 0 {
@@ -1621,7 +1623,7 @@ func (ip *inlineParser) applyUnderscoreRestriction(
 	}
 
 	// Get character after (after the delimiter run)
-	var charAfter = ' '
+	charAfter := ' '
 	// Find end of delimiter run
 	endPos := pos
 	for endPos < len(ip.tokens) && ip.tokens[endPos].Type == TokenUnderscore {

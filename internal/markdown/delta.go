@@ -372,8 +372,12 @@ func parseRenamedListItem(
 	// - FROM: OldName TO: NewName
 	// - from: OldName to: NewName
 	// - FROM OldName TO NewName (without colons)
-	normalizedText := strings.TrimSpace(text)            //nolint:revive // modifies-parameter
-	normalizedText = extractListItemText(normalizedText) //nolint:revive // modifies-parameter
+	normalizedText := strings.TrimSpace(
+		text,
+	) //nolint:revive // modifies-parameter
+	normalizedText = extractListItemText(
+		normalizedText,
+	) //nolint:revive // modifies-parameter
 
 	upper := strings.ToUpper(normalizedText)
 
@@ -417,7 +421,9 @@ func parseRenamedListItem(
 		normalizedText[toStart] == ':' {
 		toStart++
 	}
-	toValue := strings.TrimSpace(normalizedText[toStart:])
+	toValue := strings.TrimSpace(
+		normalizedText[toStart:],
+	)
 
 	return fromValue, toValue
 }
@@ -455,7 +461,9 @@ func parseFromAnnotation(text string) string {
 //
 //nolint:revive // line-length-limit
 func extractListItemText(text string) string {
-	result := strings.TrimSpace(text) //nolint:revive // modifies-parameter
+	result := strings.TrimSpace(
+		text,
+	) //nolint:revive // modifies-parameter
 
 	// Skip leading bullet characters (-, *, +)
 	if len(result) > 0 &&

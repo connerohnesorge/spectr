@@ -1144,6 +1144,7 @@ func TestWalkEnterLeave_ErrorInLeaveStopsTraversal(
 // BaseEnterLeaveVisitor Tests
 // ============================================================================
 
+//
 //nolint:revive // cyclomatic: test function necessarily tests many methods
 func TestBaseEnterLeaveVisitor_AllMethodsReturnNil(
 	t *testing.T,

@@ -1,32 +1,49 @@
 package providers
 
+// init registers the Tabnine provider with the global registry.
 func init() {
-	Register(NewTabnineProvider())
+	Register(&TabnineProvider{})
 }
 
 // TabnineProvider implements the Provider interface for Tabnine.
-// Tabnine uses .tabnine/commands/ for slash commands (no config file).
-type TabnineProvider struct {
-	BaseProvider
-}
+// Tabnine uses .tabnine/commands/ for slash commands.
+// It does not use a separate instruction file.
+type TabnineProvider struct{}
 
-// NewTabnineProvider creates a new Tabnine provider.
-func NewTabnineProvider() *TabnineProvider {
+// ID returns the unique identifier for the Tabnine provider.
+func (*TabnineProvider) ID() string { return "tabnine" }
+
+// Name returns the display name for Tabnine.
+func (*TabnineProvider) Name() string { return "Tabnine" }
+
+// Priority returns the display order for Tabnine.
+func (*TabnineProvider) Priority() int { return PriorityTabnine }
+
+// Initializers returns the file initializers for the Tabnine provider.
+func (*TabnineProvider) Initializers() []FileInitializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".tabnine/commands",
 		".md",
 	)
 
-	return &TabnineProvider{
-		BaseProvider: BaseProvider{
-			id:            "tabnine",
-			name:          "Tabnine",
-			priority:      PriorityTabnine,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []FileInitializer{
+		NewMarkdownSlashCommandInitializer(
+			proposalPath,
+			"proposal",
+			FrontmatterProposal,
+		),
+		NewMarkdownSlashCommandInitializer(
+			applyPath,
+			"apply",
+			FrontmatterApply,
+		),
 	}
+}
+
+func (p *TabnineProvider) IsConfigured(projectPath string) bool {
+	return AreInitializersConfigured(p.Initializers(), projectPath)
+}
+
+func (p *TabnineProvider) GetFilePaths() []string {
+	return GetInitializerPaths(p.Initializers())
 }

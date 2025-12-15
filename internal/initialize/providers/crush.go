@@ -1,32 +1,50 @@
 package providers
 
+// init registers the Crush provider with the global registry.
 func init() {
-	Register(NewCrushProvider())
+	Register(&CrushProvider{})
 }
 
 // CrushProvider implements the Provider interface for Crush.
-// Crush uses CRUSH.md for instructions and .crush/commands/ for slash commands.
-type CrushProvider struct {
-	BaseProvider
-}
+// Crush uses CRUSH.md for instructions and .crush/commands/
+// for slash commands.
+type CrushProvider struct{}
 
-// NewCrushProvider creates a new Crush provider.
-func NewCrushProvider() *CrushProvider {
+// ID returns the unique identifier for the Crush provider.
+func (*CrushProvider) ID() string { return "crush" }
+
+// Name returns the display name for Crush.
+func (*CrushProvider) Name() string { return "Crush" }
+
+// Priority returns the display order for Crush.
+func (*CrushProvider) Priority() int { return PriorityCrush }
+
+// Initializers returns the file initializers for the Crush provider.
+func (*CrushProvider) Initializers() []FileInitializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".crush/commands",
 		".md",
 	)
 
-	return &CrushProvider{
-		BaseProvider: BaseProvider{
-			id:            "crush",
-			name:          "Crush",
-			priority:      PriorityCrush,
-			configFile:    "CRUSH.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []FileInitializer{
+		NewInstructionFileInitializer("CRUSH.md"),
+		NewMarkdownSlashCommandInitializer(
+			proposalPath,
+			"proposal",
+			FrontmatterProposal,
+		),
+		NewMarkdownSlashCommandInitializer(
+			applyPath,
+			"apply",
+			FrontmatterApply,
+		),
 	}
+}
+
+func (p *CrushProvider) IsConfigured(projectPath string) bool {
+	return AreInitializersConfigured(p.Initializers(), projectPath)
+}
+
+func (p *CrushProvider) GetFilePaths() []string {
+	return GetInitializerPaths(p.Initializers())
 }

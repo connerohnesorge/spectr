@@ -286,11 +286,12 @@ func (e *InitExecutor) createAgentsMd(
 	return nil
 }
 
-// configureProviders configures the selected providers using the new interface-driven architecture.
-// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+// configureProviders configures the selected providers using the new initializer-based architecture.
+// Each provider declares its file initializers as a composable list, and ConfigureInitializers()
+// iterates through them with fail-fast behavior.
 func (e *InitExecutor) configureProviders(
 	selectedProviderIDs []string,
-	spectrDir string,
+	_ string, // spectrDir parameter kept for signature compatibility
 	result *ExecutionResult,
 ) error {
 	if len(selectedProviderIDs) == 0 {
@@ -316,8 +317,8 @@ func (e *InitExecutor) configureProviders(
 			e.projectPath,
 		)
 
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
+		// Configure the provider using the new initializer-based architecture
+		if err := providers.ConfigureInitializers(provider.Initializers(), e.projectPath, e.tm); err != nil {
 			result.Errors = append(
 				result.Errors,
 				fmt.Sprintf(

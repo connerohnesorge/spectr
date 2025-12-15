@@ -225,3 +225,59 @@ func isGlobalPath(path string) bool {
 	return strings.HasPrefix(path, "~/") ||
 		strings.HasPrefix(path, "/")
 }
+
+// ConfigureInitializers iterates through a slice of FileInitializers and calls
+// Configure on each one. It uses fail-fast behavior: stops on first error
+// without rollback.
+func ConfigureInitializers(
+	inits []FileInitializer,
+	projectPath string,
+	tm TemplateRenderer,
+) error {
+	for _, init := range inits {
+		if err := init.Configure(projectPath, tm); err != nil {
+			return fmt.Errorf(
+				"failed to configure %s: %w",
+				init.ID(),
+				err,
+			)
+		}
+	}
+
+	return nil
+}
+
+// AreInitializersConfigured returns true only if ALL initializers in the slice
+// are configured. Returns true for empty slices.
+func AreInitializersConfigured(
+	inits []FileInitializer,
+	projectPath string,
+) bool {
+	for _, init := range inits {
+		if !init.IsConfigured(projectPath) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// GetInitializerPaths collects file paths from a slice of FileInitializers.
+// Paths are deduplicated (if the same path appears multiple times, it's only
+// included once). Order is preserved (first occurrence is kept).
+func GetInitializerPaths(
+	inits []FileInitializer,
+) []string {
+	seen := make(map[string]struct{})
+	paths := make([]string, 0, len(inits))
+
+	for _, init := range inits {
+		path := init.FilePath()
+		if _, exists := seen[path]; !exists {
+			seen[path] = struct{}{}
+			paths = append(paths, path)
+		}
+	}
+
+	return paths
+}

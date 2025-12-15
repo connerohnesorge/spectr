@@ -37,14 +37,6 @@ description: Implement an approved Spectr change and keep tasks in sync.
 ---`
 )
 
-// StandardFrontmatter returns the standard frontmatter map for most providers.
-func StandardFrontmatter() map[string]string {
-	return map[string]string{
-		"proposal": FrontmatterProposal,
-		"apply":    FrontmatterApply,
-	}
-}
-
 // StandardCommandPaths returns the standard command paths for a given
 // directory and extension.
 // Uses subdirectory structure: {dir}/spectr/{command}{ext}

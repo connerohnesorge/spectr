@@ -36,11 +36,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v24
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-            accept-flake-config = true
+        uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@v13
@@ -58,11 +54,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v24
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-            accept-flake-config = true
+        uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@v13
@@ -80,11 +72,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v24
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-            accept-flake-config = true
+        uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@v13
@@ -120,11 +108,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v24
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-            accept-flake-config = true
+        uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@v13

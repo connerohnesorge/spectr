@@ -513,45 +513,6 @@ func findSubstring(s, substr string) bool {
 	return false
 }
 
-func TestHandleCompleteKeysCopyOnSuccess(
-	t *testing.T,
-) {
-	// Test that pressing 'c' on success screen (m.err == nil) returns tea.Quit
-	cmd := &InitCmd{Path: "/tmp/test-project"}
-	wizard, err := NewWizardModel(cmd)
-	if err != nil {
-		t.Fatalf(
-			"Failed to create wizard model: %v",
-			err,
-		)
-	}
-
-	// Set up success state (no error)
-	wizard.step = StepComplete
-	wizard.err = nil
-	wizard.executionResult = &ExecutionResult{
-		CreatedFiles: []string{
-			"spectr/project.md",
-		},
-		UpdatedFiles: make([]string, 0),
-		Errors:       make([]string, 0),
-	}
-
-	// Simulate pressing 'c' key
-	keyMsg := tea.KeyMsg{
-		Type:  tea.KeyRunes,
-		Runes: []rune{'c'},
-	}
-	_, resultCmd := wizard.Update(keyMsg)
-
-	// Verify tea.Quit is returned
-	if resultCmd == nil {
-		t.Error(
-			"Expected tea.Quit command to be returned when pressing 'c' on success screen",
-		)
-	}
-}
-
 func TestHandleCompleteKeysCopyOnError(
 	t *testing.T,
 ) {

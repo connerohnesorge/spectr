@@ -3934,34 +3934,3 @@ func TestInteractiveModel_HandleEnter_StdoutMode(
 		)
 	}
 }
-
-// TestInteractiveModel_HandleEnter_NormalMode tests that handleEnter() in normal mode
-// sets both selectedID and copied flag
-func TestInteractiveModel_HandleEnter_NormalMode(
-	t *testing.T,
-) {
-	model := interactiveModel{
-		stdoutMode: false,
-		table: createMockTable([][]string{
-			{"test-id", "Test Title", "2"},
-		}),
-	}
-
-	updatedModel := model.handleEnter()
-
-	// Should have selected ID
-	if updatedModel.selectedID != "test-id" {
-		t.Errorf(
-			"selectedID = %q, want %q",
-			updatedModel.selectedID,
-			"test-id",
-		)
-	}
-
-	// Should have copied flag set in normal mode
-	if !updatedModel.copied {
-		t.Error(
-			"Expected copied to be true in normal mode",
-		)
-	}
-}

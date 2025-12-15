@@ -118,8 +118,3 @@ The validation system SHALL validate wikilinks in spec files to ensure all targe
 - **THEN** validation SHALL report a WARNING level issue
 - **AND** the message SHALL indicate the unresolved anchor
 
-## REMOVED Requirements
-
-### Requirement: Consolidated Regex Package
-**Reason**: The regex package is being replaced by the handbuilt parser in `internal/markdown/`. All markdown parsing now uses a token-based lexer/parser instead of regex patterns.
-**Migration**: All call sites have been updated to use `internal/markdown/` API functions. The `internal/regex/` package has been deleted.

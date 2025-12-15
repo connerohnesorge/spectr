@@ -16,5 +16,4 @@ type CLI struct {
 	View       ViewCmd                   `cmd:"" help:"Display dashboard"`                 //nolint:lll,revive
 	Version    VersionCmd                `cmd:"" help:"Show version info"`                 //nolint:lll,revive
 	Completion kongcompletion.Completion `cmd:"" help:"Generate completions"`              //nolint:lll,revive
-
 }

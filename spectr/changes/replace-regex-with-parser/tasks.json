@@ -1,0 +1,1547 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Create `internal/markdown/doc.go` with package documentation",
+      "status": "done"
+    },
+    {
+      "id": "1.2",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Create `internal/markdown/token.go` with fine-grained TokenType enum",
+      "status": "done"
+    },
+    {
+      "id": "1.3",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Implement structural tokens: TokenEOF, TokenNewline, TokenWhitespace, TokenText, TokenError",
+      "status": "done"
+    },
+    {
+      "id": "1.4",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Implement punctuation delimiter tokens: TokenHash, TokenAsterisk, TokenUnderscore, TokenTilde, TokenBacktick, TokenDash, TokenPlus, TokenDot, TokenColon, TokenPipe",
+      "status": "done"
+    },
+    {
+      "id": "1.5",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Implement bracket tokens: TokenBracketOpen, TokenBracketClose, TokenParenOpen, TokenParenClose, TokenGreaterThan",
+      "status": "done"
+    },
+    {
+      "id": "1.6",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Implement special tokens: TokenNumber, TokenX (for checkboxes)",
+      "status": "done"
+    },
+    {
+      "id": "1.7",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Implement Token struct with Type, Start, End, Source ([]byte), Message fields",
+      "status": "done"
+    },
+    {
+      "id": "1.8",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Implement TokenType.String() method for debugging",
+      "status": "done"
+    },
+    {
+      "id": "1.9",
+      "section": "Token Implementation (specs/tokens/spec.md)",
+      "description": "Create `internal/markdown/token_test.go` with token type tests",
+      "status": "pending"
+    },
+    {
+      "id": "2.1",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Create `internal/markdown/lexer.go` with Lexer struct holding source []byte reference",
+      "status": "done"
+    },
+    {
+      "id": "2.2",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement byte offset tracking (pos field incremented by byte count)",
+      "status": "done"
+    },
+    {
+      "id": "2.3",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement Next() method returning next Token and advancing position",
+      "status": "done"
+    },
+    {
+      "id": "2.4",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement Peek() method returning next Token WITHOUT advancing (with caching)",
+      "status": "done"
+    },
+    {
+      "id": "2.5",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement TokenEOF handling at end of source",
+      "status": "done"
+    },
+    {
+      "id": "2.6",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement CRLF normalization: \\r\\n → single TokenNewline with End = Start + 2",
+      "status": "done"
+    },
+    {
+      "id": "2.7",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement standalone \\r handling as TokenNewline",
+      "status": "done"
+    },
+    {
+      "id": "2.8",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement TokenError emission for unrecognized input with Message field",
+      "status": "done"
+    },
+    {
+      "id": "2.9",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement error recovery: resync at newline, whitespace, or known delimiter",
+      "status": "done"
+    },
+    {
+      "id": "2.10",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement invalid UTF-8 handling: emit TokenError, continue from next byte",
+      "status": "done"
+    },
+    {
+      "id": "2.11",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement state machine for code fence context (StateFencedCode)",
+      "status": "done"
+    },
+    {
+      "id": "2.12",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement state machine for inline code context (backtick sequence tracking)",
+      "status": "done"
+    },
+    {
+      "id": "2.13",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement state machine for link URL context (StateLinkURL)",
+      "status": "done"
+    },
+    {
+      "id": "2.14",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement multi-byte UTF-8 character handling (complete sequences in TokenText)",
+      "status": "done"
+    },
+    {
+      "id": "2.15",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement Unicode whitespace handling (only ASCII space/tab as TokenWhitespace)",
+      "status": "done"
+    },
+    {
+      "id": "2.16",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement All() method returning []Token including TokenEOF",
+      "status": "done"
+    },
+    {
+      "id": "2.17",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Implement AllWithErrors() returning ([]Token, []LexError)",
+      "status": "done"
+    },
+    {
+      "id": "2.18",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Create `internal/markdown/lexer_test.go` with comprehensive tests",
+      "status": "pending"
+    },
+    {
+      "id": "2.19",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Add CRLF normalization tests",
+      "status": "pending"
+    },
+    {
+      "id": "2.20",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Add error token recovery tests",
+      "status": "pending"
+    },
+    {
+      "id": "2.21",
+      "section": "Lexer Implementation (specs/lexer/spec.md)",
+      "description": "Add state machine transition tests",
+      "status": "pending"
+    },
+    {
+      "id": "3.1",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Create `internal/markdown/node.go` with Node interface definition",
+      "status": "done"
+    },
+    {
+      "id": "3.2",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Define Node interface: NodeType(), Span(), Hash(), Source(), Children()",
+      "status": "done"
+    },
+    {
+      "id": "3.3",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Create `internal/markdown/node_types.go` with typed node structs",
+      "status": "done"
+    },
+    {
+      "id": "3.4",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeDocument struct with private fields and getters",
+      "status": "done"
+    },
+    {
+      "id": "3.5",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeSection struct with level, title fields and Level(), Title(), DeltaType() getters",
+      "status": "done"
+    },
+    {
+      "id": "3.6",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeRequirement struct with name field and Name() getter",
+      "status": "done"
+    },
+    {
+      "id": "3.7",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeScenario struct with name field and Name() getter",
+      "status": "done"
+    },
+    {
+      "id": "3.8",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeParagraph struct",
+      "status": "done"
+    },
+    {
+      "id": "3.9",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeList struct with ordered field and Ordered() getter",
+      "status": "done"
+    },
+    {
+      "id": "3.10",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeListItem struct with checked, keyword fields and Checked(), Keyword() getters",
+      "status": "done"
+    },
+    {
+      "id": "3.11",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeCodeBlock struct with language, content fields and Language(), Content() getters",
+      "status": "done"
+    },
+    {
+      "id": "3.12",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeBlockquote struct",
+      "status": "done"
+    },
+    {
+      "id": "3.13",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeText struct",
+      "status": "done"
+    },
+    {
+      "id": "3.14",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeStrong struct",
+      "status": "done"
+    },
+    {
+      "id": "3.15",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeEmphasis struct",
+      "status": "done"
+    },
+    {
+      "id": "3.16",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeStrikethrough struct",
+      "status": "done"
+    },
+    {
+      "id": "3.17",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeCode struct",
+      "status": "done"
+    },
+    {
+      "id": "3.18",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeLink struct with url, title fields and URL(), Title() getters",
+      "status": "done"
+    },
+    {
+      "id": "3.19",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeWikilink struct with target, display, anchor fields and getters",
+      "status": "done"
+    },
+    {
+      "id": "3.20",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement content hash computation (uint64 using fnv or xxhash)",
+      "status": "done"
+    },
+    {
+      "id": "3.21",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement hash from: NodeType + children hashes + text content hash",
+      "status": "done"
+    },
+    {
+      "id": "3.22",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement Source []byte field as zero-copy slice into original input",
+      "status": "done"
+    },
+    {
+      "id": "3.23",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement Start/End byte offset fields",
+      "status": "done"
+    },
+    {
+      "id": "3.24",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement Children []Node as immutable copy",
+      "status": "done"
+    },
+    {
+      "id": "3.25",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement NodeBuilder for programmatic node construction",
+      "status": "done"
+    },
+    {
+      "id": "3.26",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement node.ToBuilder() for transformation pipelines",
+      "status": "done"
+    },
+    {
+      "id": "3.27",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement builder validation: Start <= End, proper nesting",
+      "status": "done"
+    },
+    {
+      "id": "3.28",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement node.Span() returning (start, end int) byte offsets",
+      "status": "done"
+    },
+    {
+      "id": "3.29",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Implement node.Equal(other) for deep structural comparison",
+      "status": "done"
+    },
+    {
+      "id": "3.30",
+      "section": "AST Node Implementation (specs/ast/spec.md)",
+      "description": "Create `internal/markdown/node_test.go` with immutability and hashing tests",
+      "status": "pending"
+    },
+    {
+      "id": "4.1",
+      "section": "Line Index Implementation",
+      "description": "Create `internal/markdown/lineindex.go` with LineIndex struct",
+      "status": "done"
+    },
+    {
+      "id": "4.2",
+      "section": "Line Index Implementation",
+      "description": "Implement lazy line-start-offsets index construction",
+      "status": "done"
+    },
+    {
+      "id": "4.3",
+      "section": "Line Index Implementation",
+      "description": "Implement binary search for O(log n) LineCol lookup",
+      "status": "done"
+    },
+    {
+      "id": "4.4",
+      "section": "Line Index Implementation",
+      "description": "Implement LineCol(offset) returning (line, col int) with 1-based line numbers",
+      "status": "done"
+    },
+    {
+      "id": "4.5",
+      "section": "Line Index Implementation",
+      "description": "Implement PositionAt(offset) returning Position struct",
+      "status": "done"
+    },
+    {
+      "id": "4.6",
+      "section": "Line Index Implementation",
+      "description": "Create `internal/markdown/lineindex_test.go` with position tests",
+      "status": "pending"
+    },
+    {
+      "id": "5.1",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Create `internal/markdown/parser.go` with stateless Parse function",
+      "status": "done"
+    },
+    {
+      "id": "5.2",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement Parse(source []byte) returning (Node, []ParseError)",
+      "status": "done"
+    },
+    {
+      "id": "5.3",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Ensure Parse is safe for concurrent calls (no shared state)",
+      "status": "done"
+    },
+    {
+      "id": "5.4",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement internal object pooling via sync.Pool",
+      "status": "done"
+    },
+    {
+      "id": "5.5",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement ParseError struct with Offset, Message, Expected []TokenType",
+      "status": "done"
+    },
+    {
+      "id": "5.6",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement error collection mode: add ParseError, attempt recovery, continue",
+      "status": "done"
+    },
+    {
+      "id": "5.7",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement error recovery: skip to sync points (blank line, header, list marker)",
+      "status": "done"
+    },
+    {
+      "id": "5.8",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement maximum errors limit (default: 100) with abort",
+      "status": "done"
+    },
+    {
+      "id": "5.9",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement block-level parsing: code fence, header, blockquote, list item, paragraph",
+      "status": "done"
+    },
+    {
+      "id": "5.10",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement header parsing: 1-6 TokenHash + TokenWhitespace → NodeSection",
+      "status": "done"
+    },
+    {
+      "id": "5.11",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement Spectr Requirement: and Scenario: header detection",
+      "status": "done"
+    },
+    {
+      "id": "5.12",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement list parsing with nesting via indentation",
+      "status": "done"
+    },
+    {
+      "id": "5.13",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement checkbox syntax parsing for task items",
+      "status": "done"
+    },
+    {
+      "id": "5.14",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement code fence parsing: 3+ backticks/tildes, verbatim content",
+      "status": "done"
+    },
+    {
+      "id": "5.15",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement paragraph parsing: consecutive non-blank lines",
+      "status": "done"
+    },
+    {
+      "id": "5.16",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement inline parsing with delimiter stack for emphasis",
+      "status": "done"
+    },
+    {
+      "id": "5.17",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement CommonMark strict left/right flanking rules",
+      "status": "done"
+    },
+    {
+      "id": "5.18",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement underscore intraword restriction (foo_bar_baz not emphasis)",
+      "status": "done"
+    },
+    {
+      "id": "5.19",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement overlapping delimiter resolution per CommonMark spec",
+      "status": "done"
+    },
+    {
+      "id": "5.20",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement inline code parsing with backtick sequence matching",
+      "status": "done"
+    },
+    {
+      "id": "5.21",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement link parsing: [text](url) and [text][ref]",
+      "status": "done"
+    },
+    {
+      "id": "5.22",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement wikilink parsing: [[target|display#anchor]]",
+      "status": "done"
+    },
+    {
+      "id": "5.23",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement link definition collection (first pass): [label]: url \"title\"",
+      "status": "done"
+    },
+    {
+      "id": "5.24",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement reference link resolution (second pass) with case-insensitive labels",
+      "status": "done"
+    },
+    {
+      "id": "5.25",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement shortcut reference links: [text][] and [text]",
+      "status": "done"
+    },
+    {
+      "id": "5.26",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement delta section detection: ADDED|MODIFIED|REMOVED|RENAMED Requirements",
+      "status": "done"
+    },
+    {
+      "id": "5.27",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Implement WHEN/THEN/AND keyword extraction in list items",
+      "status": "done"
+    },
+    {
+      "id": "5.28",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Create `internal/markdown/parser_test.go` with comprehensive tests",
+      "status": "pending"
+    },
+    {
+      "id": "5.29",
+      "section": "Parser Implementation (specs/parser/spec.md)",
+      "description": "Add CommonMark emphasis edge case tests",
+      "status": "pending"
+    },
+    {
+      "id": "6.1",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Create `internal/markdown/incremental.go` with ParseIncremental function",
+      "status": "done"
+    },
+    {
+      "id": "6.2",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement ParseIncremental(oldTree, oldSource, newSource) returning (Node, []ParseError)",
+      "status": "done"
+    },
+    {
+      "id": "6.3",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement diff computation between oldSource and newSource",
+      "status": "done"
+    },
+    {
+      "id": "6.4",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement single edit optimization: O(n) prefix/suffix matching",
+      "status": "done"
+    },
+    {
+      "id": "6.5",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement multi-edit fallback: Myers diff for complex cases",
+      "status": "done"
+    },
+    {
+      "id": "6.6",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement EditRegion struct: StartOffset, OldEndOffset, NewEndOffset",
+      "status": "done"
+    },
+    {
+      "id": "6.7",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement affected region identification",
+      "status": "done"
+    },
+    {
+      "id": "6.8",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement subtree reuse via content hash matching",
+      "status": "done"
+    },
+    {
+      "id": "6.9",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement offset adjustment for nodes after edit point",
+      "status": "done"
+    },
+    {
+      "id": "6.10",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Implement link definition and line index reuse",
+      "status": "done"
+    },
+    {
+      "id": "6.11",
+      "section": "Incremental Parsing (specs/parser/spec.md)",
+      "description": "Create `internal/markdown/incremental_test.go` with incremental parsing tests",
+      "status": "pending"
+    },
+    {
+      "id": "7.1",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Create `internal/markdown/visitor.go` with Visitor interface",
+      "status": "done"
+    },
+    {
+      "id": "7.2",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement Visit methods for all node types via interface",
+      "status": "done"
+    },
+    {
+      "id": "7.3",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement Walk(node, visitor) for pre-order depth-first traversal",
+      "status": "done"
+    },
+    {
+      "id": "7.4",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement SkipChildren sentinel error for skipping subtrees",
+      "status": "done"
+    },
+    {
+      "id": "7.5",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement Walk with nil node returning nil (safe handling)",
+      "status": "done"
+    },
+    {
+      "id": "7.6",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement BaseVisitor with no-op defaults for embedding",
+      "status": "done"
+    },
+    {
+      "id": "7.7",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement VisitorContext for passing parent information during traversal",
+      "status": "done"
+    },
+    {
+      "id": "7.8",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement ctx.Parent() to access parent during visitation",
+      "status": "done"
+    },
+    {
+      "id": "7.9",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement EnterLeaveVisitor interface with EnterX/LeaveX methods",
+      "status": "done"
+    },
+    {
+      "id": "7.10",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement WalkEnterLeave(node, visitor) with pre/post visitation",
+      "status": "done"
+    },
+    {
+      "id": "7.11",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Implement BaseEnterLeaveVisitor with no-op defaults",
+      "status": "done"
+    },
+    {
+      "id": "7.12",
+      "section": "Visitor Implementation (specs/visitor/spec.md)",
+      "description": "Create `internal/markdown/visitor_test.go` with traversal tests",
+      "status": "pending"
+    },
+    {
+      "id": "8.1",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Create `internal/markdown/transform.go` with TransformAction type",
+      "status": "done"
+    },
+    {
+      "id": "8.2",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement TransformAction enum: ActionKeep, ActionReplace, ActionDelete",
+      "status": "done"
+    },
+    {
+      "id": "8.3",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement TransformVisitor interface with TransformX methods",
+      "status": "done"
+    },
+    {
+      "id": "8.4",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement Transform(root, visitor) returning (Node, error)",
+      "status": "done"
+    },
+    {
+      "id": "8.5",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement post-order traversal for transforms (children before parent)",
+      "status": "done"
+    },
+    {
+      "id": "8.6",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement ActionDelete: remove node from parent's children",
+      "status": "done"
+    },
+    {
+      "id": "8.7",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement ActionReplace: substitute returned node",
+      "status": "done"
+    },
+    {
+      "id": "8.8",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement BaseTransformVisitor with defaults returning (original, ActionKeep, nil)",
+      "status": "done"
+    },
+    {
+      "id": "8.9",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement Compose(t1, t2) for sequential transform composition",
+      "status": "done"
+    },
+    {
+      "id": "8.10",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement Pipeline(transforms...) for transform chains",
+      "status": "done"
+    },
+    {
+      "id": "8.11",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement When(pred, transform) for conditional transforms",
+      "status": "done"
+    },
+    {
+      "id": "8.12",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement Map(f func(Node) Node) utility transform",
+      "status": "done"
+    },
+    {
+      "id": "8.13",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement Filter(pred) utility transform",
+      "status": "done"
+    },
+    {
+      "id": "8.14",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement RenameRequirement(oldName, newName) helper",
+      "status": "done"
+    },
+    {
+      "id": "8.15",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement AddScenario(reqName, scenario) helper",
+      "status": "done"
+    },
+    {
+      "id": "8.16",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Implement RemoveRequirement(name) helper",
+      "status": "done"
+    },
+    {
+      "id": "8.17",
+      "section": "Transform Implementation (specs/transform/spec.md)",
+      "description": "Create `internal/markdown/transform_test.go` with transform tests",
+      "status": "pending"
+    },
+    {
+      "id": "9.1",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Create `internal/markdown/query.go` with Find function",
+      "status": "done"
+    },
+    {
+      "id": "9.2",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement Find(root, pred func(Node) bool) returning []Node",
+      "status": "done"
+    },
+    {
+      "id": "9.3",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement FindFirst(root, pred) returning Node (nil if none)",
+      "status": "done"
+    },
+    {
+      "id": "9.4",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement FindByType[T Node](root) returning []*T",
+      "status": "done"
+    },
+    {
+      "id": "9.5",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement FindFirstByType[T Node](root) returning *T",
+      "status": "done"
+    },
+    {
+      "id": "9.6",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement And(p1, p2) predicate combinator",
+      "status": "done"
+    },
+    {
+      "id": "9.7",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement Or(p1, p2) predicate combinator",
+      "status": "done"
+    },
+    {
+      "id": "9.8",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement Not(p) predicate combinator",
+      "status": "done"
+    },
+    {
+      "id": "9.9",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement All(preds...) predicate combinator",
+      "status": "done"
+    },
+    {
+      "id": "9.10",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement Any(preds...) predicate combinator",
+      "status": "done"
+    },
+    {
+      "id": "9.11",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement IsType[T]() predicate factory",
+      "status": "done"
+    },
+    {
+      "id": "9.12",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement HasName(name) predicate factory",
+      "status": "done"
+    },
+    {
+      "id": "9.13",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement InRange(start, end) predicate factory",
+      "status": "done"
+    },
+    {
+      "id": "9.14",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement HasChild(pred) predicate factory",
+      "status": "done"
+    },
+    {
+      "id": "9.15",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement HasDescendant(pred) predicate factory",
+      "status": "done"
+    },
+    {
+      "id": "9.16",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement Count(root, pred) returning int without slice allocation",
+      "status": "done"
+    },
+    {
+      "id": "9.17",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Implement Exists(root, pred) returning bool with short-circuit",
+      "status": "done"
+    },
+    {
+      "id": "9.18",
+      "section": "Query Implementation (specs/query/spec.md)",
+      "description": "Create `internal/markdown/query_test.go` with query tests",
+      "status": "pending"
+    },
+    {
+      "id": "10.1",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Create `internal/markdown/index.go` with PositionIndex struct",
+      "status": "done"
+    },
+    {
+      "id": "10.2",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement NewPositionIndex(root) constructor",
+      "status": "done"
+    },
+    {
+      "id": "10.3",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement lazy index building on first query",
+      "status": "done"
+    },
+    {
+      "id": "10.4",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement interval tree data structure (augmented BST)",
+      "status": "done"
+    },
+    {
+      "id": "10.5",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement index.NodeAt(offset) returning innermost node",
+      "status": "done"
+    },
+    {
+      "id": "10.6",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement index.NodesAt(offset) returning all nodes containing offset",
+      "status": "done"
+    },
+    {
+      "id": "10.7",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement index.NodesInRange(start, end) returning overlapping nodes",
+      "status": "done"
+    },
+    {
+      "id": "10.8",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement O(log n) query algorithm with subtree pruning",
+      "status": "done"
+    },
+    {
+      "id": "10.9",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement index.Rebuild(root) for explicit rebuilding",
+      "status": "done"
+    },
+    {
+      "id": "10.10",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement stale index detection via AST root hash",
+      "status": "done"
+    },
+    {
+      "id": "10.11",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Integrate LineIndex for line/column calculations",
+      "status": "done"
+    },
+    {
+      "id": "10.12",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement index.PositionAt(offset) returning Position",
+      "status": "done"
+    },
+    {
+      "id": "10.13",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement index.EnclosingSection(offset) utility",
+      "status": "done"
+    },
+    {
+      "id": "10.14",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Implement index.EnclosingRequirement(offset) utility",
+      "status": "done"
+    },
+    {
+      "id": "10.15",
+      "section": "Position Index Implementation (specs/index/spec.md)",
+      "description": "Create `internal/markdown/index_test.go` with index tests",
+      "status": "pending"
+    },
+    {
+      "id": "11.1",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Create `internal/markdown/printer.go` with Print function",
+      "status": "done"
+    },
+    {
+      "id": "11.2",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement Print(node Node) returning []byte",
+      "status": "done"
+    },
+    {
+      "id": "11.3",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement PrintTo(w io.Writer, node Node) returning error",
+      "status": "done"
+    },
+    {
+      "id": "11.4",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement minimal whitespace formatting (single space/newline)",
+      "status": "done"
+    },
+    {
+      "id": "11.5",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement header printing with ATX style (# prefix)",
+      "status": "done"
+    },
+    {
+      "id": "11.6",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement Requirement: and Scenario: header formatting",
+      "status": "done"
+    },
+    {
+      "id": "11.7",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement unordered list printing with dash bullets",
+      "status": "done"
+    },
+    {
+      "id": "11.8",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement ordered list printing with 1-based numbering",
+      "status": "done"
+    },
+    {
+      "id": "11.9",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement checkbox list item printing",
+      "status": "done"
+    },
+    {
+      "id": "11.10",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement nested list indentation (2 spaces)",
+      "status": "done"
+    },
+    {
+      "id": "11.11",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement fenced code block printing with triple backticks",
+      "status": "done"
+    },
+    {
+      "id": "11.12",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement strong emphasis printing with **",
+      "status": "done"
+    },
+    {
+      "id": "11.13",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement emphasis printing with *",
+      "status": "done"
+    },
+    {
+      "id": "11.14",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement strikethrough printing with ~~",
+      "status": "done"
+    },
+    {
+      "id": "11.15",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement inline code printing with backticks",
+      "status": "done"
+    },
+    {
+      "id": "11.16",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement inline link printing: [text](url)",
+      "status": "done"
+    },
+    {
+      "id": "11.17",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement wikilink printing: [[target|display]]",
+      "status": "done"
+    },
+    {
+      "id": "11.18",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement blockquote printing with > prefix",
+      "status": "done"
+    },
+    {
+      "id": "11.19",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement delta section header printing",
+      "status": "done"
+    },
+    {
+      "id": "11.20",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Implement WHEN/THEN/AND keyword printing in bold",
+      "status": "done"
+    },
+    {
+      "id": "11.21",
+      "section": "Printer Implementation (specs/printer/spec.md)",
+      "description": "Create `internal/markdown/printer_test.go` with printer tests",
+      "status": "pending"
+    },
+    {
+      "id": "12.1",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Create `internal/markdown/pool.go` with pool types",
+      "status": "done"
+    },
+    {
+      "id": "12.2",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement token pool using sync.Pool",
+      "status": "done"
+    },
+    {
+      "id": "12.3",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement pool.GetToken() and pool.PutToken()",
+      "status": "done"
+    },
+    {
+      "id": "12.4",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement typed node pools for each node type",
+      "status": "done"
+    },
+    {
+      "id": "12.5",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement pool.GetSection(), pool.GetRequirement(), etc.",
+      "status": "done"
+    },
+    {
+      "id": "12.6",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement pool.PutNode(n Node) with type routing",
+      "status": "done"
+    },
+    {
+      "id": "12.7",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement children slice pool with size buckets",
+      "status": "done"
+    },
+    {
+      "id": "12.8",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement pool.GetChildren(capacity) and pool.PutChildren()",
+      "status": "done"
+    },
+    {
+      "id": "12.9",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement field clearing before return to pool",
+      "status": "done"
+    },
+    {
+      "id": "12.10",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Implement optional pool statistics tracking",
+      "status": "done"
+    },
+    {
+      "id": "12.11",
+      "section": "Pool Implementation (specs/pool/spec.md)",
+      "description": "Create `internal/markdown/pool_test.go` with pool tests",
+      "status": "pending"
+    },
+    {
+      "id": "13.1",
+      "section": "High-Level API Implementation",
+      "description": "Create `internal/markdown/api.go` with public API functions",
+      "status": "done"
+    },
+    {
+      "id": "13.2",
+      "section": "High-Level API Implementation",
+      "description": "Implement ParseSpec(content) (*Spec, []ParseError)",
+      "status": "done"
+    },
+    {
+      "id": "13.3",
+      "section": "High-Level API Implementation",
+      "description": "Implement ExtractSections(content) map[string]Section",
+      "status": "done"
+    },
+    {
+      "id": "13.4",
+      "section": "High-Level API Implementation",
+      "description": "Implement ExtractRequirements(content) []Requirement",
+      "status": "done"
+    },
+    {
+      "id": "13.5",
+      "section": "High-Level API Implementation",
+      "description": "Implement FindSection(content, name) (*Section, bool)",
+      "status": "done"
+    },
+    {
+      "id": "13.6",
+      "section": "High-Level API Implementation",
+      "description": "Implement ExtractWikilinks(content) []Wikilink using visitor",
+      "status": "done"
+    },
+    {
+      "id": "13.7",
+      "section": "High-Level API Implementation",
+      "description": "Create `internal/markdown/api_test.go` with integration tests",
+      "status": "done"
+    },
+    {
+      "id": "14.1",
+      "section": "Wikilink Resolution",
+      "description": "Create `internal/markdown/wikilink.go` for wikilink types and resolution",
+      "status": "done"
+    },
+    {
+      "id": "14.2",
+      "section": "Wikilink Resolution",
+      "description": "Implement ResolveWikilink(target, projectRoot) (path string, exists bool)",
+      "status": "done"
+    },
+    {
+      "id": "14.3",
+      "section": "Wikilink Resolution",
+      "description": "Implement resolution for spec targets (spectr/specs/{target}/spec.md)",
+      "status": "done"
+    },
+    {
+      "id": "14.4",
+      "section": "Wikilink Resolution",
+      "description": "Implement resolution for change targets (spectr/changes/{target}/proposal.md)",
+      "status": "done"
+    },
+    {
+      "id": "14.5",
+      "section": "Wikilink Resolution",
+      "description": "Implement anchor resolution within target files",
+      "status": "done"
+    },
+    {
+      "id": "14.6",
+      "section": "Wikilink Resolution",
+      "description": "Create `internal/markdown/wikilink_test.go` with resolution tests",
+      "status": "done"
+    },
+    {
+      "id": "15.1",
+      "section": "Delta Parsing Implementation",
+      "description": "Create `internal/markdown/delta.go` for delta-specific parsing",
+      "status": "done"
+    },
+    {
+      "id": "15.2",
+      "section": "Delta Parsing Implementation",
+      "description": "Implement ParseDelta(content) (*Delta, []ParseError)",
+      "status": "done"
+    },
+    {
+      "id": "15.3",
+      "section": "Delta Parsing Implementation",
+      "description": "Implement FindDeltaSection(content, deltaType) string",
+      "status": "done"
+    },
+    {
+      "id": "15.4",
+      "section": "Delta Parsing Implementation",
+      "description": "Implement RENAMED FROM/TO pair parsing",
+      "status": "done"
+    },
+    {
+      "id": "15.5",
+      "section": "Delta Parsing Implementation",
+      "description": "Create `internal/markdown/delta_test.go` with delta tests",
+      "status": "done"
+    },
+    {
+      "id": "16.1",
+      "section": "Compatibility Helpers",
+      "description": "Create `internal/markdown/compat.go` for old API compatibility",
+      "status": "done"
+    },
+    {
+      "id": "16.2",
+      "section": "Compatibility Helpers",
+      "description": "Implement MatchRequirementHeader(line) (string, bool)",
+      "status": "done"
+    },
+    {
+      "id": "16.3",
+      "section": "Compatibility Helpers",
+      "description": "Implement MatchScenarioHeader(line) (string, bool)",
+      "status": "done"
+    },
+    {
+      "id": "16.4",
+      "section": "Compatibility Helpers",
+      "description": "Implement IsH2Header(line) bool",
+      "status": "done"
+    },
+    {
+      "id": "16.5",
+      "section": "Compatibility Helpers",
+      "description": "Implement IsH3Header(line) bool",
+      "status": "done"
+    },
+    {
+      "id": "16.6",
+      "section": "Compatibility Helpers",
+      "description": "Implement MatchTaskCheckbox(line) (rune, bool)",
+      "status": "done"
+    },
+    {
+      "id": "16.7",
+      "section": "Compatibility Helpers",
+      "description": "Implement MatchNumberedTask(line) (*NumberedTaskMatch, bool)",
+      "status": "done"
+    },
+    {
+      "id": "16.8",
+      "section": "Compatibility Helpers",
+      "description": "Implement MatchNumberedSection(line) (string, bool)",
+      "status": "done"
+    },
+    {
+      "id": "16.9",
+      "section": "Compatibility Helpers",
+      "description": "Create `internal/markdown/compat_test.go` with compatibility tests",
+      "status": "done"
+    },
+    {
+      "id": "17.1",
+      "section": "Migration - Parsers Package",
+      "description": "Update `internal/parsers/requirement_parser.go` to use markdown package",
+      "status": "done"
+    },
+    {
+      "id": "17.2",
+      "section": "Migration - Parsers Package",
+      "description": "Update `internal/parsers/delta_parser.go` to use markdown package",
+      "status": "done"
+    },
+    {
+      "id": "17.3",
+      "section": "Migration - Parsers Package",
+      "description": "Run existing parsers tests to verify compatibility",
+      "status": "done"
+    },
+    {
+      "id": "17.4",
+      "section": "Migration - Parsers Package",
+      "description": "Remove regex import from parsers package",
+      "status": "done"
+    },
+    {
+      "id": "18.1",
+      "section": "Migration - Validation Package",
+      "description": "Update `internal/validation/parser.go` to use markdown package",
+      "status": "done"
+    },
+    {
+      "id": "18.2",
+      "section": "Migration - Validation Package",
+      "description": "Remove inline regex patterns from ContainsShallOrMust",
+      "status": "done"
+    },
+    {
+      "id": "18.3",
+      "section": "Migration - Validation Package",
+      "description": "Remove inline regex from NormalizeRequirementName",
+      "status": "done"
+    },
+    {
+      "id": "18.4",
+      "section": "Migration - Validation Package",
+      "description": "Update `internal/validation/change_rules.go` if needed",
+      "status": "done"
+    },
+    {
+      "id": "18.5",
+      "section": "Migration - Validation Package",
+      "description": "Add wikilink validation (check targets exist)",
+      "status": "done"
+    },
+    {
+      "id": "18.6",
+      "section": "Migration - Validation Package",
+      "description": "Run existing validation tests to verify compatibility",
+      "status": "done"
+    },
+    {
+      "id": "19.1",
+      "section": "Migration - Archive Package",
+      "description": "Update `internal/archive/spec_merger.go` to use markdown package",
+      "status": "done"
+    },
+    {
+      "id": "19.2",
+      "section": "Migration - Archive Package",
+      "description": "Replace multiNewline regex with string-based normalization",
+      "status": "done"
+    },
+    {
+      "id": "19.3",
+      "section": "Migration - Archive Package",
+      "description": "Run existing archive tests to verify compatibility",
+      "status": "done"
+    },
+    {
+      "id": "20.1",
+      "section": "Migration - Cmd Package",
+      "description": "Update `cmd/accept.go` to use markdown package",
+      "status": "done"
+    },
+    {
+      "id": "20.2",
+      "section": "Migration - Cmd Package",
+      "description": "Run accept command tests to verify compatibility",
+      "status": "done"
+    },
+    {
+      "id": "21.1",
+      "section": "Performance and Benchmarking",
+      "description": "Create `internal/markdown/benchmark_test.go` with benchmark tests",
+      "status": "done"
+    },
+    {
+      "id": "21.2",
+      "section": "Performance and Benchmarking",
+      "description": "Benchmark lexer tokenization throughput",
+      "status": "done"
+    },
+    {
+      "id": "21.3",
+      "section": "Performance and Benchmarking",
+      "description": "Benchmark parser AST construction",
+      "status": "done"
+    },
+    {
+      "id": "21.4",
+      "section": "Performance and Benchmarking",
+      "description": "Benchmark incremental parsing with small edits",
+      "status": "done"
+    },
+    {
+      "id": "21.5",
+      "section": "Performance and Benchmarking",
+      "description": "Benchmark position index queries",
+      "status": "done"
+    },
+    {
+      "id": "21.6",
+      "section": "Performance and Benchmarking",
+      "description": "Benchmark object pool hit rates",
+      "status": "done"
+    },
+    {
+      "id": "21.7",
+      "section": "Performance and Benchmarking",
+      "description": "Compare performance with old regex implementation",
+      "status": "done"
+    },
+    {
+      "id": "21.8",
+      "section": "Performance and Benchmarking",
+      "description": "Optimize hot paths identified by benchmarks",
+      "status": "done"
+    },
+    {
+      "id": "22.1",
+      "section": "Cleanup and Documentation",
+      "description": "Delete `internal/regex/` package entirely",
+      "status": "done"
+    },
+    {
+      "id": "22.2",
+      "section": "Cleanup and Documentation",
+      "description": "Update `spectr/specs/validation/spec.md` to remove regex requirements",
+      "status": "done"
+    },
+    {
+      "id": "22.3",
+      "section": "Cleanup and Documentation",
+      "description": "Run `go mod tidy` to clean dependencies",
+      "status": "done"
+    },
+    {
+      "id": "22.4",
+      "section": "Cleanup and Documentation",
+      "description": "Run full test suite (`go test ./...`)",
+      "status": "done"
+    },
+    {
+      "id": "22.5",
+      "section": "Cleanup and Documentation",
+      "description": "Run linter (`golangci-lint run`)",
+      "status": "done"
+    },
+    {
+      "id": "22.6",
+      "section": "Cleanup and Documentation",
+      "description": "Update any documentation referencing regex package",
+      "status": "done"
+    },
+    {
+      "id": "22.7",
+      "section": "Cleanup and Documentation",
+      "description": "Add package documentation with usage examples",
+      "status": "done"
+    }
+  ]
+}

@@ -34,13 +34,12 @@ The validation system SHALL validate spec files for structural correctness and a
 - **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or bold text)
 - **THEN** validation SHALL report an ERROR
 - **AND** the message SHALL show the correct "#### Scenario:" header format
-- **AND** detection SHALL use `regex.H4Scenario` pattern from the consolidated regex package
 
-#### Scenario: Parsing uses consolidated regex package
+#### Scenario: Parsing uses markdown package
 - **WHEN** the validation system parses spec or delta files
-- **THEN** it SHALL use patterns from `internal/regex/` package
+- **THEN** it SHALL use the `internal/markdown/` package for AST-based parsing
 - **AND** it SHALL NOT define local regex patterns for structural markdown elements
-- **AND** behavior SHALL be identical to previous inline pattern implementation
+- **AND** it SHALL use the visitor pattern and query functions from the markdown package
 
 ### Requirement: Change Delta Validation
 The validation system SHALL validate change delta specs for structural correctness and delta operation validity.
@@ -84,17 +83,17 @@ The validation system SHALL validate change delta specs for structural correctne
 
 #### Scenario: RENAMED requirement validation
 - **WHEN** a RENAMED section contains well-formed "FROM: X TO: Y" pairs
-- **THEN** validation SHALL accept the renames using `regex.RenamedFromAlt` and `regex.RenamedToAlt` patterns
+- **THEN** validation SHALL accept the renames using AST-based parsing
 - **AND** SHALL check for duplicate FROM or TO entries
 - **AND** SHALL error if MODIFIED references the old name instead of new name
 
-#### Scenario: Delta parsing uses consolidated regex package
+#### Scenario: Delta parsing uses markdown package
 - **WHEN** the validation system parses delta spec files
-- **THEN** it SHALL use patterns from `internal/regex/` package
-- **AND** delta type detection SHALL use `regex.MatchH2DeltaSection`
-- **AND** requirement extraction SHALL use `regex.MatchH3Requirement`
-- **AND** scenario extraction SHALL use `regex.MatchH4Scenario`
-- **AND** section content extraction SHALL use `regex.FindSectionContent` or `regex.FindDeltaSectionContent`
+- **THEN** it SHALL use the `internal/markdown/` package for AST-based parsing
+- **AND** delta type detection SHALL use NodeSection with appropriate Level and Title checks
+- **AND** requirement extraction SHALL use NodeRequirement nodes from the AST
+- **AND** scenario extraction SHALL use NodeScenario nodes from the AST
+- **AND** section content extraction SHALL use query functions like Find and FindFirst
 
 ### Requirement: Validation Report Structure
 The validation system SHALL produce structured validation reports containing issue details and summary statistics.
@@ -332,62 +331,42 @@ The validation system SHALL produce bulk validation human-readable output with i
 - **AND** changes SHALL display "(change)" indicator
 - **AND** specs SHALL display "(spec)" indicator
 
-### Requirement: Consolidated Regex Package
-The system SHALL provide a dedicated `internal/regex/` package that consolidates all markdown parsing patterns used across the codebase, with files split by category and pre-compiled patterns at package initialization.
+### Requirement: Markdown Parsing Package
+The system SHALL provide a dedicated `internal/markdown/` package that provides AST-based markdown parsing with a token-based lexer and parser for Spectr-specific patterns.
 
-#### Scenario: Package structure by category
-- **WHEN** the regex package is imported
-- **THEN** it SHALL have separate files: `headers.go`, `tasks.go`, `renames.go`, `sections.go`
-- **AND** each file SHALL contain semantically related patterns
-- **AND** test files SHALL be co-located (`headers_test.go`, etc.)
+#### Scenario: Two-phase parsing architecture
+- **WHEN** the markdown package parses a document
+- **THEN** it SHALL use a lexer to tokenize input into fine-grained tokens
+- **AND** it SHALL use a parser to consume tokens and build an immutable AST
+- **AND** the separation SHALL provide clear concerns and testable components
 
-#### Scenario: Pre-compiled patterns at init
-- **WHEN** the regex package is imported
-- **THEN** all patterns SHALL be compiled once at package initialization via package-level `var` with `regexp.MustCompile`
-- **AND** subsequent pattern usage SHALL NOT require recompilation
-- **AND** invalid patterns SHALL cause a panic at program startup (fail-fast)
+#### Scenario: Spectr-specific node types
+- **WHEN** the markdown package parses Spectr documents
+- **THEN** it SHALL recognize NodeRequirement nodes for `### Requirement: Name` headers
+- **AND** it SHALL recognize NodeScenario nodes for `#### Scenario: Name` headers
+- **AND** it SHALL recognize NodeSection nodes for standard markdown headers with Level and Title
+- **AND** it SHALL recognize NodeListItem nodes with Checked state for task checkboxes
 
-#### Scenario: Header patterns available
-- **WHEN** code needs to match markdown headers
-- **THEN** it SHALL have access to `regex.H2SectionHeader` for `## Section Name`
-- **AND** it SHALL have access to `regex.H2DeltaSection` for `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`
-- **AND** it SHALL have access to `regex.H2RequirementsSection` for exactly `## Requirements`
-- **AND** it SHALL have access to `regex.H2NextSection` for finding section boundaries
-- **AND** it SHALL have access to `regex.H3Requirement` for `### Requirement: Name`
-- **AND** it SHALL have access to `regex.H3AnyHeader` for any `### ` header
-- **AND** it SHALL have access to `regex.H4Scenario` for `#### Scenario: Name`
+#### Scenario: Query functions for AST traversal
+- **WHEN** code needs to find elements in the AST
+- **THEN** it SHALL have access to `markdown.Find(root, predicate)` for finding all matching nodes
+- **AND** it SHALL have access to `markdown.FindFirst(root, predicate)` for finding the first match
+- **AND** it SHALL have access to predicate combinators like `IsType`, `HasName`, `And`, `Or`
 
-#### Scenario: Task patterns available
-- **WHEN** code needs to match task checkboxes
-- **THEN** it SHALL have access to `regex.TaskCheckbox` for `- [ ]` and `- [x]` items
-- **AND** it SHALL have access to `regex.NumberedTask` for `- [ ] 1.1 Description` format
-- **AND** it SHALL have access to `regex.NumberedSection` for `## 1. Section Name` format
+#### Scenario: Visitor pattern for AST processing
+- **WHEN** code needs to process AST nodes
+- **THEN** it SHALL have access to `markdown.Walk(root, visitor)` for traversing the tree
+- **AND** visitors SHALL implement type-specific methods like `VisitRequirement`, `VisitScenario`
+- **AND** a BaseVisitor struct SHALL provide default implementations
 
-#### Scenario: Rename patterns available as separate variants
-- **WHEN** code needs to match RENAMED section entries
-- **THEN** it SHALL have access to `regex.RenamedFrom` for backtick-wrapped FROM lines
-- **AND** it SHALL have access to `regex.RenamedTo` for backtick-wrapped TO lines
-- **AND** it SHALL have access to `regex.RenamedFromAlt` for non-backtick FROM lines
-- **AND** it SHALL have access to `regex.RenamedToAlt` for non-backtick TO lines
-- **AND** both variants SHALL be exported separately (not combined into single pattern)
+#### Scenario: Position information
+- **WHEN** nodes are created from parsing
+- **THEN** they SHALL track byte offsets via `Span() (start, end int)`
+- **AND** a LineIndex utility SHALL convert byte offsets to line/column numbers
+- **AND** position information SHALL support error reporting with location context
 
-#### Scenario: Helper functions use (value, ok) return style
-- **WHEN** code needs to extract values from pattern matches
-- **THEN** `regex.MatchH3Requirement(line)` SHALL return `(name string, ok bool)`
-- **AND** `regex.MatchH4Scenario(line)` SHALL return `(name string, ok bool)`
-- **AND** `regex.MatchTaskCheckbox(line)` SHALL return `(state rune, ok bool)` with state normalized to lowercase
-- **AND** `regex.MatchH2DeltaSection(line)` SHALL return `(deltaType string, ok bool)`
-- **AND** `regex.MatchNumberedTask(line)` SHALL return `(checkbox, id, desc string, ok bool)`
-
-#### Scenario: Section content extraction helpers
-- **WHEN** code needs to extract content between markdown headers
-- **THEN** `regex.FindSectionContent(content, sectionHeader)` SHALL return content from the specified H2 section to the next H2
-- **AND** `regex.FindDeltaSectionContent(content, deltaType)` SHALL be a convenience wrapper for delta sections
-- **AND** `regex.FindRequirementsSection(content)` SHALL extract the `## Requirements` section content
-- **AND** empty string SHALL be returned if section not found
-
-#### Scenario: Both patterns and helpers exported
-- **WHEN** consuming code uses the regex package
-- **THEN** raw `*regexp.Regexp` patterns SHALL be exported for advanced use cases
-- **AND** helper functions SHALL be exported for common matching operations
-- **AND** callers MAY use either patterns directly or helper functions
+#### Scenario: Immutable AST nodes
+- **WHEN** the parser creates AST nodes
+- **THEN** nodes SHALL be immutable after creation
+- **AND** nodes SHALL provide getter methods for type-specific data
+- **AND** transforms SHALL create new nodes rather than mutating existing ones

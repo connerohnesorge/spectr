@@ -14,8 +14,8 @@ import (
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
-	"github.com/connerohnesorge/spectr/internal/regex"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
 
@@ -32,7 +32,7 @@ type AcceptCmd struct {
 	DryRun bool `                                        help:"Preview without writing" name:"dry-run"` //nolint:lll,revive
 
 	// NoInteractive disables interactive prompts
-	NoInteractive bool `                                        help:"Disable prompts"         name:"no-interactive"` //nolint:lll,revive
+	NoInteractive bool `help:"Disable prompts" name:"no-interactive"` //nolint:lll,revive
 }
 
 // Run executes the accept command.
@@ -259,10 +259,12 @@ func parseTaskFromMatch(
 	}
 
 	return parsers.Task{
-		ID:          taskID,
-		Section:     section,
-		Description: strings.TrimSpace(description),
-		Status:      status,
+		ID:      taskID,
+		Section: section,
+		Description: strings.TrimSpace(
+			description,
+		),
+		Status: status,
 	}
 }
 
@@ -290,14 +292,18 @@ func parseTasksMd(
 		line := scanner.Text()
 
 		// Check for section header (e.g., "## 1. Core Accept Command")
-		if sectionName, ok := regex.MatchNumberedSection(line); ok {
-			currentSection = strings.TrimSpace(sectionName)
+		if sectionName, ok := markdown.MatchNumberedSection(line); ok {
+			currentSection = strings.TrimSpace(
+				sectionName,
+			)
 
 			continue
 		}
 
 		// Check for task line (e.g., "- [ ] 1.1 Create `cmd/accept.go`...")
-		match, ok := regex.MatchNumberedTask(line)
+		match, ok := markdown.MatchNumberedTask(
+			line,
+		)
 		if !ok {
 			continue
 		}
@@ -305,9 +311,9 @@ func parseTasksMd(
 		tasks = append(
 			tasks,
 			parseTaskFromMatch(
-				match.Checkbox,
-				match.ID,
-				match.Description,
+				string(match.Status),
+				match.Number,
+				match.Content,
 				currentSection,
 			),
 		)

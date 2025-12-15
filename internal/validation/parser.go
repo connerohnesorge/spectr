@@ -3,10 +3,9 @@ package validation
 
 import (
 	"bufio"
-	"regexp"
 	"strings"
 
-	"github.com/connerohnesorge/spectr/internal/regex"
+	"github.com/connerohnesorge/spectr/internal/markdown"
 )
 
 // Requirement represents a parsed requirement with its content and scenarios
@@ -33,7 +32,7 @@ func ExtractSections(
 		line := scanner.Text()
 
 		// Check if this is a section header (## header)
-		if sectionName, ok := regex.MatchH2SectionHeader(line); ok {
+		if sectionName, ok := markdown.MatchH2SectionHeader(line); ok {
 			// Save previous section if exists
 			if currentSection != "" {
 				sections[currentSection] = strings.TrimSpace(
@@ -81,7 +80,7 @@ func ExtractRequirements(
 		line := scanner.Text()
 
 		// Check if this is a requirement header
-		if reqName, ok := regex.MatchH3Requirement(line); ok {
+		if reqName, ok := markdown.MatchRequirementHeader(line); ok {
 			saveCurrentRequirement(
 				currentRequirement,
 				&currentContent,
@@ -196,7 +195,7 @@ func ExtractScenarios(
 		line := scanner.Text()
 
 		// Check if this is a scenario header (#### Scenario:)
-		if _, ok := regex.MatchH4Scenario(line); ok {
+		if _, ok := markdown.MatchScenarioHeader(line); ok {
 			// Save previous scenario if exists
 			if inScenario {
 				scenarios = append(
@@ -278,16 +277,66 @@ func closeScenario(
 }
 
 // ContainsShallOrMust checks if text contains SHALL or MUST (case-insensitive)
+// Uses string-based matching instead of regex for better performance
 func ContainsShallOrMust(text string) bool {
-	shallMustRegex := regexp.MustCompile(
-		`(?i)\b(shall|must)\b`,
-	)
+	// Convert to lowercase for case-insensitive comparison
+	lower := strings.ToLower(text)
 
-	return shallMustRegex.MatchString(text)
+	// Check for "shall" or "must" as whole words
+	// We need to ensure they are word boundaries (not part of another word)
+	return containsWord(lower, "shall") ||
+		containsWord(lower, "must")
+}
+
+// containsWord checks if a word exists as a whole word in the text
+// (not as part of a larger word)
+func containsWord(text, word string) bool {
+	wordLen := len(word)
+	textLen := len(text)
+
+	idx := 0
+	for {
+		// Find the next occurrence of the word
+		pos := strings.Index(text[idx:], word)
+		if pos == -1 {
+			return false
+		}
+
+		// Calculate absolute position
+		absPos := idx + pos
+
+		// Check if it's a word boundary at the start
+		startOK := absPos == 0 ||
+			!isWordChar(text[absPos-1])
+
+		// Check if it's a word boundary at the end
+		endPos := absPos + wordLen
+		endOK := endPos >= textLen ||
+			!isWordChar(text[endPos])
+
+		if startOK && endOK {
+			return true
+		}
+
+		// Move past this occurrence and continue searching
+		idx = absPos + 1
+		if idx >= textLen {
+			return false
+		}
+	}
+}
+
+// isWordChar returns true if the byte is a word character (alphanumeric or underscore)
+func isWordChar(b byte) bool {
+	return (b >= 'a' && b <= 'z') ||
+		(b >= 'A' && b <= 'Z') ||
+		(b >= '0' && b <= '9') ||
+		b == '_'
 }
 
 // NormalizeRequirementName normalizes requirement names for duplicate detection
 // Trims whitespace, converts to lowercase, and removes extra spaces
+// Uses string-based operations instead of regex for better performance
 func NormalizeRequirementName(
 	name string,
 ) string {
@@ -297,12 +346,10 @@ func NormalizeRequirementName(
 	// Convert to lowercase
 	normalized = strings.ToLower(normalized)
 
-	// Replace multiple spaces with single space
-	spaceRegex := regexp.MustCompile(`\s+`)
-	normalized = spaceRegex.ReplaceAllString(
-		normalized,
-		" ",
-	)
+	// Replace multiple spaces with single space using strings.Fields and Join
+	// strings.Fields splits on any whitespace and removes empty strings
+	fields := strings.Fields(normalized)
+	normalized = strings.Join(fields, " ")
 
 	return normalized
 }

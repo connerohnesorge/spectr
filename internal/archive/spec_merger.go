@@ -4,11 +4,10 @@ package archive
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
-	"github.com/connerohnesorge/spectr/internal/regex"
 )
 
 const (
@@ -280,11 +279,8 @@ func reconstructSpec(
 	result.WriteString(after)
 
 	// Normalize blank lines (collapse 3+ newlines to 2)
-	output := result.String()
-	multiNewline := regexp.MustCompile(`\n{3,}`)
-	output = multiNewline.ReplaceAllString(
-		output,
-		"\n\n",
+	output := markdown.NormalizeMultipleNewlines(
+		result.String(),
 	)
 
 	return output
@@ -294,8 +290,8 @@ func reconstructSpec(
 func splitSpec(
 	content string,
 ) (preamble, requirements, after string) {
-	// Find ## Requirements header using pre-compiled pattern
-	match := regex.H2RequirementsSection.FindStringIndex(
+	// Find ## Requirements header using markdown package
+	match := markdown.FindH2RequirementsSection(
 		content,
 	)
 	if match == nil {
@@ -305,17 +301,17 @@ func splitSpec(
 
 	preamble = content[:match[1]] + "\n\n"
 
-	// Find next ## header after Requirements using pre-compiled pattern
-	remainingContent := content[match[1]:]
-	nextMatch := regex.H2NextSection.FindStringIndex(
-		remainingContent,
+	// Find next ## header after Requirements using markdown package
+	nextMatch := markdown.FindNextH2Section(
+		content,
+		match[1],
 	)
 
 	if nextMatch != nil {
-		requirements = remainingContent[:nextMatch[0]]
-		after = remainingContent[nextMatch[0]:]
+		requirements = content[match[1]:nextMatch[0]]
+		after = content[nextMatch[0]:]
 	} else {
-		requirements = remainingContent
+		requirements = content[match[1]:]
 		after = ""
 	}
 
@@ -328,8 +324,10 @@ func extractOrderedRequirements(
 	reqsContent string,
 	reqMap map[string]parsers.RequirementBlock,
 ) []parsers.RequirementBlock {
-	// Find requirement headers in order using pre-compiled pattern
-	names := regex.FindAllH3Requirements(reqsContent)
+	// Find requirement headers in order using markdown package
+	names := markdown.FindAllH3Requirements(
+		reqsContent,
+	)
 
 	ordered := make(
 		[]parsers.RequirementBlock,

@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "section": "Core Interfaces and Types",
+      "description": "Create `internal/initialize/providers/interfaces.go` with new `Provider`, `Initializer`, `Config`, and `Registration` types",
+      "status": "completed"
+    },
+    {
+      "id": "1.2",
+      "section": "Core Interfaces and Types",
+      "description": "Create `internal/initialize/providers/registry_new.go` with instance-only `Registry` struct (no global state)",
+      "status": "completed"
+    },
+    {
+      "id": "1.3",
+      "section": "Core Interfaces and Types",
+      "description": "Add tests for new registry: registration, retrieval, priority sorting, duplicate rejection",
+      "status": "completed"
+    },
+    {
+      "id": "2.1",
+      "section": "Built-in Initializers",
+      "description": "Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer`",
+      "status": "completed"
+    },
+    {
+      "id": "2.2",
+      "section": "Built-in Initializers",
+      "description": "Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer` (marker-based updates)",
+      "status": "completed"
+    },
+    {
+      "id": "2.3",
+      "section": "Built-in Initializers",
+      "description": "Create `internal/initialize/providers/initializers/slashcmds.go` with `SlashCommandsInitializer` (Markdown and TOML formats)",
+      "status": "completed"
+    },
+    {
+      "id": "2.4",
+      "section": "Built-in Initializers",
+      "description": "Add unit tests for each initializer with `afero.MemMapFs`",
+      "status": "completed"
+    },
+    {
+      "id": "2.5",
+      "section": "Built-in Initializers",
+      "description": "Implement initializer deduplication logic in executor",
+      "status": "completed"
+    },
+    {
+      "id": "3.1",
+      "section": "Migrate Providers",
+      "description": "Migrate `claude.go` to new Provider interface (reference implementation)",
+      "status": "completed"
+    },
+    {
+      "id": "3.2",
+      "section": "Migrate Providers",
+      "description": "Migrate `gemini.go` to new Provider interface (TOML format example)",
+      "status": "completed"
+    },
+    {
+      "id": "3.3",
+      "section": "Migrate Providers",
+      "description": "Migrate remaining 15 providers to new interface (batch)",
+      "status": "completed"
+    },
+    {
+      "id": "3.4",
+      "section": "Migrate Providers",
+      "description": "Add tests verifying all providers return expected initializers",
+      "status": "completed"
+    },
+    {
+      "id": "4.1",
+      "section": "Executor Integration",
+      "description": "Update `executor.go` to use `afero.NewBasePathFs(osFs, projectPath)`",
+      "status": "completed"
+    },
+    {
+      "id": "4.2",
+      "section": "Executor Integration",
+      "description": "Update `executor.go` to collect and dedupe initializers from selected providers",
+      "status": "completed"
+    },
+    {
+      "id": "4.3",
+      "section": "Executor Integration",
+      "description": "Update `executor.go` to run initializers with new `Init(ctx, fs, cfg)` signature",
+      "status": "completed"
+    },
+    {
+      "id": "4.4",
+      "section": "Executor Integration",
+      "description": "Add integration tests for full initialization flow",
+      "status": "completed"
+    },
+    {
+      "id": "6.1",
+      "section": "Documentation and Testing",
+      "description": "Update CLI help text for `spectr init` if needed",
+      "status": "completed"
+    },
+    {
+      "id": "6.2",
+      "section": "Documentation and Testing",
+      "description": "Run full test suite and fix any failures",
+      "status": "completed"
+    },
+    {
+      "id": "6.3",
+      "section": "Documentation and Testing",
+      "description": "Manual testing: `spectr init` with various provider combinations",
+      "status": "completed"
+    },
+    {
+      "id": "6.4",
+      "section": "Documentation and Testing",
+      "description": "Verify git diff shows expected file changes after init",
+      "status": "completed"
+    }
+  ]
+}

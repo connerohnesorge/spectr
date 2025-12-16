@@ -54,7 +54,82 @@ type TaskStatus struct {
 	InProgress int `json:"in_progress"`
 }
 
-// ReadTasksJson reads and parses a tasks.json file
+// StripJSONComments removes JSONC-style comments from JSON content.
+// Handles single-line (//) and multi-line (/* */) comments.
+// Comments inside strings are preserved (not stripped).
+func StripJSONComments(data []byte) []byte {
+	result := make([]byte, 0, len(data))
+	i := 0
+
+	for i < len(data) {
+		switch {
+		case data[i] == '"':
+			i = copyJSONString(data, i, &result)
+		case isLineComment(data, i):
+			i = skipLineComment(data, i)
+		case isBlockComment(data, i):
+			i = skipBlockComment(data, i)
+		default:
+			result = append(result, data[i])
+			i++
+		}
+	}
+
+	return result
+}
+
+func isLineComment(data []byte, i int) bool {
+	return i+1 < len(data) && data[i] == '/' && data[i+1] == '/'
+}
+
+func isBlockComment(data []byte, i int) bool {
+	return i+1 < len(data) && data[i] == '/' && data[i+1] == '*'
+}
+
+func skipLineComment(data []byte, start int) int {
+	pos := start + 2
+	for pos < len(data) && data[pos] != '\n' {
+		pos++
+	}
+
+	return pos
+}
+
+func skipBlockComment(data []byte, start int) int {
+	pos := start + 2
+	for pos+1 < len(data) {
+		if data[pos] == '*' && data[pos+1] == '/' {
+			return pos + 2
+		}
+		pos++
+	}
+
+	return pos
+}
+
+func copyJSONString(data []byte, start int, result *[]byte) int {
+	*result = append(*result, data[start])
+	pos := start + 1
+
+	for pos < len(data) {
+		if data[pos] == '\\' && pos+1 < len(data) {
+			*result = append(*result, data[pos], data[pos+1])
+			pos += 2
+
+			continue
+		}
+		*result = append(*result, data[pos])
+		if data[pos] == '"' {
+			return pos + 1
+		}
+		pos++
+	}
+
+	return pos
+}
+
+// ReadTasksJson reads and parses a tasks.json file.
+// Supports JSONC format with single-line and multi-line comments.
 func ReadTasksJson(
 	filePath string,
 ) (*TasksFile, error) {
@@ -62,6 +137,9 @@ func ReadTasksJson(
 	if err != nil {
 		return nil, err
 	}
+
+	// Strip JSONC comments before unmarshalling
+	data = StripJSONComments(data)
 
 	var tasksFile TasksFile
 	if err := json.Unmarshal(data, &tasksFile); err != nil {
@@ -71,18 +149,20 @@ func ReadTasksJson(
 	return &tasksFile, nil
 }
 
-// CountTasks counts tasks in a change directory, checking tasks.json first
-// and falling back to tasks.md if tasks.json doesn't exist
+// CountTasks counts tasks in a change directory, checking tasks.jsonc first
+// and falling back to tasks.md if tasks.jsonc doesn't exist.
+// NOTE: Legacy tasks.json files are silently ignored (hard break).
 func CountTasks(
 	changeDir string,
 ) (TaskStatus, error) {
-	// First, try to read tasks.json
-	tasksJsonPath := changeDir + "/tasks.json"
-	if _, err := os.Stat(tasksJsonPath); err == nil {
-		return countTasksFromJson(tasksJsonPath)
+	// First, try to read tasks.jsonc (new format with comment support)
+	tasksJsoncPath := changeDir + "/tasks.jsonc"
+	if _, err := os.Stat(tasksJsoncPath); err == nil {
+		return countTasksFromJson(tasksJsoncPath)
 	}
 
-	// Fall back to tasks.md
+	// Fall back to tasks.md (for not-yet-accepted changes)
+	// Note: tasks.json is NOT checked - legacy files are ignored
 	tasksMdPath := changeDir + "/tasks.md"
 
 	return countTasksFromMarkdown(tasksMdPath)

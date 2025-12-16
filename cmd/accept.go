@@ -1,11 +1,10 @@
 // Package cmd provides command-line interface implementations.
 // This file implements the accept command which converts tasks.md to
-// tasks.json for machine-readable task tracking.
+// tasks.jsonc for machine-readable task tracking.
 package cmd
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -23,8 +22,8 @@ import (
 const filePerm = 0644
 
 // AcceptCmd represents the accept command for converting tasks.md to
-// tasks.json. This command parses the human-readable tasks.md file and
-// produces a machine-readable tasks.json file with structured task data.
+// tasks.jsonc. This command parses the human-readable tasks.md file and
+// produces a machine-readable tasks.jsonc file with structured task data.
 type AcceptCmd struct {
 	// ChangeID is the optional change identifier to process
 	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change"` //nolint:lll,revive
@@ -37,7 +36,7 @@ type AcceptCmd struct {
 
 // Run executes the accept command.
 // It resolves the change ID, validates the change directory exists,
-// and processes the tasks.md file to generate tasks.json.
+// and processes the tasks.md file to generate tasks.jsonc.
 func (c *AcceptCmd) Run() error {
 	projectRoot, err := os.Getwd()
 	if err != nil {
@@ -62,9 +61,9 @@ func (c *AcceptCmd) Run() error {
 	return c.processChange(projectRoot, changeID)
 }
 
-// processChange handles the conversion of tasks.md to tasks.json.
+// processChange handles the conversion of tasks.md to tasks.jsonc.
 // It validates that the change directory and tasks.md exist,
-// validates the change, parses the markdown file, and writes the JSON output.
+// validates the change, parses the markdown file, and writes the JSONC output.
 func (c *AcceptCmd) processChange(
 	projectRoot, changeID string,
 ) error {
@@ -115,7 +114,7 @@ func (c *AcceptCmd) processChange(
 
 	tasksJSONPath := filepath.Join(
 		changeDir,
-		"tasks.json",
+		"tasks.jsonc",
 	)
 
 	if c.DryRun {
@@ -130,15 +129,15 @@ func (c *AcceptCmd) processChange(
 		return nil
 	}
 
-	err = writeTasksJSON(tasksJSONPath, tasks)
+	err = writeTasksJSONC(tasksJSONPath, tasks)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to write tasks.json: %w",
+			"failed to write tasks.jsonc: %w",
 			err,
 		)
 	}
 
-	// Remove tasks.md after successful tasks.json creation
+	// Remove tasks.md after successful tasks.jsonc creation
 	err = os.Remove(tasksMdPath)
 	if err != nil {
 		return fmt.Errorf(
@@ -327,37 +326,4 @@ func parseTasksMd(
 	}
 
 	return tasks, nil
-}
-
-// writeTasksJSON writes tasks to a tasks.json file.
-// The output follows the TasksFile structure defined in parsers/types.go.
-func writeTasksJSON(
-	path string,
-	tasks []parsers.Task,
-) error {
-	tasksFile := parsers.TasksFile{
-		Version: 1,
-		Tasks:   tasks,
-	}
-
-	jsonData, err := json.MarshalIndent(
-		tasksFile,
-		"",
-		"  ",
-	)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to marshal tasks to JSON: %w",
-			err,
-		)
-	}
-
-	if err := os.WriteFile(path, jsonData, filePerm); err != nil {
-		return fmt.Errorf(
-			"failed to write tasks.json: %w",
-			err,
-		)
-	}
-
-	return nil
 }

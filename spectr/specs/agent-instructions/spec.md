@@ -40,7 +40,7 @@ When orchestrators delegate implementation tasks to subagents or when agents com
 
 - **WHEN** an orchestrator delegates a task from an active change proposal to a coder subagent
 - **THEN** the instruction pointer SHALL guide the orchestrator to include the path to `<changes-dir>/<id>/proposal.md`
-- **AND** SHALL guide inclusion of `<changes-dir>/<id>/tasks.json` for task context
+- **AND** SHALL guide inclusion of `<changes-dir>/<id>/tasks.jsonc` for task context
 - **AND** SHALL guide inclusion of relevant delta spec paths `<changes-dir>/<id>/specs/<capability>/spec.md`
 
 #### Scenario: Agent completing tasks from change proposal

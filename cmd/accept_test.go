@@ -294,13 +294,13 @@ func TestWriteTasksJson(t *testing.T) {
 			tmpDir := t.TempDir()
 			tasksJSONPath := filepath.Join(
 				tmpDir,
-				"tasks.json",
+				"tasks.jsonc",
 			)
 
 			// Write the tasks
-			if err := writeTasksJSON(tasksJSONPath, tt.tasks); err != nil {
+			if err := writeTasksJSONC(tasksJSONPath, tt.tasks); err != nil {
 				t.Fatalf(
-					"writeTasksJson() error = %v",
+					"writeTasksJSONC() error = %v",
 					err,
 				)
 			}
@@ -315,6 +315,9 @@ func TestWriteTasksJson(t *testing.T) {
 					err,
 				)
 			}
+
+			// Strip JSONC comments before unmarshalling
+			data = parsers.StripJSONComments(data)
 
 			var tasksFile parsers.TasksFile
 			if err := json.Unmarshal(data, &tasksFile); err != nil {
@@ -351,7 +354,7 @@ func TestWriteTasksJsonIndentation(t *testing.T) {
 	tmpDir := t.TempDir()
 	tasksJSONPath := filepath.Join(
 		tmpDir,
-		"tasks.json",
+		"tasks.jsonc",
 	)
 
 	tasks := []parsers.Task{
@@ -363,9 +366,9 @@ func TestWriteTasksJsonIndentation(t *testing.T) {
 		},
 	}
 
-	if err := writeTasksJSON(tasksJSONPath, tasks); err != nil {
+	if err := writeTasksJSONC(tasksJSONPath, tasks); err != nil {
 		t.Fatalf(
-			"writeTasksJson() error = %v",
+			"writeTasksJSONC() error = %v",
 			err,
 		)
 	}
@@ -385,11 +388,14 @@ func TestWriteTasksJsonIndentation(t *testing.T) {
 		)
 	}
 
+	// Strip JSONC comments before unmarshalling
+	strippedData := parsers.StripJSONComments(data)
+
 	// Verify it's valid JSON with proper structure
 	var parsed map[string]any
-	if err := json.Unmarshal(data, &parsed); err != nil {
+	if err := json.Unmarshal(strippedData, &parsed); err != nil {
 		t.Errorf(
-			"output is not valid JSON: %v",
+			"output is not valid JSONC: %v",
 			err,
 		)
 	}
@@ -409,7 +415,7 @@ func TestWriteTasksJsonFilePermissions(
 	tmpDir := t.TempDir()
 	tasksJsonPath := filepath.Join(
 		tmpDir,
-		"tasks.json",
+		"tasks.jsonc",
 	)
 
 	tasks := []parsers.Task{
@@ -421,10 +427,10 @@ func TestWriteTasksJsonFilePermissions(
 		},
 	}
 
-	err := writeTasksJSON(tasksJsonPath, tasks)
+	err := writeTasksJSONC(tasksJsonPath, tasks)
 	if err != nil {
 		t.Fatalf(
-			"writeTasksJson() error = %v",
+			"writeTasksJSONC() error = %v",
 			err,
 		)
 	}

@@ -37,20 +37,20 @@ const (
 type WizardModel struct {
 	step                 WizardStep
 	projectPath          string
-	selectedProviders    map[string]bool // provider ID -> selected
-	configuredProviders  map[string]bool // provider ID -> is configured
-	cursor               int             // cursor position in list
+	selectedProviders    map[string]bool         // provider ID -> selected
+	configuredProviders  map[string]bool         // provider ID -> is configured
+	cursor               int                     // cursor position in list
 	executing            bool
 	executionResult      *ExecutionResult
 	err                  error
-	allProviders         []providers.Provider // sorted providers for display
-	ciWorkflowEnabled    bool                 // whether user wants CI workflow created
-	ciWorkflowConfigured bool                 // whether .github/workflows/spectr-ci.yml already exists
+	allProviders         []providers.Registration // sorted providers for display
+	ciWorkflowEnabled    bool                     // whether user wants CI workflow
+	ciWorkflowConfigured bool                     // whether CI workflow exists
 	// Search mode state
-	searchMode        bool                 // whether search mode is active
-	searchQuery       string               // current search query
-	searchInput       textinput.Model      // text input for search
-	filteredProviders []providers.Provider // providers matching search query
+	searchMode        bool                     // whether search mode is active
+	searchQuery       string                   // current search query
+	searchInput       textinput.Model          // text input for search
+	filteredProviders []providers.Registration // providers matching search
 }
 
 // ExecutionResult holds the result of initialization

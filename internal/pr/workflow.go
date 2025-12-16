@@ -258,12 +258,32 @@ func executeWorkflow(
 	}
 
 	// Create PR
-	return createPRAndFinalize(
+	result, err = createPRAndFinalize(
 		config,
 		ctx,
 		result,
 		worktreeInfo.Path,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Clean up local change directory for archive and remove modes
+	// (not for proposal mode, as the user may still be working on the proposal)
+	if config.Mode == ModeArchive || config.Mode == ModeRemove {
+		fmt.Printf(
+			"Cleaning up local change directory: spectr/changes/%s/\n",
+			config.ChangeID,
+		)
+		if err := cleanupLocalChange(config); err != nil {
+			fmt.Printf(
+				"Warning: local cleanup failed: %v\n",
+				err,
+			)
+		}
+	}
+
+	return result, nil
 }
 
 // cleanupWorktree cleans up the worktree.

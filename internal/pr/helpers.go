@@ -12,6 +12,12 @@ import (
 // dirPerm is the default permission for created directories.
 const dirPerm = 0755
 
+// spectrDirName is the name of the spectr directory.
+const spectrDirName = "spectr"
+
+// changesDirName is the name of the changes subdirectory.
+const changesDirName = "changes"
+
 // checkCLITool verifies that the required CLI tool is installed.
 //
 // This function checks if the specified CLI tool is installed in the system.

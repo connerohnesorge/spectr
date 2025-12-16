@@ -81,14 +81,14 @@ func copyChangeToWorktree(
 
 	sourceDir := filepath.Join(
 		projectRoot,
-		"spectr",
-		"changes",
+		spectrDirName,
+		changesDirName,
 		config.ChangeID,
 	)
 	targetDir := filepath.Join(
 		worktreePath,
-		"spectr",
-		"changes",
+		spectrDirName,
+		changesDirName,
 		config.ChangeID,
 	)
 
@@ -123,8 +123,8 @@ func removeChangeInWorktree(
 ) error {
 	changeDir := filepath.Join(
 		worktreePath,
-		"spectr",
-		"changes",
+		spectrDirName,
+		changesDirName,
 		config.ChangeID,
 	)
 
@@ -147,6 +147,39 @@ func removeChangeInWorktree(
 	if err := os.RemoveAll(changeDir); err != nil {
 		return fmt.Errorf(
 			"remove change directory: %w",
+			err,
+		)
+	}
+
+	return nil
+}
+
+// cleanupLocalChange removes the local change directory from the working
+// directory.
+func cleanupLocalChange(config PRConfig) error {
+	projectRoot := config.ProjectRoot
+	if projectRoot == "" {
+		var err error
+		projectRoot, err = git.GetRepoRoot()
+		if err != nil {
+			return fmt.Errorf(
+				"get repo root: %w",
+				err,
+			)
+		}
+	}
+
+	changeDir := filepath.Join(
+		projectRoot,
+		spectrDirName,
+		changesDirName,
+		config.ChangeID,
+	)
+
+	// Remove the entire change directory
+	if err := os.RemoveAll(changeDir); err != nil {
+		return fmt.Errorf(
+			"remove local change directory: %w",
 			err,
 		)
 	}

@@ -1,38 +1,5 @@
 {
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "conclaude Hooks PreToolUse"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "conclaude Hooks SessionStart"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "conclaude Hooks SubagentStop"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "",
@@ -40,17 +7,6 @@
           {
             "type": "command",
             "command": "conclaude Hooks PostToolUse"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "conclaude Hooks UserPromptSubmit"
           }
         ]
       }
@@ -66,6 +22,39 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "conclaude Hooks UserPromptSubmit"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "conclaude Hooks SubagentStart"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "conclaude Hooks PermissionRequest"
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "matcher": "",
@@ -73,6 +62,17 @@
           {
             "type": "command",
             "command": "conclaude Hooks SessionEnd"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "conclaude Hooks SubagentStop"
           }
         ]
       }
@@ -88,6 +88,17 @@
         ]
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "conclaude Hooks PreToolUse"
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "matcher": "",
@@ -95,6 +106,17 @@
           {
             "type": "command",
             "command": "conclaude Hooks PreCompact"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "conclaude Hooks SessionStart"
           }
         ]
       }

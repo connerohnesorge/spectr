@@ -870,3 +870,108 @@ func TestReadTasksJsonWithComments(t *testing.T) {
 		})
 	}
 }
+
+func TestCountTasksFromJson_Fixture(t *testing.T) {
+	// Test with real fixture - 16 pending tasks
+	status, err := countTasksFromJson("testdata/tasks_fixture.jsonc")
+	if err != nil {
+		t.Fatalf("countTasksFromJson failed: %v", err)
+	}
+
+	// Fixture has 16 tasks, all pending
+	if status.Total != 16 {
+		t.Errorf("Expected Total=16, got %d", status.Total)
+	}
+	if status.Completed != 0 {
+		t.Errorf("Expected Completed=0, got %d", status.Completed)
+	}
+	if status.InProgress != 0 {
+		t.Errorf("Expected InProgress=0, got %d", status.InProgress)
+	}
+}
+
+func TestCountTasksFromJson_AllScenarios(t *testing.T) {
+	tests := []struct {
+		name           string
+		content        string
+		wantTotal      int
+		wantCompleted  int
+		wantInProgress int
+	}{
+		{
+			name: "all pending",
+			content: `{"version":1,"tasks":[
+				{"id":"1","section":"A","description":"T1","status":"pending"},
+				{"id":"2","section":"A","description":"T2","status":"pending"},
+				{"id":"3","section":"A","description":"T3","status":"pending"}
+			]}`,
+			wantTotal:      3,
+			wantCompleted:  0,
+			wantInProgress: 0,
+		},
+		{
+			name: "all completed",
+			content: `{"version":1,"tasks":[
+				{"id":"1","section":"A","description":"T1","status":"completed"},
+				{"id":"2","section":"A","description":"T2","status":"completed"}
+			]}`,
+			wantTotal:      2,
+			wantCompleted:  2,
+			wantInProgress: 0,
+		},
+		{
+			name: "mixed states",
+			content: `{"version":1,"tasks":[
+				{"id":"1","section":"A","description":"T1","status":"completed"},
+				{"id":"2","section":"A","description":"T2","status":"in_progress"},
+				{"id":"3","section":"A","description":"T3","status":"pending"},
+				{"id":"4","section":"A","description":"T4","status":"completed"}
+			]}`,
+			wantTotal:      4,
+			wantCompleted:  2,
+			wantInProgress: 1,
+		},
+		{
+			name:           "empty tasks",
+			content:        `{"version":1,"tasks":[]}`,
+			wantTotal:      0,
+			wantCompleted:  0,
+			wantInProgress: 0,
+		},
+		{
+			name: "only in_progress",
+			content: `{"version":1,"tasks":[
+				{"id":"1","section":"A","description":"T1","status":"in_progress"},
+				{"id":"2","section":"A","description":"T2","status":"in_progress"}
+			]}`,
+			wantTotal:      2,
+			wantCompleted:  0,
+			wantInProgress: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			filePath := filepath.Join(tmpDir, "tasks.jsonc")
+			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			status, err := countTasksFromJson(filePath)
+			if err != nil {
+				t.Fatalf("countTasksFromJson failed: %v", err)
+			}
+
+			if status.Total != tt.wantTotal {
+				t.Errorf("Total = %d, want %d", status.Total, tt.wantTotal)
+			}
+			if status.Completed != tt.wantCompleted {
+				t.Errorf("Completed = %d, want %d", status.Completed, tt.wantCompleted)
+			}
+			if status.InProgress != tt.wantInProgress {
+				t.Errorf("InProgress = %d, want %d", status.InProgress, tt.wantInProgress)
+			}
+		})
+	}
+}

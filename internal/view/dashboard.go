@@ -3,6 +3,7 @@
 package view
 
 import (
+	"math"
 	"path/filepath"
 	"sort"
 
@@ -218,7 +219,7 @@ func CollectData(
 // The result is rounded to the nearest integer using standard rounding rules.
 //
 // Example:
-//   - calculatePercentage(3, 8) returns 37
+//   - calculatePercentage(3, 8) returns 38
 //   - calculatePercentage(0, 10) returns 0
 //   - calculatePercentage(5, 0) returns 0
 func calculatePercentage(
@@ -229,10 +230,8 @@ func calculatePercentage(
 	}
 	// Round to nearest integer
 	return int(
-		float64(
-			completed,
-		) / float64(
-			total,
-		) * 100.0,
+		math.Round(
+			float64(completed) / float64(total) * 100.0,
+		),
 	)
 }

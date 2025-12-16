@@ -174,7 +174,7 @@ func TestCalculatePercentage(t *testing.T) {
 		{"Half completed", 5, 10, 50},
 		{"All completed", 10, 10, 100},
 		{"One third", 1, 3, 33},
-		{"Two thirds", 2, 3, 66},
+		{"Two thirds", 2, 3, 67}, // 66.67% rounds to 67
 	}
 
 	for _, tt := range tests {
@@ -651,4 +651,88 @@ func TestCollectData_ChangeWithZeroTasks(
 	t.Log(
 		"Change with zero tasks correctly categorized as completed",
 	)
+}
+
+func TestCalculatePercentage_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name      string
+		completed int
+		total     int
+		expected  int
+	}{
+		// Edge cases for rounding (values now ROUND to nearest integer)
+		{"1 of 16 (6.25%)", 1, 16, 6},
+		{"5 of 16 (31.25%)", 5, 16, 31},
+		{"8 of 16 (exactly 50%)", 8, 16, 50},
+		{"15 of 16 (93.75%)", 15, 16, 94}, // rounds up
+		{"16 of 16 (exactly 100%)", 16, 16, 100},
+
+		// More rounding edge cases
+		{"1 of 7 (14.29%)", 1, 7, 14},
+		{"3 of 7 (42.86%)", 3, 7, 43}, // rounds up
+		{"6 of 7 (85.71%)", 6, 7, 86}, // rounds up
+
+		// Large numbers
+		{"500 of 1000", 500, 1000, 50},
+		{"999 of 1000", 999, 1000, 100}, // 99.9% rounds to 100
+		{"1000 of 1000", 1000, 1000, 100},
+
+		// Small edge cases
+		{"0 of 1", 0, 1, 0},
+		{"1 of 1", 1, 1, 100},
+		{"0 of 2", 0, 2, 0},
+		{"1 of 2", 1, 2, 50},
+		{"2 of 2", 2, 2, 100},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := calculatePercentage(tt.completed, tt.total)
+			if result != tt.expected {
+				t.Errorf(
+					"calculatePercentage(%d, %d) = %d; want %d (%.2f%%)",
+					tt.completed, tt.total, result, tt.expected,
+					float64(tt.completed)/float64(tt.total)*100,
+				)
+			}
+		})
+	}
+}
+
+func TestCalculatePercentage_FixtureLike(t *testing.T) {
+	// Test with values matching the 16-task fixture
+	// Values should be ROUNDED to nearest integer (not truncated)
+	testCases := []struct {
+		completed int
+		expected  int
+	}{
+		{0, 0},    // All pending
+		{1, 6},    // 6.25% -> rounds to 6
+		{2, 13},   // 12.5% -> rounds to 13
+		{3, 19},   // 18.75% -> rounds to 19
+		{4, 25},   // 25% -> exactly 25
+		{5, 31},   // 31.25% -> rounds to 31
+		{6, 38},   // 37.5% -> rounds to 38
+		{7, 44},   // 43.75% -> rounds to 44
+		{8, 50},   // 50% -> exactly 50
+		{9, 56},   // 56.25% -> rounds to 56
+		{10, 63},  // 62.5% -> rounds to 63
+		{11, 69},  // 68.75% -> rounds to 69
+		{12, 75},  // 75% -> exactly 75
+		{13, 81},  // 81.25% -> rounds to 81
+		{14, 88},  // 87.5% -> rounds to 88
+		{15, 94},  // 93.75% -> rounds to 94
+		{16, 100}, // 100%
+	}
+
+	total := 16
+	for _, tc := range testCases {
+		result := calculatePercentage(tc.completed, total)
+		if result != tc.expected {
+			t.Errorf(
+				"calculatePercentage(%d, %d) = %d; want %d",
+				tc.completed, total, result, tc.expected,
+			)
+		}
+	}
 }

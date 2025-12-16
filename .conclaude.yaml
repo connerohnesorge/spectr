@@ -1,12 +1,12 @@
-# yaml-language-server: $schema=https://github.com/conneroisu/conclaude/releases/latest/download/conclaude-schema.json
-# Conclaude YAML Configuration - Complete Default Configuration
-# This configuration defines how conclaude handles Claude Code hook events
-# All supported options are shown below with their default values
+# yaml-language-server: $schema=https://github.com/connix-io/conclaude/releases/latest/download/conclaude-schema.json
+# Conclaude Configuration Template
+#
+# This is a minimal example configuration file.
+# For full documentation of all options, run: conclaude config --docs
+# Or see the generated documentation from `cargo doc --open`
 
-# Stop hook configuration - runs when Claude is about to stop
+# Stop hook - runs when Claude is about to stop
 stop:
-  # Structured command format with optional custom error messages
-  # Each command can have its own error message, and control output display
   commands:
     - run: "nix fmt"
       showStdout: false
@@ -33,80 +33,72 @@ stop:
       showStderr: false
       message: "Spectr validation failed - please fix validation errors before continuing"
       maxOutputLines: 5
-  # Examples:
-  # commands:
-  #   - run: "echo 'Starting build...'"
-  #     showStdout: true    # User/Claude sees: "Starting build..."
-  #
+
+# Subagent stop hook - runs when subagents finish
+subagentStop:
+  # Example:
+  # coder:
+  #   - run: "npm run lint"
+  #     showStdout: true
+  #     message: "Linting failed"
+  # test*:
   #   - run: "npm test"
-  #     showStdout: true    # Show test results to user/Claude
-  #     showStderr: true    # Show test errors to user/Claude
-  #     message: "Tests failed - please fix failing tests before continuing"
-  #     maxOutputLines: 100 # Limit output to last 100 lines (1-10000)
-  #
-  #   - run: "npm run build"
-  #     showStderr: true    # Only show build errors to user/Claude, hide stdout
-  #     message: "Build failed - please fix compilation errors"
-  #     maxOutputLines: 50  # Limit build output to last 50 lines
+  #     showStderr: true
 
-  # Infinite mode - allows Claude to continue automatically
-  # When enabled, Claude receives the infiniteMessage to continue working
-  # instead of ending the session after stop hook commands succeed
-  infinite: false
-
-  # Message to send when infinite mode is enabled
-  infiniteMessage: "continue working on the task"
-
-# Pre-tool-use hook configuration - runs before tools are executed
+# Pre-tool-use hook - file protection and tool validation
 preToolUse:
-  # Prevent Claude from creating or modifying files at the repository root
-  # Helps maintain clean project structure
+  # Prevent files at repository root
   preventRootAdditions: true
 
-  # Files that Claude cannot edit, using glob patterns
-  # Supports various glob patterns for flexible file protection
+  # Protected files (glob patterns)
   uneditableFiles:
+    - ".conclaude.yml"
     - ".conclaude.yaml"
-    - ".golangci.yaml"
-    - ".golangci.yml"
-  # Directories where file additions are prevented (in addition to root)
-  # List of directory paths where new files cannot be created
-  preventAdditions: []
   # Examples:
-  # preventAdditions:
-  #   - "dist"
-  #   - "build"
-  #   - "node_modules"
+  # - "*.lock"
+  # - pattern: ".env*"
+  #   message: "Environment files contain secrets"
 
-  # Prevent editing of auto-generated files (enabled by default)
-  # Checks for common markers like "DO\ NOT\ EDIT", "Code\ generated\ by", etc.
-  preventGeneratedFileEdits: true
+  # Prevent editing git-ignored files
+  preventUpdateGitIgnored: false
 
-  # Custom message when blocking auto-generated file edits
-  # Available placeholders: {file_path}, {marker}
-  generatedFileMessage: null
+  # Tool usage rules
+  toolUsageValidation: []
   # Example:
-  # generatedFileMessage: "Cannot modify {file_path} - it contains '{marker}' indicating it's auto-generated"
+  # - tool: "Write"
+  #   pattern: "**/*.js"
+  #   action: "allow"
+  # - tool: "Bash"
+  #   commandPattern: "git push --force*"
+  #   action: "block"
+  #   message: "Force push not allowed"
 
-# System notifications configuration
+  # Directories where additions are prevented
+  preventAdditions: []
+  # Example: ["dist", "build"]
+
+  # Prevent editing generated files
+  preventGeneratedFileEdits: true
+  generatedFileMessage: null
+
+# System notifications
 notifications:
-  # Enable system notifications for hook execution
   enabled: false
-
-  # List of hook names that should trigger notifications
-  # Use ["*"] to receive notifications for all hooks
-  # Common hook names: "Stop", "PreToolUse", "PostToolUse", "SessionStart", "UserPromptSubmit", "Notification", "SubagentStop", "PreCompact"
-  hooks: []
-  # Examples:
-  # hooks: ["*"]                    # All hooks
-  # hooks: ["Stop", "PreToolUse"]   # Only specific hooks
-  # hooks: ["Stop"]                 # Only stop hook notifications
-
-  # Show error notifications (hook failures, system errors)
+  hooks: [] # ["*"] for all, or ["Stop", "PreToolUse"]
   showErrors: false
-
-  # Show success notifications (hook completion, successful operations)
   showSuccess: false
-
-  # Show system event notifications (session start/end, configuration loaded)
   showSystemEvents: true
+# Permission request hook - auto-approve/deny tools
+# Uncomment to enable:
+#
+# permissionRequest:
+#   default: deny  # "allow" or "deny"
+#   allow:
+#     - "Read"
+#     - "Glob"
+#     - "Grep"
+#     - "Edit"
+#     - "Write"
+#   deny:
+#     - "BashOutput"
+#     - "KillShell"

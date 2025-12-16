@@ -98,7 +98,7 @@ Spectr integrates with popular AI coding assistants to provide spec-driven devel
 | [Qwen Code](https://github.com/QwenLM/Qwen-Agent) | Alibaba's Qwen Code assistant |
 | [CodeBuddy](https://codebuddy.ai) | AI coding assistant |
 | [CoStrict](https://costrict.dev) | AI coding assistant |
-| [Qoder](https://qoder.dev) | AI coding assistant |
+| [Qoder](https://qoder.ai) | AI coding assistant |
 
 Run `spectr init` to configure Spectr for your preferred AI tools.
 

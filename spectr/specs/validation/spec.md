@@ -34,12 +34,13 @@ The validation system SHALL validate spec files for structural correctness and a
 - **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or bold text)
 - **THEN** validation SHALL report an ERROR
 - **AND** the message SHALL show the correct "#### Scenario:" header format
+- **AND** detection SHALL use `markdown.MatchScenarioHeader` from the markdown parser package
 
-#### Scenario: Parsing uses markdown package
+#### Scenario: Parsing uses markdown parser package
 - **WHEN** the validation system parses spec or delta files
-- **THEN** it SHALL use the `internal/markdown/` package for AST-based parsing
-- **AND** it SHALL NOT define local regex patterns for structural markdown elements
-- **AND** it SHALL use the visitor pattern and query functions from the markdown package
+- **THEN** it SHALL use functions from `internal/markdown/` package
+- **AND** it SHALL NOT import `internal/regex/` package or define local regex patterns
+- **AND** behavior SHALL be identical to previous implementation
 
 ### Requirement: Change Delta Validation
 The validation system SHALL validate change delta specs for structural correctness and delta operation validity.
@@ -83,17 +84,17 @@ The validation system SHALL validate change delta specs for structural correctne
 
 #### Scenario: RENAMED requirement validation
 - **WHEN** a RENAMED section contains well-formed "FROM: X TO: Y" pairs
-- **THEN** validation SHALL accept the renames using AST-based parsing
+- **THEN** validation SHALL accept the renames using `markdown.MatchRenamedFrom` and `markdown.MatchRenamedTo` functions
 - **AND** SHALL check for duplicate FROM or TO entries
 - **AND** SHALL error if MODIFIED references the old name instead of new name
 
-#### Scenario: Delta parsing uses markdown package
+#### Scenario: Delta parsing uses markdown parser package
 - **WHEN** the validation system parses delta spec files
-- **THEN** it SHALL use the `internal/markdown/` package for AST-based parsing
-- **AND** delta type detection SHALL use NodeSection with appropriate Level and Title checks
-- **AND** requirement extraction SHALL use NodeRequirement nodes from the AST
-- **AND** scenario extraction SHALL use NodeScenario nodes from the AST
-- **AND** section content extraction SHALL use query functions like Find and FindFirst
+- **THEN** it SHALL use functions from `internal/markdown/` package
+- **AND** delta type detection SHALL use `markdown.MatchDeltaSection`
+- **AND** requirement extraction SHALL use `markdown.MatchRequirementHeader`
+- **AND** scenario extraction SHALL use `markdown.MatchScenarioHeader`
+- **AND** section content extraction SHALL use `markdown.FindSection` or `markdown.FindDeltaSection`
 
 ### Requirement: Validation Report Structure
 The validation system SHALL produce structured validation reports containing issue details and summary statistics.

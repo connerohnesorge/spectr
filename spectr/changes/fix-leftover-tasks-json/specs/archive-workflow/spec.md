@@ -18,11 +18,6 @@ The system SHALL clean up the local change directory after successfully completi
 - **THEN** the local change directory is NOT removed
 - **AND** no cleanup message is displayed
 
-#### Scenario: Cleanup skipped with flag
-- **WHEN** `--no-cleanup` flag is provided
-- **THEN** the local change directory is NOT removed
-- **AND** the system displays a message indicating cleanup was skipped
-
 #### Scenario: Cleanup failure is non-fatal
 - **WHEN** local cleanup fails (e.g., permission error)
 - **THEN** a warning is displayed

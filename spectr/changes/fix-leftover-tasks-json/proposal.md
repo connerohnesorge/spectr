@@ -7,9 +7,8 @@ When `spectr pr archive` or `spectr pr rm` commands complete, the local change d
 - **Add local cleanup after PR rm**: After successfully creating a PR to remove a change, delete the local change directory to prevent orphan files
 - **Add local cleanup after PR archive**: After successfully creating a PR to archive a change, delete the local change directory (the archived version will be pulled when the PR merges)
 - **Add warning before cleanup**: Display a warning message before cleaning up local files, informing the user what will be removed
-- **Add `--no-cleanup` flag**: Allow users to skip local cleanup if they want to preserve local changes
 
 ## Impact
 - Affected specs: `archive-workflow`, `cli-interface`
 - Affected code: `internal/pr/workflow.go`, `cmd/pr.go`
-- Breaking changes: None (new behavior is additive, with opt-out flag)
+- Breaking changes: None (new behavior is additive)

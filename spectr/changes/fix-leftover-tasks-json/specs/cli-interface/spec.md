@@ -79,14 +79,6 @@ The command supports aliases `r` and `remove` for convenience.
 - **THEN** the system displays: "Cleaning up local change directory: spectr/changes/<change-id>/"
 - **AND** the local change directory is removed including all files (tracked and untracked)
 
-#### Scenario: Remove with no-cleanup flag preserves local directory
-
-- **WHEN** user runs `spectr pr rm <change-id> --no-cleanup`
-- **AND** PR creation succeeds
-- **THEN** the system displays: "Skipping local cleanup (--no-cleanup)"
-- **AND** the local change directory is NOT removed
-- **AND** the user's working directory is unchanged
-
 #### Scenario: Partial ID resolution for remove command
 
 - **WHEN** user runs `spectr pr rm refactor`
@@ -145,13 +137,6 @@ This prompt helps users maintain a clean working directory by offering an opport
 - **THEN** the system displays: "Cleaning up local change directory: spectr/changes/<change-id>/"
 - **AND** the local change directory is removed
 - **AND** the change is archived in the worktree (pulled when PR merges)
-
-#### Scenario: Archive with no-cleanup flag
-
-- **WHEN** user runs `spectr pr archive <change-id> --no-cleanup`
-- **AND** PR creation succeeds
-- **THEN** the system displays: "Skipping local cleanup (--no-cleanup)"
-- **AND** the local change directory is NOT removed
 
 #### Scenario: PR creation fails
 

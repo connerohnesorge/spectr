@@ -31,38 +31,50 @@
   "tasks": [
     {
       "id": "1.1",
-      "section": "Prompt Updates",
-      "description": "Update `cmd/accept_writer.go` tasksJSONHeader to add anti-batch-update guidance",
+      "section": "Update Installation Section",
+      "description": "Add new \"Using GitHub Releases\" subsection as first installation method",
       "status": "completed"
     },
     {
       "id": "1.2",
-      "section": "Prompt Updates",
-      "description": "Update `.claude/commands/spectr/apply.md` steps 3-5 for incremental workflow",
+      "section": "Update Installation Section",
+      "description": "Include platform-specific curl/tar commands for Linux, macOS, and Windows",
       "status": "completed"
     },
     {
       "id": "1.3",
-      "section": "Prompt Updates",
-      "description": "Update `spectr/AGENTS.md` Stage 2 to remove contradictory language",
-      "status": "completed"
-    },
-    {
-      "id": "1.4",
-      "section": "Prompt Updates",
-      "description": "Update `.claude/agents/coder.md` to fix tasks.md reference and add timing guidance",
+      "section": "Update Installation Section",
+      "description": "Document all available platforms (Linux x86_64/arm64, macOS x86_64/arm64, Windows x86_64/arm64)",
       "status": "completed"
     },
     {
       "id": "2.1",
-      "section": "Validation",
-      "description": "Run `spectr validate fix-task-update-guidance --strict`",
+      "section": "Update Table of Contents",
+      "description": "Add \"Using GitHub Releases\" entry to ToC under Installation section",
       "status": "completed"
     },
     {
       "id": "2.2",
+      "section": "Update Table of Contents",
+      "description": "Ensure subsections appear in order: GitHub Releases, Nix Flakes, Building from Source, Requirements",
+      "status": "completed"
+    },
+    {
+      "id": "3.1",
       "section": "Validation",
-      "description": "Manually verify updated prompts are consistent in their guidance",
+      "description": "Verify README renders correctly with new sections",
+      "status": "completed"
+    },
+    {
+      "id": "3.2",
+      "section": "Validation",
+      "description": "Verify installation instructions match docs/src/content/docs/getting-started/installation.md",
+      "status": "completed"
+    },
+    {
+      "id": "3.3",
+      "section": "Validation",
+      "description": "Run spectr validate to confirm change passes validation",
       "status": "completed"
     }
   ]

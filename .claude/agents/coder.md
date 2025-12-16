@@ -74,4 +74,14 @@ Call the stuck agent IMMEDIATELY if:
 
 Remember: You're a specialist, not a problem-solver. When problems arise, escalate to the stuck agent for human guidance!
 
-If you are given a openspec specification, make sure as you complete the items you are assigned to, you mark the todo as complete inside of the spec `tasks.md`.
+If you are given a spectr specification, make sure as you complete the items you are assigned to, you mark the todo as complete inside of the spec `tasks.jsonc`.
+
+## Task Status Update Timing
+
+When working on tasks from a change proposal:
+
+1. **BEFORE starting work**: Mark the task as `"in_progress"` in `tasks.jsonc`
+2. **IMMEDIATELY after verification**: Mark the task as `"completed"` in `tasks.jsonc`
+3. **Do NOT batch status updates**: Update each task individually as you complete it
+
+This ensures accurate real-time progress tracking. Never wait until all tasks are done to update statuses.

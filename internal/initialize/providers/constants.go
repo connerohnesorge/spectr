@@ -16,7 +16,6 @@ const (
 	PriorityCursor      = 9
 	PriorityCodex       = 10
 	PriorityAider       = 11
-	PriorityTabnine     = 12
 	PriorityWindsurf    = 13
 	PriorityKilocode    = 14
 	PriorityContinue    = 15

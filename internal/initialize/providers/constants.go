@@ -9,19 +9,18 @@ const (
 	PriorityGemini      = 2
 	PriorityCostrict    = 3
 	PriorityQoder       = 4
-	PriorityCodeBuddy   = 5
-	PriorityQwen        = 6
-	PriorityAntigravity = 7
-	PriorityCline       = 8
-	PriorityCursor      = 9
-	PriorityCodex       = 10
+	PriorityQwen        = 5
+	PriorityAntigravity = 6
+	PriorityCline       = 7
+	PriorityCursor      = 8
+	PriorityCodex       = 9
+	PriorityOpencode    = 10
 	PriorityAider       = 11
 	PriorityTabnine     = 12
 	PriorityWindsurf    = 13
 	PriorityKilocode    = 14
 	PriorityContinue    = 15
 	PriorityCrush       = 16
-	PriorityOpencode    = 17
 )
 
 // default frontmatter templates for slash commands.

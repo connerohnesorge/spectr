@@ -227,10 +227,10 @@ The system SHALL extract titles from proposal and spec markdown files by finding
 - THEN it uses the directory name (ID) as the title
 
 ### Requirement: Task Counting
-The system SHALL count tasks in `tasks.md` files by identifying lines matching the pattern `- [ ]` or `- [x]` (case-insensitive), with completed tasks marked by `[x]`. The system SHALL prefer `tasks.json` when present.
+The system SHALL count tasks in `tasks.md` files by identifying lines matching the pattern `- [ ]` or `- [x]` (case-insensitive), with completed tasks marked by `[x]`. The system SHALL prefer `tasks.jsonc` when present.
 
 #### Scenario: Count tasks from JSON
-- WHEN the system counts tasks and `tasks.json` exists
+- WHEN the system counts tasks and `tasks.jsonc` exists
 - THEN it reads task status from the JSON file
 - AND counts tasks by status field values
 - AND reports `taskStatus` with total and completed counts
@@ -240,13 +240,13 @@ The system SHALL count tasks in `tasks.md` files by identifying lines matching t
 - THEN it reports `taskStatus` as `{ total: 3, completed: 2 }`
 
 #### Scenario: Handle missing tasks file
-- WHEN the system cannot find or read a `tasks.md` or `tasks.json` file for a change
+- WHEN the system cannot find or read a `tasks.md` or `tasks.jsonc` file for a change
 - THEN it reports `taskStatus` as `{ total: 0, completed: 0 }`
 - AND continues processing without error
 
 #### Scenario: JSON takes precedence over Markdown
-- WHEN both `tasks.json` and `tasks.md` exist (should not happen normally)
-- THEN the system reads from `tasks.json`
+- WHEN both `tasks.jsonc` and `tasks.md` exist (should not happen normally)
+- THEN the system reads from `tasks.jsonc`
 - AND ignores `tasks.md`
 
 ### Requirement: Validate Command Structure
@@ -757,7 +757,7 @@ The CLI initialization SHALL follow the kong-completion pattern where Kong is in
 - AND struct fields SHALL reference predictors using `predictor:"name"` tag
 
 ### Requirement: Accept Command Structure
-The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.json` format for stable agent manipulation during implementation.
+The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.jsonc` format for stable agent manipulation during implementation.
 
 #### Scenario: Accept command registration
 - WHEN the CLI is initialized
@@ -769,7 +769,7 @@ The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.jso
 - WHEN user runs `spectr accept <change-id>`
 - THEN the system validates the change exists in `spectr/changes/<change-id>/`
 - AND the system parses `tasks.md` into structured format
-- AND the system writes `tasks.json` with proper schema
+- AND the system writes `tasks.jsonc` with proper schema
 - AND the system removes `tasks.md` to prevent drift
 
 #### Scenario: Accept with validation
@@ -781,11 +781,11 @@ The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.jso
 #### Scenario: Accept dry-run mode
 - WHEN user runs `spectr accept <change-id> --dry-run`
 - THEN the system displays what would be converted
-- AND the system does NOT write tasks.json
+- AND the system does NOT write tasks.jsonc
 - AND the system does NOT remove tasks.md
 
 #### Scenario: Accept already accepted change
-- WHEN user runs `spectr accept <change-id>` on a change that already has tasks.json
+- WHEN user runs `spectr accept <change-id>` on a change that already has tasks.jsonc
 - THEN the system displays a message indicating change is already accepted
 - AND the system exits with code 0 (success, idempotent)
 
@@ -795,10 +795,10 @@ The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.jso
 - AND the system exits with code 1
 
 ### Requirement: Tasks JSON Schema
-The accept command SHALL generate `tasks.json` files conforming to a versioned schema with structured task objects.
+The accept command SHALL generate `tasks.jsonc` files conforming to a versioned schema with structured task objects.
 
 #### Scenario: JSON file structure
-- WHEN the accept command creates tasks.json
+- WHEN the accept command creates tasks.jsonc
 - THEN the file SHALL contain a root object with `version` and `tasks` fields
 - AND `version` SHALL be integer 1 for this schema version
 - AND `tasks` SHALL be an array of task objects
@@ -811,7 +811,7 @@ The accept command SHALL generate `tasks.json` files conforming to a versioned s
 - AND it SHALL have `status` field with value "pending", "in_progress", or "completed"
 
 #### Scenario: Status value mapping from Markdown
-- WHEN converting tasks.md to tasks.json
+- WHEN converting tasks.md to tasks.jsonc
 - THEN `- [ ]` SHALL map to status "pending"
 - AND `- [x]` (case-insensitive) SHALL map to status "completed"
 

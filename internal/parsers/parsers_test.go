@@ -383,7 +383,7 @@ func TestReadTasksJson(t *testing.T) {
 	}
 }
 
-func TestCountTasks_FromJson(t *testing.T) {
+func TestCountTasks_FromJsonc(t *testing.T) {
 	tests := []struct {
 		name               string
 		content            string
@@ -449,7 +449,7 @@ func TestCountTasks_FromJson(t *testing.T) {
 			tmpDir := t.TempDir()
 			filePath := filepath.Join(
 				tmpDir,
-				"tasks.json",
+				"tasks.jsonc",
 			)
 			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
 				t.Fatal(err)
@@ -487,25 +487,26 @@ func TestCountTasks_FromJson(t *testing.T) {
 	}
 }
 
-func TestCountTasks_JsonPreferredOverMarkdown(
+func TestCountTasks_JsoncPreferredOverMarkdown(
 	t *testing.T,
 ) {
 	tmpDir := t.TempDir()
 
-	// Create both tasks.json and tasks.md
-	// tasks.json has 2 tasks
-	jsonContent := `{
+	// Create both tasks.jsonc and tasks.md
+	// tasks.jsonc has 2 tasks
+	jsoncContent := `// This is a JSONC file with comments
+{
 		"version": 1,
 		"tasks": [
 			{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "completed"},
 			{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
 		]
 	}`
-	if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "tasks.jsonc"), []byte(jsoncContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// tasks.md has 5 tasks (different count to verify JSON is used)
+	// tasks.md has 5 tasks (different count to verify JSONC is used)
 	mdContent := `## Tasks
 - [ ] Task 1
 - [ ] Task 2
@@ -516,23 +517,356 @@ func TestCountTasks_JsonPreferredOverMarkdown(
 		t.Fatal(err)
 	}
 
-	// Should use tasks.json, not tasks.md
+	// Should use tasks.jsonc, not tasks.md
 	status, err := CountTasks(tmpDir)
 	if err != nil {
 		t.Fatalf("CountTasks failed: %v", err)
 	}
 
-	// Expect counts from JSON (2 total, 1 completed) not MD (5 total, 2 completed)
+	// Expect counts from JSONC (2 total, 1 completed) not MD (5 total, 2 completed)
 	if status.Total != 2 {
 		t.Errorf(
-			"Expected total 2 (from JSON), got %d",
+			"Expected total 2 (from JSONC), got %d",
 			status.Total,
 		)
 	}
 	if status.Completed != 1 {
 		t.Errorf(
-			"Expected completed 1 (from JSON), got %d",
+			"Expected completed 1 (from JSONC), got %d",
 			status.Completed,
 		)
+	}
+}
+
+func TestCountTasks_IgnoresLegacyJson(t *testing.T) {
+	// Test that tasks.json (legacy) is ignored in favor of tasks.md
+	t.Run("tasks.json ignored, falls back to tasks.md", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		// Create legacy tasks.json with 2 tasks
+		jsonContent := `{
+			"version": 1,
+			"tasks": [
+				{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "completed"},
+				{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
+			]
+		}`
+		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		// Create tasks.md with 4 tasks
+		mdContent := `## Tasks
+- [ ] Task 1
+- [ ] Task 2
+- [x] Task 3
+- [x] Task 4`
+		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		// Should use tasks.md, NOT tasks.json (legacy is ignored)
+		status, err := CountTasks(tmpDir)
+		if err != nil {
+			t.Fatalf("CountTasks failed: %v", err)
+		}
+
+		// Expect counts from MD (4 total, 2 completed) not legacy JSON (2 total, 1 completed)
+		if status.Total != 4 {
+			t.Errorf(
+				"Expected total 4 (from tasks.md), got %d - tasks.json should be ignored",
+				status.Total,
+			)
+		}
+		if status.Completed != 2 {
+			t.Errorf(
+				"Expected completed 2 (from tasks.md), got %d - tasks.json should be ignored",
+				status.Completed,
+			)
+		}
+	})
+
+	// Test that tasks.jsonc takes priority over both tasks.json and tasks.md
+	t.Run("tasks.jsonc wins over legacy tasks.json and tasks.md", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		// Create tasks.jsonc with 3 tasks (all completed)
+		jsoncContent := `// JSONC format with comments
+{
+			"version": 1,
+			"tasks": [
+				{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "completed"},
+				{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "completed"},
+				{"id": "1.3", "section": "Impl", "description": "Task 3", "status": "completed"}
+			]
+		}`
+		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.jsonc"), []byte(jsoncContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		// Create legacy tasks.json with 2 tasks
+		jsonContent := `{
+			"version": 1,
+			"tasks": [
+				{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "pending"},
+				{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
+			]
+		}`
+		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		// Create tasks.md with 5 tasks
+		mdContent := `## Tasks
+- [ ] Task 1
+- [ ] Task 2
+- [ ] Task 3
+- [ ] Task 4
+- [ ] Task 5`
+		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		// Should use tasks.jsonc (3 total, 3 completed)
+		status, err := CountTasks(tmpDir)
+		if err != nil {
+			t.Fatalf("CountTasks failed: %v", err)
+		}
+
+		if status.Total != 3 {
+			t.Errorf(
+				"Expected total 3 (from tasks.jsonc), got %d",
+				status.Total,
+			)
+		}
+		if status.Completed != 3 {
+			t.Errorf(
+				"Expected completed 3 (from tasks.jsonc), got %d",
+				status.Completed,
+			)
+		}
+	})
+}
+
+func TestStripJSONComments(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "No comments",
+			input:    `{"key": "value"}`,
+			expected: `{"key": "value"}`,
+		},
+		{
+			name:     "Single-line comment at start",
+			input:    "// This is a comment\n{\"key\": \"value\"}",
+			expected: "\n{\"key\": \"value\"}",
+		},
+		{
+			name:     "Single-line comment inline",
+			input:    "{\"key\": \"value\"} // comment",
+			expected: "{\"key\": \"value\"} ",
+		},
+		{
+			name:  "Multiple single-line comments",
+			input: "// Header comment\n{\n\t// Comment before key\n\t\"key\": \"value\" // inline comment\n}",
+			// Note: whitespace before comments is preserved, only the comment text is stripped
+			expected: "\n{\n\t\n\t\"key\": \"value\" \n}",
+		},
+		{
+			name:     "Multi-line comment",
+			input:    "/* This is a\nmulti-line comment */\n{\"key\": \"value\"}",
+			expected: "\n{\"key\": \"value\"}",
+		},
+		{
+			name:     "Multi-line comment inline",
+			input:    "{\"key\": /* comment */ \"value\"}",
+			expected: "{\"key\":  \"value\"}",
+		},
+		{
+			name:     "Comment-like content inside string preserved",
+			input:    `{"url": "https://example.com", "comment": "This has // slashes"}`,
+			expected: `{"url": "https://example.com", "comment": "This has // slashes"}`,
+		},
+		{
+			name:     "Multi-line comment syntax inside string preserved",
+			input:    `{"code": "/* not a comment */"}`,
+			expected: `{"code": "/* not a comment */"}`,
+		},
+		{
+			name:     "Escaped quotes in strings",
+			input:    `{"message": "He said \"hello\"", "test": "value"} // comment`,
+			expected: `{"message": "He said \"hello\"", "test": "value"} `,
+		},
+		{
+			name:     "Complex escape sequences in strings",
+			input:    `{"path": "C:\\path\\to\\file", "quote": "\""} // end`,
+			expected: `{"path": "C:\\path\\to\\file", "quote": "\""} `,
+		},
+		{
+			name:  "Mixed comments and data",
+			input: "// File header\n/* Block comment explaining format */\n{\n\t\"version\": 1, // version number\n\t\"tasks\": [\n\t\t/* First task */\n\t\t{\"id\": \"1.1\", \"description\": \"Task with // in name\"}\n\t]\n}",
+			// Note: whitespace before comments is preserved
+			expected: "\n\n{\n\t\"version\": 1, \n\t\"tasks\": [\n\t\t\n\t\t{\"id\": \"1.1\", \"description\": \"Task with // in name\"}\n\t]\n}",
+		},
+		{
+			name:     "Empty input",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Only comments",
+			input:    "// Just a comment\n/* Another one */",
+			expected: "\n",
+		},
+		{
+			name:     "Nested-looking but not nested multi-line comments",
+			input:    "/* outer /* inner */ after */ {\"key\": \"value\"}",
+			expected: " after */ {\"key\": \"value\"}",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := StripJSONComments([]byte(tt.input))
+			if string(result) != tt.expected {
+				t.Errorf(
+					"StripJSONComments(%q)\n  got:      %q\n  expected: %q",
+					tt.input,
+					string(result),
+					tt.expected,
+				)
+			}
+		})
+	}
+}
+
+func TestReadTasksJsonWithComments(t *testing.T) {
+	tests := []struct {
+		name              string
+		content           string
+		expectedVersion   int
+		expectedTaskCount int
+		expectedFirstID   string
+		expectedFirstDesc string
+	}{
+		{
+			name: "JSONC with header comment",
+			content: `// tasks.jsonc - Spectr task tracking file
+// Status values: pending, in_progress, completed
+{
+	"version": 1,
+	"tasks": [
+		{"id": "1.1", "section": "Setup", "description": "Initialize project", "status": "completed"}
+	]
+}`,
+			expectedVersion:   1,
+			expectedTaskCount: 1,
+			expectedFirstID:   "1.1",
+			expectedFirstDesc: "Initialize project",
+		},
+		{
+			name: "JSONC with inline comments",
+			content: `{
+	"version": 1, // Schema version
+	"tasks": [
+		{
+			"id": "2.1",       // Task identifier
+			"section": "Impl", // Category
+			"description": "Build feature", // What to do
+			"status": "pending" // Current state
+		}
+	]
+}`,
+			expectedVersion:   1,
+			expectedTaskCount: 1,
+			expectedFirstID:   "2.1",
+			expectedFirstDesc: "Build feature",
+		},
+		{
+			name: "JSONC with block comments",
+			content: `/*
+ * This is the tasks file for the project.
+ * It tracks implementation progress.
+ */
+{
+	"version": 1,
+	"tasks": [
+		/* First task in the list */
+		{"id": "3.1", "section": "Testing", "description": "Write tests", "status": "in_progress"}
+	]
+}`,
+			expectedVersion:   1,
+			expectedTaskCount: 1,
+			expectedFirstID:   "3.1",
+			expectedFirstDesc: "Write tests",
+		},
+		{
+			name: "Multiple tasks with comments",
+			content: `// Task file
+{
+	"version": 1,
+	"tasks": [
+		// Setup tasks
+		{"id": "1.1", "section": "Setup", "description": "First task", "status": "completed"},
+		{"id": "1.2", "section": "Setup", "description": "Second task", "status": "pending"},
+		// Implementation tasks
+		{"id": "2.1", "section": "Impl", "description": "Third task", "status": "in_progress"}
+	]
+}`,
+			expectedVersion:   1,
+			expectedTaskCount: 3,
+			expectedFirstID:   "1.1",
+			expectedFirstDesc: "First task",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			filePath := filepath.Join(tmpDir, "tasks.jsonc")
+			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			tasksFile, err := ReadTasksJson(filePath)
+			if err != nil {
+				t.Fatalf("ReadTasksJson failed: %v", err)
+			}
+
+			if tasksFile.Version != tt.expectedVersion {
+				t.Errorf(
+					"Expected version %d, got %d",
+					tt.expectedVersion,
+					tasksFile.Version,
+				)
+			}
+			if len(tasksFile.Tasks) != tt.expectedTaskCount {
+				t.Errorf(
+					"Expected %d tasks, got %d",
+					tt.expectedTaskCount,
+					len(tasksFile.Tasks),
+				)
+			}
+			if len(tasksFile.Tasks) == 0 {
+				return
+			}
+			if tasksFile.Tasks[0].ID != tt.expectedFirstID {
+				t.Errorf(
+					"Expected first task ID %q, got %q",
+					tt.expectedFirstID,
+					tasksFile.Tasks[0].ID,
+				)
+			}
+			if tasksFile.Tasks[0].Description != tt.expectedFirstDesc {
+				t.Errorf(
+					"Expected first task description %q, got %q",
+					tt.expectedFirstDesc,
+					tasksFile.Tasks[0].Description,
+				)
+			}
+		})
 	}
 }

@@ -41,10 +41,10 @@ The system SHALL validate changes before archiving to ensure spec consistency.
 - **THEN** the system returns an error requiring at least one `#### Scenario:` block per requirement
 
 ### Requirement: Task Completion Checking
-The system SHALL check task completion status and warn users before archiving. The system SHALL read from `tasks.json` when present, falling back to `tasks.md`.
+The system SHALL check task completion status and warn users before archiving. The system SHALL read from `tasks.jsonc` when present, falling back to `tasks.md`.
 
 #### Scenario: Display task status from JSON
-- **WHEN** archiving a change with `tasks.json`
+- **WHEN** archiving a change with `tasks.jsonc`
 - **THEN** the system reads task status from JSON file
 - **AND** displays task completion status (e.g., "3/5 complete")
 
@@ -235,18 +235,18 @@ The system SHALL display clear success messages after archiving.
 - **THEN** the system displays "Specs updated successfully" after showing operation counts
 
 ### Requirement: Auto-Accept on Archive
-The system SHALL automatically convert `tasks.md` to `tasks.json` during archive if not already accepted, ensuring archived changes have stable task format.
+The system SHALL automatically convert `tasks.md` to `tasks.jsonc` during archive if not already accepted, ensuring archived changes have stable task format.
 
 #### Scenario: Archive triggers auto-accept
-- **WHEN** archiving a change that has `tasks.md` but no `tasks.json`
+- **WHEN** archiving a change that has `tasks.md` but no `tasks.jsonc`
 - **THEN** the system displays a warning that auto-acceptance will occur
-- **AND** the system converts `tasks.md` to `tasks.json` before archiving
+- **AND** the system converts `tasks.md` to `tasks.jsonc` before archiving
 - **AND** the system removes `tasks.md` after successful conversion
 
-#### Scenario: Archive with existing tasks.json
-- **WHEN** archiving a change that already has `tasks.json`
+#### Scenario: Archive with existing tasks.jsonc
+- **WHEN** archiving a change that already has `tasks.jsonc`
 - **THEN** the system proceeds normally without conversion
-- **AND** the archived change contains `tasks.json`
+- **AND** the archived change contains `tasks.jsonc`
 
 #### Scenario: Auto-accept failure blocks archive
 - **WHEN** auto-acceptance fails during archive (e.g., invalid tasks.md format)
@@ -260,7 +260,7 @@ The system SHALL clean up the local change directory after successfully completi
 #### Scenario: PR archive cleans local directory
 - **WHEN** `spectr pr archive <change-id>` successfully creates a PR
 - **THEN** the system SHALL remove the local change directory at `spectr/changes/<change-id>/`
-- **AND** all files including untracked files (e.g., `tasks.json` from `spectr accept`) are removed
+- **AND** all files including untracked files (e.g., `tasks.jsonc` from `spectr accept`) are removed
 
 #### Scenario: PR remove cleans local directory
 - **WHEN** `spectr pr rm <change-id>` successfully creates a PR

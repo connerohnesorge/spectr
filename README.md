@@ -438,7 +438,7 @@ Validating change: add-two-factor-auth
 
 ### spectr accept
 
-Accept a change proposal and convert tasks.md to tasks.json format for stable machine-readable task tracking.
+Accept a change proposal and convert tasks.md to tasks.jsonc format for stable machine-readable task tracking.
 
 **Usage:**
 ```bash
@@ -452,7 +452,7 @@ spectr accept <CHANGE-ID> [FLAGS]
 **What It Does:**
 1. Validates the change before accepting
 2. Parses `tasks.md` and extracts task sections, IDs, descriptions, and status
-3. Writes `tasks.json` with structured task data
+3. Writes `tasks.jsonc` with structured task data
 4. Removes `tasks.md` to prevent drift (JSON becomes single source of truth)
 
 **Example:**
@@ -464,7 +464,7 @@ spectr accept add-two-factor-auth
 spectr accept add-two-factor-auth --dry-run
 ```
 
-**tasks.json Format:**
+**tasks.jsonc Format:**
 ```json
 {
   "version": 1,
@@ -913,7 +913,7 @@ Create a proposal when you need to:
 3. Read `tasks.md` - Get implementation checklist
 4. Run `spectr accept <id>` - Convert to stable JSON format
 5. Implement tasks sequentially
-6. Update task status in `tasks.json` with values: `pending`, `in_progress`, `completed`
+6. Update task status in `tasks.jsonc` with values: `pending`, `in_progress`, `completed`
 7. **Approval gate**: Do not implement until proposal is approved
 
 #### Stage 3: Archiving Changes

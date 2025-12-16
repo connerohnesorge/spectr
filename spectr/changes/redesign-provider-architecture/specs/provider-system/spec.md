@@ -31,16 +31,22 @@ The system SHALL provide a `Config` struct containing initialization configurati
 - **AND** the path SHALL be relative to the filesystem root
 
 ### Requirement: Provider Registration
-The system SHALL support registering providers with metadata at registration time.
+The system SHALL support registering providers with metadata at registration time using an instance-based registry.
 
 #### Scenario: Register provider with metadata
-- **WHEN** a provider is registered
+- **WHEN** a provider is registered with a `Registry` instance
 - **THEN** the registration SHALL include ID, Name, Priority, and Provider implementation
 - **AND** the system SHALL reject duplicate provider IDs
 
 #### Scenario: Retrieve registered providers
-- **WHEN** providers are queried
+- **WHEN** providers are queried from a `Registry` instance
 - **THEN** the system SHALL return providers sorted by priority (lower first)
+
+#### Scenario: No global state
+- **WHEN** the registry is used
+- **THEN** it SHALL NOT use global variables for state
+- **AND** each `Registry` instance SHALL maintain its own provider map
+- **AND** tests SHALL be able to create isolated registry instances
 
 ### Requirement: Filesystem Abstraction
 The system SHALL use `afero.Fs` rooted at project directory for all file operations.
@@ -95,3 +101,37 @@ The system SHALL deduplicate identical initializers when multiple providers are 
 - **THEN** the system SHALL run the initializer only once
 - **AND** deduplication SHALL be based on initializer type and configuration values
 
+### Requirement: Shared Helper Functions
+The system SHALL provide shared helper functions that use `afero.Fs` for filesystem operations.
+
+#### Scenario: FileExists helper
+- **WHEN** `FileExists(fs, path)` is called
+- **THEN** it SHALL return `true` if the file exists in the provided filesystem
+- **AND** it SHALL return `false` if the file does not exist
+
+#### Scenario: EnsureDir helper
+- **WHEN** `EnsureDir(fs, path)` is called
+- **THEN** it SHALL create the directory and all parent directories if they do not exist
+- **AND** it SHALL return `nil` if the directory already exists
+
+#### Scenario: UpdateFileWithMarkers helper
+- **WHEN** `UpdateFileWithMarkers(fs, path, content, startMarker, endMarker)` is called
+- **THEN** it SHALL create the file with markers if it does not exist
+- **AND** it SHALL replace content between markers if the file exists
+- **AND** it SHALL preserve content outside markers
+
+## Deprecation Notes
+
+This section documents what is being removed from the old provider system.
+
+**Global Registry Functions (removed)**:
+`Register()`, `Get()`, `All()`, `IDs()`, `Count()`, `WithConfigFile()`, `WithSlashCommands()`, `Reset()` - replaced by instance-based `Registry` struct for improved testability.
+
+**Old Provider Interface Methods (removed)**:
+`GetFilePaths()`, `HasConfigFile()`, `HasSlashCommands()`, `IsConfigured()`, `Configure()` - replaced by composable `Initializer` pattern.
+
+**TemplateRenderer Interface (removed)**:
+`RenderAgents()`, `RenderInstructionPointer()`, `RenderSlashCommand()` - template rendering moved to initializer implementations.
+
+**BaseProvider Struct (removed)**:
+Embedded configuration and method implementations - replaced by composable initializers and registration metadata.

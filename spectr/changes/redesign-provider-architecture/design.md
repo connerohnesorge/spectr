@@ -49,19 +49,33 @@ type Config struct {
 
 ### 2. Registration API
 
-**Decision**: Metadata provided at registration time.
+**Decision**: Instance-only registry with metadata at registration time. No global state.
 
 ```go
+// Create a registry instance
+reg := providers.NewRegistry()
+
 // Register a provider with its metadata
-providers.Register(providers.Registration{
+reg.Register(providers.Registration{
     ID:       "claude-code",
     Name:     "Claude Code",
     Priority: 1,
     Provider: &ClaudeProvider{},
 })
+
+// Get all providers sorted by priority
+all := reg.All()
+
+// Get provider by ID
+claude := reg.Get("claude-code")
 ```
 
-**Rationale**: Providers don't need to know their own ID/name/priority. This is registry concern.
+**Rationale**:
+- Providers don't need to know their own ID/name/priority. This is registry concern.
+- Instance-based registry improves testability (no shared global state between tests).
+- No `init()` magic - explicit registration in application setup.
+
+**Removed**: Global `Register()`, `Get()`, `All()`, `IDs()`, `Count()`, `WithConfigFile()`, `WithSlashCommands()`, `Reset()` functions.
 
 ### 3. Built-in Initializers
 
@@ -167,23 +181,59 @@ func dedupeInitializers(all []Initializer) []Initializer {
 }
 ```
 
+### 6. Shared Helper Functions
+
+**Decision**: Keep shared helpers, migrate to use `afero.Fs`.
+
+```go
+// helpers.go - Updated signatures
+func FileExists(fs afero.Fs, path string) bool
+func EnsureDir(fs afero.Fs, path string) error
+func UpdateFileWithMarkers(fs afero.Fs, path, content, start, end string) error
+```
+
+**Rationale**:
+- Avoids code duplication across initializers
+- `afero.Fs` abstraction enables testing with `afero.MemMapFs`
+- Marker-based updates are complex enough to warrant shared implementation
+
+**Removed**: `expandPath()`, `isGlobalPath()` - No longer needed with project-relative paths.
+
+### 7. Error Handling
+
+**Decision**: No rollback on partial failure.
+
+- If 2 of 5 initializers succeed and the 3rd fails, the partial state remains
+- Users can re-run `spectr init` which is idempotent
+- Git provides natural rollback via `git checkout` if needed
+
+**Rationale**: Simpler implementation, git already provides recovery mechanism.
+
 ## Risks / Trade-offs
 
 | Risk | Mitigation |
 |------|------------|
 | Breaking change for users | Clear migration docs; `spectr init` re-run required |
-| Loss of file path metadata | Use git diff; add `spectr init --dry-run` if needed |
+| Loss of file path metadata | Git diff after init shows all changes |
 | Initializer key collisions | Use deterministic key generation (type + sorted config) |
+| Partial failure state | Initializers are idempotent; re-run is safe |
 
 ## Migration Plan
 
 1. Implement new provider system alongside existing
 2. Migrate providers one-by-one to new system
-3. Remove old provider code
+3. Remove old provider code:
+   - Delete old `Provider` interface and `BaseProvider` from `provider.go`
+   - Delete `TemplateRenderer` interface
+   - Remove global registry functions from `registry.go`
+   - Migrate `helpers.go` to use `afero.Fs`
+   - Remove unused constants from `constants.go`
 4. Update docs to explain re-initialization requirement
-5. No rollback needed - old configs continue to work
+5. No automatic migration - clean break
 
-## Open Questions
+## Resolved Questions
 
-- Should `spectr init --dry-run` be added to preview changes without applying?
-- Should initializers support rollback on partial failure?
+- **Dry-run**: Not needed. Git diff after initialization provides sufficient visibility.
+- **Rollback**: Not needed. Partial state is acceptable; re-run is idempotent.
+- **Helper functions**: Keep shared helpers, migrate to use `afero.Fs`.
+- **Registry**: Instance-only, no global state.

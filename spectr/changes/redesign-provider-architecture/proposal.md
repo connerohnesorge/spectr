@@ -11,20 +11,37 @@ The current provider system has 17 providers, each implementing a 12-method inte
 
 ## What Changes
 
-- **BREAKING**: Remove current `Provider` interface (12 methods) and `BaseProvider` struct
-- **BREAKING**: Replace with minimal `Provider` interface returning `[]Initializer`
-- **BREAKING**: Provider metadata (ID, name, priority) moves to registration time
+### New Architecture
+- **NEW**: Minimal `Provider` interface returning `[]Initializer`
 - **NEW**: `Initializer` interface with `Init()` and `IsSetup()` methods
 - **NEW**: Built-in initializers: `ConfigFileInitializer`, `SlashCommandsInitializer`, `DirectoryInitializer`
 - **NEW**: `Config` struct with `SpectrDir` field only
 - **NEW**: Use `afero.NewBasePathFs(osFs, projectPath)` so all paths are relative to project root
-- **REMOVED**: `GetFilePaths()`, `HasConfigFile()`, `HasSlashCommands()` methods
-- **NEW**: Use git diff after initialization to detect changed files (no upfront declarations)
+- **NEW**: Instance-only `Registry` struct (no global state) for testability
+- **NEW**: Shared helper functions migrated to use `afero.Fs`
 - **NEW**: Add missing instruction file support for providers:
   - Gemini → `GEMINI.md`
   - Cursor → `.cursorrules`
   - Aider → `AIDER-SPECTR.md`
   - OpenCode → `AGENTS.md`
+
+### Breaking Changes
+- **BREAKING**: Remove current `Provider` interface (12 methods)
+- **BREAKING**: Remove `BaseProvider` struct and all its methods
+- **BREAKING**: Remove `TemplateRenderer` interface
+- **BREAKING**: Provider metadata (ID, name, priority) moves to registration time
+- **BREAKING**: Remove global registry functions (`Register`, `Get`, `All`, `IDs`, `Count`, `WithConfigFile`, `WithSlashCommands`, `Reset`)
+
+### Removed Code (Files to Delete/Modify)
+- **DELETE**: `provider.go` - Old `Provider` interface (lines 107-158), `TemplateRenderer` interface (lines 164-179), `BaseProvider` struct and all methods (lines 183-479)
+- **MODIFY**: `registry.go` - Remove global `registry` variable and global functions; keep only instance-based `Registry` struct
+- **MODIFY**: `helpers.go` - Migrate to use `afero.Fs` instead of `os` package
+- **MODIFY**: `constants.go` - Remove `StandardCommandPaths()`, `StandardFrontmatter()`, priority constants used only by old system
+- **MODIFY**: All 17 provider files (`claude.go`, `gemini.go`, etc.) - Complete rewrite to new interface
+
+### Design Decisions
+- **NO DRY-RUN**: Git diff after initialization provides sufficient visibility
+- **NO ROLLBACK**: Partial failures leave partial state; users can re-run or fix manually
 - **MIGRATION**: Users must re-run `spectr init` (clean break, no automatic migration)
 
 ## Impact

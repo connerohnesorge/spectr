@@ -183,6 +183,59 @@ func dedupeInitializers(all []Initializer) []Initializer {
 4. Update docs to explain re-initialization requirement
 5. No rollback needed - old configs continue to work
 
+### 6. TemplateManager Integration
+
+**Decision**: Initializers receive `*TemplateManager` instead of implementing `TemplateRenderer`.
+
+```go
+type Initializer interface {
+    Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error
+    IsSetup(fs afero.Fs, cfg *Config) bool
+}
+```
+
+**Rationale**:
+- Reuses existing `TemplateManager` from `internal/initialize/templates.go`
+- Avoids duplicating template rendering logic in each initializer
+- Simpler than the old `TemplateRenderer` interface pattern
+
+**Alternatives considered:**
+- Each initializer implements own template rendering - More code duplication
+- Pass templates as strings - Less flexible, harder to maintain
+
+### 7. Git-Based Change Detection
+
+**Decision**: Use git diff after initialization instead of upfront `GetFilePaths()` declarations.
+
+```go
+// internal/initialize/git/detector.go
+type ChangeDetector struct {
+    repoPath string
+}
+
+func (d *ChangeDetector) Snapshot() (string, error) {
+    // Create git stash or record HEAD state
+}
+
+func (d *ChangeDetector) ChangedFiles(before string) ([]string, error) {
+    // git diff --name-only before...HEAD
+}
+```
+
+**Implementation details:**
+- Use `git stash create` to capture pre-init state without modifying working tree
+- Use `git diff --name-only` to detect changed files after init
+- Handle edge cases: untracked files (use `git status --porcelain`), not a git repo, dirty working tree
+
+**Rationale**:
+- Eliminates need for providers to declare file paths upfront
+- Git is source of truth for file changes anyway
+- Simpler provider interface (no `GetFilePaths()` method)
+
+**Trade-offs:**
+- Requires git repo (graceful degradation for non-git projects)
+- Slightly more complex executor flow
+
 ## Open Questions
 
 - Should `spectr init --dry-run` be added to preview changes without applying?

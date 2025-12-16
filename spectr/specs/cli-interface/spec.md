@@ -6,6 +6,7 @@ This specification defines the CLI framework structure using Kong for declarativ
 Additionally This specification defines interactive CLI features including navigable table interfaces for list and archive commands, cross-platform clipboard operations, initialization wizard flows, and visual styling for enhanced user experience.
 
 ## Requirements
+
 ### Requirement: Archive Command
 The CLI SHALL provide an `archive` command that moves completed changes to a dated archive directory and applies delta specifications to main specs.
 
@@ -2311,12 +2312,13 @@ This prompt helps users maintain a clean working directory by offering an opport
 - **AND** the local change directory is kept (safe default)
 - **AND** the command exits successfully
 
-#### Scenario: Cleanup prompt only for proposal mode
+#### Scenario: Cleanup for archive mode
 
 - **WHEN** user runs `spectr pr archive <change-id>`
 - **AND** PR creation succeeds
-- **THEN** the cleanup prompt is NOT displayed
-- **AND** the change is already moved to archive by the archive workflow
+- **THEN** the system displays: "Cleaning up local change directory: spectr/changes/<change-id>/"
+- **AND** the local change directory is removed
+- **AND** the change is archived in the worktree (pulled when PR merges)
 
 #### Scenario: PR creation fails
 
@@ -2429,6 +2431,7 @@ The command supports aliases `r` and `remove` for convenience.
 - **AND** creates a PR using the detected platform's CLI
 - **AND** cleans up the temporary worktree
 - **AND** displays the PR URL on success
+- **AND** removes the local change directory after successful PR creation
 
 #### Scenario: User runs spectr pr rm without change ID
 
@@ -2469,6 +2472,7 @@ The command supports aliases `r` and `remove` for convenience.
 - **THEN** the system displays what would be done without executing
 - **AND** no git operations are performed
 - **AND** no PR is created
+- **AND** no local cleanup is performed
 
 #### Scenario: Remove PR with base branch flag
 
@@ -2482,13 +2486,12 @@ The command supports aliases `r` and `remove` for convenience.
 - **THEN** an error is displayed: "change '<change-id>' not found in spectr/changes/"
 - **AND** the command exits with code 1
 
-#### Scenario: Remove preserves user working directory
+#### Scenario: Remove cleans up local change directory
 
 - **WHEN** user runs `spectr pr rm <change-id>`
-- **AND** user has uncommitted changes in their working directory
-- **THEN** the user's working directory is NOT modified
-- **AND** the remove operation executes only within the isolated worktree
-- **AND** the local change directory still exists after the command completes
+- **AND** PR creation succeeds
+- **THEN** the system displays: "Cleaning up local change directory: spectr/changes/<change-id>/"
+- **AND** the local change directory is removed including all files (tracked and untracked)
 
 #### Scenario: Partial ID resolution for remove command
 
@@ -2687,6 +2690,7 @@ The initialization wizard's tool selection step SHALL provide a `/` hotkey that 
 - **AND** the current cursor position is beyond the new list length
 - **THEN** the cursor is adjusted to the last valid position in the filtered list
 - **AND** the cursor does not go out of bounds
+
 ### Requirement: Stdout Output Mode for Interactive List
 The `spectr list` command SHALL support a `--stdout` flag that, when combined with interactive mode (`-I`), outputs the selected item ID to stdout instead of copying it to the system clipboard.
 

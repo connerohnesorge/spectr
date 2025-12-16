@@ -96,7 +96,6 @@ Spectr integrates with popular AI coding assistants to provide spec-driven devel
 | [Kilocode](https://kilocode.ai) | AI coding assistant |
 | [Antigravity](https://antigravity.dev) | AI coding assistant |
 | [Qwen Code](https://github.com/QwenLM/Qwen-Agent) | Alibaba's Qwen Code assistant |
-| [CodeBuddy](https://codebuddy.ai) | AI coding assistant |
 | [CoStrict](https://costrict.dev) | AI coding assistant |
 | [Qoder](https://qoder.ai) | AI coding assistant |
 

@@ -4,9 +4,39 @@ package validation
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
+
+// extractCapabilityFromPath extracts the capability name from a delta spec path.
+// Example: spectr/changes/foo/specs/support-aider/spec.md -> support-aider
+func extractCapabilityFromPath(specPath string) string {
+	// The path structure is: .../specs/<capability>/spec.md
+	// We need to extract <capability> which is the parent directory of spec.md
+	dir := filepath.Dir(specPath)
+	capability := filepath.Base(dir)
+
+	// If we get "specs" or empty, walk up looking for the capability
+	if capability == "specs" || capability == "." || capability == "" {
+		return ""
+	}
+
+	return capability
+}
+
+// makeCompositeKey creates a composite key for cross-capability requirement tracking.
+// Format: capability::normalized_name
+func makeCompositeKey(specPath, normalizedName string) string {
+	capability := extractCapabilityFromPath(specPath)
+	if capability == "" {
+		// Fallback to just the normalized name if we can't extract capability
+		return normalizedName
+	}
+
+	return capability + "::" + strings.ToLower(normalizedName)
+}
 
 // validateAddedRequirements validates ADDED Requirements section
 func validateAddedRequirements(
@@ -91,8 +121,9 @@ func validateAddedRequirements(
 		}
 		fileAddedReqs[normalized] = true
 
-		// Check for duplicate across files
-		if existingPath, exists := addedReqs[normalized]; exists {
+		// Check for duplicate across files (scoped by capability)
+		compositeKey := makeCompositeKey(specPath, normalized)
+		if existingPath, exists := addedReqs[compositeKey]; exists {
 			issues = append(
 				issues,
 				ValidationIssue{
@@ -109,7 +140,7 @@ func validateAddedRequirements(
 				},
 			)
 		} else {
-			addedReqs[normalized] = specPath
+			addedReqs[compositeKey] = specPath
 		}
 
 		// Check for malformed scenarios
@@ -219,8 +250,9 @@ func validateModifiedRequirements(
 		}
 		fileModifiedReqs[normalized] = true
 
-		// Check for duplicate across files
-		if existingPath, exists := modifiedReqs[normalized]; exists {
+		// Check for duplicate across files (scoped by capability)
+		compositeKey := makeCompositeKey(specPath, normalized)
+		if existingPath, exists := modifiedReqs[compositeKey]; exists {
 			issues = append(
 				issues,
 				ValidationIssue{
@@ -237,7 +269,7 @@ func validateModifiedRequirements(
 				},
 			)
 		} else {
-			modifiedReqs[normalized] = specPath
+			modifiedReqs[compositeKey] = specPath
 		}
 
 		// Check for malformed scenarios
@@ -320,8 +352,9 @@ func validateRemovedRequirements(
 		}
 		fileRemovedReqs[normalized] = true
 
-		// Check for duplicate across files
-		if existingPath, exists := removedReqs[normalized]; exists {
+		// Check for duplicate across files (scoped by capability)
+		compositeKey := makeCompositeKey(specPath, normalized)
+		if existingPath, exists := removedReqs[compositeKey]; exists {
 			issues = append(
 				issues,
 				ValidationIssue{
@@ -338,7 +371,7 @@ func validateRemovedRequirements(
 				},
 			)
 		} else {
-			removedReqs[normalized] = specPath
+			removedReqs[compositeKey] = specPath
 		}
 	}
 
@@ -455,8 +488,9 @@ func validateRenamedRequirements(
 		}
 		fileRenamedToReqs[normalizedTo] = true
 
-		// Check for duplicate FROM across files
-		if existingPath, exists := renamedFromReqs[normalizedFrom]; exists {
+		// Check for duplicate FROM across files (scoped by capability)
+		compositeKeyFrom := makeCompositeKey(specPath, normalizedFrom)
+		if existingPath, exists := renamedFromReqs[compositeKeyFrom]; exists {
 			issues = append(
 				issues,
 				ValidationIssue{
@@ -473,11 +507,12 @@ func validateRenamedRequirements(
 				},
 			)
 		} else {
-			renamedFromReqs[normalizedFrom] = specPath
+			renamedFromReqs[compositeKeyFrom] = specPath
 		}
 
-		// Check for duplicate TO across files
-		if existingPath, exists := renamedToReqs[normalizedTo]; exists {
+		// Check for duplicate TO across files (scoped by capability)
+		compositeKeyTo := makeCompositeKey(specPath, normalizedTo)
+		if existingPath, exists := renamedToReqs[compositeKeyTo]; exists {
 			issues = append(
 				issues,
 				ValidationIssue{
@@ -494,7 +529,7 @@ func validateRenamedRequirements(
 				},
 			)
 		} else {
-			renamedToReqs[normalizedTo] = specPath
+			renamedToReqs[compositeKeyTo] = specPath
 		}
 	}
 

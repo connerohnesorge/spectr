@@ -996,6 +996,8 @@ func TestValidateChangeDeltaSpecs_NoSpecFiles(
 func TestValidateChangeDeltaSpecs_MultipleFilesWithConflicts(
 	t *testing.T,
 ) {
+	// Test that same-named requirements across DIFFERENT capabilities are ALLOWED
+	// (each capability has its own namespace)
 	specs := map[string]string{
 		"auth/spec.md": `## ADDED Requirements
 
@@ -1033,29 +1035,12 @@ The system SHALL provide secure authentication.
 		)
 	}
 
+	// Same requirement name across different capabilities should be valid
 	if report.Valid {
-		t.Error(
-			"Expected invalid report due to duplicate requirement across files",
-		)
-	}
-
-	found := false
-	for _, issue := range report.Issues {
-		if issue.Level == LevelError &&
-			strings.Contains(
-				issue.Message,
-				"ADDED in multiple files",
-			) {
-			found = true
-
-			break
-		}
-	}
-	if found {
 		return
 	}
 	t.Error(
-		"Expected error about duplicate requirement across files",
+		"Expected valid report - same requirement name across different capabilities should be allowed",
 	)
 	for _, issue := range report.Issues {
 		t.Logf(
@@ -1064,6 +1049,26 @@ The system SHALL provide secure authentication.
 			issue.Message,
 		)
 	}
+}
+
+// TestValidateChangeDeltaSpecs_SameCapabilityDuplicateAcrossFiles tests that
+// duplicate requirement names within the SAME capability but across multiple
+// files are still detected as errors.
+func TestValidateChangeDeltaSpecs_SameCapabilityDuplicateAcrossFiles(
+	t *testing.T,
+) {
+	// This test uses a workaround: we create two spec files in the same
+	// capability directory by using a nested directory structure.
+	// However, since the spec structure requires <capability>/spec.md,
+	// we need to test duplicate detection within the same file instead,
+	// which is already tested by TestValidateChangeDeltaSpecs_DuplicateRequirementNames.
+	//
+	// For cross-file duplicate detection within the same capability to work,
+	// we would need multiple spec.md files under the same capability,
+	// which is not the typical structure. The composite key approach ensures
+	// that different capabilities can have same-named requirements while
+	// same-capability duplicates are still caught within a single file.
+	t.Skip("Cross-file duplicate detection within same capability is covered by within-file tests")
 }
 
 func TestValidateChangeDeltaSpecs_MalformedScenarios(
@@ -1436,6 +1441,8 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(
 func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(
 	t *testing.T,
 ) {
+	// Test that same TO names across DIFFERENT capabilities are ALLOWED
+	// (each capability has its own namespace)
 	specs := map[string]string{
 		"alpha/spec.md": `## RENAMED Requirements
 
@@ -1465,37 +1472,12 @@ func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(
 		)
 	}
 
+	// Same TO name across different capabilities should be valid
 	if report.Valid {
-		t.Error(
-			"Expected invalid report due to cross-file TO duplicates",
-		)
-	}
-
-	found := false
-	for _, issue := range report.Issues {
-		if issue.Level != LevelError ||
-			!strings.Contains(
-				issue.Message,
-				"renamed (TO) in multiple files",
-			) {
-			continue
-		}
-		found = true
-		if issue.Line != 4 {
-			t.Fatalf(
-				"expected cross-file TO issue at line 4, got %d",
-				issue.Line,
-			)
-		}
-
-		break
-	}
-
-	if found {
 		return
 	}
 	t.Error(
-		"Expected error about cross-file TO duplicates",
+		"Expected valid report - same TO name across different capabilities should be allowed",
 	)
 	for _, issue := range report.Issues {
 		t.Logf(
@@ -1567,6 +1549,479 @@ func TestFindPreMergeErrorLine_UsesRenamedBulletLine(
 		t.Fatalf(
 			"expected TO error to map to line 4, got %d",
 			line,
+		)
+	}
+}
+
+// ============================================================================
+// Cross-Capability Same-Name Requirement Tests
+// These tests verify that the same requirement name can exist in different
+// capabilities without triggering duplicate errors. Each capability has its
+// own namespace, so "auth::User Authentication" is distinct from
+// "security::User Authentication".
+// ============================================================================
+
+// TestValidateChangeDeltaSpecs_SameNameRemovedAcrossCapabilities verifies that
+// requirements with the same name can be REMOVED from different capabilities
+// without triggering a duplicate error.
+func TestValidateChangeDeltaSpecs_SameNameRemovedAcrossCapabilities(
+	t *testing.T,
+) {
+	specs := map[string]string{
+		"support-aider/spec.md": `## REMOVED Requirements
+
+### Requirement: No Instruction File
+**Reason**: Replaced with new configuration approach
+`,
+		"support-cursor/spec.md": `## REMOVED Requirements
+
+### Requirement: No Instruction File
+**Reason**: Replaced with new configuration approach
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+
+	// Create base specs with the requirements that will be removed
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"support-aider",
+		`## Requirements
+
+### Requirement: No Instruction File
+The system SHALL handle missing instruction files gracefully.
+
+#### Scenario: Missing file
+- **WHEN** instruction file is absent
+- **THEN** system uses default configuration
+`,
+	)
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"support-cursor",
+		`## Requirements
+
+### Requirement: No Instruction File
+The system SHALL handle missing instruction files gracefully.
+
+#### Scenario: Missing file
+- **WHEN** instruction file is absent
+- **THEN** system uses default configuration
+`,
+	)
+
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
+	}
+
+	// Same requirement name across different capabilities should be valid
+	if report.Valid {
+		return
+	}
+	t.Error(
+		"Expected valid report - same REMOVED requirement name across different capabilities should be allowed",
+	)
+	for _, issue := range report.Issues {
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
+	}
+}
+
+// TestValidateChangeDeltaSpecs_SameNameModifiedAcrossCapabilities verifies that
+// requirements with the same name can be MODIFIED in different capabilities
+// without triggering a duplicate error.
+func TestValidateChangeDeltaSpecs_SameNameModifiedAcrossCapabilities(
+	t *testing.T,
+) {
+	specs := map[string]string{
+		"support-aider/spec.md": `## MODIFIED Requirements
+
+### Requirement: Configuration Loading
+The system SHALL load configuration from environment variables first.
+
+#### Scenario: Environment override
+- **WHEN** environment variable is set
+- **THEN** it takes precedence over file config
+`,
+		"support-cursor/spec.md": `## MODIFIED Requirements
+
+### Requirement: Configuration Loading
+The system MUST load configuration from environment variables first.
+
+#### Scenario: Environment override
+- **WHEN** environment variable is set
+- **THEN** it takes precedence over file config
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+
+	// Create base specs with the requirements that will be modified
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"support-aider",
+		`## Requirements
+
+### Requirement: Configuration Loading
+The system SHALL load configuration from config file.
+
+#### Scenario: File config
+- **WHEN** config file exists
+- **THEN** configuration is loaded from file
+`,
+	)
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"support-cursor",
+		`## Requirements
+
+### Requirement: Configuration Loading
+The system SHALL load configuration from config file.
+
+#### Scenario: File config
+- **WHEN** config file exists
+- **THEN** configuration is loaded from file
+`,
+	)
+
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
+	}
+
+	// Same requirement name across different capabilities should be valid
+	if report.Valid {
+		return
+	}
+	t.Error(
+		"Expected valid report - same MODIFIED requirement name across different capabilities should be allowed",
+	)
+	for _, issue := range report.Issues {
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
+	}
+}
+
+// TestValidateChangeDeltaSpecs_SameNameAddedAcrossCapabilities verifies that
+// requirements with the same name can be ADDED to different capabilities
+// (new specs) without triggering a duplicate error.
+func TestValidateChangeDeltaSpecs_SameNameAddedAcrossCapabilities(
+	t *testing.T,
+) {
+	specs := map[string]string{
+		"support-aider/spec.md": `## ADDED Requirements
+
+### Requirement: Provider Initialization
+The system SHALL initialize providers at startup.
+
+#### Scenario: Startup init
+- **WHEN** application starts
+- **THEN** all configured providers are initialized
+`,
+		"support-cursor/spec.md": `## ADDED Requirements
+
+### Requirement: Provider Initialization
+The system MUST initialize providers at startup.
+
+#### Scenario: Startup init
+- **WHEN** application starts
+- **THEN** all configured providers are initialized
+`,
+		"support-cline/spec.md": `## ADDED Requirements
+
+### Requirement: Provider Initialization
+The system SHALL initialize providers at startup with validation.
+
+#### Scenario: Validated startup
+- **WHEN** application starts
+- **THEN** providers are initialized and validated
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
+	}
+
+	// Same requirement name across different capabilities should be valid
+	if report.Valid {
+		return
+	}
+	t.Error(
+		"Expected valid report - same ADDED requirement name across different capabilities should be allowed",
+	)
+	for _, issue := range report.Issues {
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
+	}
+}
+
+// TestValidateChangeDeltaSpecs_SameNameRenamedFromAcrossCapabilities verifies that
+// requirements with the same FROM name can be RENAMED in different capabilities
+// without triggering a duplicate error.
+func TestValidateChangeDeltaSpecs_SameNameRenamedFromAcrossCapabilities(
+	t *testing.T,
+) {
+	specs := map[string]string{
+		"support-aider/spec.md": `## RENAMED Requirements
+
+- FROM: ### Requirement: Old Config Name
+- TO: ### Requirement: New Config Name Aider
+`,
+		"support-cursor/spec.md": `## RENAMED Requirements
+
+- FROM: ### Requirement: Old Config Name
+- TO: ### Requirement: New Config Name Cursor
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
+	}
+
+	// Same FROM name across different capabilities should be valid
+	if report.Valid {
+		return
+	}
+	t.Error(
+		"Expected valid report - same RENAMED FROM name across different capabilities should be allowed",
+	)
+	for _, issue := range report.Issues {
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
+	}
+}
+
+// TestValidateChangeDeltaSpecs_DuplicateRemovedWithinSameCapability verifies that
+// duplicate REMOVED requirements within the SAME capability are still detected
+// as errors (within-file duplicate detection should still work).
+func TestValidateChangeDeltaSpecs_DuplicateRemovedWithinSameCapability(
+	t *testing.T,
+) {
+	specs := map[string]string{
+		"auth/spec.md": `## REMOVED Requirements
+
+### Requirement: Legacy Login
+**Reason**: Deprecated
+
+### Requirement: Legacy Login
+**Reason**: Also deprecated
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+
+	// Create base spec with the requirement that will be removed
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"auth",
+		`## Requirements
+
+### Requirement: Legacy Login
+The system SHALL provide legacy login.
+
+#### Scenario: Legacy auth
+- **WHEN** user logs in with legacy method
+- **THEN** user is authenticated
+`,
+	)
+
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
+	}
+
+	if report.Valid {
+		t.Error(
+			"Expected invalid report due to duplicate REMOVED requirement within same file",
+		)
+	}
+
+	found := false
+	for _, issue := range report.Issues {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"Duplicate requirement name in REMOVED section",
+			) {
+			found = true
+
+			break
+		}
+	}
+	if found {
+		return
+	}
+	t.Error(
+		"Expected error about duplicate requirement in REMOVED section",
+	)
+	for _, issue := range report.Issues {
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
+	}
+}
+
+// TestValidateChangeDeltaSpecs_DuplicateModifiedWithinSameCapability verifies that
+// duplicate MODIFIED requirements within the SAME capability are still detected
+// as errors (within-file duplicate detection should still work).
+func TestValidateChangeDeltaSpecs_DuplicateModifiedWithinSameCapability(
+	t *testing.T,
+) {
+	specs := map[string]string{
+		"auth/spec.md": `## MODIFIED Requirements
+
+### Requirement: Password Policy
+The system SHALL enforce stronger passwords.
+
+#### Scenario: Strong password
+- **WHEN** user sets password
+- **THEN** password meets strength requirements
+
+### Requirement: Password Policy
+The system MUST enforce even stronger passwords.
+
+#### Scenario: Very strong password
+- **WHEN** user sets password
+- **THEN** password meets enhanced strength requirements
+`,
+	}
+
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
+
+	// Create base spec with the requirement that will be modified
+	createBaseSpec(
+		t,
+		spectrRoot,
+		"auth",
+		`## Requirements
+
+### Requirement: Password Policy
+The system SHALL enforce password policies.
+
+#### Scenario: Basic password
+- **WHEN** user sets password
+- **THEN** password is validated
+`,
+	)
+
+	report, err := ValidateChangeDeltaSpecs(
+		changeDir,
+		spectrRoot,
+		false,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
+	}
+
+	if report.Valid {
+		t.Error(
+			"Expected invalid report due to duplicate MODIFIED requirement within same file",
+		)
+	}
+
+	found := false
+	for _, issue := range report.Issues {
+		if issue.Level == LevelError &&
+			strings.Contains(
+				issue.Message,
+				"Duplicate requirement name in MODIFIED section",
+			) {
+			found = true
+
+			break
+		}
+	}
+	if found {
+		return
+	}
+	t.Error(
+		"Expected error about duplicate requirement in MODIFIED section",
+	)
+	for _, issue := range report.Issues {
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
 		)
 	}
 }

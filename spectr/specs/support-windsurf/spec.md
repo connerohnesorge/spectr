@@ -20,7 +20,7 @@ The provider SHALL be configured with these settings:
 #### Scenario: Provider priority ordering
 - **WHEN** providers are listed in priority order
 - **THEN** Windsurf SHALL appear with priority 13
-- **AND** it SHALL be listed after Tabnine (priority 12)
+- **AND** it SHALL be listed after Aider (priority 11)
 - **AND** it SHALL be listed before Kilocode (priority 14)
 
 ### Requirement: No Instruction File

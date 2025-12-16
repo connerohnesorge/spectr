@@ -92,7 +92,6 @@ Spectr integrates with popular AI coding assistants to provide spec-driven devel
 | [Continue](https://continue.dev) | Open-source AI code assistant |
 | [Codex CLI](https://github.com/openai/codex-cli) | OpenAI's Codex CLI |
 | [Crush](https://github.com/charmbracelet/crush) | A glamorous CLI AI coding agent by Charmbracelet |
-| [Tabnine](https://tabnine.com) | AI code completion |
 | [Kilocode](https://kilocode.ai) | AI coding assistant |
 | [Antigravity](https://antigravity.dev) | AI coding assistant |
 | [Qwen Code](https://github.com/QwenLM/Qwen-Agent) | Alibaba's Qwen Code assistant |

@@ -248,7 +248,6 @@ When delegating tasks from a change proposal to subagents:
 │       ├── support-opencode
 │       ├── support-qoder
 │       ├── support-qwen
-│       ├── support-tabnine
 │       ├── support-windsurf
 │       └── validation
 └── testdata

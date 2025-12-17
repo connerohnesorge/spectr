@@ -22,6 +22,10 @@ type MockGitExecutor struct {
 	RevParseOutput string
 	// RevParseError is the error returned by RevParse.
 	RevParseError error
+	// DiffNumstatOutput is the output returned by DiffNumstat.
+	DiffNumstatOutput string
+	// DiffNumstatError is the error returned by DiffNumstat.
+	DiffNumstatError error
 
 	// AddedFiles records the files passed to Add.
 	AddedFiles []string
@@ -35,6 +39,10 @@ type MockGitExecutor struct {
 	CommitCalls int
 	// RevParseCalls counts the number of times RevParse was called.
 	RevParseCalls int
+	// DiffNumstatCalls counts the number of times DiffNumstat was called.
+	DiffNumstatCalls int
+	// DiffNumstatFiles records the files passed to DiffNumstat.
+	DiffNumstatFiles []string
 }
 
 // Status implements GitExecutor.Status.
@@ -65,6 +73,14 @@ func (m *MockGitExecutor) RevParse(_, _ string) (string, error) {
 	m.RevParseCalls++
 
 	return m.RevParseOutput, m.RevParseError
+}
+
+// DiffNumstat implements GitExecutor.DiffNumstat.
+func (m *MockGitExecutor) DiffNumstat(_ string, files []string) (string, error) {
+	m.DiffNumstatCalls++
+	m.DiffNumstatFiles = append(m.DiffNumstatFiles, files...)
+
+	return m.DiffNumstatOutput, m.DiffNumstatError
 }
 
 func TestNewCommitter(t *testing.T) {

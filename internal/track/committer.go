@@ -72,6 +72,9 @@ type GitExecutor interface {
 	Commit(repoRoot string, message string) error
 	// RevParse runs `git rev-parse` and returns the result.
 	RevParse(repoRoot string, ref string) (string, error)
+	// DiffNumstat runs `git diff --numstat` for the specified files.
+	// Used for binary file detection.
+	DiffNumstat(repoRoot string, files []string) (string, error)
 }
 
 // RealGitExecutor implements GitExecutor using actual git commands.
@@ -157,6 +160,53 @@ func (*RealGitExecutor) RevParse(repoRoot, ref string) (string, error) {
 	}
 
 	return strings.TrimSpace(string(output)), nil
+}
+
+// DiffNumstat runs `git diff --numstat` for the specified files.
+// For untracked files, it uses --no-index to compare against /dev/null.
+// Binary files show as "-\t-\tfilename" in the output.
+func (*RealGitExecutor) DiffNumstat(repoRoot string, files []string) (string, error) {
+	if len(files) == 0 {
+		return "", nil
+	}
+
+	args := []string{gitRepoFlag, repoRoot, "diff", "--numstat", "--"}
+	args = append(args, files...)
+
+	cmd := exec.Command(gitCmd, args...)
+	output, err := cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf(
+				"git diff --numstat failed: %s",
+				strings.TrimSpace(string(exitErr.Stderr)),
+			)
+		}
+
+		return "", fmt.Errorf("failed to run git diff --numstat: %w", err)
+	}
+
+	return string(output), nil
+}
+
+// parseBinaryFiles parses git diff --numstat output to identify binary files.
+// Binary files show "-\t-\tfilename" as additions/deletions.
+func parseBinaryFiles(output string) map[string]bool {
+	binaries := make(map[string]bool)
+	lines := strings.Split(output, "\n")
+
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		// Binary files format: "-\t-\tfilename"
+		if strings.HasPrefix(line, "-\t-\t") {
+			filename := strings.TrimPrefix(line, "-\t-\t")
+			binaries[filename] = true
+		}
+	}
+
+	return binaries
 }
 
 // Committer handles git staging and commit operations for task tracking.

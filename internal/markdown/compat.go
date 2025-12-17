@@ -159,12 +159,16 @@ type NumberedTaskMatch struct {
 
 // MatchNumberedTask parses a numbered task line from tasks.md format.
 // Format: "- [ ] 1.1 Task description" or "- [x] 2.3 Another task"
+// Also accepts simpler format: "- [ ] 1. Task description" (no digits after dot)
 // Returns the parsed task match and true if matched, or nil and false.
 //
 // Example:
 //
 //	match, ok := MatchNumberedTask("- [ ] 1.1 Create the parser")
 //	// match.Number = "1.1", match.Status = ' ', match.Content = "Create the parser"
+//
+//	match, ok := MatchNumberedTask("- [ ] 1. Simple task")
+//	// match.Number = "1.", match.Status = ' ', match.Content = "Simple task"
 func MatchNumberedTask(
 	line string,
 ) (*NumberedTaskMatch, bool) {
@@ -193,30 +197,34 @@ func MatchNumberedTask(
 	// Rest of line after "- [x] "
 	rest := line[6:]
 
-	// Parse the task number (e.g., "1.1", "12.34")
-	// Must be digits, dot, digits
+	// Parse the task number (e.g., "1.1", "12.34", or "1.")
+	// Must be digits, dot, optionally more digits
 	numEnd := 0
+	dotPos := -1
 	dotSeen := false
-	digitsAfterDot := false
 
 parseLoop:
 	for i, c := range rest {
 		switch {
 		case c >= '0' && c <= '9':
 			numEnd = i + 1
-			if dotSeen {
-				digitsAfterDot = true
-			}
 		case c == '.' && !dotSeen:
 			dotSeen = true
+			dotPos = i
 		default:
 			break parseLoop
 		}
 	}
 
-	// Validate we got a proper number format
-	if !dotSeen || !digitsAfterDot ||
-		numEnd == 0 {
+	// If dot was seen but no digits after it, include the dot in numEnd
+	// This handles "1. Task" format where numEnd would be 1 but dot is at position 1
+	if dotSeen && dotPos >= 0 && dotPos+1 > numEnd {
+		numEnd = dotPos + 1
+	}
+
+	// Validate we got a proper number format (digits followed by dot, optionally more digits)
+	// Accept both "1.1" and "1." formats
+	if !dotSeen || numEnd == 0 {
 		return nil, false
 	}
 
@@ -246,6 +254,99 @@ parseLoop:
 	return &NumberedTaskMatch{
 		Section: section,
 		Number:  taskNum,
+		Status:  rune(checkChar),
+		Content: content,
+	}, true
+}
+
+// FlexibleTaskMatch holds the parsed result of any task checkbox line.
+// Unlike NumberedTaskMatch, this accepts tasks with or without numbers.
+type FlexibleTaskMatch struct {
+	Number  string // Explicit number if present (e.g., "1.1", "1.", "1"), empty otherwise
+	Status  rune   // ' ' for unchecked, 'x' or 'X' for checked
+	Content string // The task description
+}
+
+// MatchFlexibleTask parses any task checkbox line from tasks.md format.
+// Accepts all formats:
+//   - "- [ ] 1.1 Task description" (decimal)
+//   - "- [ ] 1. Task description" (simple dot)
+//   - "- [ ] 1 Task description" (number only)
+//   - "- [ ] Task description" (no number)
+//
+// Returns the parsed task match and true if matched, or nil and false.
+func MatchFlexibleTask(
+	line string,
+) (*FlexibleTaskMatch, bool) {
+	// Must start with "- ["
+	if !strings.HasPrefix(line, "- [") {
+		return nil, false
+	}
+
+	// Need at least "- [x] X" (7 chars)
+	if len(line) < 7 {
+		return nil, false
+	}
+
+	// Extract checkbox state
+	checkChar := line[3]
+	if checkChar != ' ' && checkChar != 'x' &&
+		checkChar != 'X' {
+		return nil, false
+	}
+
+	// Must be followed by "] "
+	if line[4] != ']' || line[5] != ' ' {
+		return nil, false
+	}
+
+	// Rest of line after "- [x] "
+	rest := line[6:]
+	if rest == "" {
+		return nil, false
+	}
+
+	// Try to parse optional number prefix
+	// Number can be: digits, optionally followed by dot, optionally followed by more digits
+	var number string
+	var contentStart int
+
+	// Check if starts with digit
+	if len(rest) > 0 && rest[0] >= '0' && rest[0] <= '9' {
+		// Parse number: digits, optional dot, optional more digits
+		i := 0
+		for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
+			i++
+		}
+		// Check for optional dot
+		if i < len(rest) && rest[i] == '.' {
+			i++
+			// Check for optional digits after dot
+			for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
+				i++
+			}
+		}
+		// Number must be followed by space to be valid
+		if i < len(rest) && rest[i] == ' ' {
+			number = rest[:i]
+			contentStart = i + 1
+		}
+	}
+
+	// Extract content
+	var content string
+	if number != "" {
+		content = strings.TrimLeft(rest[contentStart:], " \t")
+	} else {
+		content = strings.TrimLeft(rest, " \t")
+	}
+
+	if content == "" {
+		return nil, false
+	}
+
+	return &FlexibleTaskMatch{
+		Number:  number,
 		Status:  rune(checkChar),
 		Content: content,
 	}, true
@@ -301,6 +402,61 @@ func MatchNumberedSection(
 	}
 
 	return name, true
+}
+
+// MatchAnySection parses any H2 section header from tasks.md format.
+// Accepts both numbered and unnumbered formats:
+//   - "## 1. Setup" -> name="Setup", number="1", ok=true
+//   - "## Implementation" -> name="Implementation", number="", ok=true
+//
+// Returns the section name, optional number, and true if matched.
+func MatchAnySection(
+	line string,
+) (name, number string, ok bool) {
+	// Must start with "## "
+	if !strings.HasPrefix(line, "## ") {
+		return "", "", false
+	}
+
+	// Get the part after "## "
+	rest := line[3:]
+	if rest == "" {
+		return "", "", false
+	}
+
+	// Try to match numbered format first: "N. Name"
+	if rest[0] >= '0' && rest[0] <= '9' {
+		// Find the end of the number
+		i := 0
+		for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
+			i++
+		}
+
+		// Check for ". " after number
+		if i < len(rest) && rest[i] == '.' {
+			i++
+			if i < len(rest) && rest[i] == ' ' {
+				i++
+				// Extract number and name
+				number = rest[:i-2] // digits only
+				name = strings.TrimSpace(rest[i:])
+				if name != "" {
+					return name, number, true
+				}
+				// Numbered format matched but no content after "N. "
+				// This is invalid, return false
+				return "", "", false
+			}
+		}
+	}
+
+	// Not numbered format, treat as plain section name
+	name = strings.TrimSpace(rest)
+	if name == "" {
+		return "", "", false
+	}
+
+	return name, "", true
 }
 
 // ExtractHeaderLevel returns the header level (1-6) for a line that starts

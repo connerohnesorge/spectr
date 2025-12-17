@@ -770,7 +770,7 @@ func validateTasksFile(changeDir string) []ValidationIssue {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if _, ok := markdown.MatchTaskCheckbox(line); ok {
+		if _, ok := markdown.MatchFlexibleTask(line); ok {
 			taskCount++
 		}
 	}
@@ -793,7 +793,7 @@ func validateTasksFile(changeDir string) []ValidationIssue {
 				Path:  tasksPath,
 				Line:  1,
 				Message: "tasks.md exists but contains no task items; " +
-					"expected format: '- [ ] Task description' or '- [x] Task description'",
+					"expected format: '- [ ] Task' or '- [ ] N.N Task'",
 			},
 		}
 	}

@@ -127,13 +127,13 @@ func TestParseTasksMd(t *testing.T) {
 			},
 		},
 		{
-			name: "task ID extraction",
+			name: "task ID extraction with auto-generation",
 			markdown: `## 1. Section
 
 - [ ] 1.1 First task
 - [ ] 1.2 Second task
-- [ ] 1.10 Tenth task
-- [ ] 2.5 Task in different section numbering
+- [ ] 1.10 Tenth task (explicit ID ignored, auto-generated)
+- [ ] 2.5 Task with mismatched ID (auto-generated)
 `,
 			expected: []parsers.Task{
 				{
@@ -149,15 +149,15 @@ func TestParseTasksMd(t *testing.T) {
 					Status:      parsers.TaskStatusPending,
 				},
 				{
-					ID:          "1.10",
+					ID:          "1.3",
 					Section:     "Section",
-					Description: "Tenth task",
+					Description: "Tenth task (explicit ID ignored, auto-generated)",
 					Status:      parsers.TaskStatusPending,
 				},
 				{
-					ID:          "2.5",
+					ID:          "1.4",
 					Section:     "Section",
-					Description: "Task in different section numbering",
+					Description: "Task with mismatched ID (auto-generated)",
 					Status:      parsers.TaskStatusPending,
 				},
 			},
@@ -193,6 +193,299 @@ func TestParseTasksMd(t *testing.T) {
 					ID:          "1.2",
 					Section:     "Implementation",
 					Description: "Add function that returns `*CLI`",
+					Status:      parsers.TaskStatusCompleted,
+				},
+			},
+		},
+		{
+			name: "unnumbered section with tasks",
+			markdown: `## Implementation
+
+- [ ] 1. Update cmd/validate.go to remove Strict field
+- [ ] 2. Update cmd/validate.go to always pass true
+- [x] 3. Update internal/validation/interactive.go
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Implementation",
+					Description: "Update cmd/validate.go to remove Strict field",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.2",
+					Section:     "Implementation",
+					Description: "Update cmd/validate.go to always pass true",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.3",
+					Section:     "Implementation",
+					Description: "Update internal/validation/interactive.go",
+					Status:      parsers.TaskStatusCompleted,
+				},
+			},
+		},
+		{
+			name: "mixed formats with auto-generated IDs",
+			markdown: `## 1. Setup
+
+- [ ] 1.1 Create files
+- [ ] 1.2 Configure settings
+
+## 2. Implementation
+
+- [ ] 2. Implement feature
+- [x] 3. Test feature
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Setup",
+					Description: "Create files",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.2",
+					Section:     "Setup",
+					Description: "Configure settings",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2.1",
+					Section:     "Implementation",
+					Description: "Implement feature",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2.2",
+					Section:     "Implementation",
+					Description: "Test feature",
+					Status:      parsers.TaskStatusCompleted,
+				},
+			},
+		},
+		{
+			name: "tasks without section use global sequential IDs",
+			markdown: `- [ ] First task without section
+- [x] Second task without section
+- [ ] Third task
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1",
+					Section:     "",
+					Description: "First task without section",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2",
+					Section:     "",
+					Description: "Second task without section",
+					Status:      parsers.TaskStatusCompleted,
+				},
+				{
+					ID:          "3",
+					Section:     "",
+					Description: "Third task",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
+		{
+			name: "tasks without number get auto-generated IDs",
+			markdown: `## 1. Setup
+
+- [ ] Task without explicit number
+- [ ] Another task without number
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Setup",
+					Description: "Task without explicit number",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.2",
+					Section:     "Setup",
+					Description: "Another task without number",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
+		{
+			name: "unnumbered sections get sequential numbers",
+			markdown: `## Setup
+- [ ] First setup task
+- [ ] Second setup task
+
+## Implementation
+- [ ] First impl task
+- [x] Second impl task
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Setup",
+					Description: "First setup task",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.2",
+					Section:     "Setup",
+					Description: "Second setup task",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2.1",
+					Section:     "Implementation",
+					Description: "First impl task",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2.2",
+					Section:     "Implementation",
+					Description: "Second impl task",
+					Status:      parsers.TaskStatusCompleted,
+				},
+			},
+		},
+		{
+			name: "section numbering continues from explicit",
+			markdown: `## 1. Setup
+- [ ] Setup task
+
+## Implementation
+- [ ] Impl task
+
+## 5. Testing
+- [ ] Test task
+
+## Deployment
+- [ ] Deploy task
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Setup",
+					Description: "Setup task",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2.1",
+					Section:     "Implementation",
+					Description: "Impl task",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "5.1",
+					Section:     "Testing",
+					Description: "Test task",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "6.1",
+					Section:     "Deployment",
+					Description: "Deploy task",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
+		{
+			name: "explicit IDs used when matching expected",
+			markdown: `## 1. Section
+- [ ] 1.1 First task
+- [ ] 1.2 Second task
+- [ ] 1.3 Third task
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Section",
+					Description: "First task",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.2",
+					Section:     "Section",
+					Description: "Second task",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.3",
+					Section:     "Section",
+					Description: "Third task",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
+		{
+			name: "wrong explicit IDs get overridden",
+			markdown: `## 1. Section
+- [ ] 5 First task with wrong number
+- [ ] 99.99 Second task with wrong number
+- [ ] Third task no number
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Section",
+					Description: "First task with wrong number",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.2",
+					Section:     "Section",
+					Description: "Second task with wrong number",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.3",
+					Section:     "Section",
+					Description: "Third task no number",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
+		{
+			name: "all task number formats mixed",
+			markdown: `## 1. Mixed
+- [ ] 1.1 Decimal format
+- [ ] 1. Dot format
+- [ ] 3 Number only
+- [ ] No number format
+- [x] 1.5 Matching explicit
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Mixed",
+					Description: "Decimal format",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.2",
+					Section:     "Mixed",
+					Description: "Dot format",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.3",
+					Section:     "Mixed",
+					Description: "Number only",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.4",
+					Section:     "Mixed",
+					Description: "No number format",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.5",
+					Section:     "Mixed",
+					Description: "Matching explicit",
 					Status:      parsers.TaskStatusCompleted,
 				},
 			},

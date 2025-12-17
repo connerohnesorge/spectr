@@ -419,6 +419,39 @@ func TestMatchNumberedTask(t *testing.T) {
 			line:   "- [ ] 1.1Task",
 			wantOk: false,
 		},
+		// Tests for N. format (without digits after dot)
+		{
+			name:    "simple format unchecked",
+			line:    "- [ ] 1. Create parser",
+			wantOk:  true,
+			wantNum: "1.",
+			wantSec: "1",
+			wantSt:  ' ',
+			wantCon: "Create parser",
+		},
+		{
+			name:    "simple format checked",
+			line:    "- [x] 2. Implement feature",
+			wantOk:  true,
+			wantNum: "2.",
+			wantSec: "2",
+			wantSt:  'x',
+			wantCon: "Implement feature",
+		},
+		{
+			name:    "simple format double digit",
+			line:    "- [ ] 12. Complex task",
+			wantOk:  true,
+			wantNum: "12.",
+			wantSec: "12",
+			wantSt:  ' ',
+			wantCon: "Complex task",
+		},
+		{
+			name:   "simple format no space after dot",
+			line:   "- [ ] 1.Task",
+			wantOk: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -465,6 +498,181 @@ func TestMatchNumberedTask(t *testing.T) {
 					"Content = %q, want %q",
 					got.Content,
 					tt.wantCon,
+				)
+			}
+		})
+	}
+}
+
+func TestMatchFlexibleTask(t *testing.T) {
+	tests := []struct {
+		name        string
+		line        string
+		wantMatch   bool
+		wantNumber  string
+		wantStatus  rune
+		wantContent string
+	}{
+		// Decimal format (1.1, 1.2, etc.)
+		{
+			name:        "decimal format unchecked",
+			line:        "- [ ] 1.1 Create the parser",
+			wantMatch:   true,
+			wantNumber:  "1.1",
+			wantStatus:  ' ',
+			wantContent: "Create the parser",
+		},
+		{
+			name:        "decimal format checked",
+			line:        "- [x] 2.3 Implement feature",
+			wantMatch:   true,
+			wantNumber:  "2.3",
+			wantStatus:  'x',
+			wantContent: "Implement feature",
+		},
+		// Simple dot format (1., 2., etc.)
+		{
+			name:        "simple dot format",
+			line:        "- [ ] 1. Create something",
+			wantMatch:   true,
+			wantNumber:  "1.",
+			wantStatus:  ' ',
+			wantContent: "Create something",
+		},
+		{
+			name:        "simple dot format checked",
+			line:        "- [X] 5. Complete task",
+			wantMatch:   true,
+			wantNumber:  "5.",
+			wantStatus:  'X',
+			wantContent: "Complete task",
+		},
+		// Number only format (1, 2, etc.)
+		{
+			name:        "number only format",
+			line:        "- [ ] 1 Create item",
+			wantMatch:   true,
+			wantNumber:  "1",
+			wantStatus:  ' ',
+			wantContent: "Create item",
+		},
+		{
+			name:        "number only format double digit",
+			line:        "- [x] 12 Another task",
+			wantMatch:   true,
+			wantNumber:  "12",
+			wantStatus:  'x',
+			wantContent: "Another task",
+		},
+		// No number format
+		{
+			name:        "no number format",
+			line:        "- [ ] Create the parser",
+			wantMatch:   true,
+			wantNumber:  "",
+			wantStatus:  ' ',
+			wantContent: "Create the parser",
+		},
+		{
+			name:        "no number format checked",
+			line:        "- [x] Implement feature",
+			wantMatch:   true,
+			wantNumber:  "",
+			wantStatus:  'x',
+			wantContent: "Implement feature",
+		},
+		// Edge cases
+		{
+			name:        "complex decimal",
+			line:        "- [ ] 12.34 Multi-digit numbers",
+			wantMatch:   true,
+			wantNumber:  "12.34",
+			wantStatus:  ' ',
+			wantContent: "Multi-digit numbers",
+		},
+		{
+			name:        "content with backticks",
+			line:        "- [ ] Update `cmd/validate.go` to fix",
+			wantMatch:   true,
+			wantNumber:  "",
+			wantStatus:  ' ',
+			wantContent: "Update `cmd/validate.go` to fix",
+		},
+		{
+			name:        "numbered with backticks",
+			line:        "- [ ] 1.1 Update `cmd/validate.go`",
+			wantMatch:   true,
+			wantNumber:  "1.1",
+			wantStatus:  ' ',
+			wantContent: "Update `cmd/validate.go`",
+		},
+		// Invalid inputs
+		{
+			name:      "not a task",
+			line:      "## Section header",
+			wantMatch: false,
+		},
+		{
+			name:      "plain text",
+			line:      "Just some text",
+			wantMatch: false,
+		},
+		{
+			name:      "empty line",
+			line:      "",
+			wantMatch: false,
+		},
+		{
+			name:      "checkbox without content",
+			line:      "- [ ] ",
+			wantMatch: false,
+		},
+		{
+			name:      "invalid checkbox",
+			line:      "- [?] Task",
+			wantMatch: false,
+		},
+		{
+			name:      "wrong bullet format",
+			line:      "* [ ] Task",
+			wantMatch: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			match, ok := MatchFlexibleTask(tt.line)
+			if ok != tt.wantMatch {
+				t.Errorf(
+					"MatchFlexibleTask() matched = %v, want %v",
+					ok,
+					tt.wantMatch,
+				)
+
+				return
+			}
+			if !ok {
+				return
+			}
+			if match.Number != tt.wantNumber {
+				t.Errorf(
+					"Number = %q, want %q",
+					match.Number,
+					tt.wantNumber,
+				)
+			}
+			if match.Status != tt.wantStatus {
+				t.Errorf(
+					"Status = %q, want %q",
+					match.Status,
+					tt.wantStatus,
+				)
+			}
+			if match.Content != tt.wantContent {
+				t.Errorf(
+					"Content = %q, want %q",
+					match.Content,
+					tt.wantContent,
 				)
 			}
 		})
@@ -535,6 +743,109 @@ func TestMatchNumberedSection(t *testing.T) {
 					gotName,
 					gotOk,
 					tt.wantName,
+					tt.wantOk,
+				)
+			}
+		})
+	}
+}
+
+func TestMatchAnySection(t *testing.T) {
+	tests := []struct {
+		name       string
+		line       string
+		wantName   string
+		wantNumber string
+		wantOk     bool
+	}{
+		{
+			name:       "numbered section",
+			line:       "## 1. Setup",
+			wantName:   "Setup",
+			wantNumber: "1",
+			wantOk:     true,
+		},
+		{
+			name:       "double digit numbered section",
+			line:       "## 12. Advanced Setup",
+			wantName:   "Advanced Setup",
+			wantNumber: "12",
+			wantOk:     true,
+		},
+		{
+			name:       "unnumbered section",
+			line:       "## Implementation",
+			wantName:   "Implementation",
+			wantNumber: "",
+			wantOk:     true,
+		},
+		{
+			name:       "unnumbered section with spaces",
+			line:       "## Long Section Name",
+			wantName:   "Long Section Name",
+			wantNumber: "",
+			wantOk:     true,
+		},
+		{
+			name:       "not H2 - wrong level",
+			line:       "### 1. Not H2",
+			wantName:   "",
+			wantNumber: "",
+			wantOk:     false,
+		},
+		{
+			name:       "empty after ##",
+			line:       "## ",
+			wantName:   "",
+			wantNumber: "",
+			wantOk:     false,
+		},
+		{
+			name:       "plain text",
+			line:       "Plain text",
+			wantName:   "",
+			wantNumber: "",
+			wantOk:     false,
+		},
+		{
+			name:       "empty line",
+			line:       "",
+			wantName:   "",
+			wantNumber: "",
+			wantOk:     false,
+		},
+		{
+			name:       "numbered but no content",
+			line:       "## 1. ",
+			wantName:   "",
+			wantNumber: "",
+			wantOk:     false,
+		},
+		{
+			name:       "number without dot treated as unnumbered",
+			line:       "## 1 Setup",
+			wantName:   "1 Setup",
+			wantNumber: "",
+			wantOk:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotName, gotNumber, gotOk := MatchAnySection(
+				tt.line,
+			)
+			if gotName != tt.wantName ||
+				gotNumber != tt.wantNumber ||
+				gotOk != tt.wantOk {
+				t.Errorf(
+					"MatchAnySection(%q) = (%q, %q, %v), want (%q, %q, %v)",
+					tt.line,
+					gotName,
+					gotNumber,
+					gotOk,
+					tt.wantName,
+					tt.wantNumber,
 					tt.wantOk,
 				)
 			}

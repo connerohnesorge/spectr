@@ -33,6 +33,9 @@ type Config struct {
 	RepoRoot string
 	// Writer is used for progress output (e.g., os.Stdout).
 	Writer io.Writer
+	// IncludeBinaries controls whether binary files are included in commits.
+	// By default (false), binary files are excluded from automatic commits.
+	IncludeBinaries bool
 }
 
 // New creates a new Tracker with the specified configuration.

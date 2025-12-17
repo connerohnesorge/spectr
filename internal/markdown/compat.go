@@ -259,6 +259,99 @@ parseLoop:
 	}, true
 }
 
+// FlexibleTaskMatch holds the parsed result of any task checkbox line.
+// Unlike NumberedTaskMatch, this accepts tasks with or without numbers.
+type FlexibleTaskMatch struct {
+	Number  string // Explicit number if present (e.g., "1.1", "1.", "1"), empty otherwise
+	Status  rune   // ' ' for unchecked, 'x' or 'X' for checked
+	Content string // The task description
+}
+
+// MatchFlexibleTask parses any task checkbox line from tasks.md format.
+// Accepts all formats:
+//   - "- [ ] 1.1 Task description" (decimal)
+//   - "- [ ] 1. Task description" (simple dot)
+//   - "- [ ] 1 Task description" (number only)
+//   - "- [ ] Task description" (no number)
+//
+// Returns the parsed task match and true if matched, or nil and false.
+func MatchFlexibleTask(
+	line string,
+) (*FlexibleTaskMatch, bool) {
+	// Must start with "- ["
+	if !strings.HasPrefix(line, "- [") {
+		return nil, false
+	}
+
+	// Need at least "- [x] X" (7 chars)
+	if len(line) < 7 {
+		return nil, false
+	}
+
+	// Extract checkbox state
+	checkChar := line[3]
+	if checkChar != ' ' && checkChar != 'x' &&
+		checkChar != 'X' {
+		return nil, false
+	}
+
+	// Must be followed by "] "
+	if line[4] != ']' || line[5] != ' ' {
+		return nil, false
+	}
+
+	// Rest of line after "- [x] "
+	rest := line[6:]
+	if rest == "" {
+		return nil, false
+	}
+
+	// Try to parse optional number prefix
+	// Number can be: digits, optionally followed by dot, optionally followed by more digits
+	var number string
+	var contentStart int
+
+	// Check if starts with digit
+	if len(rest) > 0 && rest[0] >= '0' && rest[0] <= '9' {
+		// Parse number: digits, optional dot, optional more digits
+		i := 0
+		for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
+			i++
+		}
+		// Check for optional dot
+		if i < len(rest) && rest[i] == '.' {
+			i++
+			// Check for optional digits after dot
+			for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
+				i++
+			}
+		}
+		// Number must be followed by space to be valid
+		if i < len(rest) && rest[i] == ' ' {
+			number = rest[:i]
+			contentStart = i + 1
+		}
+	}
+
+	// Extract content
+	var content string
+	if number != "" {
+		content = strings.TrimLeft(rest[contentStart:], " \t")
+	} else {
+		content = strings.TrimLeft(rest, " \t")
+	}
+
+	if content == "" {
+		return nil, false
+	}
+
+	return &FlexibleTaskMatch{
+		Number:  number,
+		Status:  rune(checkChar),
+		Content: content,
+	}, true
+}
+
 // MatchNumberedSection parses a numbered section header from tasks.md format.
 // Format: "## 1. Section Name"
 // Returns the section name (without number prefix) and true if matched,
@@ -309,6 +402,61 @@ func MatchNumberedSection(
 	}
 
 	return name, true
+}
+
+// MatchAnySection parses any H2 section header from tasks.md format.
+// Accepts both numbered and unnumbered formats:
+//   - "## 1. Setup" -> name="Setup", number="1", ok=true
+//   - "## Implementation" -> name="Implementation", number="", ok=true
+//
+// Returns the section name, optional number, and true if matched.
+func MatchAnySection(
+	line string,
+) (name, number string, ok bool) {
+	// Must start with "## "
+	if !strings.HasPrefix(line, "## ") {
+		return "", "", false
+	}
+
+	// Get the part after "## "
+	rest := line[3:]
+	if rest == "" {
+		return "", "", false
+	}
+
+	// Try to match numbered format first: "N. Name"
+	if rest[0] >= '0' && rest[0] <= '9' {
+		// Find the end of the number
+		i := 0
+		for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
+			i++
+		}
+
+		// Check for ". " after number
+		if i < len(rest) && rest[i] == '.' {
+			i++
+			if i < len(rest) && rest[i] == ' ' {
+				i++
+				// Extract number and name
+				number = rest[:i-2] // digits only
+				name = strings.TrimSpace(rest[i:])
+				if name != "" {
+					return name, number, true
+				}
+				// Numbered format matched but no content after "N. "
+				// This is invalid, return false
+				return "", "", false
+			}
+		}
+	}
+
+	// Not numbered format, treat as plain section name
+	name = strings.TrimSpace(rest)
+	if name == "" {
+		return "", "", false
+	}
+
+	return name, "", true
 }
 
 // ExtractHeaderLevel returns the header level (1-6) for a line that starts

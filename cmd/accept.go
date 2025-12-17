@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
@@ -263,83 +264,112 @@ func (c *AcceptCmd) resolveChangeID(
 	return selectChangeInteractive(projectRoot)
 }
 
-// parseTaskFromMatch creates a Task from parsed task components.
-func parseTaskFromMatch(
-	checkbox, taskID, description, section string,
+// taskParseState tracks state during tasks.md parsing.
+type taskParseState struct {
+	lastSectionNum   int    // Track for section numbering continuity
+	sectionNum       string // Current section number as string
+	sectionName      string // Current section name
+	taskSeqInSection int    // Task sequence within section
+	globalTaskSeq    int    // For tasks with no section
+}
+
+// handleSection processes a section header line and updates state.
+func (s *taskParseState) handleSection(name, number string) {
+	if number != "" {
+		// Numbered section - use explicit number
+		num, _ := strconv.Atoi(number)
+		s.lastSectionNum = num
+		s.sectionNum = number
+	} else {
+		// Unnumbered section - increment from last
+		s.lastSectionNum++
+		s.sectionNum = strconv.Itoa(s.lastSectionNum)
+	}
+	s.sectionName = strings.TrimSpace(name)
+	s.taskSeqInSection = 0
+}
+
+// generateTaskID creates a task ID based on current state and match.
+func (s *taskParseState) generateTaskID(
+	matchNumber string,
+) string {
+	if s.sectionNum == "" {
+		// No section context - global sequential
+		s.globalTaskSeq++
+
+		return strconv.Itoa(s.globalTaskSeq)
+	}
+
+	s.taskSeqInSection++
+	expectedID := fmt.Sprintf("%s.%d", s.sectionNum, s.taskSeqInSection)
+
+	if matchNumber != "" && matchNumber == expectedID {
+		return matchNumber // Explicit matches expected
+	}
+
+	return expectedID // Auto-generate or override
+}
+
+// createTask builds a Task from parsed match and current state.
+func (s *taskParseState) createTask(
+	match *markdown.FlexibleTaskMatch,
 ) parsers.Task {
+	taskID := s.generateTaskID(match.Number)
+
 	var status parsers.TaskStatusValue
-	if checkbox == " " {
+	if match.Status == ' ' {
 		status = parsers.TaskStatusPending
 	} else {
 		status = parsers.TaskStatusCompleted
 	}
 
 	return parsers.Task{
-		ID:      taskID,
-		Section: section,
-		Description: strings.TrimSpace(
-			description,
-		),
-		Status: status,
+		ID:          taskID,
+		Section:     s.sectionName,
+		Description: strings.TrimSpace(match.Content),
+		Status:      status,
 	}
 }
 
 // parseTasksMd parses tasks.md and returns a slice of Task structs.
-//
 // It extracts section headers (## lines), task IDs, descriptions, and status
-// from the markdown structure.
-func parseTasksMd(
-	path string,
-) ([]parsers.Task, error) {
+// from the markdown structure. Supports flexible task formats:
+//   - "- [ ] 1.1 Task" (decimal ID)
+//   - "- [ ] 1. Task" (simple dot ID)
+//   - "- [ ] 1 Task" (number only ID)
+//   - "- [ ] Task" (no ID - auto-generated)
+func parseTasksMd(path string) ([]parsers.Task, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to open file: %w",
-			err,
-		)
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 	defer func() { _ = file.Close() }()
 
 	var tasks []parsers.Task
-	var currentSection string
+	state := &taskParseState{}
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// Check for section header (e.g., "## 1. Core Accept Command")
-		if sectionName, ok := markdown.MatchNumberedSection(line); ok {
-			currentSection = strings.TrimSpace(
-				sectionName,
-			)
+		// Check for section header (numbered or unnumbered)
+		if name, number, ok := markdown.MatchAnySection(line); ok {
+			state.handleSection(name, number)
 
 			continue
 		}
 
-		// Check for task line (e.g., "- [ ] 1.1 Create `cmd/accept.go`...")
-		match, ok := markdown.MatchNumberedTask(
-			line,
-		)
+		// Check for task line using flexible matching
+		match, ok := markdown.MatchFlexibleTask(line)
 		if !ok {
 			continue
 		}
 
-		tasks = append(
-			tasks,
-			parseTaskFromMatch(
-				string(match.Status),
-				match.Number,
-				match.Content,
-				currentSection,
-			),
-		)
+		tasks = append(tasks, state.createTask(match))
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf(
-			"error reading file: %w",
-			err,
-		)
+		return nil, fmt.Errorf("error reading file: %w", err)
 	}
 
 	return tasks, nil

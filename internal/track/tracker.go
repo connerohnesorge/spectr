@@ -46,7 +46,7 @@ func New(config Config) (*Tracker, error) {
 		return nil, err
 	}
 
-	committer := NewCommitter(config.ChangeID, config.RepoRoot)
+	committer := NewCommitter(config.ChangeID, config.RepoRoot, config.IncludeBinaries)
 
 	return &Tracker{
 		changeID:      config.ChangeID,
@@ -210,6 +210,15 @@ func (t *Tracker) commitTransition(taskID string, action Action) error {
 		t.printf("Error: failed to commit for task %s: %v\n", taskID, err)
 
 		return err
+	}
+
+	// Print warnings for skipped binary files
+	if len(result.SkippedBinaries) > 0 {
+		t.printf("  Warning: skipped %d binary file(s) (use --include-binaries to include):\n",
+			len(result.SkippedBinaries))
+		for _, binary := range result.SkippedBinaries {
+			t.printf("    - %s\n", binary)
+		}
 	}
 
 	if result.NoFiles {

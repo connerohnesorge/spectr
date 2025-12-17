@@ -88,7 +88,7 @@ func TestNewCommitter(t *testing.T) {
 		changeID := "test-change-123"
 		repoRoot := "/path/to/repo"
 
-		c := NewCommitter(changeID, repoRoot)
+		c := NewCommitter(changeID, repoRoot, false)
 
 		if c == nil {
 			t.Fatal("NewCommitter returned nil")
@@ -111,8 +111,8 @@ func TestNewCommitter(t *testing.T) {
 	})
 
 	t.Run("creates independent instances", func(t *testing.T) {
-		c1 := NewCommitter("change-1", "/repo1")
-		c2 := NewCommitter("change-2", "/repo2")
+		c1 := NewCommitter("change-1", "/repo1", false)
+		c2 := NewCommitter("change-2", "/repo2", false)
 
 		if c1 == c2 {
 			t.Error("NewCommitter returned same instance for different calls")
@@ -126,7 +126,7 @@ func TestNewCommitter(t *testing.T) {
 func TestNewCommitterWithExecutor(t *testing.T) {
 	t.Run("uses provided executor", func(t *testing.T) {
 		mock := &MockGitExecutor{}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		if c.gitExecutor != mock {
 			t.Error("NewCommitterWithExecutor did not use provided executor")
@@ -208,7 +208,7 @@ func TestCommitter_buildCommitMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := &MockGitExecutor{}
-			c := NewCommitterWithExecutor(tt.changeID, "/repo", mock)
+			c := NewCommitterWithExecutor(tt.changeID, "/repo", false, mock)
 			got := c.buildCommitMessage(tt.taskID, tt.action)
 
 			if !strings.HasPrefix(got, tt.wantPrefix) {
@@ -311,7 +311,7 @@ func TestCommitter_Commit_NoFilesToStage(t *testing.T) {
 	mock := &MockGitExecutor{
 		StatusOutput: "?? tasks.json\n?? tasks.jsonc\n?? tasks.md\n",
 	}
-	c := NewCommitterWithExecutor("test-change", "/repo", mock)
+	c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 	result, err := c.Commit("1.1", ActionStart)
 
@@ -352,7 +352,7 @@ func TestCommitter_Commit_WithFiles(t *testing.T) {
 		StatusOutput:   "?? src/main.go\n",
 		RevParseOutput: "abc123def456789012345678901234567890abcd",
 	}
-	c := NewCommitterWithExecutor("test-change", "/repo", mock)
+	c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 	result, err := c.Commit("1.1", ActionStart)
 
@@ -408,7 +408,7 @@ func TestCommitter_Commit_WithMixedFiles(t *testing.T) {
 		StatusOutput:   "?? tasks.jsonc\n?? src/fix.go\n?? tests/fix_test.go\n",
 		RevParseOutput: "def456789012345678901234567890abcdef1234",
 	}
-	c := NewCommitterWithExecutor("fix-bug", "/repo", mock)
+	c := NewCommitterWithExecutor("fix-bug", "/repo", false, mock)
 
 	result, err := c.Commit("2.1", ActionComplete)
 
@@ -457,7 +457,7 @@ func TestCommitter_Commit_WithModifiedFiles(t *testing.T) {
 		StatusOutput:   " M src/modified.go\nM  src/staged.go\n",
 		RevParseOutput: "abc123def456789012345678901234567890abcd",
 	}
-	c := NewCommitterWithExecutor("test-change", "/repo", mock)
+	c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 	result, err := c.Commit("1.1", ActionStart)
 
@@ -500,7 +500,7 @@ func TestCommitter_Commit_WithMixedNewAndModified(t *testing.T) {
 		StatusOutput:   "?? src/new.go\n M src/modified.go\nM  src/staged.go\n",
 		RevParseOutput: "def456789012345678901234567890abcdef1234",
 	}
-	c := NewCommitterWithExecutor("test-change", "/repo", mock)
+	c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 	result, err := c.Commit("1.1", ActionComplete)
 
@@ -542,7 +542,7 @@ func TestCommitter_Commit_GitError(t *testing.T) {
 		mock := &MockGitExecutor{
 			StatusError: errors.New("git status failed: not a git repository"),
 		}
-		c := NewCommitterWithExecutor("test-change", "/nonexistent", mock)
+		c := NewCommitterWithExecutor("test-change", "/nonexistent", false, mock)
 
 		result, err := c.Commit("1.1", ActionStart)
 
@@ -573,7 +573,7 @@ func TestCommitter_Commit_GitError(t *testing.T) {
 			StatusOutput: "?? src/main.go\n",
 			AddError:     errors.New("git add failed: permission denied"),
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		result, err := c.Commit("1.1", ActionStart)
 
@@ -602,7 +602,7 @@ func TestCommitter_Commit_GitError(t *testing.T) {
 			StatusOutput: "?? src/main.go\n",
 			CommitError:  errors.New("git commit failed: nothing to commit"),
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		result, err := c.Commit("1.1", ActionStart)
 
@@ -631,7 +631,7 @@ func TestCommitter_Commit_GitError(t *testing.T) {
 			StatusOutput:  "?? src/main.go\n",
 			RevParseError: errors.New("git rev-parse failed: ambiguous argument"),
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		result, err := c.Commit("1.1", ActionStart)
 
@@ -685,7 +685,7 @@ func TestCommitter_Commit_ActionTypes(t *testing.T) {
 				StatusOutput:   "?? file.go\n",
 				RevParseOutput: "abc123def456789012345678901234567890abcd",
 			}
-			c := NewCommitterWithExecutor("test-change", "/repo", mock)
+			c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 			result, err := c.Commit("1.1", tt.action)
 			if err != nil {
@@ -718,7 +718,7 @@ func TestCommitter_getModifiedFiles(t *testing.T) {
 		mock := &MockGitExecutor{
 			StatusOutput: "?? new_file.go\n?? another.go\n",
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		files, err := c.getModifiedFiles()
 		if err != nil {
@@ -746,7 +746,7 @@ func TestCommitter_getModifiedFiles(t *testing.T) {
 		mock := &MockGitExecutor{
 			StatusOutput: " M README.md\nM  staged.go\nMM both.go\n",
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		files, err := c.getModifiedFiles()
 		if err != nil {
@@ -776,7 +776,7 @@ func TestCommitter_getModifiedFiles(t *testing.T) {
 		mock := &MockGitExecutor{
 			StatusOutput: " D deleted.go\nD  staged_delete.go\n?? new.go\n",
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		files, err := c.getModifiedFiles()
 		if err != nil {
@@ -798,7 +798,7 @@ func TestCommitter_getModifiedFiles(t *testing.T) {
 		mock := &MockGitExecutor{
 			StatusOutput: "",
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		files, err := c.getModifiedFiles()
 		if err != nil {
@@ -814,7 +814,7 @@ func TestCommitter_getModifiedFiles(t *testing.T) {
 		mock := &MockGitExecutor{
 			StatusError: errors.New("git status failed"),
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		_, err := c.getModifiedFiles()
 		if err == nil {
@@ -826,7 +826,7 @@ func TestCommitter_getModifiedFiles(t *testing.T) {
 func TestCommitter_stageFiles(t *testing.T) {
 	t.Run("stages single file", func(t *testing.T) {
 		mock := &MockGitExecutor{}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		err := c.stageFiles([]string{"stage_test.go"})
 		if err != nil {
@@ -847,7 +847,7 @@ func TestCommitter_stageFiles(t *testing.T) {
 
 	t.Run("stages multiple files", func(t *testing.T) {
 		mock := &MockGitExecutor{}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		err := c.stageFiles([]string{"file1.go", "file2.go"})
 		if err != nil {
@@ -864,7 +864,7 @@ func TestCommitter_stageFiles(t *testing.T) {
 		mock := &MockGitExecutor{
 			AddError: errors.New("git add failed"),
 		}
-		c := NewCommitterWithExecutor("test-change", "/repo", mock)
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
 		err := c.stageFiles([]string{"file.go"})
 		if err == nil {

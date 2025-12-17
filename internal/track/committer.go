@@ -1,3 +1,6 @@
+// Package track provides git commit operations for spectr task tracking.
+//
+//nolint:revive // file-length-limit: This file is a cohesive unit for git operations.
 package track
 
 import (
@@ -61,7 +64,8 @@ type CommitResult struct {
 	// Message is the commit message used.
 	Message string
 	// SkippedBinaries contains the list of binary files that were skipped.
-	// This is populated when IncludeBinaries is false and binary files are detected.
+	// This is populated when IncludeBinaries is false and binary files
+	// are detected.
 	SkippedBinaries []string
 }
 
@@ -168,7 +172,10 @@ func (*RealGitExecutor) RevParse(repoRoot, ref string) (string, error) {
 // DiffNumstat runs `git diff --numstat` for the specified files.
 // For untracked files, it uses --no-index to compare against /dev/null.
 // Binary files show as "-\t-\tfilename" in the output.
-func (*RealGitExecutor) DiffNumstat(repoRoot string, files []string) (string, error) {
+func (*RealGitExecutor) DiffNumstat(
+	repoRoot string,
+	files []string,
+) (string, error) {
 	if len(files) == 0 {
 		return "", nil
 	}
@@ -245,8 +252,8 @@ func NewCommitterWithExecutor(
 	}
 }
 
-// Commit stages all modified files (excluding task files and optionally binaries)
-// and creates a commit.
+// Commit stages all modified files (excluding task files and optionally
+// binaries) and creates a commit.
 // Returns CommitResult with NoFiles=true if only task files were modified.
 // Returns a GitCommitError if git operations fail.
 func (c *Committer) Commit(taskID string, action Action) (CommitResult, error) {
@@ -371,11 +378,13 @@ func filterTaskFiles(files []string) []string {
 
 // filterFiles removes task files and optionally binary files from the list.
 // Returns the filtered list and the list of binary files that were skipped.
+//
+//nolint:revive // flag-parameter: includeBinaries is a necessary control flag.
 func filterFiles(
 	files []string,
 	includeBinaries bool,
 	binaryFiles map[string]bool,
-) (filtered []string, skippedBinaries []string) {
+) (filtered, skippedBinaries []string) {
 	for _, file := range files {
 		baseName := filepath.Base(file)
 		if isTaskFile(baseName) {

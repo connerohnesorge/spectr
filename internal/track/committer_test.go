@@ -1007,12 +1007,12 @@ func TestParseBinaryFiles(t *testing.T) {
 		{
 			name:   "no binary files",
 			output: "10\t5\tfile.go\n20\t15\tanother.go\n",
-			want:   map[string]bool{},
+			want:   make(map[string]bool),
 		},
 		{
 			name:   "empty output",
 			output: "",
-			want:   map[string]bool{},
+			want:   make(map[string]bool),
 		},
 		{
 			name:   "binary file with path",
@@ -1026,6 +1026,7 @@ func TestParseBinaryFiles(t *testing.T) {
 			got := parseBinaryFiles(tt.output)
 			if len(got) != len(tt.want) {
 				t.Errorf("parseBinaryFiles() returned %d files, want %d", len(got), len(tt.want))
+
 				return
 			}
 			for k, v := range tt.want {

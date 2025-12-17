@@ -58,6 +58,7 @@ Track these steps as TODOs and complete them one by one.
    - Implement and verify the task
    - Mark task as `completed` IMMEDIATELY after verification
    - Do NOT batch status updates - update each task individually as you complete it
+   - Using a single edit to mark a task completed AND the next task in_progress is allowed (this is a single transition, not batching)
 
 ### Stage 3: Syncing Specs
 

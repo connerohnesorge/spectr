@@ -83,5 +83,6 @@ When working on tasks from a change proposal:
 1. **BEFORE starting work**: Mark the task as `"in_progress"` in `tasks.jsonc`
 2. **IMMEDIATELY after verification**: Mark the task as `"completed"` in `tasks.jsonc`
 3. **Do NOT batch status updates**: Update each task individually as you complete it
+4. **MultiEdit allowed**: Using a single edit to mark a task as `"completed"` AND the next task as `"in_progress"` is allowed (this is a single transition, not batching)
 
 This ensures accurate real-time progress tracking. Never wait until all tasks are done to update statuses.

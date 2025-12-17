@@ -1,0 +1,218 @@
+name: Add New Provider
+description: Propose adding support for a new AI CLI/IDE tool as a Spectr provider
+title: "[Provider] Add support for <TOOL_NAME>"
+labels: ["enhancement", "provider"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to Spectr! This template will help you propose a new AI CLI/IDE provider integration.
+
+        **What are providers?** Providers are AI CLI/IDE tools (like Claude Code, Gemini, Cline, Cursor) that Spectr integrates with. Each provider handles configuration files and slash commands for that tool.
+
+        **Reference documentation:**
+        - [Provider interface](https://github.com/anthropics/spectr/blob/main/internal/initialize/providers/provider.go)
+        - [Claude provider example](https://github.com/anthropics/spectr/blob/main/internal/initialize/providers/claude.go) (Markdown format)
+        - [Gemini provider example](https://github.com/anthropics/spectr/blob/main/internal/initialize/providers/gemini.go) (TOML format)
+
+  - type: input
+    id: provider-name
+    attributes:
+      label: Provider Name
+      description: Human-readable name of the AI CLI/IDE tool
+      placeholder: e.g., "Claude Code", "Gemini CLI", "Windsurf"
+    validations:
+      required: true
+
+  - type: input
+    id: provider-id
+    attributes:
+      label: Provider ID
+      description: Kebab-case identifier (lowercase letters, numbers, hyphens only)
+      placeholder: e.g., "claude-code", "gemini", "windsurf"
+    validations:
+      required: true
+
+  - type: input
+    id: provider-website
+    attributes:
+      label: Official Website/Documentation
+      description: URL to the tool's official website or documentation
+      placeholder: https://
+    validations:
+      required: true
+
+  - type: textarea
+    id: provider-description
+    attributes:
+      label: Provider Description
+      description: Brief description of what this AI tool does
+      placeholder: A brief description of the tool and its primary use cases
+    validations:
+      required: true
+
+  - type: dropdown
+    id: config-file
+    attributes:
+      label: Instruction File Support
+      description: Does this tool support a project-level instruction file?
+      options:
+        - "No - Slash commands only (like Cursor, Gemini)"
+        - "Yes - Markdown instruction file (like CLAUDE.md, CLINE.md)"
+        - "Yes - Other format (specify in Additional Context)"
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: config-file-name
+    attributes:
+      label: Instruction File Name
+      description: If you selected "Yes" above, what should the file be named?
+      placeholder: e.g., "CLAUDE.md", "CLINE.md", "TOOL.md"
+
+  - type: checkboxes
+    id: slash-commands
+    attributes:
+      label: Slash Commands
+      description: Which slash commands should be created?
+      options:
+        - label: "Proposal command (/spectr:proposal) - Scaffold new changes"
+          required: false
+        - label: "Apply command (/spectr:apply) - Implement approved changes"
+          required: false
+
+  - type: dropdown
+    id: command-format
+    attributes:
+      label: Command Format
+      description: What file format does this tool use for slash commands?
+      options:
+        - "Markdown with YAML frontmatter (Claude Code, Cline, Cursor)"
+        - "TOML format (Gemini CLI)"
+        - "Other (specify in Additional Context)"
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: command-directory
+    attributes:
+      label: Command Directory
+      description: Where should slash command files be stored?
+      placeholder: e.g., ".claude/commands", ".gemini/commands", ".toolname/commands"
+    validations:
+      required: true
+
+  - type: input
+    id: command-extension
+    attributes:
+      label: Command File Extension
+      description: What file extension should slash commands use?
+      placeholder: e.g., ".md", ".toml"
+      value: ".md"
+    validations:
+      required: true
+
+  - type: input
+    id: priority-suggestion
+    attributes:
+      label: Suggested Priority
+      description: |
+        Priority determines display order (lower = higher priority).
+        - 1: Claude Code (Anthropic's official tool)
+        - 2-10: Major AI CLI tools
+        - 11+: Community and specialized tools
+      placeholder: e.g., 15
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional Context
+      description: Any special considerations, custom directory structure, or unique requirements
+      placeholder: |
+        Example:
+        - This tool uses a custom configuration format
+        - Commands need to be in a specific subdirectory
+        - Special handling required for templating
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Implementation Checklist
+
+        Once this issue is approved, the following steps will be needed to implement the provider:
+
+  - type: checkboxes
+    id: implementation
+    attributes:
+      label: Implementation Steps
+      description: Tasks for implementing this provider (will be done by contributor)
+      options:
+        - label: "Create provider file: `internal/initialize/providers/<toolname>.go`"
+          required: false
+        - label: "Implement Provider interface using BaseProvider"
+          required: false
+        - label: "Add init() function with Register() call"
+          required: false
+        - label: "Add priority constant to constants.go (e.g., PriorityToolName = 20)"
+          required: false
+        - label: "Configure command paths (StandardCommandPaths or custom)"
+          required: false
+        - label: "Set command format (FormatMarkdown or FormatTOML)"
+          required: false
+        - label: "Create instruction file template (if applicable)"
+          required: false
+        - label: "Test with `spectr init` in a test project"
+          required: false
+        - label: "Verify slash commands generate correctly"
+          required: false
+        - label: "Update README.md supported tools section"
+          required: false
+        - label: "Run `golangci-lint run` (must pass)"
+          required: false
+        - label: "Create PR with descriptive commit message"
+          required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Example Code Template
+
+        Here's a minimal provider implementation to get started:
+
+        ```go
+        package providers
+
+        func init() {
+            Register(NewToolNameProvider())
+        }
+
+        type ToolNameProvider struct {
+            BaseProvider
+        }
+
+        func NewToolNameProvider() *ToolNameProvider {
+            proposalPath, applyPath := StandardCommandPaths(
+                ".toolname/commands",  // directory
+                ".md",                  // extension
+            )
+
+            return &ToolNameProvider{
+                BaseProvider: BaseProvider{
+                    id:            "toolname",           // kebab-case
+                    name:          "Tool Name",          // human-readable
+                    priority:      PriorityToolName,     // add to constants.go
+                    configFile:    "TOOLNAME.md",        // or "" if none
+                    proposalPath:  proposalPath,
+                    applyPath:     applyPath,
+                    commandFormat: FormatMarkdown,
+                    frontmatter:   StandardFrontmatter(),
+                },
+            }
+        }
+        ```
+
+        **For TOML format (like Gemini):** Override the `Configure()` method. See `gemini.go` for reference.

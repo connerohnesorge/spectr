@@ -9,11 +9,9 @@ import (
 // ValidateSpecFile validates a spec file according to Spectr rules
 // Returns a ValidationReport containing all issues found, or an error
 // for filesystem issues
-//
-//nolint:revive // strictMode is intentional control flag
+// Note: Always applies strict validation (warnings are converted to errors)
 func ValidateSpecFile(
 	path string,
-	strictMode bool,
 ) (*ValidationReport, error) {
 	// Read the file
 	content, err := os.ReadFile(path)
@@ -44,94 +42,99 @@ func ValidateSpecFile(
 
 	// Rule 2-5: Validate requirements (only if Requirements section exists)
 	if hasRequirements {
-		requirements := ExtractRequirements(
+		reqIssues := validateRequirements(
+			path,
 			requirementsContent,
-		)
-		requirementsLine := findSectionLine(
 			lines,
-			"Requirements",
 		)
-
-		for _, req := range requirements {
-			reqPath := fmt.Sprintf(
-				"%s: Requirement '%s'",
-				path,
-				req.Name,
-			)
-			reqLine := findRequirementLine(
-				lines,
-				req.Name,
-				requirementsLine,
-			)
-
-			// Rule 2: Check for SHALL or MUST (WARNING if missing)
-			if !ContainsShallOrMust(req.Content) {
-				issues = append(
-					issues,
-					ValidationIssue{
-						Level: LevelWarning,
-						Path:  reqPath,
-						Line:  reqLine,
-						Message: "Requirement should contain SHALL or " +
-							"MUST to indicate normative requirement",
-					},
-				)
-			}
-
-			// Rule 3: Check for at least one scenario (WARNING)
-			if len(req.Scenarios) == 0 {
-				issues = append(
-					issues,
-					ValidationIssue{
-						Level: LevelWarning,
-						Path:  reqPath,
-						Line:  reqLine,
-						Message: "Requirement should have " +
-							"at least one scenario",
-					},
-				)
-			}
-
-			// Rule 4: Check scenario format (ERROR if wrong format)
-			// This is implicitly handled by ExtractScenarios - if
-			// there's content that looks like scenarios but doesn't
-			// match #### Scenario: format, they won't be extracted
-			// We need to explicitly check for malformed scenarios
-			if len(req.Scenarios) == 0 &&
-				hasMalformedScenarios(
-					req.Content,
-				) {
-				malformedLine := findMalformedScenarioLine(
-					lines,
-					reqLine,
-				)
-				issues = append(
-					issues,
-					ValidationIssue{
-						Level: LevelError,
-						Path:  reqPath,
-						Line:  malformedLine,
-						Message: "Scenarios must use '#### Scenario:' " +
-							"format (4 hashtags followed by 'Scenario:')",
-					},
-				)
-			}
-		}
+		issues = append(issues, reqIssues...)
 	}
 
-	// Apply strict mode: convert warnings to errors
-	if strictMode {
-		for i := range issues {
-			if issues[i].Level == LevelWarning {
-				issues[i].Level = LevelError
-			}
-		}
-	}
+	// Always convert warnings to errors (strict validation)
+	convertWarningsToErrors(issues)
 
 	// Create and return the validation report
-	report := NewValidationReport(issues)
+	return NewValidationReport(issues), nil
+}
 
-	return report, nil
+// validateRequirements validates all requirements in a spec file
+// Returns a slice of validation issues found
+func validateRequirements(
+	path, requirementsContent string,
+	lines []string,
+) []ValidationIssue {
+	issues := make([]ValidationIssue, 0)
+	requirements := ExtractRequirements(requirementsContent)
+	requirementsLine := findSectionLine(lines, "Requirements")
+
+	for _, req := range requirements {
+		reqIssues := validateSingleRequirement(
+			path,
+			req,
+			lines,
+			requirementsLine,
+		)
+		issues = append(issues, reqIssues...)
+	}
+
+	return issues
+}
+
+// validateSingleRequirement validates a single requirement
+// Returns a slice of validation issues found
+func validateSingleRequirement(
+	path string,
+	req Requirement,
+	lines []string,
+	requirementsLine int,
+) []ValidationIssue {
+	issues := make([]ValidationIssue, 0)
+	reqPath := fmt.Sprintf("%s: Requirement '%s'", path, req.Name)
+	reqLine := findRequirementLine(lines, req.Name, requirementsLine)
+
+	// Rule 2: Check for SHALL or MUST (WARNING if missing)
+	if !ContainsShallOrMust(req.Content) {
+		issues = append(issues, ValidationIssue{
+			Level: LevelWarning,
+			Path:  reqPath,
+			Line:  reqLine,
+			Message: "Requirement should contain SHALL or " +
+				"MUST to indicate normative requirement",
+		})
+	}
+
+	// Rule 3: Check for at least one scenario (WARNING)
+	if len(req.Scenarios) == 0 {
+		issues = append(issues, ValidationIssue{
+			Level:   LevelWarning,
+			Path:    reqPath,
+			Line:    reqLine,
+			Message: "Requirement should have at least one scenario",
+		})
+	}
+
+	// Rule 4: Check scenario format (ERROR if wrong format)
+	if len(req.Scenarios) == 0 && hasMalformedScenarios(req.Content) {
+		malformedLine := findMalformedScenarioLine(lines, reqLine)
+		issues = append(issues, ValidationIssue{
+			Level: LevelError,
+			Path:  reqPath,
+			Line:  malformedLine,
+			Message: "Scenarios must use '#### Scenario:' " +
+				"format (4 hashtags followed by 'Scenario:')",
+		})
+	}
+
+	return issues
+}
+
+// convertWarningsToErrors converts all warnings to errors in-place
+func convertWarningsToErrors(issues []ValidationIssue) {
+	for i := range issues {
+		if issues[i].Level == LevelWarning {
+			issues[i].Level = LevelError
+		}
+	}
 }
 
 // hasMalformedScenarios detects if content has scenario-like text that

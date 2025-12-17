@@ -168,7 +168,7 @@ OTP delivery requires integration with notification service.
 Before requesting approval, validate your change:
 
 ```bash
-spectr validate <change-id> --strict
+spectr validate <change-id>
 ```
 
 This checks:

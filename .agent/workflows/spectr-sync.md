@@ -33,13 +33,13 @@ description: Detect spec drift from code and update specs interactively.
 
 6. Apply updates:
    - Edit specs directly with confirmed changes.
-   - Run `spectr validate --strict` to ensure validity.
+   - Run `spectr validate` to ensure validity.
    - Show summary of changes made.
 
 ### Reference
 - Read `spectr/specs/<capability>/spec.md` to view current spec content.
 - Search code with `rg` to find implementations.
-- Validate after edits with `spectr validate --strict`.
+- Validate after edits with `spectr validate`.
 
 <!-- spectr:END -->
 

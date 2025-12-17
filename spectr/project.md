@@ -68,7 +68,7 @@ Spectr implements a three-stage workflow:
    - Scaffold proposals with `proposal.md`, `tasks.md`, optional `design.md`
    - Write delta specs using `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`
    - Each requirement MUST have `#### Scenario:` with WHEN/THEN format
-   - Validate with `spectr validate <change-id> --strict`
+   - Validate with `spectr validate <change-id>`
 
 2. **Implementing Changes**:
    - Follow tasks.md checklist sequentially

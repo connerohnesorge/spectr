@@ -10,7 +10,7 @@ Instructions for AI coding assistants using Spectr for spec-driven development.
 - Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
 - Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta specs per affected capability
 - Write deltas: use `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`; include at least one `#### Scenario:` per requirement
-- Validate: `spectr validate [change-id] --strict` and fix issues
+- Validate: `spectr validate [change-id]` and fix issues
 - Request approval: Do not start implementation until proposal is approved
 
 ## Three-Stage Workflow
@@ -45,7 +45,7 @@ Skip proposal for:
 1. Review `spectr/project.md`, `spectr list`, and `spectr list --specs` to understand current context.
 2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `spectr/changes/<id>/`.
 3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement.
-4. Run `spectr validate <id> --strict` and resolve any issues before sharing the proposal.
+4. Run `spectr validate <id>` and resolve any issues before sharing the proposal.
 
 ### Stage 2: Implementing Changes
 Track these steps as TODOs and complete them one by one.
@@ -62,7 +62,7 @@ After deployment, create separate PR to:
 - Move `changes/[name]/` → `changes/archive/YYYY-MM-DD-[name]/`
 - Update `specs/` if capabilities changed
 - Use `spectr archive <change-id> --skip-specs --yes` for tooling-only changes (always pass the change ID explicitly)
-- Run `spectr validate --strict` to confirm the archived change passes checks
+- Run `spectr validate` to confirm the archived change passes checks
 
 ## Before Any Task
 
@@ -106,7 +106,7 @@ spectr init [path]           # Initialize or update instruction files
 spectr validate              # Bulk validation mode
 
 # Debugging
-spectr validate [change] --strict
+spectr validate [change]
 ```
 
 **Reading Specs and Changes (for AI agents):**
@@ -118,7 +118,6 @@ spectr validate [change] --strict
 
 - `--json` - Machine-readable output
 - `--type change|spec` - Disambiguate items
-- `--strict` - Comprehensive validation
 - `--no-interactive` - Disable prompts
 - `--skip-specs` - Archive without spec updates
 - `--yes`/`-y` - Skip confirmation prompts (non-interactive archive)
@@ -308,8 +307,8 @@ Example for RENAMED:
 ### Validation Tips
 
 ```bash
-# Always use strict mode for comprehensive checks
-spectr validate [change] --strict
+# Validate a change (validation is always strict by default)
+spectr validate [change]
 ```
 
 **For AI agents debugging:**
@@ -344,7 +343,7 @@ Users MUST provide a second factor during login.
 EOF
 
 # 4) Validate
-spectr validate $CHANGE --strict
+spectr validate $CHANGE
 ```
 
 ## Multi-Capability Example
@@ -422,7 +421,7 @@ Only add complexity with:
 4. Consider combining proposals
 
 ### Validation Failures
-1. Run with `--strict` flag
+1. Run `spectr validate` (validation is always strict)
 2. Check JSON output for details
 3. Verify spec file format
 4. Ensure scenarios properly formatted
@@ -449,7 +448,7 @@ Only add complexity with:
 ### CLI Essentials
 ```bash
 spectr list              # What's in progress?
-spectr validate --strict # Is it correct?
+spectr validate          # Is it correct?
 spectr archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
 ```
 

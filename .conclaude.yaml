@@ -28,7 +28,7 @@ stop:
       showStderr: false
       message: "Fix all lint errors without being lazy or ignoring them"
       maxOutputLines: 5
-    - run: "spectr validate --all --strict"
+    - run: "spectr validate --all"
       showStdout: false
       showStderr: false
       message: "Spectr validation failed - please fix validation errors before continuing"

@@ -295,7 +295,7 @@ func TestValidateItemByType_Change(t *testing.T) {
 	)
 	createValidChange(t, tmpDir, "add-feature")
 
-	validator := NewValidator(false)
+	validator := NewValidator()
 	report, err := ValidateItemByType(
 		validator,
 		tmpDir,
@@ -319,7 +319,7 @@ func TestValidateItemByType_Spec(t *testing.T) {
 	)
 	createValidSpec(t, tmpDir, "user-auth")
 
-	validator := NewValidator(false)
+	validator := NewValidator()
 	report, err := ValidateItemByType(
 		validator,
 		tmpDir,
@@ -345,7 +345,7 @@ func TestValidateItemByType_InvalidChange(
 	)
 	createInvalidChange(t, tmpDir, "bad-change")
 
-	validator := NewValidator(true) // strict mode
+	validator := NewValidator() // strict mode
 	report, err := ValidateItemByType(
 		validator,
 		tmpDir,
@@ -380,7 +380,7 @@ func TestValidateSingleItem_Change(t *testing.T) {
 		Path:     changePath,
 	}
 
-	validator := NewValidator(false)
+	validator := NewValidator()
 	result, err := ValidateSingleItem(
 		validator,
 		item,
@@ -413,7 +413,7 @@ func TestValidateSingleItem_Spec(t *testing.T) {
 		Path:     specPath,
 	}
 
-	validator := NewValidator(false)
+	validator := NewValidator()
 	result, err := ValidateSingleItem(
 		validator,
 		item,
@@ -436,7 +436,7 @@ func TestValidateSingleItem_ValidationError(
 		Path:     "/nonexistent/path/spec.md",
 	}
 
-	validator := NewValidator(false)
+	validator := NewValidator()
 	result, err := ValidateSingleItem(
 		validator,
 		item,
@@ -482,7 +482,7 @@ func TestValidateSingleItem_InvalidContent(
 		Path:     specPath,
 	}
 
-	validator := NewValidator(true) // strict mode
+	validator := NewValidator() // strict mode
 	result, err := ValidateSingleItem(
 		validator,
 		item,

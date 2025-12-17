@@ -44,7 +44,6 @@ The system SHALL provide existing authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -129,7 +128,6 @@ The system SHALL provide other feature.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -223,7 +221,6 @@ The system SHALL provide existing feature.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(

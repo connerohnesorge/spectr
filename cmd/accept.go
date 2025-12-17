@@ -183,7 +183,6 @@ func (*AcceptCmd) runValidation(
 
 	report, err := archive.ValidatePreArchive(
 		changeDir,
-		true,
 	)
 	if err != nil {
 		return err

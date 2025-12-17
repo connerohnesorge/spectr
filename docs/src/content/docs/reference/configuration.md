@@ -188,7 +188,7 @@ Validate changes in CI/CD:
 
 ```bash
 # In your CI/CD pipeline
-spectr validate --strict --no-interactive
+spectr validate --no-interactive
 ```
 
 ### Git Hooks
@@ -198,7 +198,7 @@ Validate before commit:
 ```bash
 #!/bin/bash
 # .git/hooks/pre-commit
-spectr validate --strict || exit 1
+spectr validate || exit 1
 ```
 
 ### GitHub Actions
@@ -218,7 +218,7 @@ jobs:
       - name: Install Spectr
         run: go install github.com/connerohnesorge/spectr@latest
       - name: Validate
-        run: spectr validate --strict --no-interactive
+        run: spectr validate --no-interactive
 ```
 
 ## Troubleshooting Configuration
@@ -229,7 +229,7 @@ Ensure `project.md` follows Markdown conventions:
 
 ```bash
 # Check syntax
-spectr validate --strict
+spectr validate
 ```
 
 ### Capability not found

@@ -68,7 +68,7 @@ Before archiving, verify:
 spectr view <change-id> --json
 
 # Validate the change passes strict checks
-spectr validate <change-id> --strict
+spectr validate <change-id>
 ```
 
 ### Step 2: Run Archive
@@ -92,7 +92,7 @@ Check that specs were updated correctly:
 cat spectr/specs/auth/spec.md
 
 # Validate all specs pass
-spectr validate --strict
+spectr validate
 ```
 
 ### Step 4: Commit Changes
@@ -219,7 +219,7 @@ spectr view auth --json | jq '.requirements[].title'
 
 ```bash
 # See validation errors
-spectr validate --strict
+spectr validate
 
 # Check the archived spec for issues
 cat spectr/specs/auth/spec.md
@@ -272,7 +272,7 @@ All three are merged into their respective `specs/` files automatically.
 - [ ] All tasks marked complete in `tasks.md`
 - [ ] Implementation merged to main
 - [ ] All tests passing
-- [ ] No validation errors: `spectr validate <change-id> --strict`
+- [ ] No validation errors: `spectr validate <change-id>`
 - [ ] Changes deployed to production
 - [ ] Team notified of new features
 
@@ -280,7 +280,7 @@ All three are merged into their respective `specs/` files automatically.
 
 - [ ] Change moved to `changes/archive/`
 - [ ] Specs updated in `specs/`
-- [ ] No validation errors: `spectr validate --strict`
+- [ ] No validation errors: `spectr validate`
 - [ ] All changes committed to git
 - [ ] Team can reference new spec in future changes
 

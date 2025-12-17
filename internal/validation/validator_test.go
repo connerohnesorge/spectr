@@ -7,30 +7,13 @@ import (
 )
 
 func TestNewValidator(t *testing.T) {
-	tests := []struct {
-		name       string
-		strictMode bool
-	}{
-		{"strict mode enabled", true},
-		{"strict mode disabled", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			v := NewValidator(tt.strictMode)
-			if v == nil {
-				t.Fatal(
-					"NewValidator returned nil",
-				)
-			}
-			if v.strictMode != tt.strictMode {
-				t.Errorf(
-					"Expected strictMode=%v, got %v",
-					tt.strictMode,
-					v.strictMode,
-				)
-			}
-		})
+	// NewValidator no longer takes a strictMode parameter
+	// Validation is always strict (warnings are converted to errors)
+	v := NewValidator()
+	if v == nil {
+		t.Fatal(
+			"NewValidator returned nil",
+		)
 	}
 }
 
@@ -68,51 +51,37 @@ The system SHALL provide user authentication functionality.
 		)
 	}
 
-	tests := []struct {
-		name       string
-		strictMode bool
-		wantValid  bool
-	}{
-		{"non-strict mode", false, true},
-		{"strict mode", true, true},
+	// Validation is always strict now
+	v := NewValidator()
+	report, err := v.ValidateSpec(
+		specPath,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateSpec returned error: %v",
+			err,
+		)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			v := NewValidator(tt.strictMode)
-			report, err := v.ValidateSpec(
-				specPath,
+	if !report.Valid {
+		t.Error(
+			"Expected Valid=true, got false",
+		)
+		for _, issue := range report.Issues {
+			t.Logf(
+				"  %s: %s - %s",
+				issue.Level,
+				issue.Path,
+				issue.Message,
 			)
-			if err != nil {
-				t.Fatalf(
-					"ValidateSpec returned error: %v",
-					err,
-				)
-			}
+		}
+	}
 
-			if report.Valid != tt.wantValid {
-				t.Errorf(
-					"Expected Valid=%v, got %v",
-					tt.wantValid,
-					report.Valid,
-				)
-				for _, issue := range report.Issues {
-					t.Logf(
-						"  %s: %s - %s",
-						issue.Level,
-						issue.Path,
-						issue.Message,
-					)
-				}
-			}
-
-			if report.Summary.Errors > 0 {
-				t.Errorf(
-					"Expected no errors, got %d",
-					report.Summary.Errors,
-				)
-			}
-		})
+	if report.Summary.Errors > 0 {
+		t.Errorf(
+			"Expected no errors, got %d",
+			report.Summary.Errors,
+		)
 	}
 }
 
@@ -139,57 +108,37 @@ This is just some content without proper sections.
 		)
 	}
 
-	tests := []struct {
-		name       string
-		strictMode bool
-		wantValid  bool
-		minErrors  int
-	}{
-		{
-			"non-strict mode",
-			false,
-			false,
-			1,
-		}, // Missing Requirements
-		{"strict mode", true, false, 1},
+	// Validation is always strict now
+	v := NewValidator()
+	report, err := v.ValidateSpec(
+		specPath,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateSpec returned error: %v",
+			err,
+		)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			v := NewValidator(tt.strictMode)
-			report, err := v.ValidateSpec(
-				specPath,
-			)
-			if err != nil {
-				t.Fatalf(
-					"ValidateSpec returned error: %v",
-					err,
-				)
-			}
+	if report.Valid {
+		t.Error(
+			"Expected Valid=false, got true",
+		)
+	}
 
-			if report.Valid != tt.wantValid {
-				t.Errorf(
-					"Expected Valid=%v, got %v",
-					tt.wantValid,
-					report.Valid,
-				)
-			}
-
-			if report.Summary.Errors < tt.minErrors {
-				t.Errorf(
-					"Expected at least %d errors, got %d",
-					tt.minErrors,
-					report.Summary.Errors,
-				)
-			}
-		})
+	if report.Summary.Errors < 1 {
+		t.Errorf(
+			"Expected at least 1 error, got %d",
+			report.Summary.Errors,
+		)
 	}
 }
 
-func TestValidator_ValidateSpec_WarningsInStrictMode(
+func TestValidator_ValidateSpec_WarningsConvertedToErrors(
 	t *testing.T,
 ) {
-	// Create a spec with warnings (missing scenarios)
+	// Create a spec with what would be warnings (missing scenarios)
+	// but are now errors because validation is always strict
 	content := `# Test Specification
 
 ## Requirements
@@ -212,71 +161,38 @@ The system SHALL provide user authentication functionality.
 		)
 	}
 
-	t.Run(
-		"non-strict mode allows warnings",
-		func(t *testing.T) {
-			v := NewValidator(false)
-			report, err := v.ValidateSpec(
-				specPath,
-			)
-			if err != nil {
-				t.Fatalf(
-					"ValidateSpec returned error: %v",
-					err,
-				)
-			}
-
-			// Should be valid (warnings don't fail validation in non-strict mode)
-			if !report.Valid {
-				t.Error(
-					"Expected Valid=true in non-strict mode, got false",
-				)
-			}
-
-			if report.Summary.Warnings == 0 {
-				t.Error(
-					"Expected warnings, got none",
-				)
-			}
-		},
+	// Validation is always strict - warnings are converted to errors
+	v := NewValidator()
+	report, err := v.ValidateSpec(
+		specPath,
 	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateSpec returned error: %v",
+			err,
+		)
+	}
 
-	t.Run(
-		"strict mode treats warnings as errors",
-		func(t *testing.T) {
-			v := NewValidator(true)
-			report, err := v.ValidateSpec(
-				specPath,
-			)
-			if err != nil {
-				t.Fatalf(
-					"ValidateSpec returned error: %v",
-					err,
-				)
-			}
+	// Should be invalid (warnings become errors)
+	if report.Valid {
+		t.Error(
+			"Expected Valid=false (warnings converted to errors), got true",
+		)
+	}
 
-			// Should be invalid (warnings become errors in strict mode)
-			if report.Valid {
-				t.Error(
-					"Expected Valid=false in strict mode with warnings, got true",
-				)
-			}
+	// Warnings are converted to errors
+	if report.Summary.Errors == 0 {
+		t.Error(
+			"Expected errors (converted from warnings), got none",
+		)
+	}
 
-			// In strict mode, warnings are converted to errors
-			if report.Summary.Errors == 0 {
-				t.Error(
-					"Expected errors (converted from warnings) in strict mode, got none",
-				)
-			}
-
-			if report.Summary.Warnings > 0 {
-				t.Errorf(
-					"Expected no warnings in strict mode (should be converted to errors), got %d",
-					report.Summary.Warnings,
-				)
-			}
-		},
-	)
+	if report.Summary.Warnings > 0 {
+		t.Errorf(
+			"Expected no warnings (should be converted to errors), got %d",
+			report.Summary.Warnings,
+		)
+	}
 }
 
 func TestValidator_ValidateChange_ValidChange(
@@ -285,24 +201,35 @@ func TestValidator_ValidateChange_ValidChange(
 	// Create a valid change with delta specs
 	changeDir := setupValidChangeDirectory(t)
 
-	tests := []struct {
-		name       string
-		strictMode bool
-		wantValid  bool
-	}{
-		{"non-strict mode", false, true},
-		{"strict mode", true, true},
+	// Validation is always strict now
+	v := NewValidator()
+	report, err := v.ValidateChange(changeDir)
+	if err != nil {
+		t.Fatalf(
+			"ValidateChange returned error: %v",
+			err,
+		)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tc := validChangeTestCase{
-				changeDir:  changeDir,
-				strictMode: tt.strictMode,
-				wantValid:  tt.wantValid,
-			}
-			runValidChangeTest(t, tc)
-		})
+	if !report.Valid {
+		t.Error(
+			"Expected Valid=true, got false",
+		)
+		for _, issue := range report.Issues {
+			t.Logf(
+				"  %s: %s - %s",
+				issue.Level,
+				issue.Path,
+				issue.Message,
+			)
+		}
+	}
+
+	if report.Summary.Errors > 0 {
+		t.Errorf(
+			"Expected no errors, got %d",
+			report.Summary.Errors,
+		)
 	}
 }
 
@@ -360,53 +287,6 @@ The system SHALL require two-factor authentication for all users.
 	return changeDir
 }
 
-// validChangeTestCase holds test case parameters
-type validChangeTestCase struct {
-	changeDir  string
-	strictMode bool
-	wantValid  bool
-}
-
-// runValidChangeTest runs a single valid change test case
-func runValidChangeTest(
-	t *testing.T,
-	tc validChangeTestCase,
-) {
-	t.Helper()
-
-	v := NewValidator(tc.strictMode)
-	report, err := v.ValidateChange(tc.changeDir)
-	if err != nil {
-		t.Fatalf(
-			"ValidateChange returned error: %v",
-			err,
-		)
-	}
-
-	if report.Valid != tc.wantValid {
-		t.Errorf(
-			"Expected Valid=%v, got %v",
-			tc.wantValid,
-			report.Valid,
-		)
-		for _, issue := range report.Issues {
-			t.Logf(
-				"  %s: %s - %s",
-				issue.Level,
-				issue.Path,
-				issue.Message,
-			)
-		}
-	}
-
-	if report.Summary.Errors > 0 {
-		t.Errorf(
-			"Expected no errors, got %d",
-			report.Summary.Errors,
-		)
-	}
-}
-
 func TestValidator_ValidateChange_InvalidChange(
 	t *testing.T,
 ) {
@@ -444,50 +324,29 @@ func TestValidator_ValidateChange_InvalidChange(
 		)
 	}
 
-	tests := []struct {
-		name       string
-		strictMode bool
-		wantValid  bool
-		minErrors  int
-	}{
-		{
-			"non-strict mode",
-			false,
-			false,
-			1,
-		}, // No deltas found
-		{"strict mode", true, false, 1},
+	// Validation is always strict now
+	v := NewValidator()
+	report, err := v.ValidateChange(
+		changeDir,
+	)
+	if err != nil {
+		t.Fatalf(
+			"ValidateChange returned error: %v",
+			err,
+		)
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			v := NewValidator(tt.strictMode)
-			report, err := v.ValidateChange(
-				changeDir,
-			)
-			if err != nil {
-				t.Fatalf(
-					"ValidateChange returned error: %v",
-					err,
-				)
-			}
+	if report.Valid {
+		t.Error(
+			"Expected Valid=false, got true",
+		)
+	}
 
-			if report.Valid != tt.wantValid {
-				t.Errorf(
-					"Expected Valid=%v, got %v",
-					tt.wantValid,
-					report.Valid,
-				)
-			}
-
-			if report.Summary.Errors < tt.minErrors {
-				t.Errorf(
-					"Expected at least %d errors, got %d",
-					tt.minErrors,
-					report.Summary.Errors,
-				)
-			}
-		})
+	if report.Summary.Errors < 1 {
+		t.Errorf(
+			"Expected at least 1 error, got %d",
+			report.Summary.Errors,
+		)
 	}
 }
 
@@ -501,7 +360,7 @@ func TestValidator_ValidateChange_MissingSpecsDir(
 	)
 	// Don't create specs directory
 
-	v := NewValidator(false)
+	v := NewValidator()
 	_, err := v.ValidateChange(changeDir)
 
 	if err == nil {
@@ -514,7 +373,7 @@ func TestValidator_ValidateChange_MissingSpecsDir(
 func TestValidator_ValidateSpec_NonexistentFile(
 	t *testing.T,
 ) {
-	v := NewValidator(false)
+	v := NewValidator()
 	_, err := v.ValidateSpec(
 		"/nonexistent/path/spec.md",
 	)
@@ -527,10 +386,12 @@ func TestValidator_ValidateSpec_NonexistentFile(
 }
 
 func TestValidator_CreateReport(t *testing.T) {
+	// CreateReport is a helper that just creates a report from issues
+	// Warning-to-error conversion happens in the validation functions,
+	// not in CreateReport
 	tests := []struct {
 		name       string
 		issues     []ValidationIssue
-		strictMode bool
 		wantValid  bool
 		wantErrors int
 	}{
@@ -540,7 +401,6 @@ func TestValidator_CreateReport(t *testing.T) {
 				[]ValidationIssue,
 				0,
 			),
-			strictMode: false,
 			wantValid:  true,
 			wantErrors: 0,
 		},
@@ -558,12 +418,11 @@ func TestValidator_CreateReport(t *testing.T) {
 					Message: "Error 2",
 				},
 			},
-			strictMode: false,
 			wantValid:  false,
 			wantErrors: 2,
 		},
 		{
-			name: "warnings in non-strict mode",
+			name: "warnings (not converted by CreateReport)",
 			issues: []ValidationIssue{
 				{
 					Level:   LevelWarning,
@@ -571,7 +430,6 @@ func TestValidator_CreateReport(t *testing.T) {
 					Message: "Warning 1",
 				},
 			},
-			strictMode: false,
 			wantValid:  true,
 			wantErrors: 0,
 		},
@@ -594,7 +452,6 @@ func TestValidator_CreateReport(t *testing.T) {
 					Message: "Info",
 				},
 			},
-			strictMode: false,
 			wantValid:  false,
 			wantErrors: 1,
 		},
@@ -602,7 +459,7 @@ func TestValidator_CreateReport(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v := NewValidator(tt.strictMode)
+			v := NewValidator()
 			report := v.CreateReport(tt.issues)
 
 			if report == nil {
@@ -772,7 +629,7 @@ The system SHALL send email notifications.
 		)
 	}
 
-	v := NewValidator(false)
+	v := NewValidator()
 	report, err := v.ValidateChange(changeDir)
 	if err != nil {
 		t.Fatalf(

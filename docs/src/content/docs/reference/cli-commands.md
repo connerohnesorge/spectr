@@ -55,17 +55,16 @@ spectr view add-two-factor-auth --json --deltas-only
 
 ### Validate Changes and Specs
 
-Validate a change or specification:
+Validate a change or specification. Validation is always comprehensive (strict mode).
 
 ```bash
 spectr validate <change-id>
-spectr validate --strict
 ```
 
 **Examples:**
 ```bash
 # Validate single change
-spectr validate add-two-factor-auth --strict
+spectr validate add-two-factor-auth
 
 # Bulk validation (interactive)
 spectr validate
@@ -75,7 +74,6 @@ spectr validate --specs
 ```
 
 **Options:**
-- `--strict` - Comprehensive validation with all checks
 - `--specs` - Validate specs instead of changes
 - `--no-interactive` - Disable prompts
 
@@ -205,12 +203,12 @@ mkdir -p spectr/changes/add-feature/specs/auth
 # 2. Write proposal.md, tasks.md, and spec.md files
 
 # 3. Validate the change
-spectr validate add-feature --strict
+spectr validate add-feature
 
 # 4. Fix any issues shown in validation
 
 # 5. Validate again
-spectr validate add-feature --strict
+spectr validate add-feature
 ```
 
 ### Implement and Archive
@@ -224,13 +222,13 @@ spectr view add-feature
 # 3. Mark all tasks complete in tasks.md
 
 # 4. Validate before archiving
-spectr validate add-feature --strict
+spectr validate add-feature
 
 # 5. Archive the change
 spectr archive add-feature --yes
 
 # 6. Verify specs were updated
-spectr validate --strict
+spectr validate
 ```
 
 ### Explore Project State
@@ -249,7 +247,7 @@ spectr view add-feature
 spectr view auth --type spec
 
 # 5. Validate everything
-spectr validate --strict
+spectr validate
 ```
 
 ## Troubleshooting
@@ -311,7 +309,7 @@ Validate multiple times while editing:
 # Watch validation results
 while true; do
   clear
-  spectr validate add-feature --strict
+  spectr validate add-feature
   sleep 2
 done
 ```

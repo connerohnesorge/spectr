@@ -45,7 +45,6 @@ The system SHALL provide user authentication functionality.
 	// Validate the spec
 	report, err := ValidateSpecFile(
 		specPath,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -103,7 +102,6 @@ Some content here but no Requirements section.
 
 	report, err := ValidateSpecFile(
 		specPath,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -177,7 +175,6 @@ The system provides some feature.
 
 	report, err := ValidateSpecFile(
 		specPath,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -186,24 +183,24 @@ The system provides some feature.
 		)
 	}
 
-	// Should be valid (warnings don't make it invalid in non-strict mode)
-	if !report.Valid {
+	// Should be invalid (warnings are now errors in always-strict mode)
+	if report.Valid {
 		t.Error(
-			"Expected valid report (warnings don't invalidate in normal mode)",
+			"Expected invalid report (warnings are errors in strict mode)",
 		)
 	}
 
-	if report.Summary.Warnings != 1 {
+	if report.Summary.Errors != 1 {
 		t.Errorf(
-			"Expected 1 warning, got %d",
-			report.Summary.Warnings,
+			"Expected 1 error, got %d",
+			report.Summary.Errors,
 		)
 	}
 
-	// Check that the warning message is correct
+	// Check that the error message is correct
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelWarning &&
+		if issue.Level == LevelError &&
 			strings.Contains(
 				issue.Message,
 				"SHALL or MUST",
@@ -215,7 +212,7 @@ The system provides some feature.
 	}
 	if !found {
 		t.Error(
-			"Expected warning about missing SHALL or MUST",
+			"Expected error about missing SHALL or MUST",
 		)
 	}
 }
@@ -247,7 +244,6 @@ The system SHALL provide some feature.
 
 	report, err := ValidateSpecFile(
 		specPath,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -256,24 +252,24 @@ The system SHALL provide some feature.
 		)
 	}
 
-	// Should be valid (warnings don't make it invalid in non-strict mode)
-	if !report.Valid {
+	// Should be invalid (warnings are now errors in always-strict mode)
+	if report.Valid {
 		t.Error(
-			"Expected valid report (warnings don't invalidate in normal mode)",
+			"Expected invalid report (warnings are errors in strict mode)",
 		)
 	}
 
-	if report.Summary.Warnings != 1 {
+	if report.Summary.Errors != 1 {
 		t.Errorf(
-			"Expected 1 warning, got %d",
-			report.Summary.Warnings,
+			"Expected 1 error, got %d",
+			report.Summary.Errors,
 		)
 	}
 
-	// Check that the warning message is correct
+	// Check that the error message is correct
 	found := false
 	for _, issue := range report.Issues {
-		if issue.Level == LevelWarning &&
+		if issue.Level == LevelError &&
 			strings.Contains(
 				issue.Message,
 				"at least one scenario",
@@ -285,7 +281,7 @@ The system SHALL provide some feature.
 	}
 	if !found {
 		t.Error(
-			"Expected warning about missing scenarios",
+			"Expected error about missing scenarios",
 		)
 	}
 }
@@ -321,7 +317,6 @@ The system SHALL provide some feature.
 
 	report, err := ValidateSpecFile(
 		specPath,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -346,7 +341,7 @@ The system SHALL provide some feature.
 
 	// Check that there's an error about scenario format
 	foundFormatError := false
-	foundMissingScenarioWarning := false
+	foundMissingScenarioError := false
 	for _, issue := range report.Issues {
 		if issue.Level == LevelError &&
 			strings.Contains(
@@ -355,12 +350,12 @@ The system SHALL provide some feature.
 			) {
 			foundFormatError = true
 		}
-		if issue.Level == LevelWarning &&
+		if issue.Level == LevelError &&
 			strings.Contains(
 				issue.Message,
 				"at least one scenario",
 			) {
-			foundMissingScenarioWarning = true
+			foundMissingScenarioError = true
 		}
 	}
 
@@ -369,17 +364,18 @@ The system SHALL provide some feature.
 			"Expected error about incorrect scenario format",
 		)
 	}
-	if !foundMissingScenarioWarning {
+	if !foundMissingScenarioError {
 		t.Error(
-			"Expected warning about missing scenarios (since malformed ones don't count)",
+			"Expected error about missing scenarios (since malformed ones don't count)",
 		)
 	}
 }
 
-func TestValidateSpecFile_StrictMode(
+func TestValidateSpecFile_AlwaysStrict(
 	t *testing.T,
 ) {
-	// This spec has a warning (missing SHALL/MUST in requirement)
+	// This spec has what would have been a warning (missing SHALL/MUST)
+	// but is now always treated as an error
 	content := `# Test Specification
 
 ## Requirements
@@ -406,10 +402,9 @@ The system provides some feature.
 		)
 	}
 
-	// Validate in strict mode
+	// Validate (always strict)
 	report, err := ValidateSpecFile(
 		specPath,
-		true,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -418,25 +413,25 @@ The system provides some feature.
 		)
 	}
 
-	// Should be invalid in strict mode (warnings become errors)
+	// Should be invalid (warnings are always converted to errors)
 	if report.Valid {
 		t.Error(
-			"Expected invalid report in strict mode (warnings become errors)",
+			"Expected invalid report (warnings become errors)",
 		)
 	}
 
-	// In strict mode, warnings are converted to errors
-	// 1 warning: missing SHALL/MUST in requirement
+	// Warnings are converted to errors
+	// 1 error: missing SHALL/MUST in requirement
 	if report.Summary.Errors != 1 {
 		t.Errorf(
-			"Expected 1 error in strict mode, got %d",
+			"Expected 1 error, got %d",
 			report.Summary.Errors,
 		)
 	}
 
 	if report.Summary.Warnings != 0 {
 		t.Errorf(
-			"Expected 0 warnings in strict mode (all converted to errors), got %d",
+			"Expected 0 warnings (all converted to errors), got %d",
 			report.Summary.Warnings,
 		)
 	}
@@ -449,7 +444,6 @@ func TestValidateSpecFile_FileNotFound(
 
 	_, err := ValidateSpecFile(
 		nonexistentPath,
-		false,
 	)
 	if err == nil {
 		t.Error(
@@ -505,7 +499,6 @@ The system MUST provide feature three.
 
 	report, err := ValidateSpecFile(
 		specPath,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -514,20 +507,21 @@ The system MUST provide feature three.
 		)
 	}
 
-	// Should be valid (only warnings, no errors)
-	if !report.Valid {
+	// Should be invalid (warnings are now errors in always-strict mode)
+	if report.Valid {
 		t.Error(
-			"Expected valid report (warnings don't invalidate)",
+			"Expected invalid report (warnings are errors)",
 		)
 	}
 
 	// Expect:
-	// - 0 ERRORs
-	// - 2 WARNINGs: Feature One (no SHALL/MUST), Feature One (no scenarios)
-	// - 0 WARNINGs: Feature Two (has SHALL and has scenario)
-	// - 1 WARNING: Feature Three (no scenarios)
-	expectedErrors := 0
-	expectedWarnings := 3
+	// - 3 ERRORs (warnings converted to errors):
+	//   - Feature One (no SHALL/MUST)
+	//   - Feature One (no scenarios)
+	//   - Feature Three (no scenarios)
+	// Feature Two has SHALL and has scenario, so no issues
+	expectedErrors := 3
+	expectedWarnings := 0
 
 	if report.Summary.Errors != expectedErrors {
 		t.Errorf(
@@ -587,7 +581,6 @@ The system SHALL provide some feature.
 
 	report, err := ValidateSpecFile(
 		specPath,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -654,7 +647,6 @@ The system SHALL provide some feature.
 
 	report, err := ValidateSpecFile(
 		specPath,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(

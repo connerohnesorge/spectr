@@ -9,7 +9,7 @@ Instructions for AI coding assistants using Spectr for spec-driven development.
 - Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
 - Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta specs per affected capability
 - Write deltas: use `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`; include at least one `#### Scenario:` per requirement
-- Validate: `spectr validate [change-id] --strict` and fix issues
+- Validate: `spectr validate [change-id]` and fix issues
 - Request approval: Do not start implementation until proposal is approved
 
 ## Three-Stage Workflow
@@ -44,7 +44,7 @@ Skip proposal for:
 1. Review `spectr/project.md` and read `spectr/specs/` and `spectr/changes/` directories to understand current context.
 2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `spectr/changes/<id>/`.
 3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement.
-4. Run `spectr validate <id> --strict` and resolve any issues before sharing the proposal.
+4. Run `spectr validate <id>` and resolve any issues before sharing the proposal.
 
 ### Stage 2: Implementing Changes
 Track these steps as TODOs and complete them one by one.
@@ -68,7 +68,7 @@ When code implementation diverges from specs, sync to update specs:
 2. Identify drift: new features (ADDED), changed behavior (MODIFIED), removed features (REMOVED)
 3. Review each change interactively before applying
 4. Edit specs directly with confirmed changes
-5. Run `spectr validate --strict` to ensure validity
+5. Run `spectr validate` to ensure validity
 
 ## Before Any Task
 
@@ -114,7 +114,7 @@ spectr accept <change-id>    # Accept proposal, convert tasks.md to tasks.jsonc
 spectr validate              # Bulk validation mode
 
 # Debugging
-spectr validate [change] --strict
+spectr validate [change]
 
 # Pull request creation
 spectr pr archive [change-id] # Archive change and create PR
@@ -130,7 +130,6 @@ spectr pr new [change-id]     # Create PR for proposal without archiving
 
 - `--json` - Machine-readable output
 - `--type change|spec` - Disambiguate items
-- `--strict` - Comprehensive validation
 - `--no-interactive` - Disable prompts
 
 ### PR Creation
@@ -344,8 +343,8 @@ Example for RENAMED:
 ### Validation Tips
 
 ```bash
-# Always use strict mode for comprehensive checks
-spectr validate [change] --strict
+# Validate a change (validation is always strict by default)
+spectr validate [change]
 ```
 
 **For AI agents debugging:**
@@ -380,7 +379,7 @@ Users MUST provide a second factor during login.
 EOF
 
 # 4) Validate
-spectr validate $CHANGE --strict
+spectr validate $CHANGE
 ```
 
 ## Multi-Capability Example
@@ -458,7 +457,7 @@ Only add complexity with:
 4. Consider combining proposals
 
 ### Validation Failures
-1. Run with `--strict` flag
+1. Run `spectr validate` (validation is always strict)
 2. Check JSON output for details
 3. Verify spec file format
 4. Ensure scenarios properly formatted
@@ -483,7 +482,7 @@ Only add complexity with:
 ### CLI Essentials
 ```bash
 spectr list              # What's in progress?
-spectr validate --strict # Is it correct?
+spectr validate          # Is it correct?
 spectr pr archive [change]  # Create PR for completed change
 spectr pr new [change]      # Create PR for proposal review
 ```

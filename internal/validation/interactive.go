@@ -47,7 +47,6 @@ var menuChoices = []string{
 // RunInteractiveValidation runs the interactive validation TUI
 func RunInteractiveValidation(
 	projectPath string,
-	strict bool,
 	jsonOutput bool,
 ) error {
 	// Check if running in a TTY
@@ -72,7 +71,6 @@ func RunInteractiveValidation(
 	return handleMenuSelection(
 		selection,
 		projectPath,
-		strict,
 		jsonOutput,
 	)
 }
@@ -91,7 +89,7 @@ func showValidationMenu() (int, error) {
 func handleMenuSelection(
 	selection int,
 	projectPath string,
-	strict, jsonOutput bool,
+	jsonOutput bool,
 ) error {
 	var items []ValidationItem
 	var err error
@@ -106,7 +104,6 @@ func handleMenuSelection(
 	case menuSelectionPickItem:
 		return runItemPicker(
 			projectPath,
-			strict,
 			jsonOutput,
 		)
 	default:
@@ -122,7 +119,6 @@ func handleMenuSelection(
 
 	return runValidationAndPrint(
 		items,
-		strict,
 		jsonOutput,
 	)
 }
@@ -130,7 +126,7 @@ func handleMenuSelection(
 // runItemPicker shows the item picker and validates the selected item
 func runItemPicker(
 	projectPath string,
-	strict, jsonOutput bool,
+	jsonOutput bool,
 ) error {
 	items, err := GetAllItems(projectPath)
 	if err != nil {
@@ -224,7 +220,6 @@ func runItemPicker(
 
 	return runValidationAndPrint(
 		[]ValidationItem{selectedItem},
-		strict,
 		jsonOutput,
 	)
 }
@@ -232,7 +227,7 @@ func runItemPicker(
 // runValidationAndPrint validates items and prints results
 func runValidationAndPrint(
 	items []ValidationItem,
-	strict, jsonOutput bool,
+	jsonOutput bool,
 ) error {
 	if len(items) == 0 {
 		fmt.Println("No items to validate")
@@ -240,7 +235,7 @@ func runValidationAndPrint(
 		return nil
 	}
 
-	validator := NewValidator(strict)
+	validator := NewValidator()
 	results, _ := validateItems(validator, items)
 
 	if jsonOutput {

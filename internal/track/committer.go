@@ -62,17 +62,129 @@ type CommitResult struct {
 	Message string
 }
 
+// GitExecutor abstracts git operations for testing.
+type GitExecutor interface {
+	// Status runs `git status --porcelain` and returns the output.
+	Status(repoRoot string) (string, error)
+	// Add runs `git add` for the specified files.
+	Add(repoRoot string, files []string) error
+	// Commit runs `git commit` with the given message.
+	Commit(repoRoot string, message string) error
+	// RevParse runs `git rev-parse` and returns the result.
+	RevParse(repoRoot string, ref string) (string, error)
+}
+
+// RealGitExecutor implements GitExecutor using actual git commands.
+type RealGitExecutor struct{}
+
+// Status runs `git status --porcelain` and returns the output.
+func (*RealGitExecutor) Status(repoRoot string) (string, error) {
+	cmd := exec.Command(
+		gitCmd,
+		gitRepoFlag, repoRoot,
+		"status",
+		"--porcelain",
+	)
+	output, err := cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf(
+				"git status failed: %s",
+				strings.TrimSpace(string(exitErr.Stderr)),
+			)
+		}
+
+		return "", fmt.Errorf("failed to run git status: %w", err)
+	}
+
+	return string(output), nil
+}
+
+// Add runs `git add` for the specified files.
+func (*RealGitExecutor) Add(repoRoot string, files []string) error {
+	args := []string{gitRepoFlag, repoRoot, "add", "--"}
+	args = append(args, files...)
+
+	cmd := exec.Command(gitCmd, args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf(
+			"git add failed: %s",
+			strings.TrimSpace(string(output)),
+		)
+	}
+
+	return nil
+}
+
+// Commit runs `git commit` with the given message.
+func (*RealGitExecutor) Commit(repoRoot, message string) error {
+	cmd := exec.Command(
+		gitCmd,
+		gitRepoFlag, repoRoot,
+		"commit",
+		"-m", message,
+	)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf(
+			"git commit failed: %s",
+			strings.TrimSpace(string(output)),
+		)
+	}
+
+	return nil
+}
+
+// RevParse runs `git rev-parse` and returns the result.
+func (*RealGitExecutor) RevParse(repoRoot, ref string) (string, error) {
+	cmd := exec.Command(
+		gitCmd,
+		gitRepoFlag, repoRoot,
+		"rev-parse",
+		ref,
+	)
+	output, err := cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf(
+				"git rev-parse failed: %s",
+				strings.TrimSpace(string(exitErr.Stderr)),
+			)
+		}
+
+		return "", fmt.Errorf("failed to get commit hash: %w", err)
+	}
+
+	return strings.TrimSpace(string(output)), nil
+}
+
 // Committer handles git staging and commit operations for task tracking.
 type Committer struct {
-	changeID string
-	repoRoot string
+	changeID    string
+	repoRoot    string
+	gitExecutor GitExecutor
 }
 
 // NewCommitter creates a new Committer for the specified change.
 func NewCommitter(changeID, repoRoot string) *Committer {
 	return &Committer{
-		changeID: changeID,
-		repoRoot: repoRoot,
+		changeID:    changeID,
+		repoRoot:    repoRoot,
+		gitExecutor: &RealGitExecutor{},
+	}
+}
+
+// NewCommitterWithExecutor creates a new Committer with a custom GitExecutor.
+// This is primarily used for testing with mock implementations.
+func NewCommitterWithExecutor(
+	changeID, repoRoot string,
+	executor GitExecutor,
+) *Committer {
+	return &Committer{
+		changeID:    changeID,
+		repoRoot:    repoRoot,
+		gitExecutor: executor,
 	}
 }
 
@@ -119,25 +231,12 @@ func (c *Committer) Commit(taskID string, action Action) (CommitResult, error) {
 // This includes both staged and unstaged modifications, as well as
 // untracked files.
 func (c *Committer) getModifiedFiles() ([]string, error) {
-	cmd := exec.Command(
-		gitCmd,
-		gitRepoFlag, c.repoRoot,
-		"status",
-		"--porcelain",
-	)
-	output, err := cmd.Output()
+	output, err := c.gitExecutor.Status(c.repoRoot)
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf(
-				"git status failed: %s",
-				strings.TrimSpace(string(exitErr.Stderr)),
-			)
-		}
-
-		return nil, fmt.Errorf("failed to run git status: %w", err)
+		return nil, err
 	}
 
-	return parseGitStatus(string(output)), nil
+	return parseGitStatus(output), nil
 }
 
 // parseGitStatus parses git status porcelain output into file paths.
@@ -198,19 +297,7 @@ func isTaskFile(name string) bool {
 
 // stageFiles stages the specified files for commit.
 func (c *Committer) stageFiles(files []string) error {
-	args := []string{gitRepoFlag, c.repoRoot, "add", "--"}
-	args = append(args, files...)
-
-	cmd := exec.Command(gitCmd, args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf(
-			"git add failed: %s",
-			strings.TrimSpace(string(output)),
-		)
-	}
-
-	return nil
+	return c.gitExecutor.Add(c.repoRoot, files)
 }
 
 // buildCommitMessage creates the commit message with the standard format.
@@ -227,18 +314,8 @@ func (c *Committer) buildCommitMessage(taskID string, action Action) string {
 // createCommit creates a git commit with the given message and returns
 // the commit hash.
 func (c *Committer) createCommit(message string) (string, error) {
-	cmd := exec.Command(
-		gitCmd,
-		gitRepoFlag, c.repoRoot,
-		"commit",
-		"-m", message,
-	)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf(
-			"git commit failed: %s",
-			strings.TrimSpace(string(output)),
-		)
+	if err := c.gitExecutor.Commit(c.repoRoot, message); err != nil {
+		return "", err
 	}
 
 	return c.getCommitHash()
@@ -246,23 +323,5 @@ func (c *Committer) createCommit(message string) (string, error) {
 
 // getCommitHash returns the hash of the current HEAD commit.
 func (c *Committer) getCommitHash() (string, error) {
-	cmd := exec.Command(
-		gitCmd,
-		gitRepoFlag, c.repoRoot,
-		"rev-parse",
-		"HEAD",
-	)
-	output, err := cmd.Output()
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			return "", fmt.Errorf(
-				"git rev-parse failed: %s",
-				strings.TrimSpace(string(exitErr.Stderr)),
-			)
-		}
-
-		return "", fmt.Errorf("failed to get commit hash: %w", err)
-	}
-
-	return strings.TrimSpace(string(output)), nil
+	return c.gitExecutor.RevParse(c.repoRoot, "HEAD")
 }

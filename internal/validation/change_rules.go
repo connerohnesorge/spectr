@@ -172,6 +172,10 @@ func ValidateChangeDeltaSpecs(
 		)
 	}
 
+	// Validate tasks.md file if present
+	tasksIssues := validateTasksFile(changeDir)
+	allIssues = append(allIssues, tasksIssues...)
+
 	// Apply strict mode: convert warnings to errors
 	if strictMode {
 		for i := range allIssues {

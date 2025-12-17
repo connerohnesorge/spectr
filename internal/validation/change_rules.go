@@ -4,6 +4,7 @@
 package validation
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -170,6 +171,10 @@ func ValidateChangeDeltaSpecs(
 			},
 		)
 	}
+
+	// Validate tasks.md file if present
+	tasksIssues := validateTasksFile(changeDir)
+	allIssues = append(allIssues, tasksIssues...)
 
 	// Apply strict mode: convert warnings to errors
 	if strictMode {
@@ -721,4 +726,77 @@ func findMalformedRenamedLine(
 	}
 
 	return sectionLine // Default to section start if not found
+}
+
+// validateTasksFile validates that a tasks.md file, if present, contains
+// at least one task item (- [ ] or - [x]). Missing tasks.md is allowed.
+// Returns a slice of validation issues (empty if valid or file doesn't exist).
+func validateTasksFile(changeDir string) []ValidationIssue {
+	tasksPath := filepath.Join(changeDir, "tasks.md")
+
+	// Check if tasks.md exists
+	_, err := os.Stat(tasksPath)
+	if os.IsNotExist(err) {
+		// Missing tasks.md is allowed - not an error
+		return nil
+	}
+	if err != nil {
+		// Error accessing file - report as issue
+		return []ValidationIssue{
+			{
+				Level:   LevelError,
+				Path:    tasksPath,
+				Line:    1,
+				Message: fmt.Sprintf("failed to access tasks.md: %v", err),
+			},
+		}
+	}
+
+	// Read and scan the file for task items
+	file, err := os.Open(tasksPath)
+	if err != nil {
+		return []ValidationIssue{
+			{
+				Level:   LevelError,
+				Path:    tasksPath,
+				Line:    1,
+				Message: fmt.Sprintf("failed to read tasks.md: %v", err),
+			},
+		}
+	}
+	defer func() { _ = file.Close() }()
+
+	taskCount := 0
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if _, ok := markdown.MatchTaskCheckbox(line); ok {
+			taskCount++
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return []ValidationIssue{
+			{
+				Level:   LevelError,
+				Path:    tasksPath,
+				Line:    1,
+				Message: fmt.Sprintf("error reading tasks.md: %v", err),
+			},
+		}
+	}
+
+	// Check if any tasks were found
+	if taskCount == 0 {
+		return []ValidationIssue{
+			{
+				Level: LevelError,
+				Path:  tasksPath,
+				Line:  1,
+				Message: "tasks.md exists but contains no task items; " +
+					"expected format: '- [ ] Task description' or '- [x] Task description'",
+			},
+		}
+	}
+
+	return nil
 }

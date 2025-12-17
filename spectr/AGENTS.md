@@ -52,10 +52,13 @@ Track these steps as TODOs and complete them one by one.
 2. **Read design.md** (if exists) - Review technical decisions
 3. **Read tasks.md** - Get implementation checklist
 4. **Run `spectr accept <id>`** - Convert `tasks.md` to `tasks.jsonc` for stable task tracking
-5. **Implement tasks sequentially** - Complete in order
-6. **Confirm completion** - Ensure every item in `tasks.jsonc` is finished before updating statuses
-7. **Update task status** - After each task is done, update its status in `tasks.jsonc` to one of: `pending`, `in_progress`, `completed`
-8. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+5. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+6. **For each task in `tasks.jsonc`:**
+   - Mark task as `in_progress` BEFORE starting work
+   - Implement and verify the task
+   - Mark task as `completed` IMMEDIATELY after verification
+   - Do NOT batch status updates - update each task individually as you complete it
+   - Using a single edit to mark a task completed AND the next task in_progress is allowed (this is a single transition, not batching)
 
 ### Stage 3: Syncing Specs
 

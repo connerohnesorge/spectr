@@ -19,6 +19,7 @@ Built with Go
 - [Key Features](#key-features)
 - [Supported AI Tools](#supported-ai-tools)
 - [Installation](#installation)
+  - [Using GitHub Releases](#using-github-releases)
   - [Using Nix Flakes](#using-nix-flakes)
   - [Building from Source](#building-from-source)
   - [Requirements](#requirements)
@@ -103,6 +104,59 @@ Run `spectr init` to configure Spectr for your preferred AI tools.
 ---
 
 ## Installation
+
+### Using GitHub Releases
+
+Download pre-built binaries from the [GitHub Releases](https://github.com/connerohnesorge/spectr/releases) page.
+
+#### Linux
+
+```bash
+# For Linux x86_64 (amd64):
+curl -LO https://github.com/connerohnesorge/spectr/releases/latest/download/spectr_Linux_x86_64.tar.gz
+tar -xzf spectr_Linux_x86_64.tar.gz
+sudo mv spectr /usr/local/bin/
+
+# For Linux arm64:
+curl -LO https://github.com/connerohnesorge/spectr/releases/latest/download/spectr_Linux_arm64.tar.gz
+tar -xzf spectr_Linux_arm64.tar.gz
+sudo mv spectr /usr/local/bin/
+```
+
+#### macOS
+
+```bash
+# For macOS x86_64 (Intel):
+curl -LO https://github.com/connerohnesorge/spectr/releases/latest/download/spectr_Darwin_x86_64.tar.gz
+tar -xzf spectr_Darwin_x86_64.tar.gz
+sudo mv spectr /usr/local/bin/
+
+# For macOS arm64 (Apple Silicon):
+curl -LO https://github.com/connerohnesorge/spectr/releases/latest/download/spectr_Darwin_arm64.tar.gz
+tar -xzf spectr_Darwin_arm64.tar.gz
+sudo mv spectr /usr/local/bin/
+```
+
+#### Windows
+
+Download the `.zip` file from the [releases page](https://github.com/connerohnesorge/spectr/releases) and extract it. Then add the directory containing `spectr.exe` to your PATH.
+
+```powershell
+# Example: Download and extract using PowerShell
+# Download spectr_Windows_x86_64.zip from the releases page
+# Extract and add to PATH
+```
+
+#### Available Platforms
+
+| Platform | Architecture | File |
+|----------|--------------|------|
+| Linux | x86_64 (amd64) | `spectr_Linux_x86_64.tar.gz` |
+| Linux | arm64 | `spectr_Linux_arm64.tar.gz` |
+| macOS | x86_64 (Intel) | `spectr_Darwin_x86_64.tar.gz` |
+| macOS | arm64 (Apple Silicon) | `spectr_Darwin_arm64.tar.gz` |
+| Windows | x86_64 (amd64) | `spectr_Windows_x86_64.zip` |
+| Windows | arm64 | `spectr_Windows_arm64.zip` |
 
 ### Using Nix Flakes
 

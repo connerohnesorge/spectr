@@ -419,6 +419,39 @@ func TestMatchNumberedTask(t *testing.T) {
 			line:   "- [ ] 1.1Task",
 			wantOk: false,
 		},
+		// Tests for N. format (without digits after dot)
+		{
+			name:    "simple format unchecked",
+			line:    "- [ ] 1. Create parser",
+			wantOk:  true,
+			wantNum: "1.",
+			wantSec: "1",
+			wantSt:  ' ',
+			wantCon: "Create parser",
+		},
+		{
+			name:    "simple format checked",
+			line:    "- [x] 2. Implement feature",
+			wantOk:  true,
+			wantNum: "2.",
+			wantSec: "2",
+			wantSt:  'x',
+			wantCon: "Implement feature",
+		},
+		{
+			name:    "simple format double digit",
+			line:    "- [ ] 12. Complex task",
+			wantOk:  true,
+			wantNum: "12.",
+			wantSec: "12",
+			wantSt:  ' ',
+			wantCon: "Complex task",
+		},
+		{
+			name:   "simple format no space after dot",
+			line:   "- [ ] 1.Task",
+			wantOk: false,
+		},
 	}
 
 	for _, tt := range tests {

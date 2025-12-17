@@ -197,6 +197,74 @@ func TestParseTasksMd(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "simple numbered format",
+			markdown: `## Implementation
+
+- [ ] 1. Update cmd/validate.go to remove Strict field
+- [ ] 2. Update cmd/validate.go to always pass true
+- [x] 3. Update internal/validation/interactive.go
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.",
+					Section:     "",
+					Description: "Update cmd/validate.go to remove Strict field",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2.",
+					Section:     "",
+					Description: "Update cmd/validate.go to always pass true",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "3.",
+					Section:     "",
+					Description: "Update internal/validation/interactive.go",
+					Status:      parsers.TaskStatusCompleted,
+				},
+			},
+		},
+		{
+			name: "mixed simple and decimal formats",
+			markdown: `## 1. Setup
+
+- [ ] 1.1 Create files
+- [ ] 1.2 Configure settings
+
+## 2. Implementation
+
+- [ ] 2. Implement feature
+- [x] 3. Test feature
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "1.1",
+					Section:     "Setup",
+					Description: "Create files",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "1.2",
+					Section:     "Setup",
+					Description: "Configure settings",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2.",
+					Section:     "Implementation",
+					Description: "Implement feature",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "3.",
+					Section:     "Implementation",
+					Description: "Test feature",
+					Status:      parsers.TaskStatusCompleted,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

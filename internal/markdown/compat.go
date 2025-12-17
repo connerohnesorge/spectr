@@ -159,12 +159,16 @@ type NumberedTaskMatch struct {
 
 // MatchNumberedTask parses a numbered task line from tasks.md format.
 // Format: "- [ ] 1.1 Task description" or "- [x] 2.3 Another task"
+// Also accepts simpler format: "- [ ] 1. Task description" (no digits after dot)
 // Returns the parsed task match and true if matched, or nil and false.
 //
 // Example:
 //
 //	match, ok := MatchNumberedTask("- [ ] 1.1 Create the parser")
 //	// match.Number = "1.1", match.Status = ' ', match.Content = "Create the parser"
+//
+//	match, ok := MatchNumberedTask("- [ ] 1. Simple task")
+//	// match.Number = "1.", match.Status = ' ', match.Content = "Simple task"
 func MatchNumberedTask(
 	line string,
 ) (*NumberedTaskMatch, bool) {
@@ -193,30 +197,34 @@ func MatchNumberedTask(
 	// Rest of line after "- [x] "
 	rest := line[6:]
 
-	// Parse the task number (e.g., "1.1", "12.34")
-	// Must be digits, dot, digits
+	// Parse the task number (e.g., "1.1", "12.34", or "1.")
+	// Must be digits, dot, optionally more digits
 	numEnd := 0
+	dotPos := -1
 	dotSeen := false
-	digitsAfterDot := false
 
 parseLoop:
 	for i, c := range rest {
 		switch {
 		case c >= '0' && c <= '9':
 			numEnd = i + 1
-			if dotSeen {
-				digitsAfterDot = true
-			}
 		case c == '.' && !dotSeen:
 			dotSeen = true
+			dotPos = i
 		default:
 			break parseLoop
 		}
 	}
 
-	// Validate we got a proper number format
-	if !dotSeen || !digitsAfterDot ||
-		numEnd == 0 {
+	// If dot was seen but no digits after it, include the dot in numEnd
+	// This handles "1. Task" format where numEnd would be 1 but dot is at position 1
+	if dotSeen && dotPos >= 0 && dotPos+1 > numEnd {
+		numEnd = dotPos + 1
+	}
+
+	// Validate we got a proper number format (digits followed by dot, optionally more digits)
+	// Accept both "1.1" and "1." formats
+	if !dotSeen || numEnd == 0 {
 		return nil, false
 	}
 

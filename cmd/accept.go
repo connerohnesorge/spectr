@@ -67,41 +67,17 @@ func (c *AcceptCmd) Run() error {
 func (c *AcceptCmd) processChange(
 	projectRoot, changeID string,
 ) error {
-	changeDir := filepath.Join(
+	changeDir, tasksMdPath, err := resolveChangePaths(
 		projectRoot,
-		"spectr",
-		"changes",
 		changeID,
 	)
-	_, err := os.Stat(changeDir)
-	if os.IsNotExist(err) {
-		return fmt.Errorf(
-			"change directory not found: %s",
-			changeDir,
-		)
-	}
-
-	tasksMdPath := filepath.Join(
-		changeDir,
-		"tasks.md",
-	)
-	_, err = os.Stat(tasksMdPath)
-	if os.IsNotExist(
-		err,
-	) {
-		return fmt.Errorf(
-			"tasks.md not found in change: %s",
-			tasksMdPath,
-		)
+	if err != nil {
+		return err
 	}
 
 	// Validate the change before conversion
-	err = c.runValidation(changeDir)
-	if err != nil {
-		return fmt.Errorf(
-			"validation failed: %w",
-			err,
-		)
+	if err = c.runValidation(changeDir); err != nil {
+		return fmt.Errorf("validation failed: %w", err)
 	}
 
 	tasks, err := parseTasksMd(tasksMdPath)
@@ -112,10 +88,12 @@ func (c *AcceptCmd) processChange(
 		)
 	}
 
-	tasksJSONPath := filepath.Join(
-		changeDir,
-		"tasks.jsonc",
-	)
+	// Safety check: if tasks.md has content but no valid tasks were found
+	if err := validateParsedTasks(tasks, tasksMdPath); err != nil {
+		return err
+	}
+
+	tasksJSONPath := filepath.Join(changeDir, "tasks.jsonc")
 
 	if c.DryRun {
 		fmt.Printf(
@@ -129,8 +107,48 @@ func (c *AcceptCmd) processChange(
 		return nil
 	}
 
-	err = writeTasksJSONC(tasksJSONPath, tasks)
-	if err != nil {
+	return writeAndCleanup(
+		tasksMdPath,
+		tasksJSONPath,
+		tasks,
+	)
+}
+
+// resolveChangePaths validates and returns the change directory and
+// tasks.md path.
+func resolveChangePaths(
+	projectRoot, changeID string,
+) (changeDir, tasksMdPath string, err error) {
+	changeDir = filepath.Join(
+		projectRoot,
+		"spectr",
+		"changes",
+		changeID,
+	)
+	if _, err = os.Stat(changeDir); os.IsNotExist(err) {
+		return "", "", fmt.Errorf(
+			"change directory not found: %s",
+			changeDir,
+		)
+	}
+
+	tasksMdPath = filepath.Join(changeDir, "tasks.md")
+	if _, err = os.Stat(tasksMdPath); os.IsNotExist(err) {
+		return "", "", fmt.Errorf(
+			"tasks.md not found in change: %s",
+			tasksMdPath,
+		)
+	}
+
+	return changeDir, tasksMdPath, nil
+}
+
+// writeAndCleanup writes the tasks.jsonc file and removes tasks.md.
+func writeAndCleanup(
+	tasksMdPath, tasksJSONPath string,
+	tasks []parsers.Task,
+) error {
+	if err := writeTasksJSONC(tasksJSONPath, tasks); err != nil {
 		return fmt.Errorf(
 			"failed to write tasks.jsonc: %w",
 			err,
@@ -138,8 +156,7 @@ func (c *AcceptCmd) processChange(
 	}
 
 	// Remove tasks.md after successful tasks.jsonc creation
-	err = os.Remove(tasksMdPath)
-	if err != nil {
+	if err := os.Remove(tasksMdPath); err != nil {
 		return fmt.Errorf(
 			"failed to remove tasks.md: %w",
 			err,
@@ -326,4 +343,23 @@ func parseTasksMd(
 	}
 
 	return tasks, nil
+}
+
+// validateParsedTasks checks if tasks.md has content but no valid tasks
+// were found, which indicates a format mismatch.
+func validateParsedTasks(
+	tasks []parsers.Task,
+	tasksMdPath string,
+) error {
+	if len(tasks) == 0 {
+		info, statErr := os.Stat(tasksMdPath)
+		if statErr == nil && info.Size() > 0 {
+			return errors.New(
+				"tasks.md has content but no valid tasks found; " +
+					"expected format: '- [ ] N.N Task' or '- [ ] N. Task'",
+			)
+		}
+	}
+
+	return nil
 }

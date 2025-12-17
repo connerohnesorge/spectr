@@ -2,6 +2,7 @@ package track
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -981,6 +982,236 @@ func TestParseGitStatus(t *testing.T) {
 						i, f, tt.want[i],
 					)
 				}
+			}
+		})
+	}
+}
+
+// Task 2.1: Tests for binary detection
+func TestParseBinaryFiles(t *testing.T) {
+	tests := []struct {
+		name   string
+		output string
+		want   map[string]bool
+	}{
+		{
+			name:   "identifies binary files",
+			output: "-\t-\timage.png\n10\t5\ttext.go\n",
+			want:   map[string]bool{"image.png": true},
+		},
+		{
+			name:   "multiple binary files",
+			output: "-\t-\timage.png\n-\t-\tarchive.tar.gz\n5\t3\tmain.go\n",
+			want:   map[string]bool{"image.png": true, "archive.tar.gz": true},
+		},
+		{
+			name:   "no binary files",
+			output: "10\t5\tfile.go\n20\t15\tanother.go\n",
+			want:   map[string]bool{},
+		},
+		{
+			name:   "empty output",
+			output: "",
+			want:   map[string]bool{},
+		},
+		{
+			name:   "binary file with path",
+			output: "-\t-\tdir/subdir/binary.exe\n",
+			want:   map[string]bool{"dir/subdir/binary.exe": true},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseBinaryFiles(tt.output)
+			if len(got) != len(tt.want) {
+				t.Errorf("parseBinaryFiles() returned %d files, want %d", len(got), len(tt.want))
+				return
+			}
+			for k, v := range tt.want {
+				if got[k] != v {
+					t.Errorf("parseBinaryFiles()[%q] = %v, want %v", k, got[k], v)
+				}
+			}
+		})
+	}
+}
+
+func TestCommitter_detectBinaryFiles(t *testing.T) {
+	t.Run("returns binary file map", func(t *testing.T) {
+		mock := &MockGitExecutor{
+			DiffNumstatOutput: "-\t-\tbinary.png\n10\t5\ttext.go\n",
+		}
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
+
+		binaries, err := c.detectBinaryFiles([]string{"binary.png", "text.go"})
+		if err != nil {
+			t.Fatalf("detectBinaryFiles() error = %v", err)
+		}
+
+		if !binaries["binary.png"] {
+			t.Error("detectBinaryFiles() should mark binary.png as binary")
+		}
+		if binaries["text.go"] {
+			t.Error("detectBinaryFiles() should not mark text.go as binary")
+		}
+	})
+
+	t.Run("returns error on git failure", func(t *testing.T) {
+		mock := &MockGitExecutor{
+			DiffNumstatError: errors.New("git diff failed"),
+		}
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
+
+		_, err := c.detectBinaryFiles([]string{"file.go"})
+		if err == nil {
+			t.Error("detectBinaryFiles() expected error, got nil")
+		}
+	})
+}
+
+// Task 2.2: Tests for filtering with IncludeBinaries=false
+func TestFilterFiles_ExcludesBinaries(t *testing.T) {
+	files := []string{"src/main.go", "image.png", "tasks.jsonc", "README.md"}
+	binaries := map[string]bool{"image.png": true}
+
+	filtered, skipped := filterFiles(files, false, binaries)
+
+	// Verify binaries and task files are filtered out
+	expected := []string{"src/main.go", "README.md"}
+	if len(filtered) != len(expected) {
+		t.Errorf("filterFiles() returned %d files, want %d", len(filtered), len(expected))
+	}
+
+	// Verify the correct files are in the filtered list
+	for i, f := range expected {
+		if i >= len(filtered) || filtered[i] != f {
+			t.Errorf("filterFiles()[%d] = %q, want %q", i, filtered[i], f)
+		}
+	}
+
+	// Verify skipped binaries
+	if len(skipped) != 1 || skipped[0] != "image.png" {
+		t.Errorf("filterFiles() skipped = %v, want [image.png]", skipped)
+	}
+}
+
+// Task 2.3: Tests for including binaries with IncludeBinaries=true
+func TestFilterFiles_IncludesBinaries(t *testing.T) {
+	files := []string{"src/main.go", "image.png", "tasks.jsonc", "README.md"}
+	binaries := map[string]bool{"image.png": true}
+
+	filtered, skipped := filterFiles(files, true, binaries)
+
+	// Verify binaries are NOT filtered out (only task files are)
+	expected := []string{"src/main.go", "image.png", "README.md"}
+	if len(filtered) != len(expected) {
+		t.Errorf("filterFiles() returned %d files, want %d", len(filtered), len(expected))
+	}
+
+	// Verify the correct files are in the filtered list
+	for i, f := range expected {
+		if i >= len(filtered) || filtered[i] != f {
+			t.Errorf("filterFiles()[%d] = %q, want %q", i, filtered[i], f)
+		}
+	}
+
+	// Verify no skipped binaries
+	if len(skipped) != 0 {
+		t.Errorf("filterFiles() skipped = %v, want empty", skipped)
+	}
+}
+
+// Task 2.4: Integration-style tests for Commit with binary files
+func TestCommitter_Commit_FiltersBinaries(t *testing.T) {
+	t.Run("excludes binaries by default", func(t *testing.T) {
+		mock := &MockGitExecutor{
+			StatusOutput:      "?? src/main.go\n?? image.png\n",
+			DiffNumstatOutput: "-\t-\timage.png\n5\t0\tsrc/main.go\n",
+			RevParseOutput:    "abc123def456789012345678901234567890abcd",
+		}
+		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
+
+		result, err := c.Commit("1.1", ActionStart)
+		if err != nil {
+			t.Fatalf("Commit() error = %v", err)
+		}
+
+		// Verify only non-binary was staged
+		if len(mock.AddedFiles) != 1 || mock.AddedFiles[0] != "src/main.go" {
+			t.Errorf("AddedFiles = %v, want [src/main.go]", mock.AddedFiles)
+		}
+
+		// Verify skipped binary is reported
+		if len(result.SkippedBinaries) != 1 || result.SkippedBinaries[0] != "image.png" {
+			t.Errorf("SkippedBinaries = %v, want [image.png]", result.SkippedBinaries)
+		}
+	})
+
+	t.Run("includes binaries when flag is set", func(t *testing.T) {
+		mock := &MockGitExecutor{
+			StatusOutput:      "?? src/main.go\n?? image.png\n",
+			DiffNumstatOutput: "-\t-\timage.png\n5\t0\tsrc/main.go\n",
+			RevParseOutput:    "abc123def456789012345678901234567890abcd",
+		}
+		c := NewCommitterWithExecutor("test-change", "/repo", true, mock)
+
+		result, err := c.Commit("1.1", ActionStart)
+		if err != nil {
+			t.Fatalf("Commit() error = %v", err)
+		}
+
+		// Verify both files were staged
+		if len(mock.AddedFiles) != 2 {
+			t.Errorf("AddedFiles count = %d, want 2", len(mock.AddedFiles))
+		}
+
+		// Verify no skipped binaries
+		if len(result.SkippedBinaries) != 0 {
+			t.Errorf("SkippedBinaries = %v, want empty", result.SkippedBinaries)
+		}
+	})
+}
+
+// Task 2.5: Tests with various binary file types
+func TestCommitter_Commit_VariousBinaryTypes(t *testing.T) {
+	binaryTypes := []struct {
+		name     string
+		filename string
+	}{
+		{"image png", "photo.png"},
+		{"image jpg", "photo.jpg"},
+		{"executable", "program.exe"},
+		{"archive tar.gz", "archive.tar.gz"},
+		{"archive zip", "archive.zip"},
+		{"compiled binary", "main.o"},
+	}
+
+	for _, bt := range binaryTypes {
+		t.Run(bt.name, func(t *testing.T) {
+			mock := &MockGitExecutor{
+				StatusOutput:      fmt.Sprintf("?? %s\n?? text.go\n", bt.filename),
+				DiffNumstatOutput: fmt.Sprintf("-\t-\t%s\n5\t0\ttext.go\n", bt.filename),
+				RevParseOutput:    "abc123def456789012345678901234567890abcd",
+			}
+			c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
+
+			result, err := c.Commit("1.1", ActionStart)
+			if err != nil {
+				t.Fatalf("Commit() error = %v", err)
+			}
+
+			// Binary should be skipped
+			if len(result.SkippedBinaries) != 1 {
+				t.Errorf("SkippedBinaries count = %d, want 1", len(result.SkippedBinaries))
+			}
+			if result.SkippedBinaries[0] != bt.filename {
+				t.Errorf("SkippedBinaries[0] = %q, want %q", result.SkippedBinaries[0], bt.filename)
+			}
+
+			// Only text file should be staged
+			if len(mock.AddedFiles) != 1 || mock.AddedFiles[0] != "text.go" {
+				t.Errorf("AddedFiles = %v, want [text.go]", mock.AddedFiles)
 			}
 		})
 	}

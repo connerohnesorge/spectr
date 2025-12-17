@@ -2075,11 +2075,12 @@ The system SHALL provide user authentication.
 		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
 	}
 
-	if !report.Valid {
-		t.Error("Expected valid report with valid tasks.md")
-		for _, issue := range report.Issues {
-			t.Logf("  %s: %s", issue.Level, issue.Message)
-		}
+	if report.Valid {
+		return
+	}
+	t.Error("Expected valid report with valid tasks.md")
+	for _, issue := range report.Issues {
+		t.Logf("  %s: %s", issue.Level, issue.Message)
 	}
 }
 
@@ -2126,14 +2127,16 @@ The system SHALL provide user authentication.
 		if issue.Level == LevelError &&
 			strings.Contains(issue.Message, "no task items") {
 			found = true
+
 			break
 		}
 	}
-	if !found {
-		t.Error("Expected error about empty tasks.md")
-		for _, issue := range report.Issues {
-			t.Logf("  %s: %s", issue.Level, issue.Message)
-		}
+	if found {
+		return
+	}
+	t.Error("Expected error about empty tasks.md")
+	for _, issue := range report.Issues {
+		t.Logf("  %s: %s", issue.Level, issue.Message)
 	}
 }
 
@@ -2188,14 +2191,16 @@ Some text without any task checkboxes.
 		if issue.Level == LevelError &&
 			strings.Contains(issue.Message, "no task items") {
 			found = true
+
 			break
 		}
 	}
-	if !found {
-		t.Error("Expected error about tasks.md with no task items")
-		for _, issue := range report.Issues {
-			t.Logf("  %s: %s", issue.Level, issue.Message)
-		}
+	if found {
+		return
+	}
+	t.Error("Expected error about tasks.md with no task items")
+	for _, issue := range report.Issues {
+		t.Logf("  %s: %s", issue.Level, issue.Message)
 	}
 }
 
@@ -2265,11 +2270,12 @@ func TestValidateTasksFile_DirectFunction(
 		}
 
 		issues := validateTasksFile(tmpDir)
-		if len(issues) != 0 {
-			t.Errorf("Expected no issues for valid tasks.md, got %d", len(issues))
-			for _, issue := range issues {
-				t.Logf("  %s: %s", issue.Level, issue.Message)
-			}
+		if len(issues) == 0 {
+			return
+		}
+		t.Errorf("Expected no issues for valid tasks.md, got %d", len(issues))
+		for _, issue := range issues {
+			t.Logf("  %s: %s", issue.Level, issue.Message)
 		}
 	})
 
@@ -2300,14 +2306,14 @@ func TestValidateTasksFile_DirectFunction(
 		issues := validateTasksFile(tmpDir)
 		if len(issues) != 1 {
 			t.Errorf("Expected 1 issue for tasks.md with only headers, got %d", len(issues))
+
+			return
 		}
-		if len(issues) > 0 {
-			if issues[0].Level != LevelError {
-				t.Errorf("Expected ERROR level, got %s", issues[0].Level)
-			}
-			if !strings.Contains(issues[0].Message, "no task items") {
-				t.Errorf("Expected message about no task items, got: %s", issues[0].Message)
-			}
+		if issues[0].Level != LevelError {
+			t.Errorf("Expected ERROR level, got %s", issues[0].Level)
+		}
+		if !strings.Contains(issues[0].Message, "no task items") {
+			t.Errorf("Expected message about no task items, got: %s", issues[0].Message)
 		}
 	})
 }

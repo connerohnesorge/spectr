@@ -93,7 +93,7 @@ func (c *TrackCmd) resolveChangeID() (string, string, error) {
 // It watches the tasks.jsonc file and creates commits on status changes.
 // The tracker runs until all tasks complete, an error occurs, or the
 // user interrupts with Ctrl+C.
-func (*TrackCmd) runTracker(changeID, projectRoot string) error {
+func (c *TrackCmd) runTracker(changeID, projectRoot string) error {
 	// Build the path to the tasks.jsonc file
 	tasksPath := filepath.Join(
 		projectRoot,
@@ -110,10 +110,11 @@ func (*TrackCmd) runTracker(changeID, projectRoot string) error {
 
 	// Create the tracker configuration
 	config := track.Config{
-		ChangeID:  changeID,
-		TasksPath: tasksPath,
-		RepoRoot:  projectRoot,
-		Writer:    os.Stdout,
+		ChangeID:        changeID,
+		TasksPath:       tasksPath,
+		RepoRoot:        projectRoot,
+		Writer:          os.Stdout,
+		IncludeBinaries: c.IncludeBinaries,
 	}
 
 	// Create and start the tracker

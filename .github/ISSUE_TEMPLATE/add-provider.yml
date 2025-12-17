@@ -11,9 +11,9 @@ body:
         **What are providers?** Providers are AI CLI/IDE tools (like Claude Code, Gemini, Cline, Cursor) that Spectr integrates with. Each provider handles configuration files and slash commands for that tool.
 
         **Reference documentation:**
-        - [Provider interface](https://github.com/anthropics/spectr/blob/main/internal/initialize/providers/provider.go)
-        - [Claude provider example](https://github.com/anthropics/spectr/blob/main/internal/initialize/providers/claude.go) (Markdown format)
-        - [Gemini provider example](https://github.com/anthropics/spectr/blob/main/internal/initialize/providers/gemini.go) (TOML format)
+        - [Provider interface](https://github.com/connerohnesorge/spectr/blob/main/internal/initialize/providers/provider.go)
+        - [Claude provider example](https://github.com/connerohnesorge/spectr/blob/main/internal/initialize/providers/claude.go) (Markdown format)
+        - [Gemini provider example](https://github.com/connerohnesorge/spectr/blob/main/internal/initialize/providers/gemini.go) (TOML format)
 
   - type: input
     id: provider-name

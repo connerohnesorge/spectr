@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Documentation
-    url: https://github.com/anthropics/spectr
+    url: https://github.com/connerohnesorge/spectr
     about: Check the Spectr documentation for provider implementation details
   - name: Provider Implementation Guide
-    url: https://github.com/anthropics/spectr/blob/main/internal/initialize/providers/provider.go
+    url: https://github.com/connerohnesorge/spectr/blob/main/internal/initialize/providers/provider.go
     about: Read the Provider interface documentation and see implementation examples

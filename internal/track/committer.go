@@ -60,6 +60,9 @@ type CommitResult struct {
 	CommitHash string
 	// Message is the commit message used.
 	Message string
+	// SkippedBinaries contains the list of binary files that were skipped.
+	// This is populated when IncludeBinaries is false and binary files are detected.
+	SkippedBinaries []string
 }
 
 // GitExecutor abstracts git operations for testing.

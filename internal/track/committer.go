@@ -334,6 +334,29 @@ func filterTaskFiles(files []string) []string {
 	return filtered
 }
 
+// filterFiles removes task files and optionally binary files from the list.
+// Returns the filtered list and the list of binary files that were skipped.
+func filterFiles(
+	files []string,
+	includeBinaries bool,
+	binaryFiles map[string]bool,
+) (filtered []string, skippedBinaries []string) {
+	for _, file := range files {
+		baseName := filepath.Base(file)
+		if isTaskFile(baseName) {
+			continue
+		}
+		if !includeBinaries && binaryFiles[file] {
+			skippedBinaries = append(skippedBinaries, file)
+
+			continue
+		}
+		filtered = append(filtered, file)
+	}
+
+	return filtered, skippedBinaries
+}
+
 // isTaskFile checks if the given filename is a task file.
 func isTaskFile(name string) bool {
 	for _, taskFile := range taskFiles {

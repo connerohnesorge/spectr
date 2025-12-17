@@ -556,13 +556,7 @@ func TestCommitter_Commit_GitError(t *testing.T) {
 
 // isGitCommitError checks if the error is a GitCommitError and sets target.
 func isGitCommitError(err error, target **specterrs.GitCommitError) bool {
-	if e, ok := err.(*specterrs.GitCommitError); ok {
-		*target = e
-
-		return true
-	}
-
-	return false
+	return errors.As(err, target)
 }
 
 func TestCommitter_Commit_ActionTypes(t *testing.T) {

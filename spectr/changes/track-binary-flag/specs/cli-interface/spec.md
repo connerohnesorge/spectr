@@ -1,12 +1,7 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
-### Requirement: Track Command Flags
-The track command SHALL support flags for controlling behavior including binary file inclusion.
-
-#### Scenario: No-interactive flag disables prompts
-- **WHEN** user provides the `--no-interactive` flag
-- **AND** no change-id is provided
-- **THEN** the system displays usage error instead of prompting for selection
+### Requirement: Track Command Binary Filtering
+The track command SHALL support binary file filtering to prevent unintentional commits of binary files.
 
 #### Scenario: Include-binaries flag enables binary file commits
 - **WHEN** user provides the `--include-binaries` flag

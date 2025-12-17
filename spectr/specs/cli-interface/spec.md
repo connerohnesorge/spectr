@@ -285,10 +285,10 @@ The CLI SHALL provide a validate command for checking spec and change document c
 - AND SHALL execute the user's selection
 
 ### Requirement: Validate Command Flags
-The validate command SHALL support flags for controlling validation behavior and output format. Validation always treats warnings as errors by default.
+The validate command SHALL support flags for controlling validation behavior and output format. Validation always treats warnings as errors.
 
 #### Scenario: Default validation behavior (always strict)
-- WHEN user runs `spectr validate <item>` without any flags
+- WHEN user runs `spectr validate <item>` without any strict flag
 - THEN validation SHALL treat warnings as errors
 - AND exit code SHALL be 1 if warnings or errors exist
 - AND validation report SHALL show valid=false for any issues

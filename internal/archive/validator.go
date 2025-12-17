@@ -11,12 +11,12 @@ import (
 	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
-// ValidatePreArchive performs all pre-archive validation checks
+// ValidatePreArchive performs all pre-archive validation checks.
+// Validation is always strict: warnings are converted to errors.
 // Returns validation report and error (error is for filesystem issues,
 // not validation failures)
 func ValidatePreArchive(
 	changeDir string,
-	strictMode bool,
 ) (*validation.ValidationReport, error) {
 	// Derive spectrRoot from changeDir
 	// changeDir format: /path/to/project/spectr/changes/<change-id>
@@ -29,7 +29,6 @@ func ValidatePreArchive(
 	report, err := validation.ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		strictMode,
 	)
 	if err != nil {
 		return nil, fmt.Errorf(

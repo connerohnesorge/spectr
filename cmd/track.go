@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/connerohnesorge/spectr/internal/git"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 	"github.com/connerohnesorge/spectr/internal/track"
 )
@@ -45,23 +46,28 @@ func (c *TrackCmd) Run() error {
 //
 //nolint:revive // confusing-results is acceptable here
 func (c *TrackCmd) resolveChangeID() (string, string, error) {
-	projectRoot, err := os.Getwd()
+	// Check for --no-interactive flag before requiring git repository.
+	// This provides a better error message for the user.
+	if c.ChangeID == "" && c.NoInteractive {
+		return "", "", errors.New(
+			"change ID required when --no-interactive is set",
+		)
+	}
+
+	// Use git repository root to ensure correct paths for git operations.
+	// This is necessary because git status returns paths relative to the
+	// repo root, and git add expects paths relative to the repo root.
+	projectRoot, err := git.GetRepoRoot()
 	if err != nil {
 		return "", "", fmt.Errorf(
-			"get working directory: %w",
+			"get git repository root: %w",
 			err,
 		)
 	}
 
 	var changeID string
 	if c.ChangeID == "" {
-		// No change ID provided - either prompt or error
-		if c.NoInteractive {
-			return "", "", errors.New(
-				"change ID required when --no-interactive is set",
-			)
-		}
-
+		// No change ID provided - prompt for selection
 		changeID, err = selectChangeInteractive(projectRoot)
 	} else {
 		// Resolve the provided change ID (may be partial)

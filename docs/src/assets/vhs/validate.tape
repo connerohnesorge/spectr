@@ -26,7 +26,7 @@ Type "cd examples/validate"
 Enter
 Sleep 1s
 
-Type "spectr validate test-validation --strict"
+Type "spectr validate test-validation"
 Enter
 Sleep 1s
 
@@ -37,7 +37,7 @@ Sleep 500ms
 Sleep 500ms
 
 # Run validation again - success
-Type "spectr validate test-validation --strict"
+Type "spectr validate test-validation"
 Enter
 Sleep 2s
 

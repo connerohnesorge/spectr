@@ -81,7 +81,7 @@ cat > spectr/changes/add-hello-world/tasks.md << 'EOF'
 EOF
 
 # 6. Validate the change
-spectr validate add-hello-world --strict
+spectr validate add-hello-world
 
 # 7. After implementation, archive it
 spectr archive add-hello-world

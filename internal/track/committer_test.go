@@ -435,6 +435,92 @@ func TestCommitter_Commit_WithMixedFiles(t *testing.T) {
 	}
 }
 
+func TestCommitter_Commit_WithModifiedFiles(t *testing.T) {
+	// Mock returns modified files (unstaged and staged)
+	mock := &MockGitExecutor{
+		StatusOutput:   " M src/modified.go\nM  src/staged.go\n",
+		RevParseOutput: "abc123def456789012345678901234567890abcd",
+	}
+	c := NewCommitterWithExecutor("test-change", "/repo", mock)
+
+	result, err := c.Commit("1.1", ActionStart)
+
+	if err != nil {
+		t.Fatalf("Commit() error = %v, want nil", err)
+	}
+	if result.NoFiles {
+		t.Error("Commit().NoFiles = true, want false (should stage modified files)")
+	}
+	if result.CommitHash == "" {
+		t.Error("Commit().CommitHash should not be empty")
+	}
+
+	// Verify both modified files were staged
+	expectedFiles := []string{"src/modified.go", "src/staged.go"}
+	if len(mock.AddedFiles) != len(expectedFiles) {
+		t.Errorf(
+			"AddedFiles count = %d, want %d",
+			len(mock.AddedFiles), len(expectedFiles),
+		)
+	}
+	for _, expected := range expectedFiles {
+		found := false
+		for _, added := range mock.AddedFiles {
+			if added == expected {
+				found = true
+
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected modified file %q to be staged", expected)
+		}
+	}
+}
+
+func TestCommitter_Commit_WithMixedNewAndModified(t *testing.T) {
+	// Mock returns both new (untracked) and modified files
+	mock := &MockGitExecutor{
+		StatusOutput:   "?? src/new.go\n M src/modified.go\nM  src/staged.go\n",
+		RevParseOutput: "def456789012345678901234567890abcdef1234",
+	}
+	c := NewCommitterWithExecutor("test-change", "/repo", mock)
+
+	result, err := c.Commit("1.1", ActionComplete)
+
+	if err != nil {
+		t.Fatalf("Commit() error = %v, want nil", err)
+	}
+	if result.NoFiles {
+		t.Error("Commit().NoFiles = true, want false")
+	}
+	if result.CommitHash == "" {
+		t.Error("Commit().CommitHash should not be empty")
+	}
+
+	// Verify all three files were staged (new + modified)
+	expectedFiles := []string{"src/new.go", "src/modified.go", "src/staged.go"}
+	if len(mock.AddedFiles) != len(expectedFiles) {
+		t.Errorf(
+			"AddedFiles count = %d, want %d",
+			len(mock.AddedFiles), len(expectedFiles),
+		)
+	}
+	for _, expected := range expectedFiles {
+		found := false
+		for _, added := range mock.AddedFiles {
+			if added == expected {
+				found = true
+
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected file %q to be staged", expected)
+		}
+	}
+}
+
 func TestCommitter_Commit_GitError(t *testing.T) {
 	t.Run("status error", func(t *testing.T) {
 		mock := &MockGitExecutor{

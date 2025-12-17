@@ -252,7 +252,6 @@ func runValidation(changeDir string) error {
 
 	report, err := ValidatePreArchive(
 		changeDir,
-		true,
 	)
 	if err != nil {
 		return err

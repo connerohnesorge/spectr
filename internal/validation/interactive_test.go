@@ -33,7 +33,6 @@ func TestRunInteractiveValidation_NotTTY(
 	err = RunInteractiveValidation(
 		"/test",
 		false,
-		false,
 	)
 
 	// Restore stdout before assertions
@@ -73,7 +72,7 @@ func TestValidateItems(t *testing.T) {
 		},
 	}
 
-	validator := NewValidator(false)
+	validator := NewValidator()
 	results, hasFailures := validateItems(
 		validator,
 		items,
@@ -124,7 +123,7 @@ func TestValidateItems_MultipleItems(
 		},
 	}
 
-	validator := NewValidator(false)
+	validator := NewValidator()
 	results, hasFailures := validateItems(
 		validator,
 		items,
@@ -188,7 +187,7 @@ func TestValidateItems_WithFailures(
 		},
 	}
 
-	validator := NewValidator(true) // strict mode
+	validator := NewValidator() // strict mode
 	results, hasFailures := validateItems(
 		validator,
 		items,
@@ -208,7 +207,7 @@ func TestValidateItems_WithFailures(
 
 // TestValidateItems_EmptyList tests validation with empty item list
 func TestValidateItems_EmptyList(t *testing.T) {
-	validator := NewValidator(false)
+	validator := NewValidator()
 	results, hasFailures := validateItems(
 		validator,
 		make([]ValidationItem, 0),
@@ -274,7 +273,6 @@ func TestHandleMenuSelection_All(t *testing.T) {
 		int(menuSelectionAll),
 		tmpDir,
 		false,
-		false,
 	)
 	assert.NoError(t, err)
 }
@@ -296,7 +294,6 @@ func TestHandleMenuSelection_Changes(
 		int(menuSelectionChanges),
 		tmpDir,
 		false,
-		false,
 	)
 	assert.NoError(t, err)
 }
@@ -317,7 +314,6 @@ func TestHandleMenuSelection_Specs(t *testing.T) {
 		int(menuSelectionSpecs),
 		tmpDir,
 		false,
-		false,
 	)
 	assert.NoError(t, err)
 }
@@ -334,7 +330,6 @@ func TestHandleMenuSelection_Invalid(
 		999,
 		tmpDir,
 		false,
-		false,
 	)
 	assert.NoError(t, err)
 }
@@ -346,7 +341,6 @@ func TestRunValidationAndPrint_Empty(
 	// Should not error with empty items
 	err := runValidationAndPrint(
 		make([]ValidationItem, 0),
-		false,
 		false,
 	)
 	assert.NoError(t, err)
@@ -382,7 +376,6 @@ func TestRunValidationAndPrint_JSON(
 	// Should not error
 	err := runValidationAndPrint(
 		items,
-		false,
 		true,
 	)
 	assert.NoError(t, err)

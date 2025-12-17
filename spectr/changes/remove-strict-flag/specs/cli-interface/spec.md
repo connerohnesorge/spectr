@@ -44,8 +44,3 @@ The validate command SHALL support flags for controlling validation behavior and
 - AND SHALL print usage hint if no item specified
 - AND SHALL exit with code 1
 
-#### Scenario: Strict flag rejected as unknown
-- WHEN user provides `--strict` flag
-- THEN the command SHALL reject the flag as unknown
-- AND SHALL display an error message indicating unknown flag
-- AND the flag SHALL NOT appear in help output

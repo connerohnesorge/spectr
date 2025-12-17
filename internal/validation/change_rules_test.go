@@ -136,7 +136,6 @@ The system SHALL provide user authentication functionality.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -201,7 +200,6 @@ The system SHALL provide user authentication functionality.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -259,7 +257,6 @@ The system SHALL provide legacy authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -300,7 +297,6 @@ func TestValidateChangeDeltaSpecs_ValidRenamedRequirements(
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -354,7 +350,6 @@ The system MUST send email notifications for authentication events.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -394,7 +389,6 @@ This file doesn't have any ADDED, MODIFIED, REMOVED, or RENAMED sections.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -452,7 +446,6 @@ func TestValidateChangeDeltaSpecs_EmptyDeltaSections(
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -506,7 +499,6 @@ The system provides user authentication functionality.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -558,7 +550,6 @@ The system SHALL provide user authentication functionality.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -614,7 +605,6 @@ The system provides enhanced authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -666,7 +656,6 @@ The system SHALL provide enhanced authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -729,7 +718,6 @@ The system SHALL also do something else.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -794,7 +782,6 @@ The system SHALL provide enhanced authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -854,7 +841,6 @@ This is missing the TO line
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -925,7 +911,6 @@ func TestValidateChangeDeltaSpecs_MissingSpecsDirectory(
 	_, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err == nil {
 		t.Error(
@@ -974,7 +959,6 @@ func TestValidateChangeDeltaSpecs_NoSpecFiles(
 	_, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err == nil {
 		t.Error(
@@ -1026,7 +1010,6 @@ The system SHALL provide secure authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1093,7 +1076,6 @@ The system SHALL provide user authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1171,7 +1153,6 @@ The system SHALL provide user authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		true,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1274,7 +1255,6 @@ The system SHALL provide user login.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1325,7 +1305,6 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedFromNames(
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1388,7 +1367,6 @@ func TestValidateChangeDeltaSpecs_DuplicateRenamedToNames(
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1463,7 +1441,6 @@ func TestValidateChangeDeltaSpecs_RenamedToAcrossFilesLineNumber(
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1618,7 +1595,6 @@ The system SHALL handle missing instruction files gracefully.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1708,7 +1684,6 @@ The system SHALL load configuration from config file.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1776,7 +1751,6 @@ The system SHALL initialize providers at startup with validation.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1827,7 +1801,6 @@ func TestValidateChangeDeltaSpecs_SameNameRenamedFromAcrossCapabilities(
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1893,7 +1866,6 @@ The system SHALL provide legacy login.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1984,7 +1956,6 @@ The system SHALL enforce password policies.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -2069,7 +2040,6 @@ The system SHALL provide user authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
@@ -2112,7 +2082,6 @@ The system SHALL provide user authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
@@ -2176,7 +2145,6 @@ Some text without any task checkboxes.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
@@ -2227,7 +2195,6 @@ The system SHALL provide user authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)

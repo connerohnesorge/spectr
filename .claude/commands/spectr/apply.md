@@ -14,9 +14,9 @@ tags: [spectr, apply]
 Track these steps as TODOs and complete them one by one.
 1. Run `spectr accept <id>` to convert `tasks.md` to `tasks.jsonc` format for stable task tracking.
 2. Read `spectr/changes/<id>/proposal.md`, `design.md` (if present), and `tasks.jsonc` to confirm scope and acceptance criteria.
-3. Work through tasks sequentially, keeping edits minimal and focused on the requested change. Before starting each task, mark it as `in_progress` in `tasks.jsonc`.
-4. After completing and verifying each task, mark it as `completed` IMMEDIATELY in `tasks.jsonc`. Do NOT batch status updates--update each task individually as soon as it is verified. Using a single edit to mark a task completed AND the next task in_progress is allowed (this is a single transition, not batching).
-5. Tasks have status values: `pending`, `in_progress`, `completed`. Transitions should be: `pending` -> `in_progress` (before starting) -> `completed` (immediately after verification).
+3. Work through tasks sequentially, keeping edits minimal and focused on the requested change. Update the task status in `tasks.jsonc` after verifying the work.
+4. Confirm completion before updating statuses—make sure every item in `tasks.jsonc` is finished.
+5. Verify/Update all task status in `tasks.jsonc` after all work is done. Tasks have status values: `pending`, `in_progress`, `completed`.
 6. Read `spectr/changes/` and `spectr/specs/` directories when additional context is required.
 
 # Reference

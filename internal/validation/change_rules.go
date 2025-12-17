@@ -28,13 +28,11 @@ const (
 // change directory. changeDir should be the path to a change directory
 // (e.g., spectr/changes/add-feature). spectrRoot should be the path to the
 // spectr/ directory (e.g., /path/to/project/spectr).
-// Returns ValidationReport with all issues found, or error for issues
-//
-//nolint:revive // strictMode is intentional control flag
+// Returns ValidationReport with all issues found, or error for issues.
+// Validation is always strict: warnings are converted to errors.
 func ValidateChangeDeltaSpecs(
 	changeDir string,
 	spectrRoot string,
-	strictMode bool,
 ) (*ValidationReport, error) {
 	specsDir := filepath.Join(changeDir, "specs")
 
@@ -176,12 +174,10 @@ func ValidateChangeDeltaSpecs(
 	tasksIssues := validateTasksFile(changeDir)
 	allIssues = append(allIssues, tasksIssues...)
 
-	// Apply strict mode: convert warnings to errors
-	if strictMode {
-		for i := range allIssues {
-			if allIssues[i].Level == LevelWarning {
-				allIssues[i].Level = LevelError
-			}
+	// Always convert warnings to errors (strict mode)
+	for i := range allIssues {
+		if allIssues[i].Level == LevelWarning {
+			allIssues[i].Level = LevelError
 		}
 	}
 

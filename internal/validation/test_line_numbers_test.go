@@ -68,7 +68,6 @@ The system provides user authentication.
 	report, err := ValidateChangeDeltaSpecs(
 		changeDir,
 		spectrRoot,
-		false,
 	)
 	if err != nil {
 		t.Fatalf(

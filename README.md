@@ -239,7 +239,7 @@ This workflow will:
 - Validate all specifications and active changes
 - Fail the build if validation errors are found
 
-For strict validation mode and additional options, see the [spectr-action documentation](https://github.com/connerohnesorge/spectr-action).
+For additional options, see the [spectr-action documentation](https://github.com/connerohnesorge/spectr-action).
 
 ---
 
@@ -323,7 +323,7 @@ cat > spectr/changes/add-hello-world/tasks.md << 'EOF'
 EOF
 
 # 6. Validate the change
-spectr validate add-hello-world --strict
+spectr validate add-hello-world
 
 # 7. After implementation, archive it
 spectr archive add-hello-world
@@ -452,15 +452,14 @@ spectr validate [ITEM] [FLAGS]
 ```
 
 **Flags:**
-- `--strict`: Enable strict validation (warnings become errors)
 - `--type <change|spec>`: Disambiguate when name conflicts exist
 - `--json`: Output validation results as JSON
 - `--no-interactive`: Skip interactive mode
 
 **Examples:**
 ```bash
-# Validate a specific change (strict mode recommended)
-spectr validate add-two-factor-auth --strict
+# Validate a specific change
+spectr validate add-two-factor-auth
 
 # Validate all changes interactively
 spectr validate
@@ -901,10 +900,10 @@ Use clear, descriptive commit messages:
 
 **Examples:**
 ```
-feat: add strict validation mode
+feat: add validation improvements
 
-Implement --strict flag for validate command that treats
-warnings as errors. Useful for CI/CD pipelines.
+Implement enhanced validation rules for specifications
+to catch errors earlier. Useful for CI/CD pipelines.
 
 fix: correct scenario header parsing
 
@@ -972,7 +971,7 @@ Create a proposal when you need to:
 
 #### Stage 3: Archiving Changes
 After deployment:
-1. Run `spectr validate <change> --strict` to ensure quality
+1. Run `spectr validate <change>` to ensure quality
 2. Run `spectr archive <change>` to merge deltas into specs
 3. Changes move to `archive/YYYY-MM-DD-<change>/`
 4. Specs in `specs/` are updated with merged requirements
@@ -1024,11 +1023,7 @@ Spectr enforces strict validation rules to maintain quality:
 | Scenario Structure | Scenarios SHOULD have WHEN/THEN bullets | Warning |
 | Header Matching | Operation headers use trim() - whitespace ignored | Info |
 
-**Strict Mode:**
-```bash
-# Treat warnings as errors
-spectr validate <change> --strict
-```
+**Note:** Validation is always strict - all validation issues are treated as errors to ensure specification quality.
 
 **Debugging Validation:**
 ```bash
@@ -1121,15 +1116,14 @@ The system SHALL do something.
 - Using bold `**Scenario:**` instead of header `####`
 - Using bullets `- Scenario:` instead of header
 
-#### Validation Errors in Strict Mode
+#### Validation Errors
 
-**Problem**: `--strict` flag causes warnings to fail.
+**Problem**: Validation fails with errors.
 
 **Solution:**
-1. Review warning messages carefully
+1. Review error messages carefully
 2. Fix underlying issues (often scenario structure or purpose length)
-3. Use non-strict mode during development: `spectr validate <change>`
-4. Use strict mode before archiving: `spectr validate <change> --strict`
+3. Use `spectr validate <change> --json` to get detailed error information
 
 #### Archive Merge Conflicts
 

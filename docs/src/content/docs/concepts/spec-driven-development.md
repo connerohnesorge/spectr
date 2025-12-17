@@ -32,7 +32,7 @@ Create a proposal when you need to:
 ## Stage 3: Archiving Changes
 
 After deployment:
-1. Run `spectr validate <change> --strict` to ensure quality
+1. Run `spectr validate <change>` to ensure quality
 2. Run `spectr archive <change>` to merge deltas into specs
 3. Changes move to `archive/YYYY-MM-DD-<change>/`
 4. Specs in `specs/` are updated with merged requirements

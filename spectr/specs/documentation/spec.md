@@ -45,7 +45,7 @@ The system SHALL document all CLI commands with flags, examples, and expected ou
 
 #### Scenario: User learns validate command options
 - **WHEN** a user reads the validate command documentation
-- **THEN** they SHALL see how to use `--strict` flag and understand what validation rules are enforced
+- **THEN** they SHALL understand what validation rules are enforced and that validation is always strict by default
 
 #### Scenario: User learns archive command
 - **WHEN** a user reads the archive command documentation

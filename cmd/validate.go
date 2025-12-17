@@ -14,7 +14,6 @@ import (
 // ValidateCmd represents the validate command
 type ValidateCmd struct {
 	ItemName      *string `arg:"" optional:"" predictor:"item"`
-	Strict        bool    `                                        name:"strict"         help:"Treat warnings as errors"`                    //nolint:lll,revive
 	JSON          bool    `                                        name:"json"           help:"Output as JSON"`                              //nolint:lll,revive
 	All           bool    `                                        name:"all"            help:"Validate all"`                                //nolint:lll,revive
 	Changes       bool    `                                        name:"changes"        help:"Validate changes"`                            //nolint:lll,revive
@@ -47,7 +46,6 @@ func (c *ValidateCmd) Run() error {
 		// Launch interactive mode
 		return validation.RunInteractiveValidation(
 			projectPath,
-			c.Strict,
 			c.JSON,
 		)
 	}
@@ -83,7 +81,7 @@ func (c *ValidateCmd) runDirectValidation(
 	}
 
 	// Create validator and validate
-	validator := validation.NewValidator(c.Strict)
+	validator := validation.NewValidator()
 	report, err := validation.ValidateItemByType(
 		validator,
 		projectPath,
@@ -119,7 +117,7 @@ func (c *ValidateCmd) runDirectValidation(
 func (c *ValidateCmd) runBulkValidation(
 	projectPath string,
 ) error {
-	validator := validation.NewValidator(c.Strict)
+	validator := validation.NewValidator()
 
 	// Determine what to validate
 	items, err := c.getItemsToValidate(

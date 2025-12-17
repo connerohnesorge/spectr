@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -271,8 +272,21 @@ func TestTrackCmd_Run_NonExistentChange(t *testing.T) {
 // TestTrackCmd_Run_NoTasksFile verifies NoTasksFileError when tasks.jsonc
 // doesn't exist for a change.
 func TestTrackCmd_Run_NoTasksFile(t *testing.T) {
+	// Check if git is available (skip test in nix builds where git may not be present)
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available, skipping test")
+	}
+
 	// Create a temporary directory with spectr structure
 	tempDir := t.TempDir()
+
+	// Initialize git repository (required since track uses git.GetRepoRoot)
+	// This test will be skipped if git is not available (checked above)
+	gitInit := exec.Command("git", "init", "-q")
+	gitInit.Dir = tempDir
+	if output, err := gitInit.CombinedOutput(); err != nil {
+		t.Fatalf("Failed to initialize git repo: %v: %s", err, output)
+	}
 
 	// Create the change directory without tasks.jsonc
 	changeDir := filepath.Join(

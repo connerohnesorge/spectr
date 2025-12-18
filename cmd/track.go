@@ -23,6 +23,9 @@ type TrackCmd struct {
 	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change ID"` //nolint:lll,revive
 	// NoInteractive disables interactive prompts for change selection.
 	NoInteractive bool `help:"Disable prompts" name:"no-interactive"` //nolint:lll,revive
+	// IncludeBinaries enables inclusion of binary files in commits.
+	// By default, binary files are excluded from automated commits.
+	IncludeBinaries bool `help:"Include binary files in commits" name:"include-binaries"` //nolint:lll,revive
 }
 
 // Run executes the track command. It resolves the change ID,

@@ -123,14 +123,8 @@ type Initializer interface {
 	IsGlobal() bool
 }
 
-// Config contains initialization configuration.
-// This is a placeholder struct that will be fully defined in config.go.
-// It contains the spectr directory path and provides methods for derived paths.
-type Config struct {
-	// SpectrDir is the base directory for spectr files (e.g., "spectr").
-	// All other paths are derived from this value.
-	SpectrDir string
-}
+// Config is defined in config.go and contains initialization configuration.
+// It provides the spectr directory path and methods for computing derived paths.
 
 // TemplateManager is a forward declaration for the template manager type.
 // The actual implementation is in internal/initialize/templates.go.

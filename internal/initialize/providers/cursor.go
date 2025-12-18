@@ -1,32 +1,35 @@
 package providers
 
+import "context"
+
 func init() {
-	Register(NewCursorProvider())
+	err := RegisterV2(Registration{
+		ID:       "cursor",
+		Name:     "Cursor",
+		Priority: PriorityCursor,
+		Provider: &CursorProvider{},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
-// CursorProvider implements the Provider interface for Cursor.
-// Cursor uses .cursorrules/commands/ for slash commands (no config file).
-type CursorProvider struct {
-	BaseProvider
-}
+// CursorProvider implements the ProviderV2 interface for Cursor.
+// Cursor uses .cursorrules/commands/spectr/ for slash commands (no config file).
+type CursorProvider struct{}
 
-// NewCursorProvider creates a new Cursor provider.
-func NewCursorProvider() *CursorProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".cursorrules/commands",
-		".md",
-	)
-
-	return &CursorProvider{
-		BaseProvider: BaseProvider{
-			id:            "cursor",
-			name:          "Cursor",
-			priority:      PriorityCursor,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for Cursor.
+func (p *CursorProvider) Initializers(ctx context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".cursorrules/commands/spectr"),
+		NewSlashCommandsInitializerWithFrontmatter(
+			".cursorrules/commands/spectr",
+			".md",
+			FormatMarkdown,
+			map[string]string{
+				"proposal": FrontmatterProposal,
+				"apply":    FrontmatterApply,
+			},
+		),
 	}
 }

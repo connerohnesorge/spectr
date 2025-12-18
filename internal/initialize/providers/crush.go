@@ -1,32 +1,36 @@
 package providers
 
+import "context"
+
 func init() {
-	Register(NewCrushProvider())
+	err := RegisterV2(Registration{
+		ID:       "crush",
+		Name:     "Crush",
+		Priority: PriorityCrush,
+		Provider: &CrushProvider{},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
-// CrushProvider implements the Provider interface for Crush.
-// Crush uses CRUSH.md for instructions and .crush/commands/ for slash commands.
-type CrushProvider struct {
-	BaseProvider
-}
+// CrushProvider implements the ProviderV2 interface for Crush.
+// Crush uses CRUSH.md for instructions and .crush/commands/spectr/ for slash commands.
+type CrushProvider struct{}
 
-// NewCrushProvider creates a new Crush provider.
-func NewCrushProvider() *CrushProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".crush/commands",
-		".md",
-	)
-
-	return &CrushProvider{
-		BaseProvider: BaseProvider{
-			id:            "crush",
-			name:          "Crush",
-			priority:      PriorityCrush,
-			configFile:    "CRUSH.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for Crush.
+func (p *CrushProvider) Initializers(ctx context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".crush/commands/spectr"),
+		NewConfigFileInitializer("CRUSH.md"),
+		NewSlashCommandsInitializerWithFrontmatter(
+			".crush/commands/spectr",
+			".md",
+			FormatMarkdown,
+			map[string]string{
+				"proposal": FrontmatterProposal,
+				"apply":    FrontmatterApply,
+			},
+		),
 	}
 }

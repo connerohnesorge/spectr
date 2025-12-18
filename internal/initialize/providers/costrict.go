@@ -1,32 +1,36 @@
 package providers
 
+import "context"
+
 func init() {
-	Register(NewCostrictProvider())
+	err := RegisterV2(Registration{
+		ID:       "costrict",
+		Name:     "CoStrict",
+		Priority: PriorityCostrict,
+		Provider: &CostrictProvider{},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
-// CostrictProvider implements the Provider interface for CoStrict.
-// CoStrict uses COSTRICT.md and .costrict/commands/ for slash commands.
-type CostrictProvider struct {
-	BaseProvider
-}
+// CostrictProvider implements the ProviderV2 interface for CoStrict.
+// CoStrict uses COSTRICT.md and .costrict/commands/spectr/ for slash commands.
+type CostrictProvider struct{}
 
-// NewCostrictProvider creates a new CoStrict provider.
-func NewCostrictProvider() *CostrictProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".costrict/commands",
-		".md",
-	)
-
-	return &CostrictProvider{
-		BaseProvider: BaseProvider{
-			id:            "costrict",
-			name:          "CoStrict",
-			priority:      PriorityCostrict,
-			configFile:    "COSTRICT.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for CoStrict.
+func (p *CostrictProvider) Initializers(ctx context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".costrict/commands/spectr"),
+		NewConfigFileInitializer("COSTRICT.md"),
+		NewSlashCommandsInitializerWithFrontmatter(
+			".costrict/commands/spectr",
+			".md",
+			FormatMarkdown,
+			map[string]string{
+				"proposal": FrontmatterProposal,
+				"apply":    FrontmatterApply,
+			},
+		),
 	}
 }

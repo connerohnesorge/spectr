@@ -1,32 +1,36 @@
 package providers
 
+import "context"
+
 func init() {
-	Register(NewQoderProvider())
+	err := RegisterV2(Registration{
+		ID:       "qoder",
+		Name:     "Qoder",
+		Priority: PriorityQoder,
+		Provider: &QoderProvider{},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
-// QoderProvider implements the Provider interface for Qoder.
-// Qoder uses QODER.md and .qoder/commands/ for slash commands.
-type QoderProvider struct {
-	BaseProvider
-}
+// QoderProvider implements the ProviderV2 interface for Qoder.
+// Qoder uses QODER.md and .qoder/commands/spectr/ for slash commands.
+type QoderProvider struct{}
 
-// NewQoderProvider creates a new Qoder provider.
-func NewQoderProvider() *QoderProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".qoder/commands",
-		".md",
-	)
-
-	return &QoderProvider{
-		BaseProvider: BaseProvider{
-			id:            "qoder",
-			name:          "Qoder",
-			priority:      PriorityQoder,
-			configFile:    "QODER.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for Qoder.
+func (p *QoderProvider) Initializers(ctx context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".qoder/commands/spectr"),
+		NewConfigFileInitializer("QODER.md"),
+		NewSlashCommandsInitializerWithFrontmatter(
+			".qoder/commands/spectr",
+			".md",
+			FormatMarkdown,
+			map[string]string{
+				"proposal": FrontmatterProposal,
+				"apply":    FrontmatterApply,
+			},
+		),
 	}
 }

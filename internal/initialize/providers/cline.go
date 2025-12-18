@@ -1,32 +1,36 @@
 package providers
 
+import "context"
+
 func init() {
-	Register(NewClineProvider())
+	err := RegisterV2(Registration{
+		ID:       "cline",
+		Name:     "Cline",
+		Priority: PriorityCline,
+		Provider: &ClineProvider{},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
-// ClineProvider implements the Provider interface for Cline.
-// Cline uses CLINE.md and .clinerules/commands/ for slash commands.
-type ClineProvider struct {
-	BaseProvider
-}
+// ClineProvider implements the ProviderV2 interface for Cline.
+// Cline uses CLINE.md and .clinerules/commands/spectr/ for slash commands.
+type ClineProvider struct{}
 
-// NewClineProvider creates a new Cline provider.
-func NewClineProvider() *ClineProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".clinerules/commands",
-		".md",
-	)
-
-	return &ClineProvider{
-		BaseProvider: BaseProvider{
-			id:            "cline",
-			name:          "Cline",
-			priority:      PriorityCline,
-			configFile:    "CLINE.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for Cline.
+func (p *ClineProvider) Initializers(ctx context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".clinerules/commands/spectr"),
+		NewConfigFileInitializer("CLINE.md"),
+		NewSlashCommandsInitializerWithFrontmatter(
+			".clinerules/commands/spectr",
+			".md",
+			FormatMarkdown,
+			map[string]string{
+				"proposal": FrontmatterProposal,
+				"apply":    FrontmatterApply,
+			},
+		),
 	}
 }

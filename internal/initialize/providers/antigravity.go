@@ -1,33 +1,38 @@
 package providers
 
+import "context"
+
 func init() {
-	Register(NewAntigravityProvider())
+	err := RegisterV2(Registration{
+		ID:       "antigravity",
+		Name:     "Antigravity",
+		Priority: PriorityAntigravity,
+		Provider: &AntigravityProvider{},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
-// AntigravityProvider implements the Provider interface for Antigravity.
-//
+// AntigravityProvider implements the ProviderV2 interface for Antigravity.
 // Antigravity uses AGENTS.md and .agent/workflows/ for slash commands.
-type AntigravityProvider struct {
-	BaseProvider
-}
+// Note: Uses prefixed command paths (spectr-proposal.md, spectr-apply.md)
+// instead of subdirectory structure.
+type AntigravityProvider struct{}
 
-// NewAntigravityProvider creates a new Antigravity provider.
-func NewAntigravityProvider() *AntigravityProvider {
-	proposalPath, applyPath := PrefixedCommandPaths(
-		".agent/workflows",
-		".md",
-	)
-
-	return &AntigravityProvider{
-		BaseProvider: BaseProvider{
-			id:            "antigravity",
-			name:          "Antigravity",
-			priority:      PriorityAntigravity,
-			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for Antigravity.
+func (p *AntigravityProvider) Initializers(ctx context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".agent/workflows"),
+		NewConfigFileInitializer("AGENTS.md"),
+		NewSlashCommandsInitializerWithFrontmatter(
+			".agent/workflows",
+			".md",
+			FormatMarkdown,
+			map[string]string{
+				"proposal": FrontmatterProposal,
+				"apply":    FrontmatterApply,
+			},
+		),
 	}
 }

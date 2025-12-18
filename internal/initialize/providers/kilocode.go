@@ -1,32 +1,35 @@
 package providers
 
+import "context"
+
 func init() {
-	Register(NewKilocodeProvider())
+	err := RegisterV2(Registration{
+		ID:       "kilocode",
+		Name:     "Kilocode",
+		Priority: PriorityKilocode,
+		Provider: &KilocodeProvider{},
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
-// KilocodeProvider implements the Provider interface for Kilocode.
-// Kilocode uses .kilocode/commands/ for slash commands (no config file).
-type KilocodeProvider struct {
-	BaseProvider
-}
+// KilocodeProvider implements the ProviderV2 interface for Kilocode.
+// Kilocode uses .kilocode/commands/spectr/ for slash commands (no config file).
+type KilocodeProvider struct{}
 
-// NewKilocodeProvider creates a new Kilocode provider.
-func NewKilocodeProvider() *KilocodeProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".kilocode/commands",
-		".md",
-	)
-
-	return &KilocodeProvider{
-		BaseProvider: BaseProvider{
-			id:            "kilocode",
-			name:          "Kilocode",
-			priority:      PriorityKilocode,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for Kilocode.
+func (p *KilocodeProvider) Initializers(ctx context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".kilocode/commands/spectr"),
+		NewSlashCommandsInitializerWithFrontmatter(
+			".kilocode/commands/spectr",
+			".md",
+			FormatMarkdown,
+			map[string]string{
+				"proposal": FrontmatterProposal,
+				"apply":    FrontmatterApply,
+			},
+		),
 	}
 }

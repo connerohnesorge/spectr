@@ -266,11 +266,7 @@ func (c *AcceptCmd) resolveChangeID(
 	}
 
 	if c.NoInteractive {
-		// TODO: Define error type for this?
-		return "", errors.New(
-			"usage: spectr accept <change-id> [flags]\n" +
-				"       spectr accept <change-id> --dry-run",
-		)
+		return "", &specterrs.MissingChangeIDError{}
 	}
 
 	return selectChangeInteractive(projectRoot)
@@ -399,7 +395,8 @@ func parseTasksMd(
 		)
 	}
 
-	if err := scanner.Err(); err != nil {
+	err = scanner.Err()
+	if err != nil {
 		return nil, fmt.Errorf(
 			"error reading file: %w",
 			err,
@@ -418,10 +415,10 @@ func validateParsedTasks(
 	if len(tasks) == 0 {
 		info, statErr := os.Stat(tasksMdPath)
 		if statErr == nil && info.Size() > 0 {
-			return errors.New(
-				"tasks.md has content but no valid tasks found; " +
-					"expected format: '- [ ] N.N Task' or '- [ ] N. Task'",
-			)
+			return &specterrs.NoValidTasksError{
+				TasksMdPath: tasksMdPath,
+				FileSize:    info.Size(),
+			}
 		}
 	}
 

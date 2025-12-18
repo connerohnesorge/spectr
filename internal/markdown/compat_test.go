@@ -641,7 +641,9 @@ func TestMatchFlexibleTask(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			match, ok := MatchFlexibleTask(tt.line)
+			match, ok := MatchFlexibleTask(
+				tt.line,
+			)
 			if ok != tt.wantMatch {
 				t.Errorf(
 					"MatchFlexibleTask() matched = %v, want %v",

@@ -79,11 +79,13 @@ func StripJSONComments(data []byte) []byte {
 }
 
 func isLineComment(data []byte, i int) bool {
-	return i+1 < len(data) && data[i] == '/' && data[i+1] == '/'
+	return i+1 < len(data) && data[i] == '/' &&
+		data[i+1] == '/'
 }
 
 func isBlockComment(data []byte, i int) bool {
-	return i+1 < len(data) && data[i] == '/' && data[i+1] == '*'
+	return i+1 < len(data) && data[i] == '/' &&
+		data[i+1] == '*'
 }
 
 func skipLineComment(data []byte, start int) int {
@@ -95,10 +97,14 @@ func skipLineComment(data []byte, start int) int {
 	return pos
 }
 
-func skipBlockComment(data []byte, start int) int {
+func skipBlockComment(
+	data []byte,
+	start int,
+) int {
 	pos := start + 2
 	for pos+1 < len(data) {
-		if data[pos] == '*' && data[pos+1] == '/' {
+		if data[pos] == '*' &&
+			data[pos+1] == '/' {
 			return pos + 2
 		}
 		pos++
@@ -107,13 +113,22 @@ func skipBlockComment(data []byte, start int) int {
 	return pos
 }
 
-func copyJSONString(data []byte, start int, result *[]byte) int {
+func copyJSONString(
+	data []byte,
+	start int,
+	result *[]byte,
+) int {
 	*result = append(*result, data[start])
 	pos := start + 1
 
 	for pos < len(data) {
-		if data[pos] == '\\' && pos+1 < len(data) {
-			*result = append(*result, data[pos], data[pos+1])
+		if data[pos] == '\\' &&
+			pos+1 < len(data) {
+			*result = append(
+				*result,
+				data[pos],
+				data[pos+1],
+			)
 			pos += 2
 
 			continue

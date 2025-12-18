@@ -198,7 +198,9 @@ func TestTrackCmd_Run_NoInteractiveWithoutChangeID(
 }
 
 // TestTrackCmd_Run_NonExistentChange verifies error for non-existent change ID.
-func TestTrackCmd_Run_NonExistentChange(t *testing.T) {
+func TestTrackCmd_Run_NonExistentChange(
+	t *testing.T,
+) {
 	// Create a temporary directory with spectr structure but no changes
 	tempDir := t.TempDir()
 
@@ -274,7 +276,9 @@ func TestTrackCmd_Run_NonExistentChange(t *testing.T) {
 func TestTrackCmd_Run_NoTasksFile(t *testing.T) {
 	// Check if git is available (skip test in nix builds where git may not be present)
 	if _, err := exec.LookPath("git"); err != nil {
-		t.Skip("git binary not available, skipping test")
+		t.Skip(
+			"git binary not available, skipping test",
+		)
 	}
 
 	// Create a temporary directory with spectr structure
@@ -285,7 +289,11 @@ func TestTrackCmd_Run_NoTasksFile(t *testing.T) {
 	gitInit := exec.Command("git", "init", "-q")
 	gitInit.Dir = tempDir
 	if output, err := gitInit.CombinedOutput(); err != nil {
-		t.Fatalf("Failed to initialize git repo: %v: %s", err, output)
+		t.Fatalf(
+			"Failed to initialize git repo: %v: %s",
+			err,
+			output,
+		)
 	}
 
 	// Create the change directory without tasks.jsonc
@@ -304,7 +312,10 @@ func TestTrackCmd_Run_NoTasksFile(t *testing.T) {
 	}
 
 	// Create a minimal proposal.md to make it a valid change
-	proposalPath := filepath.Join(changeDir, "proposal.md")
+	proposalPath := filepath.Join(
+		changeDir,
+		"proposal.md",
+	)
 	proposalContent := `# Test Change
 
 ## Overview
@@ -377,7 +388,8 @@ This is a test proposal.
 	}
 
 	// Verify the error contains the change ID
-	if noTasksErr != nil && noTasksErr.ChangeID != "test-change" {
+	if noTasksErr != nil &&
+		noTasksErr.ChangeID != "test-change" {
 		t.Errorf(
 			"NoTasksFileError.ChangeID = %q, want %q",
 			noTasksErr.ChangeID,

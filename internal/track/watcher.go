@@ -32,8 +32,13 @@ type Watcher struct {
 
 // NewWatcher creates a new Watcher for the specified file path.
 // The file must exist at creation time.
-func NewWatcher(filePath string) (*Watcher, error) {
-	return NewWatcherWithDebounce(filePath, defaultDebounce)
+func NewWatcher(
+	filePath string,
+) (*Watcher, error) {
+	return NewWatcherWithDebounce(
+		filePath,
+		defaultDebounce,
+	)
 }
 
 // NewWatcherWithDebounce creates a new Watcher with custom debounce.
@@ -129,7 +134,11 @@ func (w *Watcher) loop() {
 				return
 			}
 
-			timer, timerChan = w.handleEvent(event, timer, timerChan)
+			timer, timerChan = w.handleEvent(
+				event,
+				timer,
+				timerChan,
+			)
 
 		case <-timerChan:
 			w.sendEvent()
@@ -155,7 +164,8 @@ func (w *Watcher) handleEvent(
 		return timer, timerChan
 	}
 
-	if !event.Has(fsnotify.Write) && !event.Has(fsnotify.Create) {
+	if !event.Has(fsnotify.Write) &&
+		!event.Has(fsnotify.Create) {
 		return timer, timerChan
 	}
 
@@ -182,7 +192,9 @@ func (w *Watcher) resetTimer(timer *time.Timer) {
 }
 
 // isWatchedFile checks if the event path matches the watched file.
-func (w *Watcher) isWatchedFile(eventPath string) bool {
+func (w *Watcher) isWatchedFile(
+	eventPath string,
+) bool {
 	absEventPath, err := filepath.Abs(eventPath)
 	if err != nil {
 		return false

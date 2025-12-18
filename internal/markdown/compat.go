@@ -218,7 +218,8 @@ parseLoop:
 
 	// If dot was seen but no digits after it, include the dot in numEnd
 	// This handles "1. Task" format where numEnd would be 1 but dot is at position 1
-	if dotSeen && dotPos >= 0 && dotPos+1 > numEnd {
+	if dotSeen && dotPos >= 0 &&
+		dotPos+1 > numEnd {
 		numEnd = dotPos + 1
 	}
 
@@ -312,7 +313,8 @@ func MatchFlexibleTask(
 	var contentStart int
 
 	// Check if starts with digit
-	if len(rest) > 0 && rest[0] >= '0' && rest[0] <= '9' {
+	if len(rest) > 0 && rest[0] >= '0' &&
+		rest[0] <= '9' {
 		// Parse number: digits, optional dot, optional more digits
 		i := 0
 		for i < len(rest) && rest[i] >= '0' && rest[i] <= '9' {
@@ -336,7 +338,10 @@ func MatchFlexibleTask(
 	// Extract content
 	var content string
 	if number != "" {
-		content = strings.TrimLeft(rest[contentStart:], " \t")
+		content = strings.TrimLeft(
+			rest[contentStart:],
+			" \t",
+		)
 	} else {
 		content = strings.TrimLeft(rest, " \t")
 	}

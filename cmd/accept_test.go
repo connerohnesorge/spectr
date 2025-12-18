@@ -682,7 +682,9 @@ func TestWriteTasksJsonIndentation(t *testing.T) {
 	}
 
 	// Strip JSONC comments before unmarshalling
-	strippedData := parsers.StripJSONComments(data)
+	strippedData := parsers.StripJSONComments(
+		data,
+	)
 
 	// Verify it's valid JSON with proper structure
 	var parsed map[string]any

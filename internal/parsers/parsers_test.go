@@ -538,60 +538,70 @@ func TestCountTasks_JsoncPreferredOverMarkdown(
 	}
 }
 
-func TestCountTasks_IgnoresLegacyJson(t *testing.T) {
+func TestCountTasks_IgnoresLegacyJson(
+	t *testing.T,
+) {
 	// Test that tasks.json (legacy) is ignored in favor of tasks.md
-	t.Run("tasks.json ignored, falls back to tasks.md", func(t *testing.T) {
-		tmpDir := t.TempDir()
+	t.Run(
+		"tasks.json ignored, falls back to tasks.md",
+		func(t *testing.T) {
+			tmpDir := t.TempDir()
 
-		// Create legacy tasks.json with 2 tasks
-		jsonContent := `{
+			// Create legacy tasks.json with 2 tasks
+			jsonContent := `{
 			"version": 1,
 			"tasks": [
 				{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "completed"},
 				{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
 			]
 		}`
-		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
-			t.Fatal(err)
-		}
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
+				t.Fatal(err)
+			}
 
-		// Create tasks.md with 4 tasks
-		mdContent := `## Tasks
+			// Create tasks.md with 4 tasks
+			mdContent := `## Tasks
 - [ ] Task 1
 - [ ] Task 2
 - [x] Task 3
 - [x] Task 4`
-		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
-			t.Fatal(err)
-		}
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
+				t.Fatal(err)
+			}
 
-		// Should use tasks.md, NOT tasks.json (legacy is ignored)
-		status, err := CountTasks(tmpDir)
-		if err != nil {
-			t.Fatalf("CountTasks failed: %v", err)
-		}
+			// Should use tasks.md, NOT tasks.json (legacy is ignored)
+			status, err := CountTasks(tmpDir)
+			if err != nil {
+				t.Fatalf(
+					"CountTasks failed: %v",
+					err,
+				)
+			}
 
-		// Expect counts from MD (4 total, 2 completed) not legacy JSON (2 total, 1 completed)
-		if status.Total != 4 {
-			t.Errorf(
-				"Expected total 4 (from tasks.md), got %d - tasks.json should be ignored",
-				status.Total,
-			)
-		}
-		if status.Completed != 2 {
-			t.Errorf(
-				"Expected completed 2 (from tasks.md), got %d - tasks.json should be ignored",
-				status.Completed,
-			)
-		}
-	})
+			// Expect counts from MD (4 total, 2 completed) not legacy JSON (2 total, 1 completed)
+			if status.Total != 4 {
+				t.Errorf(
+					"Expected total 4 (from tasks.md), got %d - tasks.json should be ignored",
+					status.Total,
+				)
+			}
+			if status.Completed != 2 {
+				t.Errorf(
+					"Expected completed 2 (from tasks.md), got %d - tasks.json should be ignored",
+					status.Completed,
+				)
+			}
+		},
+	)
 
 	// Test that tasks.jsonc takes priority over both tasks.json and tasks.md
-	t.Run("tasks.jsonc wins over legacy tasks.json and tasks.md", func(t *testing.T) {
-		tmpDir := t.TempDir()
+	t.Run(
+		"tasks.jsonc wins over legacy tasks.json and tasks.md",
+		func(t *testing.T) {
+			tmpDir := t.TempDir()
 
-		// Create tasks.jsonc with 3 tasks (all completed)
-		jsoncContent := `// JSONC format with comments
+			// Create tasks.jsonc with 3 tasks (all completed)
+			jsoncContent := `// JSONC format with comments
 {
 			"version": 1,
 			"tasks": [
@@ -600,52 +610,56 @@ func TestCountTasks_IgnoresLegacyJson(t *testing.T) {
 				{"id": "1.3", "section": "Impl", "description": "Task 3", "status": "completed"}
 			]
 		}`
-		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.jsonc"), []byte(jsoncContent), 0644); err != nil {
-			t.Fatal(err)
-		}
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.jsonc"), []byte(jsoncContent), 0644); err != nil {
+				t.Fatal(err)
+			}
 
-		// Create legacy tasks.json with 2 tasks
-		jsonContent := `{
+			// Create legacy tasks.json with 2 tasks
+			jsonContent := `{
 			"version": 1,
 			"tasks": [
 				{"id": "1.1", "section": "Impl", "description": "Task 1", "status": "pending"},
 				{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
 			]
 		}`
-		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
-			t.Fatal(err)
-		}
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
+				t.Fatal(err)
+			}
 
-		// Create tasks.md with 5 tasks
-		mdContent := `## Tasks
+			// Create tasks.md with 5 tasks
+			mdContent := `## Tasks
 - [ ] Task 1
 - [ ] Task 2
 - [ ] Task 3
 - [ ] Task 4
 - [ ] Task 5`
-		if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
-			t.Fatal(err)
-		}
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
+				t.Fatal(err)
+			}
 
-		// Should use tasks.jsonc (3 total, 3 completed)
-		status, err := CountTasks(tmpDir)
-		if err != nil {
-			t.Fatalf("CountTasks failed: %v", err)
-		}
+			// Should use tasks.jsonc (3 total, 3 completed)
+			status, err := CountTasks(tmpDir)
+			if err != nil {
+				t.Fatalf(
+					"CountTasks failed: %v",
+					err,
+				)
+			}
 
-		if status.Total != 3 {
-			t.Errorf(
-				"Expected total 3 (from tasks.jsonc), got %d",
-				status.Total,
-			)
-		}
-		if status.Completed != 3 {
-			t.Errorf(
-				"Expected completed 3 (from tasks.jsonc), got %d",
-				status.Completed,
-			)
-		}
-	})
+			if status.Total != 3 {
+				t.Errorf(
+					"Expected total 3 (from tasks.jsonc), got %d",
+					status.Total,
+				)
+			}
+			if status.Completed != 3 {
+				t.Errorf(
+					"Expected completed 3 (from tasks.jsonc), got %d",
+					status.Completed,
+				)
+			}
+		},
+	)
 }
 
 func TestStripJSONComments(t *testing.T) {
@@ -730,7 +744,9 @@ func TestStripJSONComments(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := StripJSONComments([]byte(tt.input))
+			result := StripJSONComments(
+				[]byte(tt.input),
+			)
 			if string(result) != tt.expected {
 				t.Errorf(
 					"StripJSONComments(%q)\n  got:      %q\n  expected: %q",
@@ -826,14 +842,22 @@ func TestReadTasksJsonWithComments(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			filePath := filepath.Join(tmpDir, "tasks.jsonc")
+			filePath := filepath.Join(
+				tmpDir,
+				"tasks.jsonc",
+			)
 			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
 				t.Fatal(err)
 			}
 
-			tasksFile, err := ReadTasksJson(filePath)
+			tasksFile, err := ReadTasksJson(
+				filePath,
+			)
 			if err != nil {
-				t.Fatalf("ReadTasksJson failed: %v", err)
+				t.Fatalf(
+					"ReadTasksJson failed: %v",
+					err,
+				)
 			}
 
 			if tasksFile.Version != tt.expectedVersion {
@@ -843,7 +867,9 @@ func TestReadTasksJsonWithComments(t *testing.T) {
 					tasksFile.Version,
 				)
 			}
-			if len(tasksFile.Tasks) != tt.expectedTaskCount {
+			if len(
+				tasksFile.Tasks,
+			) != tt.expectedTaskCount {
 				t.Errorf(
 					"Expected %d tasks, got %d",
 					tt.expectedTaskCount,
@@ -871,26 +897,44 @@ func TestReadTasksJsonWithComments(t *testing.T) {
 	}
 }
 
-func TestCountTasksFromJson_Fixture(t *testing.T) {
+func TestCountTasksFromJson_Fixture(
+	t *testing.T,
+) {
 	// Test with real fixture - 16 pending tasks
-	status, err := countTasksFromJson("testdata/tasks_fixture.jsonc")
+	status, err := countTasksFromJson(
+		"testdata/tasks_fixture.jsonc",
+	)
 	if err != nil {
-		t.Fatalf("countTasksFromJson failed: %v", err)
+		t.Fatalf(
+			"countTasksFromJson failed: %v",
+			err,
+		)
 	}
 
 	// Fixture has 16 tasks, all pending
 	if status.Total != 16 {
-		t.Errorf("Expected Total=16, got %d", status.Total)
+		t.Errorf(
+			"Expected Total=16, got %d",
+			status.Total,
+		)
 	}
 	if status.Completed != 0 {
-		t.Errorf("Expected Completed=0, got %d", status.Completed)
+		t.Errorf(
+			"Expected Completed=0, got %d",
+			status.Completed,
+		)
 	}
 	if status.InProgress != 0 {
-		t.Errorf("Expected InProgress=0, got %d", status.InProgress)
+		t.Errorf(
+			"Expected InProgress=0, got %d",
+			status.InProgress,
+		)
 	}
 }
 
-func TestCountTasksFromJson_AllScenarios(t *testing.T) {
+func TestCountTasksFromJson_AllScenarios(
+	t *testing.T,
+) {
 	tests := []struct {
 		name           string
 		content        string
@@ -953,24 +997,44 @@ func TestCountTasksFromJson_AllScenarios(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			filePath := filepath.Join(tmpDir, "tasks.jsonc")
+			filePath := filepath.Join(
+				tmpDir,
+				"tasks.jsonc",
+			)
 			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
 				t.Fatal(err)
 			}
 
-			status, err := countTasksFromJson(filePath)
+			status, err := countTasksFromJson(
+				filePath,
+			)
 			if err != nil {
-				t.Fatalf("countTasksFromJson failed: %v", err)
+				t.Fatalf(
+					"countTasksFromJson failed: %v",
+					err,
+				)
 			}
 
 			if status.Total != tt.wantTotal {
-				t.Errorf("Total = %d, want %d", status.Total, tt.wantTotal)
+				t.Errorf(
+					"Total = %d, want %d",
+					status.Total,
+					tt.wantTotal,
+				)
 			}
 			if status.Completed != tt.wantCompleted {
-				t.Errorf("Completed = %d, want %d", status.Completed, tt.wantCompleted)
+				t.Errorf(
+					"Completed = %d, want %d",
+					status.Completed,
+					tt.wantCompleted,
+				)
 			}
 			if status.InProgress != tt.wantInProgress {
-				t.Errorf("InProgress = %d, want %d", status.InProgress, tt.wantInProgress)
+				t.Errorf(
+					"InProgress = %d, want %d",
+					status.InProgress,
+					tt.wantInProgress,
+				)
 			}
 		})
 	}

@@ -231,7 +231,11 @@ func calculatePercentage(
 	// Round to nearest integer
 	return int(
 		math.Round(
-			float64(completed) / float64(total) * 100.0,
+			float64(
+				completed,
+			) / float64(
+				total,
+			) * 100.0,
 		),
 	)
 }

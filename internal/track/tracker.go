@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
@@ -33,6 +34,9 @@ type Config struct {
 	RepoRoot string
 	// Writer is used for progress output (e.g., os.Stdout).
 	Writer io.Writer
+	// IncludeBinaries controls whether binary files are included in commits.
+	// When false (default), binary files are excluded from automated commits.
+	IncludeBinaries bool
 }
 
 // New creates a new Tracker with the specified configuration.
@@ -43,16 +47,22 @@ func New(config Config) (*Tracker, error) {
 		return nil, err
 	}
 
-	committer := NewCommitter(config.ChangeID, config.RepoRoot)
+	committer := NewCommitter(
+		config.ChangeID,
+		config.RepoRoot,
+		config.IncludeBinaries,
+	)
 
 	return &Tracker{
-		changeID:      config.ChangeID,
-		tasksPath:     config.TasksPath,
-		repoRoot:      config.RepoRoot,
-		watcher:       watcher,
-		committer:     committer,
-		writer:        config.Writer,
-		previousState: make(map[string]parsers.TaskStatusValue),
+		changeID:  config.ChangeID,
+		tasksPath: config.TasksPath,
+		repoRoot:  config.RepoRoot,
+		watcher:   watcher,
+		committer: committer,
+		writer:    config.Writer,
+		previousState: make(
+			map[string]parsers.TaskStatusValue,
+		),
 	}, nil
 }
 
@@ -69,9 +79,14 @@ func New(config Config) (*Tracker, error) {
 //   - TrackInterruptedError if cancelled via context
 //   - GitCommitError if a git operation fails
 func (t *Tracker) Run(ctx context.Context) error {
-	tasksFile, err := parsers.ReadTasksJson(t.tasksPath)
+	tasksFile, err := parsers.ReadTasksJson(
+		t.tasksPath,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to read tasks file: %w", err)
+		return fmt.Errorf(
+			"failed to read tasks file: %w",
+			err,
+		)
 	}
 
 	for _, task := range tasksFile.Tasks {
@@ -79,21 +94,29 @@ func (t *Tracker) Run(ctx context.Context) error {
 	}
 
 	if allTasksComplete(tasksFile.Tasks) {
-		return &specterrs.TasksAlreadyCompleteError{ChangeID: t.changeID}
+		return &specterrs.TasksAlreadyCompleteError{
+			ChangeID: t.changeID,
+		}
 	}
 
-	completed, total := countProgress(tasksFile.Tasks)
+	completed, total := countProgress(
+		tasksFile.Tasks,
+	)
 	t.printf(
 		"Tracking %s: %d/%d tasks completed\n",
 		t.changeID, completed, total,
 	)
-	t.printf("Watching for task status changes... (Ctrl+C to stop)\n\n")
+	t.printf(
+		"Watching for task status changes... (Ctrl+C to stop)\n\n",
+	)
 
 	return t.eventLoop(ctx)
 }
 
 // eventLoop is the main event loop that processes file changes.
-func (t *Tracker) eventLoop(ctx context.Context) error {
+func (t *Tracker) eventLoop(
+	ctx context.Context,
+) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -112,14 +135,19 @@ func (t *Tracker) eventLoop(ctx context.Context) error {
 			}
 
 		case err := <-t.watcher.Errors():
-			t.printf("Warning: watcher error: %v\n", err)
+			t.printf(
+				"Warning: watcher error: %v\n",
+				err,
+			)
 		}
 	}
 }
 
 // checkAllComplete checks if all tasks are complete and prints status.
 func (t *Tracker) checkAllComplete() bool {
-	tasksFile, err := parsers.ReadTasksJson(t.tasksPath)
+	tasksFile, err := parsers.ReadTasksJson(
+		t.tasksPath,
+	)
 	if err != nil {
 		return false
 	}
@@ -128,8 +156,14 @@ func (t *Tracker) checkAllComplete() bool {
 		return false
 	}
 
-	completed, total := countProgress(tasksFile.Tasks)
-	t.printf("\nAll tasks completed! (%d/%d)\n", completed, total)
+	completed, total := countProgress(
+		tasksFile.Tasks,
+	)
+	t.printf(
+		"\nAll tasks completed! (%d/%d)\n",
+		completed,
+		total,
+	)
 
 	return true
 }
@@ -146,9 +180,14 @@ func (t *Tracker) Close() error {
 // handleFileChange processes a file change event by reloading tasks
 // and committing for any status transitions.
 func (t *Tracker) handleFileChange() error {
-	tasksFile, err := parsers.ReadTasksJson(t.tasksPath)
+	tasksFile, err := parsers.ReadTasksJson(
+		t.tasksPath,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to read tasks file: %w", err)
+		return fmt.Errorf(
+			"failed to read tasks file: %w",
+			err,
+		)
 	}
 
 	for _, task := range tasksFile.Tasks {
@@ -161,7 +200,9 @@ func (t *Tracker) handleFileChange() error {
 }
 
 // processTaskTransition checks and commits a single task's transition.
-func (t *Tracker) processTaskTransition(task parsers.Task) error {
+func (t *Tracker) processTaskTransition(
+	task parsers.Task,
+) error {
 	prevStatus, exists := t.previousState[task.ID]
 	if !exists {
 		t.previousState[task.ID] = task.Status
@@ -173,7 +214,9 @@ func (t *Tracker) processTaskTransition(task parsers.Task) error {
 		return nil
 	}
 
-	action, shouldCommit := getActionForTransition(task.Status)
+	action, shouldCommit := getActionForTransition(
+		task.Status,
+	)
 	if shouldCommit {
 		if err := t.commitTransition(task.ID, action); err != nil {
 			return err
@@ -187,7 +230,9 @@ func (t *Tracker) processTaskTransition(task parsers.Task) error {
 
 // getActionForTransition determines the commit action for a status transition.
 // Returns the action and whether a commit should be created.
-func getActionForTransition(to parsers.TaskStatusValue) (Action, bool) {
+func getActionForTransition(
+	to parsers.TaskStatusValue,
+) (Action, bool) {
 	switch to {
 	case parsers.TaskStatusInProgress:
 		return ActionStart, true
@@ -201,19 +246,44 @@ func getActionForTransition(to parsers.TaskStatusValue) (Action, bool) {
 }
 
 // commitTransition creates a commit for the task status transition.
-func (t *Tracker) commitTransition(taskID string, action Action) error {
-	result, err := t.committer.Commit(taskID, action)
+func (t *Tracker) commitTransition(
+	taskID string,
+	action Action,
+) error {
+	result, err := t.committer.Commit(
+		taskID,
+		action,
+	)
 	if err != nil {
-		t.printf("Error: failed to commit for task %s: %v\n", taskID, err)
+		t.printf(
+			"Error: failed to commit for task %s: %v\n",
+			taskID,
+			err,
+		)
 
 		return err
 	}
 
 	if result.NoFiles {
-		t.printf("  Task %s: %s (no files to commit)\n", taskID, action.String())
+		t.printf(
+			"  Task %s: %s (no files to commit)\n",
+			taskID,
+			action.String(),
+		)
 	} else {
 		hash := result.CommitHash[:7]
 		t.printf("  Task %s: %s [%s]\n", taskID, action.String(), hash)
+	}
+
+	// Display warning about skipped binary files
+	if len(result.SkippedBinaries) > 0 {
+		t.printf(
+			"  Warning: Skipped binary files: %s\n",
+			strings.Join(
+				result.SkippedBinaries,
+				", ",
+			),
+		)
 	}
 
 	return nil
@@ -235,7 +305,9 @@ func allTasksComplete(tasks []parsers.Task) bool {
 }
 
 // countProgress returns the number of completed tasks and total tasks.
-func countProgress(tasks []parsers.Task) (completed, total int) {
+func countProgress(
+	tasks []parsers.Task,
+) (completed, total int) {
 	total = len(tasks)
 	for _, task := range tasks {
 		if task.Status == parsers.TaskStatusCompleted {
@@ -247,8 +319,14 @@ func countProgress(tasks []parsers.Task) (completed, total int) {
 }
 
 // printf writes formatted output to the tracker's writer.
-func (t *Tracker) printf(format string, args ...any) {
+func (t *Tracker) printf(
+	format string,
+	args ...any,
+) {
 	if t.writer != nil {
-		_, _ = fmt.Fprintf(t.writer, format, args...)
+		_, _ = fmt.Fprintf(
+			t.writer,
+			format,
+			args...)
 	}
 }

@@ -64,8 +64,13 @@ func validateRequirements(
 	lines []string,
 ) []ValidationIssue {
 	issues := make([]ValidationIssue, 0)
-	requirements := ExtractRequirements(requirementsContent)
-	requirementsLine := findSectionLine(lines, "Requirements")
+	requirements := ExtractRequirements(
+		requirementsContent,
+	)
+	requirementsLine := findSectionLine(
+		lines,
+		"Requirements",
+	)
 
 	for _, req := range requirements {
 		reqIssues := validateSingleRequirement(
@@ -89,8 +94,16 @@ func validateSingleRequirement(
 	requirementsLine int,
 ) []ValidationIssue {
 	issues := make([]ValidationIssue, 0)
-	reqPath := fmt.Sprintf("%s: Requirement '%s'", path, req.Name)
-	reqLine := findRequirementLine(lines, req.Name, requirementsLine)
+	reqPath := fmt.Sprintf(
+		"%s: Requirement '%s'",
+		path,
+		req.Name,
+	)
+	reqLine := findRequirementLine(
+		lines,
+		req.Name,
+		requirementsLine,
+	)
 
 	// Rule 2: Check for SHALL or MUST (WARNING if missing)
 	if !ContainsShallOrMust(req.Content) {
@@ -114,8 +127,12 @@ func validateSingleRequirement(
 	}
 
 	// Rule 4: Check scenario format (ERROR if wrong format)
-	if len(req.Scenarios) == 0 && hasMalformedScenarios(req.Content) {
-		malformedLine := findMalformedScenarioLine(lines, reqLine)
+	if len(req.Scenarios) == 0 &&
+		hasMalformedScenarios(req.Content) {
+		malformedLine := findMalformedScenarioLine(
+			lines,
+			reqLine,
+		)
 		issues = append(issues, ValidationIssue{
 			Level: LevelError,
 			Path:  reqPath,
@@ -129,7 +146,9 @@ func validateSingleRequirement(
 }
 
 // convertWarningsToErrors converts all warnings to errors in-place
-func convertWarningsToErrors(issues []ValidationIssue) {
+func convertWarningsToErrors(
+	issues []ValidationIssue,
+) {
 	for i := range issues {
 		if issues[i].Level == LevelWarning {
 			issues[i].Level = LevelError

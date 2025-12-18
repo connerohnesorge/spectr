@@ -270,7 +270,8 @@ func executeWorkflow(
 
 	// Clean up local change directory for archive and remove modes
 	// (not for proposal mode, as the user may still be working on the proposal)
-	if config.Mode == ModeArchive || config.Mode == ModeRemove {
+	if config.Mode == ModeArchive ||
+		config.Mode == ModeRemove {
 		fmt.Printf(
 			"Cleaning up local change directory: spectr/changes/%s/\n",
 			config.ChangeID,

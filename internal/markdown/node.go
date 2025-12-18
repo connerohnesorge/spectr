@@ -835,7 +835,9 @@ type BuilderValidationError struct {
 
 func (e *BuilderValidationError) Error() string {
 	if e.Index > 0 {
-		return e.Field + "[" + strconv.Itoa(e.Index) + "]: " + e.Message
+		return e.Field + "[" + strconv.Itoa(
+			e.Index,
+		) + "]: " + e.Message
 	}
 
 	return e.Field + ": " + e.Message

@@ -128,9 +128,10 @@ func (d *ChangeDetector) Snapshot() (string, error) {
 		// Handle case where repo has no commits yet
 		outputStr := strings.TrimSpace(string(output))
 		if strings.Contains(outputStr, "unknown revision") ||
-			strings.Contains(outputStr, "ambiguous argument 'HEAD'") {
-			// New repo with no commits - use empty tree as baseline
-			return "4b825dc642cb6eb9a060e54bf8d69288fbee4904", nil
+			strings.Contains(outputStr, "ambiguous argument 'HEAD'") ||
+			strings.Contains(outputStr, "fatal: bad revision") {
+			// New repo with no commits - use empty tree as baseline with 0 preexisting changes
+			return "EMPTY:0", nil
 		}
 		return "", fmt.Errorf("failed to get HEAD: %w", err)
 	}

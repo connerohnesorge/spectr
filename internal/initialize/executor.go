@@ -10,10 +10,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/initialize/git"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
 	"github.com/spf13/afero"
 )
 
@@ -427,14 +427,18 @@ func (e *InitExecutor) collectInitializers(
 	return all
 }
 
-// dedupeInitializers removes duplicate initializers based on their Path().
-// Task 6.5: Same path = run once
+// dedupeInitializers removes duplicate initializers based on their Path() and type.
+// Task 6.5: Same path + same type = run once
+// Different initializer types with the same path are NOT duplicates (e.g., DirectoryInitializer
+// and SlashCommandsInitializer can both target the same directory path).
 func dedupeInitializers(all []providers.Initializer) []providers.Initializer {
 	seen := make(map[string]bool)
 	var result []providers.Initializer
 
 	for _, init := range all {
-		key := init.Path()
+		// Create key from both type and path to allow different initializer types
+		// to operate on the same path
+		key := fmt.Sprintf("%T:%s", init, init.Path())
 		if !seen[key] {
 			seen[key] = true
 			result = append(result, init)
@@ -460,17 +464,24 @@ func sortInitializers(all []providers.Initializer) []providers.Initializer {
 
 // initializerPriority returns the execution priority for an initializer based on its type.
 // Lower values execute first.
+// Uses type name matching since initializers can come from either providers or initializers package.
 func initializerPriority(init providers.Initializer) int {
-	switch init.(type) {
-	case *initializers.DirectoryInitializer:
+	typeName := fmt.Sprintf("%T", init)
+
+	// Directory initializers run first
+	if strings.Contains(typeName, "directoryInitializer") || strings.Contains(typeName, "DirectoryInitializer") {
 		return 1
-	case *initializers.ConfigFileInitializer:
-		return 2
-	case *initializers.SlashCommandsInitializer:
-		return 3
-	default:
-		return 99
 	}
+	// Config file initializers run second
+	if strings.Contains(typeName, "configFileInitializer") || strings.Contains(typeName, "ConfigFileInitializer") {
+		return 2
+	}
+	// Slash command initializers run last
+	if strings.Contains(typeName, "slashCommandsInitializer") || strings.Contains(typeName, "SlashCommandsInitializer") {
+		return 3
+	}
+	// Unknown types run at the end
+	return 99
 }
 
 // createCIWorkflow creates the .github/workflows/spectr-ci.yml file

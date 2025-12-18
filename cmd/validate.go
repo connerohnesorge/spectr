@@ -14,12 +14,12 @@ import (
 // ValidateCmd represents the validate command
 type ValidateCmd struct {
 	ItemName      *string `arg:"" optional:"" predictor:"item"`
-	JSON          bool    `                                        name:"json"           help:"Output as JSON"`                              //nolint:lll,revive
-	All           bool    `                                        name:"all"            help:"Validate all"`                                //nolint:lll,revive
-	Changes       bool    `                                        name:"changes"        help:"Validate changes"`                            //nolint:lll,revive
-	Specs         bool    `                                        name:"specs"          help:"Validate specs"`                              //nolint:lll,revive
-	Type          *string `                   predictor:"itemType" name:"type"                                           enum:"change,spec"` //nolint:lll,revive
-	NoInteractive bool    `                                        name:"no-interactive" help:"No prompts"`                                  //nolint:lll,revive
+	JSON          bool    `                                        name:"json"           help:"Output as JSON"`                      //nolint:lll,revive
+	All           bool    `                                        name:"all"            help:"Validate all"`                        //nolint:lll,revive
+	Changes       bool    `                                        name:"changes"        help:"Validate changes"`                    //nolint:lll,revive
+	Specs         bool    `                                        name:"specs"          help:"Validate specs"`                      //nolint:lll,revive
+	Type          *string `                   predictor:"itemType" name:"type"                                   enum:"change,spec"` //nolint:lll,revive
+	NoInteractive bool    `                                        name:"no-interactive" help:"No prompts"`                          //nolint:lll,revive
 }
 
 // Run executes the validate command

@@ -14,11 +14,17 @@ import (
 )
 
 // createTestTasksFile creates a tasks.jsonc file in the given directory.
-func createTestTasksFile(t *testing.T, dir, content string) string {
+func createTestTasksFile(
+	t *testing.T,
+	dir, content string,
+) string {
 	t.Helper()
 	tasksPath := filepath.Join(dir, "tasks.jsonc")
 	if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
-		t.Fatalf("failed to create tasks file: %v", err)
+		t.Fatalf(
+			"failed to create tasks file: %v",
+			err,
+		)
 	}
 
 	return tasksPath
@@ -28,7 +34,8 @@ func createTestTasksFile(t *testing.T, dir, content string) string {
 func tasksFileContent(tasks ...struct {
 	id     string
 	status string
-}) string {
+},
+) string {
 	content := `{"version": 1, "tasks": [`
 	for i, task := range tasks {
 		if i > 0 {
@@ -43,13 +50,22 @@ func tasksFileContent(tasks ...struct {
 
 func TestNew_Success(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	tempDir := t.TempDir()
-	tasksPath := createTestTasksFile(t, tempDir, tasksFileContent(
-		struct{ id, status string }{"1.1", "pending"},
-	))
+	tasksPath := createTestTasksFile(
+		t,
+		tempDir,
+		tasksFileContent(
+			struct{ id, status string }{
+				"1.1",
+				"pending",
+			},
+		),
+	)
 
 	var buf bytes.Buffer
 	tracker, err := New(Config{
@@ -58,9 +74,11 @@ func TestNew_Success(t *testing.T) {
 		RepoRoot:  tempDir,
 		Writer:    &buf,
 	})
-
 	if err != nil {
-		t.Fatalf("New() error = %v, want nil", err)
+		t.Fatalf(
+			"New() error = %v, want nil",
+			err,
+		)
 	}
 	defer func() { _ = tracker.Close() }()
 
@@ -68,32 +86,54 @@ func TestNew_Success(t *testing.T) {
 		t.Fatal("New() returned nil tracker")
 	}
 	if tracker.changeID != "test-change" {
-		t.Errorf("New().changeID = %q, want %q", tracker.changeID, "test-change")
+		t.Errorf(
+			"New().changeID = %q, want %q",
+			tracker.changeID,
+			"test-change",
+		)
 	}
 	if tracker.tasksPath != tasksPath {
-		t.Errorf("New().tasksPath = %q, want %q", tracker.tasksPath, tasksPath)
+		t.Errorf(
+			"New().tasksPath = %q, want %q",
+			tracker.tasksPath,
+			tasksPath,
+		)
 	}
 	if tracker.repoRoot != tempDir {
-		t.Errorf("New().repoRoot = %q, want %q", tracker.repoRoot, tempDir)
+		t.Errorf(
+			"New().repoRoot = %q, want %q",
+			tracker.repoRoot,
+			tempDir,
+		)
 	}
 	if tracker.watcher == nil {
 		t.Error("New().watcher should not be nil")
 	}
 	if tracker.committer == nil {
-		t.Error("New().committer should not be nil")
+		t.Error(
+			"New().committer should not be nil",
+		)
 	}
 	if tracker.previousState == nil {
-		t.Error("New().previousState should not be nil")
+		t.Error(
+			"New().previousState should not be nil",
+		)
 	}
 }
 
 func TestNew_MissingTasksFile(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	tempDir := t.TempDir()
-	nonExistentPath := filepath.Join(tempDir, "nonexistent", "tasks.jsonc")
+	nonExistentPath := filepath.Join(
+		tempDir,
+		"nonexistent",
+		"tasks.jsonc",
+	)
 
 	var buf bytes.Buffer
 	tracker, err := New(Config{
@@ -107,12 +147,16 @@ func TestNew_MissingTasksFile(t *testing.T) {
 		if tracker != nil {
 			_ = tracker.Close()
 		}
-		t.Fatal("New() expected error for missing tasks file, got nil")
+		t.Fatal(
+			"New() expected error for missing tasks file, got nil",
+		)
 	}
 
 	if tracker != nil {
 		_ = tracker.Close()
-		t.Error("New() should return nil tracker on error")
+		t.Error(
+			"New() should return nil tracker on error",
+		)
 	}
 }
 
@@ -130,58 +174,106 @@ func TestTracker_allTasksComplete(t *testing.T) {
 		{
 			name: "all tasks completed",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusCompleted},
-				{ID: "1.2", Status: parsers.TaskStatusCompleted},
-				{ID: "2.1", Status: parsers.TaskStatusCompleted},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusCompleted,
+				},
+				{
+					ID:     "1.2",
+					Status: parsers.TaskStatusCompleted,
+				},
+				{
+					ID:     "2.1",
+					Status: parsers.TaskStatusCompleted,
+				},
 			},
 			want: true,
 		},
 		{
 			name: "some tasks pending",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusCompleted},
-				{ID: "1.2", Status: parsers.TaskStatusPending},
-				{ID: "2.1", Status: parsers.TaskStatusCompleted},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusCompleted,
+				},
+				{
+					ID:     "1.2",
+					Status: parsers.TaskStatusPending,
+				},
+				{
+					ID:     "2.1",
+					Status: parsers.TaskStatusCompleted,
+				},
 			},
 			want: false,
 		},
 		{
 			name: "some tasks in_progress",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusCompleted},
-				{ID: "1.2", Status: parsers.TaskStatusInProgress},
-				{ID: "2.1", Status: parsers.TaskStatusCompleted},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusCompleted,
+				},
+				{
+					ID:     "1.2",
+					Status: parsers.TaskStatusInProgress,
+				},
+				{
+					ID:     "2.1",
+					Status: parsers.TaskStatusCompleted,
+				},
 			},
 			want: false,
 		},
 		{
 			name: "all tasks pending",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusPending},
-				{ID: "1.2", Status: parsers.TaskStatusPending},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusPending,
+				},
+				{
+					ID:     "1.2",
+					Status: parsers.TaskStatusPending,
+				},
 			},
 			want: false,
 		},
 		{
 			name: "single completed task",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusCompleted},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusCompleted,
+				},
 			},
 			want: true,
 		},
 		{
 			name: "single pending task",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusPending},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusPending,
+				},
 			},
 			want: false,
 		},
 		{
 			name: "mixed statuses",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusPending},
-				{ID: "1.2", Status: parsers.TaskStatusInProgress},
-				{ID: "1.3", Status: parsers.TaskStatusCompleted},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusPending,
+				},
+				{
+					ID:     "1.2",
+					Status: parsers.TaskStatusInProgress,
+				},
+				{
+					ID:     "1.3",
+					Status: parsers.TaskStatusCompleted,
+				},
 			},
 			want: false,
 		},
@@ -191,7 +283,11 @@ func TestTracker_allTasksComplete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := allTasksComplete(tt.tasks)
 			if got != tt.want {
-				t.Errorf("allTasksComplete() = %v, want %v", got, tt.want)
+				t.Errorf(
+					"allTasksComplete() = %v, want %v",
+					got,
+					tt.want,
+				)
 			}
 		})
 	}
@@ -205,17 +301,29 @@ func TestTracker_countProgress(t *testing.T) {
 		wantTotal     int
 	}{
 		{
-			name:          "empty list",
-			tasks:         make([]parsers.Task, 0),
+			name: "empty list",
+			tasks: make(
+				[]parsers.Task,
+				0,
+			),
 			wantCompleted: 0,
 			wantTotal:     0,
 		},
 		{
 			name: "all completed",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusCompleted},
-				{ID: "1.2", Status: parsers.TaskStatusCompleted},
-				{ID: "1.3", Status: parsers.TaskStatusCompleted},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusCompleted,
+				},
+				{
+					ID:     "1.2",
+					Status: parsers.TaskStatusCompleted,
+				},
+				{
+					ID:     "1.3",
+					Status: parsers.TaskStatusCompleted,
+				},
 			},
 			wantCompleted: 3,
 			wantTotal:     3,
@@ -223,8 +331,14 @@ func TestTracker_countProgress(t *testing.T) {
 		{
 			name: "none completed",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusPending},
-				{ID: "1.2", Status: parsers.TaskStatusInProgress},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusPending,
+				},
+				{
+					ID:     "1.2",
+					Status: parsers.TaskStatusInProgress,
+				},
 			},
 			wantCompleted: 0,
 			wantTotal:     2,
@@ -232,10 +346,22 @@ func TestTracker_countProgress(t *testing.T) {
 		{
 			name: "partial completion",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusCompleted},
-				{ID: "1.2", Status: parsers.TaskStatusInProgress},
-				{ID: "1.3", Status: parsers.TaskStatusPending},
-				{ID: "1.4", Status: parsers.TaskStatusCompleted},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusCompleted,
+				},
+				{
+					ID:     "1.2",
+					Status: parsers.TaskStatusInProgress,
+				},
+				{
+					ID:     "1.3",
+					Status: parsers.TaskStatusPending,
+				},
+				{
+					ID:     "1.4",
+					Status: parsers.TaskStatusCompleted,
+				},
 			},
 			wantCompleted: 2,
 			wantTotal:     4,
@@ -243,7 +369,10 @@ func TestTracker_countProgress(t *testing.T) {
 		{
 			name: "single completed",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusCompleted},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusCompleted,
+				},
 			},
 			wantCompleted: 1,
 			wantTotal:     1,
@@ -251,7 +380,10 @@ func TestTracker_countProgress(t *testing.T) {
 		{
 			name: "single pending",
 			tasks: []parsers.Task{
-				{ID: "1.1", Status: parsers.TaskStatusPending},
+				{
+					ID:     "1.1",
+					Status: parsers.TaskStatusPending,
+				},
 			},
 			wantCompleted: 0,
 			wantTotal:     1,
@@ -260,20 +392,34 @@ func TestTracker_countProgress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			completed, total := countProgress(tt.tasks)
+			completed, total := countProgress(
+				tt.tasks,
+			)
 			if completed != tt.wantCompleted {
-				t.Errorf("countProgress() completed = %d, want %d", completed, tt.wantCompleted)
+				t.Errorf(
+					"countProgress() completed = %d, want %d",
+					completed,
+					tt.wantCompleted,
+				)
 			}
 			if total != tt.wantTotal {
-				t.Errorf("countProgress() total = %d, want %d", total, tt.wantTotal)
+				t.Errorf(
+					"countProgress() total = %d, want %d",
+					total,
+					tt.wantTotal,
+				)
 			}
 		})
 	}
 }
 
-func TestTracker_getActionForTransition(t *testing.T) {
+func TestTracker_getActionForTransition(
+	t *testing.T,
+) {
 	tracker := &Tracker{
-		previousState: make(map[string]parsers.TaskStatusValue),
+		previousState: make(
+			map[string]parsers.TaskStatusValue,
+		),
 	}
 
 	tests := []struct {
@@ -329,7 +475,9 @@ func TestTracker_getActionForTransition(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			action, shouldCommit := getActionForTransition(tt.to)
+			action, shouldCommit := getActionForTransition(
+				tt.to,
+			)
 
 			if shouldCommit != tt.wantCommit {
 				t.Errorf(
@@ -339,8 +487,13 @@ func TestTracker_getActionForTransition(t *testing.T) {
 				)
 			}
 
-			if tt.wantCommit && action != tt.wantAction {
-				t.Errorf("getActionForTransition() action = %v, want %v", action, tt.wantAction)
+			if tt.wantCommit &&
+				action != tt.wantAction {
+				t.Errorf(
+					"getActionForTransition() action = %v, want %v",
+					action,
+					tt.wantAction,
+				)
 			}
 		})
 	}
@@ -349,20 +502,37 @@ func TestTracker_getActionForTransition(t *testing.T) {
 	_ = tracker
 }
 
-func TestTracker_Run_AlreadyComplete(t *testing.T) {
+func TestTracker_Run_AlreadyComplete(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	tempDir := t.TempDir()
 
 	// Create tasks file with all tasks completed
 	tasksContent := tasksFileContent(
-		struct{ id, status string }{"1.1", "completed"},
-		struct{ id, status string }{"1.2", "completed"},
-		struct{ id, status string }{"2.1", "completed"},
+		struct{ id, status string }{
+			"1.1",
+			"completed",
+		},
+		struct{ id, status string }{
+			"1.2",
+			"completed",
+		},
+		struct{ id, status string }{
+			"2.1",
+			"completed",
+		},
 	)
-	tasksPath := createTestTasksFile(t, tempDir, tasksContent)
+	tasksPath := createTestTasksFile(
+		t,
+		tempDir,
+		tasksContent,
+	)
 
 	var buf bytes.Buffer
 	tracker, err := New(Config{
@@ -380,28 +550,47 @@ func TestTracker_Run_AlreadyComplete(t *testing.T) {
 	err = tracker.Run(ctx)
 
 	if err == nil {
-		t.Fatal("Run() expected error for already complete tasks, got nil")
+		t.Fatal(
+			"Run() expected error for already complete tasks, got nil",
+		)
 	}
 
 	// Verify it's a TasksAlreadyCompleteError
 	if _, ok := err.(*specterrs.TasksAlreadyCompleteError); !ok {
-		t.Errorf("Run() error type = %T, want *specterrs.TasksAlreadyCompleteError", err)
+		t.Errorf(
+			"Run() error type = %T, want *specterrs.TasksAlreadyCompleteError",
+			err,
+		)
 	}
 }
 
-func TestTracker_Run_ContextCancellation(t *testing.T) {
+func TestTracker_Run_ContextCancellation(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	tempDir := t.TempDir()
 
 	// Create tasks file with pending tasks (so it doesn't exit immediately)
 	tasksContent := tasksFileContent(
-		struct{ id, status string }{"1.1", "pending"},
-		struct{ id, status string }{"1.2", "pending"},
+		struct{ id, status string }{
+			"1.1",
+			"pending",
+		},
+		struct{ id, status string }{
+			"1.2",
+			"pending",
+		},
 	)
-	tasksPath := createTestTasksFile(t, tempDir, tasksContent)
+	tasksPath := createTestTasksFile(
+		t,
+		tempDir,
+		tasksContent,
+	)
 
 	var buf bytes.Buffer
 	tracker, err := New(Config{
@@ -416,7 +605,9 @@ func TestTracker_Run_ContextCancellation(t *testing.T) {
 	defer func() { _ = tracker.Close() }()
 
 	// Create a context that will be cancelled
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(
+		context.Background(),
+	)
 
 	// Run tracker in goroutine
 	errChan := make(chan error, 1)
@@ -434,27 +625,43 @@ func TestTracker_Run_ContextCancellation(t *testing.T) {
 	select {
 	case err := <-errChan:
 		if err == nil {
-			t.Fatal("Run() expected error on context cancellation, got nil")
+			t.Fatal(
+				"Run() expected error on context cancellation, got nil",
+			)
 		}
 
 		// Verify it's a TrackInterruptedError
 		if _, ok := err.(*specterrs.TrackInterruptedError); !ok {
-			t.Errorf("Run() error type = %T, want *specterrs.TrackInterruptedError", err)
+			t.Errorf(
+				"Run() error type = %T, want *specterrs.TrackInterruptedError",
+				err,
+			)
 		}
 	case <-time.After(2 * time.Second):
-		t.Fatal("Run() did not return after context cancellation")
+		t.Fatal(
+			"Run() did not return after context cancellation",
+		)
 	}
 }
 
 func TestTracker_Close_Idempotent(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	tempDir := t.TempDir()
-	tasksPath := createTestTasksFile(t, tempDir, tasksFileContent(
-		struct{ id, status string }{"1.1", "pending"},
-	))
+	tasksPath := createTestTasksFile(
+		t,
+		tempDir,
+		tasksFileContent(
+			struct{ id, status string }{
+				"1.1",
+				"pending",
+			},
+		),
+	)
 
 	var buf bytes.Buffer
 	tracker, err := New(Config{
@@ -471,7 +678,11 @@ func TestTracker_Close_Idempotent(t *testing.T) {
 	for i := range 5 {
 		err := tracker.Close()
 		if err != nil {
-			t.Errorf("Close() call %d error = %v, want nil", i+1, err)
+			t.Errorf(
+				"Close() call %d error = %v, want nil",
+				i+1,
+				err,
+			)
 		}
 	}
 }
@@ -484,7 +695,10 @@ func TestTracker_Close_NilWatcher(t *testing.T) {
 
 	err := tracker.Close()
 	if err != nil {
-		t.Errorf("Close() with nil watcher error = %v, want nil", err)
+		t.Errorf(
+			"Close() with nil watcher error = %v, want nil",
+			err,
+		)
 	}
 }
 
@@ -494,33 +708,55 @@ func TestTracker_printf(t *testing.T) {
 		tracker := &Tracker{writer: &buf}
 		tracker.printf("Hello, %s!", "World")
 		if got := buf.String(); got != "Hello, World!" {
-			t.Errorf("printf() output = %q, want %q", got, "Hello, World!")
+			t.Errorf(
+				"printf() output = %q, want %q",
+				got,
+				"Hello, World!",
+			)
 		}
 	})
 
-	t.Run("message with numbers", func(t *testing.T) {
-		var buf bytes.Buffer
-		tracker := &Tracker{writer: &buf}
-		tracker.printf("Progress: %d/%d tasks", 5, 10)
-		if got := buf.String(); got != "Progress: 5/10 tasks" {
-			t.Errorf("printf() output = %q, want %q", got, "Progress: 5/10 tasks")
-		}
-	})
+	t.Run(
+		"message with numbers",
+		func(t *testing.T) {
+			var buf bytes.Buffer
+			tracker := &Tracker{writer: &buf}
+			tracker.printf(
+				"Progress: %d/%d tasks",
+				5,
+				10,
+			)
+			if got := buf.String(); got != "Progress: 5/10 tasks" {
+				t.Errorf(
+					"printf() output = %q, want %q",
+					got,
+					"Progress: 5/10 tasks",
+				)
+			}
+		},
+	)
 
 	t.Run("no args", func(t *testing.T) {
 		var buf bytes.Buffer
 		tracker := &Tracker{writer: &buf}
 		tracker.printf("Simple message")
 		if got := buf.String(); got != "Simple message" {
-			t.Errorf("printf() output = %q, want %q", got, "Simple message")
+			t.Errorf(
+				"printf() output = %q, want %q",
+				got,
+				"Simple message",
+			)
 		}
 	})
 
-	t.Run("nil writer does not panic", func(_ *testing.T) {
-		tracker := &Tracker{writer: nil}
-		// This should not panic with nil writer
-		tracker.printf("Should not output")
-	})
+	t.Run(
+		"nil writer does not panic",
+		func(_ *testing.T) {
+			tracker := &Tracker{writer: nil}
+			// This should not panic with nil writer
+			tracker.printf("Should not output")
+		},
+	)
 }
 
 func TestConfig_Fields(t *testing.T) {
@@ -532,30 +768,61 @@ func TestConfig_Fields(t *testing.T) {
 	}
 
 	if config.ChangeID != "test-change-123" {
-		t.Errorf("Config.ChangeID = %q, want %q", config.ChangeID, "test-change-123")
+		t.Errorf(
+			"Config.ChangeID = %q, want %q",
+			config.ChangeID,
+			"test-change-123",
+		)
 	}
 	if config.TasksPath != "/path/to/tasks.jsonc" {
-		t.Errorf("Config.TasksPath = %q, want %q", config.TasksPath, "/path/to/tasks.jsonc")
+		t.Errorf(
+			"Config.TasksPath = %q, want %q",
+			config.TasksPath,
+			"/path/to/tasks.jsonc",
+		)
 	}
 	if config.RepoRoot != "/path/to/repo" {
-		t.Errorf("Config.RepoRoot = %q, want %q", config.RepoRoot, "/path/to/repo")
+		t.Errorf(
+			"Config.RepoRoot = %q, want %q",
+			config.RepoRoot,
+			"/path/to/repo",
+		)
 	}
 	if config.Writer != os.Stdout {
-		t.Error("Config.Writer should be os.Stdout")
+		t.Error(
+			"Config.Writer should be os.Stdout",
+		)
 	}
 }
 
-func TestTracker_previousState_Initialization(t *testing.T) {
+func TestTracker_previousState_Initialization(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	tempDir := t.TempDir()
-	tasksPath := createTestTasksFile(t, tempDir, tasksFileContent(
-		struct{ id, status string }{"1.1", "pending"},
-		struct{ id, status string }{"1.2", "in_progress"},
-		struct{ id, status string }{"1.3", "completed"},
-	))
+	tasksPath := createTestTasksFile(
+		t,
+		tempDir,
+		tasksFileContent(
+			struct{ id, status string }{
+				"1.1",
+				"pending",
+			},
+			struct{ id, status string }{
+				"1.2",
+				"in_progress",
+			},
+			struct{ id, status string }{
+				"1.3",
+				"completed",
+			},
+		),
+	)
 
 	var buf bytes.Buffer
 	tracker, err := New(Config{
@@ -571,16 +838,25 @@ func TestTracker_previousState_Initialization(t *testing.T) {
 
 	// previousState should be initialized but empty until Run() is called
 	if tracker.previousState == nil {
-		t.Error("New() should initialize previousState map")
+		t.Error(
+			"New() should initialize previousState map",
+		)
 	}
 	if len(tracker.previousState) != 0 {
-		t.Errorf("New() previousState should be empty, got len=%d", len(tracker.previousState))
+		t.Errorf(
+			"New() previousState should be empty, got len=%d",
+			len(tracker.previousState),
+		)
 	}
 }
 
-func TestTracker_Run_InitializesPreviousState(t *testing.T) {
+func TestTracker_Run_InitializesPreviousState(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	tempDir := t.TempDir()
@@ -588,10 +864,20 @@ func TestTracker_Run_InitializesPreviousState(t *testing.T) {
 	// Create tasks file - use all completed to trigger immediate return
 	// after state initialization
 	tasksContent := tasksFileContent(
-		struct{ id, status string }{"1.1", "completed"},
-		struct{ id, status string }{"1.2", "completed"},
+		struct{ id, status string }{
+			"1.1",
+			"completed",
+		},
+		struct{ id, status string }{
+			"1.2",
+			"completed",
+		},
 	)
-	tasksPath := createTestTasksFile(t, tempDir, tasksContent)
+	tasksPath := createTestTasksFile(
+		t,
+		tempDir,
+		tasksContent,
+	)
 
 	var buf bytes.Buffer
 	tracker, err := New(Config{
@@ -633,20 +919,37 @@ func TestTracker_Run_InitializesPreviousState(t *testing.T) {
 	}
 }
 
-func TestTracker_Run_PrintsInitialStatus(t *testing.T) {
+func TestTracker_Run_PrintsInitialStatus(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	tempDir := t.TempDir()
 
 	// Create tasks file with pending tasks
 	tasksContent := tasksFileContent(
-		struct{ id, status string }{"1.1", "completed"},
-		struct{ id, status string }{"1.2", "pending"},
-		struct{ id, status string }{"1.3", "pending"},
+		struct{ id, status string }{
+			"1.1",
+			"completed",
+		},
+		struct{ id, status string }{
+			"1.2",
+			"pending",
+		},
+		struct{ id, status string }{
+			"1.3",
+			"pending",
+		},
 	)
-	tasksPath := createTestTasksFile(t, tempDir, tasksContent)
+	tasksPath := createTestTasksFile(
+		t,
+		tempDir,
+		tasksContent,
+	)
 
 	var buf bytes.Buffer
 	tracker, err := New(Config{
@@ -661,7 +964,9 @@ func TestTracker_Run_PrintsInitialStatus(t *testing.T) {
 	defer func() { _ = tracker.Close() }()
 
 	// Create cancellable context
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(
+		context.Background(),
+	)
 
 	// Run in goroutine
 	errChan := make(chan error, 1)
@@ -678,20 +983,37 @@ func TestTracker_Run_PrintsInitialStatus(t *testing.T) {
 
 	// Check that initial status was printed
 	output := buf.String()
-	if !containsString(output, "Tracking test-change") {
-		t.Error("Run() should print tracking message with change ID")
+	if !containsString(
+		output,
+		"Tracking test-change",
+	) {
+		t.Error(
+			"Run() should print tracking message with change ID",
+		)
 	}
-	if !containsString(output, "1/3 tasks completed") {
-		t.Errorf("Run() should print progress, got: %s", output)
+	if !containsString(
+		output,
+		"1/3 tasks completed",
+	) {
+		t.Errorf(
+			"Run() should print progress, got: %s",
+			output,
+		)
 	}
-	if !containsString(output, "Watching for task status changes") {
-		t.Error("Run() should print watching message")
+	if !containsString(
+		output,
+		"Watching for task status changes",
+	) {
+		t.Error(
+			"Run() should print watching message",
+		)
 	}
 }
 
 // containsString checks if s contains substr.
 func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsSubstr(s, substr))
+	return len(s) >= len(substr) &&
+		(s == substr || len(s) > 0 && containsSubstr(s, substr))
 }
 
 func containsSubstr(s, substr string) bool {
@@ -704,7 +1026,9 @@ func containsSubstr(s, substr string) bool {
 	return false
 }
 
-func TestTracker_countProgress_FixtureLike(t *testing.T) {
+func TestTracker_countProgress_FixtureLike(
+	t *testing.T,
+) {
 	// Create 16 tasks like the real fixture
 	tasks := make([]parsers.Task, 16)
 	sections := []string{
@@ -717,7 +1041,11 @@ func TestTracker_countProgress_FixtureLike(t *testing.T) {
 
 	for i := range 16 {
 		tasks[i] = parsers.Task{
-			ID:      fmt.Sprintf("%d.%d", (i/3)+1, (i%3)+1),
+			ID: fmt.Sprintf(
+				"%d.%d",
+				(i/3)+1,
+				(i%3)+1,
+			),
 			Section: sections[i%len(sections)],
 			Status:  parsers.TaskStatusPending,
 		}
@@ -726,10 +1054,16 @@ func TestTracker_countProgress_FixtureLike(t *testing.T) {
 	// Test all pending
 	completed, total := countProgress(tasks)
 	if completed != 0 {
-		t.Errorf("countProgress() completed = %d, want 0 for all pending", completed)
+		t.Errorf(
+			"countProgress() completed = %d, want 0 for all pending",
+			completed,
+		)
 	}
 	if total != 16 {
-		t.Errorf("countProgress() total = %d, want 16", total)
+		t.Errorf(
+			"countProgress() total = %d, want 16",
+			total,
+		)
 	}
 
 	// Mark 5 tasks completed
@@ -741,10 +1075,16 @@ func TestTracker_countProgress_FixtureLike(t *testing.T) {
 
 	completed, total = countProgress(tasks)
 	if completed != 5 {
-		t.Errorf("countProgress() completed = %d, want 5", completed)
+		t.Errorf(
+			"countProgress() completed = %d, want 5",
+			completed,
+		)
 	}
 	if total != 16 {
-		t.Errorf("countProgress() total = %d, want 16", total)
+		t.Errorf(
+			"countProgress() total = %d, want 16",
+			total,
+		)
 	}
 
 	// Mark remaining completed
@@ -754,26 +1094,40 @@ func TestTracker_countProgress_FixtureLike(t *testing.T) {
 
 	completed, total = countProgress(tasks)
 	if completed != 16 {
-		t.Errorf("countProgress() completed = %d, want 16", completed)
+		t.Errorf(
+			"countProgress() completed = %d, want 16",
+			completed,
+		)
 	}
 	if total != 16 {
-		t.Errorf("countProgress() total = %d, want 16", total)
+		t.Errorf(
+			"countProgress() total = %d, want 16",
+			total,
+		)
 	}
 }
 
-func TestTracker_allTasksComplete_FixtureLike(t *testing.T) {
+func TestTracker_allTasksComplete_FixtureLike(
+	t *testing.T,
+) {
 	// Create 16 tasks like the real fixture, all pending
 	tasks := make([]parsers.Task, 16)
 	for i := range 16 {
 		tasks[i] = parsers.Task{
-			ID:     fmt.Sprintf("%d.%d", (i/3)+1, (i%3)+1),
+			ID: fmt.Sprintf(
+				"%d.%d",
+				(i/3)+1,
+				(i%3)+1,
+			),
 			Status: parsers.TaskStatusPending,
 		}
 	}
 
 	// All pending should return false
 	if allTasksComplete(tasks) {
-		t.Error("allTasksComplete() = true, want false for all pending")
+		t.Error(
+			"allTasksComplete() = true, want false for all pending",
+		)
 	}
 
 	// Mark all but one completed
@@ -782,31 +1136,55 @@ func TestTracker_allTasksComplete_FixtureLike(t *testing.T) {
 	}
 
 	if allTasksComplete(tasks) {
-		t.Error("allTasksComplete() = true, want false when one task pending")
+		t.Error(
+			"allTasksComplete() = true, want false when one task pending",
+		)
 	}
 
 	// Mark last task completed
 	tasks[15].Status = parsers.TaskStatusCompleted
 
 	if !allTasksComplete(tasks) {
-		t.Error("allTasksComplete() = false, want true when all completed")
+		t.Error(
+			"allTasksComplete() = false, want true when all completed",
+		)
 	}
 }
 
-func TestTracker_countProgress_InProgressNotCounted(t *testing.T) {
+func TestTracker_countProgress_InProgressNotCounted(
+	t *testing.T,
+) {
 	// Test that in_progress tasks are NOT counted as completed
 	tasks := []parsers.Task{
-		{ID: "1.1", Status: parsers.TaskStatusCompleted},
-		{ID: "1.2", Status: parsers.TaskStatusInProgress},
-		{ID: "1.3", Status: parsers.TaskStatusInProgress},
-		{ID: "1.4", Status: parsers.TaskStatusPending},
+		{
+			ID:     "1.1",
+			Status: parsers.TaskStatusCompleted,
+		},
+		{
+			ID:     "1.2",
+			Status: parsers.TaskStatusInProgress,
+		},
+		{
+			ID:     "1.3",
+			Status: parsers.TaskStatusInProgress,
+		},
+		{
+			ID:     "1.4",
+			Status: parsers.TaskStatusPending,
+		},
 	}
 
 	completed, total := countProgress(tasks)
 	if completed != 1 {
-		t.Errorf("countProgress() completed = %d, want 1 (in_progress should NOT count)", completed)
+		t.Errorf(
+			"countProgress() completed = %d, want 1 (in_progress should NOT count)",
+			completed,
+		)
 	}
 	if total != 4 {
-		t.Errorf("countProgress() total = %d, want 4", total)
+		t.Errorf(
+			"countProgress() total = %d, want 4",
+			total,
+		)
 	}
 }

@@ -8,7 +8,10 @@ type NoTasksFileError struct {
 }
 
 func (e *NoTasksFileError) Error() string {
-	return fmt.Sprintf("tasks file not found for change %q", e.ChangeID)
+	return fmt.Sprintf(
+		"tasks file not found for change %q",
+		e.ChangeID,
+	)
 }
 
 // TasksAlreadyCompleteError indicates all tasks are already completed.
@@ -17,7 +20,10 @@ type TasksAlreadyCompleteError struct {
 }
 
 func (e *TasksAlreadyCompleteError) Error() string {
-	return fmt.Sprintf("all tasks already completed for change %q", e.ChangeID)
+	return fmt.Sprintf(
+		"all tasks already completed for change %q",
+		e.ChangeID,
+	)
 }
 
 // TrackInterruptedError indicates tracking was stopped by user interrupt.

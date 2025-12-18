@@ -12,14 +12,18 @@ import (
 
 // extractCapabilityFromPath extracts the capability name from a delta spec path.
 // Example: spectr/changes/foo/specs/support-aider/spec.md -> support-aider
-func extractCapabilityFromPath(specPath string) string {
+func extractCapabilityFromPath(
+	specPath string,
+) string {
 	// The path structure is: .../specs/<capability>/spec.md
 	// We need to extract <capability> which is the parent directory of spec.md
 	dir := filepath.Dir(specPath)
 	capability := filepath.Base(dir)
 
 	// If we get "specs" or empty, walk up looking for the capability
-	if capability == "specs" || capability == "." || capability == "" {
+	if capability == "specs" ||
+		capability == "." ||
+		capability == "" {
 		return ""
 	}
 
@@ -28,14 +32,20 @@ func extractCapabilityFromPath(specPath string) string {
 
 // makeCompositeKey creates a composite key for cross-capability requirement tracking.
 // Format: capability::normalized_name
-func makeCompositeKey(specPath, normalizedName string) string {
-	capability := extractCapabilityFromPath(specPath)
+func makeCompositeKey(
+	specPath, normalizedName string,
+) string {
+	capability := extractCapabilityFromPath(
+		specPath,
+	)
 	if capability == "" {
 		// Fallback to just the normalized name if we can't extract capability
 		return normalizedName
 	}
 
-	return capability + "::" + strings.ToLower(normalizedName)
+	return capability + "::" + strings.ToLower(
+		normalizedName,
+	)
 }
 
 // validateAddedRequirements validates ADDED Requirements section
@@ -122,7 +132,10 @@ func validateAddedRequirements(
 		fileAddedReqs[normalized] = true
 
 		// Check for duplicate across files (scoped by capability)
-		compositeKey := makeCompositeKey(specPath, normalized)
+		compositeKey := makeCompositeKey(
+			specPath,
+			normalized,
+		)
 		if existingPath, exists := addedReqs[compositeKey]; exists {
 			issues = append(
 				issues,
@@ -251,7 +264,10 @@ func validateModifiedRequirements(
 		fileModifiedReqs[normalized] = true
 
 		// Check for duplicate across files (scoped by capability)
-		compositeKey := makeCompositeKey(specPath, normalized)
+		compositeKey := makeCompositeKey(
+			specPath,
+			normalized,
+		)
 		if existingPath, exists := modifiedReqs[compositeKey]; exists {
 			issues = append(
 				issues,
@@ -353,7 +369,10 @@ func validateRemovedRequirements(
 		fileRemovedReqs[normalized] = true
 
 		// Check for duplicate across files (scoped by capability)
-		compositeKey := makeCompositeKey(specPath, normalized)
+		compositeKey := makeCompositeKey(
+			specPath,
+			normalized,
+		)
 		if existingPath, exists := removedReqs[compositeKey]; exists {
 			issues = append(
 				issues,
@@ -489,7 +508,10 @@ func validateRenamedRequirements(
 		fileRenamedToReqs[normalizedTo] = true
 
 		// Check for duplicate FROM across files (scoped by capability)
-		compositeKeyFrom := makeCompositeKey(specPath, normalizedFrom)
+		compositeKeyFrom := makeCompositeKey(
+			specPath,
+			normalizedFrom,
+		)
 		if existingPath, exists := renamedFromReqs[compositeKeyFrom]; exists {
 			issues = append(
 				issues,
@@ -511,7 +533,10 @@ func validateRenamedRequirements(
 		}
 
 		// Check for duplicate TO across files (scoped by capability)
-		compositeKeyTo := makeCompositeKey(specPath, normalizedTo)
+		compositeKeyTo := makeCompositeKey(
+			specPath,
+			normalizedTo,
+		)
 		if existingPath, exists := renamedToReqs[compositeKeyTo]; exists {
 			issues = append(
 				issues,

@@ -22,10 +22,10 @@ type TrackCmd struct {
 	// ChangeID is the optional change identifier to track.
 	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change ID"` //nolint:lll,revive
 	// NoInteractive disables interactive prompts for change selection.
-	NoInteractive bool `help:"Disable prompts" name:"no-interactive"` //nolint:lll,revive
+	NoInteractive bool `                                        help:"Disable prompts"                 name:"no-interactive"` //nolint:lll,revive
 	// IncludeBinaries enables inclusion of binary files in commits.
 	// By default, binary files are excluded from automated commits.
-	IncludeBinaries bool `help:"Include binary files in commits" name:"include-binaries"` //nolint:lll,revive
+	IncludeBinaries bool `                                        help:"Include binary files in commits" name:"include-binaries"` //nolint:lll,revive
 }
 
 // Run executes the track command. It resolves the change ID,
@@ -71,7 +71,9 @@ func (c *TrackCmd) resolveChangeID() (string, string, error) {
 	var changeID string
 	if c.ChangeID == "" {
 		// No change ID provided - prompt for selection
-		changeID, err = selectChangeInteractive(projectRoot)
+		changeID, err = selectChangeInteractive(
+			projectRoot,
+		)
 	} else {
 		// Resolve the provided change ID (may be partial)
 		changeID, err = resolveOrSelectChangeID(c.ChangeID, projectRoot)
@@ -93,7 +95,9 @@ func (c *TrackCmd) resolveChangeID() (string, string, error) {
 // It watches the tasks.jsonc file and creates commits on status changes.
 // The tracker runs until all tasks complete, an error occurs, or the
 // user interrupts with Ctrl+C.
-func (c *TrackCmd) runTracker(changeID, projectRoot string) error {
+func (c *TrackCmd) runTracker(
+	changeID, projectRoot string,
+) error {
 	// Build the path to the tasks.jsonc file
 	tasksPath := filepath.Join(
 		projectRoot,
@@ -104,8 +108,12 @@ func (c *TrackCmd) runTracker(changeID, projectRoot string) error {
 	)
 
 	// Verify the tasks file exists
-	if _, err := os.Stat(tasksPath); os.IsNotExist(err) {
-		return &specterrs.NoTasksFileError{ChangeID: changeID}
+	if _, err := os.Stat(tasksPath); os.IsNotExist(
+		err,
+	) {
+		return &specterrs.NoTasksFileError{
+			ChangeID: changeID,
+		}
 	}
 
 	// Create the tracker configuration
@@ -135,12 +143,18 @@ func (c *TrackCmd) runTracker(changeID, projectRoot string) error {
 	)
 	defer stop()
 
-	return handleTrackerResult(tracker.Run(ctx), changeID)
+	return handleTrackerResult(
+		tracker.Run(ctx),
+		changeID,
+	)
 }
 
 // handleTrackerResult processes the result from tracker.Run and
 // converts tracker errors into appropriate user-facing messages.
-func handleTrackerResult(err error, changeID string) error {
+func handleTrackerResult(
+	err error,
+	changeID string,
+) error {
 	if err == nil {
 		return nil
 	}

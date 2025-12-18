@@ -13,7 +13,12 @@ import (
 func isFsnotifySupported() bool {
 	// fsnotify is supported on Linux, macOS, Windows, and BSD
 	switch runtime.GOOS {
-	case "linux", "darwin", "windows", "freebsd", "netbsd", "openbsd":
+	case "linux",
+		"darwin",
+		"windows",
+		"freebsd",
+		"netbsd",
+		"openbsd":
 		return true
 	default:
 		return false
@@ -22,7 +27,9 @@ func isFsnotifySupported() bool {
 
 func TestNewWatcher_Success(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -33,7 +40,10 @@ func TestNewWatcher_Success(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	// Create watcher for existing file
@@ -45,13 +55,19 @@ func TestNewWatcher_Success(t *testing.T) {
 
 	// Verify watcher is configured correctly
 	if w.filePath == "" {
-		t.Error("NewWatcher() created watcher with empty filePath")
+		t.Error(
+			"NewWatcher() created watcher with empty filePath",
+		)
 	}
 	if w.events == nil {
-		t.Error("NewWatcher() created watcher with nil events channel")
+		t.Error(
+			"NewWatcher() created watcher with nil events channel",
+		)
 	}
 	if w.errors == nil {
-		t.Error("NewWatcher() created watcher with nil errors channel")
+		t.Error(
+			"NewWatcher() created watcher with nil errors channel",
+		)
 	}
 	if w.debounce != defaultDebounce {
 		t.Errorf(
@@ -62,9 +78,13 @@ func TestNewWatcher_Success(t *testing.T) {
 	}
 }
 
-func TestNewWatcher_NonExistentFile(t *testing.T) {
+func TestNewWatcher_NonExistentFile(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Try to create watcher for non-existent file
@@ -76,7 +96,9 @@ func TestNewWatcher_NonExistentFile(t *testing.T) {
 	w, err := NewWatcher(nonExistentPath)
 	if err == nil {
 		_ = w.Close()
-		t.Fatal("NewWatcher() expected error for non-existent file, got nil")
+		t.Fatal(
+			"NewWatcher() expected error for non-existent file, got nil",
+		)
 	}
 
 	// Error should be related to file not found
@@ -88,9 +110,13 @@ func TestNewWatcher_NonExistentFile(t *testing.T) {
 	}
 }
 
-func TestNewWatcher_WithCustomDebounce(t *testing.T) {
+func TestNewWatcher_WithCustomDebounce(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -101,7 +127,10 @@ func TestNewWatcher_WithCustomDebounce(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	tests := []struct {
@@ -109,14 +138,23 @@ func TestNewWatcher_WithCustomDebounce(t *testing.T) {
 		debounce time.Duration
 	}{
 		{"50ms debounce", 50 * time.Millisecond},
-		{"100ms debounce", 100 * time.Millisecond},
-		{"200ms debounce", 200 * time.Millisecond},
+		{
+			"100ms debounce",
+			100 * time.Millisecond,
+		},
+		{
+			"200ms debounce",
+			200 * time.Millisecond,
+		},
 		{"1s debounce", 1 * time.Second},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w, err := NewWatcherWithDebounce(tempFile, tt.debounce)
+			w, err := NewWatcherWithDebounce(
+				tempFile,
+				tt.debounce,
+			)
 			if err != nil {
 				t.Fatalf(
 					"NewWatcherWithDebounce() error = %v",
@@ -136,9 +174,13 @@ func TestNewWatcher_WithCustomDebounce(t *testing.T) {
 	}
 }
 
-func TestWatcher_Events_OnFileModification(t *testing.T) {
+func TestWatcher_Events_OnFileModification(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -149,13 +191,22 @@ func TestWatcher_Events_OnFileModification(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	// Use a short debounce for faster tests
-	w, err := NewWatcherWithDebounce(tempFile, 50*time.Millisecond)
+	w, err := NewWatcherWithDebounce(
+		tempFile,
+		50*time.Millisecond,
+	)
 	if err != nil {
-		t.Fatalf("NewWatcherWithDebounce() error = %v", err)
+		t.Fatalf(
+			"NewWatcherWithDebounce() error = %v",
+			err,
+		)
 	}
 	defer func() { _ = w.Close() }()
 
@@ -168,7 +219,10 @@ func TestWatcher_Events_OnFileModification(t *testing.T) {
 		[]byte("modified content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to modify temp file: %v", err)
+		t.Fatalf(
+			"failed to modify temp file: %v",
+			err,
+		)
 	}
 
 	// Wait for event with timeout
@@ -176,15 +230,24 @@ func TestWatcher_Events_OnFileModification(t *testing.T) {
 	case <-w.Events():
 		// Success - received event
 	case err := <-w.Errors():
-		t.Fatalf("received error instead of event: %v", err)
+		t.Fatalf(
+			"received error instead of event: %v",
+			err,
+		)
 	case <-time.After(2 * time.Second):
-		t.Fatal("timeout waiting for file modification event")
+		t.Fatal(
+			"timeout waiting for file modification event",
+		)
 	}
 }
 
-func TestWatcher_Events_OnFileRecreation(t *testing.T) {
+func TestWatcher_Events_OnFileRecreation(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -195,13 +258,22 @@ func TestWatcher_Events_OnFileRecreation(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	// Use a short debounce for faster tests
-	w, err := NewWatcherWithDebounce(tempFile, 50*time.Millisecond)
+	w, err := NewWatcherWithDebounce(
+		tempFile,
+		50*time.Millisecond,
+	)
 	if err != nil {
-		t.Fatalf("NewWatcherWithDebounce() error = %v", err)
+		t.Fatalf(
+			"NewWatcherWithDebounce() error = %v",
+			err,
+		)
 	}
 	defer func() { _ = w.Close() }()
 
@@ -210,14 +282,20 @@ func TestWatcher_Events_OnFileRecreation(t *testing.T) {
 
 	// Delete and recreate the file (simulating what some editors do)
 	if err := os.Remove(tempFile); err != nil {
-		t.Fatalf("failed to remove temp file: %v", err)
+		t.Fatalf(
+			"failed to remove temp file: %v",
+			err,
+		)
 	}
 	if err := os.WriteFile(
 		tempFile,
 		[]byte("recreated content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to recreate temp file: %v", err)
+		t.Fatalf(
+			"failed to recreate temp file: %v",
+			err,
+		)
 	}
 
 	// Wait for event with timeout
@@ -225,15 +303,22 @@ func TestWatcher_Events_OnFileRecreation(t *testing.T) {
 	case <-w.Events():
 		// Success - received event for file recreation
 	case err := <-w.Errors():
-		t.Fatalf("received error instead of event: %v", err)
+		t.Fatalf(
+			"received error instead of event: %v",
+			err,
+		)
 	case <-time.After(2 * time.Second):
-		t.Fatal("timeout waiting for file recreation event")
+		t.Fatal(
+			"timeout waiting for file recreation event",
+		)
 	}
 }
 
 func TestWatcher_Debouncing(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -244,14 +329,23 @@ func TestWatcher_Debouncing(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	// Use a moderate debounce to test coalescing
 	debounce := 100 * time.Millisecond
-	w, err := NewWatcherWithDebounce(tempFile, debounce)
+	w, err := NewWatcherWithDebounce(
+		tempFile,
+		debounce,
+	)
 	if err != nil {
-		t.Fatalf("NewWatcherWithDebounce() error = %v", err)
+		t.Fatalf(
+			"NewWatcherWithDebounce() error = %v",
+			err,
+		)
 	}
 	defer func() { _ = w.Close() }()
 
@@ -265,9 +359,14 @@ func TestWatcher_Debouncing(t *testing.T) {
 			[]byte("content "+string(rune('0'+i))),
 			0644,
 		); err != nil {
-			t.Fatalf("failed to write temp file: %v", err)
+			t.Fatalf(
+				"failed to write temp file: %v",
+				err,
+			)
 		}
-		time.Sleep(20 * time.Millisecond) // Faster than debounce
+		time.Sleep(
+			20 * time.Millisecond,
+		) // Faster than debounce
 	}
 
 	// Count events received within a reasonable window
@@ -275,7 +374,9 @@ func TestWatcher_Debouncing(t *testing.T) {
 	done := make(chan struct{})
 
 	go func() {
-		timer := time.NewTimer(500 * time.Millisecond)
+		timer := time.NewTimer(
+			500 * time.Millisecond,
+		)
 		defer timer.Stop()
 		for {
 			select {
@@ -295,7 +396,9 @@ func TestWatcher_Debouncing(t *testing.T) {
 	// Ideally just 1 event, but timing can vary
 	count := atomic.LoadInt32(&eventCount)
 	if count == 0 {
-		t.Error("expected at least one event after rapid writes")
+		t.Error(
+			"expected at least one event after rapid writes",
+		)
 	}
 	if count >= 5 {
 		t.Errorf(
@@ -307,7 +410,9 @@ func TestWatcher_Debouncing(t *testing.T) {
 
 func TestWatcher_Close_Idempotent(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -318,7 +423,10 @@ func TestWatcher_Close_Idempotent(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	w, err := NewWatcher(tempFile)
@@ -341,7 +449,9 @@ func TestWatcher_Close_Idempotent(t *testing.T) {
 
 func TestWatcher_Errors_Channel(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -352,7 +462,10 @@ func TestWatcher_Errors_Channel(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	w, err := NewWatcher(tempFile)
@@ -370,15 +483,22 @@ func TestWatcher_Errors_Channel(t *testing.T) {
 	// The channel should be readable (though empty initially)
 	select {
 	case err := <-errChan:
-		t.Errorf("unexpected error in channel: %v", err)
+		t.Errorf(
+			"unexpected error in channel: %v",
+			err,
+		)
 	default:
 		// Expected - no errors initially
 	}
 }
 
-func TestWatcher_Events_ChannelCapacity(t *testing.T) {
+func TestWatcher_Events_ChannelCapacity(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -389,7 +509,10 @@ func TestWatcher_Events_ChannelCapacity(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	w, err := NewWatcher(tempFile)
@@ -415,7 +538,9 @@ func TestWatcher_Events_ChannelCapacity(t *testing.T) {
 
 func TestWatcher_AbsolutePath(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -426,7 +551,10 @@ func TestWatcher_AbsolutePath(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	// Create watcher with relative-looking path
@@ -448,7 +576,9 @@ func TestWatcher_AbsolutePath(t *testing.T) {
 
 func TestWatcher_WatchDirectory(t *testing.T) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -459,13 +589,22 @@ func TestWatcher_WatchDirectory(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	// Use a short debounce for faster tests
-	w, err := NewWatcherWithDebounce(tempFile, 50*time.Millisecond)
+	w, err := NewWatcherWithDebounce(
+		tempFile,
+		50*time.Millisecond,
+	)
 	if err != nil {
-		t.Fatalf("NewWatcherWithDebounce() error = %v", err)
+		t.Fatalf(
+			"NewWatcherWithDebounce() error = %v",
+			err,
+		)
 	}
 	defer func() { _ = w.Close() }()
 
@@ -474,27 +613,39 @@ func TestWatcher_WatchDirectory(t *testing.T) {
 
 	// Create a different file in the same directory
 	// This should NOT trigger an event since we're watching a specific file
-	otherFile := filepath.Join(tempDir, "other.txt")
+	otherFile := filepath.Join(
+		tempDir,
+		"other.txt",
+	)
 	if err := os.WriteFile(
 		otherFile,
 		[]byte("other content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create other file: %v", err)
+		t.Fatalf(
+			"failed to create other file: %v",
+			err,
+		)
 	}
 
 	// Wait briefly - should not receive event for other file
 	select {
 	case <-w.Events():
-		t.Error("received unexpected event for unrelated file")
+		t.Error(
+			"received unexpected event for unrelated file",
+		)
 	case <-time.After(200 * time.Millisecond):
 		// Expected - no event for other file
 	}
 }
 
-func TestWatcher_ClosedWatcherChannels(t *testing.T) {
+func TestWatcher_ClosedWatcherChannels(
+	t *testing.T,
+) {
 	if !isFsnotifySupported() {
-		t.Skip("fsnotify not supported on this platform")
+		t.Skip(
+			"fsnotify not supported on this platform",
+		)
 	}
 
 	// Create a temporary file to watch
@@ -505,7 +656,10 @@ func TestWatcher_ClosedWatcherChannels(t *testing.T) {
 		[]byte("initial content"),
 		0644,
 	); err != nil {
-		t.Fatalf("failed to create temp file: %v", err)
+		t.Fatalf(
+			"failed to create temp file: %v",
+			err,
+		)
 	}
 
 	w, err := NewWatcher(tempFile)
@@ -528,9 +682,13 @@ func TestWatcher_ClosedWatcherChannels(t *testing.T) {
 	// Channels should still be readable (though the loop has stopped)
 	// The channels are not explicitly closed by Close(), but the loop stops
 	if eventsChan == nil {
-		t.Error("events channel should not be nil")
+		t.Error(
+			"events channel should not be nil",
+		)
 	}
 	if errorsChan == nil {
-		t.Error("errors channel should not be nil")
+		t.Error(
+			"errors channel should not be nil",
+		)
 	}
 }

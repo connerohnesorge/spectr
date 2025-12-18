@@ -1051,7 +1051,9 @@ func TestValidateChangeDeltaSpecs_SameCapabilityDuplicateAcrossFiles(
 	// which is not the typical structure. The composite key approach ensures
 	// that different capabilities can have same-named requirements while
 	// same-capability duplicates are still caught within a single file.
-	t.Skip("Cross-file duplicate detection within same capability is covered by within-file tests")
+	t.Skip(
+		"Cross-file duplicate detection within same capability is covered by within-file tests",
+	)
 }
 
 func TestValidateChangeDeltaSpecs_MalformedScenarios(
@@ -2020,7 +2022,10 @@ The system SHALL provide user authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
 
 	// Create tasks.md with valid tasks
 	tasksContent := `# Tasks
@@ -2032,9 +2037,15 @@ The system SHALL provide user authentication.
 ## 2. Testing
 - [ ] 2.1 Write unit tests
 `
-	tasksPath := filepath.Join(changeDir, "tasks.md")
+	tasksPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
 	if err := os.WriteFile(tasksPath, []byte(tasksContent), 0644); err != nil {
-		t.Fatalf("Failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"Failed to write tasks.md: %v",
+			err,
+		)
 	}
 
 	report, err := ValidateChangeDeltaSpecs(
@@ -2042,15 +2053,24 @@ The system SHALL provide user authentication.
 		spectrRoot,
 	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
 		return
 	}
-	t.Error("Expected valid report with valid tasks.md")
+	t.Error(
+		"Expected valid report with valid tasks.md",
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
@@ -2071,12 +2091,21 @@ The system SHALL provide user authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
 
 	// Create empty tasks.md
-	tasksPath := filepath.Join(changeDir, "tasks.md")
+	tasksPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
 	if err := os.WriteFile(tasksPath, []byte(""), 0644); err != nil {
-		t.Fatalf("Failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"Failed to write tasks.md: %v",
+			err,
+		)
 	}
 
 	report, err := ValidateChangeDeltaSpecs(
@@ -2084,17 +2113,25 @@ The system SHALL provide user authentication.
 		spectrRoot,
 	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report for empty tasks.md")
+		t.Error(
+			"Expected invalid report for empty tasks.md",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
 		if issue.Level == LevelError &&
-			strings.Contains(issue.Message, "no task items") {
+			strings.Contains(
+				issue.Message,
+				"no task items",
+			) {
 			found = true
 
 			break
@@ -2105,7 +2142,11 @@ The system SHALL provide user authentication.
 	}
 	t.Error("Expected error about empty tasks.md")
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
@@ -2126,7 +2167,10 @@ The system SHALL provide user authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
 
 	// Create tasks.md with only headers, no task items
 	tasksContent := `# Tasks
@@ -2137,9 +2181,15 @@ The system SHALL provide user authentication.
 
 Some text without any task checkboxes.
 `
-	tasksPath := filepath.Join(changeDir, "tasks.md")
+	tasksPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
 	if err := os.WriteFile(tasksPath, []byte(tasksContent), 0644); err != nil {
-		t.Fatalf("Failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"Failed to write tasks.md: %v",
+			err,
+		)
 	}
 
 	report, err := ValidateChangeDeltaSpecs(
@@ -2147,17 +2197,25 @@ Some text without any task checkboxes.
 		spectrRoot,
 	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	if report.Valid {
-		t.Error("Expected invalid report for tasks.md with only headers")
+		t.Error(
+			"Expected invalid report for tasks.md with only headers",
+		)
 	}
 
 	found := false
 	for _, issue := range report.Issues {
 		if issue.Level == LevelError &&
-			strings.Contains(issue.Message, "no task items") {
+			strings.Contains(
+				issue.Message,
+				"no task items",
+			) {
 			found = true
 
 			break
@@ -2166,9 +2224,15 @@ Some text without any task checkboxes.
 	if found {
 		return
 	}
-	t.Error("Expected error about tasks.md with no task items")
+	t.Error(
+		"Expected error about tasks.md with no task items",
+	)
 	for _, issue := range report.Issues {
-		t.Logf("  %s: %s", issue.Level, issue.Message)
+		t.Logf(
+			"  %s: %s",
+			issue.Level,
+			issue.Message,
+		)
 	}
 }
 
@@ -2189,7 +2253,10 @@ The system SHALL provide user authentication.
 `,
 	}
 
-	changeDir, spectrRoot := createChangeDir(t, specs)
+	changeDir, spectrRoot := createChangeDir(
+		t,
+		specs,
+	)
 	// Do NOT create tasks.md - it should not be required
 
 	report, err := ValidateChangeDeltaSpecs(
@@ -2197,21 +2264,36 @@ The system SHALL provide user authentication.
 		spectrRoot,
 	)
 	if err != nil {
-		t.Fatalf("ValidateChangeDeltaSpecs returned error: %v", err)
+		t.Fatalf(
+			"ValidateChangeDeltaSpecs returned error: %v",
+			err,
+		)
 	}
 
 	// Validation should pass - no tasks.md is allowed
 	if !report.Valid {
-		t.Error("Expected valid report when tasks.md is not present")
+		t.Error(
+			"Expected valid report when tasks.md is not present",
+		)
 		for _, issue := range report.Issues {
-			t.Logf("  %s: %s", issue.Level, issue.Message)
+			t.Logf(
+				"  %s: %s",
+				issue.Level,
+				issue.Message,
+			)
 		}
 	}
 
 	// Ensure no task-related errors
 	for _, issue := range report.Issues {
-		if strings.Contains(issue.Message, "tasks.md") {
-			t.Errorf("Unexpected tasks.md related issue: %s", issue.Message)
+		if strings.Contains(
+			issue.Message,
+			"tasks.md",
+		) {
+			t.Errorf(
+				"Unexpected tasks.md related issue: %s",
+				issue.Message,
+			)
 		}
 	}
 }
@@ -2220,67 +2302,126 @@ The system SHALL provide user authentication.
 func TestValidateTasksFile_DirectFunction(
 	t *testing.T,
 ) {
-	t.Run("file does not exist", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		issues := validateTasksFile(tmpDir)
-		if len(issues) != 0 {
-			t.Errorf("Expected no issues for missing tasks.md, got %d", len(issues))
-		}
-	})
+	t.Run(
+		"file does not exist",
+		func(t *testing.T) {
+			tmpDir := t.TempDir()
+			issues := validateTasksFile(tmpDir)
+			if len(issues) != 0 {
+				t.Errorf(
+					"Expected no issues for missing tasks.md, got %d",
+					len(issues),
+				)
+			}
+		},
+	)
 
-	t.Run("file exists with tasks", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		tasksPath := filepath.Join(tmpDir, "tasks.md")
-		content := "- [ ] Task 1\n- [x] Task 2\n"
-		if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
-			t.Fatalf("Failed to write tasks.md: %v", err)
-		}
+	t.Run(
+		"file exists with tasks",
+		func(t *testing.T) {
+			tmpDir := t.TempDir()
+			tasksPath := filepath.Join(
+				tmpDir,
+				"tasks.md",
+			)
+			content := "- [ ] Task 1\n- [x] Task 2\n"
+			if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+				t.Fatalf(
+					"Failed to write tasks.md: %v",
+					err,
+				)
+			}
 
-		issues := validateTasksFile(tmpDir)
-		if len(issues) == 0 {
-			return
-		}
-		t.Errorf("Expected no issues for valid tasks.md, got %d", len(issues))
-		for _, issue := range issues {
-			t.Logf("  %s: %s", issue.Level, issue.Message)
-		}
-	})
+			issues := validateTasksFile(tmpDir)
+			if len(issues) == 0 {
+				return
+			}
+			t.Errorf(
+				"Expected no issues for valid tasks.md, got %d",
+				len(issues),
+			)
+			for _, issue := range issues {
+				t.Logf(
+					"  %s: %s",
+					issue.Level,
+					issue.Message,
+				)
+			}
+		},
+	)
 
-	t.Run("file exists empty", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		tasksPath := filepath.Join(tmpDir, "tasks.md")
-		if err := os.WriteFile(tasksPath, []byte(""), 0644); err != nil {
-			t.Fatalf("Failed to write tasks.md: %v", err)
-		}
+	t.Run(
+		"file exists empty",
+		func(t *testing.T) {
+			tmpDir := t.TempDir()
+			tasksPath := filepath.Join(
+				tmpDir,
+				"tasks.md",
+			)
+			if err := os.WriteFile(tasksPath, []byte(""), 0644); err != nil {
+				t.Fatalf(
+					"Failed to write tasks.md: %v",
+					err,
+				)
+			}
 
-		issues := validateTasksFile(tmpDir)
-		if len(issues) != 1 {
-			t.Errorf("Expected 1 issue for empty tasks.md, got %d", len(issues))
-		}
-		if len(issues) > 0 && issues[0].Level != LevelError {
-			t.Errorf("Expected ERROR level, got %s", issues[0].Level)
-		}
-	})
+			issues := validateTasksFile(tmpDir)
+			if len(issues) != 1 {
+				t.Errorf(
+					"Expected 1 issue for empty tasks.md, got %d",
+					len(issues),
+				)
+			}
+			if len(issues) > 0 &&
+				issues[0].Level != LevelError {
+				t.Errorf(
+					"Expected ERROR level, got %s",
+					issues[0].Level,
+				)
+			}
+		},
+	)
 
-	t.Run("file exists with only headers", func(t *testing.T) {
-		tmpDir := t.TempDir()
-		tasksPath := filepath.Join(tmpDir, "tasks.md")
-		content := "# Tasks\n\n## Section 1\n\nSome text\n"
-		if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
-			t.Fatalf("Failed to write tasks.md: %v", err)
-		}
+	t.Run(
+		"file exists with only headers",
+		func(t *testing.T) {
+			tmpDir := t.TempDir()
+			tasksPath := filepath.Join(
+				tmpDir,
+				"tasks.md",
+			)
+			content := "# Tasks\n\n## Section 1\n\nSome text\n"
+			if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+				t.Fatalf(
+					"Failed to write tasks.md: %v",
+					err,
+				)
+			}
 
-		issues := validateTasksFile(tmpDir)
-		if len(issues) != 1 {
-			t.Errorf("Expected 1 issue for tasks.md with only headers, got %d", len(issues))
+			issues := validateTasksFile(tmpDir)
+			if len(issues) != 1 {
+				t.Errorf(
+					"Expected 1 issue for tasks.md with only headers, got %d",
+					len(issues),
+				)
 
-			return
-		}
-		if issues[0].Level != LevelError {
-			t.Errorf("Expected ERROR level, got %s", issues[0].Level)
-		}
-		if !strings.Contains(issues[0].Message, "no task items") {
-			t.Errorf("Expected message about no task items, got: %s", issues[0].Message)
-		}
-	})
+				return
+			}
+			if issues[0].Level != LevelError {
+				t.Errorf(
+					"Expected ERROR level, got %s",
+					issues[0].Level,
+				)
+			}
+			if !strings.Contains(
+				issues[0].Message,
+				"no task items",
+			) {
+				t.Errorf(
+					"Expected message about no task items, got: %s",
+					issues[0].Message,
+				)
+			}
+		},
+	)
 }

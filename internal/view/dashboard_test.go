@@ -174,7 +174,12 @@ func TestCalculatePercentage(t *testing.T) {
 		{"Half completed", 5, 10, 50},
 		{"All completed", 10, 10, 100},
 		{"One third", 1, 3, 33},
-		{"Two thirds", 2, 3, 67}, // 66.67% rounds to 67
+		{
+			"Two thirds",
+			2,
+			3,
+			67,
+		}, // 66.67% rounds to 67
 	}
 
 	for _, tt := range tests {
@@ -653,7 +658,9 @@ func TestCollectData_ChangeWithZeroTasks(
 	)
 }
 
-func TestCalculatePercentage_EdgeCases(t *testing.T) {
+func TestCalculatePercentage_EdgeCases(
+	t *testing.T,
+) {
 	tests := []struct {
 		name      string
 		completed int
@@ -664,17 +671,37 @@ func TestCalculatePercentage_EdgeCases(t *testing.T) {
 		{"1 of 16 (6.25%)", 1, 16, 6},
 		{"5 of 16 (31.25%)", 5, 16, 31},
 		{"8 of 16 (exactly 50%)", 8, 16, 50},
-		{"15 of 16 (93.75%)", 15, 16, 94}, // rounds up
+		{
+			"15 of 16 (93.75%)",
+			15,
+			16,
+			94,
+		}, // rounds up
 		{"16 of 16 (exactly 100%)", 16, 16, 100},
 
 		// More rounding edge cases
 		{"1 of 7 (14.29%)", 1, 7, 14},
-		{"3 of 7 (42.86%)", 3, 7, 43}, // rounds up
-		{"6 of 7 (85.71%)", 6, 7, 86}, // rounds up
+		{
+			"3 of 7 (42.86%)",
+			3,
+			7,
+			43,
+		}, // rounds up
+		{
+			"6 of 7 (85.71%)",
+			6,
+			7,
+			86,
+		}, // rounds up
 
 		// Large numbers
 		{"500 of 1000", 500, 1000, 50},
-		{"999 of 1000", 999, 1000, 100}, // 99.9% rounds to 100
+		{
+			"999 of 1000",
+			999,
+			1000,
+			100,
+		}, // 99.9% rounds to 100
 		{"1000 of 1000", 1000, 1000, 100},
 
 		// Small edge cases
@@ -687,19 +714,31 @@ func TestCalculatePercentage_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := calculatePercentage(tt.completed, tt.total)
+			result := calculatePercentage(
+				tt.completed,
+				tt.total,
+			)
 			if result != tt.expected {
 				t.Errorf(
 					"calculatePercentage(%d, %d) = %d; want %d (%.2f%%)",
-					tt.completed, tt.total, result, tt.expected,
-					float64(tt.completed)/float64(tt.total)*100,
+					tt.completed,
+					tt.total,
+					result,
+					tt.expected,
+					float64(
+						tt.completed,
+					)/float64(
+						tt.total,
+					)*100,
 				)
 			}
 		})
 	}
 }
 
-func TestCalculatePercentage_FixtureLike(t *testing.T) {
+func TestCalculatePercentage_FixtureLike(
+	t *testing.T,
+) {
 	// Test with values matching the 16-task fixture
 	// Values should be ROUNDED to nearest integer (not truncated)
 	testCases := []struct {
@@ -727,11 +766,17 @@ func TestCalculatePercentage_FixtureLike(t *testing.T) {
 
 	total := 16
 	for _, tc := range testCases {
-		result := calculatePercentage(tc.completed, total)
+		result := calculatePercentage(
+			tc.completed,
+			total,
+		)
 		if result != tc.expected {
 			t.Errorf(
 				"calculatePercentage(%d, %d) = %d; want %d",
-				tc.completed, total, result, tc.expected,
+				tc.completed,
+				total,
+				result,
+				tc.expected,
 			)
 		}
 	}

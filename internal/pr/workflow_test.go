@@ -782,7 +782,10 @@ func TestCleanupLocalChange(t *testing.T) {
 			}
 
 			for path, content := range testFiles {
-				fullPath := filepath.Join(changeDir, path)
+				fullPath := filepath.Join(
+					changeDir,
+					path,
+				)
 				if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
 					t.Fatalf(
 						"Failed to create directory for %s: %v",
@@ -801,7 +804,10 @@ func TestCleanupLocalChange(t *testing.T) {
 
 			// Verify files exist before cleanup
 			for path := range testFiles {
-				fullPath := filepath.Join(changeDir, path)
+				fullPath := filepath.Join(
+					changeDir,
+					path,
+				)
 				if _, err := os.Stat(fullPath); err != nil {
 					t.Fatalf(
 						"File %s should exist before cleanup: %v",
@@ -825,14 +831,20 @@ func TestCleanupLocalChange(t *testing.T) {
 			}
 
 			// Verify the change directory is removed
-			if _, err := os.Stat(changeDir); !os.IsNotExist(err) {
+			if _, err := os.Stat(changeDir); !os.IsNotExist(
+				err,
+			) {
 				t.Error(
 					"Change directory should be removed after cleanupLocalChange()",
 				)
 			}
 
 			// Verify parent directories still exist
-			parentDir := filepath.Join(projectRoot, "spectr", "changes")
+			parentDir := filepath.Join(
+				projectRoot,
+				"spectr",
+				"changes",
+			)
 			if _, err := os.Stat(parentDir); err != nil {
 				t.Errorf(
 					"Parent directory should still exist: %v",
@@ -849,7 +861,11 @@ func TestCleanupLocalChange(t *testing.T) {
 			projectRoot := t.TempDir()
 
 			// Create the spectr/changes directory but not the specific change
-			changesDir := filepath.Join(projectRoot, "spectr", "changes")
+			changesDir := filepath.Join(
+				projectRoot,
+				"spectr",
+				"changes",
+			)
 			if err := os.MkdirAll(changesDir, 0755); err != nil {
 				t.Fatalf(
 					"Failed to create changes directory: %v",
@@ -896,7 +912,10 @@ func TestCleanupLocalChange(t *testing.T) {
 			}
 
 			// Create a test file
-			testFile := filepath.Join(changeDir, "proposal.md")
+			testFile := filepath.Join(
+				changeDir,
+				"proposal.md",
+			)
 			if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
 				t.Fatalf(
 					"Failed to write test file: %v",
@@ -917,7 +936,10 @@ func TestCleanupLocalChange(t *testing.T) {
 					err,
 				)
 			}
-			wrongTestFile := filepath.Join(wrongChangeDir, "proposal.md")
+			wrongTestFile := filepath.Join(
+				wrongChangeDir,
+				"proposal.md",
+			)
 			if err := os.WriteFile(wrongTestFile, []byte("wrong"), 0644); err != nil {
 				t.Fatalf(
 					"Failed to write wrong test file: %v",
@@ -939,7 +961,9 @@ func TestCleanupLocalChange(t *testing.T) {
 			}
 
 			// Verify the correct change directory is removed
-			if _, err := os.Stat(changeDir); !os.IsNotExist(err) {
+			if _, err := os.Stat(changeDir); !os.IsNotExist(
+				err,
+			) {
 				t.Error(
 					"Change directory in correctRoot should be removed",
 				)
@@ -957,7 +981,9 @@ func TestCleanupLocalChange(t *testing.T) {
 }
 
 // TestCleanupTriggersForArchiveMode tests that ModeArchive triggers cleanup logic.
-func TestCleanupTriggersForArchiveMode(t *testing.T) {
+func TestCleanupTriggersForArchiveMode(
+	t *testing.T,
+) {
 	t.Run(
 		"ModeArchive is configured for cleanup",
 		func(t *testing.T) {
@@ -988,31 +1014,37 @@ func TestCleanupTriggersForArchiveMode(t *testing.T) {
 			}
 
 			for _, tc := range testCases {
-				t.Run(tc.description, func(t *testing.T) {
-					config := PRConfig{
-						ChangeID: "test-change",
-						Mode:     tc.mode,
-					}
+				t.Run(
+					tc.description,
+					func(t *testing.T) {
+						config := PRConfig{
+							ChangeID: "test-change",
+							Mode:     tc.mode,
+						}
 
-					// This is the same condition used in executeWorkflow
-					triggersCleanup := config.Mode == ModeArchive || config.Mode == ModeRemove
+						// This is the same condition used in executeWorkflow
+						triggersCleanup := config.Mode == ModeArchive ||
+							config.Mode == ModeRemove
 
-					if triggersCleanup != tc.shouldTrigger {
-						t.Errorf(
-							"Mode %q: cleanup triggered = %v, want %v",
-							tc.mode,
-							triggersCleanup,
-							tc.shouldTrigger,
-						)
-					}
-				})
+						if triggersCleanup != tc.shouldTrigger {
+							t.Errorf(
+								"Mode %q: cleanup triggered = %v, want %v",
+								tc.mode,
+								triggersCleanup,
+								tc.shouldTrigger,
+							)
+						}
+					},
+				)
 			}
 		},
 	)
 }
 
 // TestCleanupTriggersForRemoveMode tests that ModeRemove triggers cleanup logic.
-func TestCleanupTriggersForRemoveMode(t *testing.T) {
+func TestCleanupTriggersForRemoveMode(
+	t *testing.T,
+) {
 	t.Run(
 		"ModeRemove triggers cleanup",
 		func(t *testing.T) {
@@ -1022,7 +1054,8 @@ func TestCleanupTriggersForRemoveMode(t *testing.T) {
 			}
 
 			// This is the same condition used in executeWorkflow
-			triggersCleanup := config.Mode == ModeArchive || config.Mode == ModeRemove
+			triggersCleanup := config.Mode == ModeArchive ||
+				config.Mode == ModeRemove
 
 			if !triggersCleanup {
 				t.Error(
@@ -1058,7 +1091,10 @@ func TestCleanupTriggersForRemoveMode(t *testing.T) {
 				"tasks.json",
 			}
 			for _, fileName := range testFiles {
-				filePath := filepath.Join(changeDir, fileName)
+				filePath := filepath.Join(
+					changeDir,
+					fileName,
+				)
 				if err := os.WriteFile(filePath, []byte("test content"), 0644); err != nil {
 					t.Fatalf(
 						"Failed to write %s: %v",
@@ -1077,7 +1113,9 @@ func TestCleanupTriggersForRemoveMode(t *testing.T) {
 
 			// Verify cleanup is triggered for remove mode
 			if config.Mode != ModeRemove {
-				t.Fatal("Mode should be ModeRemove")
+				t.Fatal(
+					"Mode should be ModeRemove",
+				)
 			}
 
 			// Execute cleanup
@@ -1090,7 +1128,9 @@ func TestCleanupTriggersForRemoveMode(t *testing.T) {
 			}
 
 			// Verify directory is removed
-			if _, err := os.Stat(changeDir); !os.IsNotExist(err) {
+			if _, err := os.Stat(changeDir); !os.IsNotExist(
+				err,
+			) {
 				t.Error(
 					"Change directory should be removed after cleanup",
 				)

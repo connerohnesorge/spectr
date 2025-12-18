@@ -727,8 +727,13 @@ func findMalformedRenamedLine(
 // validateTasksFile validates that a tasks.md file, if present, contains
 // at least one task item (- [ ] or - [x]). Missing tasks.md is allowed.
 // Returns a slice of validation issues (empty if valid or file doesn't exist).
-func validateTasksFile(changeDir string) []ValidationIssue {
-	tasksPath := filepath.Join(changeDir, "tasks.md")
+func validateTasksFile(
+	changeDir string,
+) []ValidationIssue {
+	tasksPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
 
 	// Check if tasks.md exists
 	_, err := os.Stat(tasksPath)
@@ -740,10 +745,13 @@ func validateTasksFile(changeDir string) []ValidationIssue {
 		// Error accessing file - report as issue
 		return []ValidationIssue{
 			{
-				Level:   LevelError,
-				Path:    tasksPath,
-				Line:    1,
-				Message: fmt.Sprintf("failed to access tasks.md: %v", err),
+				Level: LevelError,
+				Path:  tasksPath,
+				Line:  1,
+				Message: fmt.Sprintf(
+					"failed to access tasks.md: %v",
+					err,
+				),
 			},
 		}
 	}
@@ -753,10 +761,13 @@ func validateTasksFile(changeDir string) []ValidationIssue {
 	if err != nil {
 		return []ValidationIssue{
 			{
-				Level:   LevelError,
-				Path:    tasksPath,
-				Line:    1,
-				Message: fmt.Sprintf("failed to read tasks.md: %v", err),
+				Level: LevelError,
+				Path:  tasksPath,
+				Line:  1,
+				Message: fmt.Sprintf(
+					"failed to read tasks.md: %v",
+					err,
+				),
 			},
 		}
 	}
@@ -773,10 +784,13 @@ func validateTasksFile(changeDir string) []ValidationIssue {
 	if err := scanner.Err(); err != nil {
 		return []ValidationIssue{
 			{
-				Level:   LevelError,
-				Path:    tasksPath,
-				Line:    1,
-				Message: fmt.Sprintf("error reading tasks.md: %v", err),
+				Level: LevelError,
+				Path:  tasksPath,
+				Line:  1,
+				Message: fmt.Sprintf(
+					"error reading tasks.md: %v",
+					err,
+				),
 			},
 		}
 	}

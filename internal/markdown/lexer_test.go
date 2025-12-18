@@ -1864,7 +1864,11 @@ func TestLexer_PeekDoesNotAdvance(t *testing.T) {
 			tok2.End,
 		)
 	}
-	if string(tok1.Source) != string(tok2.Source) {
+	if string(
+		tok1.Source,
+	) != string(
+		tok2.Source,
+	) {
 		t.Errorf(
 			"Peek returned different Source: %q vs %q",
 			tok1.Source,

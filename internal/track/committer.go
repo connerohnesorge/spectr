@@ -79,18 +79,26 @@ type GitExecutor interface {
 	// Commit runs `git commit` with the given message.
 	Commit(repoRoot string, message string) error
 	// RevParse runs `git rev-parse` and returns the result.
-	RevParse(repoRoot string, ref string) (string, error)
+	RevParse(
+		repoRoot string,
+		ref string,
+	) (string, error)
 	// DiffNumstat runs `git diff --numstat` for the specified files.
 	// Returns output showing lines added/deleted per file.
 	// Binary files show as "-\t-\t<filename>".
-	DiffNumstat(repoRoot string, files []string) (string, error)
+	DiffNumstat(
+		repoRoot string,
+		files []string,
+	) (string, error)
 }
 
 // RealGitExecutor implements GitExecutor using actual git commands.
 type RealGitExecutor struct{}
 
 // Status runs `git status --porcelain` and returns the output.
-func (*RealGitExecutor) Status(repoRoot string) (string, error) {
+func (*RealGitExecutor) Status(
+	repoRoot string,
+) (string, error) {
 	cmd := exec.Command(
 		gitCmd,
 		gitRepoFlag, repoRoot,
@@ -102,19 +110,32 @@ func (*RealGitExecutor) Status(repoRoot string) (string, error) {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			return "", fmt.Errorf(
 				"git status failed: %s",
-				strings.TrimSpace(string(exitErr.Stderr)),
+				strings.TrimSpace(
+					string(exitErr.Stderr),
+				),
 			)
 		}
 
-		return "", fmt.Errorf("failed to run git status: %w", err)
+		return "", fmt.Errorf(
+			"failed to run git status: %w",
+			err,
+		)
 	}
 
 	return string(output), nil
 }
 
 // Add runs `git add` for the specified files.
-func (*RealGitExecutor) Add(repoRoot string, files []string) error {
-	args := []string{gitRepoFlag, repoRoot, "add", "--"}
+func (*RealGitExecutor) Add(
+	repoRoot string,
+	files []string,
+) error {
+	args := []string{
+		gitRepoFlag,
+		repoRoot,
+		"add",
+		"--",
+	}
 	args = append(args, files...)
 
 	cmd := exec.Command(gitCmd, args...)
@@ -130,7 +151,9 @@ func (*RealGitExecutor) Add(repoRoot string, files []string) error {
 }
 
 // Commit runs `git commit` with the given message.
-func (*RealGitExecutor) Commit(repoRoot, message string) error {
+func (*RealGitExecutor) Commit(
+	repoRoot, message string,
+) error {
 	cmd := exec.Command(
 		gitCmd,
 		gitRepoFlag, repoRoot,
@@ -149,7 +172,9 @@ func (*RealGitExecutor) Commit(repoRoot, message string) error {
 }
 
 // RevParse runs `git rev-parse` and returns the result.
-func (*RealGitExecutor) RevParse(repoRoot, ref string) (string, error) {
+func (*RealGitExecutor) RevParse(
+	repoRoot, ref string,
+) (string, error) {
 	cmd := exec.Command(
 		gitCmd,
 		gitRepoFlag, repoRoot,
@@ -161,11 +186,16 @@ func (*RealGitExecutor) RevParse(repoRoot, ref string) (string, error) {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			return "", fmt.Errorf(
 				"git rev-parse failed: %s",
-				strings.TrimSpace(string(exitErr.Stderr)),
+				strings.TrimSpace(
+					string(exitErr.Stderr),
+				),
 			)
 		}
 
-		return "", fmt.Errorf("failed to get commit hash: %w", err)
+		return "", fmt.Errorf(
+			"failed to get commit hash: %w",
+			err,
+		)
 	}
 
 	return strings.TrimSpace(string(output)), nil
@@ -179,7 +209,13 @@ func (*RealGitExecutor) DiffNumstat(
 ) (string, error) {
 	// Use git diff --numstat to get line counts for each file.
 	// Binary files will show "-" for both additions and deletions.
-	args := []string{gitRepoFlag, repoRoot, "diff", "--numstat", "--"}
+	args := []string{
+		gitRepoFlag,
+		repoRoot,
+		"diff",
+		"--numstat",
+		"--",
+	}
 	args = append(args, files...)
 
 	cmd := exec.Command(gitCmd, args...)
@@ -188,11 +224,16 @@ func (*RealGitExecutor) DiffNumstat(
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			return "", fmt.Errorf(
 				"git diff --numstat failed: %s",
-				strings.TrimSpace(string(exitErr.Stderr)),
+				strings.TrimSpace(
+					string(exitErr.Stderr),
+				),
 			)
 		}
 
-		return "", fmt.Errorf("failed to run git diff --numstat: %w", err)
+		return "", fmt.Errorf(
+			"failed to run git diff --numstat: %w",
+			err,
+		)
 	}
 
 	return string(output), nil
@@ -207,7 +248,10 @@ type Committer struct {
 }
 
 // NewCommitter creates a new Committer for the specified change.
-func NewCommitter(changeID, repoRoot string, includeBinaries bool) *Committer {
+func NewCommitter(
+	changeID, repoRoot string,
+	includeBinaries bool,
+) *Committer {
 	return &Committer{
 		changeID:        changeID,
 		repoRoot:        repoRoot,
@@ -236,19 +280,30 @@ func NewCommitterWithExecutor(
 // Returns a GitCommitError if git operations fail.
 // When IncludeBinaries is false, binary files are excluded and listed in
 // SkippedBinaries.
-func (c *Committer) Commit(taskID string, action Action) (CommitResult, error) {
+func (c *Committer) Commit(
+	taskID string,
+	action Action,
+) (CommitResult, error) {
 	modifiedFiles, err := c.getModifiedFiles()
 	if err != nil {
-		return CommitResult{}, &specterrs.GitCommitError{Err: err}
+		return CommitResult{}, &specterrs.GitCommitError{
+			Err: err,
+		}
 	}
 
 	// First filter out task files
-	filesWithoutTasks := filterTaskFiles(modifiedFiles)
+	filesWithoutTasks := filterTaskFiles(
+		modifiedFiles,
+	)
 
 	// Then filter out binary files if not including them
-	filesToStage, skippedBinaries, err := c.filterFiles(filesWithoutTasks)
+	filesToStage, skippedBinaries, err := c.filterFiles(
+		filesWithoutTasks,
+	)
 	if err != nil {
-		return CommitResult{}, &specterrs.GitCommitError{Err: err}
+		return CommitResult{}, &specterrs.GitCommitError{
+			Err: err,
+		}
 	}
 
 	if len(filesToStage) == 0 {
@@ -265,13 +320,20 @@ func (c *Committer) Commit(taskID string, action Action) (CommitResult, error) {
 	}
 
 	if err := c.stageFiles(filesToStage); err != nil {
-		return CommitResult{}, &specterrs.GitCommitError{Err: err}
+		return CommitResult{}, &specterrs.GitCommitError{
+			Err: err,
+		}
 	}
 
-	message := c.buildCommitMessage(taskID, action)
+	message := c.buildCommitMessage(
+		taskID,
+		action,
+	)
 	hash, err := c.createCommit(message)
 	if err != nil {
-		return CommitResult{}, &specterrs.GitCommitError{Err: err}
+		return CommitResult{}, &specterrs.GitCommitError{
+			Err: err,
+		}
 	}
 
 	return CommitResult{
@@ -314,7 +376,9 @@ func (c *Committer) filterFiles(
 // This includes both staged and unstaged modifications, as well as
 // untracked files.
 func (c *Committer) getModifiedFiles() ([]string, error) {
-	output, err := c.gitExecutor.Status(c.repoRoot)
+	output, err := c.gitExecutor.Status(
+		c.repoRoot,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +397,9 @@ func parseGitStatus(output string) []string {
 		}
 
 		status := line[0:2]
-		filename := strings.TrimSpace(line[minPorcelainLineLen:])
+		filename := strings.TrimSpace(
+			line[minPorcelainLineLen:],
+		)
 		if filename == "" {
 			continue
 		}
@@ -381,7 +447,9 @@ func isTaskFile(name string) bool {
 // parseBinaryFilesFromNumstat parses git diff --numstat output to identify
 // binary files. Binary files show as "-\t-\t<filename>" in the output.
 // Returns a map of binary file paths for O(1) lookup.
-func parseBinaryFilesFromNumstat(numstatOutput string) map[string]bool {
+func parseBinaryFilesFromNumstat(
+	numstatOutput string,
+) map[string]bool {
 	binaryFiles := make(map[string]bool)
 	lines := strings.Split(numstatOutput, "\n")
 
@@ -394,7 +462,9 @@ func parseBinaryFilesFromNumstat(numstatOutput string) map[string]bool {
 		// Binary files format: "-\t-\t<filename>"
 		// Text files format: "<added>\t<deleted>\t<filename>"
 		parts := strings.Split(line, "\t")
-		if len(parts) >= minNumstatParts && parts[0] == "-" && parts[1] == "-" {
+		if len(parts) >= minNumstatParts &&
+			parts[0] == "-" &&
+			parts[1] == "-" {
 			filename := parts[2]
 			binaryFiles[filename] = true
 		}
@@ -405,26 +475,38 @@ func parseBinaryFilesFromNumstat(numstatOutput string) map[string]bool {
 
 // getBinaryFiles returns a set of binary files from the given file list.
 // Uses git diff --numstat to detect binary files.
-func (c *Committer) getBinaryFiles(files []string) (map[string]bool, error) {
+func (c *Committer) getBinaryFiles(
+	files []string,
+) (map[string]bool, error) {
 	if len(files) == 0 {
 		return make(map[string]bool), nil
 	}
 
-	output, err := c.gitExecutor.DiffNumstat(c.repoRoot, files)
+	output, err := c.gitExecutor.DiffNumstat(
+		c.repoRoot,
+		files,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return parseBinaryFilesFromNumstat(output), nil
+	return parseBinaryFilesFromNumstat(
+		output,
+	), nil
 }
 
 // stageFiles stages the specified files for commit.
-func (c *Committer) stageFiles(files []string) error {
+func (c *Committer) stageFiles(
+	files []string,
+) error {
 	return c.gitExecutor.Add(c.repoRoot, files)
 }
 
 // buildCommitMessage creates the commit message with the standard format.
-func (c *Committer) buildCommitMessage(taskID string, action Action) string {
+func (c *Committer) buildCommitMessage(
+	taskID string,
+	action Action,
+) string {
 	return fmt.Sprintf(
 		"spectr(%s): %s task %s\n\n%s",
 		c.changeID,
@@ -436,7 +518,9 @@ func (c *Committer) buildCommitMessage(taskID string, action Action) string {
 
 // createCommit creates a git commit with the given message and returns
 // the commit hash.
-func (c *Committer) createCommit(message string) (string, error) {
+func (c *Committer) createCommit(
+	message string,
+) (string, error) {
 	if err := c.gitExecutor.Commit(c.repoRoot, message); err != nil {
 		return "", err
 	}
@@ -446,5 +530,8 @@ func (c *Committer) createCommit(message string) (string, error) {
 
 // getCommitHash returns the hash of the current HEAD commit.
 func (c *Committer) getCommitHash() (string, error) {
-	return c.gitExecutor.RevParse(c.repoRoot, "HEAD")
+	return c.gitExecutor.RevParse(
+		c.repoRoot,
+		"HEAD",
+	)
 }

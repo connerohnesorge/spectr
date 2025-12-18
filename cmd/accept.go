@@ -78,7 +78,10 @@ func (c *AcceptCmd) processChange(
 
 	// Validate the change before conversion
 	if err = c.runValidation(changeDir); err != nil {
-		return fmt.Errorf("validation failed: %w", err)
+		return fmt.Errorf(
+			"validation failed: %w",
+			err,
+		)
 	}
 
 	tasks, err := parseTasksMd(tasksMdPath)
@@ -94,7 +97,10 @@ func (c *AcceptCmd) processChange(
 		return err
 	}
 
-	tasksJSONPath := filepath.Join(changeDir, "tasks.jsonc")
+	tasksJSONPath := filepath.Join(
+		changeDir,
+		"tasks.jsonc",
+	)
 
 	if c.DryRun {
 		fmt.Printf(
@@ -126,15 +132,22 @@ func resolveChangePaths(
 		"changes",
 		changeID,
 	)
-	if _, err = os.Stat(changeDir); os.IsNotExist(err) {
+	if _, err = os.Stat(changeDir); os.IsNotExist(
+		err,
+	) {
 		return "", "", fmt.Errorf(
 			"change directory not found: %s",
 			changeDir,
 		)
 	}
 
-	tasksMdPath = filepath.Join(changeDir, "tasks.md")
-	if _, err = os.Stat(tasksMdPath); os.IsNotExist(err) {
+	tasksMdPath = filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
+	if _, err = os.Stat(tasksMdPath); os.IsNotExist(
+		err,
+	) {
 		return "", "", fmt.Errorf(
 			"tasks.md not found in change: %s",
 			tasksMdPath,
@@ -273,7 +286,9 @@ type taskParseState struct {
 }
 
 // handleSection processes a section header line and updates state.
-func (s *taskParseState) handleSection(name, number string) {
+func (s *taskParseState) handleSection(
+	name, number string,
+) {
 	if number != "" {
 		// Numbered section - use explicit number
 		num, _ := strconv.Atoi(number)
@@ -300,9 +315,14 @@ func (s *taskParseState) generateTaskID(
 	}
 
 	s.taskSeqInSection++
-	expectedID := fmt.Sprintf("%s.%d", s.sectionNum, s.taskSeqInSection)
+	expectedID := fmt.Sprintf(
+		"%s.%d",
+		s.sectionNum,
+		s.taskSeqInSection,
+	)
 
-	if matchNumber != "" && matchNumber == expectedID {
+	if matchNumber != "" &&
+		matchNumber == expectedID {
 		return matchNumber // Explicit matches expected
 	}
 
@@ -323,10 +343,12 @@ func (s *taskParseState) createTask(
 	}
 
 	return parsers.Task{
-		ID:          taskID,
-		Section:     s.sectionName,
-		Description: strings.TrimSpace(match.Content),
-		Status:      status,
+		ID:      taskID,
+		Section: s.sectionName,
+		Description: strings.TrimSpace(
+			match.Content,
+		),
+		Status: status,
 	}
 }
 
@@ -337,10 +359,15 @@ func (s *taskParseState) createTask(
 //   - "- [ ] 1. Task" (simple dot ID)
 //   - "- [ ] 1 Task" (number only ID)
 //   - "- [ ] Task" (no ID - auto-generated)
-func parseTasksMd(path string) ([]parsers.Task, error) {
+func parseTasksMd(
+	path string,
+) ([]parsers.Task, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
+		return nil, fmt.Errorf(
+			"failed to open file: %w",
+			err,
+		)
 	}
 	defer func() { _ = file.Close() }()
 
@@ -359,16 +386,24 @@ func parseTasksMd(path string) ([]parsers.Task, error) {
 		}
 
 		// Check for task line using flexible matching
-		match, ok := markdown.MatchFlexibleTask(line)
+		match, ok := markdown.MatchFlexibleTask(
+			line,
+		)
 		if !ok {
 			continue
 		}
 
-		tasks = append(tasks, state.createTask(match))
+		tasks = append(
+			tasks,
+			state.createTask(match),
+		)
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
+		return nil, fmt.Errorf(
+			"error reading file: %w",
+			err,
+		)
 	}
 
 	return tasks, nil

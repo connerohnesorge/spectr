@@ -1,6 +1,8 @@
 // Package cmd provides command-line interface implementations.
 // This file implements the accept command which converts tasks.md to
 // tasks.jsonc for machine-readable task tracking.
+//
+//nolint:revive // file-length-limit: accept command requires cohesive task parsing logic
 package cmd
 
 import (

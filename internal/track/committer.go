@@ -60,6 +60,9 @@ type CommitResult struct {
 	CommitHash string
 	// Message is the commit message used.
 	Message string
+	// SkippedBinaries contains the list of binary files that were skipped.
+	// This is populated when IncludeBinaries is false and binaries are found.
+	SkippedBinaries []string
 }
 
 // GitExecutor abstracts git operations for testing.
@@ -189,17 +192,19 @@ func (*RealGitExecutor) DiffNumstat(repoRoot string, files []string) (string, er
 
 // Committer handles git staging and commit operations for task tracking.
 type Committer struct {
-	changeID    string
-	repoRoot    string
-	gitExecutor GitExecutor
+	changeID        string
+	repoRoot        string
+	gitExecutor     GitExecutor
+	includeBinaries bool
 }
 
 // NewCommitter creates a new Committer for the specified change.
-func NewCommitter(changeID, repoRoot string) *Committer {
+func NewCommitter(changeID, repoRoot string, includeBinaries bool) *Committer {
 	return &Committer{
-		changeID:    changeID,
-		repoRoot:    repoRoot,
-		gitExecutor: &RealGitExecutor{},
+		changeID:        changeID,
+		repoRoot:        repoRoot,
+		gitExecutor:     &RealGitExecutor{},
+		includeBinaries: includeBinaries,
 	}
 }
 
@@ -207,25 +212,37 @@ func NewCommitter(changeID, repoRoot string) *Committer {
 // This is primarily used for testing with mock implementations.
 func NewCommitterWithExecutor(
 	changeID, repoRoot string,
+	includeBinaries bool,
 	executor GitExecutor,
 ) *Committer {
 	return &Committer{
-		changeID:    changeID,
-		repoRoot:    repoRoot,
-		gitExecutor: executor,
+		changeID:        changeID,
+		repoRoot:        repoRoot,
+		gitExecutor:     executor,
+		includeBinaries: includeBinaries,
 	}
 }
 
 // Commit stages all modified files (excluding task files) and creates a commit.
 // Returns CommitResult with NoFiles=true if only task files were modified.
 // Returns a GitCommitError if git operations fail.
+// When IncludeBinaries is false, binary files are excluded and listed in
+// SkippedBinaries.
 func (c *Committer) Commit(taskID string, action Action) (CommitResult, error) {
 	modifiedFiles, err := c.getModifiedFiles()
 	if err != nil {
 		return CommitResult{}, &specterrs.GitCommitError{Err: err}
 	}
 
-	filesToStage := filterTaskFiles(modifiedFiles)
+	// First filter out task files
+	filesWithoutTasks := filterTaskFiles(modifiedFiles)
+
+	// Then filter out binary files if not including them
+	filesToStage, skippedBinaries, err := c.filterFiles(filesWithoutTasks)
+	if err != nil {
+		return CommitResult{}, &specterrs.GitCommitError{Err: err}
+	}
+
 	if len(filesToStage) == 0 {
 		return CommitResult{
 			NoFiles: true,
@@ -235,6 +252,7 @@ func (c *Committer) Commit(taskID string, action Action) (CommitResult, error) {
 				action.String(),
 				taskID,
 			),
+			SkippedBinaries: skippedBinaries,
 		}, nil
 	}
 
@@ -249,10 +267,40 @@ func (c *Committer) Commit(taskID string, action Action) (CommitResult, error) {
 	}
 
 	return CommitResult{
-		NoFiles:    false,
-		CommitHash: hash,
-		Message:    message,
+		NoFiles:         false,
+		CommitHash:      hash,
+		Message:         message,
+		SkippedBinaries: skippedBinaries,
 	}, nil
+}
+
+// filterFiles filters out binary files if IncludeBinaries is false.
+// Returns the filtered file list and a list of skipped binary files.
+func (c *Committer) filterFiles(files []string) ([]string, []string, error) {
+	if c.includeBinaries || len(files) == 0 {
+		return files, nil, nil
+	}
+
+	// Detect binary files
+	binaryFiles, err := c.getBinaryFiles(files)
+	if err != nil {
+		// If we can't detect binaries, proceed with all files
+		// This is a non-fatal error
+		return files, nil, nil
+	}
+
+	var filtered []string
+	var skipped []string
+
+	for _, file := range files {
+		if binaryFiles[file] {
+			skipped = append(skipped, file)
+		} else {
+			filtered = append(filtered, file)
+		}
+	}
+
+	return filtered, skipped, nil
 }
 
 // getModifiedFiles returns a list of modified files in the working tree.

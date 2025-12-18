@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
@@ -46,7 +47,11 @@ func New(config Config) (*Tracker, error) {
 		return nil, err
 	}
 
-	committer := NewCommitter(config.ChangeID, config.RepoRoot)
+	committer := NewCommitter(
+		config.ChangeID,
+		config.RepoRoot,
+		config.IncludeBinaries,
+	)
 
 	return &Tracker{
 		changeID:      config.ChangeID,
@@ -217,6 +222,14 @@ func (t *Tracker) commitTransition(taskID string, action Action) error {
 	} else {
 		hash := result.CommitHash[:7]
 		t.printf("  Task %s: %s [%s]\n", taskID, action.String(), hash)
+	}
+
+	// Display warning about skipped binary files
+	if len(result.SkippedBinaries) > 0 {
+		t.printf(
+			"  Warning: Skipped binary files: %s\n",
+			strings.Join(result.SkippedBinaries, ", "),
+		)
 	}
 
 	return nil

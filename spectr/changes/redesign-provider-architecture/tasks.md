@@ -2,18 +2,36 @@
 
 These tasks establish the new architecture without breaking the existing code.
 
-- [ ] 1.1 Create `internal/initialize/providers/initializer.go` with new `Initializer` interface including `Init(ctx, fs, cfg, templateManager)` and `IsSetup(fs, cfg)` methods
-- [ ] 1.2 Create `internal/initialize/providers/config.go` with `Config` struct containing `SpectrDir` field
+- [ ] 1.1 Create `internal/initialize/providers/initializer.go` with new `Initializer` interface including:
+  - `Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error`
+  - `IsSetup(fs afero.Fs, cfg *Config) bool`
+  - `Path() string` (for deduplication)
+  - `IsGlobal() bool` (true = use globalFs, false = use projectFs)
+- [ ] 1.2 Create `internal/initialize/providers/config.go` with `Config` struct containing:
+  - `SpectrDir string` field
+  - `SpecsDir() string` method (returns SpectrDir + "/specs")
+  - `ChangesDir() string` method (returns SpectrDir + "/changes")
+  - `ProjectFile() string` method (returns SpectrDir + "/project.md")
+  - `AgentsFile() string` method (returns SpectrDir + "/AGENTS.md")
 - [ ] 1.3 Create `internal/initialize/providers/provider_new.go` with new minimal `Provider` interface returning `[]Initializer`
 - [ ] 1.4 Create `internal/initialize/providers/registration.go` with `Registration` struct (ID, Name, Priority, Provider) and new registration API
 
 ## 2. Built-in Initializers
 
-Create the three composable initializers that providers will use.
+Create the three composable initializers that providers will use. Each must implement `Path()` and `IsGlobal()`.
 
-- [ ] 2.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer` that accepts `afero.Fs` and creates directory paths
-- [ ] 2.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer` that accepts `afero.Fs` and `*TemplateManager` for marker-based instruction file updates
-- [ ] 2.3 Create `internal/initialize/providers/initializers/slashcmds.go` with `SlashCommandsInitializer` supporting both Markdown and TOML formats, receiving `*TemplateManager` for template rendering
+- [ ] 2.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer`:
+  - Implements `Init()`, `IsSetup()`, `Path()`, `IsGlobal()`
+  - Accepts directory path(s) and isGlobal flag
+  - Creates directories with `MkdirAll`
+- [ ] 2.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`:
+  - Implements `Init()`, `IsSetup()`, `Path()`, `IsGlobal()`
+  - Uses `*TemplateManager` for marker-based instruction file updates
+  - Handles both create and update scenarios
+- [ ] 2.3 Create `internal/initialize/providers/initializers/slashcmds.go` with `SlashCommandsInitializer`:
+  - Implements `Init()`, `IsSetup()`, `Path()`, `IsGlobal()`
+  - Supports both Markdown and TOML formats
+  - Receives `*TemplateManager` for template rendering
 - [ ] 2.4 Add unit tests for `DirectoryInitializer` with `afero.MemMapFs`
 - [ ] 2.5 Add unit tests for `ConfigFileInitializer` with `afero.MemMapFs` - test create and marker update scenarios
 - [ ] 2.6 Add unit tests for `SlashCommandsInitializer` with `afero.MemMapFs` - test Markdown and TOML formats
@@ -28,15 +46,17 @@ Replace the old registry with metadata-separated registration.
 - [ ] 3.4 Add duplicate ID rejection with clear error messages
 - [ ] 3.5 Add unit tests for new registry: registration, retrieval, priority sorting, duplicate rejection
 
-## 4. Git Diff Integration for Change Detection
+## 4. Git Integration for Change Detection
 
-Implement git-based file change detection to replace `GetFilePaths()` declarations.
+Implement git-based file change detection to replace `GetFilePaths()` declarations. Require git repository.
 
 - [ ] 4.1 Create `internal/initialize/git/detector.go` with `ChangeDetector` type
-- [ ] 4.2 Implement `Snapshot() (string, error)` method to capture git working tree state (using `git stash create` or staging area comparison)
-- [ ] 4.3 Implement `ChangedFiles(beforeSnapshot string) ([]string, error)` method using `git diff --name-only`
-- [ ] 4.4 Handle edge cases: untracked files, not a git repo, dirty working tree
-- [ ] 4.5 Add unit tests for `ChangeDetector` mocking git commands
+- [ ] 4.2 Implement `IsGitRepo(path string) bool` function for early validation
+- [ ] 4.3 Implement `Snapshot() (string, error)` method to capture git working tree state (using `git stash create` or staging area comparison)
+- [ ] 4.4 Implement `ChangedFiles(beforeSnapshot string) ([]string, error)` method using `git diff --name-only`
+- [ ] 4.5 Handle edge cases: untracked files (use `git status --porcelain`), dirty working tree
+- [ ] 4.6 Add clear error message for non-git repos: "spectr init requires a git repository. Run 'git init' first."
+- [ ] 4.7 Add unit tests for `ChangeDetector` mocking git commands
 
 ## 5. Migrate Providers (In-Place Replacement)
 
@@ -61,15 +81,27 @@ Migrate each provider to the new interface, deleting old code as each migration 
 
 ## 6. Executor Integration
 
-Update executor to use new architecture with `afero.Fs` and initializer deduplication.
+Update executor to use new architecture with dual filesystem, ordering, and deduplication.
 
-- [ ] 6.1 Update `executor.go` to create `afero.NewBasePathFs(osFs, projectPath)` filesystem
-- [ ] 6.2 Update `executor.go` to use new registry API (`Registration` based retrieval)
-- [ ] 6.3 Implement initializer collection from selected providers
-- [ ] 6.4 Implement initializer deduplication logic based on type + config key
-- [ ] 6.5 Update `configureProviders()` to run initializers with `Init(ctx, fs, cfg, templateManager)` signature
-- [ ] 6.6 Integrate `git.ChangeDetector` for file change reporting (replace `GetFilePaths()` usage)
-- [ ] 6.7 Update `ExecutionResult` to use git-detected changed files instead of declared paths
+- [ ] 6.1 Create dual filesystem in `executor.go`:
+  - `projectFs := afero.NewBasePathFs(osFs, projectPath)` for project-relative paths
+  - `globalFs := afero.NewBasePathFs(osFs, os.UserHomeDir())` for global paths
+- [ ] 6.2 Add git repo check at start of `Init()`:
+  - Call `git.IsGitRepo(projectPath)`
+  - Return clear error if not a git repo
+- [ ] 6.3 Update `executor.go` to use new registry API (`Registration` based retrieval)
+- [ ] 6.4 Implement initializer collection from selected providers
+- [ ] 6.5 Implement initializer deduplication by `Path()` - same path = run once
+- [ ] 6.6 Implement initializer sorting by type (guaranteed order):
+  - 1. `DirectoryInitializer`
+  - 2. `ConfigFileInitializer`
+  - 3. `SlashCommandsInitializer`
+- [ ] 6.7 Update `configureProviders()` to:
+  - Select `projectFs` or `globalFs` based on `initializer.IsGlobal()`
+  - Call `Init(ctx, fs, cfg, templateManager)` on each initializer
+- [ ] 6.8 Integrate `git.ChangeDetector` for file change reporting (replace `GetFilePaths()` usage)
+- [ ] 6.9 Update `ExecutionResult` to use git-detected changed files instead of declared paths
+- [ ] 6.10 Handle partial failures: report which initializers failed, continue with rest
 
 ## 7. Remove Old Provider Code (In-Place Cleanup)
 
@@ -103,8 +135,11 @@ Ensure everything works end-to-end.
 
 - [ ] 9.1 Run `go build ./...` to verify no compilation errors
 - [ ] 9.2 Run `go test ./...` to verify all tests pass
-- [ ] 9.3 Manual test: `spectr init` with Claude Code provider
-- [ ] 9.4 Manual test: `spectr init` with multiple providers (verify deduplication)
-- [ ] 9.5 Manual test: `spectr init` with Gemini provider (verify TOML format)
-- [ ] 9.6 Verify git diff shows expected file changes after init
-- [ ] 9.7 Update CLI help text for `spectr init` if needed
+- [ ] 9.3 Manual test: `spectr init` in non-git directory (verify early fail with clear error)
+- [ ] 9.4 Manual test: `spectr init` with Claude Code provider
+- [ ] 9.5 Manual test: `spectr init` with multiple providers (verify deduplication)
+- [ ] 9.6 Manual test: `spectr init` with Gemini provider (verify TOML format)
+- [ ] 9.7 Manual test: Provider with global path (verify globalFs usage)
+- [ ] 9.8 Verify git diff shows expected file changes after init
+- [ ] 9.9 Verify initializer ordering (directories created before files)
+- [ ] 9.10 Update CLI help text for `spectr init` if needed

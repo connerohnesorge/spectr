@@ -8,6 +8,10 @@ Spectr supports 17 AI CLI/IDE tools (Claude Code, Cursor, Cline, etc.) through a
 
 The current implementation has each provider implement a 12-method interface, with most embedding `BaseProvider`. This leads to ~50 lines of boilerplate per provider when the actual variance is just configuration values.
 
+## Scope
+
+**Minimal viable refactor**: Reduce boilerplate while keeping behavior identical. No new features.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -16,11 +20,14 @@ The current implementation has each provider implement a 12-method interface, wi
 - Improve testability of initialization steps
 - Maintain support for all 17 current providers
 - Use `afero.Fs` rooted at project for cleaner path handling
+- Require git repository for change detection
 
 **Non-Goals:**
 - Runtime plugin loading (all providers compiled in)
 - Backwards compatibility with existing configurations
-- Ordered initializer dependencies
+- Rollback on partial failure
+- Support for non-git projects
+- New instruction file formats (separate proposal)
 
 ## Decisions
 
@@ -34,18 +41,41 @@ type Provider interface {
 }
 
 type Initializer interface {
-    Init(ctx context.Context, fs afero.Fs, cfg *Config) error
+    // Init creates or updates files. Returns error if initialization fails.
+    // Must be idempotent (safe to run multiple times).
+    Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error
+
+    // IsSetup returns true if this initializer's artifacts already exist.
     IsSetup(fs afero.Fs, cfg *Config) bool
+
+    // Path returns the file/directory path this initializer manages.
+    // Used for deduplication: same path = run once.
+    Path() string
+
+    // IsGlobal returns true if this initializer uses globalFs instead of projectFs.
+    IsGlobal() bool
 }
 
 type Config struct {
     SpectrDir string // e.g., "spectr" (relative to fs root)
 }
+
+// Derived paths (computed, not stored):
+// - SpecsDir:    cfg.SpectrDir + "/specs"
+// - ChangesDir:  cfg.SpectrDir + "/changes"
+// - ProjectFile: cfg.SpectrDir + "/project.md"
+// - AgentsFile:  cfg.SpectrDir + "/AGENTS.md"
+
+func (c *Config) SpecsDir() string    { return c.SpectrDir + "/specs" }
+func (c *Config) ChangesDir() string  { return c.SpectrDir + "/changes" }
+func (c *Config) ProjectFile() string { return c.SpectrDir + "/project.md" }
+func (c *Config) AgentsFile() string  { return c.SpectrDir + "/AGENTS.md" }
 ```
 
 **Alternatives considered:**
 - Keep metadata in Provider interface (current design) - More boilerplate
 - Use functional options pattern - Harder to test
+- Store all paths in Config - Redundant, error-prone
 
 ### 2. Registration API
 
@@ -82,15 +112,28 @@ func NewSlashCommandsInitializer(dir, ext string, format CommandFormat) Initiali
 
 ### 4. Filesystem Abstraction
 
-**Decision**: Use `afero.NewBasePathFs(osFs, projectPath)` so all paths are project-relative.
+**Decision**: Use two filesystem instances to support both project-relative and global paths.
 
 ```go
-// Instead of: "/home/user/project/CLAUDE.md"
-// Use:        "CLAUDE.md"
-fs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+// Project-relative filesystem (for CLAUDE.md, .claude/commands/, etc.)
+projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+
+// Global filesystem (for ~/.config/tool/commands/, etc.)
+globalFs := afero.NewBasePathFs(afero.NewOsFs(), os.UserHomeDir())
+
+// Executor provides both to initializers based on IsGlobal()
+type ExecutorContext struct {
+    ProjectFs afero.Fs
+    GlobalFs  afero.Fs
+    Config    *Config
+    Templates *TemplateManager
+}
 ```
 
-**Rationale**: Cleaner paths, easier testing with `afero.MemMapFs`.
+**Rationale**:
+- Project paths are cleaner and easier to test
+- Global paths support tools like Aider that use ~/.config/
+- Initializers declare via `IsGlobal()` which fs to use
 
 ### 5. File Change Detection
 
@@ -148,7 +191,42 @@ func (p *GeminiProvider) Initializers(ctx context.Context) []Initializer {
 }
 ```
 
-## Initializer Deduplication
+### 8. Initializer Ordering (Documented Guarantee)
+
+**Decision**: Initializers are sorted by type before execution. This is a documented guarantee.
+
+```go
+// Execution order (guaranteed):
+// 1. DirectoryInitializer   - Create directories first
+// 2. ConfigFileInitializer  - Then config files (may need directories)
+// 3. SlashCommandsInitializer - Then slash commands (may need directories)
+
+func sortInitializers(all []Initializer) []Initializer {
+    sort.SliceStable(all, func(i, j int) bool {
+        return initializerPriority(all[i]) < initializerPriority(all[j])
+    })
+    return all
+}
+
+func initializerPriority(init Initializer) int {
+    switch init.(type) {
+    case *DirectoryInitializer:
+        return 1
+    case *ConfigFileInitializer:
+        return 2
+    case *SlashCommandsInitializer:
+        return 3
+    default:
+        return 99
+    }
+}
+```
+
+**Rationale**: Directories must exist before files can be written. This ordering is implicit but guaranteed.
+
+### 9. Initializer Deduplication
+
+**Decision**: Deduplicate by file path. Same path = run once.
 
 When initializers are collected from multiple providers:
 
@@ -157,7 +235,7 @@ func dedupeInitializers(all []Initializer) []Initializer {
     seen := make(map[string]bool)
     var result []Initializer
     for _, init := range all {
-        key := initializerKey(init) // Based on type + config
+        key := init.Path() // Simple: just the path
         if !seen[key] {
             seen[key] = true
             result = append(result, init)
@@ -167,13 +245,37 @@ func dedupeInitializers(all []Initializer) []Initializer {
 }
 ```
 
+**Example**: If Claude Code and Cline both return `ConfigFileInitializer{path: "CLAUDE.md"}`, only one runs.
+
+**Rationale**: Path-based deduplication is simple and covers the common case (multiple providers sharing same file).
+
+### 10. Git Requirement
+
+**Decision**: Require git repository. Fail early with clear error.
+
+```go
+func (e *Executor) Init(ctx context.Context) error {
+    // Check git repo at start - fail fast
+    if !isGitRepo(e.projectPath) {
+        return fmt.Errorf(
+            "spectr init requires a git repository for change detection.\n" +
+            "Run 'git init' first, then retry 'spectr init'.",
+        )
+    }
+    // ... proceed with initialization
+}
+```
+
+**Rationale**: Git is required for spectr's proposal workflow anyway. Simplifies change detection.
+
 ## Risks / Trade-offs
 
 | Risk | Mitigation |
 |------|------------|
 | Breaking change for users | Clear migration docs; `spectr init` re-run required |
-| Loss of file path metadata | Use git diff; add `spectr init --dry-run` if needed |
-| Initializer key collisions | Use deterministic key generation (type + sorted config) |
+| Git requirement | Clear error message with instructions; spectr assumes git anyway |
+| Path-based dedup misses edge cases | Simple first; can enhance if needed |
+| No rollback on failure | Clear error reporting; users can re-run init |
 
 ## Migration Plan
 
@@ -236,7 +338,18 @@ func (d *ChangeDetector) ChangedFiles(before string) ([]string, error) {
 - Requires git repo (graceful degradation for non-git projects)
 - Slightly more complex executor flow
 
-## Open Questions
+## Resolved Questions
 
-- Should `spectr init --dry-run` be added to preview changes without applying?
-- Should initializers support rollback on partial failure?
+| Question | Decision |
+|----------|----------|
+| How to handle non-git projects? | Require git, fail early with clear error |
+| Initializer ordering? | Implicit ordering by type (Directory → ConfigFile → SlashCommands) |
+| Rollback on partial failure? | No rollback; report failures, users re-run init |
+| Template variable location? | Derived from SpectrDir via methods |
+| Global paths support? | Two fs instances (projectFs, globalFs) |
+| Deduplication key? | By file path (simple and effective) |
+
+## Future Considerations (Out of Scope)
+
+- `spectr init --dry-run` to preview changes without applying
+- New instruction file support for Gemini, Cursor, Aider, OpenCode (separate proposal)

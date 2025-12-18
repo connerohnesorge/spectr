@@ -72,6 +72,10 @@ type GitExecutor interface {
 	Commit(repoRoot string, message string) error
 	// RevParse runs `git rev-parse` and returns the result.
 	RevParse(repoRoot string, ref string) (string, error)
+	// DiffNumstat runs `git diff --numstat` for the specified files.
+	// Returns output showing lines added/deleted per file.
+	// Binary files show as "-\t-\t<filename>".
+	DiffNumstat(repoRoot string, files []string) (string, error)
 }
 
 // RealGitExecutor implements GitExecutor using actual git commands.
@@ -157,6 +161,30 @@ func (*RealGitExecutor) RevParse(repoRoot, ref string) (string, error) {
 	}
 
 	return strings.TrimSpace(string(output)), nil
+}
+
+// DiffNumstat runs `git diff --numstat` for the specified files.
+// This is used to detect binary files, which show as "-\t-\t<filename>".
+func (*RealGitExecutor) DiffNumstat(repoRoot string, files []string) (string, error) {
+	// Use git diff --numstat to get line counts for each file.
+	// Binary files will show "-" for both additions and deletions.
+	args := []string{gitRepoFlag, repoRoot, "diff", "--numstat", "--"}
+	args = append(args, files...)
+
+	cmd := exec.Command(gitCmd, args...)
+	output, err := cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return "", fmt.Errorf(
+				"git diff --numstat failed: %s",
+				strings.TrimSpace(string(exitErr.Stderr)),
+			)
+		}
+
+		return "", fmt.Errorf("failed to run git diff --numstat: %w", err)
+	}
+
+	return string(output), nil
 }
 
 // Committer handles git staging and commit operations for task tracking.
@@ -293,6 +321,47 @@ func isTaskFile(name string) bool {
 	}
 
 	return false
+}
+
+// detectBinaryFiles identifies which files from the given list are binary files.
+// It uses git diff --numstat output where binary files show as "-\t-\t<filename>".
+// Returns a map of binary file paths for O(1) lookup.
+func parseBinaryFilesFromNumstat(numstatOutput string) map[string]bool {
+	binaryFiles := make(map[string]bool)
+	lines := strings.Split(numstatOutput, "\n")
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		// Binary files in numstat output format: "-\t-\t<filename>"
+		// Text files show: "<added>\t<deleted>\t<filename>"
+		parts := strings.Split(line, "\t")
+		if len(parts) >= 3 && parts[0] == "-" && parts[1] == "-" {
+			// This is a binary file
+			filename := parts[2]
+			binaryFiles[filename] = true
+		}
+	}
+
+	return binaryFiles
+}
+
+// getBinaryFiles returns a set of binary files from the given file list.
+// Uses git diff --numstat to detect binary files.
+func (c *Committer) getBinaryFiles(files []string) (map[string]bool, error) {
+	if len(files) == 0 {
+		return make(map[string]bool), nil
+	}
+
+	output, err := c.gitExecutor.DiffNumstat(c.repoRoot, files)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseBinaryFilesFromNumstat(output), nil
 }
 
 // stageFiles stages the specified files for commit.

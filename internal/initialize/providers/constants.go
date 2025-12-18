@@ -1,6 +1,6 @@
 package providers
 
-import "path/filepath"
+import "strings"
 
 // Priority constants for all providers.
 // Lower numbers = higher priority (displayed first).
@@ -22,6 +22,37 @@ const (
 	PriorityCrush       = 16
 )
 
+// File and directory permission constants.
+const (
+	dirPerm  = 0o755
+	filePerm = 0o644
+)
+
+// Marker constants for managing config file updates.
+const (
+	SpectrStartMarker = "<!-- spectr:START -->"
+	SpectrEndMarker   = "<!-- spectr:END -->"
+)
+
+// Common strings.
+const (
+	newline       = "\n"
+	newlineDouble = "\n\n"
+)
+
+// findMarkerIndex finds the index of a marker in content, starting from offset.
+func findMarkerIndex(content, marker string, offset int) int {
+	if offset >= len(content) {
+		return -1
+	}
+	idx := strings.Index(content[offset:], marker)
+	if idx == -1 {
+		return -1
+	}
+
+	return offset + idx
+}
+
 // default frontmatter templates for slash commands.
 var (
 	// FrontmatterProposal is the YAML frontmatter for proposal commands.
@@ -34,51 +65,3 @@ description: Scaffold a new Spectr change and validate strictly.
 description: Implement an approved Spectr change and keep tasks in sync.
 ---`
 )
-
-// StandardFrontmatter returns the standard frontmatter map for most providers.
-func StandardFrontmatter() map[string]string {
-	return map[string]string{
-		"proposal": FrontmatterProposal,
-		"apply":    FrontmatterApply,
-	}
-}
-
-// StandardCommandPaths returns the standard command paths for a given
-// directory and extension.
-// Uses subdirectory structure: {dir}/spectr/{command}{ext}
-// Example: ".claude/commands", ".md" -> ".claude/commands/spectr/proposal.md"
-// Returns proposalPath, applyPath.
-func StandardCommandPaths(
-	dir, ext string,
-) (proposalPath, applyPath string) {
-	spectrDir := filepath.Join(dir, "spectr")
-	proposalPath = filepath.Join(
-		spectrDir,
-		"proposal"+ext,
-	)
-	applyPath = filepath.Join(
-		spectrDir,
-		"apply"+ext,
-	)
-
-	return proposalPath, applyPath
-}
-
-// PrefixedCommandPaths returns command paths using a flat prefix pattern.
-// Uses flat structure: {dir}/spectr-{command}{ext}
-// Example: ".agent/workflows", ".md" -> ".agent/workflows/spectr-proposal.md"
-// Returns proposalPath, applyPath.
-func PrefixedCommandPaths(
-	dir, ext string,
-) (proposalPath, applyPath string) {
-	proposalPath = filepath.Join(
-		dir,
-		"spectr-proposal"+ext,
-	)
-	applyPath = filepath.Join(
-		dir,
-		"spectr-apply"+ext,
-	)
-
-	return proposalPath, applyPath
-}

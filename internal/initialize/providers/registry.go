@@ -1,3 +1,38 @@
+// Package providers defines the core interfaces for the provider architecture.
+//
+// This file contains the provider registry that uses the Registration struct
+// for metadata. Providers are registered with their metadata (ID, Name, Priority)
+// and can be retrieved by ID or as a sorted list.
+//
+// # Global Registry
+//
+// The global registry provides thread-safe registration and retrieval of providers:
+//
+//	// Register a provider in init()
+//	func init() {
+//	    err := providers.RegisterV2(Registration{
+//	        ID:       "claude-code",
+//	        Name:     "Claude Code",
+//	        Priority: 1,
+//	        Provider: &ClaudeProvider{},
+//	    })
+//	    if err != nil {
+//	        panic(err)
+//	    }
+//	}
+//
+//	// Get a specific provider
+//	reg := providers.GetV2("claude-code")
+//
+//	// Get all providers sorted by priority
+//	allRegs := providers.AllV2()
+//
+// # Instance-Based Registry
+//
+// For testing or isolated use cases, create a RegistryV2 instance:
+//
+//	r := providers.NewRegistryV2()
+//	err := r.Register(Registration{...})
 package providers
 
 import (
@@ -7,203 +42,226 @@ import (
 	"sync"
 )
 
-// registry is the global provider registry.
+// registryV2 is the global provider registry for the new architecture.
 var (
-	registry     = make(map[string]Provider)
-	registryLock sync.RWMutex
+	registryV2     = make(map[string]Registration)
+	registryLockV2 sync.RWMutex
 )
 
-// Register adds a provider to the global registry.
+// RegisterV2 adds a provider registration to the global registry.
+//
 // This is typically called from init() in each provider file.
-// Panics if a provider with the same ID is already registered.
-func Register(p Provider) {
-	registryLock.Lock()
-	defer registryLock.Unlock()
-
-	if _, exists := registry[p.ID()]; exists {
-		panic(
-			fmt.Sprintf(
-				"provider %q already registered",
-				p.ID(),
-			),
-		)
+// Returns an error if:
+//   - The registration is invalid (empty ID, Name, or nil Provider)
+//   - A provider with the same ID is already registered
+//
+// Example:
+//
+//	func init() {
+//	    err := providers.RegisterV2(Registration{
+//	        ID:       "claude-code",
+//	        Name:     "Claude Code",
+//	        Priority: 1,
+//	        Provider: &ClaudeProvider{},
+//	    })
+//	    if err != nil {
+//	        panic(err)
+//	    }
+//	}
+func RegisterV2(r Registration) error {
+	if err := r.Validate(); err != nil {
+		return fmt.Errorf("invalid registration: %w", err)
 	}
 
-	registry[p.ID()] = p
+	registryLockV2.Lock()
+	defer registryLockV2.Unlock()
+
+	if _, exists := registryV2[r.ID]; exists {
+		return fmt.Errorf("provider %q: %w", r.ID, ErrDuplicateID)
+	}
+
+	registryV2[r.ID] = r
+
+	return nil
 }
 
-// Get retrieves a provider by its ID.
-// Returns nil if the provider is not found.
-func Get(id string) Provider {
-	registryLock.RLock()
-	defer registryLock.RUnlock()
+// GetV2 retrieves a registration by its ID from the global registry.
+//
+// Returns nil if no provider with the given ID is registered.
+func GetV2(id string) *Registration {
+	registryLockV2.RLock()
+	defer registryLockV2.RUnlock()
 
-	return registry[id]
+	if r, exists := registryV2[id]; exists {
+		return &r
+	}
+
+	return nil
 }
 
-// All returns all registered providers sorted by priority.
-func All() []Provider {
-	registryLock.RLock()
-	defer registryLock.RUnlock()
+// AllV2 returns all registrations from the global registry sorted by priority.
+//
+// Lower priority values appear first in the returned slice.
+// This maintains backwards-compatible behavior with the old registry.
+func AllV2() []Registration {
+	registryLockV2.RLock()
+	defer registryLockV2.RUnlock()
 
-	providers := make(
-		[]Provider,
+	registrations := make(
+		[]Registration,
 		0,
-		len(registry),
+		len(registryV2),
 	)
-	for _, p := range registry {
-		providers = append(providers, p)
+	for _, r := range registryV2 {
+		registrations = append(registrations, r)
 	}
 
-	sort.Slice(providers, func(i, j int) bool {
-		return providers[i].Priority() < providers[j].Priority()
+	sort.Slice(registrations, func(i, j int) bool {
+		return registrations[i].Priority < registrations[j].Priority
 	})
 
-	return providers
+	return registrations
 }
 
-// IDs returns all registered provider IDs sorted by priority.
-func IDs() []string {
-	providers := All()
-	ids := make([]string, len(providers))
-	for i, p := range providers {
-		ids[i] = p.ID()
+// IDsV2 returns all registered provider IDs from the global registry
+// sorted by priority.
+//
+// Lower priority values appear first in the returned slice.
+func IDsV2() []string {
+	registrations := AllV2()
+	ids := make([]string, len(registrations))
+	for i, r := range registrations {
+		ids[i] = r.ID
 	}
 
 	return ids
 }
 
-// Count returns the number of registered providers.
-func Count() int {
-	registryLock.RLock()
-	defer registryLock.RUnlock()
+// CountV2 returns the number of providers in the global registry.
+func CountV2() int {
+	registryLockV2.RLock()
+	defer registryLockV2.RUnlock()
 
-	return len(registry)
+	return len(registryV2)
 }
 
-// WithConfigFile returns all providers that have an instruction file,
-// sorted by priority.
-func WithConfigFile() []Provider {
-	registryLock.RLock()
-	defer registryLock.RUnlock()
+// ResetV2 clears the global registry.
+//
+// This function should only be used in tests.
+func ResetV2() {
+	registryLockV2.Lock()
+	defer registryLockV2.Unlock()
 
-	var providers []Provider
-	for _, p := range registry {
-		if p.HasConfigFile() {
-			providers = append(providers, p)
-		}
-	}
-
-	sort.Slice(providers, func(i, j int) bool {
-		return providers[i].Priority() < providers[j].Priority()
-	})
-
-	return providers
+	registryV2 = make(map[string]Registration)
 }
 
-// WithSlashCommands returns all providers that have slash commands,
-// sorted by priority.
-func WithSlashCommands() []Provider {
-	registryLock.RLock()
-	defer registryLock.RUnlock()
-
-	var providers []Provider
-	for _, p := range registry {
-		if p.HasSlashCommands() {
-			providers = append(providers, p)
-		}
-	}
-
-	sort.Slice(providers, func(i, j int) bool {
-		return providers[i].Priority() < providers[j].Priority()
-	})
-
-	return providers
-}
-
-// Reset clears the global registry. Only use in tests.
-func Reset() {
-	registryLock.Lock()
-	defer registryLock.Unlock()
-
-	registry = make(map[string]Provider)
-}
-
-// Registry provides an instance-based registry for cases where
+// RegistryV2 provides an instance-based registry for cases where
 // global state is not desired (e.g., testing).
-type Registry struct {
-	providers map[string]Provider
+//
+// Unlike the global registry functions, RegistryV2 instances are
+// not thread-safe. If you need thread-safety, use the global
+// registry functions (RegisterV2, GetV2, AllV2, etc.).
+type RegistryV2 struct {
+	registrations map[string]Registration
 }
 
-// NewRegistry creates a new empty registry.
-func NewRegistry() *Registry {
-	return &Registry{
-		providers: make(map[string]Provider),
+// NewRegistryV2 creates a new empty registry.
+//
+// Example:
+//
+//	r := providers.NewRegistryV2()
+//	err := r.Register(Registration{
+//	    ID:       "test-provider",
+//	    Name:     "Test Provider",
+//	    Priority: 1,
+//	    Provider: &TestProvider{},
+//	})
+func NewRegistryV2() *RegistryV2 {
+	return &RegistryV2{
+		registrations: make(map[string]Registration),
 	}
 }
 
-// NewRegistryFromGlobal creates a registry populated with all globally
-// ) registered providers.
-func NewRegistryFromGlobal() *Registry {
-	r := NewRegistry()
+// NewRegistryV2FromGlobal creates a registry populated with all globally
+// registered providers.
+//
+// This is useful for testing when you want to start with the global
+// providers and potentially add or override some.
+func NewRegistryV2FromGlobal() *RegistryV2 {
+	r := NewRegistryV2()
 
-	registryLock.RLock()
-	defer registryLock.RUnlock()
+	registryLockV2.RLock()
+	defer registryLockV2.RUnlock()
 
-	maps.Copy(r.providers, registry)
+	maps.Copy(r.registrations, registryV2)
 
 	return r
 }
 
-// Register adds a provider to this registry.
-func (r *Registry) Register(p Provider) error {
-	if _, exists := r.providers[p.ID()]; exists {
-		return fmt.Errorf(
-			"provider %q already registered",
-			p.ID(),
-		)
+// Register adds a provider registration to this registry.
+//
+// Returns an error if:
+//   - The registration is invalid (empty ID, Name, or nil Provider)
+//   - A provider with the same ID is already registered
+func (r *RegistryV2) Register(reg Registration) error {
+	if err := reg.Validate(); err != nil {
+		return fmt.Errorf("invalid registration: %w", err)
 	}
 
-	r.providers[p.ID()] = p
+	if _, exists := r.registrations[reg.ID]; exists {
+		return fmt.Errorf("provider %q: %w", reg.ID, ErrDuplicateID)
+	}
+
+	r.registrations[reg.ID] = reg
 
 	return nil
 }
 
-// Get retrieves a provider by its ID.
-func (r *Registry) Get(id string) Provider {
-	return r.providers[id]
-}
-
-// All returns all providers in this registry sorted by priority.
-func (r *Registry) All() []Provider {
-	providers := make(
-		[]Provider,
-		0,
-		len(r.providers),
-	)
-	for _, p := range r.providers {
-		providers = append(providers, p)
+// Get retrieves a registration by its ID.
+//
+// Returns nil if no provider with the given ID is registered.
+func (r *RegistryV2) Get(id string) *Registration {
+	if reg, exists := r.registrations[id]; exists {
+		return &reg
 	}
 
-	sort.Slice(providers, func(i, j int) bool {
-		return providers[i].Priority() < providers[j].Priority()
+	return nil
+}
+
+// All returns all registrations in this registry sorted by priority.
+//
+// Lower priority values appear first in the returned slice.
+func (r *RegistryV2) All() []Registration {
+	registrations := make(
+		[]Registration,
+		0,
+		len(r.registrations),
+	)
+	for _, reg := range r.registrations {
+		registrations = append(registrations, reg)
+	}
+
+	sort.Slice(registrations, func(i, j int) bool {
+		return registrations[i].Priority < registrations[j].Priority
 	})
 
-	return providers
+	return registrations
 }
 
 // IDs returns all provider IDs in this registry sorted by priority.
-func (r *Registry) IDs() []string {
-	providers := r.All()
-	ids := make([]string, len(providers))
-	for i, p := range providers {
-		ids[i] = p.ID()
+//
+// Lower priority values appear first in the returned slice.
+func (r *RegistryV2) IDs() []string {
+	registrations := r.All()
+	ids := make([]string, len(registrations))
+	for i, reg := range registrations {
+		ids[i] = reg.ID
 	}
 
 	return ids
 }
 
 // Count returns the number of providers in this registry.
-func (r *Registry) Count() int {
-	return len(r.providers)
+func (r *RegistryV2) Count() int {
+	return len(r.registrations)
 }

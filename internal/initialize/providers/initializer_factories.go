@@ -36,7 +36,7 @@ func NewGlobalDirectoryInitializer(paths ...string) Initializer {
 	}
 }
 
-func (d *directoryInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error {
+func (d *directoryInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager) error {
 	for _, p := range d.paths {
 		if err := fs.MkdirAll(p, 0755); err != nil {
 			return err
@@ -88,10 +88,10 @@ func NewGlobalConfigFileInitializer(path string) Initializer {
 	}
 }
 
-func (c *configFileInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error {
+func (c *configFileInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager) error {
 	// Render the instruction pointer template
 	templateCtx := NewTemplateContext(cfg)
-	content, err := (*tm).RenderInstructionPointer(templateCtx)
+	content, err := tm.RenderInstructionPointer(templateCtx)
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ const (
 	tomlDescriptionApply         = "Implement an approved Spectr change and keep tasks in sync."
 )
 
-func (s *slashCommandsInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error {
+func (s *slashCommandsInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager) error {
 	// Ensure directory exists
 	if err := fs.MkdirAll(s.dir, 0755); err != nil {
 		return err
@@ -253,10 +253,10 @@ func (s *slashCommandsInitializer) Init(ctx context.Context, fs afero.Fs, cfg *C
 	return nil
 }
 
-func (s *slashCommandsInitializer) initCommand(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager, cmd string) error {
+func (s *slashCommandsInitializer) initCommand(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager, cmd string) error {
 	// Render the command template
 	templateCtx := NewTemplateContext(cfg)
-	body, err := (*tm).RenderSlashCommand(cmd, templateCtx)
+	body, err := tm.RenderSlashCommand(cmd, templateCtx)
 	if err != nil {
 		return err
 	}

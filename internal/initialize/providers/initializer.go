@@ -83,7 +83,7 @@ type Initializer interface {
 	// Returns an error if initialization fails. Partial failures should be
 	// avoided - either complete the initialization or return an error without
 	// modifying the filesystem.
-	Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error
+	Init(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager) error
 
 	// IsSetup returns true if this initializer's artifacts already exist.
 	//

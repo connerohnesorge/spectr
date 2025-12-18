@@ -5,17 +5,25 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
+	"github.com/connerohnesorge/spectr/internal/initialize/git"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/spf13/afero"
 )
 
 // InitExecutor handles the actual initialization process
 type InitExecutor struct {
 	projectPath string
 	tm          *TemplateManager
+	// Dual filesystem for project and global paths (Task 6.1)
+	projectFs afero.Fs
+	globalFs  afero.Fs
 }
 
 // NewInitExecutor creates a new initialization executor
@@ -49,9 +57,25 @@ func NewInitExecutor(
 			)
 	}
 
+	// Create dual filesystem (Task 6.1)
+	// Project-relative filesystem (for CLAUDE.md, .claude/commands/, etc.)
+	projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+
+	// Global filesystem (for ~/.config/tool/commands/, etc.)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to get user home directory: %w",
+			err,
+		)
+	}
+	globalFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
+
 	return &InitExecutor{
 		projectPath: projectPath,
 		tm:          tm,
+		projectFs:   projectFs,
+		globalFs:    globalFs,
 	}, nil
 }
 
@@ -64,6 +88,21 @@ func (e *InitExecutor) Execute(
 		CreatedFiles: make([]string, 0),
 		UpdatedFiles: make([]string, 0),
 		Errors:       make([]string, 0),
+	}
+
+	// Task 6.2: Check git repo at start - fail fast
+	if !git.IsGitRepo(e.projectPath) {
+		return nil, git.ErrNotGitRepo
+	}
+
+	// Task 6.8: Take snapshot before initialization for change detection
+	detector := git.NewChangeDetector(e.projectPath)
+	snapshot, err := detector.Snapshot()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to take git snapshot: %w",
+			err,
+		)
 	}
 
 	// 1. Check if Spectr is already initialized
@@ -80,7 +119,7 @@ func (e *InitExecutor) Execute(
 		e.projectPath,
 		"spectr",
 	)
-	err := e.createDirectoryStructure(
+	err = e.createDirectoryStructure(
 		spectrDir,
 		result,
 	)
@@ -115,10 +154,11 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 5. Configure selected providers
+	// 5. Configure selected providers using new architecture (Task 6.7)
+	ctx := context.Background()
 	err = e.configureProviders(
+		ctx,
 		selectedProviderIDs,
-		spectrDir,
 		result,
 	)
 	if err != nil {
@@ -143,6 +183,23 @@ func (e *InitExecutor) Execute(
 				),
 			)
 		}
+	}
+
+	// Task 6.9: Update result with git-detected changed files
+	changedFiles, err := detector.ChangedFiles(snapshot)
+	if err != nil {
+		result.Errors = append(
+			result.Errors,
+			fmt.Sprintf(
+				"failed to detect changed files: %v",
+				err,
+			),
+		)
+	} else {
+		// Replace declared paths with git-detected changes
+		// This gives us the actual files that were modified
+		result.CreatedFiles = changedFiles
+		result.UpdatedFiles = nil // Git status doesn't distinguish, so clear this
 	}
 
 	return result, nil
@@ -286,62 +343,134 @@ func (e *InitExecutor) createAgentsMd(
 	return nil
 }
 
-// configureProviders configures the selected providers using the new interface-driven architecture.
-// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+// configureProviders configures the selected providers using the new initializer-based architecture.
+// Task 6.7: Each provider returns initializers that are collected, deduplicated, sorted, and executed.
 func (e *InitExecutor) configureProviders(
+	ctx context.Context,
 	selectedProviderIDs []string,
-	spectrDir string,
 	result *ExecutionResult,
 ) error {
 	if len(selectedProviderIDs) == 0 {
 		return nil // No providers to configure
 	}
 
-	for _, providerID := range selectedProviderIDs {
-		provider := providers.Get(providerID)
-		if provider == nil {
+	// Task 6.4: Collect initializers from all selected providers
+	allInitializers := e.collectInitializers(ctx, selectedProviderIDs, result)
+
+	// Task 6.5: Deduplicate by Path()
+	dedupedInitializers := dedupeInitializers(allInitializers)
+
+	// Task 6.6: Sort by type (guaranteed order)
+	sortedInitializers := sortInitializers(dedupedInitializers)
+
+	// Create config for initializers
+	cfg := &providers.Config{SpectrDir: "spectr"}
+
+	// Task 6.10: Execute each initializer, handling partial failures
+	var initErrors []string
+	for _, init := range sortedInitializers {
+		// Select appropriate filesystem based on IsGlobal()
+		var fs afero.Fs
+		if init.IsGlobal() {
+			fs = e.globalFs
+		} else {
+			fs = e.projectFs
+		}
+
+		// Run the initializer
+		if err := init.Init(ctx, fs, cfg, e.tm); err != nil {
+			// Task 6.10: Report failure but continue with rest
+			errMsg := fmt.Sprintf(
+				"failed to initialize %s: %v",
+				init.Path(),
+				err,
+			)
+			initErrors = append(initErrors, errMsg)
+			continue
+		}
+	}
+
+	// Add all initialization errors to result
+	result.Errors = append(result.Errors, initErrors...)
+
+	return nil
+}
+
+// collectInitializers collects initializers from all selected providers.
+// Task 6.3 & 6.4: Uses new registry API (Registration-based retrieval)
+func (e *InitExecutor) collectInitializers(
+	ctx context.Context,
+	providerIDs []string,
+	result *ExecutionResult,
+) []providers.Initializer {
+	var all []providers.Initializer
+
+	for _, id := range providerIDs {
+		// Task 6.3: Use GetV2 instead of Get
+		reg := providers.GetV2(id)
+		if reg == nil {
 			result.Errors = append(
 				result.Errors,
 				fmt.Sprintf(
 					"provider %s not found",
-					providerID,
+					id,
 				),
 			)
-
 			continue
 		}
 
-		// Check if already configured
-		wasConfigured := provider.IsConfigured(
-			e.projectPath,
-		)
+		// Get initializers from provider
+		inits := reg.Provider.Initializers(ctx)
+		all = append(all, inits...)
+	}
 
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"failed to configure %s: %v",
-					provider.Name(),
-					err,
-				),
-			)
+	return all
+}
 
-			continue
-		}
+// dedupeInitializers removes duplicate initializers based on their Path().
+// Task 6.5: Same path = run once
+func dedupeInitializers(all []providers.Initializer) []providers.Initializer {
+	seen := make(map[string]bool)
+	var result []providers.Initializer
 
-		// Track created/updated files
-		filePaths := provider.GetFilePaths()
-		if wasConfigured {
-			result.UpdatedFiles = append(
-				result.UpdatedFiles,
-				filePaths...)
-		} else {
-			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
+	for _, init := range all {
+		key := init.Path()
+		if !seen[key] {
+			seen[key] = true
+			result = append(result, init)
 		}
 	}
 
-	return nil
+	return result
+}
+
+// sortInitializers sorts initializers by type to ensure correct execution order.
+// Task 6.6: Guaranteed order - directories first, then config files, then slash commands
+func sortInitializers(all []providers.Initializer) []providers.Initializer {
+	// Create a copy to avoid modifying the input
+	sorted := make([]providers.Initializer, len(all))
+	copy(sorted, all)
+
+	sort.SliceStable(sorted, func(i, j int) bool {
+		return initializerPriority(sorted[i]) < initializerPriority(sorted[j])
+	})
+
+	return sorted
+}
+
+// initializerPriority returns the execution priority for an initializer based on its type.
+// Lower values execute first.
+func initializerPriority(init providers.Initializer) int {
+	switch init.(type) {
+	case *initializers.DirectoryInitializer:
+		return 1
+	case *initializers.ConfigFileInitializer:
+		return 2
+	case *initializers.SlashCommandsInitializer:
+		return 3
+	default:
+		return 99
+	}
 }
 
 // createCIWorkflow creates the .github/workflows/spectr-ci.yml file
@@ -400,7 +529,7 @@ func (e *InitExecutor) createCIWorkflow(
 // FormatNextStepsMessage returns a formatted next steps message for display after initialization
 func FormatNextStepsMessage() string {
 	return `
-────────────────────────────────────────────────────────────────
+--------------------------------------------------------------------
 
 Next steps:
 
@@ -417,6 +546,6 @@ Next steps:
 
    "Review spectr/AGENTS.md and explain how Spectr's change workflow works."
 
-────────────────────────────────────────────────────────────────
+--------------------------------------------------------------------
 `
 }

@@ -1007,12 +1007,12 @@ func TestParseBinaryFilesFromNumstat(t *testing.T) {
 		{
 			name:  "empty input",
 			input: "",
-			want:  map[string]bool{},
+			want:  make(map[string]bool),
 		},
 		{
 			name:  "single text file",
 			input: "10\t5\tsrc/main.go\n",
-			want:  map[string]bool{},
+			want:  make(map[string]bool),
 		},
 		{
 			name:  "single binary file",
@@ -1022,7 +1022,7 @@ func TestParseBinaryFilesFromNumstat(t *testing.T) {
 		{
 			name:  "multiple text files",
 			input: "10\t5\tsrc/main.go\n20\t3\tsrc/utils.go\n1\t1\tREADME.md\n",
-			want:  map[string]bool{},
+			want:  make(map[string]bool),
 		},
 		{
 			name:  "multiple binary files",
@@ -1059,12 +1059,12 @@ func TestParseBinaryFilesFromNumstat(t *testing.T) {
 		{
 			name:  "zero additions and deletions is not binary",
 			input: "0\t0\tempty.txt\n",
-			want:  map[string]bool{},
+			want:  make(map[string]bool),
 		},
 		{
 			name:  "malformed line - too few parts",
 			input: "-\t-\n10\n",
-			want:  map[string]bool{},
+			want:  make(map[string]bool),
 		},
 	}
 
@@ -1108,7 +1108,7 @@ func TestCommitter_getBinaryFiles(t *testing.T) {
 		mock := &MockGitExecutor{}
 		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
-		result, err := c.getBinaryFiles([]string{})
+		result, err := c.getBinaryFiles(nil)
 		if err != nil {
 			t.Fatalf("getBinaryFiles() error = %v", err)
 		}
@@ -1203,7 +1203,7 @@ func TestCommitter_filterFiles_ExcludeBinaries(t *testing.T) {
 		mock := &MockGitExecutor{}
 		c := NewCommitterWithExecutor("test-change", "/repo", false, mock)
 
-		filtered, skipped, err := c.filterFiles([]string{})
+		filtered, skipped, err := c.filterFiles(nil)
 		if err != nil {
 			t.Fatalf("filterFiles() error = %v", err)
 		}
@@ -1382,7 +1382,7 @@ func TestCommitter_filterFiles_IncludeBinaries(t *testing.T) {
 		mock := &MockGitExecutor{}
 		c := NewCommitterWithExecutor("test-change", "/repo", true, mock)
 
-		filtered, skipped, err := c.filterFiles([]string{})
+		filtered, skipped, err := c.filterFiles(nil)
 		if err != nil {
 			t.Fatalf("filterFiles() error = %v", err)
 		}

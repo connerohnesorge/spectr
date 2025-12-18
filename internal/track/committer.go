@@ -1,3 +1,4 @@
+//nolint:revive // file-length-limit: binary detection adds ~50 lines
 package track
 
 import (
@@ -21,6 +22,10 @@ const (
 
 	// minPorcelainLineLen is the minimum length of a git status porcelain line.
 	minPorcelainLineLen = 3
+
+	// minNumstatParts is the minimum number of tab-separated parts in
+	// git diff --numstat output (additions, deletions, filename).
+	minNumstatParts = 3
 )
 
 // taskFiles lists files that should be excluded from staging.
@@ -167,8 +172,11 @@ func (*RealGitExecutor) RevParse(repoRoot, ref string) (string, error) {
 }
 
 // DiffNumstat runs `git diff --numstat` for the specified files.
-// This is used to detect binary files, which show as "-\t-\t<filename>".
-func (*RealGitExecutor) DiffNumstat(repoRoot string, files []string) (string, error) {
+// Binary files show as "-\t-\t<filename>".
+func (*RealGitExecutor) DiffNumstat(
+	repoRoot string,
+	files []string,
+) (string, error) {
 	// Use git diff --numstat to get line counts for each file.
 	// Binary files will show "-" for both additions and deletions.
 	args := []string{gitRepoFlag, repoRoot, "diff", "--numstat", "--"}
@@ -276,7 +284,9 @@ func (c *Committer) Commit(taskID string, action Action) (CommitResult, error) {
 
 // filterFiles filters out binary files if IncludeBinaries is false.
 // Returns the filtered file list and a list of skipped binary files.
-func (c *Committer) filterFiles(files []string) ([]string, []string, error) {
+func (c *Committer) filterFiles(
+	files []string,
+) (filtered []string, skipped []string, err error) {
 	if c.includeBinaries || len(files) == 0 {
 		return files, nil, nil
 	}
@@ -286,11 +296,8 @@ func (c *Committer) filterFiles(files []string) ([]string, []string, error) {
 	if err != nil {
 		// If we can't detect binaries, proceed with all files
 		// This is a non-fatal error
-		return files, nil, nil
+		return files, nil, nil //nolint:nilerr
 	}
-
-	var filtered []string
-	var skipped []string
 
 	for _, file := range files {
 		if binaryFiles[file] {
@@ -371,8 +378,8 @@ func isTaskFile(name string) bool {
 	return false
 }
 
-// detectBinaryFiles identifies which files from the given list are binary files.
-// It uses git diff --numstat output where binary files show as "-\t-\t<filename>".
+// parseBinaryFilesFromNumstat parses git diff --numstat output to identify
+// binary files. Binary files show as "-\t-\t<filename>" in the output.
 // Returns a map of binary file paths for O(1) lookup.
 func parseBinaryFilesFromNumstat(numstatOutput string) map[string]bool {
 	binaryFiles := make(map[string]bool)
@@ -384,11 +391,10 @@ func parseBinaryFilesFromNumstat(numstatOutput string) map[string]bool {
 			continue
 		}
 
-		// Binary files in numstat output format: "-\t-\t<filename>"
-		// Text files show: "<added>\t<deleted>\t<filename>"
+		// Binary files format: "-\t-\t<filename>"
+		// Text files format: "<added>\t<deleted>\t<filename>"
 		parts := strings.Split(line, "\t")
-		if len(parts) >= 3 && parts[0] == "-" && parts[1] == "-" {
-			// This is a binary file
+		if len(parts) >= minNumstatParts && parts[0] == "-" && parts[1] == "-" {
 			filename := parts[2]
 			binaryFiles[filename] = true
 		}

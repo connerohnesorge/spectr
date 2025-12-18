@@ -45,7 +45,8 @@ The system SHALL document all CLI commands with flags, examples, and expected ou
 
 #### Scenario: User learns validate command options
 - **WHEN** a user reads the validate command documentation
-- **THEN** they SHALL understand what validation rules are enforced and that validation is always strict by default
+- **THEN** they SHALL understand that validation always treats warnings as errors
+- **AND** they SHALL see available flags (`--json`, `--type`, `--all`, `--changes`, `--specs`, `--no-interactive`) with explanations
 
 #### Scenario: User learns archive command
 - **WHEN** a user reads the archive command documentation

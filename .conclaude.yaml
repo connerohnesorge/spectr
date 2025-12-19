@@ -115,7 +115,7 @@ preToolUse:
   # Example: ["dist", "build"]
 
   # Prevent editing generated files
-  preventGeneratedFileEdits: true
+  preventGeneratedFileEdits: false
   generatedFileMessage: null
 
 # System notifications

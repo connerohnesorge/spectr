@@ -70,14 +70,13 @@ Migrate each provider to the new interface, deleting old code as each migration 
 - [ ] 5.6 Migrate `codex.go` to new Provider interface - delete old code
 - [ ] 5.7 Migrate `costrict.go` to new Provider interface - delete old code
 - [ ] 5.8 Migrate `qoder.go` to new Provider interface - delete old code
-- [ ] 5.9 Migrate `codebuddy.go` to new Provider interface - delete old code
-- [ ] 5.10 Migrate `qwen.go` to new Provider interface - delete old code
-- [ ] 5.11 Migrate `antigravity.go` to new Provider interface - delete old code
-- [ ] 5.13 Migrate `windsurf.go` to new Provider interface - delete old code
-- [ ] 5.14 Migrate `kilocode.go` to new Provider interface - delete old code
-- [ ] 5.15 Migrate `continue.go` to new Provider interface - delete old code
-- [ ] 5.16 Migrate `crush.go` to new Provider interface - delete old code
-- [ ] 5.17 Migrate `opencode.go` to new Provider interface - delete old code
+- [ ] 5.9 Migrate `qwen.go` to new Provider interface - delete old code
+- [ ] 5.10 Migrate `antigravity.go` to new Provider interface - delete old code
+- [ ] 5.12 Migrate `windsurf.go` to new Provider interface - delete old code
+- [ ] 5.13 Migrate `kilocode.go` to new Provider interface - delete old code
+- [ ] 5.14 Migrate `continue.go` to new Provider interface - delete old code
+- [ ] 5.15 Migrate `crush.go` to new Provider interface - delete old code
+- [ ] 5.16 Migrate `opencode.go` to new Provider interface - delete old code
 
 ## 6. Executor Integration
 

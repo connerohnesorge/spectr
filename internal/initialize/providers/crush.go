@@ -1,32 +1,62 @@
+// Package providers implements the interface-driven provider architecture for
+// AI CLI/IDE/Orchestrator tools.
+//
+// This file implements the Crush provider using the ProviderV2 interface.
+// Crush uses CRUSH.md for instructions and .crush/commands/ for slash commands.
 package providers
 
+import (
+	"context"
+)
+
 func init() {
-	Register(NewCrushProvider())
-}
-
-// CrushProvider implements the Provider interface for Crush.
-// Crush uses CRUSH.md for instructions and .crush/commands/ for slash commands.
-type CrushProvider struct {
-	BaseProvider
-}
-
-// NewCrushProvider creates a new Crush provider.
-func NewCrushProvider() *CrushProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".crush/commands",
-		".md",
-	)
-
-	return &CrushProvider{
-		BaseProvider: BaseProvider{
-			id:            "crush",
-			name:          "Crush",
-			priority:      PriorityCrush,
-			configFile:    "CRUSH.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	// Register with RegistryV2
+	err := RegisterV2(Registration{
+		ID:       "crush",
+		Name:     "Crush",
+		Priority: PriorityCrush,
+		Provider: &CrushProviderV2{},
+	})
+	if err != nil {
+		// Panic on registration failure since this is called at init time
+		// and indicates a programming error (e.g., duplicate ID)
+		panic("failed to register crush provider: " + err.Error())
 	}
 }
+
+// CrushProviderV2 implements the ProviderV2 interface for Crush.
+//
+// Crush uses:
+//   - CRUSH.md for instruction file (with spectr markers)
+//   - .crush/commands/spectr/ for slash commands
+//   - Markdown format for slash commands with YAML frontmatter
+type CrushProviderV2 struct{}
+
+// Initializers returns the list of Initializers needed to configure
+// Crush for use with spectr.
+//
+// Returns:
+//   - DirectoryInitializer for .crush/commands/spectr
+//   - ConfigFileInitializer for CRUSH.md
+//   - SlashCommandsInitializer for .crush/commands/spectr (Markdown)
+func (*CrushProviderV2) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		// Create the slash commands directory
+		NewDirectoryInitializer(false, ".crush/commands/spectr"),
+
+		// Create/update the CRUSH.md instruction file
+		NewConfigFileInitializer("CRUSH.md", "instruction-pointer", false),
+
+		// Create/update slash commands (proposal.md, apply.md)
+		NewSlashCommandsInitializer(
+			".crush/commands/spectr",
+			".md",
+			FormatMarkdown,
+			StandardFrontmatter(),
+			false,
+		),
+	}
+}
+
+// Ensure CrushProviderV2 implements the ProviderV2 interface.
+var _ ProviderV2 = (*CrushProviderV2)(nil)

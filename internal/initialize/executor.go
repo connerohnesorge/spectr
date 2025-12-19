@@ -5,17 +5,24 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
+	"github.com/connerohnesorge/spectr/internal/initialize/git"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/spf13/afero"
 )
 
 // InitExecutor handles the actual initialization process
 type InitExecutor struct {
-	projectPath string
-	tm          *TemplateManager
+	projectPath    string
+	tm             *TemplateManager
+	projectFs      afero.Fs            // project-relative filesystem
+	globalFs       afero.Fs            // home directory filesystem
+	changeDetector *git.ChangeDetector // git-based change detection
 }
 
 // NewInitExecutor creates a new initialization executor
@@ -39,6 +46,14 @@ func NewInitExecutor(
 			)
 	}
 
+	// Task 6.2: Check if project is a git repo - fail early with clear error
+	if !git.IsGitRepo(projectPath) {
+		return nil, fmt.Errorf(
+			"spectr init requires a git repository for change detection, " +
+				"run 'git init' first, then retry 'spectr init'",
+		)
+	}
+
 	// Initialize template manager
 	tm, err := NewTemplateManager()
 	if err != nil {
@@ -49,9 +64,29 @@ func NewInitExecutor(
 			)
 	}
 
+	// Task 6.1: Create dual filesystem instances
+	// Project-relative filesystem (for CLAUDE.md, .claude/commands/, etc.)
+	projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+
+	// Global filesystem (for ~/.config/tool/commands/, etc.)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to get user home directory: %w",
+			err,
+		)
+	}
+	globalFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
+
+	// Create change detector for git-based file change reporting
+	changeDetector := git.NewChangeDetector(projectPath)
+
 	return &InitExecutor{
-		projectPath: projectPath,
-		tm:          tm,
+		projectPath:    projectPath,
+		tm:             tm,
+		projectFs:      projectFs,
+		globalFs:       globalFs,
+		changeDetector: changeDetector,
 	}, nil
 }
 
@@ -64,6 +99,14 @@ func (e *InitExecutor) Execute(
 		CreatedFiles: make([]string, 0),
 		UpdatedFiles: make([]string, 0),
 		Errors:       make([]string, 0),
+	}
+
+	// Task 6.8: Take a git snapshot before initialization
+	beforeSnapshot, err := e.changeDetector.Snapshot()
+	if err != nil {
+		// Non-fatal: continue without git tracking if snapshot fails
+		result.Errors = append(result.Errors,
+			fmt.Sprintf("git snapshot failed (continuing without change tracking): %v", err))
 	}
 
 	// 1. Check if Spectr is already initialized
@@ -80,7 +123,7 @@ func (e *InitExecutor) Execute(
 		e.projectPath,
 		"spectr",
 	)
-	err := e.createDirectoryStructure(
+	err = e.createDirectoryStructure(
 		spectrDir,
 		result,
 	)
@@ -115,7 +158,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 5. Configure selected providers
+	// 5. Configure selected providers using new initializer-based architecture
 	err = e.configureProviders(
 		selectedProviderIDs,
 		spectrDir,
@@ -145,7 +188,63 @@ func (e *InitExecutor) Execute(
 		}
 	}
 
+	// Task 6.9: Get changed files from git after initialization
+	if beforeSnapshot != "" {
+		changedFiles, gitErr := e.changeDetector.ChangedFiles(beforeSnapshot)
+		if gitErr != nil {
+			result.Errors = append(result.Errors,
+				fmt.Sprintf("git change detection failed: %v", gitErr))
+		} else {
+			// Update result with git-detected files
+			e.updateResultWithGitChanges(result, changedFiles)
+		}
+	}
+
 	return result, nil
+}
+
+// updateResultWithGitChanges updates the ExecutionResult with git-detected changed files.
+// This replaces the declared paths from providers with actual changes detected by git.
+func (e *InitExecutor) updateResultWithGitChanges(result *ExecutionResult, changedFiles []string) {
+	// Track which files were in the original created/updated lists
+	originalCreated := make(map[string]bool)
+	for _, f := range result.CreatedFiles {
+		originalCreated[f] = true
+	}
+
+	originalUpdated := make(map[string]bool)
+	for _, f := range result.UpdatedFiles {
+		originalUpdated[f] = true
+	}
+
+	// Clear and rebuild the lists based on git detection
+	// Files that are new to git (untracked before) go to CreatedFiles
+	// Files that existed and changed go to UpdatedFiles
+	newCreated := make([]string, 0)
+	newUpdated := make([]string, 0)
+
+	for _, file := range changedFiles {
+		// Check if this file was in the original created list (new file)
+		// or was already being tracked
+		switch {
+		case originalCreated[file]:
+			newCreated = append(newCreated, file)
+		case originalUpdated[file]:
+			newUpdated = append(newUpdated, file)
+		default:
+			// File was detected by git but not in our tracking
+			// This could be a file created by an initializer that we didn't track
+			// Add it based on whether the file existed before (heuristic: if file ends with /)
+			// For simplicity, add all git-detected changes to created
+			newCreated = append(newCreated, file)
+		}
+	}
+
+	// Only update if we have git-detected changes
+	if len(newCreated) > 0 || len(newUpdated) > 0 {
+		result.CreatedFiles = newCreated
+		result.UpdatedFiles = newUpdated
+	}
 }
 
 // createDirectoryStructure creates the spectr/ directory
@@ -287,7 +386,7 @@ func (e *InitExecutor) createAgentsMd(
 }
 
 // configureProviders configures the selected providers using the new interface-driven architecture.
-// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+// It uses the RegistryV2 API with Registration-based retrieval and runs initializers from each provider.
 func (e *InitExecutor) configureProviders(
 	selectedProviderIDs []string,
 	spectrDir string,
@@ -297,51 +396,164 @@ func (e *InitExecutor) configureProviders(
 		return nil // No providers to configure
 	}
 
-	for _, providerID := range selectedProviderIDs {
-		provider := providers.Get(providerID)
-		if provider == nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"provider %s not found",
-					providerID,
-				),
-			)
+	// Create config for initializers
+	cfg := providers.NewConfig("spectr")
 
-			continue
-		}
+	ctx := context.Background()
 
-		// Check if already configured
-		wasConfigured := provider.IsConfigured(
-			e.projectPath,
-		)
+	// Task 6.4: Collect initializers from selected providers
+	allInitializers := e.collectInitializers(ctx, selectedProviderIDs, result)
 
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"failed to configure %s: %v",
-					provider.Name(),
-					err,
-				),
-			)
+	// Task 6.5: Deduplicate initializers by Path()
+	dedupedInitializers := e.dedupeInitializers(allInitializers)
 
-			continue
-		}
+	// Task 6.6: Sort initializers by type (Directory -> ConfigFile -> SlashCommands)
+	sortedInitializers := e.sortInitializers(dedupedInitializers)
 
-		// Track created/updated files
-		filePaths := provider.GetFilePaths()
-		if wasConfigured {
-			result.UpdatedFiles = append(
-				result.UpdatedFiles,
-				filePaths...)
+	// Task 6.7 & 6.10: Run each initializer, collecting errors (don't fail on first error)
+	var initErrors []InitializerError
+	for _, init := range sortedInitializers {
+		// Select appropriate filesystem based on IsGlobal()
+		var fs afero.Fs
+		if init.IsGlobal() {
+			fs = e.globalFs
 		} else {
-			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
+			fs = e.projectFs
+		}
+
+		// Run the initializer
+		if err := init.Init(ctx, fs, cfg, e.tm); err != nil {
+			initErrors = append(initErrors, InitializerError{
+				Path:  init.Path(),
+				Error: err,
+			})
+		} else {
+			// Track the file path for this initializer
+			path := init.Path()
+			if path != "" {
+				if init.IsSetup(fs, cfg) {
+					result.UpdatedFiles = append(result.UpdatedFiles, path)
+				} else {
+					result.CreatedFiles = append(result.CreatedFiles, path)
+				}
+			}
+		}
+	}
+
+	// Task 6.10: Report which initializers failed
+	if len(initErrors) > 0 {
+		for _, initErr := range initErrors {
+			result.Errors = append(result.Errors,
+				fmt.Sprintf("initializer %q failed: %v", initErr.Path, initErr.Error))
 		}
 	}
 
 	return nil
+}
+
+// InitializerError tracks failures for individual initializers
+type InitializerError struct {
+	Path  string
+	Error error
+}
+
+// collectInitializers gathers initializers from all selected providers using RegistryV2.
+func (e *InitExecutor) collectInitializers(
+	ctx context.Context,
+	providerIDs []string,
+	result *ExecutionResult,
+) []providers.Initializer {
+	var all []providers.Initializer
+
+	for _, providerID := range providerIDs {
+		// Task 6.3: Use new registry API (GetV2 with Registration-based retrieval)
+		reg, found := providers.GetV2(providerID)
+		if !found {
+			result.Errors = append(result.Errors,
+				fmt.Sprintf("provider %s not found in registry", providerID))
+
+			continue
+		}
+
+		if reg.Provider == nil {
+			result.Errors = append(result.Errors,
+				fmt.Sprintf("provider %s has nil Provider implementation", providerID))
+
+			continue
+		}
+
+		// Get initializers from the provider
+		initializers := reg.Provider.Initializers(ctx)
+		all = append(all, initializers...)
+	}
+
+	return all
+}
+
+// dedupeInitializers removes duplicate initializers based on Path().
+// When multiple providers return initializers with the same Path(), only the first one is kept.
+func (e *InitExecutor) dedupeInitializers(all []providers.Initializer) []providers.Initializer {
+	seen := make(map[string]bool)
+	var result []providers.Initializer
+
+	for _, init := range all {
+		if init == nil {
+			continue
+		}
+		key := init.Path()
+		if key == "" {
+			// Include initializers without a path (shouldn't happen normally)
+			result = append(result, init)
+
+			continue
+		}
+		if !seen[key] {
+			seen[key] = true
+			result = append(result, init)
+		}
+	}
+
+	return result
+}
+
+// sortInitializers sorts initializers by type to ensure correct execution order.
+// Order: Directory (1) -> ConfigFile (2) -> SlashCommands (3) -> Others (99)
+func (e *InitExecutor) sortInitializers(all []providers.Initializer) []providers.Initializer {
+	// Use stable sort to maintain relative ordering within each type
+	sort.SliceStable(all, func(i, j int) bool {
+		return initializerPriority(all[i]) < initializerPriority(all[j])
+	})
+
+	return all
+}
+
+// initializerPriority returns the execution priority for an initializer.
+// Lower numbers execute first.
+func initializerPriority(init providers.Initializer) int {
+	if init == nil {
+		return 99
+	}
+
+	// Type switch to determine priority based on initializer type
+	switch init.(type) {
+	case *providers.DirectoryInitializerBuiltin:
+		return 1
+	case *providers.ConfigFileInitializerBuiltin:
+		return 2
+	case *providers.SlashCommandsInitializerBuiltin:
+		return 3
+	default:
+		// Check for initializers from the initializers subpackage
+		// We use the Path() method to infer type when concrete type matching fails
+		path := init.Path()
+		if path == "" {
+			return 99
+		}
+		// Heuristic: directories often don't have extensions
+		// Config files often have .md extension
+		// This is a fallback for unknown types
+		return 50
+	}
 }
 
 // createCIWorkflow creates the .github/workflows/spectr-ci.yml file

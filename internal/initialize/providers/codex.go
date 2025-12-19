@@ -1,31 +1,67 @@
+// Package providers implements the interface-driven provider architecture for
+// AI CLI/IDE/Orchestrator tools.
+//
+// This file implements the Codex CLI provider using the ProviderV2 interface.
+// Codex uses AGENTS.md and global ~/.codex/prompts/ for commands.
 package providers
 
+import (
+	"context"
+)
+
 func init() {
-	Register(NewCodexProvider())
-}
-
-// CodexProvider implements the Provider interface for Codex CLI.
-// Codex uses AGENTS.md and global ~/.codex/prompts/spectr/ for commands.
-type CodexProvider struct {
-	BaseProvider
-}
-
-// NewCodexProvider creates a new Codex CLI provider.
-func NewCodexProvider() *CodexProvider {
-	// Codex uses global paths, not project-relative paths
-	proposalPath := "~/.codex/prompts/spectr-proposal.md"
-	applyPath := "~/.codex/prompts/spectr-apply.md"
-
-	return &CodexProvider{
-		BaseProvider: BaseProvider{
-			id:            "codex",
-			name:          "Codex CLI",
-			priority:      PriorityCodex,
-			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	// Register with RegistryV2
+	err := RegisterV2(Registration{
+		ID:       "codex",
+		Name:     "Codex CLI",
+		Priority: PriorityCodex,
+		Provider: &CodexProviderV2{},
+	})
+	if err != nil {
+		// Panic on registration failure since this is called at init time
+		// and indicates a programming error (e.g., duplicate ID)
+		panic("failed to register codex provider: " + err.Error())
 	}
 }
+
+// CodexProviderV2 implements the ProviderV2 interface for Codex CLI.
+//
+// Codex uses:
+//   - AGENTS.md for instruction file (with spectr markers) - project-relative
+//   - ~/.codex/prompts/ for slash commands - global (home directory)
+//   - Markdown format for slash commands with YAML frontmatter
+//   - Prefixed command files (spectr-proposal.md, spectr-apply.md)
+type CodexProviderV2 struct{}
+
+// Initializers returns the list of Initializers needed to configure
+// Codex CLI for use with spectr.
+//
+// Returns:
+//   - DirectoryInitializer for ~/.codex/prompts (global)
+//   - ConfigFileInitializer for AGENTS.md (project-relative)
+//   - SlashCommandsInitializer for ~/.codex/prompts (Markdown, global)
+//
+// Note: Codex uses global paths for commands, project-relative for config.
+func (*CodexProviderV2) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		// Create the global prompts directory
+		// Note: Path is relative to home directory when isGlobal=true
+		NewDirectoryInitializer(true, ".codex/prompts"),
+
+		// Create/update the AGENTS.md instruction file (project-relative)
+		NewConfigFileInitializer("AGENTS.md", "instruction-pointer", false),
+
+		// Create/update slash commands in global prompts
+		// Note: Using prefixed command pattern for Codex
+		NewSlashCommandsInitializer(
+			".codex/prompts",
+			".md",
+			FormatMarkdown,
+			StandardFrontmatter(),
+			true, // isGlobal - commands are in home directory
+		),
+	}
+}
+
+// Ensure CodexProviderV2 implements the ProviderV2 interface.
+var _ ProviderV2 = (*CodexProviderV2)(nil)

@@ -47,7 +47,18 @@ stop:
 
 # Subagent stop hook - runs when subagents finish
 subagentStop:
-  commands: {}
+  commands:
+    coder:
+      - run: "nix develop -c 'tests'"
+        showStdout: false
+        showStderr: false
+        message: "Tests failed - please fix failing tests before continuing"
+        maxOutputLines: 5
+      - run: "nix develop -c 'lint'"
+        showStdout: false
+        showStderr: false
+        message: "Fix all lint errors without being lazy or ignoring them"
+        maxOutputLines: 5
   # Example:
   # coder:
   #   - run: "npm run lint"

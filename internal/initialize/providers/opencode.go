@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "opencode",
 		Name:     "OpenCode",
 		Priority: PriorityOpencode,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// OpencodeProvider implements the ProviderV2 interface for OpenCode.
+// OpencodeProvider implements the Provider interface for OpenCode.
 // OpenCode uses .opencode/command/spectr/ for slash commands.
 // It has no instruction file as it uses JSON configuration.
 type OpencodeProvider struct{}

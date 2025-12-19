@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "qwen",
 		Name:     "Qwen Code",
 		Priority: PriorityQwen,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// QwenProvider implements the ProviderV2 interface for Qwen Code.
+// QwenProvider implements the Provider interface for Qwen Code.
 // Qwen uses QWEN.md and .qwen/commands/spectr/ for slash commands.
 type QwenProvider struct{}
 

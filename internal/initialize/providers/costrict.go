@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "costrict",
 		Name:     "CoStrict",
 		Priority: PriorityCostrict,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// CostrictProvider implements the ProviderV2 interface for CoStrict.
+// CostrictProvider implements the Provider interface for CoStrict.
 // CoStrict uses COSTRICT.md and .costrict/commands/spectr/ for slash commands.
 type CostrictProvider struct{}
 

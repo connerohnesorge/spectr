@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "qoder",
 		Name:     "Qoder",
 		Priority: PriorityQoder,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// QoderProvider implements the ProviderV2 interface for Qoder.
+// QoderProvider implements the Provider interface for Qoder.
 // Qoder uses QODER.md and .qoder/commands/spectr/ for slash commands.
 type QoderProvider struct{}
 

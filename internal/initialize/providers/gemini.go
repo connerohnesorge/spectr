@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "gemini",
 		Name:     "Gemini CLI",
 		Priority: PriorityGemini,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// GeminiProvider implements the ProviderV2 interface for Gemini CLI.
+// GeminiProvider implements the Provider interface for Gemini CLI.
 // Gemini uses .gemini/commands/spectr/ for TOML-based slash commands
 // (no instruction file).
 type GeminiProvider struct{}

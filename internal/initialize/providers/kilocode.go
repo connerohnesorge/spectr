@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "kilocode",
 		Name:     "Kilocode",
 		Priority: PriorityKilocode,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// KilocodeProvider implements the ProviderV2 interface for Kilocode.
+// KilocodeProvider implements the Provider interface for Kilocode.
 // Kilocode uses .kilocode/commands/spectr/ for slash commands (no config file).
 type KilocodeProvider struct{}
 

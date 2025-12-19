@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "aider",
 		Name:     "Aider",
 		Priority: PriorityAider,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// AiderProvider implements the ProviderV2 interface for Aider.
+// AiderProvider implements the Provider interface for Aider.
 // Aider uses .aider/commands/spectr/ for slash commands (no config file).
 type AiderProvider struct{}
 

@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "cline",
 		Name:     "Cline",
 		Priority: PriorityCline,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// ClineProvider implements the ProviderV2 interface for Cline.
+// ClineProvider implements the Provider interface for Cline.
 // Cline uses CLINE.md and .clinerules/commands/spectr/ for slash commands.
 type ClineProvider struct{}
 

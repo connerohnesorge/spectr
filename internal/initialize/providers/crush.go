@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "crush",
 		Name:     "Crush",
 		Priority: PriorityCrush,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// CrushProvider implements the ProviderV2 interface for Crush.
+// CrushProvider implements the Provider interface for Crush.
 // Crush uses CRUSH.md for instructions and .crush/commands/spectr/ for slash commands.
 type CrushProvider struct{}
 

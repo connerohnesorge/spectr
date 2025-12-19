@@ -406,8 +406,7 @@ func (e *InitExecutor) collectInitializers(
 	var all []providers.Initializer
 
 	for _, id := range providerIDs {
-		// Task 6.3: Use GetV2 instead of Get
-		reg := providers.GetV2(id)
+		reg := providers.Get(id)
 		if reg == nil {
 			result.Errors = append(
 				result.Errors,
@@ -469,15 +468,18 @@ func initializerPriority(init providers.Initializer) int {
 	typeName := fmt.Sprintf("%T", init)
 
 	// Directory initializers run first
-	if strings.Contains(typeName, "directoryInitializer") || strings.Contains(typeName, "DirectoryInitializer") {
+	if strings.Contains(typeName, "directoryInitializer") ||
+		strings.Contains(typeName, "DirectoryInitializer") {
 		return 1
 	}
 	// Config file initializers run second
-	if strings.Contains(typeName, "configFileInitializer") || strings.Contains(typeName, "ConfigFileInitializer") {
+	if strings.Contains(typeName, "configFileInitializer") ||
+		strings.Contains(typeName, "ConfigFileInitializer") {
 		return 2
 	}
 	// Slash command initializers run last
-	if strings.Contains(typeName, "slashCommandsInitializer") || strings.Contains(typeName, "SlashCommandsInitializer") {
+	if strings.Contains(typeName, "slashCommandsInitializer") ||
+		strings.Contains(typeName, "SlashCommandsInitializer") {
 		return 3
 	}
 	// Unknown types run at the end

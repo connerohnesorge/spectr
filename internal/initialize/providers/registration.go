@@ -30,7 +30,7 @@ package providers
 // in priority order.
 //
 // Provider is the actual provider implementation that returns initializers.
-// This can be either a struct implementing ProviderV2 or a ProviderV2Func.
+// This can be either a struct implementing Provider or a ProviderFunc.
 //
 // # Example: Struct Provider
 //
@@ -55,14 +55,14 @@ package providers
 //
 // # Example: Function Provider
 //
-// For simple providers, you can use ProviderV2Func instead of creating a struct:
+// For simple providers, you can use ProviderFunc instead of creating a struct:
 //
 //	func init() {
 //	    providers.Register(Registration{
 //	        ID:       "simple-tool",
 //	        Name:     "Simple Tool",
 //	        Priority: 50,
-//	        Provider: ProviderV2Func(func(ctx context.Context) []Initializer {
+//	        Provider: ProviderFunc(func(ctx context.Context) []Initializer {
 //	            return []Initializer{
 //	                NewConfigFileInitializer("SIMPLE.md", template),
 //	            }
@@ -142,15 +142,15 @@ type Registration struct {
 
 	// Provider is the provider implementation.
 	//
-	// Provider must implement the ProviderV2 interface, which has a single
+	// Provider must implement the Provider interface, which has a single
 	// method: Initializers(ctx context.Context) []Initializer
 	//
 	// The Provider can be:
-	//   - A pointer to a struct implementing ProviderV2
-	//   - A ProviderV2Func for simple function-based providers
+	//   - A pointer to a struct implementing Provider
+	//   - A ProviderFunc for simple function-based providers
 	//
 	// Provider must not be nil.
-	Provider ProviderV2
+	Provider Provider
 }
 
 // Validate checks that the Registration has all required fields.

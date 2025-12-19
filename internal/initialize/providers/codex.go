@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "codex",
 		Name:     "Codex CLI",
 		Priority: PriorityCodex,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// CodexProvider implements the ProviderV2 interface for Codex CLI.
+// CodexProvider implements the Provider interface for Codex CLI.
 // Codex uses AGENTS.md and global ~/.codex/prompts/ for commands.
 type CodexProvider struct{}
 

@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "antigravity",
 		Name:     "Antigravity",
 		Priority: PriorityAntigravity,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// AntigravityProvider implements the ProviderV2 interface for Antigravity.
+// AntigravityProvider implements the Provider interface for Antigravity.
 // Antigravity uses AGENTS.md and .agent/workflows/ for slash commands.
 // Note: Uses prefixed command paths (spectr-proposal.md, spectr-apply.md)
 // instead of subdirectory structure.

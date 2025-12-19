@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "claude-code",
 		Name:     "Claude Code",
 		Priority: PriorityClaudeCode,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// ClaudeProvider implements the ProviderV2 interface for Claude Code.
+// ClaudeProvider implements the Provider interface for Claude Code.
 // Claude Code uses CLAUDE.md and .claude/commands/spectr/ for slash commands.
 type ClaudeProvider struct{}
 

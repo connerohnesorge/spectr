@@ -10,7 +10,7 @@
 //
 //	// Register a provider in init()
 //	func init() {
-//	    err := providers.RegisterV2(Registration{
+//	    err := providers.Register(Registration{
 //	        ID:       "claude-code",
 //	        Name:     "Claude Code",
 //	        Priority: 1,
@@ -22,16 +22,16 @@
 //	}
 //
 //	// Get a specific provider
-//	reg := providers.GetV2("claude-code")
+//	reg := providers.Get("claude-code")
 //
 //	// Get all providers sorted by priority
-//	allRegs := providers.AllV2()
+//	allRegs := providers.All()
 //
 // # Instance-Based Registry
 //
-// For testing or isolated use cases, create a RegistryV2 instance:
+// For testing or isolated use cases, create a Registry instance:
 //
-//	r := providers.NewRegistryV2()
+//	r := providers.NewRegistry()
 //	err := r.Register(Registration{...})
 package providers
 
@@ -42,13 +42,13 @@ import (
 	"sync"
 )
 
-// registryV2 is the global provider registry for the new architecture.
+// registry is the global provider registry.
 var (
-	registryV2     = make(map[string]Registration)
-	registryLockV2 sync.RWMutex
+	registry     = make(map[string]Registration)
+	registryLock sync.RWMutex
 )
 
-// RegisterV2 adds a provider registration to the global registry.
+// Register adds a provider registration to the global registry.
 //
 // This is typically called from init() in each provider file.
 // Returns an error if:
@@ -58,7 +58,7 @@ var (
 // Example:
 //
 //	func init() {
-//	    err := providers.RegisterV2(Registration{
+//	    err := providers.Register(Registration{
 //	        ID:       "claude-code",
 //	        Name:     "Claude Code",
 //	        Priority: 1,
@@ -68,51 +68,50 @@ var (
 //	        panic(err)
 //	    }
 //	}
-func RegisterV2(r Registration) error {
+func Register(r Registration) error {
 	if err := r.Validate(); err != nil {
 		return fmt.Errorf("invalid registration: %w", err)
 	}
 
-	registryLockV2.Lock()
-	defer registryLockV2.Unlock()
+	registryLock.Lock()
+	defer registryLock.Unlock()
 
-	if _, exists := registryV2[r.ID]; exists {
+	if _, exists := registry[r.ID]; exists {
 		return fmt.Errorf("provider %q: %w", r.ID, ErrDuplicateID)
 	}
 
-	registryV2[r.ID] = r
+	registry[r.ID] = r
 
 	return nil
 }
 
-// GetV2 retrieves a registration by its ID from the global registry.
+// Get retrieves a registration by its ID from the global registry.
 //
 // Returns nil if no provider with the given ID is registered.
-func GetV2(id string) *Registration {
-	registryLockV2.RLock()
-	defer registryLockV2.RUnlock()
+func Get(id string) *Registration {
+	registryLock.RLock()
+	defer registryLock.RUnlock()
 
-	if r, exists := registryV2[id]; exists {
+	if r, exists := registry[id]; exists {
 		return &r
 	}
 
 	return nil
 }
 
-// AllV2 returns all registrations from the global registry sorted by priority.
+// All returns all registrations from the global registry sorted by priority.
 //
 // Lower priority values appear first in the returned slice.
-// This maintains backwards-compatible behavior with the old registry.
-func AllV2() []Registration {
-	registryLockV2.RLock()
-	defer registryLockV2.RUnlock()
+func All() []Registration {
+	registryLock.RLock()
+	defer registryLock.RUnlock()
 
 	registrations := make(
 		[]Registration,
 		0,
-		len(registryV2),
+		len(registry),
 	)
-	for _, r := range registryV2 {
+	for _, r := range registry {
 		registrations = append(registrations, r)
 	}
 
@@ -123,12 +122,12 @@ func AllV2() []Registration {
 	return registrations
 }
 
-// IDsV2 returns all registered provider IDs from the global registry
+// IDs returns all registered provider IDs from the global registry
 // sorted by priority.
 //
 // Lower priority values appear first in the returned slice.
-func IDsV2() []string {
-	registrations := AllV2()
+func IDs() []string {
+	registrations := All()
 	ids := make([]string, len(registrations))
 	for i, r := range registrations {
 		ids[i] = r.ID
@@ -137,63 +136,63 @@ func IDsV2() []string {
 	return ids
 }
 
-// CountV2 returns the number of providers in the global registry.
-func CountV2() int {
-	registryLockV2.RLock()
-	defer registryLockV2.RUnlock()
+// Count returns the number of providers in the global registry.
+func Count() int {
+	registryLock.RLock()
+	defer registryLock.RUnlock()
 
-	return len(registryV2)
+	return len(registry)
 }
 
-// ResetV2 clears the global registry.
+// Reset clears the global registry.
 //
 // This function should only be used in tests.
-func ResetV2() {
-	registryLockV2.Lock()
-	defer registryLockV2.Unlock()
+func Reset() {
+	registryLock.Lock()
+	defer registryLock.Unlock()
 
-	registryV2 = make(map[string]Registration)
+	registry = make(map[string]Registration)
 }
 
-// RegistryV2 provides an instance-based registry for cases where
+// Registry provides an instance-based registry for cases where
 // global state is not desired (e.g., testing).
 //
-// Unlike the global registry functions, RegistryV2 instances are
+// Unlike the global registry functions, Registry instances are
 // not thread-safe. If you need thread-safety, use the global
-// registry functions (RegisterV2, GetV2, AllV2, etc.).
-type RegistryV2 struct {
+// registry functions (Register, Get, All, etc.).
+type Registry struct {
 	registrations map[string]Registration
 }
 
-// NewRegistryV2 creates a new empty registry.
+// NewRegistry creates a new empty registry.
 //
 // Example:
 //
-//	r := providers.NewRegistryV2()
+//	r := providers.NewRegistry()
 //	err := r.Register(Registration{
 //	    ID:       "test-provider",
 //	    Name:     "Test Provider",
 //	    Priority: 1,
 //	    Provider: &TestProvider{},
 //	})
-func NewRegistryV2() *RegistryV2 {
-	return &RegistryV2{
+func NewRegistry() *Registry {
+	return &Registry{
 		registrations: make(map[string]Registration),
 	}
 }
 
-// NewRegistryV2FromGlobal creates a registry populated with all globally
+// NewRegistryFromGlobal creates a registry populated with all globally
 // registered providers.
 //
 // This is useful for testing when you want to start with the global
 // providers and potentially add or override some.
-func NewRegistryV2FromGlobal() *RegistryV2 {
-	r := NewRegistryV2()
+func NewRegistryFromGlobal() *Registry {
+	r := NewRegistry()
 
-	registryLockV2.RLock()
-	defer registryLockV2.RUnlock()
+	registryLock.RLock()
+	defer registryLock.RUnlock()
 
-	maps.Copy(r.registrations, registryV2)
+	maps.Copy(r.registrations, registry)
 
 	return r
 }
@@ -203,7 +202,7 @@ func NewRegistryV2FromGlobal() *RegistryV2 {
 // Returns an error if:
 //   - The registration is invalid (empty ID, Name, or nil Provider)
 //   - A provider with the same ID is already registered
-func (r *RegistryV2) Register(reg Registration) error {
+func (r *Registry) Register(reg Registration) error {
 	if err := reg.Validate(); err != nil {
 		return fmt.Errorf("invalid registration: %w", err)
 	}
@@ -220,7 +219,7 @@ func (r *RegistryV2) Register(reg Registration) error {
 // Get retrieves a registration by its ID.
 //
 // Returns nil if no provider with the given ID is registered.
-func (r *RegistryV2) Get(id string) *Registration {
+func (r *Registry) Get(id string) *Registration {
 	if reg, exists := r.registrations[id]; exists {
 		return &reg
 	}
@@ -231,7 +230,7 @@ func (r *RegistryV2) Get(id string) *Registration {
 // All returns all registrations in this registry sorted by priority.
 //
 // Lower priority values appear first in the returned slice.
-func (r *RegistryV2) All() []Registration {
+func (r *Registry) All() []Registration {
 	registrations := make(
 		[]Registration,
 		0,
@@ -251,7 +250,7 @@ func (r *RegistryV2) All() []Registration {
 // IDs returns all provider IDs in this registry sorted by priority.
 //
 // Lower priority values appear first in the returned slice.
-func (r *RegistryV2) IDs() []string {
+func (r *Registry) IDs() []string {
 	registrations := r.All()
 	ids := make([]string, len(registrations))
 	for i, reg := range registrations {
@@ -262,6 +261,6 @@ func (r *RegistryV2) IDs() []string {
 }
 
 // Count returns the number of providers in this registry.
-func (r *RegistryV2) Count() int {
+func (r *Registry) Count() int {
 	return len(r.registrations)
 }

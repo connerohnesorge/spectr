@@ -297,7 +297,7 @@ func TestProviderInitializerIntegration(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.providerID, func(t *testing.T) {
-			reg := providers.GetV2(tc.providerID)
+			reg := providers.Get(tc.providerID)
 			if reg == nil {
 				t.Fatalf("Provider %q not found", tc.providerID)
 			}
@@ -491,7 +491,11 @@ func TestGitChangeDetectionIntegration(t *testing.T) {
 		}
 
 		// Modify the file (simulating config file update)
-		_ = os.WriteFile(existingFile, []byte("# Existing content\n\n<!-- spectr:START -->\n# Spectr\n<!-- spectr:END -->\n"), 0644)
+		_ = os.WriteFile(
+			existingFile,
+			[]byte("# Existing content\n\n<!-- spectr:START -->\n# Spectr\n<!-- spectr:END -->\n"),
+			0644,
+		)
 
 		// Detect changes
 		changedFiles, err := detector.ChangedFiles(snapshot)
@@ -539,11 +543,16 @@ type MockTemplateManager struct {
 	applyCommand       string
 }
 
-func (m *MockTemplateManager) RenderInstructionPointer(ctx providers.TemplateContext) (string, error) {
+func (m *MockTemplateManager) RenderInstructionPointer(
+	ctx providers.TemplateContext,
+) (string, error) {
 	return m.instructionPointer, nil
 }
 
-func (m *MockTemplateManager) RenderSlashCommand(commandType string, ctx providers.TemplateContext) (string, error) {
+func (m *MockTemplateManager) RenderSlashCommand(
+	commandType string,
+	ctx providers.TemplateContext,
+) (string, error) {
 	switch commandType {
 	case "proposal":
 		return m.proposalCommand, nil

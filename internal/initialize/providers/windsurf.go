@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "windsurf",
 		Name:     "Windsurf",
 		Priority: PriorityWindsurf,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// WindsurfProvider implements the ProviderV2 interface for Windsurf.
+// WindsurfProvider implements the Provider interface for Windsurf.
 // Windsurf uses .windsurf/commands/spectr/ for slash commands (no config file).
 type WindsurfProvider struct{}
 

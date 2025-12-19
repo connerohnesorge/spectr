@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "cursor",
 		Name:     "Cursor",
 		Priority: PriorityCursor,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// CursorProvider implements the ProviderV2 interface for Cursor.
+// CursorProvider implements the Provider interface for Cursor.
 // Cursor uses .cursorrules/commands/spectr/ for slash commands (no config file).
 type CursorProvider struct{}
 

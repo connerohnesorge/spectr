@@ -3,7 +3,7 @@ package providers
 import "context"
 
 func init() {
-	err := RegisterV2(Registration{
+	err := Register(Registration{
 		ID:       "continue",
 		Name:     "Continue",
 		Priority: PriorityContinue,
@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// ContinueProvider implements the ProviderV2 interface for Continue.
+// ContinueProvider implements the Provider interface for Continue.
 // Continue uses .continue/commands/spectr/ for slash commands (no config file).
 type ContinueProvider struct{}
 

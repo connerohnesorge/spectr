@@ -36,7 +36,12 @@ func NewGlobalDirectoryInitializer(paths ...string) Initializer {
 	}
 }
 
-func (d *directoryInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager) error {
+func (d *directoryInitializer) Init(
+	ctx context.Context,
+	fs afero.Fs,
+	cfg *Config,
+	tm TemplateManager,
+) error {
 	for _, p := range d.paths {
 		if err := fs.MkdirAll(p, 0755); err != nil {
 			return err
@@ -88,7 +93,12 @@ func NewGlobalConfigFileInitializer(path string) Initializer {
 	}
 }
 
-func (c *configFileInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager) error {
+func (c *configFileInitializer) Init(
+	ctx context.Context,
+	fs afero.Fs,
+	cfg *Config,
+	tm TemplateManager,
+) error {
 	// Render the instruction pointer template
 	templateCtx := NewTemplateContext(cfg)
 	content, err := tm.RenderInstructionPointer(templateCtx)
@@ -126,7 +136,10 @@ func (c *configFileInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Conf
 	return c.updateExistingFile(fs, string(existingContent), content)
 }
 
-func (c *configFileInitializer) updateExistingFile(fs afero.Fs, existingContent, newMarkerContent string) error {
+func (c *configFileInitializer) updateExistingFile(
+	fs afero.Fs,
+	existingContent, newMarkerContent string,
+) error {
 	startIndex := findMarkerIndex(existingContent, SpectrStartMarker, 0)
 	endIndex := -1
 	if startIndex != -1 {
@@ -196,7 +209,11 @@ func NewSlashCommandsInitializer(dir, ext string, format CommandFormat) Initiali
 
 // NewSlashCommandsInitializerWithFrontmatter creates a SlashCommandsInitializer with
 // custom YAML frontmatter for Markdown format commands.
-func NewSlashCommandsInitializerWithFrontmatter(dir, ext string, format CommandFormat, frontmatter map[string]string) Initializer {
+func NewSlashCommandsInitializerWithFrontmatter(
+	dir, ext string,
+	format CommandFormat,
+	frontmatter map[string]string,
+) Initializer {
 	return &slashCommandsInitializer{
 		dir:         dir,
 		ext:         ext,
@@ -219,7 +236,11 @@ func NewGlobalSlashCommandsInitializer(dir, ext string, format CommandFormat) In
 
 // NewGlobalSlashCommandsInitializerWithFrontmatter creates a global SlashCommandsInitializer
 // with custom YAML frontmatter for Markdown format commands.
-func NewGlobalSlashCommandsInitializerWithFrontmatter(dir, ext string, format CommandFormat, frontmatter map[string]string) Initializer {
+func NewGlobalSlashCommandsInitializerWithFrontmatter(
+	dir, ext string,
+	format CommandFormat,
+	frontmatter map[string]string,
+) Initializer {
 	return &slashCommandsInitializer{
 		dir:         dir,
 		ext:         ext,
@@ -230,13 +251,18 @@ func NewGlobalSlashCommandsInitializerWithFrontmatter(dir, ext string, format Co
 }
 
 const (
-	slashCommandProposal         = "proposal"
-	slashCommandApply            = "apply"
-	tomlDescriptionProposal      = "Scaffold a new Spectr change and validate strictly."
-	tomlDescriptionApply         = "Implement an approved Spectr change and keep tasks in sync."
+	slashCommandProposal    = "proposal"
+	slashCommandApply       = "apply"
+	tomlDescriptionProposal = "Scaffold a new Spectr change and validate strictly."
+	tomlDescriptionApply    = "Implement an approved Spectr change and keep tasks in sync."
 )
 
-func (s *slashCommandsInitializer) Init(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager) error {
+func (s *slashCommandsInitializer) Init(
+	ctx context.Context,
+	fs afero.Fs,
+	cfg *Config,
+	tm TemplateManager,
+) error {
 	// Ensure directory exists
 	if err := fs.MkdirAll(s.dir, 0755); err != nil {
 		return err
@@ -253,7 +279,13 @@ func (s *slashCommandsInitializer) Init(ctx context.Context, fs afero.Fs, cfg *C
 	return nil
 }
 
-func (s *slashCommandsInitializer) initCommand(ctx context.Context, fs afero.Fs, cfg *Config, tm TemplateManager, cmd string) error {
+func (s *slashCommandsInitializer) initCommand(
+	ctx context.Context,
+	fs afero.Fs,
+	cfg *Config,
+	tm TemplateManager,
+	cmd string,
+) error {
 	// Render the command template
 	templateCtx := NewTemplateContext(cfg)
 	body, err := tm.RenderSlashCommand(cmd, templateCtx)
@@ -275,7 +307,10 @@ func (s *slashCommandsInitializer) initCommand(ctx context.Context, fs afero.Fs,
 	}
 }
 
-func (s *slashCommandsInitializer) initMarkdownCommand(fs afero.Fs, filePath, cmd, body string) error {
+func (s *slashCommandsInitializer) initMarkdownCommand(
+	fs afero.Fs,
+	filePath, cmd, body string,
+) error {
 	// Check if file exists
 	exists, err := afero.Exists(fs, filePath)
 	if err != nil {
@@ -289,7 +324,10 @@ func (s *slashCommandsInitializer) initMarkdownCommand(fs afero.Fs, filePath, cm
 	return s.createNewMarkdownCommand(fs, filePath, cmd, body)
 }
 
-func (s *slashCommandsInitializer) createNewMarkdownCommand(fs afero.Fs, filePath, cmd, body string) error {
+func (s *slashCommandsInitializer) createNewMarkdownCommand(
+	fs afero.Fs,
+	filePath, cmd, body string,
+) error {
 	var sections []string
 
 	// Add frontmatter if provided
@@ -306,7 +344,10 @@ func (s *slashCommandsInitializer) createNewMarkdownCommand(fs afero.Fs, filePat
 	return afero.WriteFile(fs, filePath, []byte(content), filePerm)
 }
 
-func (s *slashCommandsInitializer) updateExistingMarkdownCommand(fs afero.Fs, filePath, cmd, body string) error {
+func (s *slashCommandsInitializer) updateExistingMarkdownCommand(
+	fs afero.Fs,
+	filePath, cmd, body string,
+) error {
 	// Read existing file
 	existingContent, err := afero.ReadFile(fs, filePath)
 	if err != nil {

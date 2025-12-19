@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://github.com/connix-io/conclaude/releases/latest/download/conclaude-schema.json
+# yaml-language-server: $schema=https://github.com/connerohnesorge/conclaude/releases/latest/download/conclaude-schema.json
 # Conclaude Configuration Template
 #
 # This is a minimal example configuration file.
@@ -33,17 +33,31 @@ stop:
       showStderr: false
       message: "Spectr validation failed - please fix validation errors before continuing"
       maxOutputLines: 5
+  # Example:
+  # - run: "npm test"
+  #   showStdout: true
+  #   showStderr: true
+  #   showCommand: true  # Show "Executing command X/Y: npm test" (default: true)
+  #   message: "Tests failed"
+  #   maxOutputLines: 100
+  #   timeout: 300
+
+  infinite: false
+  infiniteMessage: "continue working on the task"
 
 # Subagent stop hook - runs when subagents finish
 subagentStop:
+  commands: {}
   # Example:
   # coder:
   #   - run: "npm run lint"
   #     showStdout: true
+  #     showCommand: true  # Show "Executing command X/Y: npm run lint" (default: true)
   #     message: "Linting failed"
   # test*:
   #   - run: "npm test"
   #     showStderr: true
+  #     showCommand: false  # Hide the "Executing command..." line
 
 # Pre-tool-use hook - file protection and tool validation
 preToolUse:
@@ -54,10 +68,22 @@ preToolUse:
   uneditableFiles:
     - ".conclaude.yml"
     - ".conclaude.yaml"
+    - pattern: "spectr/changes/**/tasks.jsonc"
+      message: "Task files managed by orchestrator. Make sure to tell your manager to test/eval your changes and mark them as done and next tasks as in_progress."
+      agent: "coder" # Only blocks coder subagent
   # Examples:
   # - "*.lock"
   # - pattern: ".env*"
   #   message: "Environment files contain secrets"
+  #
+  # Agent-specific protection examples (blocks specific subagents):
+  #
+  # - pattern: "src/**/*.test.ts"
+  #   message: "Test files managed by tester agent"
+  #   agent: "code*"  # Blocks coder, coder-v2, etc.
+  #
+  # - pattern: "docs/**"
+  #   agent: "*"  # Blocks all agents (same as omitting agent field)
 
   # Prevent editing git-ignored files
   preventUpdateGitIgnored: false
@@ -78,7 +104,7 @@ preToolUse:
   # Example: ["dist", "build"]
 
   # Prevent editing generated files
-  preventGeneratedFileEdits: false
+  preventGeneratedFileEdits: true
   generatedFileMessage: null
 
 # System notifications
@@ -102,3 +128,34 @@ notifications:
 #   deny:
 #     - "BashOutput"
 #     - "KillShell"
+
+# User prompt submit hook - context injection based on prompt patterns
+# Automatically prepends context when prompts match patterns
+# Uncomment to enable:
+#
+# userPromptSubmit:
+#   contextRules:
+#     # Pattern-based context injection
+#     - pattern: "sidebar"
+#       prompt: |
+#         Make sure to read @.claude/contexts/sidebar.md before proceeding.
+#
+#     # Multiple patterns with regex alternation
+#     - pattern: "auth|login|authentication"
+#       prompt: |
+#         Review the authentication patterns in @.claude/contexts/auth.md
+#
+#     # Case-insensitive matching (using regex flag)
+#     - pattern: "(?i)database|sql|query"
+#       prompt: |
+#         Follow the database conventions in @.claude/contexts/database.md
+#
+#     # Disable a rule temporarily
+#     - pattern: "test"
+#       prompt: "Run tests before proceeding"
+#       enabled: false
+#
+#     # Explicit case-insensitive flag
+#     - pattern: "api"
+#       prompt: "Check API documentation first"
+#       caseInsensitive: true

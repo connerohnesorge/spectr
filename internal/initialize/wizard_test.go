@@ -827,12 +827,12 @@ func TestProviderFilteringLogic(t *testing.T) {
 	// Verify all results contain "claude" (case-insensitive)
 	for _, provider := range wizard.filteredProviders {
 		if !strings.Contains(
-			strings.ToLower(provider.Name()),
+			strings.ToLower(provider.Name),
 			"claude",
 		) {
 			t.Errorf(
 				"Provider %s should not match 'claude'",
-				provider.Name(),
+				provider.Name,
 			)
 		}
 	}
@@ -916,7 +916,7 @@ func TestSelectionPreservedDuringFiltering(
 
 	// Select all providers
 	for _, provider := range wizard.allProviders {
-		wizard.selectedProviders[provider.ID()] = true
+		wizard.selectedProviders[provider.ID] = true
 	}
 
 	originalSelectionCount := len(
@@ -1150,7 +1150,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 
 	// Ensure first provider is not selected
 	if len(wizard.filteredProviders) > 0 {
-		wizard.selectedProviders[wizard.filteredProviders[0].ID()] = false
+		wizard.selectedProviders[wizard.filteredProviders[0].ID] = false
 	}
 
 	// Simulate pressing space key while in search mode
@@ -1168,7 +1168,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 		return
 	}
 
-	providerID := updatedWizard.filteredProviders[0].ID()
+	providerID := updatedWizard.filteredProviders[0].ID
 	if !updatedWizard.selectedProviders[providerID] {
 		t.Errorf(
 			"Expected provider %s to be selected after space press",

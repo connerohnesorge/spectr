@@ -1,33 +1,31 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewOpencodeProvider())
+	Register(Registration{
+		ID:       "opencode",
+		Name:     "OpenCode",
+		Priority: 10,
+		Provider: &OpencodeProvider{},
+	})
 }
 
-// OpencodeProvider implements the Provider interface for OpenCode.
-// OpenCode uses .opencode/command/spectr/ for slash commands.
-// It has no instruction file as it uses JSON configuration.
-type OpencodeProvider struct {
-	BaseProvider
-}
+// OpencodeProvider implements the new Provider interface for OpenCode.
+type OpencodeProvider struct{}
 
-// NewOpencodeProvider creates a new OpenCode provider.
-func NewOpencodeProvider() *OpencodeProvider {
+// Initializers returns the initializers for OpenCode.
+func (p *OpencodeProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".opencode/command",
 		".md",
 	)
 
-	return &OpencodeProvider{
-		BaseProvider: BaseProvider{
-			id:            "opencode",
-			name:          "OpenCode",
-			priority:      PriorityOpencode,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

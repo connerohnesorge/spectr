@@ -1,32 +1,31 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewKilocodeProvider())
+	Register(Registration{
+		ID:       "kilocode",
+		Name:     "Kilocode",
+		Priority: 14,
+		Provider: &KilocodeProvider{},
+	})
 }
 
-// KilocodeProvider implements the Provider interface for Kilocode.
-// Kilocode uses .kilocode/commands/ for slash commands (no config file).
-type KilocodeProvider struct {
-	BaseProvider
-}
+// KilocodeProvider implements the new Provider interface for Kilocode.
+type KilocodeProvider struct{}
 
-// NewKilocodeProvider creates a new Kilocode provider.
-func NewKilocodeProvider() *KilocodeProvider {
+// Initializers returns the initializers for Kilocode.
+func (p *KilocodeProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".kilocode/commands",
 		".md",
 	)
 
-	return &KilocodeProvider{
-		BaseProvider: BaseProvider{
-			id:            "kilocode",
-			name:          "Kilocode",
-			priority:      PriorityKilocode,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

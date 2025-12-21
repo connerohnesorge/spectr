@@ -1,33 +1,32 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewAntigravityProvider())
+	Register(Registration{
+		ID:       "antigravity",
+		Name:     "Antigravity",
+		Priority: 6,
+		Provider: &AntigravityProvider{},
+	})
 }
 
-// AntigravityProvider implements the Provider interface for Antigravity.
-//
-// Antigravity uses AGENTS.md and .agent/workflows/ for slash commands.
-type AntigravityProvider struct {
-	BaseProvider
-}
+// AntigravityProvider implements the new Provider interface for Antigravity.
+type AntigravityProvider struct{}
 
-// NewAntigravityProvider creates a new Antigravity provider.
-func NewAntigravityProvider() *AntigravityProvider {
+// Initializers returns the initializers for Antigravity.
+func (p *AntigravityProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := PrefixedCommandPaths(
 		".agent/workflows",
 		".md",
 	)
 
-	return &AntigravityProvider{
-		BaseProvider: BaseProvider{
-			id:            "antigravity",
-			name:          "Antigravity",
-			priority:      PriorityAntigravity,
-			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewConfigFileInitializer("AGENTS.md"),
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

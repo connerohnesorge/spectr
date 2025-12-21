@@ -1,32 +1,32 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewQoderProvider())
+	Register(Registration{
+		ID:       "qoder",
+		Name:     "Qoder",
+		Priority: 4,
+		Provider: &QoderProvider{},
+	})
 }
 
-// QoderProvider implements the Provider interface for Qoder.
-// Qoder uses QODER.md and .qoder/commands/ for slash commands.
-type QoderProvider struct {
-	BaseProvider
-}
+// QoderProvider implements the new Provider interface for Qoder.
+type QoderProvider struct{}
 
-// NewQoderProvider creates a new Qoder provider.
-func NewQoderProvider() *QoderProvider {
+// Initializers returns the initializers for Qoder.
+func (p *QoderProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".qoder/commands",
 		".md",
 	)
 
-	return &QoderProvider{
-		BaseProvider: BaseProvider{
-			id:            "qoder",
-			name:          "Qoder",
-			priority:      PriorityQoder,
-			configFile:    "QODER.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewConfigFileInitializer("QODER.md"),
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

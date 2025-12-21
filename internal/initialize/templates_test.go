@@ -4,11 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/templates"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
 func TestNewTemplateManager(t *testing.T) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -20,11 +21,6 @@ func TestNewTemplateManager(t *testing.T) {
 			"NewTemplateManager() returned nil",
 		)
 	}
-	if tm.templates == nil {
-		t.Fatal(
-			"TemplateManager.templates is nil",
-		)
-	}
 }
 
 //
@@ -32,7 +28,7 @@ func TestNewTemplateManager(t *testing.T) {
 func TestTemplateManager_RenderProject(
 	t *testing.T,
 ) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -42,13 +38,13 @@ func TestTemplateManager_RenderProject(
 
 	tests := []struct {
 		name    string
-		ctx     ProjectContext
+		ctx     types.ProjectContext
 		want    []string // Strings that should be in the output
 		wantErr bool
 	}{
 		{
 			name: "basic project",
-			ctx: ProjectContext{
+			ctx: types.ProjectContext{
 				ProjectName: "MyProject",
 				Description: "A test project",
 				TechStack: []string{
@@ -67,7 +63,7 @@ func TestTemplateManager_RenderProject(
 		},
 		{
 			name: "empty tech stack",
-			ctx: ProjectContext{
+			ctx: types.ProjectContext{
 				ProjectName: "EmptyStack",
 				Description: "No tech stack",
 				TechStack:   make([]string, 0),
@@ -80,7 +76,7 @@ func TestTemplateManager_RenderProject(
 		},
 		{
 			name: "single tech",
-			ctx: ProjectContext{
+			ctx: types.ProjectContext{
 				ProjectName: "SingleTech",
 				Description: "One technology",
 				TechStack: []string{
@@ -102,9 +98,8 @@ func TestTemplateManager_RenderProject(
 				t.Errorf(
 					"RenderProject() error = %v, wantErr %v",
 					err,
-					tt.wantErr,
-				)
-
+								tt.wantErr,
+							)
 				return
 			}
 			if err != nil {
@@ -138,7 +133,7 @@ func TestTemplateManager_RenderProject(
 func TestTemplateManager_RenderAgents(
 	t *testing.T,
 ) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -147,7 +142,7 @@ func TestTemplateManager_RenderAgents(
 	}
 
 	got, err := tm.RenderAgents(
-		providers.DefaultTemplateContext(),
+		types.DefaultTemplateContext(),
 	)
 	if err != nil {
 		t.Fatalf("RenderAgents() error = %v", err)
@@ -192,7 +187,7 @@ func TestTemplateManager_RenderAgents(
 func TestTemplateManager_RenderInstructionPointer(
 	t *testing.T,
 ) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -201,7 +196,7 @@ func TestTemplateManager_RenderInstructionPointer(
 	}
 
 	got, err := tm.RenderInstructionPointer(
-		providers.DefaultTemplateContext(),
+		types.DefaultTemplateContext(),
 	)
 	if err != nil {
 		t.Fatalf(
@@ -257,7 +252,7 @@ func TestTemplateManager_RenderInstructionPointer(
 func TestTemplateManager_RenderSlashCommand(
 	t *testing.T,
 ) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -313,15 +308,14 @@ func TestTemplateManager_RenderSlashCommand(
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tm.RenderSlashCommand(
 				tt.commandType,
-				providers.DefaultTemplateContext(),
+				types.DefaultTemplateContext(),
 			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf(
 					"RenderSlashCommand() error = %v, wantErr %v",
 					err,
-					tt.wantErr,
-				)
-
+								tt.wantErr,
+							)
 				return
 			}
 			if err != nil {
@@ -344,7 +338,7 @@ func TestTemplateManager_RenderSlashCommand(
 func TestTemplateManager_RenderCIWorkflow(
 	t *testing.T,
 ) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -386,7 +380,7 @@ func TestTemplateManager_RenderCIWorkflow(
 func TestTemplateManager_AllTemplatesCompile(
 	t *testing.T,
 ) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -396,7 +390,7 @@ func TestTemplateManager_AllTemplatesCompile(
 
 	// Test that all templates can be rendered without errors
 	t.Run("project template", func(t *testing.T) {
-		ctx := ProjectContext{
+		ctx := types.ProjectContext{
 			ProjectName: "Test",
 			Description: "Test Description",
 			TechStack:   []string{"Go"},
@@ -412,7 +406,7 @@ func TestTemplateManager_AllTemplatesCompile(
 
 	t.Run("agents template", func(t *testing.T) {
 		_, err := tm.RenderAgents(
-			providers.DefaultTemplateContext(),
+			types.DefaultTemplateContext(),
 		)
 		if err != nil {
 			t.Errorf(
@@ -426,7 +420,7 @@ func TestTemplateManager_AllTemplatesCompile(
 		"instruction pointer template",
 		func(t *testing.T) {
 			_, err := tm.RenderInstructionPointer(
-				providers.DefaultTemplateContext(),
+				types.DefaultTemplateContext(),
 			)
 			if err != nil {
 				t.Errorf(
@@ -442,7 +436,7 @@ func TestTemplateManager_AllTemplatesCompile(
 		for _, cmd := range commands {
 			_, err := tm.RenderSlashCommand(
 				cmd,
-				providers.DefaultTemplateContext(),
+				types.DefaultTemplateContext(),
 			)
 			if err != nil {
 				t.Errorf(
@@ -473,7 +467,7 @@ func TestTemplateManager_AllTemplatesCompile(
 func TestTemplateManager_VariableSubstitution(
 	t *testing.T,
 ) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -484,7 +478,7 @@ func TestTemplateManager_VariableSubstitution(
 	t.Run(
 		"project variables are substituted",
 		func(t *testing.T) {
-			ctx := ProjectContext{
+			ctx := types.ProjectContext{
 				ProjectName: "VariableTest",
 				Description: "Testing variable substitution",
 				TechStack: []string{
@@ -543,7 +537,7 @@ func TestTemplateManager_VariableSubstitution(
 func TestTemplateManager_EmptyTechStack(
 	t *testing.T,
 ) {
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		t.Fatalf(
 			"NewTemplateManager() error = %v",
@@ -552,7 +546,7 @@ func TestTemplateManager_EmptyTechStack(
 	}
 
 	// Test with nil tech stack
-	ctx := ProjectContext{
+	ctx := types.ProjectContext{
 		ProjectName: "NilStack",
 		Description: "Test nil tech stack",
 		TechStack:   nil,

@@ -1,32 +1,31 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewClineProvider())
+	Register(Registration{
+		ID:       "cline",
+		Name:     "Cline",
+		Priority: 7,
+		Provider: &ClineProvider{},
+	})
 }
 
-// ClineProvider implements the Provider interface for Cline.
-// Cline uses CLINE.md and .clinerules/commands/ for slash commands.
-type ClineProvider struct {
-	BaseProvider
-}
+// ClineProvider implements the new Provider interface for Cline.
+type ClineProvider struct{}
 
-// NewClineProvider creates a new Cline provider.
-func NewClineProvider() *ClineProvider {
+// Initializers returns the initializers for Cline.
+func (p *ClineProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
-		".clinerules/commands",
+		".cline/commands",
 		".md",
 	)
 
-	return &ClineProvider{
-		BaseProvider: BaseProvider{
-			id:            "cline",
-			name:          "Cline",
-			priority:      PriorityCline,
-			configFile:    "CLINE.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

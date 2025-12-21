@@ -1,32 +1,31 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewWindsurfProvider())
+	Register(Registration{
+		ID:       "windsurf",
+		Name:     "Windsurf",
+		Priority: 13,
+		Provider: &WindsurfProvider{},
+	})
 }
 
-// WindsurfProvider implements the Provider interface for Windsurf.
-// Windsurf uses .windsurf/commands/ for slash commands (no config file).
-type WindsurfProvider struct {
-	BaseProvider
-}
+// WindsurfProvider implements the new Provider interface for Windsurf.
+type WindsurfProvider struct{}
 
-// NewWindsurfProvider creates a new Windsurf provider.
-func NewWindsurfProvider() *WindsurfProvider {
+// Initializers returns the initializers for Windsurf.
+func (p *WindsurfProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".windsurf/commands",
 		".md",
 	)
 
-	return &WindsurfProvider{
-		BaseProvider: BaseProvider{
-			id:            "windsurf",
-			name:          "Windsurf",
-			priority:      PriorityWindsurf,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

@@ -1,32 +1,31 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewContinueProvider())
+	Register(Registration{
+		ID:       "continue",
+		Name:     "Continue",
+		Priority: 15,
+		Provider: &ContinueProvider{},
+	})
 }
 
-// ContinueProvider implements the Provider interface for Continue.
-// Continue uses .continue/commands/ for slash commands (no config file).
-type ContinueProvider struct {
-	BaseProvider
-}
+// ContinueProvider implements the new Provider interface for Continue.
+type ContinueProvider struct{}
 
-// NewContinueProvider creates a new Continue provider.
-func NewContinueProvider() *ContinueProvider {
+// Initializers returns the initializers for Continue.
+func (p *ContinueProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".continue/commands",
 		".md",
 	)
 
-	return &ContinueProvider{
-		BaseProvider: BaseProvider{
-			id:            "continue",
-			name:          "Continue",
-			priority:      PriorityContinue,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

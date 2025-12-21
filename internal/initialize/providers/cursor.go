@@ -1,32 +1,31 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewCursorProvider())
+	Register(Registration{
+		ID:       "cursor",
+		Name:     "Cursor",
+		Priority: 8,
+		Provider: &CursorProvider{},
+	})
 }
 
-// CursorProvider implements the Provider interface for Cursor.
-// Cursor uses .cursorrules/commands/ for slash commands (no config file).
-type CursorProvider struct {
-	BaseProvider
-}
+// CursorProvider implements the new Provider interface for Cursor.
+type CursorProvider struct{}
 
-// NewCursorProvider creates a new Cursor provider.
-func NewCursorProvider() *CursorProvider {
+// Initializers returns the initializers for Cursor.
+func (p *CursorProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".cursorrules/commands",
 		".md",
 	)
 
-	return &CursorProvider{
-		BaseProvider: BaseProvider{
-			id:            "cursor",
-			name:          "Cursor",
-			priority:      PriorityCursor,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

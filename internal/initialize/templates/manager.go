@@ -1,4 +1,4 @@
-package initialize
+package templates
 
 import (
 	"bytes"
@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
-//go:embed templates/**/*.tmpl
+//go:embed ci/*.tmpl spectr/*.tmpl tools/*.tmpl
 var templateFS embed.FS
 
 // TemplateManager manages embedded templates for initialization
@@ -23,7 +23,9 @@ func NewTemplateManager() (*TemplateManager, error) {
 	// Parse all embedded templates
 	tmpl, err := template.ParseFS(
 		templateFS,
-		"templates/**/*.tmpl",
+		"ci/*.tmpl",
+		"spectr/*.tmpl",
+		"tools/*.tmpl",
 	)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -39,10 +41,9 @@ func NewTemplateManager() (*TemplateManager, error) {
 
 // RenderProject renders the project.md template with the given context
 func (tm *TemplateManager) RenderProject(
-	ctx ProjectContext,
+	ctx types.ProjectContext,
 ) (string, error) {
 	var buf bytes.Buffer
-	// Template names in ParseFS include the full path from the embed directive
 	err := tm.templates.ExecuteTemplate(
 		&buf,
 		"project.md.tmpl",
@@ -61,7 +62,7 @@ func (tm *TemplateManager) RenderProject(
 // RenderAgents renders the AGENTS.md template with the given template context
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderAgents(
-	ctx providers.TemplateContext,
+	ctx types.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
@@ -83,7 +84,7 @@ func (tm *TemplateManager) RenderAgents(
 // This is a short pointer that directs AI assistants to read the AGENTS.md file
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderInstructionPointer(
-	ctx providers.TemplateContext,
+	ctx types.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
@@ -107,7 +108,7 @@ func (tm *TemplateManager) RenderInstructionPointer(
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderSlashCommand(
 	commandType string,
-	ctx providers.TemplateContext,
+	ctx types.TemplateContext,
 ) (string, error) {
 	templateName := fmt.Sprintf(
 		"slash-%s.md.tmpl",

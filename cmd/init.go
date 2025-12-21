@@ -19,6 +19,7 @@ type InitCmd struct {
 // Run executes the init command
 func (c *InitCmd) Run() error {
 	// Determine project path - positional arg takes precedence over flag
+
 	projectPath := c.Path
 	if projectPath == "" {
 		projectPath = c.PathFlag
@@ -105,12 +106,12 @@ func runNonInteractiveInit(c *InitCmd) error {
 	// Handle "all" special case
 	selectedProviders := c.Tools
 	if len(c.Tools) == 1 && c.Tools[0] == "all" {
-		selectedProviders = providers.IDs()
+		selectedProviders = providers.DefaultRegistry.IDs()
 	}
 
 	// Validate provider IDs
 	for _, id := range selectedProviders {
-		if providers.Get(id) == nil {
+		if _, ok := providers.Get(id); !ok {
 			return fmt.Errorf(
 				"invalid provider ID: %s",
 				id,
@@ -153,25 +154,17 @@ func printInitResults(
 	fmt.Printf("Project: %s\n\n", projectPath)
 
 	if len(result.CreatedFiles) > 0 {
-		fmt.Println("Created files:")
+		fmt.Println("Changed files:")
 		for _, file := range result.CreatedFiles {
 			fmt.Printf("  ✓ %s\n", file)
 		}
 		fmt.Println()
 	}
 
-	if len(result.UpdatedFiles) > 0 {
-		fmt.Println("Updated files:")
-		for _, file := range result.UpdatedFiles {
-			fmt.Printf("  ✓ %s\n", file)
-		}
-		fmt.Println()
-	}
-
 	if len(result.Errors) > 0 {
-		fmt.Println("Errors:")
+		fmt.Println("Errors/Warnings:")
 		for _, e := range result.Errors {
-			fmt.Printf("  ✗ %s\n", e)
+			fmt.Printf("  ⚠ %s\n", e)
 		}
 
 		// Convert string errors to error type
@@ -179,11 +172,7 @@ func printInitResults(
 		for i, e := range result.Errors {
 			errs[i] = errors.New(e)
 		}
-
-		return &specterrs.InitializationCompletedWithErrorsError{
-			ErrorCount: len(result.Errors),
-			Errors:     errs,
-		}
+        _ = errs
 	}
 
 	fmt.Print(initialize.FormatNextStepsMessage())

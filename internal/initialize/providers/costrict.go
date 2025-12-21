@@ -1,32 +1,32 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewCostrictProvider())
+	Register(Registration{
+		ID:       "costrict",
+		Name:     "CoStrict",
+		Priority: 3,
+		Provider: &CostrictProvider{},
+	})
 }
 
-// CostrictProvider implements the Provider interface for CoStrict.
-// CoStrict uses COSTRICT.md and .costrict/commands/ for slash commands.
-type CostrictProvider struct {
-	BaseProvider
-}
+// CostrictProvider implements the new Provider interface for CoStrict.
+type CostrictProvider struct{}
 
-// NewCostrictProvider creates a new CoStrict provider.
-func NewCostrictProvider() *CostrictProvider {
+// Initializers returns the initializers for CoStrict.
+func (p *CostrictProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".costrict/commands",
 		".md",
 	)
 
-	return &CostrictProvider{
-		BaseProvider: BaseProvider{
-			id:            "costrict",
-			name:          "CoStrict",
-			priority:      PriorityCostrict,
-			configFile:    "COSTRICT.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewConfigFileInitializer("COSTRICT.md"),
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

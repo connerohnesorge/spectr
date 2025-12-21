@@ -5,17 +5,26 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
-	"os"
 	"path/filepath"
+	"sort"
 
+	"github.com/spf13/afero"
+	"github.com/connerohnesorge/spectr/internal/initialize/git"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/templates"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
 // InitExecutor handles the actual initialization process
 type InitExecutor struct {
 	projectPath string
-	tm          *TemplateManager
+	tm          *templates.TemplateManager
+	projectFs   afero.Fs
+	globalFs    afero.Fs
+	detector    *git.ChangeDetector
 }
 
 // NewInitExecutor creates a new initialization executor
@@ -30,17 +39,8 @@ func NewInitExecutor(
 		)
 	}
 
-	// Check if path exists
-	if !FileExists(projectPath) {
-		return nil,
-			fmt.Errorf(
-				"project path does not exist: %s",
-				projectPath,
-			)
-	}
-
 	// Initialize template manager
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		return nil,
 			fmt.Errorf(
@@ -52,6 +52,9 @@ func NewInitExecutor(
 	return &InitExecutor{
 		projectPath: projectPath,
 		tm:          tm,
+		projectFs:   afero.NewBasePathFs(afero.NewOsFs(), projectPath),
+		globalFs:    afero.NewOsFs(), // Ideally this would be limited or specialized
+		detector:    git.NewChangeDetector(projectPath),
 	}, nil
 }
 
@@ -66,13 +69,23 @@ func (e *InitExecutor) Execute(
 		Errors:       make([]string, 0),
 	}
 
+	// 0. Require git repository
+	if !git.IsGitRepo(e.projectPath) {
+		return result, fmt.Errorf("spectr init requires a git repository. Run 'git init' first")
+	}
+
+	// 0.1 Capture initial state
+	snapshotBefore, err := e.detector.Snapshot()
+	if err != nil {
+		return result, fmt.Errorf("failed to capture git snapshot: %w", err)
+	}
+
 	// 1. Check if Spectr is already initialized
 	if IsSpectrInitialized(e.projectPath) {
 		result.Errors = append(
 			result.Errors,
 			"Spectr already initialized in this project",
 		)
-		// Don't return error - allow updating tool configurations
 	}
 
 	// 2. Create spectr/ directory structure
@@ -80,7 +93,7 @@ func (e *InitExecutor) Execute(
 		e.projectPath,
 		"spectr",
 	)
-	err := e.createDirectoryStructure(
+	err = e.createDirectoryStructure(
 		spectrDir,
 		result,
 	)
@@ -118,7 +131,6 @@ func (e *InitExecutor) Execute(
 	// 5. Configure selected providers
 	err = e.configureProviders(
 		selectedProviderIDs,
-		spectrDir,
 		result,
 	)
 	if err != nil {
@@ -145,24 +157,43 @@ func (e *InitExecutor) Execute(
 		}
 	}
 
+	// 7. Calculate changed files using git
+	changedFiles, err := e.detector.ChangedFiles(snapshotBefore)
+	if err != nil {
+		result.Errors = append(result.Errors, fmt.Sprintf("failed to detect changed files: %v", err))
+	} else {
+        // Merge git detected files into CreatedFiles for display, avoiding duplicates
+        seen := make(map[string]bool)
+        for _, f := range result.CreatedFiles { seen[f] = true }
+        for _, f := range result.UpdatedFiles { seen[f] = true }
+        
+        for _, f := range changedFiles {
+            if !seen[f] {
+                result.CreatedFiles = append(result.CreatedFiles, f)
+                seen[f] = true
+            }
+        }
+	}
+
 	return result, nil
 }
 
 // createDirectoryStructure creates the spectr/ directory
 // and subdirectories
-func (*InitExecutor) createDirectoryStructure(
+func (e *InitExecutor) createDirectoryStructure(
 	spectrDir string,
 	result *ExecutionResult,
 ) error {
 	dirs := []string{
-		spectrDir,
-		filepath.Join(spectrDir, "specs"),
-		filepath.Join(spectrDir, "changes"),
+		"spectr",
+		filepath.Join("spectr", "specs"),
+		filepath.Join("spectr", "changes"),
 	}
 
 	for _, dir := range dirs {
-		if !FileExists(dir) {
-			if err := EnsureDir(dir); err != nil {
+		exists, _ := afero.Exists(e.projectFs, dir)
+		if !exists {
+			if err := e.projectFs.MkdirAll(dir, 0755); err != nil {
 				return fmt.Errorf(
 					"failed to create directory %s: %w",
 					dir,
@@ -185,12 +216,13 @@ func (e *InitExecutor) createProjectMd(
 	result *ExecutionResult,
 ) error {
 	projectFile := filepath.Join(
-		spectrDir,
+		"spectr",
 		"project.md",
 	)
 
 	// Check if it already exists
-	if FileExists(projectFile) {
+	exists, _ := afero.Exists(e.projectFs, projectFile)
+	if exists {
 		result.Errors = append(
 			result.Errors,
 			"project.md already exists, skipping",
@@ -204,7 +236,7 @@ func (e *InitExecutor) createProjectMd(
 
 	// Render template
 	content, err := e.tm.RenderProject(
-		ProjectContext{
+		types.ProjectContext{
 			ProjectName: projectName,
 			Description: "Add your project description here",
 			TechStack: []string{
@@ -224,7 +256,7 @@ func (e *InitExecutor) createProjectMd(
 	}
 
 	// Write file
-	if err := os.WriteFile(projectFile, []byte(content), filePerm); err != nil {
+	if err := afero.WriteFile(e.projectFs, projectFile, []byte(content), 0644); err != nil {
 		return fmt.Errorf(
 			"failed to write project.md: %w",
 			err,
@@ -245,12 +277,13 @@ func (e *InitExecutor) createAgentsMd(
 	result *ExecutionResult,
 ) error {
 	agentsFile := filepath.Join(
-		spectrDir,
+		"spectr",
 		"AGENTS.md",
 	)
 
 	// Check if it already exists
-	if FileExists(agentsFile) {
+	exists, _ := afero.Exists(e.projectFs, agentsFile)
+	if exists {
 		result.Errors = append(
 			result.Errors,
 			"AGENTS.md already exists, skipping",
@@ -261,7 +294,7 @@ func (e *InitExecutor) createAgentsMd(
 
 	// Render template
 	content, err := e.tm.RenderAgents(
-		providers.DefaultTemplateContext(),
+		types.DefaultTemplateContext(),
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -271,7 +304,7 @@ func (e *InitExecutor) createAgentsMd(
 	}
 
 	// Write file
-	if err := os.WriteFile(agentsFile, []byte(content), filePerm); err != nil {
+	if err := afero.WriteFile(e.projectFs, agentsFile, []byte(content), 0644); err != nil {
 		return fmt.Errorf(
 			"failed to write AGENTS.md: %w",
 			err,
@@ -286,58 +319,65 @@ func (e *InitExecutor) createAgentsMd(
 	return nil
 }
 
-// configureProviders configures the selected providers using the new interface-driven architecture.
-// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+// configureProviders configures the selected providers using the new composable architecture.
 func (e *InitExecutor) configureProviders(
 	selectedProviderIDs []string,
-	spectrDir string,
 	result *ExecutionResult,
 ) error {
 	if len(selectedProviderIDs) == 0 {
-		return nil // No providers to configure
+		return nil
 	}
 
-	for _, providerID := range selectedProviderIDs {
-		provider := providers.Get(providerID)
-		if provider == nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"provider %s not found",
-					providerID,
-				),
-			)
+	var allInitializers []types.Initializer
+	seenPaths := make(map[string]bool)
 
+	// 1. Collect initializers from all selected providers
+	for _, id := range selectedProviderIDs {
+		reg, exists := providers.Get(id)
+		if !exists {
+			result.Errors = append(result.Errors, fmt.Sprintf("provider %s not found", id))
 			continue
 		}
 
-		// Check if already configured
-		wasConfigured := provider.IsConfigured(
-			e.projectPath,
-		)
+		inits := reg.Provider.Initializers()
+		for _, ini := range inits {
+			path := ini.Path()
+			if path != "" {
+				if seenPaths[path] {
+					continue // Deduplicate by path
+				}
+				seenPaths[path] = true
+			}
+			allInitializers = append(allInitializers, ini)
+		}
+	}
 
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"failed to configure %s: %v",
-					provider.Name(),
-					err,
-				),
-			)
+	// 2. Sort initializers by type (Directories first)
+	sort.SliceStable(allInitializers, func(i, j int) bool {
+		_, iIsDir := allInitializers[i].(*initializers.DirectoryInitializer)
+		_, jIsDir := allInitializers[j].(*initializers.DirectoryInitializer)
+		if iIsDir && !jIsDir {
+			return true
+		}
+		return false
+	})
 
+	// 3. Run initializers
+	cfg := &types.Config{SpectrDir: "spectr"}
+	ctx := context.Background()
+	for _, ini := range allInitializers {
+		setup, err := ini.IsSetup(e.projectFs, e.globalFs, cfg)
+		if err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("failed to check status of %s: %v", ini.Path(), err))
 			continue
 		}
 
-		// Track created/updated files
-		filePaths := provider.GetFilePaths()
-		if wasConfigured {
-			result.UpdatedFiles = append(
-				result.UpdatedFiles,
-				filePaths...)
-		} else {
-			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
+		if err := ini.Init(ctx, e.projectFs, e.globalFs, cfg, e.tm); err != nil {
+			result.Errors = append(result.Errors, fmt.Sprintf("failed to initialize %s: %v", ini.Path(), err))
+			if !setup {
+				// If it wasn't setup and failed, we might want to continue or stop.
+				// Proposal says: "No rollback, report failures. Keep simple; users can re-run init"
+			}
 		}
 	}
 
@@ -348,13 +388,12 @@ func (e *InitExecutor) configureProviders(
 func (e *InitExecutor) createCIWorkflow(
 	result *ExecutionResult,
 ) error {
-	// Ensure .github/workflows directory exists
 	workflowDir := filepath.Join(
 		e.projectPath,
 		".github",
 		"workflows",
 	)
-	if err := EnsureDir(workflowDir); err != nil {
+	if err := e.projectFs.MkdirAll(workflowDir, 0755); err != nil {
 		return fmt.Errorf(
 			"failed to create workflows directory: %w",
 			err,
@@ -365,7 +404,6 @@ func (e *InitExecutor) createCIWorkflow(
 		workflowDir,
 		"spectr-ci.yml",
 	)
-	wasConfigured := FileExists(workflowFile)
 
 	// Render the CI workflow template
 	content, err := e.tm.RenderCIWorkflow()
@@ -377,21 +415,11 @@ func (e *InitExecutor) createCIWorkflow(
 	}
 
 	// Write the workflow file
-	if err := os.WriteFile(workflowFile, []byte(content), filePerm); err != nil {
+	if err := afero.WriteFile(e.projectFs, workflowFile, []byte(content), 0644); err != nil {
 		return fmt.Errorf(
 			"failed to write CI workflow file: %w",
 			err,
 		)
-	}
-
-	// Track in results
-	if wasConfigured {
-		result.UpdatedFiles = append(
-			result.UpdatedFiles,
-			".github/workflows/spectr-ci.yml",
-		)
-	} else {
-		result.CreatedFiles = append(result.CreatedFiles, ".github/workflows/spectr-ci.yml")
 	}
 
 	return nil

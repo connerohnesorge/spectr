@@ -13,7 +13,9 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/spf13/afero"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
 	"github.com/connerohnesorge/spectr/internal/tui"
 )
 
@@ -43,14 +45,14 @@ type WizardModel struct {
 	executing            bool
 	executionResult      *ExecutionResult
 	err                  error
-	allProviders         []providers.Provider // sorted providers for display
+	allProviders         []providers.Registration // sorted providers for display
 	ciWorkflowEnabled    bool                 // whether user wants CI workflow created
 	ciWorkflowConfigured bool                 // whether .github/workflows/spectr-ci.yml already exists
 	// Search mode state
 	searchMode        bool                 // whether search mode is active
 	searchQuery       string               // current search query
 	searchInput       textinput.Model      // text input for search
-	filteredProviders []providers.Provider // providers matching search query
+	filteredProviders []providers.Registration // providers matching search query
 }
 
 // ExecutionResult holds the result of initialization
@@ -69,33 +71,33 @@ type ExecutionCompleteMsg struct {
 // Lipgloss styles
 var (
 	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("99")).
-			MarginBottom(1)
+		Bold(true).
+		Foreground(lipgloss.Color("99")).
+		MarginBottom(1)
 
 	selectedStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("170")).
-			Bold(true)
+		Foreground(lipgloss.Color("170")).
+		Bold(true)
 
 	dimmedStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("240"))
+		Foreground(lipgloss.Color("240"))
 
 	cursorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("212"))
+		Foreground(lipgloss.Color("212"))
 
 	errorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("196")).
-			Bold(true)
+		Foreground(lipgloss.Color("196")).
+		Bold(true)
 
 	successStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("42")).
-			Bold(true)
+		Foreground(lipgloss.Color("42")).
+		Bold(true)
 
 	infoStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("86"))
+		Foreground(lipgloss.Color("86"))
 
 	subtleStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241"))
+		Foreground(lipgloss.Color("241"))
 )
 
 // NewWizardModel creates a new wizard model
@@ -112,19 +114,33 @@ func NewWizardModel(
 
 	allProviders := providers.All()
 
+	projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+	globalFs := afero.NewOsFs()
+	cfg := &types.Config{SpectrDir: "spectr"}
+
 	configuredProviders := make(map[string]bool)
 	selectedProviders := make(map[string]bool)
 
-	for _, provider := range allProviders {
-		isConfigured := provider.IsConfigured(
-			projectPath,
-		)
+	for _, reg := range allProviders {
+		isConfigured := true
+		inits := reg.Provider.Initializers()
+		if len(inits) == 0 {
+			isConfigured = false
+		} else {
+			for _, ini := range inits {
+				setup, err := ini.IsSetup(projectFs, globalFs, cfg)
+				if err != nil || !setup {
+					isConfigured = false
+					break
+				}
+			}
+		}
 
-		configuredProviders[provider.ID()] = isConfigured
+		configuredProviders[reg.ID] = isConfigured
 
 		// Pre-select already-configured providers
 		if isConfigured {
-			selectedProviders[provider.ID()] = true
+			selectedProviders[reg.ID] = true
 		}
 	}
 
@@ -256,7 +272,7 @@ func (m WizardModel) handleSelectKeys(
 		// Toggle selection on filtered list
 		if m.cursor < len(m.filteredProviders) {
 			provider := m.filteredProviders[m.cursor]
-			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+			m.selectedProviders[provider.ID] = !m.selectedProviders[provider.ID]
 		}
 	case "enter":
 		// Confirm and move to review
@@ -266,7 +282,7 @@ func (m WizardModel) handleSelectKeys(
 	case "a":
 		// Select all (from full list, not just filtered)
 		for _, provider := range m.allProviders {
-			m.selectedProviders[provider.ID()] = true
+			m.selectedProviders[provider.ID] = true
 		}
 	case "n":
 		// Deselect all
@@ -325,7 +341,7 @@ func (m WizardModel) handleSearchModeInput(
 		// Toggle selection on filtered list while in search mode
 		if m.cursor < len(m.filteredProviders) {
 			provider := m.filteredProviders[m.cursor]
-			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+			m.selectedProviders[provider.ID] = !m.selectedProviders[provider.ID]
 		}
 
 		return m, nil
@@ -348,9 +364,9 @@ func (m *WizardModel) applyProviderFilter() {
 	if query == "" {
 		m.filteredProviders = m.allProviders
 	} else {
-		m.filteredProviders = make([]providers.Provider, 0)
+		m.filteredProviders = make([]providers.Registration, 0)
 		for _, provider := range m.allProviders {
-			if strings.Contains(strings.ToLower(provider.Name()), query) {
+			if strings.Contains(strings.ToLower(provider.Name), query) {
 				m.filteredProviders = append(m.filteredProviders, provider)
 			}
 		}
@@ -546,7 +562,7 @@ func (m WizardModel) renderSelect() string {
 }
 
 func (m WizardModel) renderProviderGroup(
-	providersList []providers.Provider,
+	providersList []providers.Registration,
 	offset int,
 ) string {
 	var b strings.Builder
@@ -559,7 +575,7 @@ func (m WizardModel) renderProviderGroup(
 		}
 
 		checkbox := "[ ]"
-		if m.selectedProviders[provider.ID()] {
+		if m.selectedProviders[provider.ID] {
 			checkbox = selectedStyle.Render("[✓]")
 		}
 
@@ -568,12 +584,12 @@ func (m WizardModel) renderProviderGroup(
 			"  %s %s %s",
 			cursor,
 			checkbox,
-			provider.Name(),
+			provider.Name,
 		)
 
 		// Add configured indicator if provider is already configured
 		configuredIndicator := ""
-		if m.configuredProviders[provider.ID()] {
+		if m.configuredProviders[provider.ID] {
 			configuredIndicator = subtleStyle.Render(
 				" (configured)",
 			)
@@ -585,7 +601,7 @@ func (m WizardModel) renderProviderGroup(
 				cursorStyle.Render(line),
 			)
 			b.WriteString(configuredIndicator)
-		case m.selectedProviders[provider.ID()]:
+		case m.selectedProviders[provider.ID]:
 			b.WriteString(
 				selectedStyle.Render(line),
 			)
@@ -684,11 +700,11 @@ func (m WizardModel) renderSelectedProviders(
 	)
 
 	for _, provider := range m.allProviders {
-		if !m.selectedProviders[provider.ID()] {
+		if !m.selectedProviders[provider.ID] {
 			continue
 		}
 		b.WriteString(successStyle.Render("  ✓ "))
-		b.WriteString(provider.Name())
+		b.WriteString(provider.Name)
 		b.WriteString("\n")
 	}
 	b.WriteString("\n")
@@ -910,7 +926,7 @@ func executeInit(
 				err: fmt.Errorf(
 					"failed to create executor: %w",
 					err,
-				),
+			),
 			}
 		}
 

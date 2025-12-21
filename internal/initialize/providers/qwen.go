@@ -1,32 +1,32 @@
 package providers
 
+import (
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/connerohnesorge/spectr/internal/initialize/types"
+)
+
 func init() {
-	Register(NewQwenProvider())
+	Register(Registration{
+		ID:       "qwen",
+		Name:     "Qwen Code",
+		Priority: 5,
+		Provider: &QwenProvider{},
+	})
 }
 
-// QwenProvider implements the Provider interface for Qwen Code.
-// Qwen uses QWEN.md and .qwen/commands/ for slash commands.
-type QwenProvider struct {
-	BaseProvider
-}
+// QwenProvider implements the new Provider interface for Qwen Code.
+type QwenProvider struct{}
 
-// NewQwenProvider creates a new Qwen Code provider.
-func NewQwenProvider() *QwenProvider {
+// Initializers returns the initializers for Qwen Code.
+func (p *QwenProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".qwen/commands",
 		".md",
 	)
 
-	return &QwenProvider{
-		BaseProvider: BaseProvider{
-			id:            "qwen",
-			name:          "Qwen Code",
-			priority:      PriorityQwen,
-			configFile:    "QWEN.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+	return []types.Initializer{
+		initializers.NewConfigFileInitializer("QWEN.md"),
+		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
+		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
 	}
 }

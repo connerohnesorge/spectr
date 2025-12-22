@@ -3,27 +3,43 @@ package initializers
 import (
 	"context"
 
-	"github.com/spf13/afero"
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
+	"github.com/spf13/afero"
 )
 
+// DirectoryInitializer initializes a directory.
 type DirectoryInitializer struct {
 	path string
 }
 
-func NewDirectoryInitializer(path string) *DirectoryInitializer {
+// NewDirectoryInitializer creates a new DirectoryInitializer.
+func NewDirectoryInitializer(
+	path string,
+) *DirectoryInitializer {
 	return &DirectoryInitializer{path: path}
 }
 
-func (d *DirectoryInitializer) Init(ctx context.Context, projectFs, globalFs afero.Fs, cfg *types.Config, tm types.TemplateRenderer) error {
+// Init initializes the directory.
+//
+//nolint:revive // argument-limit - interface defined elsewhere
+func (d *DirectoryInitializer) Init(
+	ctx context.Context,
+	projectFs, globalFs afero.Fs,
+	cfg *types.Config,
+	_ types.TemplateRenderer,
+) error {
 	fs := projectFs
 	if IsGlobalPath(d.path) {
 		fs = globalFs
 	}
-	return fs.MkdirAll(d.path, 0755)
+	return fs.MkdirAll(d.path, dirPerm)
 }
 
-func (d *DirectoryInitializer) IsSetup(projectFs, globalFs afero.Fs, cfg *types.Config) (bool, error) {
+// IsSetup checks if the directory is already set up.
+func (d *DirectoryInitializer) IsSetup(
+	projectFs, globalFs afero.Fs,
+	cfg *types.Config,
+) (bool, error) {
 	fs := projectFs
 	if IsGlobalPath(d.path) {
 		fs = globalFs
@@ -35,6 +51,7 @@ func (d *DirectoryInitializer) IsSetup(projectFs, globalFs afero.Fs, cfg *types.
 	return exists, nil
 }
 
+// Path returns the path of the directory.
 func (d *DirectoryInitializer) Path() string {
 	return d.path
 }

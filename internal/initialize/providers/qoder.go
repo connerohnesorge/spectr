@@ -25,8 +25,18 @@ func (p *QoderProvider) Initializers() []types.Initializer {
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer("QODER.md"),
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		initializers.NewConfigFileInitializer(
+			"QODER.md",
+		),
+		initializers.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		initializers.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

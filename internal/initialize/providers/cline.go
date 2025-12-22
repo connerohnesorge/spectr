@@ -18,14 +18,22 @@ func init() {
 type ClineProvider struct{}
 
 // Initializers returns the initializers for Cline.
-func (p *ClineProvider) Initializers() []types.Initializer {
+func (*ClineProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".cline/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		initializers.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		initializers.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

@@ -172,7 +172,7 @@ func printInitResults(
 		for i, e := range result.Errors {
 			errs[i] = errors.New(e)
 		}
-        _ = errs
+		_ = errs
 	}
 
 	fmt.Print(initialize.FormatNextStepsMessage())

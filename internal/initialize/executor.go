@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/spf13/afero"
 	"github.com/connerohnesorge/spectr/internal/initialize/git"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
 	"github.com/connerohnesorge/spectr/internal/initialize/templates"
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
+	"github.com/spf13/afero"
 )
 
 // InitExecutor handles the actual initialization process
@@ -52,9 +52,14 @@ func NewInitExecutor(
 	return &InitExecutor{
 		projectPath: projectPath,
 		tm:          tm,
-		projectFs:   afero.NewBasePathFs(afero.NewOsFs(), projectPath),
-		globalFs:    afero.NewOsFs(), // Ideally this would be limited or specialized
-		detector:    git.NewChangeDetector(projectPath),
+		projectFs: afero.NewBasePathFs(
+			afero.NewOsFs(),
+			projectPath,
+		),
+		globalFs: afero.NewOsFs(), // Ideally this would be limited or specialized
+		detector: git.NewChangeDetector(
+			projectPath,
+		),
 	}, nil
 }
 
@@ -71,13 +76,18 @@ func (e *InitExecutor) Execute(
 
 	// 0. Require git repository
 	if !git.IsGitRepo(e.projectPath) {
-		return result, fmt.Errorf("spectr init requires a git repository. Run 'git init' first")
+		return result, fmt.Errorf(
+			"spectr init requires a git repository. Run 'git init' first",
+		)
 	}
 
 	// 0.1 Capture initial state
 	snapshotBefore, err := e.detector.Snapshot()
 	if err != nil {
-		return result, fmt.Errorf("failed to capture git snapshot: %w", err)
+		return result, fmt.Errorf(
+			"failed to capture git snapshot: %w",
+			err,
+		)
 	}
 
 	// 1. Check if Spectr is already initialized
@@ -158,21 +168,33 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 7. Calculate changed files using git
-	changedFiles, err := e.detector.ChangedFiles(snapshotBefore)
+	changedFiles, err := e.detector.ChangedFiles(
+		snapshotBefore,
+	)
 	if err != nil {
-		result.Errors = append(result.Errors, fmt.Sprintf("failed to detect changed files: %v", err))
+		result.Errors = append(
+			result.Errors,
+			fmt.Sprintf(
+				"failed to detect changed files: %v",
+				err,
+			),
+		)
 	} else {
-        // Merge git detected files into CreatedFiles for display, avoiding duplicates
-        seen := make(map[string]bool)
-        for _, f := range result.CreatedFiles { seen[f] = true }
-        for _, f := range result.UpdatedFiles { seen[f] = true }
-        
-        for _, f := range changedFiles {
-            if !seen[f] {
-                result.CreatedFiles = append(result.CreatedFiles, f)
-                seen[f] = true
-            }
-        }
+		// Merge git detected files into CreatedFiles for display, avoiding duplicates
+		seen := make(map[string]bool)
+		for _, f := range result.CreatedFiles {
+			seen[f] = true
+		}
+		for _, f := range result.UpdatedFiles {
+			seen[f] = true
+		}
+
+		for _, f := range changedFiles {
+			if !seen[f] {
+				result.CreatedFiles = append(result.CreatedFiles, f)
+				seen[f] = true
+			}
+		}
 	}
 
 	return result, nil
@@ -191,7 +213,10 @@ func (e *InitExecutor) createDirectoryStructure(
 	}
 
 	for _, dir := range dirs {
-		exists, _ := afero.Exists(e.projectFs, dir)
+		exists, _ := afero.Exists(
+			e.projectFs,
+			dir,
+		)
 		if !exists {
 			if err := e.projectFs.MkdirAll(dir, 0755); err != nil {
 				return fmt.Errorf(
@@ -221,7 +246,10 @@ func (e *InitExecutor) createProjectMd(
 	)
 
 	// Check if it already exists
-	exists, _ := afero.Exists(e.projectFs, projectFile)
+	exists, _ := afero.Exists(
+		e.projectFs,
+		projectFile,
+	)
 	if exists {
 		result.Errors = append(
 			result.Errors,
@@ -282,7 +310,10 @@ func (e *InitExecutor) createAgentsMd(
 	)
 
 	// Check if it already exists
-	exists, _ := afero.Exists(e.projectFs, agentsFile)
+	exists, _ := afero.Exists(
+		e.projectFs,
+		agentsFile,
+	)
 	if exists {
 		result.Errors = append(
 			result.Errors,
@@ -335,7 +366,13 @@ func (e *InitExecutor) configureProviders(
 	for _, id := range selectedProviderIDs {
 		reg, exists := providers.Get(id)
 		if !exists {
-			result.Errors = append(result.Errors, fmt.Sprintf("provider %s not found", id))
+			result.Errors = append(
+				result.Errors,
+				fmt.Sprintf(
+					"provider %s not found",
+					id,
+				),
+			)
 			continue
 		}
 
@@ -348,36 +385,57 @@ func (e *InitExecutor) configureProviders(
 				}
 				seenPaths[path] = true
 			}
-			allInitializers = append(allInitializers, ini)
+			allInitializers = append(
+				allInitializers,
+				ini,
+			)
 		}
 	}
 
 	// 2. Sort initializers by type (Directories first)
-	sort.SliceStable(allInitializers, func(i, j int) bool {
-		_, iIsDir := allInitializers[i].(*initializers.DirectoryInitializer)
-		_, jIsDir := allInitializers[j].(*initializers.DirectoryInitializer)
-		if iIsDir && !jIsDir {
-			return true
-		}
-		return false
-	})
+	sort.SliceStable(
+		allInitializers,
+		func(i, j int) bool {
+			_, iIsDir := allInitializers[i].(*initializers.DirectoryInitializer)
+			_, jIsDir := allInitializers[j].(*initializers.DirectoryInitializer)
+			if iIsDir && !jIsDir {
+				return true
+			}
+			return false
+		},
+	)
 
 	// 3. Run initializers
 	cfg := &types.Config{SpectrDir: "spectr"}
 	ctx := context.Background()
 	for _, ini := range allInitializers {
-		setup, err := ini.IsSetup(e.projectFs, e.globalFs, cfg)
+		_, err := ini.IsSetup(
+			e.projectFs,
+			e.globalFs,
+			cfg,
+		)
 		if err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("failed to check status of %s: %v", ini.Path(), err))
+			result.Errors = append(
+				result.Errors,
+				fmt.Sprintf(
+					"failed to check status of %s: %v",
+					ini.Path(),
+					err,
+				),
+			)
+
 			continue
 		}
 
 		if err := ini.Init(ctx, e.projectFs, e.globalFs, cfg, e.tm); err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("failed to initialize %s: %v", ini.Path(), err))
-			if !setup {
-				// If it wasn't setup and failed, we might want to continue or stop.
-				// Proposal says: "No rollback, report failures. Keep simple; users can re-run init"
-			}
+			result.Errors = append(
+				result.Errors,
+				fmt.Sprintf(
+					"failed to initialize %s: %v",
+					ini.Path(),
+					err,
+				),
+			)
 		}
 	}
 

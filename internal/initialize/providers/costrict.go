@@ -25,8 +25,18 @@ func (p *CostrictProvider) Initializers() []types.Initializer {
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer("COSTRICT.md"),
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		initializers.NewConfigFileInitializer(
+			"COSTRICT.md",
+		),
+		initializers.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		initializers.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

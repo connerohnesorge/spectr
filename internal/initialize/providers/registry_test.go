@@ -3,19 +3,29 @@ package providers
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
+	"github.com/stretchr/testify/assert"
 )
 
 type mockProvider struct{}
 
-func (m *mockProvider) Initializers() []types.Initializer { return nil }
+func (*mockProvider) Initializers() []types.Initializer { return nil }
 
 func TestRegistryV2(t *testing.T) {
 	r := NewRegistry()
 
-	reg1 := Registration{ID: "p1", Name: "Provider 1", Priority: 10, Provider: &mockProvider{}}
-	reg2 := Registration{ID: "p2", Name: "Provider 2", Priority: 5, Provider: &mockProvider{}}
+	reg1 := Registration{
+		ID:       "p1",
+		Name:     "Provider 1",
+		Priority: 10,
+		Provider: &mockProvider{},
+	}
+	reg2 := Registration{
+		ID:       "p2",
+		Name:     "Provider 2",
+		Priority: 5,
+		Provider: &mockProvider{},
+	}
 
 	// Register
 	assert.NoError(t, r.Register(reg1))
@@ -36,5 +46,9 @@ func TestRegistryV2(t *testing.T) {
 	all := r.All()
 	assert.Len(t, all, 2)
 	assert.Equal(t, "p2", all[0].ID) // Priority 5
-	assert.Equal(t, "p1", all[1].ID) // Priority 10
+	assert.Equal(
+		t,
+		"p1",
+		all[1].ID,
+	) // Priority 10
 }

@@ -13,10 +13,10 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/spf13/afero"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 	"github.com/connerohnesorge/spectr/internal/tui"
+	"github.com/spf13/afero"
 )
 
 const (
@@ -46,12 +46,12 @@ type WizardModel struct {
 	executionResult      *ExecutionResult
 	err                  error
 	allProviders         []providers.Registration // sorted providers for display
-	ciWorkflowEnabled    bool                 // whether user wants CI workflow created
-	ciWorkflowConfigured bool                 // whether .github/workflows/spectr-ci.yml already exists
+	ciWorkflowEnabled    bool                     // whether user wants CI workflow created
+	ciWorkflowConfigured bool                     // whether .github/workflows/spectr-ci.yml already exists
 	// Search mode state
-	searchMode        bool                 // whether search mode is active
-	searchQuery       string               // current search query
-	searchInput       textinput.Model      // text input for search
+	searchMode        bool                     // whether search mode is active
+	searchQuery       string                   // current search query
+	searchInput       textinput.Model          // text input for search
 	filteredProviders []providers.Registration // providers matching search query
 }
 
@@ -71,33 +71,33 @@ type ExecutionCompleteMsg struct {
 // Lipgloss styles
 var (
 	titleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("99")).
-		MarginBottom(1)
+			Bold(true).
+			Foreground(lipgloss.Color("99")).
+			MarginBottom(1)
 
 	selectedStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("170")).
-		Bold(true)
+			Foreground(lipgloss.Color("170")).
+			Bold(true)
 
 	dimmedStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("240"))
+			Foreground(lipgloss.Color("240"))
 
 	cursorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("212"))
+			Foreground(lipgloss.Color("212"))
 
 	errorStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("196")).
-		Bold(true)
+			Foreground(lipgloss.Color("196")).
+			Bold(true)
 
 	successStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("42")).
-		Bold(true)
+			Foreground(lipgloss.Color("42")).
+			Bold(true)
 
 	infoStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("86"))
+			Foreground(lipgloss.Color("86"))
 
 	subtleStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("241"))
+			Foreground(lipgloss.Color("241"))
 )
 
 // NewWizardModel creates a new wizard model
@@ -114,7 +114,10 @@ func NewWizardModel(
 
 	allProviders := providers.All()
 
-	projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+	projectFs := afero.NewBasePathFs(
+		afero.NewOsFs(),
+		projectPath,
+	)
 	globalFs := afero.NewOsFs()
 	cfg := &types.Config{SpectrDir: "spectr"}
 
@@ -131,6 +134,7 @@ func NewWizardModel(
 				setup, err := ini.IsSetup(projectFs, globalFs, cfg)
 				if err != nil || !setup {
 					isConfigured = false
+
 					break
 				}
 			}
@@ -926,7 +930,7 @@ func executeInit(
 				err: fmt.Errorf(
 					"failed to create executor: %w",
 					err,
-			),
+				),
 			}
 		}
 

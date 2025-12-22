@@ -25,7 +25,15 @@ func (p *KilocodeProvider) Initializers() []types.Initializer {
 	)
 
 	return []types.Initializer{
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		initializers.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		initializers.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

@@ -13,8 +13,8 @@ func TestAllProvidersRegistered(t *testing.T) {
 
 func TestProviderInitializers(t *testing.T) {
 	tests := []struct {
-		id           string
-		expectInits  int
+		id          string
+		expectInits int
 	}{
 		{"claude-code", 3},
 		{"gemini", 2},

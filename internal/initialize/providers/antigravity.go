@@ -25,8 +25,18 @@ func (p *AntigravityProvider) Initializers() []types.Initializer {
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer("AGENTS.md"),
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		initializers.NewConfigFileInitializer(
+			"AGENTS.md",
+		),
+		initializers.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		initializers.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

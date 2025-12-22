@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	inits "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -18,14 +18,22 @@ func init() {
 type CursorProvider struct{}
 
 // Initializers returns the initializers for Cursor.
-func (p *CursorProvider) Initializers() []types.Initializer {
+func (*CursorProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".cursorrules/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		inits.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		inits.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

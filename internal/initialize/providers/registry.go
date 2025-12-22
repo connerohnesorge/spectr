@@ -6,10 +6,8 @@ import (
 	"sync"
 )
 
-var (
-	// DefaultRegistry is the default global registry.
-	DefaultRegistry = NewRegistry()
-)
+// DefaultRegistry is the default global registry.
+var DefaultRegistry = NewRegistry()
 
 // Register adds a provider to the default registry.
 func Register(r Registration) {
@@ -37,17 +35,24 @@ type Registry struct {
 // NewRegistry creates a new empty registry.
 func NewRegistry() *Registry {
 	return &Registry{
-		registrations: make(map[string]Registration),
+		registrations: make(
+			map[string]Registration,
+		),
 	}
 }
 
 // Register adds a provider registration.
-func (r *Registry) Register(reg Registration) error {
+func (r *Registry) Register(
+	reg Registration,
+) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	if _, exists := r.registrations[reg.ID]; exists {
-		return fmt.Errorf("provider %q already registered", reg.ID)
+		return fmt.Errorf(
+			"provider %q already registered",
+			reg.ID,
+		)
 	}
 
 	r.registrations[reg.ID] = reg
@@ -55,7 +60,9 @@ func (r *Registry) Register(reg Registration) error {
 }
 
 // Get retrieves a provider registration by ID.
-func (r *Registry) Get(id string) (Registration, bool) {
+func (r *Registry) Get(
+	id string,
+) (Registration, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -68,7 +75,11 @@ func (r *Registry) All() []Registration {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	regs := make([]Registration, 0, len(r.registrations))
+	regs := make(
+		[]Registration,
+		0,
+		len(r.registrations),
+	)
 	for _, reg := range r.registrations {
 		regs = append(regs, reg)
 	}

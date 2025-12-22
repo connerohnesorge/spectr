@@ -18,15 +18,25 @@ func init() {
 type ClaudeProvider struct{}
 
 // Initializers returns the initializers for Claude Code.
-func (p *ClaudeProvider) Initializers() []types.Initializer {
+func (*ClaudeProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".claude/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer("CLAUDE.md"),
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		initializers.NewConfigFileInitializer(
+			"CLAUDE.md",
+		),
+		initializers.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		initializers.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

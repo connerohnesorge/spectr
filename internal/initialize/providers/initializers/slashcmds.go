@@ -4,17 +4,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/afero"
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
+	"github.com/spf13/afero"
 )
 
+// SlashCommandsInitializer initializes slash commands.
 type SlashCommandsInitializer struct {
 	cmd         string // "proposal", "apply"
 	path        string
 	frontmatter string
 }
 
-func NewSlashCommandsInitializer(cmd, path, frontmatter string) *SlashCommandsInitializer {
+// NewSlashCommandsInitializer creates a new SlashCommandsInitializer.
+func NewSlashCommandsInitializer(
+	cmd, path, frontmatter string,
+) *SlashCommandsInitializer {
 	return &SlashCommandsInitializer{
 		cmd:         cmd,
 		path:        path,
@@ -22,23 +26,38 @@ func NewSlashCommandsInitializer(cmd, path, frontmatter string) *SlashCommandsIn
 	}
 }
 
-func (s *SlashCommandsInitializer) Init(ctx context.Context, projectFs, globalFs afero.Fs, cfg *types.Config, tm types.TemplateRenderer) error {
+// Init initializes the slash command.
+//
+//nolint:revive // argument-limit - interface defined elsewhere
+func (s *SlashCommandsInitializer) Init(
+	_ context.Context,
+	projectFs, globalFs afero.Fs,
+	_ *types.Config,
+	tm types.TemplateRenderer,
+) error {
 	fs := projectFs
 	isGlobal := IsGlobalPath(s.path)
 	if isGlobal {
 		fs = globalFs
 	}
 
-	body, err := tm.RenderSlashCommand(s.cmd, types.DefaultTemplateContext())
+	body, err := tm.RenderSlashCommand(
+		s.cmd,
+		types.DefaultTemplateContext(),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to render slash command %s: %w", s.cmd, err)
+		return fmt.Errorf(
+			"failed to render slash command %s: %w",
+			s.cmd,
+			err,
+		)
 	}
 
-    // Use ExpandPath only if global, otherwise keep relative for BasePathFs
-    targetPath := s.path
-    if isGlobal {
-        targetPath = ExpandPath(s.path)
-    }
+	// Use ExpandPath only if global, otherwise keep relative for BasePathFs
+	targetPath := s.path
+	if isGlobal {
+		targetPath = ExpandPath(s.path)
+	}
 
 	exists, err := afero.Exists(fs, targetPath)
 	if err != nil {
@@ -46,18 +65,32 @@ func (s *SlashCommandsInitializer) Init(ctx context.Context, projectFs, globalFs
 	}
 
 	if exists {
-		return updateSlashCommandBody(fs, targetPath, body, s.frontmatter)
+		return updateSlashCommandBody(
+			fs,
+			targetPath,
+			body,
+			s.frontmatter,
+		)
 	}
 
-	return createNewSlashCommand(fs, targetPath, s.cmd, body, s.frontmatter)
+	return createNewSlashCommand(
+		fs,
+		targetPath,
+		body,
+		s.frontmatter,
+	)
 }
 
-func (s *SlashCommandsInitializer) IsSetup(projectFs, globalFs afero.Fs, cfg *types.Config) (bool, error) {
+// IsSetup checks if the slash command is already set up.
+func (s *SlashCommandsInitializer) IsSetup(
+	projectFs, globalFs afero.Fs,
+	_ *types.Config,
+) (bool, error) {
 	fs := projectFs
-    targetPath := s.path
+	targetPath := s.path
 	if IsGlobalPath(s.path) {
 		fs = globalFs
-        targetPath = ExpandPath(s.path)
+		targetPath = ExpandPath(s.path)
 	}
 	exists, err := afero.Exists(fs, targetPath)
 	if err != nil {
@@ -66,6 +99,7 @@ func (s *SlashCommandsInitializer) IsSetup(projectFs, globalFs afero.Fs, cfg *ty
 	return exists, nil
 }
 
+// Path returns the path of the slash command.
 func (s *SlashCommandsInitializer) Path() string {
 	return s.path
 }

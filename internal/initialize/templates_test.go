@@ -98,8 +98,8 @@ func TestTemplateManager_RenderProject(
 				t.Errorf(
 					"RenderProject() error = %v, wantErr %v",
 					err,
-								tt.wantErr,
-							)
+					tt.wantErr,
+				)
 				return
 			}
 			if err != nil {
@@ -314,8 +314,8 @@ func TestTemplateManager_RenderSlashCommand(
 				t.Errorf(
 					"RenderSlashCommand() error = %v, wantErr %v",
 					err,
-								tt.wantErr,
-							)
+					tt.wantErr,
+				)
 				return
 			}
 			if err != nil {

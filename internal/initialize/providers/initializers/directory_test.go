@@ -10,10 +10,18 @@ import (
 
 func TestDirectoryInitializer(t *testing.T) {
 	fs := afero.NewMemMapFs()
-	initializer := NewDirectoryInitializer("some/dir")
+	initializer := NewDirectoryInitializer(
+		"some/dir",
+	)
 
 	// Test Init
-	err := initializer.Init(context.Background(), fs, fs, nil, nil)
+	err := initializer.Init(
+		context.Background(),
+		fs,
+		fs,
+		nil,
+		nil,
+	)
 	assert.NoError(t, err)
 
 	exists, _ := afero.DirExists(fs, "some/dir")
@@ -25,5 +33,9 @@ func TestDirectoryInitializer(t *testing.T) {
 	assert.True(t, setup)
 
 	// Test Path
-	assert.Equal(t, "some/dir", initializer.Path())
+	assert.Equal(
+		t,
+		"some/dir",
+		initializer.Path(),
+	)
 }

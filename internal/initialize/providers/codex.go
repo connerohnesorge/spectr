@@ -24,8 +24,18 @@ func (p *CodexProvider) Initializers() []types.Initializer {
 	applyPath := "~/.codex/prompts/spectr-apply.md"
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer("AGENTS.md"),
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		initializers.NewConfigFileInitializer(
+			"AGENTS.md",
+		),
+		initializers.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		initializers.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

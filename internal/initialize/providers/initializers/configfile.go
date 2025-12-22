@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/spf13/afero"
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
+	"github.com/spf13/afero"
 )
 
 // ConfigFileInitializer creates or updates an instruction file (e.g. CLAUDE.md)
@@ -13,26 +13,42 @@ type ConfigFileInitializer struct {
 	path string
 }
 
-func NewConfigFileInitializer(path string) *ConfigFileInitializer {
+// NewConfigFileInitializer creates a new ConfigFileInitializer.
+func NewConfigFileInitializer(
+	path string,
+) *ConfigFileInitializer {
 	return &ConfigFileInitializer{path: path}
 }
 
-func (c *ConfigFileInitializer) Init(ctx context.Context, projectFs, globalFs afero.Fs, cfg *types.Config, tm types.TemplateRenderer) error {
+// Init initializes the config file.
+//
+//nolint:revive // argument-limit - interface defined elsewhere
+func (c *ConfigFileInitializer) Init(
+	_ context.Context,
+	projectFs, globalFs afero.Fs,
+	_ *types.Config,
+	tm types.TemplateRenderer,
+) error {
 	fs := projectFs
-    isGlobal := IsGlobalPath(c.path)
+	isGlobal := IsGlobalPath(c.path)
 	if isGlobal {
 		fs = globalFs
 	}
 
-	content, err := tm.RenderInstructionPointer(types.DefaultTemplateContext())
+	content, err := tm.RenderInstructionPointer(
+		types.DefaultTemplateContext(),
+	)
 	if err != nil {
-		return fmt.Errorf("failed to render instruction pointer: %w", err)
+		return fmt.Errorf(
+			"failed to render instruction pointer: %w",
+			err,
+		)
 	}
 
-    targetPath := c.path
-    if isGlobal {
-        targetPath = ExpandPath(c.path)
-    }
+	targetPath := c.path
+	if isGlobal {
+		targetPath = ExpandPath(c.path)
+	}
 
 	return UpdateFileWithMarkers(
 		fs,
@@ -43,12 +59,16 @@ func (c *ConfigFileInitializer) Init(ctx context.Context, projectFs, globalFs af
 	)
 }
 
-func (c *ConfigFileInitializer) IsSetup(projectFs, globalFs afero.Fs, cfg *types.Config) (bool, error) {
+// IsSetup checks if the config file is already set up.
+func (c *ConfigFileInitializer) IsSetup(
+	projectFs, globalFs afero.Fs,
+	_ *types.Config,
+) (bool, error) {
 	fs := projectFs
-    targetPath := c.path
+	targetPath := c.path
 	if IsGlobalPath(c.path) {
 		fs = globalFs
-        targetPath = ExpandPath(c.path)
+		targetPath = ExpandPath(c.path)
 	}
 	exists, err := afero.Exists(fs, targetPath)
 	if err != nil {
@@ -57,6 +77,7 @@ func (c *ConfigFileInitializer) IsSetup(projectFs, globalFs afero.Fs, cfg *types
 	return exists, nil
 }
 
+// Path returns the path of the config file.
 func (c *ConfigFileInitializer) Path() string {
 	return c.path
 }

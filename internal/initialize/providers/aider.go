@@ -1,3 +1,4 @@
+// Package providers implements the different AI provider configurations.
 package providers
 
 import (
@@ -18,14 +19,22 @@ func init() {
 type AiderProvider struct{}
 
 // Initializers returns the initializers for Aider.
-func (p *AiderProvider) Initializers() []types.Initializer {
+func (*AiderProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".aider/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		initializers.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		initializers.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

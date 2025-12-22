@@ -1,3 +1,4 @@
+// Package types defines the shared types for the initialize package.
 package types
 
 import (
@@ -29,7 +30,10 @@ func (c *Config) ChangesDir() string {
 
 // ProjectFile returns the path to the project configuration file.
 func (c *Config) ProjectFile() string {
-	return filepath.Join(c.SpectrDir, "project.md")
+	return filepath.Join(
+		c.SpectrDir,
+		"project.md",
+	)
 }
 
 // AgentsFile returns the path to the agents file.

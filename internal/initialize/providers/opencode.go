@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	inits "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -18,14 +18,22 @@ func init() {
 type OpencodeProvider struct{}
 
 // Initializers returns the initializers for OpenCode.
-func (p *OpencodeProvider) Initializers() []types.Initializer {
+func (*OpencodeProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".opencode/command",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewSlashCommandsInitializer("proposal", proposalPath, FrontmatterProposal),
-		initializers.NewSlashCommandsInitializer("apply", applyPath, FrontmatterApply),
+		inits.NewSlashCommandsInitializer(
+			"proposal",
+			proposalPath,
+			FrontmatterProposal,
+		),
+		inits.NewSlashCommandsInitializer(
+			"apply",
+			applyPath,
+			FrontmatterApply,
+		),
 	}
 }

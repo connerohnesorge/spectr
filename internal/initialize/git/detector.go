@@ -38,7 +38,9 @@ func IsGitRepo(path string) bool {
 // It returns a string representing the state (stash commit + untracked files).
 func (d *ChangeDetector) Snapshot() (string, error) {
 	if !IsGitRepo(d.projectPath) {
-		return "", errors.New("not a git repository")
+		return "", errors.New(
+			"not a git repository",
+		)
 	}
 
 	stashHash, err := d.runGit("stash", "create")
@@ -68,11 +70,22 @@ func (d *ChangeDetector) ChangedFiles(
 		return nil, err
 	}
 
-	beforeParts := strings.SplitN(beforeSnapshot, "|", 2)
-	currentParts := strings.SplitN(currentSnapshot, "|", 2)
+	beforeParts := strings.SplitN(
+		beforeSnapshot,
+		"|",
+		2,
+	)
+	currentParts := strings.SplitN(
+		currentSnapshot,
+		"|",
+		2,
+	)
 
-	if len(beforeParts) != 2 || len(currentParts) != 2 {
-		return nil, errors.New("invalid snapshot format")
+	if len(beforeParts) != 2 ||
+		len(currentParts) != 2 {
+		return nil, errors.New(
+			"invalid snapshot format",
+		)
 	}
 
 	beforeStash, beforeUntracked := beforeParts[0], beforeParts[1]
@@ -90,7 +103,11 @@ func (d *ChangeDetector) ChangedFiles(
 	}
 
 	// Detect changes in untracked files.
-	d.detectUntrackedChanges(beforeUntracked, currentUntracked, changes)
+	d.detectUntrackedChanges(
+		beforeUntracked,
+		currentUntracked,
+		changes,
+	)
 
 	result := make([]string, 0, len(changes))
 	for f := range changes {

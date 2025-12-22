@@ -41,7 +41,8 @@ type WizardModel struct {
 	projectPath          string
 	selectedProviders    map[string]bool // provider ID -> selected
 	configuredProviders  map[string]bool // provider ID -> is configured
-	cursor               int             // cursor position in list
+	providerErrors       map[string]error
+	cursor               int // cursor position in list
 	executing            bool
 	executionResult      *ExecutionResult
 	err                  error
@@ -123,6 +124,7 @@ func NewWizardModel(
 
 	configuredProviders := make(map[string]bool)
 	selectedProviders := make(map[string]bool)
+	providerErrors := make(map[string]error)
 
 	for _, reg := range allProviders {
 		isConfigured := true
@@ -132,7 +134,13 @@ func NewWizardModel(
 		} else {
 			for _, ini := range inits {
 				setup, err := ini.IsSetup(projectFs, globalFs, cfg)
-				if err != nil || !setup {
+				if err != nil {
+					providerErrors[reg.ID] = err
+					isConfigured = false
+
+					break
+				}
+				if !setup {
 					isConfigured = false
 
 					break
@@ -143,7 +151,7 @@ func NewWizardModel(
 		configuredProviders[reg.ID] = isConfigured
 
 		// Pre-select already-configured providers
-		if isConfigured {
+		if isConfigured && providerErrors[reg.ID] == nil {
 			selectedProviders[reg.ID] = true
 		}
 	}
@@ -173,6 +181,7 @@ func NewWizardModel(
 		projectPath:          projectPath,
 		selectedProviders:    selectedProviders,
 		configuredProviders:  configuredProviders,
+		providerErrors:       providerErrors,
 		cursor:               0,
 		allProviders:         allProviders,
 		ciWorkflowEnabled:    ciWorkflowEnabled,
@@ -276,6 +285,9 @@ func (m WizardModel) handleSelectKeys(
 		// Toggle selection on filtered list
 		if m.cursor < len(m.filteredProviders) {
 			provider := m.filteredProviders[m.cursor]
+			if m.providerErrors[provider.ID] != nil {
+				return m, nil
+			}
 			m.selectedProviders[provider.ID] = !m.selectedProviders[provider.ID]
 		}
 	case "enter":
@@ -286,6 +298,9 @@ func (m WizardModel) handleSelectKeys(
 	case "a":
 		// Select all (from full list, not just filtered)
 		for _, provider := range m.allProviders {
+			if m.providerErrors[provider.ID] != nil {
+				continue
+			}
 			m.selectedProviders[provider.ID] = true
 		}
 	case "n":
@@ -345,6 +360,9 @@ func (m WizardModel) handleSearchModeInput(
 		// Toggle selection on filtered list while in search mode
 		if m.cursor < len(m.filteredProviders) {
 			provider := m.filteredProviders[m.cursor]
+			if m.providerErrors[provider.ID] != nil {
+				return m, nil
+			}
 			m.selectedProviders[provider.ID] = !m.selectedProviders[provider.ID]
 		}
 
@@ -539,6 +557,31 @@ func (m WizardModel) renderSelect() string {
 
 	// Configured indicator explanation
 	b.WriteString(doubleNewline)
+	if len(m.providerErrors) > 0 {
+		b.WriteString(
+			errorStyle.Render(
+				"Status check failures:",
+			),
+		)
+		b.WriteString(newline)
+		for _, provider := range m.allProviders {
+			err, ok := m.providerErrors[provider.ID]
+			if !ok {
+				continue
+			}
+			b.WriteString(
+				errorStyle.Render("  ⚠ "),
+			)
+			b.WriteString(fmt.Sprintf(
+				"%s (%s): %v",
+				provider.Name,
+				provider.ID,
+				err,
+			))
+			b.WriteString(newline)
+		}
+		b.WriteString(newline)
+	}
 	b.WriteString(
 		subtleStyle.Render(
 			"Items marked (configured) are already set up and will be updated.\n",
@@ -593,7 +636,11 @@ func (m WizardModel) renderProviderGroup(
 
 		// Add configured indicator if provider is already configured
 		configuredIndicator := ""
-		if m.configuredProviders[provider.ID] {
+		if m.providerErrors[provider.ID] != nil {
+			configuredIndicator = errorStyle.Render(
+				" (check failed)",
+			)
+		} else if m.configuredProviders[provider.ID] {
 			configuredIndicator = subtleStyle.Render(
 				" (configured)",
 			)
@@ -704,7 +751,8 @@ func (m WizardModel) renderSelectedProviders(
 	)
 
 	for _, provider := range m.allProviders {
-		if !m.selectedProviders[provider.ID] {
+		if !m.selectedProviders[provider.ID] ||
+			m.providerErrors[provider.ID] != nil {
 			continue
 		}
 		b.WriteString(successStyle.Render("  ✓ "))
@@ -905,6 +953,9 @@ func (m WizardModel) getSelectedProviderIDs() []string {
 	var selected []string
 	for id, isSelected := range m.selectedProviders {
 		if isSelected {
+			if m.providerErrors[id] != nil {
+				continue
+			}
 			selected = append(selected, id)
 		}
 	}

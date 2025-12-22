@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	ini "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -18,22 +18,22 @@ func init() {
 type QwenProvider struct{}
 
 // Initializers returns the initializers for Qwen Code.
-func (p *QwenProvider) Initializers() []types.Initializer {
+func (*QwenProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".qwen/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer(
+		ini.NewConfigFileInitializer(
 			"QWEN.md",
 		),
-		initializers.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"proposal",
 			proposalPath,
 			FrontmatterProposal,
 		),
-		initializers.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"apply",
 			applyPath,
 			FrontmatterApply,

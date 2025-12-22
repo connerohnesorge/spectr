@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	inits "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -18,22 +18,22 @@ func init() {
 type QoderProvider struct{}
 
 // Initializers returns the initializers for Qoder.
-func (p *QoderProvider) Initializers() []types.Initializer {
+func (*QoderProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".qoder/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer(
+		inits.NewConfigFileInitializer(
 			"QODER.md",
 		),
-		initializers.NewSlashCommandsInitializer(
+		inits.NewSlashCommandsInitializer(
 			"proposal",
 			proposalPath,
 			FrontmatterProposal,
 		),
-		initializers.NewSlashCommandsInitializer(
+		inits.NewSlashCommandsInitializer(
 			"apply",
 			applyPath,
 			FrontmatterApply,

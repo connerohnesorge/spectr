@@ -23,31 +23,34 @@ func NewDirectoryInitializer(
 //
 //nolint:revive // argument-limit - interface defined elsewhere
 func (d *DirectoryInitializer) Init(
-	ctx context.Context,
+	_ context.Context,
 	projectFs, globalFs afero.Fs,
-	cfg *types.Config,
+	_ *types.Config,
 	_ types.TemplateRenderer,
 ) error {
 	fs := projectFs
 	if IsGlobalPath(d.path) {
 		fs = globalFs
 	}
+
 	return fs.MkdirAll(d.path, dirPerm)
 }
 
 // IsSetup checks if the directory is already set up.
 func (d *DirectoryInitializer) IsSetup(
 	projectFs, globalFs afero.Fs,
-	cfg *types.Config,
+	_ *types.Config,
 ) (bool, error) {
 	fs := projectFs
 	if IsGlobalPath(d.path) {
 		fs = globalFs
 	}
+
 	exists, err := afero.DirExists(fs, d.path)
 	if err != nil {
 		return false, err
 	}
+
 	return exists, nil
 }
 

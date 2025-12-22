@@ -1,3 +1,5 @@
+// Package templates provides functionality for managing and rendering
+// embedded templates.
 package templates
 
 import (

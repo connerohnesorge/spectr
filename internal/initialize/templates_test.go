@@ -100,6 +100,7 @@ func TestTemplateManager_RenderProject(
 					err,
 					tt.wantErr,
 				)
+
 				return
 			}
 			if err != nil {
@@ -316,6 +317,7 @@ func TestTemplateManager_RenderSlashCommand(
 					err,
 					tt.wantErr,
 				)
+
 				return
 			}
 			if err != nil {

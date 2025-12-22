@@ -14,6 +14,7 @@ func (m *MockTemplateRenderer) RenderAgents(
 	if m.RenderAgentsFunc != nil {
 		return m.RenderAgentsFunc(ctx)
 	}
+
 	return "", nil
 }
 
@@ -23,6 +24,7 @@ func (m *MockTemplateRenderer) RenderInstructionPointer(
 	if m.RenderInstructionPointerFunc != nil {
 		return m.RenderInstructionPointerFunc(ctx)
 	}
+
 	return "", nil
 }
 
@@ -33,5 +35,6 @@ func (m *MockTemplateRenderer) RenderSlashCommand(
 	if m.RenderSlashCommandFunc != nil {
 		return m.RenderSlashCommandFunc(cmd, ctx)
 	}
+
 	return "", nil
 }

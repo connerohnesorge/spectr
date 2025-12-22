@@ -1,7 +1,7 @@
 package providers
 
 import (
-	inits "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	inits "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 

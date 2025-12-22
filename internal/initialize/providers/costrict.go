@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	ini "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -18,22 +18,22 @@ func init() {
 type CostrictProvider struct{}
 
 // Initializers returns the initializers for CoStrict.
-func (p *CostrictProvider) Initializers() []types.Initializer {
+func (*CostrictProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".costrict/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer(
+		ini.NewConfigFileInitializer(
 			"COSTRICT.md",
 		),
-		initializers.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"proposal",
 			proposalPath,
 			FrontmatterProposal,
 		),
-		initializers.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"apply",
 			applyPath,
 			FrontmatterApply,

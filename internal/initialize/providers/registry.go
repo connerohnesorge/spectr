@@ -56,6 +56,7 @@ func (r *Registry) Register(
 	}
 
 	r.registrations[reg.ID] = reg
+
 	return nil
 }
 
@@ -67,6 +68,7 @@ func (r *Registry) Get(
 	defer r.mu.RUnlock()
 
 	reg, exists := r.registrations[id]
+
 	return reg, exists
 }
 
@@ -88,6 +90,7 @@ func (r *Registry) All() []Registration {
 		if regs[i].Priority != regs[j].Priority {
 			return regs[i].Priority < regs[j].Priority
 		}
+
 		return regs[i].ID < regs[j].ID
 	})
 
@@ -101,6 +104,7 @@ func (r *Registry) IDs() []string {
 	for i, reg := range regs {
 		ids[i] = reg.ID
 	}
+
 	return ids
 }
 
@@ -108,5 +112,6 @@ func (r *Registry) IDs() []string {
 func (r *Registry) Count() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+
 	return len(r.registrations)
 }

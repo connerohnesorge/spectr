@@ -373,6 +373,7 @@ func (e *InitExecutor) configureProviders(
 					id,
 				),
 			)
+
 			continue
 		}
 
@@ -401,6 +402,7 @@ func (e *InitExecutor) configureProviders(
 			if iIsDir && !jIsDir {
 				return true
 			}
+
 			return false
 		},
 	)

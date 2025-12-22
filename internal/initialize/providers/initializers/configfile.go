@@ -70,10 +70,12 @@ func (c *ConfigFileInitializer) IsSetup(
 		fs = globalFs
 		targetPath = ExpandPath(c.path)
 	}
+
 	exists, err := afero.Exists(fs, targetPath)
 	if err != nil {
 		return false, err
 	}
+
 	return exists, nil
 }
 

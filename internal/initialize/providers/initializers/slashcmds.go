@@ -96,6 +96,7 @@ func (s *SlashCommandsInitializer) IsSetup(
 	if err != nil {
 		return false, err
 	}
+
 	return exists, nil
 }
 

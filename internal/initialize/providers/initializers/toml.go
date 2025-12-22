@@ -11,17 +11,14 @@ import (
 	"github.com/spf13/afero"
 )
 
-const (
-	dirPerm  = 0755
-	filePerm = 0644
-)
-
+// TOMLCommandInitializer initializes a command in TOML format.
 type TOMLCommandInitializer struct {
 	cmd         string
 	path        string
 	description string
 }
 
+// NewTOMLCommandInitializer creates a new TOMLCommandInitializer.
 func NewTOMLCommandInitializer(
 	cmd, path, description string,
 ) *TOMLCommandInitializer {
@@ -32,11 +29,13 @@ func NewTOMLCommandInitializer(
 	}
 }
 
+// Init initializes the TOML command file.
+//
 //nolint:revive // argument-limit - interface defined elsewhere
 func (t *TOMLCommandInitializer) Init(
-	ctx context.Context,
+	_ context.Context,
 	projectFs, globalFs afero.Fs,
-	cfg *types.Config,
+	_ *types.Config,
 	tm types.TemplateRenderer,
 ) error {
 	fs := projectFs
@@ -78,21 +77,25 @@ func (t *TOMLCommandInitializer) Init(
 	)
 }
 
+// IsSetup checks if the TOML command file is already set up.
 func (t *TOMLCommandInitializer) IsSetup(
 	projectFs, globalFs afero.Fs,
-	cfg *types.Config,
+	_ *types.Config,
 ) (bool, error) {
 	fs := projectFs
 	if IsGlobalPath(t.path) {
 		fs = globalFs
 	}
+
 	return afero.Exists(fs, t.path)
 }
 
+// Path returns the path of the TOML command file.
 func (t *TOMLCommandInitializer) Path() string {
 	return t.path
 }
 
+// generateTOMLContent creates the content for the TOML command file.
 func generateTOMLContent(
 	description, prompt string,
 ) string {

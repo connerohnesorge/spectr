@@ -1,3 +1,5 @@
+// Package initializers provides initialization logic for various providers.
+// This file contains utility functions for file and path operations.
 package initializers
 
 import (
@@ -10,13 +12,38 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Permission constants for directory and file creation.
 const (
+	// dirPerm is the default permission for new directories (0755).
+	dirPerm = 0755
+	// filePerm is the default permission for new files (0644).
+	filePerm = 0644
+)
+
+// String constants for newlines and block suffixes.
+const (
+	// markerBlockSuffix is the suffix added after a marker block.
 	markerBlockSuffix = "\n\n"
-	newlineDouble     = "\n\n"
-	newline           = "\n"
+	// newlineDouble is a double newline string.
+	newlineDouble = "\n\n"
+	// newline is a single newline string.
+	newline = "\n"
 )
 
 // UpdateFileWithMarkers updates a file with content between markers.
+// It handles different scenarios:
+// 1. If the file exists and has markers, it replaces the content between them.
+// 2. If the file exists but has no markers, it prepends the markers and content.
+// 3. If the file does not exist, it creates it with markers and content.
+//
+// Parameters:
+//   - fs: The afero.Fs to perform operations on.
+//   - filePath: The path to the file to update.
+//   - content: The content to place between markers.
+//   - startMarker: The string that marks the beginning of the block.
+//   - endMarker: The string that marks the end of the block.
+//
+//nolint:revive // argument-limit - interface defined elsewhere
 func UpdateFileWithMarkers(
 	fs afero.Fs,
 	filePath, content, startMarker, endMarker string,
@@ -29,6 +56,8 @@ func UpdateFileWithMarkers(
 			err,
 		)
 	}
+
+	// If the file exists, read its content and find marker positions.
 	if exists {
 		data, err := afero.ReadFile(fs, filePath)
 		if err != nil {
@@ -38,13 +67,17 @@ func UpdateFileWithMarkers(
 			)
 		}
 		existingContent = string(data)
+
+		// Find where the start marker begins.
 		startIndex := findMarkerIndex(
 			existingContent,
 			startMarker,
 			0,
 		)
+
 		var endIndex int
 		if startIndex != -1 {
+			// Start marker exists, look for end marker after it.
 			startPos := startIndex + len(
 				startMarker,
 			)
@@ -54,10 +87,13 @@ func UpdateFileWithMarkers(
 				startPos,
 			)
 		} else {
+			// Start marker not found, check if end marker exists anywhere.
 			endIndex = findMarkerIndex(existingContent, endMarker, 0)
 		}
+
 		switch {
 		case startIndex != -1 && endIndex != -1:
+			// Both markers found, replace what's between them.
 			if endIndex < startIndex {
 				return fmt.Errorf(
 					"invalid marker state in %s: end before start",
@@ -66,21 +102,26 @@ func UpdateFileWithMarkers(
 			}
 			before := existingContent[:startIndex]
 			after := existingContent[endIndex+len(endMarker):]
-			existingContent = before + startMarker + "\n" +
-				content + "\n" + endMarker + after
+			existingContent = before + startMarker + newline +
+				content + newline + endMarker + after
 		case startIndex == -1 && endIndex == -1:
-			existingContent = startMarker + "\n" + content + "\n" +
+			// Neither marker found, prepend them to the file.
+			existingContent = startMarker + newline + content + newline +
 				endMarker + markerBlockSuffix + existingContent
 		default:
+			// Only one marker found, which is an invalid state for the file.
 			return fmt.Errorf(
 				"invalid marker state in %s",
 				filePath,
 			)
 		}
 	} else {
-		existingContent = startMarker + "\n" + content + "\n" +
+		// File does not exist, initialize it with markers and content.
+		existingContent = startMarker + newline + content + newline +
 			endMarker + markerBlockSuffix
 	}
+
+	// Ensure the parent directory exists before writing.
 	dir := filepath.Dir(filePath)
 	if err := fs.MkdirAll(dir, dirPerm); err != nil {
 		return fmt.Errorf(
@@ -88,6 +129,8 @@ func UpdateFileWithMarkers(
 			err,
 		)
 	}
+
+	// Write the updated content to the file.
 	if err := afero.WriteFile(
 		fs,
 		filePath,
@@ -99,6 +142,7 @@ func UpdateFileWithMarkers(
 			err,
 		)
 	}
+
 	return nil
 }
 
@@ -109,17 +153,23 @@ func IsGlobalPath(path string) bool {
 }
 
 // ExpandPath expands the home directory in the path.
+// If the path starts with ~/, it replaces it with the user's home directory.
 func ExpandPath(path string) string {
 	if !strings.HasPrefix(path, "~/") {
 		return path
 	}
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return path
 	}
+
 	return filepath.Join(home, path[2:])
 }
 
+// updateSlashCommandBody updates the body of a slash command file.
+// It searches for Spectr markers and replaces the content between them.
+// It also handles frontmatter preservation or addition.
 func updateSlashCommandBody(
 	fs afero.Fs,
 	filePath, body, frontmatter string,
@@ -131,7 +181,10 @@ func updateSlashCommandBody(
 			err,
 		)
 	}
+
 	contentStr := string(content)
+
+	// Find Spectr start marker in the file.
 	startIndex := findMarkerIndex(
 		contentStr,
 		types.SpectrStartMarker,
@@ -143,6 +196,8 @@ func updateSlashCommandBody(
 			filePath,
 		)
 	}
+
+	// Find Spectr end marker in the file.
 	searchOffset := startIndex + len(
 		types.SpectrStartMarker,
 	)
@@ -157,14 +212,18 @@ func updateSlashCommandBody(
 			filePath,
 		)
 	}
+
 	if endIndex < startIndex {
 		return fmt.Errorf(
 			"end marker appears before start marker in %s",
 			filePath,
 		)
 	}
+
 	before := contentStr[:startIndex]
 	after := contentStr[endIndex+len(types.SpectrEndMarker):]
+
+	// Handle frontmatter if it's required but missing.
 	if frontmatter != "" &&
 		!strings.HasPrefix(
 			strings.TrimSpace(before),
@@ -177,8 +236,11 @@ func updateSlashCommandBody(
 			"\n\r",
 		)
 	}
-	newContent := before + types.SpectrStartMarker + newline + 
+
+	// Construct and write the new file content.
+	newContent := before + types.SpectrStartMarker + newline +
 		body + newline + types.SpectrEndMarker + after
+
 	return afero.WriteFile(
 		fs,
 		filePath,
@@ -187,30 +249,42 @@ func updateSlashCommandBody(
 	)
 }
 
+// createNewSlashCommand creates a new slash command file.
+// It includes optional frontmatter and the Spectr markers.
 func createNewSlashCommand(
 	fs afero.Fs,
 	filePath, body, frontmatter string,
 ) error {
 	var sections []string
+
+	// Add frontmatter at the top if provided.
 	if frontmatter != "" {
 		sections = append(
 			sections,
 			strings.TrimSpace(frontmatter),
 		)
 	}
+
+	// Add the body wrapped in Spectr markers.
 	sections = append(
 		sections,
 		types.SpectrStartMarker+newlineDouble+body+newlineDouble+
 			types.SpectrEndMarker,
 	)
+
+	// Join sections with double newlines.
 	content := strings.Join(
 		sections,
 		newlineDouble,
 	) + newlineDouble
+
+	// Create directory structure if needed.
 	dir := filepath.Dir(filePath)
 	if err := fs.MkdirAll(dir, dirPerm); err != nil {
 		return err
 	}
+
+	// Write the initial command file.
 	return afero.WriteFile(
 		fs,
 		filePath,
@@ -219,6 +293,9 @@ func createNewSlashCommand(
 	)
 }
 
+// findMarkerIndex finds the index of a marker in the content.
+// It ensures that the marker is on its own line by checking
+// surrounding whitespace.
 func findMarkerIndex(
 	content, marker string,
 	fromIndex int,
@@ -230,7 +307,10 @@ func findMarkerIndex(
 	if currentIndex == -1 {
 		return -1
 	}
+
 	currentIndex += fromIndex
+
+	// Iterate to find a marker that satisfies the "own line" condition.
 	for currentIndex != -1 {
 		if isMarkerOnOwnLine(
 			content,
@@ -239,6 +319,7 @@ func findMarkerIndex(
 		) {
 			return currentIndex
 		}
+
 		nextIndex := strings.Index(
 			content[currentIndex+len(marker):],
 			marker,
@@ -250,13 +331,18 @@ func findMarkerIndex(
 			marker,
 		) + nextIndex
 	}
+
 	return -1
 }
 
+// isMarkerOnOwnLine checks if a marker is on its own line.
+// It looks for only whitespace characters (space, tab, carriage return)
+// between the marker and the nearest newlines on both sides.
 func isMarkerOnOwnLine(
 	content string,
 	markerIndex, markerLength int,
 ) bool {
+	// Check the left side of the marker.
 	leftIndex := markerIndex - 1
 	for leftIndex >= 0 && content[leftIndex] != '\n' {
 		char := content[leftIndex]
@@ -266,6 +352,8 @@ func isMarkerOnOwnLine(
 		}
 		leftIndex--
 	}
+
+	// Check the right side of the marker.
 	rightIndex := markerIndex + markerLength
 	for rightIndex < len(content) && content[rightIndex] != '\n' {
 		char := content[rightIndex]
@@ -275,5 +363,6 @@ func isMarkerOnOwnLine(
 		}
 		rightIndex++
 	}
+
 	return true
 }

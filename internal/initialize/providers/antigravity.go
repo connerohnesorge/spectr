@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	inits "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -18,22 +18,22 @@ func init() {
 type AntigravityProvider struct{}
 
 // Initializers returns the initializers for Antigravity.
-func (p *AntigravityProvider) Initializers() []types.Initializer {
+func (*AntigravityProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := PrefixedCommandPaths(
 		".agent/workflows",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer(
+		inits.NewConfigFileInitializer(
 			"AGENTS.md",
 		),
-		initializers.NewSlashCommandsInitializer(
+		inits.NewSlashCommandsInitializer(
 			"proposal",
 			proposalPath,
 			FrontmatterProposal,
 		),
-		initializers.NewSlashCommandsInitializer(
+		inits.NewSlashCommandsInitializer(
 			"apply",
 			applyPath,
 			FrontmatterApply,

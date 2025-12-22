@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	inits "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -25,12 +25,12 @@ func (*ClineProvider) Initializers() []types.Initializer {
 	)
 
 	return []types.Initializer{
-		initializers.NewSlashCommandsInitializer(
+		inits.NewSlashCommandsInitializer(
 			"proposal",
 			proposalPath,
 			FrontmatterProposal,
 		),
-		initializers.NewSlashCommandsInitializer(
+		inits.NewSlashCommandsInitializer(
 			"apply",
 			applyPath,
 			FrontmatterApply,

@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	ini "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -18,19 +18,19 @@ func init() {
 type KilocodeProvider struct{}
 
 // Initializers returns the initializers for Kilocode.
-func (p *KilocodeProvider) Initializers() []types.Initializer {
+func (*KilocodeProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".kilocode/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"proposal",
 			proposalPath,
 			FrontmatterProposal,
 		),
-		initializers.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"apply",
 			applyPath,
 			FrontmatterApply,

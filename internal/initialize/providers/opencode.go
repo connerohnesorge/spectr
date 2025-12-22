@@ -1,7 +1,7 @@
 package providers
 
 import (
-	inits "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	ini "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -25,12 +25,12 @@ func (*OpencodeProvider) Initializers() []types.Initializer {
 	)
 
 	return []types.Initializer{
-		inits.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"proposal",
 			proposalPath,
 			FrontmatterProposal,
 		),
-		inits.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"apply",
 			applyPath,
 			FrontmatterApply,

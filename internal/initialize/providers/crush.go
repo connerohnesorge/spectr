@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	ini "github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
 	"github.com/connerohnesorge/spectr/internal/initialize/types"
 )
 
@@ -18,22 +18,22 @@ func init() {
 type CrushProvider struct{}
 
 // Initializers returns the initializers for Crush.
-func (p *CrushProvider) Initializers() []types.Initializer {
+func (*CrushProvider) Initializers() []types.Initializer {
 	proposalPath, applyPath := StandardCommandPaths(
 		".crush/commands",
 		".md",
 	)
 
 	return []types.Initializer{
-		initializers.NewConfigFileInitializer(
+		ini.NewConfigFileInitializer(
 			"CRUSH.md",
 		),
-		initializers.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"proposal",
 			proposalPath,
 			FrontmatterProposal,
 		),
-		initializers.NewSlashCommandsInitializer(
+		ini.NewSlashCommandsInitializer(
 			"apply",
 			applyPath,
 			FrontmatterApply,

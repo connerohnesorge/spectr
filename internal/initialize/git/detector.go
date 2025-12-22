@@ -59,6 +59,7 @@ func (d *ChangeDetector) Snapshot() (string, error) {
 }
 
 // ChangedFiles calculates the files changed between the beforeSnapshot and now.
+// It compares both stashed changes and untracked files.
 func (d *ChangeDetector) ChangedFiles(
 	beforeSnapshot string,
 ) ([]string, error) {
@@ -79,10 +80,16 @@ func (d *ChangeDetector) ChangedFiles(
 
 	changes := make(map[string]bool)
 
-	if err := d.detectStashChanges(beforeStash, currentStash, changes); err != nil {
+	// Detect changes in the stash.
+	if err := d.detectStashChanges(
+		beforeStash,
+		currentStash,
+		changes,
+	); err != nil {
 		return nil, err
 	}
 
+	// Detect changes in untracked files.
 	d.detectUntrackedChanges(beforeUntracked, currentUntracked, changes)
 
 	result := make([]string, 0, len(changes))
@@ -93,7 +100,12 @@ func (d *ChangeDetector) ChangedFiles(
 	return result, nil
 }
 
-func (d *ChangeDetector) detectStashChanges(beforeStash, currentStash string, changes map[string]bool) error {
+// detectStashChanges identifies file differences between two stash hashes.
+func (d *ChangeDetector) detectStashChanges(
+	beforeStash,
+	currentStash string,
+	changes map[string]bool,
+) error {
 	if beforeStash == currentStash {
 		return nil
 	}
@@ -101,19 +113,36 @@ func (d *ChangeDetector) detectStashChanges(beforeStash, currentStash string, ch
 	var diffOut string
 	var err error
 
+	// Determine which git diff command to run based on which stash is empty.
 	switch {
 	case beforeStash == "":
-		diffOut, err = d.runGit("diff", "--name-only", "HEAD", currentStash)
+		diffOut, err = d.runGit(
+			"diff",
+			"--name-only",
+			"HEAD",
+			currentStash,
+		)
 	case currentStash == "":
-		diffOut, err = d.runGit("diff", "--name-only", beforeStash, "HEAD")
+		diffOut, err = d.runGit(
+			"diff",
+			"--name-only",
+			beforeStash,
+			"HEAD",
+		)
 	default:
-		diffOut, err = d.runGit("diff", "--name-only", beforeStash, currentStash)
+		diffOut, err = d.runGit(
+			"diff",
+			"--name-only",
+			beforeStash,
+			currentStash,
+		)
 	}
 
 	if err != nil {
 		return err
 	}
 
+	// Record each changed file path.
 	for _, f := range strings.Split(diffOut, "\n") {
 		if f != "" {
 			changes[f] = true
@@ -123,7 +152,13 @@ func (d *ChangeDetector) detectStashChanges(beforeStash, currentStash string, ch
 	return nil
 }
 
-func (d *ChangeDetector) detectUntrackedChanges(beforeUntracked, currentUntracked string, changes map[string]bool) {
+// detectUntrackedChanges finds new untracked files.
+func (*ChangeDetector) detectUntrackedChanges(
+	beforeUntracked,
+	currentUntracked string,
+	changes map[string]bool,
+) {
+	// Map existing untracked files for quick lookup.
 	beforeUntrackedMap := make(map[string]bool)
 	for _, f := range strings.Split(beforeUntracked, "\n") {
 		if f != "" {
@@ -131,6 +166,7 @@ func (d *ChangeDetector) detectUntrackedChanges(beforeUntracked, currentUntracke
 		}
 	}
 
+	// Identify files that are newly untracked.
 	for _, f := range strings.Split(currentUntracked, "\n") {
 		if f != "" && !beforeUntrackedMap[f] {
 			changes[f] = true
@@ -138,6 +174,7 @@ func (d *ChangeDetector) detectUntrackedChanges(beforeUntracked, currentUntracke
 	}
 }
 
+// runGit executes a git command and returns its trimmed output.
 func (d *ChangeDetector) runGit(
 	args ...string,
 ) (string, error) {
@@ -154,6 +191,7 @@ func (d *ChangeDetector) runGit(
 				string(exitErr.Stderr),
 			)
 		}
+
 		return "", err
 	}
 

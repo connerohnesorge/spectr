@@ -18,7 +18,7 @@ func TestSlashCommandsInitializer(t *testing.T) {
 	)
 
 	mockTM := &MockTemplateRenderer{
-		RenderSlashCommandFunc: func(_ string, ctx types.TemplateContext) (string, error) {
+		RenderSlashCommandFunc: func(_ string, _ types.TemplateContext) (string, error) {
 			return "Slash Command Content", nil
 		},
 	}

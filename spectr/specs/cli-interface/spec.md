@@ -30,60 +30,6 @@ The CLI SHALL provide an `archive` command that moves completed changes to a dat
 - WHEN user runs `spectr archive <change-id> --no-validate`
 - THEN the system warns about skipping validation and requires confirmation unless --yes flag is also provided
 
-### Requirement: Archive Command Flags
-The archive command SHALL support flags for controlling behavior.
-
-#### Scenario: Yes flag skips all prompts
-- WHEN user provides the `-y` or `--yes` flag
-- THEN the system skips all confirmation prompts for automated usage
-
-#### Scenario: Skip specs flag bypasses spec updates
-- WHEN user provides the `--skip-specs` flag
-- THEN the system moves the change to archive without applying delta specs
-
-#### Scenario: No validate flag skips validation
-- WHEN user provides the `--no-validate` flag
-- THEN the system skips validation but requires confirmation unless --yes is also provided
-
-### Requirement: Struct-Based Command Definition
-The CLI framework SHALL use Go struct types with struct tags to declaratively define command structure, subcommands, flags, and arguments. Provider configuration SHALL be retrieved from the `Registry` interface rather than static global maps.
-
-#### Scenario: Root command definition
-- WHEN the CLI is initialized
-- THEN it SHALL use a root struct with subcommand fields tagged with `cmd` for command definitions
-- AND each subcommand SHALL be a nested struct type with appropriate tags
-
-#### Scenario: Subcommand registration
-- WHEN a new subcommand is added to the CLI
-- THEN it SHALL be defined as a struct field on the parent command struct
-- AND it SHALL use `cmd` tag to indicate it is a subcommand
-- AND it SHALL include a `help` tag describing the command purpose
-
-#### Scenario: Tool configuration lookup
-- WHEN the executor needs tool configuration
-- THEN it SHALL query the `Registry` via `Get(id)` method
-- AND it SHALL NOT use hardcoded global maps
-
-### Requirement: Declarative Flag Definition
-The CLI framework SHALL define flags using struct fields with Kong struct tags instead of imperative flag registration.
-
-#### Scenario: String flag definition
-- WHEN a command requires a string flag
-- THEN it SHALL be defined as a struct field with `name` tag for the flag name
-- AND it MAY include `short` tag for single-character shorthand
-- AND it SHALL include `help` tag describing the flag purpose
-- AND it MAY include `default` tag for default values
-
-#### Scenario: Boolean flag definition
-- WHEN a command requires a boolean flag
-- THEN it SHALL be defined as a bool struct field with appropriate tags
-- AND the flag SHALL default to false unless explicitly set
-
-#### Scenario: Slice flag definition
-- WHEN a command requires a multi-value flag
-- THEN it SHALL be defined as a slice type struct field
-- AND it SHALL support comma-separated values or repeated flag usage
-
 ### Requirement: Positional Argument Support
 The CLI framework SHALL support positional arguments using struct fields tagged with `arg`.
 
@@ -96,15 +42,6 @@ The CLI framework SHALL support positional arguments using struct fields tagged 
 - WHEN a command requires a positional argument
 - THEN it SHALL be defined with `arg` tag without `optional`
 - AND parsing SHALL fail if the argument is not provided
-
-### Requirement: Automatic Method Dispatch
-The CLI framework SHALL automatically invoke the appropriate command's Run method after parsing.
-
-#### Scenario: Command execution
-- WHEN a command is successfully parsed
-- THEN the framework SHALL call the command struct's `Run() error` method
-- AND it SHALL pass any configured context values to the Run method
-- AND it SHALL handle the returned error appropriately
 
 ### Requirement: Built-in Help Generation
 The CLI framework SHALL automatically generate help text from struct tags and types.
@@ -257,7 +194,7 @@ The system SHALL count tasks from `tasks.jsonc` or `tasks.md` files. Legacy `tas
 - THEN the system reads from `tasks.jsonc`
 - AND ignores `tasks.md`
 
-### Requirement: Validate Command Structure
+### Requirement: Validate Command
 The CLI SHALL provide a validate command for checking spec and change document correctness.
 
 #### Scenario: Validate command registration
@@ -284,9 +221,6 @@ The CLI SHALL provide a validate command for checking spec and change document c
 - THEN the command SHALL prompt for what to validate
 - AND SHALL execute the user's selection
 
-### Requirement: Validate Command Flags
-The validate command SHALL support flags for controlling validation behavior and output format. Validation always treats warnings as errors.
-
 #### Scenario: Default validation behavior (always strict)
 - WHEN user runs `spectr validate <item>` without any strict flag
 - THEN validation SHALL treat warnings as errors
@@ -304,11 +238,6 @@ The validate command SHALL support flags for controlling validation behavior and
 - THEN the command SHALL treat the item as the specified type
 - AND SHALL skip type auto-detection
 - AND SHALL error if item does not exist as that type
-
-#### Scenario: All items flag
-- WHEN user provides `--all` flag
-- THEN the command SHALL validate all changes and all specs
-- AND SHALL run in bulk validation mode
 
 #### Scenario: Changes only flag
 - WHEN user provides `--changes` flag
@@ -351,7 +280,7 @@ The validate command SHALL accept an optional positional argument for the item t
 - AND SHALL auto-detect whether it's a change or spec
 - AND SHALL respect --type flag if provided for disambiguation
 
-### Requirement: View Command Structure
+### Requirement: View Command
 The CLI SHALL provide a `view` command that displays a comprehensive project dashboard with summary metrics, active changes, completed changes, and specifications.
 
 #### Scenario: View command registration
@@ -374,6 +303,25 @@ The CLI SHALL provide a `view` command that displays a comprehensive project das
 - THEN the system outputs dashboard data as JSON
 - AND includes summary, activeChanges, completedChanges, and specs fields
 - AND SHALL be parseable by standard JSON tools
+
+#### Scenario: JSON structure
+- WHEN user provides `--json` flag
+- THEN output SHALL be a JSON object with top-level fields: `summary`, `activeChanges`, `completedChanges`, `specs`
+- AND `summary` SHALL contain: `totalSpecs`, `totalRequirements`, `activeChanges`, `completedChanges`, `totalTasks`, `completedTasks`
+- AND `activeChanges` SHALL be an array of objects with: `id`, `title`, `progress` (object with `total`, `completed`, `percentage`)
+- AND `completedChanges` SHALL be an array of objects with: `id`, `title`
+- AND `specs` SHALL be an array of objects with: `id`, `title`, `requirementCount`
+
+#### Scenario: JSON arrays sorted consistently
+- WHEN outputting JSON
+- THEN `activeChanges` array SHALL be sorted by percentage ascending, then ID alphabetically
+- AND `completedChanges` array SHALL be sorted by ID alphabetically
+- AND `specs` array SHALL be sorted by requirementCount descending, then ID alphabetically
+
+#### Scenario: JSON with no items
+- WHEN outputting JSON and a category has no items
+- THEN the corresponding array SHALL be empty `[]`
+- AND summary counts SHALL reflect zero appropriately
 
 ### Requirement: Dashboard Summary Metrics
 The view command SHALL display summary metrics aggregating key project statistics in a dedicated section at the top of the dashboard.
@@ -498,27 +446,6 @@ The view command SHALL use colored output, Unicode box-drawing characters, and c
 - AND use blue for spec indicators
 - AND use dim gray for empty progress bars and footer hints
 
-### Requirement: JSON Output Format
-The view command SHALL support `--json` flag to output dashboard data as structured JSON for programmatic consumption.
-
-#### Scenario: JSON structure
-- WHEN user provides `--json` flag
-- THEN output SHALL be a JSON object with top-level fields: `summary`, `activeChanges`, `completedChanges`, `specs`
-- AND `summary` SHALL contain: `totalSpecs`, `totalRequirements`, `activeChanges`, `completedChanges`, `totalTasks`, `completedTasks`
-- AND `activeChanges` SHALL be an array of objects with: `id`, `title`, `progress` (object with `total`, `completed`, `percentage`)
-- AND `completedChanges` SHALL be an array of objects with: `id`, `title`
-- AND `specs` SHALL be an array of objects with: `id`, `title`, `requirementCount`
-
-#### Scenario: JSON arrays sorted consistently
-- WHEN outputting JSON
-- THEN `activeChanges` array SHALL be sorted by percentage ascending, then ID alphabetically
-- AND `completedChanges` array SHALL be sorted by ID alphabetically
-- AND `specs` array SHALL be sorted by requirementCount descending, then ID alphabetically
-
-#### Scenario: JSON with no items
-- WHEN outputting JSON and a category has no items
-- THEN the corresponding array SHALL be empty `[]`
-- AND summary counts SHALL reflect zero appropriately
 
 ### Requirement: Sorting Strategy
 The view command SHALL sort dashboard items to surface the most relevant information first.
@@ -538,20 +465,6 @@ The view command SHALL sort dashboard items to surface the most relevant informa
 - WHEN sorting completed changes
 - THEN sort by ID alphabetically
 
-### Requirement: Data Reuse from Discovery and Parsers
-The view command SHALL reuse existing discovery and parsing infrastructure to avoid code duplication.
-
-#### Scenario: Discover changes and specs
-- WHEN building dashboard data
-- THEN use `internal/discovery` package functions to find changes
-- AND use `internal/discovery` package functions to find specs
-- AND exclude archived changes from active/completed lists
-
-#### Scenario: Parse titles and counts
-- WHEN extracting metadata from markdown files
-- THEN use `internal/parsers` package to parse proposal.md for titles
-- AND use `internal/parsers` package to parse spec.md for titles and requirement counts
-- AND use `internal/parsers` package to parse tasks.md for task counts
 
 ### Requirement: View Command Help Text
 The view command SHALL provide comprehensive help documentation.
@@ -594,48 +507,8 @@ The init system SHALL define a `Provider` interface that all AI CLI tool integra
 - THEN it SHALL return true if ANY command path method returns a non-empty string
 - AND it SHALL return false only if ALL command path methods return empty strings
 
-### Requirement: Provider Registry
-The init system SHALL provide a `Registry` that manages registration and lookup of providers using a registry pattern similar to `database/sql`.
 
-#### Scenario: Register provider
-- WHEN a provider calls `Register(provider Provider)`
-- THEN the registry SHALL store the provider by its ID
-- AND duplicate registration SHALL panic with a descriptive message
 
-#### Scenario: Get provider by ID
-- WHEN code calls `Get(id string) (Provider, bool)`
-- THEN the registry SHALL return the provider and true if found
-- AND SHALL return nil and false if not found
-
-#### Scenario: List all providers
-- WHEN code calls `All() []Provider`
-- THEN the registry SHALL return all registered providers
-- AND providers SHALL be sorted by Priority ascending
-
-### Requirement: Per-Provider File Organization
-The init system SHALL organize provider implementations as separate Go files under `internal/initialize/providers/`, with one file per provider.
-
-#### Scenario: Provider file structure
-- WHEN a provider file is created
-- THEN it SHALL be named `{provider-id}.go` (e.g., `claude.go`, `gemini.go`)
-- AND it SHALL contain an `init()` function that registers its provider
-- AND it SHALL be self-contained with all provider-specific configuration
-
-#### Scenario: Adding a new provider
-- WHEN a developer adds a new AI CLI provider
-- THEN they SHALL create a single file under `internal/initialize/providers/`
-- AND the file SHALL implement the `Provider` interface
-- AND the file SHALL call `Register()` in its `init()` function
-- AND no other files SHALL require modification
-
-### Requirement: Init Function Registration
-The init system SHALL use Go's `init()` function pattern for automatic provider registration at startup.
-
-#### Scenario: Auto-registration at startup
-- WHEN the program starts
-- THEN all provider `init()` functions SHALL execute before `main()`
-- AND all providers SHALL be registered in the global registry
-- AND registration order SHALL not affect functionality
 
 ### Requirement: Command Format Support
 The init system SHALL support multiple command file formats through the `CommandFormat` type.
@@ -698,14 +571,6 @@ The version information SHALL be injectable at build time via Go ldflags, suppor
 - AND commit SHALL default to `unknown`
 - AND date SHALL default to `unknown`
 
-### Requirement: Version Package Location
-The version variables SHALL be defined in a dedicated `internal/version` package for clean separation and easy ldflags targeting.
-
-#### Scenario: Package structure
-- WHEN the version package is imported
-- THEN it SHALL expose `Version`, `Commit`, and `Date` string variables
-- AND variables SHALL have default values for development builds
-- AND the ldflags path SHALL be `github.com/connerohnesorge/spectr/internal/version`
 
 ### Requirement: Completion Command Structure
 The CLI SHALL provide a `completion` subcommand that outputs shell completion scripts for supported shells using the kong-completion library.
@@ -749,20 +614,6 @@ The completion system SHALL provide context-aware suggestions for arguments that
 - WHEN user types `spectr validate --type <TAB>`
 - THEN completion suggests `change` and `spec`
 
-### Requirement: Kong-Completion Integration Pattern
-The CLI initialization SHALL follow the kong-completion pattern where Kong is initialized, completions are registered, and then arguments are parsed.
-
-#### Scenario: Initialization order
-- WHEN the program starts
-- THEN `kong.Must()` is called first to create the Kong application
-- AND `kongcompletion.Register()` is called before parsing
-- AND `app.Parse()` is called after completion registration
-- AND this order ensures completions work correctly
-
-#### Scenario: Predictor registration
-- WHEN custom predictors are defined
-- THEN they SHALL be registered via `kongcompletion.WithPredictor()`
-- AND struct fields SHALL reference predictors using `predictor:"name"` tag
 
 ### Requirement: Accept Command Structure
 The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.jsonc` format with header comments for stable agent manipulation during implementation.
@@ -906,15 +757,6 @@ Commands accepting item names (validate, archive, accept) SHALL normalize path a
 ### Requirement: Interactive List Mode
 The interactive list mode in `spectr list` is extended to support unified display of changes and specifications alongside existing separate modes.
 
-#### Previous behavior
-The system displays either changes OR specs in interactive mode based on the `--specs` flag. Columns and behavior are specific to each item type.
-
-#### New behavior
-- When `--all` is provided with `--interactive`, both changes and specs are shown together with unified columns
-- When neither `--all` nor `--specs` are provided, changes-only mode is default (backward compatible)
-- When `--specs` is provided without `--all`, specs-only mode is used (backward compatible)
-- Each item type is clearly labeled in the Type column (CHANGE or SPEC)
-- Type-aware actions apply based on selected item (edit only for specs)
 
 #### Scenario: Default behavior unchanged
 - WHEN the user runs `spectr list --interactive`

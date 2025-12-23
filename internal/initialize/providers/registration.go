@@ -20,7 +20,7 @@
 //
 // See also:
 //   - provider_new.go: Provider interface for provider behavior
-//   - registry_v2.go: Registry that accepts Registration structs
+//   - registry.go: Registry that accepts Registration structs
 package providers
 
 import (

@@ -99,7 +99,7 @@
     {
       "id": "3.1",
       "section": "New Registry Implementation",
-      "description": "Create `internal/initialize/providers/registry_v2.go` with new `Registry` type using `Registration` struct for metadata",
+      "description": "Create `internal/initialize/providers/registry.go` with new `Registry` type using `Registration` struct for metadata",
       "status": "completed"
     },
     {

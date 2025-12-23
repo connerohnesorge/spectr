@@ -20,13 +20,6 @@ The provider SHALL be configured with these settings:
 - **AND** it SHALL return a SlashCommandsInitializer for TOML format slash commands
 - **AND** it SHALL NOT return a ConfigFileInitializer (Gemini has no instruction file)
 
-### Requirement: No Instruction File
-The Gemini provider SHALL NOT create an instruction file since Gemini CLI does not support project-level instruction files.
-
-#### Scenario: No config file initializer
-- **WHEN** the provider returns its initializers
-- **THEN** no ConfigFileInitializer SHALL be included in the returned list
-
 ### Requirement: Gemini Slash Commands
 The provider SHALL create slash commands in `.gemini/commands/spectr/` directory using TOML format.
 

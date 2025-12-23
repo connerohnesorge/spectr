@@ -20,13 +20,6 @@ The provider SHALL be configured with these settings:
 - **AND** it SHALL return a SlashCommandsInitializer for Markdown format slash commands
 - **AND** it SHALL NOT return a ConfigFileInitializer (Cursor has no instruction file)
 
-### Requirement: No Instruction File
-The Cursor provider SHALL NOT create an instruction file.
-
-#### Scenario: No config file initializer
-- **WHEN** the provider returns its initializers
-- **THEN** no ConfigFileInitializer SHALL be included in the returned list
-
 ### Requirement: Cursor Slash Commands
 The provider SHALL create slash commands in `.cursorrules/commands/spectr/` directory.
 

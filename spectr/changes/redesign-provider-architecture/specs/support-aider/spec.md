@@ -21,13 +21,6 @@ The provider SHALL be configured with these settings:
 - **AND** it SHALL NOT return a ConfigFileInitializer (Aider has no instruction file)
 
 
-### Requirement: No Instruction File
-The Aider provider SHALL NOT create an instruction file.
-
-#### Scenario: No config file initializer
-- **WHEN** the provider returns its initializers
-- **THEN** no ConfigFileInitializer SHALL be included in the returned list
-
 ### Requirement: Aider Slash Commands
 The provider SHALL create slash commands in `.aider/commands/spectr/` directory.
 

@@ -26,17 +26,6 @@ The provider SHALL be configured with these settings:
 - **AND** it SHALL be listed after Aider (priority 11)
 - **AND** it SHALL be listed before Kilocode (priority 14)
 
-### Requirement: No Instruction File
-The Windsurf provider SHALL NOT create an instruction file.
-
-#### Scenario: No config file initializer
-- **WHEN** the provider returns its initializers
-- **THEN** no ConfigFileInitializer SHALL be included in the returned list
-
-#### Scenario: Config file path
-- **WHEN** the provider is initialized
-- **THEN** no config file path is specified
-
 ### Requirement: Windsurf Slash Commands
 The provider SHALL create slash commands in `.windsurf/commands/spectr/` directory.
 

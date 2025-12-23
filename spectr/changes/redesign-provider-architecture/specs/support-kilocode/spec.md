@@ -28,17 +28,6 @@ The provider SHALL be configured with these settings:
 - **WHEN** the provider is registered
 - **THEN** it SHALL use Markdown format for slash commands
 
-### Requirement: No Instruction File
-The Kilocode provider SHALL NOT create an instruction file.
-
-#### Scenario: No config file initializer
-- **WHEN** the provider returns its initializers
-- **THEN** no ConfigFileInitializer SHALL be included in the returned list
-
-#### Scenario: Config file path
-- **WHEN** the provider is initialized
-- **THEN** no config file path is specified
-
 ### Requirement: Kilocode Slash Commands
 The provider SHALL create slash commands in `.kilocode/commands/spectr/` directory.
 

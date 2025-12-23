@@ -20,13 +20,12 @@ The current implementation has each provider implement a 12-method interface, wi
 - Improve testability of initialization steps
 - Maintain support for all 17 current providers
 - Use `afero.Fs` rooted at project for cleaner path handling
-- Require git repository for change detection
+- Explicit change tracking via InitResult return values
 
 **Non-Goals:**
 - Runtime plugin loading (all providers compiled in)
 - Backwards compatibility with existing configurations
 - Rollback on partial failure
-- Support for non-git projects
 - New instruction file formats (separate proposal)
 
 ## Decisions
@@ -40,10 +39,16 @@ type Provider interface {
     Initializers(ctx context.Context) []Initializer
 }
 
+// InitResult contains the files created or modified by an initializer.
+type InitResult struct {
+    CreatedFiles []string
+    UpdatedFiles []string
+}
+
 type Initializer interface {
-    // Init creates or updates files. Returns error if initialization fails.
+    // Init creates or updates files. Returns result with file changes and error if initialization fails.
     // Must be idempotent (safe to run multiple times).
-    Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error
+    Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
 
     // IsSetup returns true if this initializer's artifacts already exist.
     IsSetup(fs afero.Fs, cfg *Config) bool
@@ -137,22 +142,26 @@ type ExecutorContext struct {
 
 ### 5. File Change Detection
 
-**Decision**: Use git diff after initialization instead of upfront declarations.
+**Decision**: Each initializer returns an `InitResult` containing the files it created/updated.
 
 ```go
-// Before init
-beforeCommit := git.Stash()
+// Collect results from all initializers
+var allResults []InitResult
 
-// Run initializers
 for _, init := range allInitializers {
-    init.Init(ctx, fs, cfg)
+    result, err := init.Init(ctx, fs, cfg, tm)
+    if err != nil {
+        errors = append(errors, err)
+        continue
+    }
+    allResults = append(allResults, result)
 }
 
-// After init
-changedFiles := git.DiffFiles(beforeCommit)
+// Aggregate into ExecutionResult
+executionResult := aggregateResults(allResults)
 ```
 
-**Rationale**: Simpler provider interface; git already tracks file changes.
+**Rationale**: Explicit change tracking; initializers know what they create; works in non-git projects; more testable.
 
 ## Example: Claude Code Provider
 
@@ -249,31 +258,11 @@ func dedupeInitializers(all []Initializer) []Initializer {
 
 **Rationale**: Path-based deduplication is simple and covers the common case (multiple providers sharing same file).
 
-### 10. Git Requirement
-
-**Decision**: Require git repository. Fail early with clear error.
-
-```go
-func (e *Executor) Init(ctx context.Context) error {
-    // Check git repo at start - fail fast
-    if !isGitRepo(e.projectPath) {
-        return fmt.Errorf(
-            "spectr init requires a git repository for change detection.\n" +
-            "Run 'git init' first, then retry 'spectr init'.",
-        )
-    }
-    // ... proceed with initialization
-}
-```
-
-**Rationale**: Git is required for spectr's proposal workflow anyway. Simplifies change detection.
-
 ## Risks / Trade-offs
 
 | Risk | Mitigation |
 |------|------------|
 | Breaking change for users | Clear migration docs; `spectr init` re-run required |
-| Git requirement | Clear error message with instructions; spectr assumes git anyway |
 | Path-based dedup misses edge cases | Simple first; can enhance if needed |
 | No rollback on failure | Clear error reporting; users can re-run init |
 
@@ -291,7 +280,7 @@ func (e *Executor) Init(ctx context.Context) error {
 
 ```go
 type Initializer interface {
-    Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) error
+    Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
     IsSetup(fs afero.Fs, cfg *Config) bool
 }
 ```
@@ -305,44 +294,11 @@ type Initializer interface {
 - Each initializer implements own template rendering - More code duplication
 - Pass templates as strings - Less flexible, harder to maintain
 
-### 7. Git-Based Change Detection
-
-**Decision**: Use git diff after initialization instead of upfront `GetFilePaths()` declarations.
-
-```go
-// internal/initialize/git/detector.go
-type ChangeDetector struct {
-    repoPath string
-}
-
-func (d *ChangeDetector) Snapshot() (string, error) {
-    // Create git stash or record HEAD state
-}
-
-func (d *ChangeDetector) ChangedFiles(before string) ([]string, error) {
-    // git diff --name-only before...HEAD
-}
-```
-
-**Implementation details:**
-- Use `git stash create` to capture pre-init state without modifying working tree
-- Use `git diff --name-only` to detect changed files after init
-- Handle edge cases: untracked files (use `git status --porcelain`), not a git repo, dirty working tree
-
-**Rationale**:
-- Eliminates need for providers to declare file paths upfront
-- Git is source of truth for file changes anyway
-- Simpler provider interface (no `GetFilePaths()` method)
-
-**Trade-offs:**
-- Requires git repo (graceful degradation for non-git projects)
-- Slightly more complex executor flow
-
 ## Resolved Questions
 
 | Question | Decision |
 |----------|----------|
-| How to handle non-git projects? | Require git, fail early with clear error |
+| Change detection approach? | InitResult return value from each Initializer |
 | Initializer ordering? | Implicit ordering by type (Directory → ConfigFile → SlashCommands) |
 | Rollback on partial failure? | No rollback; report failures, users re-run init |
 | Template variable location? | Derived from SpectrDir via methods |

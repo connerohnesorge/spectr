@@ -19,6 +19,7 @@ The system SHALL define an `Initializer` interface with `Init`, `IsSetup`, `Path
 #### Scenario: Initializer execution
 - **WHEN** `Init(ctx, fs, cfg, tm)` is called on an initializer
 - **THEN** it SHALL create or update the necessary files in the filesystem
+- **AND** it SHALL return an `InitResult` containing created and updated file paths
 - **AND** it SHALL return an error if initialization fails
 - **AND** it SHALL be idempotent (safe to run multiple times)
 
@@ -129,14 +130,18 @@ The system SHALL execute initializers in a guaranteed order by type.
 - **THEN** it SHALL be a documented API guarantee
 - **AND** implementers MAY rely on this ordering
 
-### Requirement: Git Repository Requirement
-The system SHALL require a git repository for initialization.
+### Requirement: Initialize Result
+The system SHALL return file change information from each initializer.
 
-#### Scenario: Git repo check at start
-- **WHEN** `spectr init` is executed
-- **THEN** the system SHALL check for a git repository before proceeding
-- **AND** if not a git repo, it SHALL fail with a clear error message
-- **AND** the error SHALL instruct the user to run `git init` first
+#### Scenario: Initializer returns result
+- **WHEN** `Init()` is called on an initializer
+- **THEN** it SHALL return an `InitResult` containing created and updated files
+- **AND** the `InitResult` SHALL have `CreatedFiles` and `UpdatedFiles` fields
+
+#### Scenario: Result accumulation
+- **WHEN** multiple initializers are executed
+- **THEN** the executor SHALL accumulate all `InitResult` values
+- **AND** the accumulated results SHALL be returned in the `ExecutionResult`
 
 ### Requirement: Dual Filesystem Support
 The system SHALL provide two filesystem instances for project and global paths.

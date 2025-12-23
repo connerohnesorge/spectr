@@ -23,21 +23,19 @@ The current provider system has 17 providers, each implementing a 12-method inte
 - **NEW**: `Config` struct with `SpectrDir` field; other paths derived (SpecsDir = SpectrDir/specs, etc.)
 - **NEW**: Two filesystem instances: `projectFs` (project-relative) and `globalFs` (home directory)
 - **REMOVED**: `GetFilePaths()`, `HasConfigFile()`, `HasSlashCommands()` methods
-- **NEW**: Git-based change detection after initialization (replaces upfront declarations)
-- **NEW**: Require git repository - fail early with clear error if not a git repo
+- **NEW**: `Initializer.Init()` returns `InitResult` containing created/updated files (explicit change tracking)
 - **MIGRATION**: Users must re-run `spectr init` (clean break, no automatic migration)
 
 ## Key Decisions
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Non-git projects | Require git, fail early | Simplifies change detection; git is assumed for spectr |
+| Change detection | InitResult return value | Each initializer returns files it created/updated; explicit and testable |
 | Initializer ordering | Implicit, documented guarantee | Directory → ConfigFile → SlashCommands; simple and predictable |
 | Partial failure | No rollback, report failures | Keep simple; users can re-run init |
 | Template variables | Derive from SpectrDir | SpecsDir = SpectrDir/specs, etc.; single source of truth |
 | Global paths | Two fs instances | projectFs and globalFs; supports ~/.config/tool/ patterns |
 | Deduplication | By file path | Same path = initialize once; prevents redundant writes |
-| Git check timing | Early fail | Check at init start, not lazily; clear error messaging |
 
 ## Impact
 
@@ -47,7 +45,7 @@ The current provider system has 17 providers, each implementing a 12-method inte
 
 - `internal/initialize/providers/*.go` - Complete rewrite
 - `internal/initialize/providers/initializers/*.go` - New initializer implementations
-- `internal/initialize/git/detector.go` - New change detection
-- `internal/initialize/executor.go` - Simplified provider orchestration
+- `internal/initialize/providers/result.go` - New InitResult type
+- `internal/initialize/executor.go` - Simplified provider orchestration with result collection
 - `internal/initialize/wizard.go` - Provider selection UI unchanged
 - `cmd/init.go` - Minor updates for new API

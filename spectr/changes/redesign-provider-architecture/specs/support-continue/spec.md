@@ -25,17 +25,6 @@ The provider SHALL be configured with these settings:
 - **THEN** it SHALL have name `Continue`
 - **AND** priority SHALL be 15
 
-### Requirement: No Instruction File
-The Continue provider SHALL NOT create an instruction file.
-
-#### Scenario: No config file initializer
-- **WHEN** the provider returns its initializers
-- **THEN** no ConfigFileInitializer SHALL be included in the returned list
-
-#### Scenario: Config file path
-- **WHEN** the provider is initialized
-- **THEN** no config file path is specified
-
 ### Requirement: Continue Slash Commands
 The provider SHALL create slash commands in `.continue/commands/spectr/` directory.
 

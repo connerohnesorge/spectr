@@ -110,7 +110,7 @@ func NewWizardModel(
 		)
 	}
 
-	allProviders := providers.AllV2()
+	allProviders := providers.All()
 
 	configuredProviders := make(map[string]bool)
 	selectedProviders := make(map[string]bool)

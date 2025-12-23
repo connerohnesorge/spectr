@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Continue provider using the ProviderV2 interface.
+// This file implements the Continue provider using the Provider interface.
 // Continue uses .continue/commands/ for slash commands (no instruction file).
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "continue",
 		Name:     "Continue",
 		Priority: PriorityContinue,
-		Provider: &ContinueProviderV2{},
+		Provider: &ContinueProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// ContinueProviderV2 implements the ProviderV2 interface for Continue.
+// ContinueProvider implements the Provider interface for Continue.
 //
 // Continue uses:
 //   - No instruction file
 //   - .continue/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type ContinueProviderV2 struct{}
+type ContinueProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Continue for use with spectr.
@@ -41,7 +41,7 @@ type ContinueProviderV2 struct{}
 // Returns:
 //   - DirectoryInitializer for .continue/commands/spectr
 //   - SlashCommandsInitializer for .continue/commands/spectr (Markdown)
-func (*ContinueProviderV2) Initializers(_ context.Context) []Initializer {
+func (*ContinueProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".continue/commands/spectr"),
@@ -59,5 +59,5 @@ func (*ContinueProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure ContinueProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*ContinueProviderV2)(nil)
+// Ensure ContinueProvider implements the Provider interface.
+var _ Provider = (*ContinueProvider)(nil)

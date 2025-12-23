@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the CoStrict provider using the ProviderV2 interface.
+// This file implements the CoStrict provider using the Provider interface.
 // CoStrict uses COSTRICT.md and .costrict/commands/ for slash commands.
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "costrict",
 		Name:     "CoStrict",
 		Priority: PriorityCostrict,
-		Provider: &CostrictProviderV2{},
+		Provider: &CostrictProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// CostrictProviderV2 implements the ProviderV2 interface for CoStrict.
+// CostrictProvider implements the Provider interface for CoStrict.
 //
 // CoStrict uses:
 //   - COSTRICT.md for instruction file (with spectr markers)
 //   - .costrict/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type CostrictProviderV2 struct{}
+type CostrictProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // CoStrict for use with spectr.
@@ -39,7 +39,7 @@ type CostrictProviderV2 struct{}
 //   - DirectoryInitializer for .costrict/commands/spectr
 //   - ConfigFileInitializer for COSTRICT.md
 //   - SlashCommandsInitializer for .costrict/commands/spectr (Markdown)
-func (*CostrictProviderV2) Initializers(_ context.Context) []Initializer {
+func (*CostrictProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".costrict/commands/spectr"),
@@ -58,5 +58,5 @@ func (*CostrictProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure CostrictProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*CostrictProviderV2)(nil)
+// Ensure CostrictProvider implements the Provider interface.
+var _ Provider = (*CostrictProvider)(nil)

@@ -3,7 +3,7 @@
 //
 // This file defines the Registration struct which holds metadata for a
 // provider. The Registration struct separates concerns: providers implement
-// behavior through the ProviderV2 interface, while metadata (ID, Name,
+// behavior through the Provider interface, while metadata (ID, Name,
 // Priority) is provided at registration time via this struct.
 //
 // This design means providers don't need to know their own ID, name, or
@@ -19,7 +19,7 @@
 //	})
 //
 // See also:
-//   - provider_new.go: ProviderV2 interface for provider behavior
+//   - provider_new.go: Provider interface for provider behavior
 //   - registry_v2.go: Registry that accepts Registration structs
 package providers
 
@@ -37,7 +37,7 @@ var kebabCaseRegex = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
 //
 // The Registration struct is used when registering a provider with the
 // registry. It separates provider metadata from the provider's behavior
-// (the ProviderV2 interface). This design allows:
+// (the Provider interface). This design allows:
 //
 //   - Providers to focus solely on returning their initializers
 //   - Registry to manage identification and priority ordering
@@ -57,7 +57,7 @@ var kebabCaseRegex = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
 //     available. Lower numbers indicate higher priority. Must be >= 0.
 //     Priority 0 is reserved for the most commonly used providers.
 //
-//   - Provider: The ProviderV2 implementation that returns initializers.
+//   - Provider: The Provider implementation that returns initializers.
 //     Must not be nil.
 //
 //nolint:revive // line-length-limit - struct documentation
@@ -91,11 +91,11 @@ type Registration struct {
 	//   - Priority 100+: Specialized or less common providers
 	Priority int
 
-	// Provider is the ProviderV2 implementation that returns initializers.
+	// Provider is the Provider implementation that returns initializers.
 	//
 	// Constraints:
 	//   - Must not be nil
-	Provider ProviderV2
+	Provider Provider
 }
 
 // Validate checks that all Registration fields meet their constraints.

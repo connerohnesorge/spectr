@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Claude Code provider using the ProviderV2 interface.
+// This file implements the Claude Code provider using the Provider interface.
 // Claude uses CLAUDE.md for instructions and .claude/commands/ for commands.
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "claude-code",
 		Name:     "Claude Code",
 		Priority: PriorityClaudeCode,
-		Provider: &ClaudeProviderV2{},
+		Provider: &ClaudeProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// ClaudeProviderV2 implements the ProviderV2 interface for Claude Code.
+// ClaudeProvider implements the Provider interface for Claude Code.
 //
 // Claude Code uses:
 //   - CLAUDE.md for instruction file (with spectr markers)
 //   - .claude/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type ClaudeProviderV2 struct{}
+type ClaudeProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Claude Code for use with spectr.
@@ -39,7 +39,7 @@ type ClaudeProviderV2 struct{}
 //   - DirectoryInitializer for .claude/commands/spectr
 //   - ConfigFileInitializer for CLAUDE.md
 //   - SlashCommandsInitializer for .claude/commands/spectr (Markdown)
-func (*ClaudeProviderV2) Initializers(_ context.Context) []Initializer {
+func (*ClaudeProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".claude/commands/spectr"),
@@ -58,5 +58,5 @@ func (*ClaudeProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure ClaudeProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*ClaudeProviderV2)(nil)
+// Ensure ClaudeProvider implements the Provider interface.
+var _ Provider = (*ClaudeProvider)(nil)

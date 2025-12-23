@@ -386,7 +386,7 @@ func (e *InitExecutor) createAgentsMd(
 }
 
 // configureProviders configures the selected providers using the new interface-driven architecture.
-// It uses the RegistryV2 API with Registration-based retrieval and runs initializers from each provider.
+// It uses the Registry API with Registration-based retrieval and runs initializers from each provider.
 func (e *InitExecutor) configureProviders(
 	selectedProviderIDs []string,
 	spectrDir string,
@@ -457,7 +457,7 @@ type InitializerError struct {
 	Error error
 }
 
-// collectInitializers gathers initializers from all selected providers using RegistryV2.
+// collectInitializers gathers initializers from all selected providers using Registry.
 func (e *InitExecutor) collectInitializers(
 	ctx context.Context,
 	providerIDs []string,
@@ -466,8 +466,8 @@ func (e *InitExecutor) collectInitializers(
 	var all []providers.Initializer
 
 	for _, providerID := range providerIDs {
-		// Task 6.3: Use new registry API (GetV2 with Registration-based retrieval)
-		reg, found := providers.GetV2(providerID)
+		// Task 6.3: Use new registry API (Get with Registration-based retrieval)
+		reg, found := providers.Get(providerID)
 		if !found {
 			result.Errors = append(result.Errors,
 				fmt.Sprintf("provider %s not found in registry", providerID))

@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Cursor provider using the ProviderV2 interface.
+// This file implements the Cursor provider using the Provider interface.
 // Cursor uses .cursorrules/commands/ for slash commands (no config file).
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "cursor",
 		Name:     "Cursor",
 		Priority: PriorityCursor,
-		Provider: &CursorProviderV2{},
+		Provider: &CursorProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// CursorProviderV2 implements the ProviderV2 interface for Cursor.
+// CursorProvider implements the Provider interface for Cursor.
 //
 // Cursor uses:
 //   - No instruction file (configFile is empty)
 //   - .cursorrules/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type CursorProviderV2 struct{}
+type CursorProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Cursor for use with spectr.
@@ -40,7 +40,7 @@ type CursorProviderV2 struct{}
 //   - SlashCommandsInitializer for .cursorrules/commands/spectr (Markdown)
 //
 // Note: No ConfigFileInitializer since Cursor doesn't use an instruction file.
-func (*CursorProviderV2) Initializers(_ context.Context) []Initializer {
+func (*CursorProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".cursorrules/commands/spectr"),
@@ -56,5 +56,5 @@ func (*CursorProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure CursorProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*CursorProviderV2)(nil)
+// Ensure CursorProvider implements the Provider interface.
+var _ Provider = (*CursorProvider)(nil)

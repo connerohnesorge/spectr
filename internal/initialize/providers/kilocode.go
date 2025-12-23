@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Kilocode provider using the ProviderV2 interface.
+// This file implements the Kilocode provider using the Provider interface.
 // Kilocode uses .kilocode/commands/ for slash commands (no instruction file).
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "kilocode",
 		Name:     "Kilocode",
 		Priority: PriorityKilocode,
-		Provider: &KilocodeProviderV2{},
+		Provider: &KilocodeProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// KilocodeProviderV2 implements the ProviderV2 interface for Kilocode.
+// KilocodeProvider implements the Provider interface for Kilocode.
 //
 // Kilocode uses:
 //   - No instruction file
 //   - .kilocode/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type KilocodeProviderV2 struct{}
+type KilocodeProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Kilocode for use with spectr.
@@ -41,7 +41,7 @@ type KilocodeProviderV2 struct{}
 // Returns:
 //   - DirectoryInitializer for .kilocode/commands/spectr
 //   - SlashCommandsInitializer for .kilocode/commands/spectr (Markdown)
-func (*KilocodeProviderV2) Initializers(_ context.Context) []Initializer {
+func (*KilocodeProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".kilocode/commands/spectr"),
@@ -59,5 +59,5 @@ func (*KilocodeProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure KilocodeProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*KilocodeProviderV2)(nil)
+// Ensure KilocodeProvider implements the Provider interface.
+var _ Provider = (*KilocodeProvider)(nil)

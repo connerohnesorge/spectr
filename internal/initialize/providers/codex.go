@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Codex CLI provider using the ProviderV2 interface.
+// This file implements the Codex CLI provider using the Provider interface.
 // Codex uses AGENTS.md and global ~/.codex/prompts/ for commands.
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "codex",
 		Name:     "Codex CLI",
 		Priority: PriorityCodex,
-		Provider: &CodexProviderV2{},
+		Provider: &CodexProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,14 +24,14 @@ func init() {
 	}
 }
 
-// CodexProviderV2 implements the ProviderV2 interface for Codex CLI.
+// CodexProvider implements the Provider interface for Codex CLI.
 //
 // Codex uses:
 //   - AGENTS.md for instruction file (with spectr markers) - project-relative
 //   - ~/.codex/prompts/ for slash commands - global (home directory)
 //   - Markdown format for slash commands with YAML frontmatter
 //   - Prefixed command files (spectr-proposal.md, spectr-apply.md)
-type CodexProviderV2 struct{}
+type CodexProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Codex CLI for use with spectr.
@@ -42,7 +42,7 @@ type CodexProviderV2 struct{}
 //   - SlashCommandsInitializer for ~/.codex/prompts (Markdown, global)
 //
 // Note: Codex uses global paths for commands, project-relative for config.
-func (*CodexProviderV2) Initializers(_ context.Context) []Initializer {
+func (*CodexProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the global prompts directory
 		// Note: Path is relative to home directory when isGlobal=true
@@ -63,5 +63,5 @@ func (*CodexProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure CodexProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*CodexProviderV2)(nil)
+// Ensure CodexProvider implements the Provider interface.
+var _ Provider = (*CodexProvider)(nil)

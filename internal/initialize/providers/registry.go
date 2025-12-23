@@ -1,11 +1,10 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file defines the new registry (RegistryV2) that works with the
-// Registration struct and ProviderV2 interface. Unlike the legacy registry
-// that accepted Provider interfaces directly, this registry accepts
-// Registration structs which contain metadata (ID, Name, Priority) along
-// with the ProviderV2 implementation.
+// This file defines the provider registry that works with the Registration
+// struct and Provider interface. The registry accepts Registration structs
+// which contain metadata (ID, Name, Priority) along with the Provider
+// implementation.
 //
 // The registry is thread-safe using sync.RWMutex and provides both a global
 // default registry instance and the ability to create independent registry
@@ -21,7 +20,7 @@
 // Example usage:
 //
 //	// Using global registry
-//	err := providers.RegisterV2(providers.Registration{
+//	err := providers.Register(providers.Registration{
 //	    ID:       "claude-code",
 //	    Name:     "Claude Code",
 //	    Priority: 1,
@@ -29,13 +28,12 @@
 //	})
 //
 //	// Using instance registry
-//	registry := providers.NewRegistryV2()
+//	registry := providers.NewRegistry()
 //	err := registry.Register(providers.Registration{...})
 //
 // See also:
 //   - registration.go: Registration struct definition and validation
-//   - provider_new.go: ProviderV2 interface
-//   - registry.go: Legacy registry (for backwards compatibility)
+//   - provider.go: Provider interface
 //
 //nolint:revive // line-length-limit - registry documentation
 package providers
@@ -50,26 +48,26 @@ import (
 	"github.com/spf13/afero"
 )
 
-// registryV2 is the global provider registry for the new Registration-based API.
+// globalRegistry is the global provider registry for the Registration-based API.
 var (
-	globalRegistryV2     = NewRegistryV2()
-	globalRegistryV2Lock sync.RWMutex
+	globalRegistry     = NewRegistry()
+	globalRegistryLock sync.RWMutex
 )
 
-// RegistryV2 provides an instance-based registry for providers using the new
+// Registry provides an instance-based registry for providers using the
 // Registration struct. It is thread-safe and supports validation, duplicate
 // rejection, and priority-sorted retrieval.
 //
-// Use NewRegistryV2() to create a new instance, or use the global convenience
-// functions (RegisterV2, GetV2, AllV2, etc.) for the default global registry.
-type RegistryV2 struct {
+// Use NewRegistry() to create a new instance, or use the global convenience
+// functions (Register, Get, All, etc.) for the default global registry.
+type Registry struct {
 	mu            sync.RWMutex
 	registrations map[string]Registration
 }
 
-// NewRegistryV2 creates a new empty registry.
-func NewRegistryV2() *RegistryV2 {
-	return &RegistryV2{
+// NewRegistry creates a new empty registry.
+func NewRegistry() *Registry {
+	return &Registry{
 		registrations: make(map[string]Registration),
 	}
 }
@@ -81,7 +79,7 @@ func NewRegistryV2() *RegistryV2 {
 //   - A provider with the same ID is already registered
 //
 // This method is thread-safe.
-func (r *RegistryV2) Register(reg Registration) error {
+func (r *Registry) Register(reg Registration) error {
 	// Validate the registration first
 	if err := reg.Validate(); err != nil {
 		return fmt.Errorf("cannot register provider: %w", err)
@@ -107,7 +105,7 @@ func (r *RegistryV2) Register(reg Registration) error {
 //
 // Returns the registration and true if found, or a zero Registration and false
 // if not found. This method is thread-safe.
-func (r *RegistryV2) Get(id string) (*Registration, bool) {
+func (r *Registry) Get(id string) (*Registration, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -123,7 +121,7 @@ func (r *RegistryV2) Get(id string) (*Registration, bool) {
 //
 // This maintains backwards-compatible behavior with the legacy registry.
 // This method is thread-safe.
-func (r *RegistryV2) All() []Registration {
+func (r *Registry) All() []Registration {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -148,7 +146,7 @@ func (r *RegistryV2) All() []Registration {
 //
 // This is a convenience method that returns just the IDs from All().
 // This method is thread-safe.
-func (r *RegistryV2) IDs() []string {
+func (r *Registry) IDs() []string {
 	registrations := r.All()
 	ids := make([]string, len(registrations))
 	for i, reg := range registrations {
@@ -161,7 +159,7 @@ func (r *RegistryV2) IDs() []string {
 // Count returns the number of registered providers.
 //
 // This method is thread-safe.
-func (r *RegistryV2) Count() int {
+func (r *Registry) Count() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -171,7 +169,7 @@ func (r *RegistryV2) Count() int {
 // Reset clears all registrations from this registry.
 //
 // This is primarily useful for testing. This method is thread-safe.
-func (r *RegistryV2) Reset() {
+func (r *Registry) Reset() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -182,75 +180,75 @@ func (r *RegistryV2) Reset() {
 // Global Convenience Functions
 // -----------------------------------------------------------------------------
 
-// RegisterV2 adds a provider registration to the global registry.
+// Register adds a provider registration to the global registry.
 //
-// This is a convenience function that calls Register on the global RegistryV2.
+// This is a convenience function that calls Register on the global Registry.
 // The registration is validated before being accepted. Returns an error if:
 //   - The registration fails validation (invalid ID, Name, Priority, nil)
 //   - A provider with the same ID is already registered
 //
 // This function is thread-safe.
-func RegisterV2(reg Registration) error {
-	globalRegistryV2Lock.Lock()
-	defer globalRegistryV2Lock.Unlock()
+func Register(reg Registration) error {
+	globalRegistryLock.Lock()
+	defer globalRegistryLock.Unlock()
 
-	return globalRegistryV2.Register(reg)
+	return globalRegistry.Register(reg)
 }
 
-// GetV2 retrieves a registration by its ID from the global registry.
+// Get retrieves a registration by its ID from the global registry.
 //
-// This is a convenience function that calls Get on the global RegistryV2.
+// This is a convenience function that calls Get on the global Registry.
 // Returns the registration and true if found, or nil/false if not found.
 // This function is thread-safe.
-func GetV2(id string) (*Registration, bool) {
-	globalRegistryV2Lock.RLock()
-	defer globalRegistryV2Lock.RUnlock()
+func Get(id string) (*Registration, bool) {
+	globalRegistryLock.RLock()
+	defer globalRegistryLock.RUnlock()
 
-	return globalRegistryV2.Get(id)
+	return globalRegistry.Get(id)
 }
 
-// AllV2 returns all registrations from the global registry sorted by priority.
+// All returns all registrations from the global registry sorted by priority.
 //
-// This is a convenience function that calls All on the global RegistryV2.
+// This is a convenience function that calls All on the global Registry.
 // Returns registrations sorted by priority (lower priority number first).
 // This function is thread-safe.
-func AllV2() []Registration {
-	globalRegistryV2Lock.RLock()
-	defer globalRegistryV2Lock.RUnlock()
+func All() []Registration {
+	globalRegistryLock.RLock()
+	defer globalRegistryLock.RUnlock()
 
-	return globalRegistryV2.All()
+	return globalRegistry.All()
 }
 
-// IDsV2 returns all registered provider IDs from the global registry sorted by priority.
+// IDs returns all registered provider IDs from the global registry sorted by priority.
 //
-// This is a convenience function that calls IDs on the global RegistryV2.
+// This is a convenience function that calls IDs on the global Registry.
 // This function is thread-safe.
-func IDsV2() []string {
-	globalRegistryV2Lock.RLock()
-	defer globalRegistryV2Lock.RUnlock()
+func IDs() []string {
+	globalRegistryLock.RLock()
+	defer globalRegistryLock.RUnlock()
 
-	return globalRegistryV2.IDs()
+	return globalRegistry.IDs()
 }
 
-// CountV2 returns the number of providers in the global registry.
+// Count returns the number of providers in the global registry.
 //
-// This is a convenience function that calls Count on the global RegistryV2.
+// This is a convenience function that calls Count on the global Registry.
 // This function is thread-safe.
-func CountV2() int {
-	globalRegistryV2Lock.RLock()
-	defer globalRegistryV2Lock.RUnlock()
+func Count() int {
+	globalRegistryLock.RLock()
+	defer globalRegistryLock.RUnlock()
 
-	return globalRegistryV2.Count()
+	return globalRegistry.Count()
 }
 
-// ResetV2 clears the global RegistryV2. Only use in tests.
+// Reset clears the global Registry. Only use in tests.
 //
 // This function is thread-safe.
-func ResetV2() {
-	globalRegistryV2Lock.Lock()
-	defer globalRegistryV2Lock.Unlock()
+func Reset() {
+	globalRegistryLock.Lock()
+	defer globalRegistryLock.Unlock()
 
-	globalRegistryV2.Reset()
+	globalRegistry.Reset()
 }
 
 // -----------------------------------------------------------------------------

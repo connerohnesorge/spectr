@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Qwen Code provider using the ProviderV2 interface.
+// This file implements the Qwen Code provider using the Provider interface.
 // Qwen uses QWEN.md for instructions and .qwen/commands/ for slash commands.
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "qwen",
 		Name:     "Qwen Code",
 		Priority: PriorityQwen,
-		Provider: &QwenProviderV2{},
+		Provider: &QwenProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// QwenProviderV2 implements the ProviderV2 interface for Qwen Code.
+// QwenProvider implements the Provider interface for Qwen Code.
 //
 // Qwen Code uses:
 //   - QWEN.md for instruction file (with spectr markers)
 //   - .qwen/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type QwenProviderV2 struct{}
+type QwenProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Qwen Code for use with spectr.
@@ -39,7 +39,7 @@ type QwenProviderV2 struct{}
 //   - DirectoryInitializer for .qwen/commands/spectr
 //   - ConfigFileInitializer for QWEN.md
 //   - SlashCommandsInitializer for .qwen/commands/spectr (Markdown)
-func (*QwenProviderV2) Initializers(_ context.Context) []Initializer {
+func (*QwenProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".qwen/commands/spectr"),
@@ -58,5 +58,5 @@ func (*QwenProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure QwenProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*QwenProviderV2)(nil)
+// Ensure QwenProvider implements the Provider interface.
+var _ Provider = (*QwenProvider)(nil)

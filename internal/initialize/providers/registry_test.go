@@ -6,29 +6,29 @@ import (
 	"testing"
 )
 
-// mockProviderV2 is a minimal ProviderV2 implementation for testing.
-type mockProviderV2 struct {
+// mockProvider is a minimal Provider implementation for testing.
+type mockProvider struct {
 	initializers []Initializer
 }
 
-func (m *mockProviderV2) Initializers(_ context.Context) []Initializer {
+func (m *mockProvider) Initializers(_ context.Context) []Initializer {
 	return m.initializers
 }
 
-// newMockProviderV2 creates a mock ProviderV2 for testing.
-func newMockProviderV2() ProviderV2 {
-	return &mockProviderV2{}
+// newMockProvider creates a mock Provider for testing.
+func newMockProvider() Provider {
+	return &mockProvider{}
 }
 
-func TestRegistryV2_Register(t *testing.T) {
+func TestRegistry_Register(t *testing.T) {
 	t.Run("successful registration", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		err := registry.Register(Registration{
 			ID:       "test-provider",
 			Name:     "Test Provider",
 			Priority: 1,
-			Provider: newMockProviderV2(),
+			Provider: newMockProvider(),
 		})
 
 		if err != nil {
@@ -41,12 +41,12 @@ func TestRegistryV2_Register(t *testing.T) {
 	})
 
 	t.Run("multiple registrations", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		providers := []Registration{
-			{ID: "provider-a", Name: "Provider A", Priority: 10, Provider: newMockProviderV2()},
-			{ID: "provider-b", Name: "Provider B", Priority: 5, Provider: newMockProviderV2()},
-			{ID: "provider-c", Name: "Provider C", Priority: 20, Provider: newMockProviderV2()},
+			{ID: "provider-a", Name: "Provider A", Priority: 10, Provider: newMockProvider()},
+			{ID: "provider-b", Name: "Provider B", Priority: 5, Provider: newMockProvider()},
+			{ID: "provider-c", Name: "Provider C", Priority: 20, Provider: newMockProvider()},
 		}
 
 		for _, reg := range providers {
@@ -61,16 +61,16 @@ func TestRegistryV2_Register(t *testing.T) {
 	})
 }
 
-func TestRegistryV2_DuplicateRejection(t *testing.T) {
+func TestRegistry_DuplicateRejection(t *testing.T) {
 	t.Run("rejects duplicate ID", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		// First registration should succeed
 		err := registry.Register(Registration{
 			ID:       "duplicate-test",
 			Name:     "First Provider",
 			Priority: 1,
-			Provider: newMockProviderV2(),
+			Provider: newMockProvider(),
 		})
 		if err != nil {
 			t.Fatalf("first registration failed: %v", err)
@@ -81,7 +81,7 @@ func TestRegistryV2_DuplicateRejection(t *testing.T) {
 			ID:       "duplicate-test",
 			Name:     "Second Provider",
 			Priority: 2,
-			Provider: newMockProviderV2(),
+			Provider: newMockProvider(),
 		})
 
 		if err == nil {
@@ -103,20 +103,20 @@ func TestRegistryV2_DuplicateRejection(t *testing.T) {
 	})
 
 	t.Run("error message includes existing provider name", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		_ = registry.Register(Registration{
 			ID:       "my-provider",
 			Name:     "Original Name",
 			Priority: 1,
-			Provider: newMockProviderV2(),
+			Provider: newMockProvider(),
 		})
 
 		err := registry.Register(Registration{
 			ID:       "my-provider",
 			Name:     "New Name",
 			Priority: 2,
-			Provider: newMockProviderV2(),
+			Provider: newMockProvider(),
 		})
 
 		if err == nil {
@@ -129,7 +129,7 @@ func TestRegistryV2_DuplicateRejection(t *testing.T) {
 	})
 }
 
-func TestRegistryV2_ValidationRejection(t *testing.T) {
+func TestRegistry_ValidationRejection(t *testing.T) {
 	tests := []struct {
 		name        string
 		reg         Registration
@@ -141,7 +141,7 @@ func TestRegistryV2_ValidationRejection(t *testing.T) {
 				ID:       "",
 				Name:     "Test",
 				Priority: 1,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			},
 			errContains: "ID is required",
 		},
@@ -151,7 +151,7 @@ func TestRegistryV2_ValidationRejection(t *testing.T) {
 				ID:       "InvalidCase",
 				Name:     "Test",
 				Priority: 1,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			},
 			errContains: "must be kebab-case",
 		},
@@ -161,7 +161,7 @@ func TestRegistryV2_ValidationRejection(t *testing.T) {
 				ID:       "valid-id",
 				Name:     "",
 				Priority: 1,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			},
 			errContains: "Name is required",
 		},
@@ -171,7 +171,7 @@ func TestRegistryV2_ValidationRejection(t *testing.T) {
 				ID:       "valid-id",
 				Name:     "Test",
 				Priority: -1,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			},
 			errContains: "Priority must be >= 0",
 		},
@@ -189,7 +189,7 @@ func TestRegistryV2_ValidationRejection(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			registry := NewRegistryV2()
+			registry := NewRegistry()
 			err := registry.Register(tt.reg)
 
 			if err == nil {
@@ -209,15 +209,15 @@ func TestRegistryV2_ValidationRejection(t *testing.T) {
 	}
 }
 
-func TestRegistryV2_Get(t *testing.T) {
+func TestRegistry_Get(t *testing.T) {
 	t.Run("get existing provider", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		expected := Registration{
 			ID:       "test-get",
 			Name:     "Test Get Provider",
 			Priority: 5,
-			Provider: newMockProviderV2(),
+			Provider: newMockProvider(),
 		}
 		_ = registry.Register(expected)
 
@@ -245,7 +245,7 @@ func TestRegistryV2_Get(t *testing.T) {
 	})
 
 	t.Run("get non-existent provider", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		got, found := registry.Get("non-existent")
 
@@ -259,9 +259,9 @@ func TestRegistryV2_Get(t *testing.T) {
 	})
 }
 
-func TestRegistryV2_PrioritySorting(t *testing.T) {
+func TestRegistry_PrioritySorting(t *testing.T) {
 	t.Run("All returns priority-sorted registrations", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		// Register in non-priority order
 		_ = registry.Register(
@@ -269,7 +269,7 @@ func TestRegistryV2_PrioritySorting(t *testing.T) {
 				ID:       "low-priority",
 				Name:     "Low",
 				Priority: 100,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			},
 		)
 		_ = registry.Register(
@@ -277,7 +277,7 @@ func TestRegistryV2_PrioritySorting(t *testing.T) {
 				ID:       "high-priority",
 				Name:     "High",
 				Priority: 1,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			},
 		)
 		_ = registry.Register(
@@ -285,7 +285,7 @@ func TestRegistryV2_PrioritySorting(t *testing.T) {
 				ID:       "mid-priority",
 				Name:     "Mid",
 				Priority: 50,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			},
 		)
 		_ = registry.Register(
@@ -293,7 +293,7 @@ func TestRegistryV2_PrioritySorting(t *testing.T) {
 				ID:       "zero-priority",
 				Name:     "Zero",
 				Priority: 0,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			},
 		)
 
@@ -313,16 +313,16 @@ func TestRegistryV2_PrioritySorting(t *testing.T) {
 	})
 
 	t.Run("IDs returns priority-sorted IDs", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		_ = registry.Register(
-			Registration{ID: "charlie", Name: "C", Priority: 30, Provider: newMockProviderV2()},
+			Registration{ID: "charlie", Name: "C", Priority: 30, Provider: newMockProvider()},
 		)
 		_ = registry.Register(
-			Registration{ID: "alpha", Name: "A", Priority: 10, Provider: newMockProviderV2()},
+			Registration{ID: "alpha", Name: "A", Priority: 10, Provider: newMockProvider()},
 		)
 		_ = registry.Register(
-			Registration{ID: "bravo", Name: "B", Priority: 20, Provider: newMockProviderV2()},
+			Registration{ID: "bravo", Name: "B", Priority: 20, Provider: newMockProvider()},
 		)
 
 		ids := registry.IDs()
@@ -337,17 +337,17 @@ func TestRegistryV2_PrioritySorting(t *testing.T) {
 
 	t.Run("deterministic sort for same priority uses ID as tiebreaker", func(t *testing.T) {
 		// When providers have the same priority, they should be sorted alphabetically by ID
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		// Register in reverse alphabetical order to ensure sorting works
 		_ = registry.Register(
-			Registration{ID: "provider-c", Name: "C", Priority: 10, Provider: newMockProviderV2()},
+			Registration{ID: "provider-c", Name: "C", Priority: 10, Provider: newMockProvider()},
 		)
 		_ = registry.Register(
-			Registration{ID: "provider-a", Name: "A", Priority: 10, Provider: newMockProviderV2()},
+			Registration{ID: "provider-a", Name: "A", Priority: 10, Provider: newMockProvider()},
 		)
 		_ = registry.Register(
-			Registration{ID: "provider-b", Name: "B", Priority: 10, Provider: newMockProviderV2()},
+			Registration{ID: "provider-b", Name: "B", Priority: 10, Provider: newMockProvider()},
 		)
 
 		ids := registry.IDs()
@@ -378,9 +378,9 @@ func TestRegistryV2_PrioritySorting(t *testing.T) {
 	})
 }
 
-func TestRegistryV2_Count(t *testing.T) {
+func TestRegistry_Count(t *testing.T) {
 	t.Run("empty registry", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		if registry.Count() != 0 {
 			t.Errorf("expected 0, got %d", registry.Count())
@@ -388,14 +388,14 @@ func TestRegistryV2_Count(t *testing.T) {
 	})
 
 	t.Run("after registrations", func(t *testing.T) {
-		registry := NewRegistryV2()
+		registry := NewRegistry()
 
 		for i := range 5 {
 			_ = registry.Register(Registration{
 				ID:       "provider-" + string(rune('a'+i)),
 				Name:     "Test",
 				Priority: i,
-				Provider: newMockProviderV2(),
+				Provider: newMockProvider(),
 			})
 		}
 
@@ -405,14 +405,14 @@ func TestRegistryV2_Count(t *testing.T) {
 	})
 }
 
-func TestRegistryV2_Reset(t *testing.T) {
-	registry := NewRegistryV2()
+func TestRegistry_Reset(t *testing.T) {
+	registry := NewRegistry()
 
 	_ = registry.Register(
-		Registration{ID: "provider-1", Name: "P1", Priority: 1, Provider: newMockProviderV2()},
+		Registration{ID: "provider-1", Name: "P1", Priority: 1, Provider: newMockProvider()},
 	)
 	_ = registry.Register(
-		Registration{ID: "provider-2", Name: "P2", Priority: 2, Provider: newMockProviderV2()},
+		Registration{ID: "provider-2", Name: "P2", Priority: 2, Provider: newMockProvider()},
 	)
 
 	if registry.Count() != 2 {
@@ -427,30 +427,30 @@ func TestRegistryV2_Reset(t *testing.T) {
 
 	// Should be able to register again after reset
 	err := registry.Register(
-		Registration{ID: "provider-1", Name: "P1", Priority: 1, Provider: newMockProviderV2()},
+		Registration{ID: "provider-1", Name: "P1", Priority: 1, Provider: newMockProvider()},
 	)
 	if err != nil {
 		t.Errorf("should be able to register after reset, got: %v", err)
 	}
 }
 
-func TestGlobalRegistryV2(t *testing.T) {
+func TestGlobalRegistry(t *testing.T) {
 	// Reset global registry before and after tests
-	ResetV2()
-	defer ResetV2()
+	Reset()
+	defer Reset()
 
-	t.Run("RegisterV2 and GetV2", func(t *testing.T) {
-		err := RegisterV2(Registration{
+	t.Run("Register and Get", func(t *testing.T) {
+		err := Register(Registration{
 			ID:       "global-test",
 			Name:     "Global Test",
 			Priority: 1,
-			Provider: newMockProviderV2(),
+			Provider: newMockProvider(),
 		})
 		if err != nil {
-			t.Fatalf("RegisterV2 failed: %v", err)
+			t.Fatalf("Register failed: %v", err)
 		}
 
-		reg, found := GetV2("global-test")
+		reg, found := Get("global-test")
 		if !found {
 			t.Error("expected to find registered provider")
 		}
@@ -459,17 +459,17 @@ func TestGlobalRegistryV2(t *testing.T) {
 		}
 	})
 
-	t.Run("AllV2 returns sorted", func(t *testing.T) {
-		ResetV2()
+	t.Run("All returns sorted", func(t *testing.T) {
+		Reset()
 
-		_ = RegisterV2(
-			Registration{ID: "second", Name: "Second", Priority: 20, Provider: newMockProviderV2()},
+		_ = Register(
+			Registration{ID: "second", Name: "Second", Priority: 20, Provider: newMockProvider()},
 		)
-		_ = RegisterV2(
-			Registration{ID: "first", Name: "First", Priority: 10, Provider: newMockProviderV2()},
+		_ = Register(
+			Registration{ID: "first", Name: "First", Priority: 10, Provider: newMockProvider()},
 		)
 
-		all := AllV2()
+		all := All()
 		if len(all) != 2 {
 			t.Fatalf("expected 2, got %d", len(all))
 		}
@@ -478,17 +478,17 @@ func TestGlobalRegistryV2(t *testing.T) {
 		}
 	})
 
-	t.Run("IDsV2 returns sorted IDs", func(t *testing.T) {
-		ResetV2()
+	t.Run("IDs returns sorted IDs", func(t *testing.T) {
+		Reset()
 
-		_ = RegisterV2(
-			Registration{ID: "beta", Name: "Beta", Priority: 2, Provider: newMockProviderV2()},
+		_ = Register(
+			Registration{ID: "beta", Name: "Beta", Priority: 2, Provider: newMockProvider()},
 		)
-		_ = RegisterV2(
-			Registration{ID: "alpha", Name: "Alpha", Priority: 1, Provider: newMockProviderV2()},
+		_ = Register(
+			Registration{ID: "alpha", Name: "Alpha", Priority: 1, Provider: newMockProvider()},
 		)
 
-		ids := IDsV2()
+		ids := IDs()
 		if len(ids) != 2 {
 			t.Fatalf("expected 2, got %d", len(ids))
 		}
@@ -497,30 +497,30 @@ func TestGlobalRegistryV2(t *testing.T) {
 		}
 	})
 
-	t.Run("CountV2", func(t *testing.T) {
-		ResetV2()
+	t.Run("Count", func(t *testing.T) {
+		Reset()
 
-		if CountV2() != 0 {
+		if Count() != 0 {
 			t.Error("expected 0 after reset")
 		}
 
-		_ = RegisterV2(
-			Registration{ID: "test", Name: "Test", Priority: 1, Provider: newMockProviderV2()},
+		_ = Register(
+			Registration{ID: "test", Name: "Test", Priority: 1, Provider: newMockProvider()},
 		)
 
-		if CountV2() != 1 {
+		if Count() != 1 {
 			t.Error("expected 1 after registration")
 		}
 	})
 
 	t.Run("duplicate rejection in global registry", func(t *testing.T) {
-		ResetV2()
+		Reset()
 
-		_ = RegisterV2(
-			Registration{ID: "unique", Name: "First", Priority: 1, Provider: newMockProviderV2()},
+		_ = Register(
+			Registration{ID: "unique", Name: "First", Priority: 1, Provider: newMockProvider()},
 		)
-		err := RegisterV2(
-			Registration{ID: "unique", Name: "Second", Priority: 2, Provider: newMockProviderV2()},
+		err := Register(
+			Registration{ID: "unique", Name: "Second", Priority: 2, Provider: newMockProvider()},
 		)
 
 		if err == nil {
@@ -529,10 +529,10 @@ func TestGlobalRegistryV2(t *testing.T) {
 	})
 }
 
-func TestRegistryV2_ThreadSafety(_ *testing.T) {
+func TestRegistry_ThreadSafety(_ *testing.T) {
 	// This test verifies that concurrent operations don't cause races
 	// Run with -race flag: go test -race ./...
-	registry := NewRegistryV2()
+	registry := NewRegistry()
 
 	// Pre-register some providers
 	for i := range 10 {
@@ -540,7 +540,7 @@ func TestRegistryV2_ThreadSafety(_ *testing.T) {
 			ID:       "provider-" + string(rune('a'+i)),
 			Name:     "Test",
 			Priority: i,
-			Provider: newMockProviderV2(),
+			Provider: newMockProvider(),
 		})
 	}
 

@@ -1,21 +1,15 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file defines the new minimal ProviderV2 interface. Unlike the legacy
-// 12-method Provider interface, this interface has a single method.
+// This file defines the minimal Provider interface.
 //
-// The new design separates concerns:
-//   - ProviderV2: Returns the list of initializers needed for a tool
+// The design separates concerns:
+//   - Provider: Returns the list of initializers needed for a tool
 //   - Registration: Contains metadata (ID, Name, Priority) at registration time
 //   - Initializer: Handles actual file creation/update operations
 //
 // This reduces provider authoring from ~50 lines of boilerplate to ~10 lines
 // of registration code, as providers only need to return their initializers.
-//
-// Note: This interface is named ProviderV2 during the migration period to
-// coexist with the legacy Provider interface. Once migration is complete
-// (task 7.1), the legacy interface will be removed and ProviderV2 can be
-// renamed to Provider.
 //
 // Example usage:
 //
@@ -41,17 +35,12 @@ package providers
 
 import "context"
 
-// ProviderV2 defines the minimal interface for AI CLI/IDE tool providers.
+// Provider defines the minimal interface for AI CLI/IDE tool providers.
 //
-// This is the new provider interface that replaces the legacy 12-method
-// Provider interface. It is named ProviderV2 during the migration period
-// to allow both interfaces to coexist. After migration is complete, the
-// legacy Provider interface will be removed and this can be renamed.
-//
-// A ProviderV2's sole responsibility is to return the list of Initializers
+// A Provider's sole responsibility is to return the list of Initializers
 // needed to configure a tool for use with spectr. All metadata (ID, Name,
 // Priority) is provided at registration time via the Registration struct,
-// not through the ProviderV2 interface itself.
+// not through the Provider interface itself.
 //
 // This design enables:
 //   - Minimal boilerplate: providers only implement one method
@@ -64,7 +53,7 @@ import "context"
 //   - Deduplicated by Path() (same path = run once)
 //   - Sorted by type (directories first, then config files, then commands)
 //   - Executed in order with proper filesystem abstraction
-type ProviderV2 interface {
+type Provider interface {
 	// Initializers returns the list of Initializers needed to configure
 	// this provider's tool for use with spectr.
 	//

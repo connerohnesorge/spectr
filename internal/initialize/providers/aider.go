@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Aider provider using the ProviderV2 interface.
+// This file implements the Aider provider using the Provider interface.
 // Aider uses .aider/commands/ for slash commands (no config file).
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "aider",
 		Name:     "Aider",
 		Priority: PriorityAider,
-		Provider: &AiderProviderV2{},
+		Provider: &AiderProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// AiderProviderV2 implements the ProviderV2 interface for Aider.
+// AiderProvider implements the Provider interface for Aider.
 //
 // Aider uses:
 //   - No instruction file (configFile is empty)
 //   - .aider/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type AiderProviderV2 struct{}
+type AiderProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Aider for use with spectr.
@@ -40,7 +40,7 @@ type AiderProviderV2 struct{}
 //   - SlashCommandsInitializer for .aider/commands/spectr with Markdown format
 //
 // Note: No ConfigFileInitializer since Aider doesn't use an instruction file.
-func (*AiderProviderV2) Initializers(_ context.Context) []Initializer {
+func (*AiderProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".aider/commands/spectr"),
@@ -56,5 +56,5 @@ func (*AiderProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure AiderProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*AiderProviderV2)(nil)
+// Ensure AiderProvider implements the Provider interface.
+var _ Provider = (*AiderProvider)(nil)

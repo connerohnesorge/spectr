@@ -6,29 +6,29 @@ import (
 )
 
 // -----------------------------------------------------------------------------
-// Tests for ProviderV2 interface (Task 8.2)
+// Tests for Provider interface (Task 8.2)
 // -----------------------------------------------------------------------------
 
-func TestProviderV2Interface(t *testing.T) {
-	t.Run("ProviderV2 interface is implemented by all registered providers", func(t *testing.T) {
+func TestProviderInterface(t *testing.T) {
+	t.Run("Provider interface is implemented by all registered providers", func(t *testing.T) {
 		// Get all registered providers
-		registrations := AllV2()
+		registrations := All()
 
 		if len(registrations) == 0 {
 			t.Skip("No providers registered - init() functions may not have run")
 		}
 
 		for _, reg := range registrations {
-			// Verify Provider field is not nil (it already implements ProviderV2
-			// since reg.Provider is typed as ProviderV2 in the Registration struct)
+			// Verify Provider field is not nil (it already implements Provider
+			// since reg.Provider is typed as Provider in the Registration struct)
 			if reg.Provider == nil {
 				t.Errorf("provider %s has nil Provider", reg.ID)
 			}
 		}
 	})
 
-	t.Run("ProviderV2.Initializers returns valid slice", func(t *testing.T) {
-		registrations := AllV2()
+	t.Run("Provider.Initializers returns valid slice", func(t *testing.T) {
+		registrations := All()
 
 		if len(registrations) == 0 {
 			t.Skip("No providers registered")
@@ -225,7 +225,7 @@ func TestAllProvidersReturnExpectedInitializers(t *testing.T) {
 
 	for _, expected := range expectedConfigs {
 		t.Run(expected.ID, func(t *testing.T) {
-			reg, found := GetV2(expected.ID)
+			reg, found := Get(expected.ID)
 			if !found {
 				t.Skipf("provider %s not registered", expected.ID)
 
@@ -284,7 +284,7 @@ func TestAllProvidersReturnExpectedInitializers(t *testing.T) {
 func TestProviderInitializerPaths(t *testing.T) {
 	// Test that initializers have valid, non-empty paths
 	ctx := context.Background()
-	registrations := AllV2()
+	registrations := All()
 
 	for _, reg := range registrations {
 		t.Run(reg.ID+"_paths", func(t *testing.T) {
@@ -308,7 +308,7 @@ func TestProviderInitializerPaths(t *testing.T) {
 
 func TestProviderInitializerCount(t *testing.T) {
 	// Verify the total count of registered providers
-	count := CountV2()
+	count := Count()
 
 	// We expect at least 15 providers based on the constants
 	minExpectedProviders := 15
@@ -324,7 +324,7 @@ func TestProviderInitializerCount(t *testing.T) {
 // -----------------------------------------------------------------------------
 
 func TestProviderRegistrationMetadata(t *testing.T) {
-	registrations := AllV2()
+	registrations := All()
 
 	t.Run("all providers have valid IDs", func(t *testing.T) {
 		for _, reg := range registrations {
@@ -410,7 +410,7 @@ func TestSpecificProviderMetadata(t *testing.T) {
 
 	for _, expected := range expectedMetadata {
 		t.Run(expected.ID, func(t *testing.T) {
-			reg, found := GetV2(expected.ID)
+			reg, found := Get(expected.ID)
 			if !found {
 				t.Skipf("provider %s not registered", expected.ID)
 
@@ -432,7 +432,7 @@ func TestSpecificProviderMetadata(t *testing.T) {
 
 func TestProviderPriorityOrdering(t *testing.T) {
 	// Verify that All() returns providers in priority order
-	registrations := AllV2()
+	registrations := All()
 
 	if len(registrations) < 2 {
 		t.Skip("Not enough providers to test ordering")
@@ -488,7 +488,7 @@ func TestInitializerTypesCounting(t *testing.T) {
 	// Test that our counting helper works correctly
 	ctx := context.Background()
 
-	reg, found := GetV2("claude-code")
+	reg, found := Get("claude-code")
 	if !found {
 		t.Skip("claude-code provider not registered")
 	}
@@ -511,7 +511,7 @@ func TestInitializerTypesCounting(t *testing.T) {
 // properly implement the Initializer interface.
 func TestInitializersImplementInterface(t *testing.T) {
 	ctx := context.Background()
-	registrations := AllV2()
+	registrations := All()
 
 	for _, reg := range registrations {
 		t.Run(reg.ID, func(t *testing.T) {

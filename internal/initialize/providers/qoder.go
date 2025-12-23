@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Qoder provider using the ProviderV2 interface.
+// This file implements the Qoder provider using the Provider interface.
 // Qoder uses QODER.md for instructions and .qoder/commands/ for slash commands.
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "qoder",
 		Name:     "Qoder",
 		Priority: PriorityQoder,
-		Provider: &QoderProviderV2{},
+		Provider: &QoderProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// QoderProviderV2 implements the ProviderV2 interface for Qoder.
+// QoderProvider implements the Provider interface for Qoder.
 //
 // Qoder uses:
 //   - QODER.md for instruction file (with spectr markers)
 //   - .qoder/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type QoderProviderV2 struct{}
+type QoderProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Qoder for use with spectr.
@@ -39,7 +39,7 @@ type QoderProviderV2 struct{}
 //   - DirectoryInitializer for .qoder/commands/spectr
 //   - ConfigFileInitializer for QODER.md
 //   - SlashCommandsInitializer for .qoder/commands/spectr (Markdown)
-func (*QoderProviderV2) Initializers(_ context.Context) []Initializer {
+func (*QoderProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".qoder/commands/spectr"),
@@ -58,5 +58,5 @@ func (*QoderProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure QoderProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*QoderProviderV2)(nil)
+// Ensure QoderProvider implements the Provider interface.
+var _ Provider = (*QoderProvider)(nil)

@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Antigravity provider using the ProviderV2 interface.
+// This file implements the Antigravity provider using the Provider interface.
 // Antigravity uses AGENTS.md for instructions and .agent/workflows/ for
 // slash commands.
 //
@@ -13,12 +13,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "antigravity",
 		Name:     "Antigravity",
 		Priority: PriorityAntigravity,
-		Provider: &AntigravityProviderV2{},
+		Provider: &AntigravityProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -27,13 +27,13 @@ func init() {
 	}
 }
 
-// AntigravityProviderV2 implements the ProviderV2 interface for Antigravity.
+// AntigravityProvider implements the Provider interface for Antigravity.
 //
 // Antigravity uses:
 //   - AGENTS.md for instruction file (with spectr markers)
 //   - .agent/workflows/ for slash commands (prefixed pattern)
 //   - Markdown format for slash commands with YAML frontmatter
-type AntigravityProviderV2 struct{}
+type AntigravityProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Antigravity for use with spectr.
@@ -47,7 +47,7 @@ type AntigravityProviderV2 struct{}
 //   - DirectoryInitializer for .agent/workflows
 //   - ConfigFileInitializer for AGENTS.md
 //   - SlashCommandsInitializer for .agent/workflows (Markdown, prefixed)
-func (p *AntigravityProviderV2) Initializers(_ context.Context) []Initializer {
+func (p *AntigravityProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the workflows directory
 		NewDirectoryInitializer(false, ".agent/workflows"),
@@ -67,5 +67,5 @@ func (p *AntigravityProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure AntigravityProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*AntigravityProviderV2)(nil)
+// Ensure AntigravityProvider implements the Provider interface.
+var _ Provider = (*AntigravityProvider)(nil)

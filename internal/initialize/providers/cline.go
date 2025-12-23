@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Cline provider using the ProviderV2 interface.
+// This file implements the Cline provider using the Provider interface.
 // Cline uses CLINE.md and .clinerules/commands/ for slash commands.
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "cline",
 		Name:     "Cline",
 		Priority: PriorityCline,
-		Provider: &ClineProviderV2{},
+		Provider: &ClineProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// ClineProviderV2 implements the ProviderV2 interface for Cline.
+// ClineProvider implements the Provider interface for Cline.
 //
 // Cline uses:
 //   - CLINE.md for instruction file (with spectr markers)
 //   - .clinerules/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type ClineProviderV2 struct{}
+type ClineProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Cline for use with spectr.
@@ -39,7 +39,7 @@ type ClineProviderV2 struct{}
 //   - DirectoryInitializer for .clinerules/commands/spectr
 //   - ConfigFileInitializer for CLINE.md
 //   - SlashCommandsInitializer for .clinerules/commands/spectr (Markdown)
-func (*ClineProviderV2) Initializers(_ context.Context) []Initializer {
+func (*ClineProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".clinerules/commands/spectr"),
@@ -58,5 +58,5 @@ func (*ClineProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure ClineProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*ClineProviderV2)(nil)
+// Ensure ClineProvider implements the Provider interface.
+var _ Provider = (*ClineProvider)(nil)

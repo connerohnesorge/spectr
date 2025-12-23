@@ -3,7 +3,7 @@
 //
 // # Overview
 //
-// This package defines the ProviderV2 interface that all AI CLI tools
+// This package defines the Provider interface that all AI CLI tools
 // (Claude Code, Gemini CLI, Cline, Cursor, etc.) must implement.
 //
 // Each provider returns a list of Initializers that configure the tool
@@ -19,20 +19,20 @@
 //	package providers
 //
 //	func init() {
-//		err := RegisterV2(Registration{
+//		err := Register(Registration{
 //			ID:       "mytool",
 //			Name:     "MyTool",
 //			Priority: 100,
-//			Provider: &MyToolProviderV2{},
+//			Provider: &MyToolProvider{},
 //		})
 //		if err != nil {
 //			panic("failed to register mytool provider: " + err.Error())
 //		}
 //	}
 //
-//	type MyToolProviderV2 struct{}
+//	type MyToolProvider struct{}
 //
-//	func (p *MyToolProviderV2) Initializers(ctx context.Context) []Initializer {
+//	func (p *MyToolProvider) Initializers(ctx context.Context) []Initializer {
 //		return []Initializer{
 //			NewDirectoryInitializer(false, ".mytool/commands/spectr"),
 //			NewConfigFileInitializer("MYTOOL.md", "instruction-pointer", false),
@@ -47,7 +47,7 @@
 //	}
 //
 // See also:
-//   - provider_new.go: ProviderV2 interface definition
+//   - provider_new.go: Provider interface definition
 //   - registration.go: Registration struct for provider metadata
 //   - initializer.go: Initializer interface for file operations
 //   - builtins.go: Built-in initializer implementations

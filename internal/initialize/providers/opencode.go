@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the OpenCode provider using the ProviderV2 interface.
+// This file implements the OpenCode provider using the Provider interface.
 // OpenCode uses .opencode/command/spectr/ for slash commands.
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "opencode",
 		Name:     "OpenCode",
 		Priority: PriorityOpencode,
-		Provider: &OpencodeProviderV2{},
+		Provider: &OpencodeProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// OpencodeProviderV2 implements the ProviderV2 interface for OpenCode.
+// OpencodeProvider implements the Provider interface for OpenCode.
 //
 // OpenCode uses:
 //   - No instruction file (uses JSON configuration)
 //   - .opencode/command/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type OpencodeProviderV2 struct{}
+type OpencodeProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // OpenCode for use with spectr.
@@ -41,7 +41,7 @@ type OpencodeProviderV2 struct{}
 // Returns:
 //   - DirectoryInitializer for .opencode/command/spectr
 //   - SlashCommandsInitializer for .opencode/command/spectr (Markdown)
-func (*OpencodeProviderV2) Initializers(_ context.Context) []Initializer {
+func (*OpencodeProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".opencode/command/spectr"),
@@ -59,5 +59,5 @@ func (*OpencodeProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure OpencodeProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*OpencodeProviderV2)(nil)
+// Ensure OpencodeProvider implements the Provider interface.
+var _ Provider = (*OpencodeProvider)(nil)

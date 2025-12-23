@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Windsurf provider using the ProviderV2 interface.
+// This file implements the Windsurf provider using the Provider interface.
 // Windsurf uses .windsurf/commands/ for slash commands (no instruction file).
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "windsurf",
 		Name:     "Windsurf",
 		Priority: PriorityWindsurf,
-		Provider: &WindsurfProviderV2{},
+		Provider: &WindsurfProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// WindsurfProviderV2 implements the ProviderV2 interface for Windsurf.
+// WindsurfProvider implements the Provider interface for Windsurf.
 //
 // Windsurf uses:
 //   - No instruction file
 //   - .windsurf/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type WindsurfProviderV2 struct{}
+type WindsurfProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Windsurf for use with spectr.
@@ -41,7 +41,7 @@ type WindsurfProviderV2 struct{}
 // Returns:
 //   - DirectoryInitializer for .windsurf/commands/spectr
 //   - SlashCommandsInitializer for .windsurf/commands/spectr (Markdown)
-func (*WindsurfProviderV2) Initializers(_ context.Context) []Initializer {
+func (*WindsurfProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".windsurf/commands/spectr"),
@@ -59,5 +59,5 @@ func (*WindsurfProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure WindsurfProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*WindsurfProviderV2)(nil)
+// Ensure WindsurfProvider implements the Provider interface.
+var _ Provider = (*WindsurfProvider)(nil)

@@ -1,7 +1,7 @@
 // Package providers implements the interface-driven provider architecture for
 // AI CLI/IDE/Orchestrator tools.
 //
-// This file implements the Crush provider using the ProviderV2 interface.
+// This file implements the Crush provider using the Provider interface.
 // Crush uses CRUSH.md for instructions and .crush/commands/ for slash commands.
 package providers
 
@@ -10,12 +10,12 @@ import (
 )
 
 func init() {
-	// Register with RegistryV2
-	err := RegisterV2(Registration{
+	// Register with Registry
+	err := Register(Registration{
 		ID:       "crush",
 		Name:     "Crush",
 		Priority: PriorityCrush,
-		Provider: &CrushProviderV2{},
+		Provider: &CrushProvider{},
 	})
 	if err != nil {
 		// Panic on registration failure since this is called at init time
@@ -24,13 +24,13 @@ func init() {
 	}
 }
 
-// CrushProviderV2 implements the ProviderV2 interface for Crush.
+// CrushProvider implements the Provider interface for Crush.
 //
 // Crush uses:
 //   - CRUSH.md for instruction file (with spectr markers)
 //   - .crush/commands/spectr/ for slash commands
 //   - Markdown format for slash commands with YAML frontmatter
-type CrushProviderV2 struct{}
+type CrushProvider struct{}
 
 // Initializers returns the list of Initializers needed to configure
 // Crush for use with spectr.
@@ -39,7 +39,7 @@ type CrushProviderV2 struct{}
 //   - DirectoryInitializer for .crush/commands/spectr
 //   - ConfigFileInitializer for CRUSH.md
 //   - SlashCommandsInitializer for .crush/commands/spectr (Markdown)
-func (*CrushProviderV2) Initializers(_ context.Context) []Initializer {
+func (*CrushProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		// Create the slash commands directory
 		NewDirectoryInitializer(false, ".crush/commands/spectr"),
@@ -58,5 +58,5 @@ func (*CrushProviderV2) Initializers(_ context.Context) []Initializer {
 	}
 }
 
-// Ensure CrushProviderV2 implements the ProviderV2 interface.
-var _ ProviderV2 = (*CrushProviderV2)(nil)
+// Ensure CrushProvider implements the Provider interface.
+var _ Provider = (*CrushProvider)(nil)

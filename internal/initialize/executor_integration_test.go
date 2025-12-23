@@ -20,7 +20,7 @@ func TestInitializerCollectionFromProviders(t *testing.T) {
 
 	t.Run("collects initializers from single provider", func(t *testing.T) {
 		// Get Claude provider which has 3 initializers
-		reg, found := providers.GetV2("claude-code")
+		reg, found := providers.Get("claude-code")
 		if !found {
 			t.Skip("claude-code provider not registered")
 		}
@@ -60,7 +60,7 @@ func TestInitializerCollectionFromProviders(t *testing.T) {
 
 		var allInitializers []providers.Initializer
 		for _, id := range providerIDs {
-			reg, found := providers.GetV2(id)
+			reg, found := providers.Get(id)
 			if !found {
 				t.Skipf("provider %s not registered", id)
 			}
@@ -112,8 +112,8 @@ func TestInitializerDeduplication(t *testing.T) {
 	t.Run("preserves order (first wins)", func(t *testing.T) {
 		// When two providers return same path, first should be kept
 		// Get two providers that might share common paths
-		reg1, found1 := providers.GetV2("cline")
-		reg2, found2 := providers.GetV2("qoder")
+		reg1, found1 := providers.Get("cline")
+		reg2, found2 := providers.Get("qoder")
 		if !found1 || !found2 {
 			t.Skip("required providers not registered")
 		}
@@ -362,7 +362,7 @@ func TestFullInitializationFlow(t *testing.T) {
 		}
 
 		// Get provider
-		reg, found := providers.GetV2("claude-code")
+		reg, found := providers.Get("claude-code")
 		if !found {
 			t.Skip("claude-code provider not registered")
 		}
@@ -405,7 +405,7 @@ func TestFullInitializationFlow(t *testing.T) {
 		}
 
 		// Get provider
-		reg, found := providers.GetV2("gemini")
+		reg, found := providers.Get("gemini")
 		if !found {
 			t.Skip("gemini provider not registered")
 		}
@@ -449,7 +449,7 @@ func TestFullInitializationFlow(t *testing.T) {
 		}
 
 		// Get provider
-		reg, found := providers.GetV2("codex")
+		reg, found := providers.Get("codex")
 		if !found {
 			t.Skip("codex provider not registered")
 		}

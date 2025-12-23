@@ -43,14 +43,14 @@ type WizardModel struct {
 	executing            bool
 	executionResult      *ExecutionResult
 	err                  error
-	allProviders         []providers.Provider // sorted providers for display
-	ciWorkflowEnabled    bool                 // whether user wants CI workflow created
-	ciWorkflowConfigured bool                 // whether .github/workflows/spectr-ci.yml already exists
+	allProviders         []providers.Registration // sorted providers for display
+	ciWorkflowEnabled    bool                     // whether user wants CI workflow created
+	ciWorkflowConfigured bool                     // whether .github/workflows/spectr-ci.yml already exists
 	// Search mode state
-	searchMode        bool                 // whether search mode is active
-	searchQuery       string               // current search query
-	searchInput       textinput.Model      // text input for search
-	filteredProviders []providers.Provider // providers matching search query
+	searchMode        bool                     // whether search mode is active
+	searchQuery       string                   // current search query
+	searchInput       textinput.Model          // text input for search
+	filteredProviders []providers.Registration // providers matching search query
 }
 
 // ExecutionResult holds the result of initialization
@@ -115,18 +115,8 @@ func NewWizardModel(
 	configuredProviders := make(map[string]bool)
 	selectedProviders := make(map[string]bool)
 
-	for _, provider := range allProviders {
-		isConfigured := provider.IsConfigured(
-			projectPath,
-		)
-
-		configuredProviders[provider.ID()] = isConfigured
-
-		// Pre-select already-configured providers
-		if isConfigured {
-			selectedProviders[provider.ID()] = true
-		}
-	}
+	// We no longer pre-detect configured state since the system is idempotent
+	// Users will manually select providers they want
 
 	// Detect if CI workflow is already configured
 	ciWorkflowPath := filepath.Join(
@@ -256,7 +246,7 @@ func (m WizardModel) handleSelectKeys(
 		// Toggle selection on filtered list
 		if m.cursor < len(m.filteredProviders) {
 			provider := m.filteredProviders[m.cursor]
-			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+			m.selectedProviders[provider.ID] = !m.selectedProviders[provider.ID]
 		}
 	case "enter":
 		// Confirm and move to review
@@ -266,7 +256,7 @@ func (m WizardModel) handleSelectKeys(
 	case "a":
 		// Select all (from full list, not just filtered)
 		for _, provider := range m.allProviders {
-			m.selectedProviders[provider.ID()] = true
+			m.selectedProviders[provider.ID] = true
 		}
 	case "n":
 		// Deselect all
@@ -325,7 +315,7 @@ func (m WizardModel) handleSearchModeInput(
 		// Toggle selection on filtered list while in search mode
 		if m.cursor < len(m.filteredProviders) {
 			provider := m.filteredProviders[m.cursor]
-			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+			m.selectedProviders[provider.ID] = !m.selectedProviders[provider.ID]
 		}
 
 		return m, nil
@@ -348,9 +338,9 @@ func (m *WizardModel) applyProviderFilter() {
 	if query == "" {
 		m.filteredProviders = m.allProviders
 	} else {
-		m.filteredProviders = make([]providers.Provider, 0)
+		m.filteredProviders = make([]providers.Registration, 0)
 		for _, provider := range m.allProviders {
-			if strings.Contains(strings.ToLower(provider.Name()), query) {
+			if strings.Contains(strings.ToLower(provider.Name), query) {
 				m.filteredProviders = append(m.filteredProviders, provider)
 			}
 		}
@@ -546,7 +536,7 @@ func (m WizardModel) renderSelect() string {
 }
 
 func (m WizardModel) renderProviderGroup(
-	providersList []providers.Provider,
+	providersList []providers.Registration,
 	offset int,
 ) string {
 	var b strings.Builder
@@ -559,7 +549,7 @@ func (m WizardModel) renderProviderGroup(
 		}
 
 		checkbox := "[ ]"
-		if m.selectedProviders[provider.ID()] {
+		if m.selectedProviders[provider.ID] {
 			checkbox = selectedStyle.Render("[✓]")
 		}
 
@@ -568,12 +558,12 @@ func (m WizardModel) renderProviderGroup(
 			"  %s %s %s",
 			cursor,
 			checkbox,
-			provider.Name(),
+			provider.Name,
 		)
 
 		// Add configured indicator if provider is already configured
 		configuredIndicator := ""
-		if m.configuredProviders[provider.ID()] {
+		if m.configuredProviders[provider.ID] {
 			configuredIndicator = subtleStyle.Render(
 				" (configured)",
 			)
@@ -585,7 +575,7 @@ func (m WizardModel) renderProviderGroup(
 				cursorStyle.Render(line),
 			)
 			b.WriteString(configuredIndicator)
-		case m.selectedProviders[provider.ID()]:
+		case m.selectedProviders[provider.ID]:
 			b.WriteString(
 				selectedStyle.Render(line),
 			)
@@ -684,11 +674,11 @@ func (m WizardModel) renderSelectedProviders(
 	)
 
 	for _, provider := range m.allProviders {
-		if !m.selectedProviders[provider.ID()] {
+		if !m.selectedProviders[provider.ID] {
 			continue
 		}
 		b.WriteString(successStyle.Render("  ✓ "))
-		b.WriteString(provider.Name())
+		b.WriteString(provider.Name)
 		b.WriteString("\n")
 	}
 	b.WriteString("\n")

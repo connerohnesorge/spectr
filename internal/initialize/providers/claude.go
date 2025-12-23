@@ -1,32 +1,33 @@
+// Package providers implements AI tool provider registration and
+// initialization.
 package providers
 
+import (
+	"context"
+)
+
 func init() {
-	Register(NewClaudeProvider())
+	if err := Register(Registration{
+		ID:       "claude-code",
+		Name:     "Claude Code",
+		Priority: PriorityClaudeCode,
+		Provider: &ClaudeProvider{},
+	}); err != nil {
+		panic(err)
+	}
 }
 
 // ClaudeProvider implements the Provider interface for Claude Code.
-// Claude Code uses CLAUDE.md and .claude/commands/ for slash commands.
-type ClaudeProvider struct {
-	BaseProvider
-}
+type ClaudeProvider struct{}
 
-// NewClaudeProvider creates a new Claude Code provider.
-func NewClaudeProvider() *ClaudeProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".claude/commands",
-		".md",
-	)
-
-	return &ClaudeProvider{
-		BaseProvider: BaseProvider{
-			id:            "claude-code",
-			name:          "Claude Code",
-			priority:      PriorityClaudeCode,
-			configFile:    "CLAUDE.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*ClaudeProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".claude/commands/spectr"),
+		NewConfigFileInitializer("CLAUDE.md", "instruction_pointer"),
+		NewSlashCommandsInitializer(
+			".claude/commands/spectr",
+			".md",
+			FormatMarkdown,
+		),
 	}
 }

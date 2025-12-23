@@ -319,17 +319,18 @@ func TestNewWizardModelWithConfiguredProviders(
 		)
 	}
 
-	// Verify claude-code is marked as configured
-	if !wizard.configuredProviders["claude-code"] {
+	// System is idempotent and doesn't pre-detect configured state
+	// Verify that no providers are pre-selected (users manually select)
+	if wizard.selectedProviders["claude-code"] {
 		t.Error(
-			"Expected claude-code to be marked as configured",
+			"Expected claude-code NOT to be pre-selected",
 		)
 	}
 
-	// Verify claude-code is pre-selected
-	if !wizard.selectedProviders["claude-code"] {
+	// Verify configuredProviders map exists but is empty (not used anymore)
+	if len(wizard.configuredProviders) != 0 {
 		t.Error(
-			"Expected claude-code to be pre-selected",
+			"Expected configuredProviders to be empty",
 		)
 	}
 }
@@ -827,12 +828,12 @@ func TestProviderFilteringLogic(t *testing.T) {
 	// Verify all results contain "claude" (case-insensitive)
 	for _, provider := range wizard.filteredProviders {
 		if !strings.Contains(
-			strings.ToLower(provider.Name()),
+			strings.ToLower(provider.Name),
 			"claude",
 		) {
 			t.Errorf(
 				"Provider %s should not match 'claude'",
-				provider.Name(),
+				provider.Name,
 			)
 		}
 	}
@@ -916,7 +917,7 @@ func TestSelectionPreservedDuringFiltering(
 
 	// Select all providers
 	for _, provider := range wizard.allProviders {
-		wizard.selectedProviders[provider.ID()] = true
+		wizard.selectedProviders[provider.ID] = true
 	}
 
 	originalSelectionCount := len(
@@ -1150,7 +1151,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 
 	// Ensure first provider is not selected
 	if len(wizard.filteredProviders) > 0 {
-		wizard.selectedProviders[wizard.filteredProviders[0].ID()] = false
+		wizard.selectedProviders[wizard.filteredProviders[0].ID] = false
 	}
 
 	// Simulate pressing space key while in search mode
@@ -1168,7 +1169,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 		return
 	}
 
-	providerID := updatedWizard.filteredProviders[0].ID()
+	providerID := updatedWizard.filteredProviders[0].ID
 	if !updatedWizard.selectedProviders[providerID] {
 		t.Errorf(
 			"Expected provider %s to be selected after space press",

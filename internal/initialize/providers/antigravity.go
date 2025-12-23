@@ -1,33 +1,34 @@
+// Package providers implements AI tool provider registration and
+// initialization.
 package providers
 
+import "context"
+
 func init() {
-	Register(NewAntigravityProvider())
+	if err := Register(Registration{
+		ID:       "antigravity",
+		Name:     "Antigravity",
+		Priority: PriorityAntigravity,
+		Provider: &AntigravityProvider{},
+	}); err != nil {
+		panic(err)
+	}
 }
 
 // AntigravityProvider implements the Provider interface for Antigravity.
-//
-// Antigravity uses AGENTS.md and .agent/workflows/ for slash commands.
-type AntigravityProvider struct {
-	BaseProvider
-}
+type AntigravityProvider struct{}
 
-// NewAntigravityProvider creates a new Antigravity provider.
-func NewAntigravityProvider() *AntigravityProvider {
-	proposalPath, applyPath := PrefixedCommandPaths(
-		".agent/workflows",
-		".md",
-	)
-
-	return &AntigravityProvider{
-		BaseProvider: BaseProvider{
-			id:            "antigravity",
-			name:          "Antigravity",
-			priority:      PriorityAntigravity,
-			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*AntigravityProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".antigravity/commands/spectr"),
+		NewConfigFileInitializer(
+			"ANTIGRAVITY.md",
+			"instruction_pointer",
+		),
+		NewSlashCommandsInitializer(
+			".antigravity/commands/spectr",
+			".md",
+			FormatMarkdown,
+		),
 	}
 }

@@ -1,32 +1,31 @@
+// Package providers implements AI tool provider registration and
+// initialization.
 package providers
 
+import "context"
+
 func init() {
-	Register(NewQwenProvider())
+	if err := Register(Registration{
+		ID:       "qwen",
+		Name:     "Qwen",
+		Priority: PriorityQwen,
+		Provider: &QwenProvider{},
+	}); err != nil {
+		panic(err)
+	}
 }
 
-// QwenProvider implements the Provider interface for Qwen Code.
-// Qwen uses QWEN.md and .qwen/commands/ for slash commands.
-type QwenProvider struct {
-	BaseProvider
-}
+// QwenProvider implements the Provider interface for Qwen.
+type QwenProvider struct{}
 
-// NewQwenProvider creates a new Qwen Code provider.
-func NewQwenProvider() *QwenProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".qwen/commands",
-		".md",
-	)
-
-	return &QwenProvider{
-		BaseProvider: BaseProvider{
-			id:            "qwen",
-			name:          "Qwen Code",
-			priority:      PriorityQwen,
-			configFile:    "QWEN.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*QwenProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".qwen/commands/spectr"),
+		NewConfigFileInitializer("QWEN.md", "instruction_pointer"),
+		NewSlashCommandsInitializer(
+			".qwen/commands/spectr",
+			".md",
+			FormatMarkdown,
+		),
 	}
 }

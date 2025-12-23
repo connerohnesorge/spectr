@@ -1,32 +1,31 @@
+// Package providers implements AI tool provider registration and
+// initialization.
 package providers
 
+import "context"
+
 func init() {
-	Register(NewQoderProvider())
+	if err := Register(Registration{
+		ID:       "qoder",
+		Name:     "Qoder",
+		Priority: PriorityQoder,
+		Provider: &QoderProvider{},
+	}); err != nil {
+		panic(err)
+	}
 }
 
 // QoderProvider implements the Provider interface for Qoder.
-// Qoder uses QODER.md and .qoder/commands/ for slash commands.
-type QoderProvider struct {
-	BaseProvider
-}
+type QoderProvider struct{}
 
-// NewQoderProvider creates a new Qoder provider.
-func NewQoderProvider() *QoderProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".qoder/commands",
-		".md",
-	)
-
-	return &QoderProvider{
-		BaseProvider: BaseProvider{
-			id:            "qoder",
-			name:          "Qoder",
-			priority:      PriorityQoder,
-			configFile:    "QODER.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*QoderProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".qoder/commands/spectr"),
+		NewConfigFileInitializer("QODER.md", "instruction_pointer"),
+		NewSlashCommandsInitializer(
+			".qoder/commands/spectr",
+			".md",
+			FormatMarkdown,
+		),
 	}
 }

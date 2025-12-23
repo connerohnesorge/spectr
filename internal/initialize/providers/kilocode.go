@@ -1,32 +1,30 @@
+// Package providers implements AI tool provider registration and
+// initialization.
 package providers
 
+import "context"
+
 func init() {
-	Register(NewKilocodeProvider())
+	if err := Register(Registration{
+		ID:       "kilocode",
+		Name:     "Kilocode",
+		Priority: PriorityKilocode,
+		Provider: &KilocodeProvider{},
+	}); err != nil {
+		panic(err)
+	}
 }
 
 // KilocodeProvider implements the Provider interface for Kilocode.
-// Kilocode uses .kilocode/commands/ for slash commands (no config file).
-type KilocodeProvider struct {
-	BaseProvider
-}
+type KilocodeProvider struct{}
 
-// NewKilocodeProvider creates a new Kilocode provider.
-func NewKilocodeProvider() *KilocodeProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".kilocode/commands",
-		".md",
-	)
-
-	return &KilocodeProvider{
-		BaseProvider: BaseProvider{
-			id:            "kilocode",
-			name:          "Kilocode",
-			priority:      PriorityKilocode,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*KilocodeProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".kilocode/commands/spectr"),
+		NewSlashCommandsInitializer(
+			".kilocode/commands/spectr",
+			".md",
+			FormatMarkdown,
+		),
 	}
 }

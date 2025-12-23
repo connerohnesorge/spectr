@@ -1,32 +1,31 @@
+// Package providers implements AI tool provider registration and
+// initialization.
 package providers
 
+import "context"
+
 func init() {
-	Register(NewCostrictProvider())
+	if err := Register(Registration{
+		ID:       "costrict",
+		Name:     "Costrict",
+		Priority: PriorityCostrict,
+		Provider: &CostrictProvider{},
+	}); err != nil {
+		panic(err)
+	}
 }
 
-// CostrictProvider implements the Provider interface for CoStrict.
-// CoStrict uses COSTRICT.md and .costrict/commands/ for slash commands.
-type CostrictProvider struct {
-	BaseProvider
-}
+// CostrictProvider implements the Provider interface for Costrict.
+type CostrictProvider struct{}
 
-// NewCostrictProvider creates a new CoStrict provider.
-func NewCostrictProvider() *CostrictProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".costrict/commands",
-		".md",
-	)
-
-	return &CostrictProvider{
-		BaseProvider: BaseProvider{
-			id:            "costrict",
-			name:          "CoStrict",
-			priority:      PriorityCostrict,
-			configFile:    "COSTRICT.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*CostrictProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".costrict/commands/spectr"),
+		NewConfigFileInitializer("COSTRICT.md", "instruction_pointer"),
+		NewSlashCommandsInitializer(
+			".costrict/commands/spectr",
+			".md",
+			FormatMarkdown,
+		),
 	}
 }

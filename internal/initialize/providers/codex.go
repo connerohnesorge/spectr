@@ -1,31 +1,31 @@
+// Package providers implements AI tool provider registration and
+// initialization.
 package providers
 
+import "context"
+
 func init() {
-	Register(NewCodexProvider())
+	if err := Register(Registration{
+		ID:       "codex",
+		Name:     "Codex",
+		Priority: PriorityCodex,
+		Provider: &CodexProvider{},
+	}); err != nil {
+		panic(err)
+	}
 }
 
-// CodexProvider implements the Provider interface for Codex CLI.
-// Codex uses AGENTS.md and global ~/.codex/prompts/spectr/ for commands.
-type CodexProvider struct {
-	BaseProvider
-}
+// CodexProvider implements the Provider interface for Codex.
+type CodexProvider struct{}
 
-// NewCodexProvider creates a new Codex CLI provider.
-func NewCodexProvider() *CodexProvider {
-	// Codex uses global paths, not project-relative paths
-	proposalPath := "~/.codex/prompts/spectr-proposal.md"
-	applyPath := "~/.codex/prompts/spectr-apply.md"
-
-	return &CodexProvider{
-		BaseProvider: BaseProvider{
-			id:            "codex",
-			name:          "Codex CLI",
-			priority:      PriorityCodex,
-			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*CodexProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".codex/commands/spectr"),
+		NewConfigFileInitializer("AGENTS.md", "instruction_pointer"),
+		NewSlashCommandsInitializer(
+			".codex/commands/spectr",
+			".md",
+			FormatMarkdown,
+		),
 	}
 }

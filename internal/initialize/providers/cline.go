@@ -1,32 +1,31 @@
+// Package providers implements AI tool provider registration and
+// initialization.
 package providers
 
+import "context"
+
 func init() {
-	Register(NewClineProvider())
+	if err := Register(Registration{
+		ID:       "cline",
+		Name:     "Cline",
+		Priority: PriorityCline,
+		Provider: &ClineProvider{},
+	}); err != nil {
+		panic(err)
+	}
 }
 
 // ClineProvider implements the Provider interface for Cline.
-// Cline uses CLINE.md and .clinerules/commands/ for slash commands.
-type ClineProvider struct {
-	BaseProvider
-}
+type ClineProvider struct{}
 
-// NewClineProvider creates a new Cline provider.
-func NewClineProvider() *ClineProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".clinerules/commands",
-		".md",
-	)
-
-	return &ClineProvider{
-		BaseProvider: BaseProvider{
-			id:            "cline",
-			name:          "Cline",
-			priority:      PriorityCline,
-			configFile:    "CLINE.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*ClineProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".clinerules/commands/spectr"),
+		NewConfigFileInitializer("CLINE.md", "instruction_pointer"),
+		NewSlashCommandsInitializer(
+			".clinerules/commands/spectr",
+			".md",
+			FormatMarkdown,
+		),
 	}
 }

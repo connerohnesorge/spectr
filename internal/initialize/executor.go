@@ -5,11 +5,14 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/spf13/afero"
 )
 
 // InitExecutor handles the actual initialization process
@@ -286,8 +289,9 @@ func (e *InitExecutor) createAgentsMd(
 	return nil
 }
 
-// configureProviders configures the selected providers using the new interface-driven architecture.
-// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+// configureProviders configures the selected providers.
+// This method collects initializers from all selected providers, deduplicates them by path,
+// sorts them by type (directories before files), and runs them with the appropriate filesystem.
 func (e *InitExecutor) configureProviders(
 	selectedProviderIDs []string,
 	spectrDir string,
@@ -297,32 +301,50 @@ func (e *InitExecutor) configureProviders(
 		return nil // No providers to configure
 	}
 
-	for _, providerID := range selectedProviderIDs {
-		provider := providers.Get(providerID)
-		if provider == nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"provider %s not found",
-					providerID,
-				),
-			)
+	// Get home directory for global filesystem
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get user home directory: %w", err)
+	}
 
-			continue
+	// Task 5.1: Create dual filesystem
+	// Project-relative filesystem (for CLAUDE.md, .claude/commands/, etc.)
+	projectFs := afero.NewBasePathFs(afero.NewOsFs(), e.projectPath)
+
+	// Global filesystem (for ~/.config/tool/commands/, etc.)
+	globalFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
+
+	// Task 5.3: Collect initializers from selected providers
+	allInitializers := e.collectInitializers(context.Background(), selectedProviderIDs)
+
+	// Task 5.4: Deduplicate by Path()
+	dedupedInitializers := e.dedupeInitializers(allInitializers)
+
+	// Task 5.5: Sort by type (directories before files)
+	sortedInitializers := e.sortInitializers(dedupedInitializers)
+
+	// Create config for initializers
+	cfg := &providers.Config{
+		SpectrDir: spectrDir,
+	}
+
+	// Task 5.7 & 5.8: Run initializers and aggregate results
+	for _, init := range sortedInitializers {
+		// Select appropriate filesystem based on IsGlobal()
+		fs := projectFs
+		if init.IsGlobal() {
+			fs = globalFs
 		}
 
-		// Check if already configured
-		wasConfigured := provider.IsConfigured(
-			e.projectPath,
-		)
-
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
+		// Run the initializer
+		initResult, err := init.Init(context.Background(), fs, cfg, e.tm)
+		if err != nil {
+			// Task 5.8: Handle partial failures - report and continue
 			result.Errors = append(
 				result.Errors,
 				fmt.Sprintf(
-					"failed to configure %s: %v",
-					provider.Name(),
+					"failed to initialize %s: %v",
+					init.Path(),
 					err,
 				),
 			)
@@ -330,18 +352,82 @@ func (e *InitExecutor) configureProviders(
 			continue
 		}
 
-		// Track created/updated files
-		filePaths := provider.GetFilePaths()
-		if wasConfigured {
-			result.UpdatedFiles = append(
-				result.UpdatedFiles,
-				filePaths...)
-		} else {
-			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
-		}
+		// Task 5.7: Aggregate results
+		result.CreatedFiles = append(result.CreatedFiles, initResult.CreatedFiles...)
+		result.UpdatedFiles = append(result.UpdatedFiles, initResult.UpdatedFiles...)
 	}
 
 	return nil
+}
+
+// Task 5.3: collectInitializers gathers all initializers from selected providers
+func (e *InitExecutor) collectInitializers(
+	ctx context.Context,
+	providerIDs []string,
+) []providers.Initializer {
+	var allInitializers []providers.Initializer
+
+	for _, id := range providerIDs {
+		// Task 5.2: Use new registry API
+		reg := providers.Get(id)
+		if reg == nil {
+			// Provider not found in registry, skip
+			continue
+		}
+
+		// Get initializers from provider
+		inits := reg.Provider.Initializers(ctx)
+		allInitializers = append(allInitializers, inits...)
+	}
+
+	return allInitializers
+}
+
+// Task 5.4: dedupeInitializers removes duplicate initializers by Path()
+func (e *InitExecutor) dedupeInitializers(
+	allInitializers []providers.Initializer,
+) []providers.Initializer {
+	seen := make(map[string]bool)
+	var result []providers.Initializer
+
+	for _, init := range allInitializers {
+		key := init.Path()
+		if !seen[key] {
+			seen[key] = true
+			result = append(result, init)
+		}
+	}
+
+	return result
+}
+
+// Task 5.5: sortInitializers sorts by type priority
+func (e *InitExecutor) sortInitializers(
+	allInitializers []providers.Initializer,
+) []providers.Initializer {
+	sorted := make([]providers.Initializer, len(allInitializers))
+	copy(sorted, allInitializers)
+
+	sort.SliceStable(sorted, func(i, j int) bool {
+		return e.initializerPriority(sorted[i]) < e.initializerPriority(sorted[j])
+	})
+
+	return sorted
+}
+
+// initializerPriority returns the priority of an initializer type.
+// Lower values run first (directories before files).
+func (e *InitExecutor) initializerPriority(init providers.Initializer) int {
+	switch init.(type) {
+	case *providers.DirectoryInitializer:
+		return 1
+	case *providers.ConfigFileInitializer:
+		return 2
+	case *providers.SlashCommandsInitializer:
+		return 3
+	default:
+		return 99
+	}
 }
 
 // createCIWorkflow creates the .github/workflows/spectr-ci.yml file

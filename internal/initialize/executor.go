@@ -397,7 +397,7 @@ func (e *InitExecutor) configureProviders(
 	}
 
 	// Create config for initializers
-	cfg := providers.NewConfig("spectr")
+	cfg := providers.NewConfig(spectrDir)
 
 	ctx := context.Background()
 

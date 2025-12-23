@@ -10,10 +10,12 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/x/exp/teatest v0.0.0-20251117171329-74ce264f24fc
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/jotaen/kong-completion v0.0.7
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/posener/complete v1.2.3
+	github.com/spf13/afero v1.15.0
 )
 
 require (
@@ -26,7 +28,6 @@ require (
 	github.com/charmbracelet/x/exp/golden v0.0.0-20241011142426-46044092ad91 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
@@ -37,7 +38,6 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/riywo/loginshell v0.0.0-20200815045211-7d26008be1ab // indirect
-	github.com/spf13/afero v1.15.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.28.0 // indirect

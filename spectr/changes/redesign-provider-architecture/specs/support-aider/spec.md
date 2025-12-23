@@ -1,0 +1,47 @@
+## MODIFIED Requirements
+
+### Requirement: Aider Provider Configuration
+The provider SHALL be configured with these settings:
+- ID: `aider`
+- Name: `Aider`
+- Priority: 11
+- Config File: (none)
+- Command Format: Markdown
+
+#### Scenario: Provider registration
+- **WHEN** the Aider provider is registered
+- **THEN** it SHALL use the new Registration struct with metadata
+- **AND** registration SHALL include ID `aider`, Name `Aider`, Priority 11
+- **AND** the Provider implementation SHALL return initializers
+
+#### Scenario: Provider returns initializers
+- **WHEN** the provider's Initializers() method is called
+- **THEN** it SHALL return a DirectoryInitializer for `.aider/commands/spectr/`
+- **AND** it SHALL return a SlashCommandsInitializer for Markdown format slash commands
+- **AND** it SHALL NOT return a ConfigFileInitializer (Aider has no instruction file)
+
+
+### Requirement: No Instruction File
+The Aider provider SHALL NOT create an instruction file.
+
+#### Scenario: No config file initializer
+- **WHEN** the provider returns its initializers
+- **THEN** no ConfigFileInitializer SHALL be included in the returned list
+
+### Requirement: Aider Slash Commands
+The provider SHALL create slash commands in `.aider/commands/spectr/` directory.
+
+#### Scenario: Command directory structure
+- **WHEN** the provider returns initializers
+- **THEN** DirectoryInitializer SHALL create `.aider/commands/spectr/` directory
+
+#### Scenario: Command paths
+- **WHEN** the SlashCommandsInitializer executes
+- **THEN** it creates `.aider/commands/spectr/proposal.md`
+- **AND** it creates `.aider/commands/spectr/apply.md`
+
+#### Scenario: Command format
+- **WHEN** slash command files are created
+- **THEN** they use Markdown format with YAML frontmatter
+- **AND** frontmatter includes `description` field
+

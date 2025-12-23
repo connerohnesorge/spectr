@@ -43,10 +43,6 @@ The current provider system has 17 providers, each implementing a 12-method inte
 
 - Affected specs: `support-*` (all 17 provider specs), `cli-interface` (init command)
 
-## Note
-
-Individual `support-*` delta specs are blocked by a validator limitation (same-named requirements across capabilities). See `fix-cross-capability-requirement-validation` proposal. Once that fix is implemented, the provider deltas will be added.
-
 ## Affected Code
 
 - `internal/initialize/providers/*.go` - Complete rewrite

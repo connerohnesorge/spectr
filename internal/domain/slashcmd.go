@@ -1,7 +1,21 @@
 // Package domain contains shared domain types used across packages.
 package domain
 
-import "fmt"
+import (
+	"embed"
+	"fmt"
+	"sync"
+	"text/template"
+)
+
+//go:embed templates/*.tmpl
+var slashTemplateFS embed.FS
+
+var (
+	slashTemplates     *template.Template
+	slashTemplatesOnce sync.Once
+	errSlashTemplates  error
+)
 
 // SlashCommand represents a type-safe slash command identifier.
 type SlashCommand int
@@ -27,16 +41,32 @@ func (s SlashCommand) String() string {
 	return "unknown"
 }
 
-// TemplateName returns the template file name for this command.
-// Returns an error if the command is not recognized.
-func (s SlashCommand) TemplateName() (string, error) {
+// TemplateRef returns a type-safe reference to the slash command's template.
+// Templates are parsed once on first access.
+func (s SlashCommand) TemplateRef() (TemplateRef, error) {
+	slashTemplatesOnce.Do(func() {
+		slashTemplates, errSlashTemplates = template.ParseFS(
+			slashTemplateFS,
+			"templates/*.tmpl",
+		)
+	})
+	if errSlashTemplates != nil {
+		return TemplateRef{}, fmt.Errorf(
+			"failed to parse slash templates: %w",
+			errSlashTemplates,
+		)
+	}
+
 	name, ok := templateNames[s]
 	if !ok {
-		return "", fmt.Errorf(
+		return TemplateRef{}, fmt.Errorf(
 			"unknown slash command: %d",
 			s,
 		)
 	}
 
-	return name, nil
+	return TemplateRef{
+		Name:     name,
+		Template: slashTemplates,
+	}, nil
 }

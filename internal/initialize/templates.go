@@ -103,31 +103,36 @@ func (tm *TemplateManager) RenderInstructionPointer(
 }
 
 // RenderSlashCommand renders a slash command template with the given context
-// commandType must be one of: "proposal", "apply", "archive"
+// commandType must be one of: "proposal", "apply"
 // The context provides path variables for dynamic directory names
-func (tm *TemplateManager) RenderSlashCommand(
+func (*TemplateManager) RenderSlashCommand(
 	commandType string,
 	ctx domain.TemplateContext,
 ) (string, error) {
-	templateName := fmt.Sprintf(
-		"slash-%s.md.tmpl",
-		commandType,
-	)
-	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(
-		&buf,
-		templateName,
-		ctx,
-	)
+	// Convert string to SlashCommand
+	var cmd domain.SlashCommand
+	switch commandType {
+	case "proposal":
+		cmd = domain.SlashProposal
+	case "apply":
+		cmd = domain.SlashApply
+	default:
+		return "", fmt.Errorf(
+			"unknown slash command type: %s",
+			commandType,
+		)
+	}
+
+	ref, err := cmd.TemplateRef()
 	if err != nil {
 		return "", fmt.Errorf(
-			"failed to render slash command template %s: %w",
+			"failed to get slash command template %s: %w",
 			commandType,
 			err,
 		)
 	}
 
-	return buf.String(), nil
+	return ref.Render(ctx)
 }
 
 // RenderCIWorkflow renders the spectr-ci.yml template for GitHub Actions
@@ -184,18 +189,10 @@ func (tm *TemplateManager) CIWorkflow() domain.TemplateRef {
 }
 
 // SlashCommand returns a reference to a slash command template.
-func (tm *TemplateManager) SlashCommand(
+func (*TemplateManager) SlashCommand(
 	cmd domain.SlashCommand,
 ) (domain.TemplateRef, error) {
-	name, err := cmd.TemplateName()
-	if err != nil {
-		return domain.TemplateRef{}, err
-	}
-
-	return domain.TemplateRef{
-		Name:     name,
-		Template: tm.templates,
-	}, nil
+	return cmd.TemplateRef()
 }
 
 // GetTemplates returns the underlying template set.

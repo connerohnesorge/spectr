@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/afero"
 
@@ -50,17 +49,9 @@ func (s *SlashCommandsInitializer) Init(
 	_ context.Context,
 	fs afero.Fs,
 	cfg *Config,
-	tm any,
+	_ any,
 ) (InitResult, error) {
 	var result InitResult
-
-	templateProvider, ok := tm.(TemplateProvider)
-	if !ok {
-		return result, fmt.Errorf(
-			"expected TemplateProvider, got %T",
-			tm,
-		)
-	}
 
 	templateCtx := domain.TemplateContext{
 		BaseDir:     cfg.SpectrDir,
@@ -77,14 +68,10 @@ func (s *SlashCommandsInitializer) Init(
 		)
 	}
 
-	tp := templateProvider
-	ctx := templateCtx
-
 	for _, cmd := range s.commands {
 		r, err := s.processCommand(
 			fs,
-			tp,
-			ctx,
+			templateCtx,
 			cmd,
 		)
 		if err != nil {
@@ -100,7 +87,6 @@ func (s *SlashCommandsInitializer) Init(
 // processCommand handles a single command file.
 func (s *SlashCommandsInitializer) processCommand(
 	fs afero.Fs,
-	tp TemplateProvider,
 	ctx domain.TemplateContext,
 	cmd domain.SlashCommand,
 ) (InitResult, error) {
@@ -111,7 +97,6 @@ func (s *SlashCommandsInitializer) processCommand(
 		cmd.String()+s.ext,
 	)
 	content, fileContent, err := s.renderCommand(
-		tp,
 		ctx,
 		cmd,
 	)
@@ -142,22 +127,16 @@ func (s *SlashCommandsInitializer) processCommand(
 
 // renderCommand renders a command template and formats the content.
 func (s *SlashCommandsInitializer) renderCommand(
-	tp TemplateProvider,
 	ctx domain.TemplateContext,
 	cmd domain.SlashCommand,
 ) (content, fileContent string, err error) {
-	templateName, err := cmd.TemplateName()
+	templateRef, err := cmd.TemplateRef()
 	if err != nil {
 		return "", "", fmt.Errorf(
-			"failed to get template name for %s: %w",
+			"failed to get template for %s: %w",
 			cmd.String(),
 			err,
 		)
-	}
-
-	templateRef := domain.TemplateRef{
-		Name:     templateName,
-		Template: tp.GetTemplates(),
 	}
 
 	content, err = templateRef.Render(ctx)
@@ -367,61 +346,7 @@ func (*SlashCommandsInitializer) updateMarkdownFile(
 }
 
 // Path returns the command directory path.
-func (s *SlashCommandsInitializer) Path() string {
-	return s.dir
-}
+func (s *SlashCommandsInitializer) Path() string { return s.dir }
 
 // IsGlobal returns whether this initializer operates on global files.
-func (s *SlashCommandsInitializer) IsGlobal() bool {
-	return s.isGlobal
-}
-
-// formatMarkdownCommand formats a slash command as a Markdown file.
-func formatMarkdownCommand(
-	cmd domain.SlashCommand,
-	content string,
-) string {
-	var frontmatter string
-
-	const (
-		proposalDesc = "description: Scaffold a new Spectr change.\n"
-		applyDesc    = "description: Implement an approved Spectr change.\n"
-	)
-
-	switch cmd {
-	case domain.SlashProposal:
-		frontmatter = "---\n" + proposalDesc + "---"
-	case domain.SlashApply:
-		frontmatter = "---\n" + applyDesc + "---"
-	}
-
-	return frontmatter + "\n\n" +
-		SpectrStartMarker + "\n" +
-		content + "\n" +
-		SpectrEndMarker + "\n"
-}
-
-// formatTOMLCommand formats a slash command as a TOML file.
-func formatTOMLCommand(
-	cmd domain.SlashCommand,
-	content string,
-) string {
-	var description string
-
-	switch cmd {
-	case domain.SlashProposal:
-		description = "Scaffold a new Spectr change and validate strictly."
-	case domain.SlashApply:
-		description = "Implement an approved Spectr change."
-	}
-
-	var sb strings.Builder
-
-	sb.WriteString("# " + description + "\n\n")
-	sb.WriteString("[[agent]]\n")
-	sb.WriteString(SpectrStartMarker + "\n")
-	sb.WriteString(content + "\n")
-	sb.WriteString(SpectrEndMarker + "\n")
-
-	return sb.String()
-}
+func (s *SlashCommandsInitializer) IsGlobal() bool { return s.isGlobal }

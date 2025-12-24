@@ -36,11 +36,11 @@ func TestSlashCommand_String(t *testing.T) {
 	}
 }
 
-func TestSlashCommand_TemplateName(t *testing.T) {
+func TestSlashCommand_TemplateRef(t *testing.T) {
 	tests := []struct {
-		name     string
-		cmd      SlashCommand
-		expected string
+		name         string
+		cmd          SlashCommand
+		expectedName string
 	}{
 		{
 			"Proposal template",
@@ -56,41 +56,45 @@ func TestSlashCommand_TemplateName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.cmd.TemplateName()
+			ref, err := tt.cmd.TemplateRef()
 			if err != nil {
 				t.Errorf(
-					"SlashCommand(%d).TemplateName() unexpected error: %v",
+					"SlashCommand(%d).TemplateRef() unexpected error: %v",
 					tt.cmd,
 					err,
 				)
 			}
-			if got != tt.expected {
+			if ref.Name != tt.expectedName {
 				t.Errorf(
-					"SlashCommand(%d).TemplateName() = %q, want %q",
+					"SlashCommand(%d).TemplateRef().Name = %q, want %q",
 					tt.cmd,
-					got,
-					tt.expected,
+					ref.Name,
+					tt.expectedName,
+				)
+			}
+			if ref.Template == nil {
+				t.Error(
+					"SlashCommand.TemplateRef().Template should not be nil",
 				)
 			}
 		})
 	}
 }
 
-func TestSlashCommand_TemplateNameUnknown(
+func TestSlashCommand_TemplateRefUnknown(
 	t *testing.T,
 ) {
 	// Test that unknown command returns an error
 	cmd := SlashCommand(999)
-	got, err := cmd.TemplateName()
+	ref, err := cmd.TemplateRef()
 	if err == nil {
 		t.Error(
-			"SlashCommand(999).TemplateName() expected error, got nil",
+			"SlashCommand(999).TemplateRef() expected error, got nil",
 		)
 	}
-	if got != "" {
-		t.Errorf(
-			"SlashCommand(999).TemplateName() = %q, want empty string on error",
-			got,
+	if ref.Template != nil {
+		t.Error(
+			"SlashCommand(999).TemplateRef().Template should be nil on error",
 		)
 	}
 }

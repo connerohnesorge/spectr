@@ -21,7 +21,7 @@ type ClineProvider struct{}
 func (*ClineProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".clinerules/commands/spectr"),
-		NewConfigFileInitializer("CLINE.md", "instruction_pointer"),
+		NewConfigFileInitializer("CLINE.md", RenderInstructionPointer),
 		NewSlashCommandsInitializer(
 			".clinerules/commands/spectr",
 			".md",

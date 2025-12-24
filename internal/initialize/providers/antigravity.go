@@ -23,7 +23,7 @@ func (*AntigravityProvider) Initializers(_ context.Context) []Initializer {
 		NewDirectoryInitializer(".antigravity/commands/spectr"),
 		NewConfigFileInitializer(
 			"ANTIGRAVITY.md",
-			"instruction_pointer",
+			RenderInstructionPointer,
 		),
 		NewSlashCommandsInitializer(
 			".antigravity/commands/spectr",

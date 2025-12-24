@@ -21,7 +21,7 @@ type CostrictProvider struct{}
 func (*CostrictProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".costrict/commands/spectr"),
-		NewConfigFileInitializer("COSTRICT.md", "instruction_pointer"),
+		NewConfigFileInitializer("COSTRICT.md", RenderInstructionPointer),
 		NewSlashCommandsInitializer(
 			".costrict/commands/spectr",
 			".md",

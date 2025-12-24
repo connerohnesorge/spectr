@@ -23,7 +23,7 @@ type ClaudeProvider struct{}
 func (*ClaudeProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".claude/commands/spectr"),
-		NewConfigFileInitializer("CLAUDE.md", "instruction_pointer"),
+		NewConfigFileInitializer("CLAUDE.md", RenderInstructionPointer),
 		NewSlashCommandsInitializer(
 			".claude/commands/spectr",
 			".md",

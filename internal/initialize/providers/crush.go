@@ -21,7 +21,7 @@ type CrushProvider struct{}
 func (*CrushProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".crush/commands/spectr"),
-		NewConfigFileInitializer("CRUSH.md", "instruction_pointer"),
+		NewConfigFileInitializer("CRUSH.md", RenderInstructionPointer),
 		NewSlashCommandsInitializer(
 			".crush/commands/spectr",
 			".md",

@@ -254,8 +254,11 @@ func TestInitializerIdempotency(t *testing.T) {
 			initializer: NewDirectoryInitializer(".test/idempotent/dir"),
 		},
 		{
-			name:        "ConfigFileInitializer",
-			initializer: NewConfigFileInitializer("TEST_CONFIG.md", "instruction_pointer"),
+			name: "ConfigFileInitializer",
+			initializer: NewConfigFileInitializer(
+				"TEST_CONFIG.md",
+				RenderInstructionPointer,
+			),
 		},
 		{
 			name:        "SlashCommandsInitializer",

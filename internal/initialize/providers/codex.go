@@ -21,7 +21,7 @@ type CodexProvider struct{}
 func (*CodexProvider) Initializers(_ context.Context) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".codex/commands/spectr"),
-		NewConfigFileInitializer("AGENTS.md", "instruction_pointer"),
+		NewConfigFileInitializer("AGENTS.md", RenderInstructionPointer),
 		NewSlashCommandsInitializer(
 			".codex/commands/spectr",
 			".md",

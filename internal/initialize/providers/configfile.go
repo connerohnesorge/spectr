@@ -14,28 +14,29 @@ import (
 //
 // Example usage:
 //
-//	init := NewConfigFileInitializer("CLAUDE.md", "instruction_pointer")
+//	init := NewConfigFileInitializer("CLAUDE.md", RenderInstructionPointer)
 type ConfigFileInitializer struct {
-	FilePath     string
-	TemplateName string
-	IsGlobalFs   bool
+	FilePath   string
+	Renderer   TemplateRenderer
+	IsGlobalFs bool
 }
 
 // NewConfigFileInitializer creates a new ConfigFileInitializer.
 //
 // Parameters:
 //   - path: Path to the config file (e.g., "CLAUDE.md")
-//   - templateName: Template to render (e.g., "instruction_pointer")
+//   - renderer: Template renderer function (e.g., RenderInstructionPointer)
 //
 // Returns:
 //   - *ConfigFileInitializer: A new config file initializer
 func NewConfigFileInitializer(
-	path, templateName string,
+	path string,
+	renderer TemplateRenderer,
 ) *ConfigFileInitializer {
 	return &ConfigFileInitializer{
-		FilePath:     path,
-		TemplateName: templateName,
-		IsGlobalFs:   false,
+		FilePath:   path,
+		Renderer:   renderer,
+		IsGlobalFs: false,
 	}
 }
 
@@ -112,11 +113,10 @@ func (c *ConfigFileInitializer) renderContent(
 		AgentsFile:  cfg.AgentsFile(),
 	}
 
-	content, err := tm.RenderInstructionPointer(templateCtx)
+	content, err := c.Renderer(tm, templateCtx)
 	if err != nil {
 		return "", fmt.Errorf(
-			"failed to render template %s: %w",
-			c.TemplateName,
+			"failed to render template: %w",
 			err,
 		)
 	}

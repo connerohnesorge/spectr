@@ -32,6 +32,7 @@ type SlashCommandsInitializer struct {
 	Dir        string
 	Ext        string
 	Format     CommandFormat
+	Commands   []SlashCommand
 	IsGlobalFs bool
 }
 
@@ -54,6 +55,7 @@ func NewSlashCommandsInitializer(
 		Dir:        dir,
 		Ext:        ext,
 		Format:     format,
+		Commands:   DefaultSlashCommands(),
 		IsGlobalFs: false,
 	}
 }
@@ -64,6 +66,15 @@ func (s *SlashCommandsInitializer) WithGlobal(
 	global bool,
 ) *SlashCommandsInitializer {
 	s.IsGlobalFs = global
+
+	return s
+}
+
+// WithCommands configures custom slash commands.
+func (s *SlashCommandsInitializer) WithCommands(
+	commands []SlashCommand,
+) *SlashCommandsInitializer {
+	s.Commands = commands
 
 	return s
 }
@@ -113,23 +124,9 @@ func (s *SlashCommandsInitializer) Init(
 		)
 	}
 
-	// Create proposal and apply commands
-	commands := []struct {
-		name        string
-		description string
-	}{
-		{
-			"proposal",
-			"Scaffold a new Spectr change and validate strictly.",
-		},
-		{
-			"apply",
-			"Implement an approved Spectr change and keep tasks in sync.",
-		},
-	}
-
-	for _, cmd := range commands {
-		filePath := filepath.Join(s.Dir, cmd.name+s.Ext)
+	// Create slash command files
+	for _, cmd := range s.Commands {
+		filePath := filepath.Join(s.Dir, cmd.Name+s.Ext)
 
 		// Check if file already exists
 		exists, err := afero.Exists(fs, filePath)
@@ -142,11 +139,11 @@ func (s *SlashCommandsInitializer) Init(
 		}
 
 		// Render template content
-		content, err := tm.RenderSlashCommand(cmd.name, templateCtx)
+		content, err := cmd.Renderer(tm, templateCtx)
 		if err != nil {
 			return InitResult{}, fmt.Errorf(
 				"failed to render slash command %s: %w",
-				cmd.name,
+				cmd.Name,
 				err,
 			)
 		}
@@ -154,9 +151,9 @@ func (s *SlashCommandsInitializer) Init(
 		var fileContent string
 		switch s.Format {
 		case FormatMarkdown:
-			fileContent = s.generateMarkdownContent(cmd.description, content)
+			fileContent = s.generateMarkdownContent(cmd.Description, content)
 		case FormatTOML:
-			fileContent = s.generateTOMLContent(cmd.description, content)
+			fileContent = s.generateTOMLContent(cmd.Description, content)
 		default:
 			return InitResult{}, fmt.Errorf(
 				"unsupported command format: %d",

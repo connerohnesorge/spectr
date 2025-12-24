@@ -40,7 +40,7 @@ func TestConfigFileInitializer_Init_CreateNew(t *testing.T) {
 		content: "Test instruction content",
 	}
 
-	init := NewConfigFileInitializer("CLAUDE.md", "instruction_pointer")
+	init := NewConfigFileInitializer("CLAUDE.md", RenderInstructionPointer)
 	result, err := init.Init(ctx, fs, cfg, tm)
 
 	if err != nil {
@@ -167,7 +167,7 @@ Same content
 				content: tt.templateContent,
 			}
 
-			init := NewConfigFileInitializer("CLAUDE.md", "instruction_pointer")
+			init := NewConfigFileInitializer("CLAUDE.md", RenderInstructionPointer)
 			result, err := init.Init(ctx, fs, cfg, tm)
 
 			if err != nil {
@@ -206,7 +206,10 @@ func TestConfigFileInitializer_Init_NestedPath(t *testing.T) {
 	}
 
 	// Use nested path that requires parent directory creation
-	init := NewConfigFileInitializer(".claude/config/CLAUDE.md", "instruction_pointer")
+	init := NewConfigFileInitializer(
+		".claude/config/CLAUDE.md",
+		RenderInstructionPointer,
+	)
 	result, err := init.Init(ctx, fs, cfg, tm)
 
 	if err != nil {
@@ -286,7 +289,7 @@ func TestConfigFileInitializer_IsSetup(t *testing.T) {
 				}
 			}
 
-			init := NewConfigFileInitializer("CLAUDE.md", "instruction_pointer")
+			init := NewConfigFileInitializer("CLAUDE.md", RenderInstructionPointer)
 			if got := init.IsSetup(fs, cfg); got != tt.want {
 				t.Errorf("IsSetup() = %v, want %v", got, tt.want)
 			}
@@ -295,7 +298,7 @@ func TestConfigFileInitializer_IsSetup(t *testing.T) {
 }
 
 func TestConfigFileInitializer_Path(t *testing.T) {
-	init := NewConfigFileInitializer("CLAUDE.md", "instruction_pointer")
+	init := NewConfigFileInitializer("CLAUDE.md", RenderInstructionPointer)
 	if got := init.Path(); got != "CLAUDE.md" {
 		t.Errorf("Path() = %v, want CLAUDE.md", got)
 	}
@@ -321,7 +324,7 @@ func TestConfigFileInitializer_IsGlobal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			init := NewConfigFileInitializer("CLAUDE.md", "instruction_pointer")
+			init := NewConfigFileInitializer("CLAUDE.md", RenderInstructionPointer)
 			if tt.isGlobal {
 				init = init.WithGlobal(true)
 			}

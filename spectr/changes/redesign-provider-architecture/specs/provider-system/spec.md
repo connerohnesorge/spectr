@@ -1,5 +1,25 @@
 ## ADDED Requirements
 
+### Requirement: Domain Package
+The system SHALL define a `internal/domain` package containing shared domain types to break import cycles.
+
+#### Scenario: TemplateRef in domain package
+- **WHEN** code needs to reference a template
+- **THEN** it SHALL use `domain.TemplateRef` from `internal/domain`
+- **AND** `TemplateRef` SHALL have `Name` and `Template` fields
+- **AND** `TemplateRef` SHALL have a `Render(ctx TemplateContext) (string, error)` method
+
+#### Scenario: SlashCommand in domain package
+- **WHEN** code needs to reference a slash command type
+- **THEN** it SHALL use `domain.SlashCommand` from `internal/domain`
+- **AND** `SlashCommand` SHALL be a typed constant (`SlashProposal`, `SlashApply`)
+- **AND** `SlashCommand` SHALL have `String()` and `TemplateName()` methods
+
+#### Scenario: TemplateContext in domain package
+- **WHEN** code needs template context with path variables
+- **THEN** it SHALL use `domain.TemplateContext` from `internal/domain`
+- **AND** `domain.DefaultTemplateContext()` SHALL return default path values
+
 ### Requirement: Provider Interface
 The system SHALL define a `Provider` interface that returns a list of initializers.
 
@@ -48,13 +68,21 @@ The system SHALL provide a `Config` struct containing initialization configurati
 - **AND** `ProjectFile()` SHALL return `SpectrDir + "/project.md"`
 - **AND** `AgentsFile()` SHALL return `SpectrDir + "/AGENTS.md"`
 
-### Requirement: Provider Registration
-The system SHALL support registering providers with metadata at registration time.
+### Requirement: Provider Registration (Explicit, No init())
+The system SHALL support registering providers explicitly from a central location, not via init() functions.
 
 #### Scenario: Register provider with metadata
-- **WHEN** a provider is registered
+- **WHEN** a provider is registered via `RegisterProvider(reg Registration) error`
 - **THEN** the registration SHALL include ID, Name, Priority, and Provider implementation
-- **AND** the system SHALL reject duplicate provider IDs
+- **AND** the system SHALL reject duplicate provider IDs with a clear error
+- **AND** the function SHALL return an error (not panic) for invalid registrations
+
+#### Scenario: RegisterAllProviders at startup
+- **WHEN** the application starts
+- **THEN** it SHALL call `RegisterAllProviders()` explicitly from `cmd/root.go` or `main()`
+- **AND** the function SHALL register all built-in providers in one place
+- **AND** the function SHALL return an error if any registration fails
+- **AND** individual provider files SHALL NOT contain `init()` functions for registration
 
 #### Scenario: Retrieve registered providers
 - **WHEN** providers are queried

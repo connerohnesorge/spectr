@@ -8,6 +8,10 @@ Spectr supports 17 AI CLI/IDE tools (Claude Code, Cursor, Cline, etc.) through a
 
 The current implementation has each provider implement a 12-method interface, with most embedding `BaseProvider`. This leads to ~50 lines of boilerplate per provider when the actual variance is just configuration values.
 
+**Current Problems:**
+1. **Import cycle**: `providers.TemplateManager` cannot import `internal/initialize/templates` without creating an import cycle, forcing the use of `any` as placeholder types
+2. **Silent registration failures**: Provider registration in `init()` assigns errors to the blank identifier, silently discarding failures
+
 ## Scope
 
 **Minimal viable refactor**: Reduce boilerplate while keeping behavior identical. No new features.
@@ -21,6 +25,8 @@ The current implementation has each provider implement a 12-method interface, wi
 - Maintain support for all 17 current providers
 - Use `afero.Fs` rooted at project for cleaner path handling
 - Explicit change tracking via InitResult return values
+- Break import cycles with a dedicated `internal/domain` package
+- Fail-fast registration with explicit error handling (no silent failures)
 
 **Non-Goals:**
 - Runtime plugin loading (all providers compiled in)
@@ -29,6 +35,114 @@ The current implementation has each provider implement a 12-method interface, wi
 - New instruction file formats (separate proposal)
 
 ## Decisions
+
+### 0. Domain Package for Shared Types
+
+**Decision**: Create `internal/domain` package containing shared domain types to break import cycles.
+
+**Problem**: The current architecture has an import cycle issue:
+- `providers.TemplateManager` needs to reference template types like `TemplateRef` and `SlashCommand`
+- These types are defined in `internal/initialize/templates`
+- But `templates` cannot import `providers` and vice versa without creating a cycle
+- Currently, `any` is used as a placeholder, with the concrete adapter in `executor.go` explaining the real types
+
+**Solution**: Extract domain objects into `internal/domain`:
+
+```go
+// internal/domain/template.go
+package domain
+
+import (
+    "bytes"
+    "html/template"
+)
+
+// TemplateRef is a type-safe reference to a parsed template.
+// It can be safely passed between packages without creating import cycles.
+type TemplateRef struct {
+    Name     string              // template file name (e.g., "instruction-pointer.md.tmpl")
+    Template *template.Template  // pre-parsed template
+}
+
+// Render executes the template with the given context.
+func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
+    var buf bytes.Buffer
+    if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
+        return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)
+    }
+    return buf.String(), nil
+}
+
+// TemplateContext holds path-related template variables for dynamic directory names.
+type TemplateContext struct {
+    BaseDir     string // e.g., "spectr"
+    SpecsDir    string // e.g., "spectr/specs"
+    ChangesDir  string // e.g., "spectr/changes"
+    ProjectFile string // e.g., "spectr/project.md"
+    AgentsFile  string // e.g., "spectr/AGENTS.md"
+}
+
+// DefaultTemplateContext returns a TemplateContext with default values.
+func DefaultTemplateContext() TemplateContext {
+    return TemplateContext{
+        BaseDir:     "spectr",
+        SpecsDir:    "spectr/specs",
+        ChangesDir:  "spectr/changes",
+        ProjectFile: "spectr/project.md",
+        AgentsFile:  "spectr/AGENTS.md",
+    }
+}
+```
+
+```go
+// internal/domain/slashcmd.go
+package domain
+
+// SlashCommand represents a type-safe slash command identifier.
+type SlashCommand int
+
+const (
+    SlashProposal SlashCommand = iota
+    SlashApply
+)
+
+// String returns the command name for debugging.
+func (s SlashCommand) String() string {
+    names := []string{"proposal", "apply"}
+    if int(s) < len(names) {
+        return names[s]
+    }
+    return "unknown"
+}
+
+// TemplateName returns the template file name for this command.
+func (s SlashCommand) TemplateName() string {
+    names := map[SlashCommand]string{
+        SlashProposal: "slash-proposal.md.tmpl",
+        SlashApply:    "slash-apply.md.tmpl",
+    }
+    return names[s]
+}
+```
+
+**Import structure after change:**
+```
+internal/domain          <- shared types (no dependencies on other internal packages)
+    ├── template.go      <- TemplateRef, TemplateContext
+    └── slashcmd.go      <- SlashCommand enum
+
+internal/initialize/templates
+    └── imports domain   <- uses domain.TemplateRef, domain.TemplateContext
+
+internal/initialize/providers
+    └── imports domain   <- uses domain.TemplateRef, domain.SlashCommand
+```
+
+**Benefits:**
+- Clean separation of domain types from implementation
+- No import cycles possible (domain has no internal dependencies)
+- Types can be shared freely between packages
+- Clear ownership of domain concepts
 
 ### 1. Provider Interface
 
@@ -82,21 +196,94 @@ func (c *Config) AgentsFile() string  { return c.SpectrDir + "/AGENTS.md" }
 - Use functional options pattern - Harder to test
 - Store all paths in Config - Redundant, error-prone
 
-### 2. Registration API
+### 2. Registration API with Explicit Calls (No init())
 
-**Decision**: Metadata provided at registration time.
+**Decision**: Register providers explicitly from a central location, not via `init()`.
 
+**Problem**: The current `init()` pattern has multiple issues:
 ```go
-// Register a provider with its metadata
-providers.Register(providers.Registration{
-    ID:       "claude-code",
-    Name:     "Claude Code",
-    Priority: 1,
-    Provider: &ClaudeProvider{},
-})
+// CURRENT (BAD):
+// 1. Error is discarded - registration failures are silent
+// 2. init() is implicit - hard to test, hard to trace, order-dependent
+// 3. No control over when registration happens
+func init() {
+    Register(NewOpencodeProvider())  // Returns error but it's ignored
+}
 ```
 
-**Rationale**: Providers don't need to know their own ID/name/priority. This is registry concern.
+**Solution**: Explicit registration from a central `RegisterAllProviders()` function:
+
+```go
+// RegisterProvider registers a provider and returns an error if registration fails.
+func RegisterProvider(reg Registration) error {
+    if reg.ID == "" {
+        return fmt.Errorf("provider ID is required")
+    }
+    if reg.Provider == nil {
+        return fmt.Errorf("provider implementation is required")
+    }
+    if _, exists := registry[reg.ID]; exists {
+        return fmt.Errorf("provider %q already registered", reg.ID)
+    }
+    registry[reg.ID] = reg
+    return nil
+}
+
+// Registration contains provider metadata and implementation.
+type Registration struct {
+    ID       string   // Unique identifier (kebab-case, e.g., "claude-code")
+    Name     string   // Human-readable name (e.g., "Claude Code")
+    Priority int      // Display order (lower = higher priority)
+    Provider Provider // Implementation
+}
+
+// RegisterAllProviders registers all built-in providers.
+// Called once at application startup (e.g., from main() or cmd/root.go).
+// Returns error if any registration fails.
+func RegisterAllProviders() error {
+    providers := []Registration{
+        {ID: "claude-code", Name: "Claude Code", Priority: 1, Provider: &ClaudeProvider{}},
+        {ID: "gemini", Name: "Gemini CLI", Priority: 2, Provider: &GeminiProvider{}},
+        {ID: "cursor", Name: "Cursor", Priority: 3, Provider: &CursorProvider{}},
+        {ID: "cline", Name: "Cline", Priority: 4, Provider: &ClineProvider{}},
+        {ID: "aider", Name: "Aider", Priority: 5, Provider: &AiderProvider{}},
+        {ID: "opencode", Name: "OpenCode", Priority: 6, Provider: &OpencodeProvider{}},
+        // ... all other providers
+    }
+
+    for _, reg := range providers {
+        if err := RegisterProvider(reg); err != nil {
+            return fmt.Errorf("failed to register %s provider: %w", reg.ID, err)
+        }
+    }
+    return nil
+}
+```
+
+**Application startup (cmd/root.go or main.go):**
+```go
+func init() {
+    // Single init() that calls explicit registration with error handling
+    if err := providers.RegisterAllProviders(); err != nil {
+        panic(err)
+    }
+}
+
+// Or even better - called explicitly from main():
+func main() {
+    if err := providers.RegisterAllProviders(); err != nil {
+        log.Fatalf("failed to register providers: %v", err)
+    }
+    // ... rest of application
+}
+```
+
+**Rationale**:
+- **Testability**: Tests can call `RegisterProvider()` individually or skip registration entirely
+- **Clarity**: All registrations in one place, easy to see what providers exist
+- **Error handling**: Errors are explicit and propagated, not silently discarded
+- **Debuggability**: Easy to set breakpoints, trace registration order
+- **No implicit dependencies**: No reliance on init() ordering between packages
 
 ### 3. Built-in Initializers
 
@@ -169,6 +356,17 @@ executionResult := aggregateResults(allResults)
 ## Example: Claude Code Provider
 
 ```go
+// internal/initialize/providers/claude.go
+package providers
+
+import (
+    "context"
+
+    "github.com/connerohnesorge/spectr/internal/domain"
+)
+
+// ClaudeProvider configures Claude Code with CLAUDE.md and .claude/commands/spectr/.
+// No init() - registration happens in RegisterAllProviders().
 type ClaudeProvider struct{}
 
 func (p *ClaudeProvider) Initializers(ctx context.Context) []Initializer {
@@ -177,36 +375,38 @@ func (p *ClaudeProvider) Initializers(ctx context.Context) []Initializer {
         // Type-safe: (*TemplateManager).InstructionPointer is a method reference
         // Compiler catches typos - no runtime surprises
         NewConfigFileInitializer("CLAUDE.md", (*TemplateManager).InstructionPointer),
-        // Type-safe: SlashProposal/SlashApply are typed constants
-        NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []SlashCommand{
-            SlashProposal,
-            SlashApply,
+        // Type-safe: domain.SlashProposal/domain.SlashApply are typed constants from domain package
+        NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []domain.SlashCommand{
+            domain.SlashProposal,
+            domain.SlashApply,
         }),
     }
-}
-
-func init() {
-    providers.Register(providers.Registration{
-        ID:       "claude-code",
-        Name:     "Claude Code",
-        Priority: 1,
-        Provider: &ClaudeProvider{},
-    })
 }
 ```
 
 ## Example: Gemini Provider (TOML format)
 
 ```go
+// internal/initialize/providers/gemini.go
+package providers
+
+import (
+    "context"
+
+    "github.com/connerohnesorge/spectr/internal/domain"
+)
+
+// GeminiProvider configures Gemini CLI with TOML slash commands only.
+// No init() - registration happens in RegisterAllProviders().
 type GeminiProvider struct{}
 
 func (p *GeminiProvider) Initializers(ctx context.Context) []Initializer {
     return []Initializer{
         NewDirectoryInitializer(".gemini/commands/spectr"),
         // No config file for Gemini - uses TOML slash commands only
-        NewSlashCommandsInitializer(".gemini/commands/spectr", ".toml", []SlashCommand{
-            SlashProposal,
-            SlashApply,
+        NewSlashCommandsInitializer(".gemini/commands/spectr", ".toml", []domain.SlashCommand{
+            domain.SlashProposal,
+            domain.SlashApply,
         }),
     }
 }
@@ -431,6 +631,8 @@ NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []SlashCommand{
 | Global paths support? | Two fs instances (projectFs, globalFs) |
 | Deduplication key? | By file path (simple and effective) |
 | Template selection type safety? | TemplateRef accessors with method references; compile-time checked |
+| Import cycle resolution? | New `internal/domain` package with shared types (`TemplateRef`, `SlashCommand`, `TemplateContext`) |
+| Registration error handling? | No init() - explicit `RegisterAllProviders()` called at startup with proper error propagation |
 
 ## Future Considerations (Out of Scope)
 

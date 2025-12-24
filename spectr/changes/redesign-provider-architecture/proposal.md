@@ -18,12 +18,14 @@ The current provider system has 17 providers, each implementing a 12-method inte
 - **BREAKING**: Remove current `Provider` interface (12 methods) and `BaseProvider` struct
 - **BREAKING**: Replace with minimal `Provider` interface returning `[]Initializer`
 - **BREAKING**: Provider metadata (ID, name, priority) moves to registration time
+- **NEW**: `internal/domain` package containing shared domain types (`TemplateRef`, `SlashCommand`) to break import cycles
 - **NEW**: `Initializer` interface with `Init(ctx, fs, cfg, tm)` and `IsSetup(fs, cfg)` methods
 - **NEW**: Built-in initializers: `DirectoryInitializer`, `ConfigFileInitializer`, `SlashCommandsInitializer`
 - **NEW**: `Config` struct with `SpectrDir` field; other paths derived (SpecsDir = SpectrDir/specs, etc.)
 - **NEW**: Two filesystem instances: `projectFs` (project-relative) and `globalFs` (home directory)
 - **REMOVED**: `GetFilePaths()`, `HasConfigFile()`, `HasSlashCommands()` methods
 - **NEW**: `Initializer.Init()` returns `InitResult` containing created/updated files (explicit change tracking)
+- **CHANGED**: Provider registration uses explicit `RegisterAllProviders()` called at startup (no init() in provider files, proper error propagation)
 - **MIGRATION**: Users must re-run `spectr init` (clean break, no automatic migration)
 
 ## Key Decisions
@@ -43,9 +45,11 @@ The current provider system has 17 providers, each implementing a 12-method inte
 
 ## Affected Code
 
-- `internal/initialize/providers/*.go` - Complete rewrite
+- `internal/domain/*.go` - New domain package with shared types (`TemplateRef`, `SlashCommand`, `TemplateContext`)
+- `internal/initialize/providers/*.go` - Complete rewrite with explicit registration error handling
 - `internal/initialize/providers/initializers/*.go` - New initializer implementations
 - `internal/initialize/providers/result.go` - New InitResult type
+- `internal/initialize/templates/*.go` - Updated to use domain types from `internal/domain`
 - `internal/initialize/executor.go` - Simplified provider orchestration with result collection
 - `internal/initialize/wizard.go` - Provider selection UI unchanged
 - `cmd/init.go` - Minor updates for new API

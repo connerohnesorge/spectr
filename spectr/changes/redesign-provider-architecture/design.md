@@ -114,28 +114,48 @@ func (s SlashCommand) String() string {
     }
     return "unknown"
 }
-
-// TemplateName returns the template file name for this command.
-func (s SlashCommand) TemplateName() string {
-    names := map[SlashCommand]string{
-        SlashProposal: "slash-proposal.md.tmpl",
-        SlashApply:    "slash-apply.md.tmpl",
-    }
-    return names[s]
-}
 ```
+
+**Slash command template consolidation:**
+
+The slash command templates (`slash-proposal.md.tmpl`, `slash-apply.md.tmpl`) will be moved from `internal/initialize/templates/tools/` into the `internal/domain` package. This achieves full consolidation by:
+
+1. **Embedding templates in domain package:**
+   ```go
+   // internal/domain/templates.go
+   package domain
+
+   import "embed"
+
+   //go:embed templates/*.tmpl
+   var TemplateFS embed.FS
+   ```
+
+2. **Template file locations:**
+   - Move: `internal/initialize/templates/tools/slash-proposal.md.tmpl` → `internal/domain/templates/slash-proposal.md.tmpl`
+   - Move: `internal/initialize/templates/tools/slash-apply.md.tmpl` → `internal/domain/templates/slash-apply.md.tmpl`
+
+3. **Template access via TemplateManager:**
+   Templates are accessed through `TemplateManager.SlashCommand(cmd)`, NOT via a method on `SlashCommand` itself. This keeps template rendering concerns separate from the domain type.
 
 **Import structure after change:**
 ```
-internal/domain          <- shared types (no dependencies on other internal packages)
-    ├── template.go      <- TemplateRef, TemplateContext
-    └── slashcmd.go      <- SlashCommand enum
+internal/domain                    <- shared types + embedded slash templates
+    ├── template.go                <- TemplateRef, TemplateContext
+    ├── slashcmd.go                <- SlashCommand enum (NO TemplateName method)
+    ├── templates.go               <- embed.FS for slash command templates
+    └── templates/                 <- embedded template files
+        ├── slash-proposal.md.tmpl
+        └── slash-apply.md.tmpl
 
-internal/initialize/templates
-    └── imports domain   <- uses domain.TemplateRef, domain.TemplateContext
+internal/initialize/templates      <- main template manager
+    ├── imports domain             <- uses domain.TemplateRef, domain.TemplateContext, domain.TemplateFS
+    └── templates/                 <- instruction and doc templates (non-slash)
+        ├── AGENTS.md.tmpl
+        └── instruction-pointer.md.tmpl
 
 internal/initialize/providers
-    └── imports domain   <- uses domain.TemplateRef, domain.SlashCommand
+    └── imports domain             <- uses domain.TemplateRef, domain.SlashCommand
 ```
 
 **Benefits:**
@@ -285,6 +305,36 @@ func main() {
 - **Debuggability**: Easy to set breakpoints, trace registration order
 - **No implicit dependencies**: No reliance on init() ordering between packages
 
+**Why not keep a compatibility shim?**
+
+We considered adding a deprecated `Register(_ any)` function during migration:
+
+```go
+// REJECTED APPROACH:
+// Deprecated: Use RegisterProvider instead
+func Register(_ any) {
+    // Silently swallow calls to prevent compilation errors
+    // OR log a deprecation warning
+}
+```
+
+**Why we rejected this:**
+
+1. **Hides problems**: Code appears to work but providers aren't actually registered
+2. **Creates ambiguity**: Two registration paths exist, unclear which to use
+3. **Technical debt**: Deprecated code that must be maintained and eventually removed
+4. **Violates zero tech debt policy**: We have an explicit policy against keeping deprecated code around
+5. **Delayed migration**: Developers can postpone fixing the real problem
+6. **No benefit**: This is a single change that migrates all providers at once - there's no partial migration state where compatibility is needed
+
+**Our approach instead:**
+- Complete removal of old `Register()` function
+- Any code calling it will fail to compile
+- Developers get clear error: `undefined: Register`
+- Forces explicit migration to new system
+- No hidden behavior, no confusion
+- Clean codebase from day one
+
 ### 3. Built-in Initializers
 
 **Decision**: Provide three composable initializers with type-safe template selection:
@@ -304,6 +354,56 @@ func NewSlashCommandsInitializer(dir, ext string, commands []SlashCommand) Initi
 ```
 
 **Deduplication**: When multiple providers share an initializer with same config, run once.
+
+**ConfigFileInitializer Marker Handling**:
+
+The ConfigFileInitializer uses `<!-- spectr:START -->` and `<!-- spectr:END -->` markers to update instruction files. It must handle orphaned markers correctly:
+
+```go
+// Pseudocode for marker handling logic
+func updateWithMarkers(content, newContent, startMarker, endMarker string) string {
+    startIdx := strings.Index(content, startMarker)
+
+    if startIdx == -1 {
+        // No markers exist - append new block at end
+        return content + "\n\n" + startMarker + newContent + endMarker
+    }
+
+    // Start marker found - look for end marker AFTER the start
+    searchFrom := startIdx + len(startMarker)
+    endIdx := strings.Index(content[searchFrom:], endMarker)
+
+    if endIdx != -1 {
+        // Normal case: both markers present
+        endIdx += searchFrom // Adjust to absolute position
+        before := content[:startIdx]
+        after := content[endIdx+len(endMarker):]
+        return before + startMarker + newContent + endMarker + after
+    }
+
+    // Start marker exists but no end marker immediately after
+    // Search for trailing end marker anywhere in the file
+    trailingEndIdx := strings.LastIndex(content, endMarker)
+
+    if trailingEndIdx > startIdx {
+        // Found end marker after start - use it
+        before := content[:startIdx]
+        after := content[trailingEndIdx+len(endMarker):]
+        return before + startMarker + newContent + endMarker + after
+    }
+
+    // No end marker anywhere after start - orphaned start marker
+    // Replace everything from start marker onward with new block
+    before := content[:startIdx]
+    return before + startMarker + newContent + endMarker
+}
+```
+
+**Rationale**:
+- **Prevents duplicate blocks**: Don't append when start marker already exists
+- **Handles corrupted files**: Recovers from missing end markers
+- **Uses trailing end marker**: If end marker exists elsewhere, use it
+- **Clean replacement**: Orphaned start markers are replaced, not duplicated
 
 ### 4. Filesystem Abstraction
 
@@ -480,11 +580,71 @@ func dedupeInitializers(all []Initializer) []Initializer {
 
 ## Migration Plan
 
-1. Implement new provider system alongside existing
-2. Migrate providers one-by-one to new system
-3. Remove old provider code
+### Zero Technical Debt Policy
+
+This migration follows a **zero technical debt** policy - no compatibility shims, no deprecated functions kept around. Clean break, complete removal of old code.
+
+### Migration Steps
+
+1. Implement new provider system (new files, new types)
+2. Migrate all 16 providers in-place (delete old code, write new code in same file)
+3. **Completely remove** old registration system - no `Register(p Provider)` function kept around
 4. Update docs to explain re-initialization requirement
 5. No rollback needed - old configs continue to work
+
+### No Compatibility Shims
+
+**We will NOT do this:**
+```go
+// BAD: Deprecated compatibility shim that silently swallows calls
+func Register(_ any) {
+    // No-op to prevent compilation errors during migration
+}
+```
+
+This approach:
+- Hides migration problems instead of surfacing them
+- Creates technical debt
+- Makes it unclear which registration method to use
+- Allows old code to "work" but not actually register providers
+
+**Instead, we do this:**
+- Remove `func Register(p Provider)` entirely from registry.go
+- Remove all `init()` functions from provider files
+- Implement `RegisterAllProviders()` in one central location
+- Any attempt to call old `Register()` will cause a **compile-time error**
+- Developers must explicitly migrate to the new registration system
+
+### Migration is All-or-Nothing
+
+The migration happens in a single change. There is no "partial migration" state where some providers use init() and others don't. The tasks are ordered to ensure:
+
+1. New system is fully implemented first (sections 0-4)
+2. All 16 providers are migrated together (section 5)
+3. Old code is completely removed (section 7)
+
+This ensures no ambiguity about which registration approach to use.
+
+### Enforcement: No Compatibility Shims Allowed
+
+If during implementation someone is tempted to add:
+
+```go
+// DON'T DO THIS - violates zero tech debt policy
+func Register(_ any) {
+    log.Printf("WARNING: Register() is deprecated, use RegisterProvider()")
+    // ... caller info ...
+}
+```
+
+**STOP.** This violates the zero technical debt policy. Instead:
+
+1. **Delete the old Register() function entirely** (task 7.6)
+2. **Delete all init() functions** that call it (tasks 5.1-5.16)
+3. **Implement RegisterAllProviders()** in one location (task 4.6)
+4. Let the **compiler enforce migration** with clear errors
+
+The only valid reason to keep deprecated code would be if external code depends on it. Since all providers are internal to this codebase, there is no valid reason to keep compatibility shims.
 
 ### 6. TemplateManager Integration
 
@@ -497,14 +657,56 @@ type Initializer interface {
 }
 ```
 
+**TemplateManager loads templates from both locations:**
+
+```go
+// NewTemplateManager creates a new template manager with all embedded templates loaded.
+// It merges templates from:
+// 1. internal/initialize/templates (main templates: AGENTS.md, instruction-pointer.md)
+// 2. internal/domain (slash command templates: slash-proposal.md, slash-apply.md)
+func NewTemplateManager() (*TemplateManager, error) {
+    // Parse main templates
+    mainTmpl, err := template.ParseFS(
+        templateFS,  // internal/initialize/templates embed.FS
+        "templates/**/*.tmpl",
+    )
+    if err != nil {
+        return nil, fmt.Errorf("failed to parse main templates: %w", err)
+    }
+
+    // Parse and merge domain templates (slash commands)
+    domainTmpl, err := template.ParseFS(
+        domain.TemplateFS,  // internal/domain embed.FS
+        "templates/*.tmpl",
+    )
+    if err != nil {
+        return nil, fmt.Errorf("failed to parse domain templates: %w", err)
+    }
+
+    // Merge: add domain templates to main template set
+    for _, t := range domainTmpl.Templates() {
+        if _, err := mainTmpl.AddParseTree(t.Name(), t.Tree); err != nil {
+            return nil, fmt.Errorf("failed to merge template %s: %w", t.Name(), err)
+        }
+    }
+
+    return &TemplateManager{
+        templates: mainTmpl,
+    }, nil
+}
+```
+
 **Rationale**:
 - Reuses existing `TemplateManager` from `internal/initialize/templates.go`
+- Merges templates from both `internal/initialize` and `internal/domain` packages
 - Avoids duplicating template rendering logic in each initializer
 - Simpler than the old `TemplateRenderer` interface pattern
+- Domain package remains dependency-free (only exposes embed.FS, doesn't use it)
 
 **Alternatives considered:**
 - Each initializer implements own template rendering - More code duplication
 - Pass templates as strings - Less flexible, harder to maintain
+- Keep all templates in `internal/initialize` - Creates import cycle for domain types
 
 ### 7. Type-Safe Template Selection
 
@@ -555,23 +757,16 @@ func (tm *TemplateManager) Agents() TemplateRef {
     }
 }
 
-// SlashCommand type for compile-time checked slash command types
-type SlashCommand int
-
-const (
-    SlashProposal SlashCommand = iota
-    SlashApply
-)
-
-// SlashCommand returns a template reference for the given slash command type
-func (tm *TemplateManager) SlashCommand(cmd SlashCommand) TemplateRef {
-    names := map[SlashCommand]string{
-        SlashProposal: "slash-proposal.md.tmpl",
-        SlashApply:    "slash-apply.md.tmpl",
+// SlashCommand returns a template reference for the given slash command type.
+// Templates are loaded from domain.TemplateFS and merged with main templates.
+func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+    names := map[domain.SlashCommand]string{
+        domain.SlashProposal: "slash-proposal.md.tmpl",
+        domain.SlashApply:    "slash-apply.md.tmpl",
     }
-    return TemplateRef{
-        name:     names[cmd],
-        template: tm.templates,
+    return domain.TemplateRef{
+        Name:     names[cmd],
+        Template: tm.templates,
     }
 }
 ```

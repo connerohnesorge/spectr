@@ -13,7 +13,8 @@ The system SHALL define a `internal/domain` package containing shared domain typ
 - **WHEN** code needs to reference a slash command type
 - **THEN** it SHALL use `domain.SlashCommand` from `internal/domain`
 - **AND** `SlashCommand` SHALL be a typed constant (`SlashProposal`, `SlashApply`)
-- **AND** `SlashCommand` SHALL have `String()` and `TemplateName()` methods
+- **AND** `SlashCommand` SHALL have a `String()` method for debugging
+- **AND** slash command templates SHALL be accessed via `TemplateManager.SlashCommand(cmd)`, not via a method on `SlashCommand`
 
 #### Scenario: TemplateContext in domain package
 - **WHEN** code needs template context with path variables
@@ -112,6 +113,19 @@ The system SHALL provide a built-in `ConfigFileInitializer` for marker-based fil
 - **WHEN** content is written to a config file
 - **THEN** it SHALL be wrapped with `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
 
+#### Scenario: Orphaned start marker handling
+- **WHEN** a config file contains a start marker but the end marker is missing immediately after
+- **THEN** the initializer SHALL search for an end marker anywhere after the start position using `strings.LastIndex`
+- **AND** if an end marker is found after the start marker, the initializer SHALL use it to perform the update
+- **AND** if no end marker exists anywhere after the start, the initializer SHALL replace content from the start marker onward with the new block (start + content + end)
+- **AND** the initializer SHALL NOT append a duplicate block that leaves orphaned markers
+
+#### Scenario: Missing end marker recovery
+- **WHEN** start marker exists at position X but no end marker exists anywhere after position X
+- **THEN** the initializer SHALL trim content from position X onward
+- **AND** insert the complete new block (startMarker + newContent + endMarker)
+- **AND** this prevents duplicate marker blocks and orphaned start markers
+
 ### Requirement: SlashCommands Initializer
 The system SHALL provide a built-in `SlashCommandsInitializer` for creating slash commands.
 
@@ -190,4 +204,19 @@ The system SHALL handle partial initialization failures gracefully.
 - **THEN** the system SHALL report which initializers failed
 - **AND** the system SHALL NOT rollback successful initializers
 - **AND** the user SHALL be able to re-run `spectr init` to retry
+
+### Requirement: Zero Technical Debt - No Compatibility Shims
+The system SHALL NOT provide compatibility shims for deprecated registration patterns.
+
+#### Scenario: Old Register() function removed
+- **WHEN** the old provider registration system is removed
+- **THEN** the old `Register(p Provider)` function SHALL be completely deleted
+- **AND** NO deprecated `Register(_ any)` function SHALL exist that silently swallows calls
+- **AND** code attempting to call the old `Register()` SHALL fail to compile with a clear error
+
+#### Scenario: Explicit migration required
+- **WHEN** providers are migrated to the new system
+- **THEN** all provider `init()` functions SHALL be deleted
+- **AND** registration SHALL happen exclusively via `RegisterAllProviders()`
+- **AND** compiler errors SHALL enforce complete migration
 

@@ -61,6 +61,42 @@
       "status": "pending"
     },
     {
+      "id": "0.5",
+      "section": "Domain Package: Slash Command Template Consolidation",
+      "description": "Create `internal/domain/templates.go` with `//go:embed templates/*.tmpl` directive and exported `TemplateFS embed.FS` variable",
+      "status": "pending"
+    },
+    {
+      "id": "0.6",
+      "section": "Domain Package: Slash Command Template Consolidation",
+      "description": "Create directory `internal/domain/templates/` for embedded slash command templates",
+      "status": "pending"
+    },
+    {
+      "id": "0.7",
+      "section": "Domain Package: Slash Command Template Consolidation",
+      "description": "Move `internal/initialize/templates/tools/slash-proposal.md.tmpl` to `internal/domain/templates/slash-proposal.md.tmpl`",
+      "status": "pending"
+    },
+    {
+      "id": "0.8",
+      "section": "Domain Package: Slash Command Template Consolidation",
+      "description": "Move `internal/initialize/templates/tools/slash-apply.md.tmpl` to `internal/domain/templates/slash-apply.md.tmpl`",
+      "status": "pending"
+    },
+    {
+      "id": "0.9",
+      "section": "Domain Package: Slash Command Template Consolidation",
+      "description": "Verify `internal/domain/slashcmd.go` has ONLY `String()` method (NO `TemplateName()` method)",
+      "status": "pending"
+    },
+    {
+      "id": "0.10",
+      "section": "Domain Package: Slash Command Template Consolidation",
+      "description": "Delete empty `internal/initialize/templates/tools/` directory after moving slash command templates",
+      "status": "pending"
+    },
+    {
       "id": "1.1",
       "section": "Foundation: Core Interfaces and Types",
       "description": "Create `internal/initialize/providers/initializer.go` with new `Initializer` interface including:",
@@ -93,7 +129,7 @@
     {
       "id": "2.1",
       "section": "Type-Safe Template System",
-      "description": "Update `internal/initialize/templates.go` to import and use `domain.TemplateRef` and `domain.TemplateContext`",
+      "description": "Update `internal/initialize/templates.go` to import and use `domain.TemplateRef` and `domain.TemplateContext`, and merge templates from both `templateFS` (main) and `domain.TemplateFS` (slash commands) in `NewTemplateManager()`",
       "status": "pending"
     },
     {
@@ -129,7 +165,7 @@
     {
       "id": "3.2",
       "section": "Built-in Initializers",
-      "description": "Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`:",
+      "description": "Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer` that handles orphaned markers: (1) if start marker found but end marker missing immediately after, search for trailing end marker with strings.LastIndex; (2) if trailing end found after start, use it for update; (3) if no end marker anywhere after start, replace from start marker onward with new block (prevents duplicate blocks and orphaned markers)",
       "status": "pending"
     },
     {
@@ -147,7 +183,7 @@
     {
       "id": "3.5",
       "section": "Built-in Initializers",
-      "description": "Add unit tests for `ConfigFileInitializer` with `afero.MemMapFs` - test create and marker update scenarios",
+      "description": "Add unit tests for `ConfigFileInitializer` with `afero.MemMapFs` - test: (1) create new file, (2) normal marker update (both markers present), (3) orphaned start marker with trailing end marker elsewhere, (4) orphaned start marker with no end marker anywhere (replacement scenario), (5) verify no duplicate blocks created",
       "status": "pending"
     },
     {
@@ -207,7 +243,7 @@
     {
       "id": "5.1",
       "section": "Migrate Providers (In-Place Replacement, No init())",
-      "description": "Migrate `claude.go` to new Provider interface (reference implementation) - delete old struct, `NewClaudeProvider()`, and `init()`",
+      "description": "Migrate `claude.go` to new Provider interface (reference implementation) - **DELETE** old `BaseProvider` struct, `NewClaudeProvider()`, and the entire `func init() { Register(NewClaudeProvider()) }` block - replace with simple struct implementing new `Provider` interface returning `[]Initializer`",
       "status": "pending"
     },
     {
@@ -387,7 +423,7 @@
     {
       "id": "7.6",
       "section": "Remove Old Provider Code (In-Place Cleanup)",
-      "description": "Remove old global registry functions from `registry.go` (keep only new `Registry` type)",
+      "description": "**COMPLETELY REMOVE** old global registry functions from `registry.go`: delete `Register(p Provider)`, `Get(id)`, `All()`, `IDs()`, `Count()`, `WithConfigFile()`, `WithSlashCommands()`, `Reset()` - zero tech debt policy means NO compatibility shims, NO deprecated `Register(_ any)` that silently swallows calls",
       "status": "pending"
     },
     {

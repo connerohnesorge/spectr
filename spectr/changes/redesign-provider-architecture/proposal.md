@@ -13,12 +13,17 @@ The current provider system has 17 providers, each implementing a 12-method inte
 
 **Minimal viable**: Focus on reducing boilerplate while keeping behavior identical. No new features, no new instruction files (those belong in a separate proposal).
 
+**Zero technical debt policy**: Complete removal of old registration system. No compatibility shims, no deprecated functions that silently swallow calls. Clean break with compile-time errors to force explicit migration.
+
 ## What Changes
 
 - **BREAKING**: Remove current `Provider` interface (12 methods) and `BaseProvider` struct
 - **BREAKING**: Replace with minimal `Provider` interface returning `[]Initializer`
 - **BREAKING**: Provider metadata (ID, name, priority) moves to registration time
-- **NEW**: `internal/domain` package containing shared domain types (`TemplateRef`, `SlashCommand`) to break import cycles
+- **BREAKING**: **COMPLETELY REMOVE** old `Register(p Provider)` function and all `init()` registration - zero tech debt policy means NO deprecated `Register(_ any)` compatibility shim
+- **BREAKING**: Remove all provider `init()` functions that call `Register()`
+- **NEW**: `internal/domain` package containing shared domain types (`TemplateRef`, `SlashCommand`, `TemplateContext`) to break import cycles
+- **NEW**: `internal/domain` package embeds slash command templates (`slash-proposal.md.tmpl`, `slash-apply.md.tmpl`) moved from `internal/initialize/templates/tools/`
 - **NEW**: `Initializer` interface with `Init(ctx, fs, cfg, tm)` and `IsSetup(fs, cfg)` methods
 - **NEW**: Built-in initializers: `DirectoryInitializer`, `ConfigFileInitializer`, `SlashCommandsInitializer`
 - **NEW**: `Config` struct with `SpectrDir` field; other paths derived (SpecsDir = SpectrDir/specs, etc.)
@@ -46,6 +51,8 @@ The current provider system has 17 providers, each implementing a 12-method inte
 ## Affected Code
 
 - `internal/domain/*.go` - New domain package with shared types (`TemplateRef`, `SlashCommand`, `TemplateContext`)
+- `internal/domain/templates/*.tmpl` - Slash command templates moved from `internal/initialize/templates/tools/`
+- `internal/domain/templates.go` - Embed directive for domain templates
 - `internal/initialize/providers/*.go` - Complete rewrite with explicit registration error handling
 - `internal/initialize/providers/initializers/*.go` - New initializer implementations
 - `internal/initialize/providers/result.go` - New InitResult type

@@ -16,10 +16,23 @@ type TemplateRef struct {
 }
 
 // Render executes the template with the given context.
-func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
+func (tr TemplateRef) Render(
+	ctx TemplateContext,
+) (string, error) {
+	if tr.Template == nil {
+		return "", fmt.Errorf(
+			"template %s is nil",
+			tr.Name,
+		)
+	}
+
 	var buf bytes.Buffer
 	if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
-		return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)
+		return "", fmt.Errorf(
+			"failed to render template %s: %w",
+			tr.Name,
+			err,
+		)
 	}
 
 	return buf.String(), nil

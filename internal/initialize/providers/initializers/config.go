@@ -59,7 +59,10 @@ func (c *Config) ChangesDir() string {
 // ProjectFile returns the path to the project.md file.
 // Example: "spectr/project.md"
 func (c *Config) ProjectFile() string {
-	return filepath.Join(c.SpectrDir, "project.md")
+	return filepath.Join(
+		c.SpectrDir,
+		"project.md",
+	)
 }
 
 // AgentsFile returns the path to the AGENTS.md file.

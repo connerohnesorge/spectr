@@ -13,9 +13,13 @@ import (
 // Qoder uses QODER.md and .qoder/commands/ for slash commands.
 type QoderProvider struct{}
 
-func (*QoderProvider) Initializers(_ context.Context) []Initializer {
+func (*QoderProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".qoder/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".qoder/commands/spectr",
+		),
 		initializers.NewConfigFileInitializer(
 			"QODER.md",
 			"instruction-pointer.md.tmpl",

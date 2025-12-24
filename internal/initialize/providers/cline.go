@@ -13,9 +13,13 @@ import (
 // Cline uses CLINE.md and .clinerules/commands/ for slash commands.
 type ClineProvider struct{}
 
-func (*ClineProvider) Initializers(_ context.Context) []Initializer {
+func (*ClineProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".clinerules/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".clinerules/commands/spectr",
+		),
 		initializers.NewConfigFileInitializer(
 			"CLINE.md",
 			"instruction-pointer.md.tmpl",

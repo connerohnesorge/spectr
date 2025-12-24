@@ -13,9 +13,13 @@ import (
 // Qwen uses QWEN.md and .qwen/commands/ for slash commands.
 type QwenProvider struct{}
 
-func (*QwenProvider) Initializers(_ context.Context) []Initializer {
+func (*QwenProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".qwen/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".qwen/commands/spectr",
+		),
 		initializers.NewConfigFileInitializer(
 			"QWEN.md",
 			"instruction-pointer.md.tmpl",

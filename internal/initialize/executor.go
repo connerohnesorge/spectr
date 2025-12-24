@@ -299,7 +299,9 @@ func (e *InitExecutor) configureProviders(
 	}
 
 	for _, providerID := range selectedProviderIDs {
-		reg := providers.GetRegistration(providerID)
+		reg := providers.GetRegistration(
+			providerID,
+		)
 		if reg == nil {
 			result.Errors = append(
 				result.Errors,

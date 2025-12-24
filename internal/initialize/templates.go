@@ -186,11 +186,16 @@ func (tm *TemplateManager) CIWorkflow() domain.TemplateRef {
 // SlashCommand returns a reference to a slash command template.
 func (tm *TemplateManager) SlashCommand(
 	cmd domain.SlashCommand,
-) domain.TemplateRef {
-	return domain.TemplateRef{
-		Name:     cmd.TemplateName(),
-		Template: tm.templates,
+) (domain.TemplateRef, error) {
+	name, err := cmd.TemplateName()
+	if err != nil {
+		return domain.TemplateRef{}, err
 	}
+
+	return domain.TemplateRef{
+		Name:     name,
+		Template: tm.templates,
+	}, nil
 }
 
 // GetTemplates returns the underlying template set.

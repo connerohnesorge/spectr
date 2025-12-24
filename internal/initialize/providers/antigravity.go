@@ -13,10 +13,17 @@ import (
 // Antigravity uses AGENTS.md and .agent/workflows/spectr/ for slash commands.
 type AntigravityProvider struct{}
 
-func (*AntigravityProvider) Initializers(_ context.Context) []Initializer {
+func (*AntigravityProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".agent/workflows/spectr"),
-		initializers.NewConfigFileInitializer("AGENTS.md", "AGENTS.md.tmpl"),
+		initializers.NewDirectoryInitializer(
+			".agent/workflows/spectr",
+		),
+		initializers.NewConfigFileInitializer(
+			"AGENTS.md",
+			"AGENTS.md.tmpl",
+		),
 		initializers.NewSlashCommandsInitializer(
 			".agent/workflows/spectr",
 			".md",

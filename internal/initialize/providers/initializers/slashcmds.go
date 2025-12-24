@@ -56,7 +56,10 @@ func (s *SlashCommandsInitializer) Init(
 
 	templateProvider, ok := tm.(TemplateProvider)
 	if !ok {
-		return result, fmt.Errorf("expected TemplateProvider, got %T", tm)
+		return result, fmt.Errorf(
+			"expected TemplateProvider, got %T",
+			tm,
+		)
 	}
 
 	templateCtx := domain.TemplateContext{
@@ -68,14 +71,22 @@ func (s *SlashCommandsInitializer) Init(
 	}
 
 	if err := fs.MkdirAll(s.dir, DirPerm); err != nil {
-		return result, fmt.Errorf("failed to create directory: %w", err)
+		return result, fmt.Errorf(
+			"failed to create directory: %w",
+			err,
+		)
 	}
 
 	tp := templateProvider
 	ctx := templateCtx
 
 	for _, cmd := range s.commands {
-		r, err := s.processCommand(fs, tp, ctx, cmd)
+		r, err := s.processCommand(
+			fs,
+			tp,
+			ctx,
+			cmd,
+		)
 		if err != nil {
 			return result, err
 		}
@@ -95,9 +106,15 @@ func (s *SlashCommandsInitializer) processCommand(
 ) (InitResult, error) {
 	var result InitResult
 
-	filePath := filepath.Join(s.dir, cmd.String()+s.ext)
-	content, fileContent, err := s.renderCommand(tp, ctx, cmd)
-
+	filePath := filepath.Join(
+		s.dir,
+		cmd.String()+s.ext,
+	)
+	content, fileContent, err := s.renderCommand(
+		tp,
+		ctx,
+		cmd,
+	)
 	if err != nil {
 		return result, err
 	}
@@ -108,10 +125,19 @@ func (s *SlashCommandsInitializer) processCommand(
 	}
 
 	if !exists {
-		return s.createFile(fs, filePath, fileContent)
+		return s.createFile(
+			fs,
+			filePath,
+			fileContent,
+		)
 	}
 
-	return s.maybeUpdateFile(fs, filePath, content, fileContent)
+	return s.maybeUpdateFile(
+		fs,
+		filePath,
+		content,
+		fileContent,
+	)
 }
 
 // renderCommand renders a command template and formats the content.
@@ -120,19 +146,33 @@ func (s *SlashCommandsInitializer) renderCommand(
 	ctx domain.TemplateContext,
 	cmd domain.SlashCommand,
 ) (content, fileContent string, err error) {
+	templateName, err := cmd.TemplateName()
+	if err != nil {
+		return "", "", fmt.Errorf(
+			"failed to get template name for %s: %w",
+			cmd.String(),
+			err,
+		)
+	}
+
 	templateRef := domain.TemplateRef{
-		Name:     cmd.TemplateName(),
+		Name:     templateName,
 		Template: tp.GetTemplates(),
 	}
 
 	content, err = templateRef.Render(ctx)
 	if err != nil {
 		return "", "", fmt.Errorf(
-			"failed to render template for %s: %w", cmd.String(), err,
+			"failed to render template for %s: %w",
+			cmd.String(),
+			err,
 		)
 	}
 
-	fileContent, err = s.formatContent(cmd, content)
+	fileContent, err = s.formatContent(
+		cmd,
+		content,
+	)
 	if err != nil {
 		return "", "", err
 	}
@@ -147,14 +187,24 @@ func (*SlashCommandsInitializer) createFile(
 ) (InitResult, error) {
 	var result InitResult
 
-	err := afero.WriteFile(fs, filePath, []byte(fileContent), FilePerm)
+	err := afero.WriteFile(
+		fs,
+		filePath,
+		[]byte(fileContent),
+		FilePerm,
+	)
 	if err != nil {
 		return result, fmt.Errorf(
-			"failed to write file %s: %w", filePath, err,
+			"failed to write file %s: %w",
+			filePath,
+			err,
 		)
 	}
 
-	result.CreatedFiles = append(result.CreatedFiles, filePath)
+	result.CreatedFiles = append(
+		result.CreatedFiles,
+		filePath,
+	)
 
 	return result, nil
 }
@@ -169,7 +219,9 @@ func (s *SlashCommandsInitializer) maybeUpdateFile(
 	existing, err := afero.ReadFile(fs, filePath)
 	if err != nil {
 		return result, fmt.Errorf(
-			"failed to read file %s: %w", filePath, err,
+			"failed to read file %s: %w",
+			filePath,
+			err,
 		)
 	}
 
@@ -183,13 +235,20 @@ func (s *SlashCommandsInitializer) maybeUpdateFile(
 		fileContent: fileContent,
 	}
 
-	updated, err := s.updateFile(fs, filePath, updateCtx)
+	updated, err := s.updateFile(
+		fs,
+		filePath,
+		updateCtx,
+	)
 	if err != nil {
 		return result, err
 	}
 
 	if updated {
-		result.UpdatedFiles = append(result.UpdatedFiles, filePath)
+		result.UpdatedFiles = append(
+			result.UpdatedFiles,
+			filePath,
+		)
 	}
 
 	return result, nil
@@ -202,18 +261,33 @@ func (s *SlashCommandsInitializer) formatContent(
 ) (string, error) {
 	switch s.ext {
 	case ".md":
-		return formatMarkdownCommand(cmd, content), nil
+		return formatMarkdownCommand(
+			cmd,
+			content,
+		), nil
 	case ".toml":
-		return formatTOMLCommand(cmd, content), nil
+		return formatTOMLCommand(
+			cmd,
+			content,
+		), nil
 	default:
-		return "", fmt.Errorf("unsupported extension: %s", s.ext)
+		return "", fmt.Errorf(
+			"unsupported extension: %s",
+			s.ext,
+		)
 	}
 }
 
 // IsSetup returns true if all command files exist.
-func (s *SlashCommandsInitializer) IsSetup(fs afero.Fs, _ *Config) bool {
+func (s *SlashCommandsInitializer) IsSetup(
+	fs afero.Fs,
+	_ *Config,
+) bool {
 	for _, cmd := range s.commands {
-		filePath := filepath.Join(s.dir, cmd.String()+s.ext)
+		filePath := filepath.Join(
+			s.dir,
+			cmd.String()+s.ext,
+		)
 		exists, err := afero.Exists(fs, filePath)
 
 		if err != nil || !exists {
@@ -232,13 +306,26 @@ func (s *SlashCommandsInitializer) updateFile(
 	ctx fileUpdateCtx,
 ) (bool, error) {
 	if s.ext == ".md" {
-		return s.updateMarkdownFile(fs, filePath, ctx)
+		return s.updateMarkdownFile(
+			fs,
+			filePath,
+			ctx,
+		)
 	}
 
 	// For TOML, just replace the whole file
-	err := afero.WriteFile(fs, filePath, []byte(ctx.fileContent), FilePerm)
+	err := afero.WriteFile(
+		fs,
+		filePath,
+		[]byte(ctx.fileContent),
+		FilePerm,
+	)
 	if err != nil {
-		return false, fmt.Errorf("failed to write file %s: %w", filePath, err)
+		return false, fmt.Errorf(
+			"failed to write file %s: %w",
+			filePath,
+			err,
+		)
 	}
 
 	return true, nil
@@ -262,9 +349,18 @@ func (*SlashCommandsInitializer) updateMarkdownFile(
 		return false, nil
 	}
 
-	err := afero.WriteFile(fs, filePath, []byte(newContentStr), FilePerm)
+	err := afero.WriteFile(
+		fs,
+		filePath,
+		[]byte(newContentStr),
+		FilePerm,
+	)
 	if err != nil {
-		return false, fmt.Errorf("failed to write file %s: %w", filePath, err)
+		return false, fmt.Errorf(
+			"failed to write file %s: %w",
+			filePath,
+			err,
+		)
 	}
 
 	return true, nil
@@ -281,7 +377,10 @@ func (s *SlashCommandsInitializer) IsGlobal() bool {
 }
 
 // formatMarkdownCommand formats a slash command as a Markdown file.
-func formatMarkdownCommand(cmd domain.SlashCommand, content string) string {
+func formatMarkdownCommand(
+	cmd domain.SlashCommand,
+	content string,
+) string {
 	var frontmatter string
 
 	const (
@@ -303,7 +402,10 @@ func formatMarkdownCommand(cmd domain.SlashCommand, content string) string {
 }
 
 // formatTOMLCommand formats a slash command as a TOML file.
-func formatTOMLCommand(cmd domain.SlashCommand, content string) string {
+func formatTOMLCommand(
+	cmd domain.SlashCommand,
+	content string,
+) string {
 	var description string
 
 	switch cmd {

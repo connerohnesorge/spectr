@@ -11,9 +11,14 @@ import (
 // Codex uses AGENTS.md and global ~/.codex/prompts/ for commands.
 type CodexProvider struct{}
 
-func (*CodexProvider) Initializers(_ context.Context) []Initializer {
+func (*CodexProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewConfigFileInitializer("AGENTS.md", "AGENTS.md.tmpl"),
+		initializers.NewConfigFileInitializer(
+			"AGENTS.md",
+			"AGENTS.md.tmpl",
+		),
 		// TODO: Add global slash commands for ~/.codex/prompts/
 		// Requires a custom global filesystem initializer.
 	}

@@ -11,9 +11,13 @@ import (
 // Kilocode uses .kilocode/commands/ for slash commands (no config file).
 type KilocodeProvider struct{}
 
-func (*KilocodeProvider) Initializers(_ context.Context) []Initializer {
+func (*KilocodeProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".kilocode/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".kilocode/commands/spectr",
+		),
 		initializers.NewSlashCommandsInitializer(
 			".kilocode/commands/spectr",
 			".md",

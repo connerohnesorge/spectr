@@ -5,10 +5,14 @@ import "errors"
 // Error constants for registration validation.
 var (
 	// ErrProviderIDRequired is returned when a registration has an empty ID.
-	ErrProviderIDRequired = errors.New("provider ID is required")
+	ErrProviderIDRequired = errors.New(
+		"provider ID is required",
+	)
 
 	// ErrProviderRequired is returned when a registration has a nil Provider.
-	ErrProviderRequired = errors.New("provider implementation is required")
+	ErrProviderRequired = errors.New(
+		"provider implementation is required",
+	)
 )
 
 // Registration contains provider metadata and implementation.

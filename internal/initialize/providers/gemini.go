@@ -13,9 +13,13 @@ import (
 // Gemini uses TOML format for slash commands and has no instruction file.
 type GeminiProvider struct{}
 
-func (*GeminiProvider) Initializers(_ context.Context) []Initializer {
+func (*GeminiProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".gemini/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".gemini/commands/spectr",
+		),
 		initializers.NewSlashCommandsInitializer(
 			".gemini/commands/spectr",
 			".toml",

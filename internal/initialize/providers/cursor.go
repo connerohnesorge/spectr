@@ -13,9 +13,13 @@ import (
 // Cursor uses .cursorrules/commands/ for slash commands (no config file).
 type CursorProvider struct{}
 
-func (*CursorProvider) Initializers(_ context.Context) []Initializer {
+func (*CursorProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".cursorrules/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".cursorrules/commands/spectr",
+		),
 		initializers.NewSlashCommandsInitializer(
 			".cursorrules/commands/spectr",
 			".md",

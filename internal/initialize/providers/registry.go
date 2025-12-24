@@ -23,7 +23,9 @@ type Registry struct {
 // NewRegistry creates a new empty registry.
 func NewRegistry() *Registry {
 	return &Registry{
-		registrations: make(map[string]Registration),
+		registrations: make(
+			map[string]Registration,
+		),
 	}
 }
 
@@ -42,7 +44,9 @@ func RegisterProvider(reg Registration) error {
 
 // registerProvider is the internal implementation.
 // Not thread-safe, caller must lock.
-func (r *Registry) registerProvider(reg Registration) error {
+func (r *Registry) registerProvider(
+	reg Registration,
+) error {
 	// Validate the registration
 	if err := reg.Validate(); err != nil {
 		return err
@@ -50,7 +54,10 @@ func (r *Registry) registerProvider(reg Registration) error {
 
 	// Check for duplicate ID
 	if _, exists := r.registrations[reg.ID]; exists {
-		return fmt.Errorf("provider %q already registered", reg.ID)
+		return fmt.Errorf(
+			"provider %q already registered",
+			reg.ID,
+		)
 	}
 
 	r.registrations[reg.ID] = reg
@@ -71,7 +78,9 @@ func GetRegistration(id string) *Registration {
 
 // GetRegistration retrieves a provider registration by ID from this registry.
 // Returns nil if the provider is not found.
-func (r *Registry) GetRegistration(id string) *Registration {
+func (r *Registry) GetRegistration(
+	id string,
+) *Registration {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -97,15 +106,22 @@ func (r *Registry) AllRegistrations() []Registration {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	registrations := make([]Registration, 0, len(r.registrations))
+	registrations := make(
+		[]Registration,
+		0,
+		len(r.registrations),
+	)
 	for _, reg := range r.registrations {
 		registrations = append(registrations, reg)
 	}
 
 	// Sort by priority (lower = higher priority)
-	sort.Slice(registrations, func(i, j int) bool {
-		return registrations[i].Priority < registrations[j].Priority
-	})
+	sort.Slice(
+		registrations,
+		func(i, j int) bool {
+			return registrations[i].Priority < registrations[j].Priority
+		},
+	)
 
 	return registrations
 }
@@ -287,7 +303,11 @@ func RegisterAllProviders() error {
 
 	for _, reg := range providers {
 		if err := RegisterProvider(reg); err != nil {
-			return fmt.Errorf("failed to register %s provider: %w", reg.ID, err)
+			return fmt.Errorf(
+				"failed to register %s provider: %w",
+				reg.ID,
+				err,
+			)
 		}
 	}
 

@@ -10,9 +10,13 @@ import (
 // ClaudeProvider configures Claude Code.
 type ClaudeProvider struct{}
 
-func (*ClaudeProvider) Initializers(_ context.Context) []Initializer {
+func (*ClaudeProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".claude/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".claude/commands/spectr",
+		),
 		initializers.NewConfigFileInitializer(
 			"CLAUDE.md",
 			"instruction-pointer.md.tmpl",

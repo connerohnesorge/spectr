@@ -13,9 +13,13 @@ import (
 // OpenCode uses .opencode/command/spectr/ for slash commands (no config file).
 type OpencodeProvider struct{}
 
-func (*OpencodeProvider) Initializers(_ context.Context) []Initializer {
+func (*OpencodeProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".opencode/command/spectr"),
+		initializers.NewDirectoryInitializer(
+			".opencode/command/spectr",
+		),
 		initializers.NewSlashCommandsInitializer(
 			".opencode/command/spectr",
 			".md",

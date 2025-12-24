@@ -13,9 +13,13 @@ import (
 // Windsurf uses .windsurf/commands/ for slash commands (no config file).
 type WindsurfProvider struct{}
 
-func (*WindsurfProvider) Initializers(_ context.Context) []Initializer {
+func (*WindsurfProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".windsurf/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".windsurf/commands/spectr",
+		),
 		initializers.NewSlashCommandsInitializer(
 			".windsurf/commands/spectr",
 			".md",

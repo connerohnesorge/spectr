@@ -48,7 +48,10 @@ type Initializer interface {
 	// Parameters:
 	//   - fs: Filesystem abstraction (either projectFs or globalFs)
 	//   - cfg: Provider configuration (SpectrDir and derived paths)
-	IsSetup(fs afero.Fs, cfg *initializers.Config) bool
+	IsSetup(
+		fs afero.Fs,
+		cfg *initializers.Config,
+	) bool
 
 	// Path returns the primary file or directory path this initializer manages.
 	// Used for deduplication: if multiple initializers return the same path,

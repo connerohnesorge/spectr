@@ -13,9 +13,13 @@ import (
 // Continue uses .continue/commands/ for slash commands (no config file).
 type ContinueProvider struct{}
 
-func (*ContinueProvider) Initializers(_ context.Context) []Initializer {
+func (*ContinueProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".continue/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".continue/commands/spectr",
+		),
 		initializers.NewSlashCommandsInitializer(
 			".continue/commands/spectr",
 			".md",

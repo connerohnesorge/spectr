@@ -56,7 +56,10 @@ func (c *ConfigFileInitializer) Init(
 	// Ensure parent directory exists
 	dir := filepath.Dir(c.path)
 	if err := fs.MkdirAll(dir, DirPerm); err != nil {
-		return result, fmt.Errorf("failed to create directory: %w", err)
+		return result, fmt.Errorf(
+			"failed to create directory: %w",
+			err,
+		)
 	}
 
 	exists, err := afero.Exists(fs, c.path)
@@ -78,7 +81,10 @@ func (c *ConfigFileInitializer) renderContent(
 ) (string, error) {
 	templateProvider, ok := tm.(TemplateProvider)
 	if !ok {
-		return "", fmt.Errorf("expected TemplateProvider, got %T", tm)
+		return "", fmt.Errorf(
+			"expected TemplateProvider, got %T",
+			tm,
+		)
 	}
 
 	templateCtx := domain.TemplateContext{
@@ -94,9 +100,14 @@ func (c *ConfigFileInitializer) renderContent(
 		Template: templateProvider.GetTemplates(),
 	}
 
-	content, err := templateRef.Render(templateCtx)
+	content, err := templateRef.Render(
+		templateCtx,
+	)
 	if err != nil {
-		return "", fmt.Errorf("failed to render template: %w", err)
+		return "", fmt.Errorf(
+			"failed to render template: %w",
+			err,
+		)
 	}
 
 	return content, nil
@@ -113,12 +124,23 @@ func (c *ConfigFileInitializer) createNewFile(
 		content + Newline +
 		SpectrEndMarker + Newline
 
-	err := afero.WriteFile(fs, c.path, []byte(newContent), FilePerm)
+	err := afero.WriteFile(
+		fs,
+		c.path,
+		[]byte(newContent),
+		FilePerm,
+	)
 	if err != nil {
-		return result, fmt.Errorf("failed to write file: %w", err)
+		return result, fmt.Errorf(
+			"failed to write file: %w",
+			err,
+		)
 	}
 
-	result.CreatedFiles = append(result.CreatedFiles, c.path)
+	result.CreatedFiles = append(
+		result.CreatedFiles,
+		c.path,
+	)
 
 	return result, nil
 }
@@ -130,9 +152,15 @@ func (c *ConfigFileInitializer) updateExistingFile(
 ) (InitResult, error) {
 	var result InitResult
 
-	existingContent, err := afero.ReadFile(fs, c.path)
+	existingContent, err := afero.ReadFile(
+		fs,
+		c.path,
+	)
 	if err != nil {
-		return result, fmt.Errorf("failed to read file: %w", err)
+		return result, fmt.Errorf(
+			"failed to read file: %w",
+			err,
+		)
 	}
 
 	contentStr := string(existingContent)
@@ -144,19 +172,33 @@ func (c *ConfigFileInitializer) updateExistingFile(
 	)
 
 	if wasUpdated {
-		err := afero.WriteFile(fs, c.path, []byte(newContentStr), FilePerm)
+		err := afero.WriteFile(
+			fs,
+			c.path,
+			[]byte(newContentStr),
+			FilePerm,
+		)
 		if err != nil {
-			return result, fmt.Errorf("failed to write file: %w", err)
+			return result, fmt.Errorf(
+				"failed to write file: %w",
+				err,
+			)
 		}
 
-		result.UpdatedFiles = append(result.UpdatedFiles, c.path)
+		result.UpdatedFiles = append(
+			result.UpdatedFiles,
+			c.path,
+		)
 	}
 
 	return result, nil
 }
 
 // IsSetup returns true if the file exists and contains spectr markers.
-func (c *ConfigFileInitializer) IsSetup(fs afero.Fs, _ *Config) bool {
+func (c *ConfigFileInitializer) IsSetup(
+	fs afero.Fs,
+	_ *Config,
+) bool {
 	exists, err := afero.Exists(fs, c.path)
 	if err != nil || !exists {
 		return false
@@ -169,8 +211,14 @@ func (c *ConfigFileInitializer) IsSetup(fs afero.Fs, _ *Config) bool {
 	}
 
 	contentStr := string(content)
-	hasStartMarker := strings.Contains(contentStr, SpectrStartMarker)
-	hasEndMarker := strings.Contains(contentStr, SpectrEndMarker)
+	hasStartMarker := strings.Contains(
+		contentStr,
+		SpectrStartMarker,
+	)
+	hasEndMarker := strings.Contains(
+		contentStr,
+		SpectrEndMarker,
+	)
 
 	return hasStartMarker && hasEndMarker
 }
@@ -189,26 +237,50 @@ func (c *ConfigFileInitializer) IsGlobal() bool {
 func updateBetweenMarkers(
 	contentStr, newContent, startMarker, endMarker string,
 ) (string, bool) {
-	startIndex := strings.Index(contentStr, startMarker)
-	endIndex := -1
+	startIndex := strings.Index(
+		contentStr,
+		startMarker,
+	)
 
-	if startIndex != -1 {
-		searchOffset := startIndex + len(startMarker)
-		endIndex = strings.Index(contentStr[searchOffset:], endMarker)
-
-		if endIndex != -1 {
-			endIndex += searchOffset
-		}
-	}
-
-	if startIndex == -1 || endIndex == -1 {
-		// No markers found - append to end
+	// Case 1: No start marker - append new block at end
+	if startIndex == -1 {
 		updated := contentStr + Newline + Newline +
 			startMarker + Newline +
 			newContent + Newline +
 			endMarker + Newline
 
 		return updated, true
+	}
+
+	// Start marker found - look for end marker after it
+	searchOffset := startIndex + len(startMarker)
+	endIndex := strings.Index(
+		contentStr[searchOffset:],
+		endMarker,
+	)
+
+	if endIndex != -1 {
+		// Case 2: Both markers found in proper order - update between them
+		endIndex += searchOffset
+	} else {
+		// End marker not found immediately after start marker
+		// Try to find a trailing end marker anywhere after start
+		lastEndIndex := strings.LastIndex(contentStr, endMarker)
+
+		if lastEndIndex == -1 || lastEndIndex <= startIndex {
+			// Case 4: Orphaned start marker (no valid end marker after start)
+			// Replace from start marker to end of content
+			before := contentStr[:startIndex]
+			updated := before +
+				startMarker + Newline +
+				newContent + Newline +
+				endMarker + Newline
+
+			return updated, true
+		}
+
+		// Case 3: Found trailing end marker after start - use it
+		endIndex = lastEndIndex
 	}
 
 	// Replace content between markers

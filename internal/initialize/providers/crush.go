@@ -11,9 +11,13 @@ import (
 // Crush uses CRUSH.md and .crush/commands/ for slash commands.
 type CrushProvider struct{}
 
-func (*CrushProvider) Initializers(_ context.Context) []Initializer {
+func (*CrushProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".crush/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".crush/commands/spectr",
+		),
 		initializers.NewConfigFileInitializer(
 			"CRUSH.md",
 			"instruction-pointer.md.tmpl",

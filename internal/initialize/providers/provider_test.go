@@ -13,7 +13,10 @@ func TestClaudeProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 3 {
-		t.Errorf("ClaudeProvider should return 3 initializers, got %d", len(inits))
+		t.Errorf(
+			"ClaudeProvider should return 3 initializers, got %d",
+			len(inits),
+		)
 	}
 
 	// Verify paths
@@ -31,7 +34,10 @@ func TestClaudeProvider(t *testing.T) {
 
 	for path, found := range expectedPaths {
 		if !found {
-			t.Errorf("ClaudeProvider should return initializer for path %s", path)
+			t.Errorf(
+				"ClaudeProvider should return initializer for path %s",
+				path,
+			)
 		}
 	}
 
@@ -54,7 +60,10 @@ func TestGeminiProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 2 {
-		t.Errorf("GeminiProvider should return 2 initializers, got %d", len(inits))
+		t.Errorf(
+			"GeminiProvider should return 2 initializers, got %d",
+			len(inits),
+		)
 	}
 
 	// Verify paths
@@ -71,7 +80,10 @@ func TestGeminiProvider(t *testing.T) {
 
 	for path, found := range expectedPaths {
 		if !found {
-			t.Errorf("GeminiProvider should return initializer for path %s", path)
+			t.Errorf(
+				"GeminiProvider should return initializer for path %s",
+				path,
+			)
 		}
 	}
 }
@@ -84,7 +96,10 @@ func TestCursorProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 2 {
-		t.Errorf("CursorProvider should return 2 initializers, got %d", len(inits))
+		t.Errorf(
+			"CursorProvider should return 2 initializers, got %d",
+			len(inits),
+		)
 	}
 
 	// Verify paths
@@ -101,7 +116,10 @@ func TestCursorProvider(t *testing.T) {
 
 	for path, found := range expectedPaths {
 		if !found {
-			t.Errorf("CursorProvider should return initializer for path %s", path)
+			t.Errorf(
+				"CursorProvider should return initializer for path %s",
+				path,
+			)
 		}
 	}
 }
@@ -114,7 +132,10 @@ func TestClineProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 3 {
-		t.Errorf("ClineProvider should return 3 initializers, got %d", len(inits))
+		t.Errorf(
+			"ClineProvider should return 3 initializers, got %d",
+			len(inits),
+		)
 	}
 
 	// Verify paths
@@ -131,10 +152,14 @@ func TestClineProvider(t *testing.T) {
 	}
 
 	if !foundClineDir {
-		t.Error("ClineProvider should return initializer for .clinerules/commands/spectr")
+		t.Error(
+			"ClineProvider should return initializer for .clinerules/commands/spectr",
+		)
 	}
 	if !foundClineMd {
-		t.Error("ClineProvider should return initializer for CLINE.md")
+		t.Error(
+			"ClineProvider should return initializer for CLINE.md",
+		)
 	}
 }
 
@@ -146,19 +171,42 @@ func TestContinueProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 2 {
-		t.Errorf("ContinueProvider should return 2 initializers, got %d", len(inits))
+		t.Errorf(
+			"ContinueProvider should return 2 initializers, got %d",
+			len(inits),
+		)
 	}
 
-	// Verify paths contain continue directory
-	foundContinue := false
+	// Build count of found paths
+	foundPaths := make(map[string]int)
 	for _, init := range inits {
-		if init.Path() == ".continue/commands/spectr" {
-			foundContinue = true
+		foundPaths[init.Path()]++
+	}
+
+	// Verify all expected paths are present with correct counts
+	// Both DirectoryInitializer and SlashCommandsInitializer use the same path
+	expectedPaths := map[string]int{
+		".continue/commands/spectr": 2,
+	}
+	for expected, expectedCount := range expectedPaths {
+		if foundPaths[expected] != expectedCount {
+			t.Errorf(
+				"ContinueProvider path %q: got count %d, want %d",
+				expected,
+				foundPaths[expected],
+				expectedCount,
+			)
 		}
 	}
 
-	if !foundContinue {
-		t.Error("ContinueProvider should return initializer for .continue/commands/spectr")
+	// Verify no unexpected paths
+	for path := range foundPaths {
+		if _, ok := expectedPaths[path]; !ok {
+			t.Errorf(
+				"ContinueProvider has unexpected path: %s",
+				path,
+			)
+		}
 	}
 }
 
@@ -170,20 +218,42 @@ func TestWindsurfProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 2 {
-		t.Errorf("WindsurfProvider should return 2 initializers, got %d", len(inits))
+		t.Errorf(
+			"WindsurfProvider should return 2 initializers, got %d",
+			len(inits),
+		)
 	}
 
-	// Verify paths
-	foundWindsurf := false
+	// Build count of found paths
+	foundPaths := make(map[string]int)
 	for _, init := range inits {
-		path := init.Path()
-		if path == ".windsurf/commands/spectr" {
-			foundWindsurf = true
+		foundPaths[init.Path()]++
+	}
+
+	// Verify all expected paths are present with correct counts
+	// Both DirectoryInitializer and SlashCommandsInitializer use the same path
+	expectedPaths := map[string]int{
+		".windsurf/commands/spectr": 2,
+	}
+	for expected, expectedCount := range expectedPaths {
+		if foundPaths[expected] != expectedCount {
+			t.Errorf(
+				"WindsurfProvider path %q: got count %d, want %d",
+				expected,
+				foundPaths[expected],
+				expectedCount,
+			)
 		}
 	}
 
-	if !foundWindsurf {
-		t.Error("WindsurfProvider should return initializer for .windsurf/commands/spectr")
+	// Verify no unexpected paths
+	for path := range foundPaths {
+		if _, ok := expectedPaths[path]; !ok {
+			t.Errorf(
+				"WindsurfProvider has unexpected path: %s",
+				path,
+			)
+		}
 	}
 }
 
@@ -195,20 +265,42 @@ func TestAiderProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 2 {
-		t.Errorf("AiderProvider should return 2 initializers, got %d", len(inits))
+		t.Errorf(
+			"AiderProvider should return 2 initializers, got %d",
+			len(inits),
+		)
 	}
 
-	// Verify paths
-	foundAider := false
+	// Build count of found paths
+	foundPaths := make(map[string]int)
 	for _, init := range inits {
-		path := init.Path()
-		if path == ".aider/commands/spectr" {
-			foundAider = true
+		foundPaths[init.Path()]++
+	}
+
+	// Verify all expected paths are present with correct counts
+	// Both DirectoryInitializer and SlashCommandsInitializer use the same path
+	expectedPaths := map[string]int{
+		".aider/commands/spectr": 2,
+	}
+	for expected, expectedCount := range expectedPaths {
+		if foundPaths[expected] != expectedCount {
+			t.Errorf(
+				"AiderProvider path %q: got count %d, want %d",
+				expected,
+				foundPaths[expected],
+				expectedCount,
+			)
 		}
 	}
 
-	if !foundAider {
-		t.Error("AiderProvider should return initializer for .aider/commands/spectr")
+	// Verify no unexpected paths
+	for path := range foundPaths {
+		if _, ok := expectedPaths[path]; !ok {
+			t.Errorf(
+				"AiderProvider has unexpected path: %s",
+				path,
+			)
+		}
 	}
 }
 
@@ -220,27 +312,44 @@ func TestCostrictProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 3 {
-		t.Errorf("CostrictProvider should return 3 initializers, got %d", len(inits))
+		t.Errorf(
+			"CostrictProvider should return 3 initializers, got %d",
+			len(inits),
+		)
 	}
 
-	// Verify paths
-	foundCostrict := false
-	foundCostrictMd := false
+	// Build count of found paths
+	foundPaths := make(map[string]int)
 	for _, init := range inits {
-		path := init.Path()
-		if path == ".costrict/commands/spectr" {
-			foundCostrict = true
-		}
-		if path == "COSTRICT.md" {
-			foundCostrictMd = true
+		foundPaths[init.Path()]++
+	}
+
+	// Verify all expected paths are present with correct counts
+	// DirectoryInitializer and SlashCommandsInitializer share the same path (count 2)
+	// ConfigFileInitializer uses COSTRICT.md (count 1)
+	expectedPaths := map[string]int{
+		".costrict/commands/spectr": 2,
+		"COSTRICT.md":               1,
+	}
+	for expected, expectedCount := range expectedPaths {
+		if foundPaths[expected] != expectedCount {
+			t.Errorf(
+				"CostrictProvider path %q: got count %d, want %d",
+				expected,
+				foundPaths[expected],
+				expectedCount,
+			)
 		}
 	}
 
-	if !foundCostrict {
-		t.Error("CostrictProvider should return initializer for .costrict/commands/spectr")
-	}
-	if !foundCostrictMd {
-		t.Error("CostrictProvider should return initializer for COSTRICT.md")
+	// Verify no unexpected paths
+	for path := range foundPaths {
+		if _, ok := expectedPaths[path]; !ok {
+			t.Errorf(
+				"CostrictProvider has unexpected path: %s",
+				path,
+			)
+		}
 	}
 }
 
@@ -252,19 +361,42 @@ func TestKilocodeProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 2 {
-		t.Errorf("KilocodeProvider should return 2 initializers, got %d", len(inits))
+		t.Errorf(
+			"KilocodeProvider should return 2 initializers, got %d",
+			len(inits),
+		)
 	}
 
-	// Verify paths
-	foundKilocode := false
+	// Build count of found paths
+	foundPaths := make(map[string]int)
 	for _, init := range inits {
-		if init.Path() == ".kilocode/commands/spectr" {
-			foundKilocode = true
+		foundPaths[init.Path()]++
+	}
+
+	// Verify all expected paths are present with correct counts
+	// Both DirectoryInitializer and SlashCommandsInitializer use the same path
+	expectedPaths := map[string]int{
+		".kilocode/commands/spectr": 2,
+	}
+	for expected, expectedCount := range expectedPaths {
+		if foundPaths[expected] != expectedCount {
+			t.Errorf(
+				"KilocodeProvider path %q: got count %d, want %d",
+				expected,
+				foundPaths[expected],
+				expectedCount,
+			)
 		}
 	}
 
-	if !foundKilocode {
-		t.Error("KilocodeProvider should return initializer for .kilocode/commands/spectr")
+	// Verify no unexpected paths
+	for path := range foundPaths {
+		if _, ok := expectedPaths[path]; !ok {
+			t.Errorf(
+				"KilocodeProvider has unexpected path: %s",
+				path,
+			)
+		}
 	}
 }
 
@@ -276,7 +408,10 @@ func TestAntigravityProvider(t *testing.T) {
 	inits := p.Initializers(ctx)
 
 	if len(inits) != 3 {
-		t.Errorf("AntigravityProvider should return 3 initializers, got %d", len(inits))
+		t.Errorf(
+			"AntigravityProvider should return 3 initializers, got %d",
+			len(inits),
+		)
 	}
 
 	// Verify paths
@@ -293,10 +428,14 @@ func TestAntigravityProvider(t *testing.T) {
 	}
 
 	if !foundAntigravity {
-		t.Error("AntigravityProvider should return initializer for .agent/workflows/spectr")
+		t.Error(
+			"AntigravityProvider should return initializer for .agent/workflows/spectr",
+		)
 	}
 	if !foundAgents {
-		t.Error("AntigravityProvider should return initializer for AGENTS.md")
+		t.Error(
+			"AntigravityProvider should return initializer for AGENTS.md",
+		)
 	}
 }
 
@@ -310,7 +449,10 @@ func TestCodexProvider(t *testing.T) {
 	// CodexProvider currently returns 1 initializer (AGENTS.md)
 	// TODO: Will return more when global slash commands are implemented
 	if len(inits) != 1 {
-		t.Errorf("CodexProvider should return 1 initializer, got %d", len(inits))
+		t.Errorf(
+			"CodexProvider should return 1 initializer, got %d",
+			len(inits),
+		)
 	}
 
 	// Verify paths
@@ -323,12 +465,16 @@ func TestCodexProvider(t *testing.T) {
 	}
 
 	if !foundAgents {
-		t.Error("CodexProvider should return initializer for AGENTS.md")
+		t.Error(
+			"CodexProvider should return initializer for AGENTS.md",
+		)
 	}
 }
 
 // TestAllProvidersReturnInitializers verifies all providers return at least one initializer
-func TestAllProvidersReturnInitializers(t *testing.T) {
+func TestAllProvidersReturnInitializers(
+	t *testing.T,
+) {
 	ctx := context.Background()
 
 	providers := []Provider{
@@ -348,13 +494,20 @@ func TestAllProvidersReturnInitializers(t *testing.T) {
 	for _, p := range providers {
 		inits := p.Initializers(ctx)
 		if len(inits) == 0 {
-			t.Errorf("Provider %T should return at least one initializer", p)
+			t.Errorf(
+				"Provider %T should return at least one initializer",
+				p,
+			)
 		}
 
 		// Verify all initializers have non-empty paths
 		for i, init := range inits {
 			if init.Path() == "" {
-				t.Errorf("Provider %T initializer %d has empty path", p, i)
+				t.Errorf(
+					"Provider %T initializer %d has empty path",
+					p,
+					i,
+				)
 			}
 		}
 	}
@@ -390,13 +543,19 @@ func TestInitializersAreIdempotent(t *testing.T) {
 
 	for path := range paths1 {
 		if !paths2[path] {
-			t.Errorf("Path %s found in first call but not second", path)
+			t.Errorf(
+				"Path %s found in first call but not second",
+				path,
+			)
 		}
 	}
 
 	for path := range paths2 {
 		if !paths1[path] {
-			t.Errorf("Path %s found in second call but not first", path)
+			t.Errorf(
+				"Path %s found in second call but not first",
+				path,
+			)
 		}
 	}
 }

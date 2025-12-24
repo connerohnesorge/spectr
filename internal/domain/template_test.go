@@ -14,9 +14,13 @@ Changes: {{.ChangesDir}}
 Project: {{.ProjectFile}}
 Agents: {{.AgentsFile}}`
 
-	tmpl, err := template.New("test.tmpl").Parse(tmplContent)
+	tmpl, err := template.New("test.tmpl").
+		Parse(tmplContent)
 	if err != nil {
-		t.Fatalf("failed to parse test template: %v", err)
+		t.Fatalf(
+			"failed to parse test template: %v",
+			err,
+		)
 	}
 
 	ref := TemplateRef{
@@ -48,7 +52,11 @@ Agents: {{.AgentsFile}}`
 
 	for _, expected := range expectedLines {
 		if !strings.Contains(result, expected) {
-			t.Errorf("Render() result missing expected line: %s\nGot:\n%s", expected, result)
+			t.Errorf(
+				"Render() result missing expected line: %s\nGot:\n%s",
+				expected,
+				result,
+			)
 		}
 	}
 }
@@ -57,9 +65,13 @@ func TestTemplateRef_RenderError(t *testing.T) {
 	// Create a template that expects different fields
 	tmplContent := `{{.NonExistentField}}`
 
-	tmpl, err := template.New("error.tmpl").Parse(tmplContent)
+	tmpl, err := template.New("error.tmpl").
+		Parse(tmplContent)
 	if err != nil {
-		t.Fatalf("failed to parse test template: %v", err)
+		t.Fatalf(
+			"failed to parse test template: %v",
+			err,
+		)
 	}
 
 	ref := TemplateRef{
@@ -73,7 +85,9 @@ func TestTemplateRef_RenderError(t *testing.T) {
 
 	_, err = ref.Render(ctx)
 	if err == nil {
-		t.Error("Render() should have returned an error for non-existent field")
+		t.Error(
+			"Render() should have returned an error for non-existent field",
+		)
 	}
 }
 
@@ -86,16 +100,37 @@ func TestDefaultTemplateContext(t *testing.T) {
 		expected string
 	}{
 		{"BaseDir", ctx.BaseDir, "spectr"},
-		{"SpecsDir", ctx.SpecsDir, "spectr/specs"},
-		{"ChangesDir", ctx.ChangesDir, "spectr/changes"},
-		{"ProjectFile", ctx.ProjectFile, "spectr/project.md"},
-		{"AgentsFile", ctx.AgentsFile, "spectr/AGENTS.md"},
+		{
+			"SpecsDir",
+			ctx.SpecsDir,
+			"spectr/specs",
+		},
+		{
+			"ChangesDir",
+			ctx.ChangesDir,
+			"spectr/changes",
+		},
+		{
+			"ProjectFile",
+			ctx.ProjectFile,
+			"spectr/project.md",
+		},
+		{
+			"AgentsFile",
+			ctx.AgentsFile,
+			"spectr/AGENTS.md",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.got != tt.expected {
-				t.Errorf("DefaultTemplateContext().%s = %q, want %q", tt.name, tt.got, tt.expected)
+				t.Errorf(
+					"DefaultTemplateContext().%s = %q, want %q",
+					tt.name,
+					tt.got,
+					tt.expected,
+				)
 			}
 		})
 	}

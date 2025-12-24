@@ -13,9 +13,13 @@ import (
 // Aider uses .aider/commands/ for slash commands (no config file).
 type AiderProvider struct{}
 
-func (*AiderProvider) Initializers(_ context.Context) []Initializer {
+func (*AiderProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".aider/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".aider/commands/spectr",
+		),
 		initializers.NewSlashCommandsInitializer(
 			".aider/commands/spectr",
 			".md",

@@ -14,7 +14,9 @@ type DirectoryInitializer struct {
 
 // NewDirectoryInitializer creates a DirectoryInitializer for the given paths.
 // All paths should be relative to the filesystem root.
-func NewDirectoryInitializer(paths ...string) *DirectoryInitializer {
+func NewDirectoryInitializer(
+	paths ...string,
+) *DirectoryInitializer {
 	return &DirectoryInitializer{
 		paths: paths,
 	}
@@ -44,7 +46,10 @@ func (d *DirectoryInitializer) Init(
 				return result, err
 			}
 
-			result.CreatedFiles = append(result.CreatedFiles, path)
+			result.CreatedFiles = append(
+				result.CreatedFiles,
+				path,
+			)
 		}
 	}
 
@@ -52,7 +57,10 @@ func (d *DirectoryInitializer) Init(
 }
 
 // IsSetup returns true if all directories exist.
-func (d *DirectoryInitializer) IsSetup(fs afero.Fs, _ *Config) bool {
+func (d *DirectoryInitializer) IsSetup(
+	fs afero.Fs,
+	_ *Config,
+) bool {
 	for _, path := range d.paths {
 		exists, err := afero.DirExists(fs, path)
 		if err != nil || !exists {

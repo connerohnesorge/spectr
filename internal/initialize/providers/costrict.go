@@ -13,9 +13,13 @@ import (
 // CoStrict uses COSTRICT.md and .costrict/commands/ for slash commands.
 type CostrictProvider struct{}
 
-func (*CostrictProvider) Initializers(_ context.Context) []Initializer {
+func (*CostrictProvider) Initializers(
+	_ context.Context,
+) []Initializer {
 	return []Initializer{
-		initializers.NewDirectoryInitializer(".costrict/commands/spectr"),
+		initializers.NewDirectoryInitializer(
+			".costrict/commands/spectr",
+		),
 		initializers.NewConfigFileInitializer(
 			"COSTRICT.md",
 			"instruction-pointer.md.tmpl",

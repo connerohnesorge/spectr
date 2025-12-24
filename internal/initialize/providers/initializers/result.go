@@ -21,14 +21,36 @@ type InitResult struct {
 //	r2 := InitResult{CreatedFiles: []string{"b.txt"}}
 //	merged := r1.Merge(r2)
 //	// merged.CreatedFiles == []string{"a.txt", "b.txt"}
-func (r InitResult) Merge(other InitResult) InitResult {
-	created := make([]string, 0, len(r.CreatedFiles)+len(other.CreatedFiles))
+func (r InitResult) Merge(
+	other InitResult,
+) InitResult {
+	created := make(
+		[]string,
+		0,
+		len(
+			r.CreatedFiles,
+		)+len(
+			other.CreatedFiles,
+		),
+	)
 	created = append(created, r.CreatedFiles...)
-	created = append(created, other.CreatedFiles...)
+	created = append(
+		created,
+		other.CreatedFiles...)
 
-	updated := make([]string, 0, len(r.UpdatedFiles)+len(other.UpdatedFiles))
+	updated := make(
+		[]string,
+		0,
+		len(
+			r.UpdatedFiles,
+		)+len(
+			other.UpdatedFiles,
+		),
+	)
 	updated = append(updated, r.UpdatedFiles...)
-	updated = append(updated, other.UpdatedFiles...)
+	updated = append(
+		updated,
+		other.UpdatedFiles...)
 
 	return InitResult{
 		CreatedFiles: created,
@@ -38,18 +60,29 @@ func (r InitResult) Merge(other InitResult) InitResult {
 
 // IsEmpty returns true if no files were created or updated.
 func (r InitResult) IsEmpty() bool {
-	return len(r.CreatedFiles) == 0 && len(r.UpdatedFiles) == 0
+	return len(r.CreatedFiles) == 0 &&
+		len(r.UpdatedFiles) == 0
 }
 
 // TotalFiles returns the total number of files affected (created + updated).
 func (r InitResult) TotalFiles() int {
-	return len(r.CreatedFiles) + len(r.UpdatedFiles)
+	return len(
+		r.CreatedFiles,
+	) + len(
+		r.UpdatedFiles,
+	)
 }
 
 // AddCreated adds a file path to the CreatedFiles list.
 // Returns a new InitResult with the file added.
-func (r InitResult) AddCreated(path string) InitResult {
-	created := make([]string, 0, len(r.CreatedFiles)+1)
+func (r InitResult) AddCreated(
+	path string,
+) InitResult {
+	created := make(
+		[]string,
+		0,
+		len(r.CreatedFiles)+1,
+	)
 	created = append(created, r.CreatedFiles...)
 	created = append(created, path)
 
@@ -64,11 +97,17 @@ func (r InitResult) AddCreated(path string) InitResult {
 
 // AddUpdated adds a file path to the UpdatedFiles list.
 // Returns a new InitResult with the file added.
-func (r InitResult) AddUpdated(path string) InitResult {
+func (r InitResult) AddUpdated(
+	path string,
+) InitResult {
 	created := make([]string, len(r.CreatedFiles))
 	copy(created, r.CreatedFiles)
 
-	updated := make([]string, 0, len(r.UpdatedFiles)+1)
+	updated := make(
+		[]string,
+		0,
+		len(r.UpdatedFiles)+1,
+	)
 	updated = append(updated, r.UpdatedFiles...)
 	updated = append(updated, path)
 

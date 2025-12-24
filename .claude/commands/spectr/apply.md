@@ -1,14 +1,12 @@
 ---
-name: Spectr: Apply
 description: Implement an approved Spectr change and keep tasks in sync.
-category: Spectr
-tags: [spectr, apply]
 ---
+
 <!-- spectr:START -->
 # Guardrails
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
-- Refer to `spectr/AGENTS.md` (located inside the `spectr/` directory—run `ls spectr` or `spectr init` if you don't see it) if you need additional Spectr conventions or clarifications.
+- Refer to `spectr/AGENTS.md` and `spectr/project.md` (located inside the `spectr/` directory—run `ls spectr`) if you need additional Spectr conventions or clarifications.
 
 # Steps
 Track these steps as TODOs and complete them one by one.
@@ -22,5 +20,7 @@ Track these steps as TODOs and complete them one by one.
 # Reference
 - Read `spectr/changes/<id>/proposal.md` for proposal details.
 - Read `spectr/changes/<id>/specs/<capability>/spec.md` for delta specs.
+-
 
 <!-- spectr:END -->
+

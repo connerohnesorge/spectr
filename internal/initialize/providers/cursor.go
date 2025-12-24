@@ -1,32 +1,28 @@
 package providers
 
-func init() {
-	Register(NewCursorProvider())
-}
+import (
+	"context"
 
-// CursorProvider implements the Provider interface for Cursor.
+	"github.com/connerohnesorge/spectr/internal/domain"
+
+	//nolint:revive // long import path is unavoidable
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+)
+
+// CursorProvider configures Cursor.
 // Cursor uses .cursorrules/commands/ for slash commands (no config file).
-type CursorProvider struct {
-	BaseProvider
-}
+type CursorProvider struct{}
 
-// NewCursorProvider creates a new Cursor provider.
-func NewCursorProvider() *CursorProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".cursorrules/commands",
-		".md",
-	)
-
-	return &CursorProvider{
-		BaseProvider: BaseProvider{
-			id:            "cursor",
-			name:          "Cursor",
-			priority:      PriorityCursor,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*CursorProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		initializers.NewDirectoryInitializer(".cursorrules/commands/spectr"),
+		initializers.NewSlashCommandsInitializer(
+			".cursorrules/commands/spectr",
+			".md",
+			[]domain.SlashCommand{
+				domain.SlashProposal,
+				domain.SlashApply,
+			},
+		),
 	}
 }

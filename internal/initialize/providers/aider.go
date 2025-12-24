@@ -1,32 +1,28 @@
 package providers
 
-func init() {
-	Register(NewAiderProvider())
-}
+import (
+	"context"
 
-// AiderProvider implements the Provider interface for Aider.
+	"github.com/connerohnesorge/spectr/internal/domain"
+
+	//nolint:revive // long import path is unavoidable
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+)
+
+// AiderProvider configures Aider.
 // Aider uses .aider/commands/ for slash commands (no config file).
-type AiderProvider struct {
-	BaseProvider
-}
+type AiderProvider struct{}
 
-// NewAiderProvider creates a new Aider provider.
-func NewAiderProvider() *AiderProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".aider/commands",
-		".md",
-	)
-
-	return &AiderProvider{
-		BaseProvider: BaseProvider{
-			id:            "aider",
-			name:          "Aider",
-			priority:      PriorityAider,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*AiderProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		initializers.NewDirectoryInitializer(".aider/commands/spectr"),
+		initializers.NewSlashCommandsInitializer(
+			".aider/commands/spectr",
+			".md",
+			[]domain.SlashCommand{
+				domain.SlashProposal,
+				domain.SlashApply,
+			},
+		),
 	}
 }

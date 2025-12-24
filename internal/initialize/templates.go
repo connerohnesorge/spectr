@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/domain"
 )
 
 //go:embed templates/**/*.tmpl
@@ -61,7 +61,7 @@ func (tm *TemplateManager) RenderProject(
 // RenderAgents renders the AGENTS.md template with the given template context
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderAgents(
-	ctx providers.TemplateContext,
+	ctx domain.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
@@ -83,7 +83,7 @@ func (tm *TemplateManager) RenderAgents(
 // This is a short pointer that directs AI assistants to read the AGENTS.md file
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderInstructionPointer(
-	ctx providers.TemplateContext,
+	ctx domain.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
@@ -107,7 +107,7 @@ func (tm *TemplateManager) RenderInstructionPointer(
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderSlashCommand(
 	commandType string,
-	ctx providers.TemplateContext,
+	ctx domain.TemplateContext,
 ) (string, error) {
 	templateName := fmt.Sprintf(
 		"slash-%s.md.tmpl",
@@ -147,4 +147,54 @@ func (tm *TemplateManager) RenderCIWorkflow() (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+// Type-safe accessor methods returning domain.TemplateRef
+
+// InstructionPointer returns a reference to the instruction-pointer template.
+func (tm *TemplateManager) InstructionPointer() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "instruction-pointer.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// Agents returns a type-safe reference to the AGENTS.md template.
+func (tm *TemplateManager) Agents() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "AGENTS.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// Project returns a type-safe reference to the project.md template.
+func (tm *TemplateManager) Project() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "project.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// CIWorkflow returns a type-safe reference to the CI workflow template.
+func (tm *TemplateManager) CIWorkflow() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "spectr-ci.yml.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// SlashCommand returns a reference to a slash command template.
+func (tm *TemplateManager) SlashCommand(
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     cmd.TemplateName(),
+		Template: tm.templates,
+	}
+}
+
+// GetTemplates returns the underlying template set.
+// This is used by initializers to create TemplateRef instances.
+func (tm *TemplateManager) GetTemplates() *template.Template {
+	return tm.templates
 }

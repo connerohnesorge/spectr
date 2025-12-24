@@ -1,665 +1,402 @@
 package providers
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
+	"context"
 	"testing"
 )
 
-// mockTemplateRenderer implements TemplateRenderer for testing
-type mockTemplateRenderer struct {
-	agentsContent         string
-	instructionPtrContent string
-	slashContent          map[string]string
-}
-
-func newMockRenderer() *mockTemplateRenderer {
-	return &mockTemplateRenderer{
-		agentsContent:         "# Test AGENTS content",
-		instructionPtrContent: "# Spectr Instructions\nRead spectr/AGENTS.md",
-		slashContent: map[string]string{
-			"proposal": "Proposal command content",
-			"apply":    "Apply command content",
-		},
-	}
-}
-
-func (m *mockTemplateRenderer) RenderAgents(
-	_ TemplateContext,
-) (string, error) {
-	return m.agentsContent, nil
-}
-
-func (m *mockTemplateRenderer) RenderInstructionPointer(
-	_ TemplateContext,
-) (string, error) {
-	return m.instructionPtrContent, nil
-}
-
-func (m *mockTemplateRenderer) RenderSlashCommand(
-	command string,
-	_ TemplateContext,
-) (string, error) {
-	return m.slashContent[command], nil
-}
-
+// TestClaudeProvider tests that ClaudeProvider returns correct initializers
 func TestClaudeProvider(t *testing.T) {
-	p := NewClaudeProvider()
+	p := &ClaudeProvider{}
+	ctx := context.Background()
 
-	if p.ID() != "claude-code" {
-		t.Errorf(
-			"ID() = %s, want claude-code",
-			p.ID(),
-		)
-	}
-	if p.Name() != "Claude Code" {
-		t.Errorf(
-			"Name() = %s, want Claude Code",
-			p.Name(),
-		)
-	}
-	if p.Priority() != PriorityClaudeCode {
-		t.Errorf(
-			"Priority() = %d, want %d",
-			p.Priority(),
-			PriorityClaudeCode,
-		)
-	}
-	if p.ConfigFile() != "CLAUDE.md" {
-		t.Errorf(
-			"ConfigFile() = %s, want CLAUDE.md",
-			p.ConfigFile(),
-		)
-	}
-	if p.GetProposalCommandPath() != ".claude/commands/spectr/proposal.md" {
-		t.Errorf(
-			"GetProposalCommandPath() = %s, want .claude/commands/spectr/proposal.md",
-			p.GetProposalCommandPath(),
-		)
-	}
-	if p.GetApplyCommandPath() != ".claude/commands/spectr/apply.md" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .claude/commands/spectr/apply.md",
-			p.GetApplyCommandPath(),
-		)
-	}
-	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
-		)
-	}
-	if !p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = false, want true",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
-	}
-}
+	inits := p.Initializers(ctx)
 
-func TestGeminiProvider(t *testing.T) {
-	p := NewGeminiProvider()
-
-	if p.ID() != "gemini" {
-		t.Errorf("ID() = %s, want gemini", p.ID())
-	}
-	if p.Name() != "Gemini CLI" {
-		t.Errorf(
-			"Name() = %s, want Gemini CLI",
-			p.Name(),
-		)
-	}
-	if p.ConfigFile() != "" {
-		t.Errorf(
-			"ConfigFile() = %s, want empty",
-			p.ConfigFile(),
-		)
-	}
-	if p.GetProposalCommandPath() != ".gemini/commands/spectr/proposal.toml" {
-		t.Errorf(
-			"GetProposalCommandPath() = %s, want .gemini/commands/spectr/proposal.toml",
-			p.GetProposalCommandPath(),
-		)
-	}
-	if p.GetApplyCommandPath() != ".gemini/commands/spectr/apply.toml" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .gemini/commands/spectr/apply.toml",
-			p.GetApplyCommandPath(),
-		)
-	}
-	if p.CommandFormat() != FormatTOML {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatTOML",
-			p.CommandFormat(),
-		)
-	}
-	if p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = true, want false",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
-	}
-}
-
-func TestCursorProvider(t *testing.T) {
-	p := NewCursorProvider()
-
-	if p.ID() != "cursor" {
-		t.Errorf("ID() = %s, want cursor", p.ID())
-	}
-	if p.ConfigFile() != "" {
-		t.Errorf(
-			"ConfigFile() should be empty for cursor, got %s",
-			p.ConfigFile(),
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"Cursor should have slash commands",
-		)
-	}
-	if p.HasConfigFile() {
-		t.Error(
-			"Cursor should not have config file",
-		)
-	}
-}
-
-func TestBaseProviderConfigure(t *testing.T) {
-	tmpDir, err := os.MkdirTemp(
-		"",
-		"spectr-test-*",
-	)
-	if err != nil {
-		t.Fatalf(
-			"Failed to create temp dir: %v",
-			err,
-		)
-	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	p := NewClaudeProvider()
-	tm := newMockRenderer()
-
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
-	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+	if len(inits) != 3 {
+		t.Errorf("ClaudeProvider should return 3 initializers, got %d", len(inits))
 	}
 
-	// Check config file was created
-	configPath := filepath.Join(
-		tmpDir,
-		"CLAUDE.md",
-	)
-	if !FileExists(configPath) {
-		t.Error("Config file was not created")
+	// Verify paths
+	expectedPaths := map[string]bool{
+		".claude/commands/spectr": false,
+		"CLAUDE.md":               false,
 	}
 
-	// Check slash command files were created
-	commands := []string{"proposal", "apply"}
-	for _, cmd := range commands {
-		cmdPath := filepath.Join(
-			tmpDir,
-			".claude/commands/spectr",
-			cmd+".md",
-		)
-		if !FileExists(cmdPath) {
-			t.Errorf(
-				"Slash command file not created: %s",
-				cmdPath,
-			)
+	for _, init := range inits {
+		path := init.Path()
+		if _, ok := expectedPaths[path]; ok {
+			expectedPaths[path] = true
 		}
 	}
-}
 
-func TestBaseProviderIsConfigured(t *testing.T) {
-	tmpDir, err := os.MkdirTemp(
-		"",
-		"spectr-test-*",
-	)
-	if err != nil {
-		t.Fatalf(
-			"Failed to create temp dir: %v",
-			err,
-		)
-	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	p := NewClaudeProvider()
-
-	// Should not be configured initially
-	if p.IsConfigured(tmpDir) {
-		t.Error(
-			"Should not be configured initially",
-		)
-	}
-
-	// Configure it
-	tm := newMockRenderer()
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
-	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
-	}
-
-	// Should be configured now
-	if !p.IsConfigured(tmpDir) {
-		t.Error(
-			"Should be configured after Configure()",
-		)
-	}
-}
-
-func TestBaseProviderGetFilePaths(t *testing.T) {
-	p := NewClaudeProvider()
-	paths := p.GetFilePaths()
-
-	// Should have config file + 2 slash command files
-	expectedPaths := []string{
-		"CLAUDE.md",
-		".claude/commands/spectr/proposal.md",
-		".claude/commands/spectr/apply.md",
-	}
-
-	if len(paths) != len(expectedPaths) {
-		t.Errorf(
-			"Expected %d paths, got %d",
-			len(expectedPaths),
-			len(paths),
-		)
-	}
-
-	for _, expected := range expectedPaths {
-		found := false
-		for _, path := range paths {
-			if path == expected {
-				found = true
-
-				break
-			}
-		}
+	for path, found := range expectedPaths {
 		if !found {
+			t.Errorf("ClaudeProvider should return initializer for path %s", path)
+		}
+	}
+
+	// Verify none are global
+	for _, init := range inits {
+		if init.IsGlobal() {
 			t.Errorf(
-				"Expected path %s not found in GetFilePaths()",
-				expected,
+				"ClaudeProvider initializers should not be global, but %s is global",
+				init.Path(),
 			)
 		}
 	}
 }
 
-func TestGeminiProviderConfigure(t *testing.T) {
-	tmpDir, err := os.MkdirTemp(
-		"",
-		"spectr-test-*",
-	)
-	if err != nil {
-		t.Fatalf(
-			"Failed to create temp dir: %v",
-			err,
-		)
-	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
+// TestGeminiProvider tests that GeminiProvider returns correct initializers
+func TestGeminiProvider(t *testing.T) {
+	p := &GeminiProvider{}
+	ctx := context.Background()
 
-	p := NewGeminiProvider()
-	tm := newMockRenderer()
+	inits := p.Initializers(ctx)
 
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
-	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+	if len(inits) != 2 {
+		t.Errorf("GeminiProvider should return 2 initializers, got %d", len(inits))
 	}
 
-	// Check TOML files were created
-	commands := []string{"proposal", "apply"}
-	for _, cmd := range commands {
-		cmdPath := filepath.Join(
-			tmpDir,
-			".gemini/commands/spectr",
-			cmd+".toml",
-		)
-		if !FileExists(cmdPath) {
-			t.Errorf(
-				"TOML command file not created: %s",
-				cmdPath,
-			)
-		}
+	// Verify paths
+	expectedPaths := map[string]bool{
+		".gemini/commands/spectr": false,
+	}
 
-		// Verify content is TOML format
-		content, err := os.ReadFile(cmdPath)
-		if err != nil {
-			t.Errorf(
-				"Failed to read %s: %v",
-				cmdPath,
-				err,
-			)
+	for _, init := range inits {
+		path := init.Path()
+		if _, ok := expectedPaths[path]; ok {
+			expectedPaths[path] = true
+		}
+	}
 
-			continue
-		}
-		if !strings.Contains(
-			string(content),
-			"description =",
-		) {
-			t.Errorf(
-				"File %s doesn't look like TOML",
-				cmdPath,
-			)
-		}
-		if !strings.Contains(
-			string(content),
-			"prompt =",
-		) {
-			t.Errorf(
-				"File %s missing prompt field",
-				cmdPath,
-			)
+	for path, found := range expectedPaths {
+		if !found {
+			t.Errorf("GeminiProvider should return initializer for path %s", path)
 		}
 	}
 }
 
-func TestSlashOnlyProviderGetFilePaths(
-	t *testing.T,
-) {
-	p := NewCursorProvider()
-	paths := p.GetFilePaths()
+// TestCursorProvider tests that CursorProvider returns correct initializers
+func TestCursorProvider(t *testing.T) {
+	p := &CursorProvider{}
+	ctx := context.Background()
 
-	// Should have only slash command files (no config file)
-	expectedPaths := []string{
-		".cursorrules/commands/spectr/proposal.md",
-		".cursorrules/commands/spectr/apply.md",
+	inits := p.Initializers(ctx)
+
+	if len(inits) != 2 {
+		t.Errorf("CursorProvider should return 2 initializers, got %d", len(inits))
 	}
 
-	if len(paths) != len(expectedPaths) {
-		t.Errorf(
-			"Expected %d paths, got %d",
-			len(expectedPaths),
-			len(paths),
-		)
+	// Verify paths
+	expectedPaths := map[string]bool{
+		".cursorrules/commands/spectr": false,
 	}
-}
 
-func TestAllProvidersHaveRequiredFields(
-	t *testing.T,
-) {
-	allProviders := All()
+	for _, init := range inits {
+		path := init.Path()
+		if _, ok := expectedPaths[path]; ok {
+			expectedPaths[path] = true
+		}
+	}
 
-	for _, p := range allProviders {
-		if p.ID() == "" {
-			t.Error(
-				"Found provider with empty ID",
-			)
-		}
-		if p.Name() == "" {
-			t.Errorf(
-				"Provider %s has empty Name",
-				p.ID(),
-			)
-		}
-		if p.Priority() < 1 {
-			t.Errorf(
-				"Provider %s has invalid priority: %d",
-				p.ID(),
-				p.Priority(),
-			)
-		}
-
-		// All providers should have slash commands
-		if !p.HasSlashCommands() {
-			t.Errorf(
-				"Provider %s has no slash commands",
-				p.ID(),
-			)
-		}
-		// Check that at least one command path is set
-		if p.GetProposalCommandPath() == "" &&
-			p.GetApplyCommandPath() == "" {
-			t.Errorf(
-				"Provider %s has no command paths set",
-				p.ID(),
-			)
+	for path, found := range expectedPaths {
+		if !found {
+			t.Errorf("CursorProvider should return initializer for path %s", path)
 		}
 	}
 }
 
-func TestPrioritiesAreUnique(t *testing.T) {
-	allProviders := All()
-	priorities := make(map[int]string)
+// TestClineProvider tests that ClineProvider returns correct initializers
+func TestClineProvider(t *testing.T) {
+	p := &ClineProvider{}
+	ctx := context.Background()
 
-	for _, p := range allProviders {
-		if existingID, exists := priorities[p.Priority()]; exists {
-			t.Errorf(
-				"Duplicate priority %d for providers %s and %s",
-				p.Priority(),
-				existingID,
-				p.ID(),
-			)
+	inits := p.Initializers(ctx)
+
+	if len(inits) != 3 {
+		t.Errorf("ClineProvider should return 3 initializers, got %d", len(inits))
+	}
+
+	// Verify paths
+	foundClineDir := false
+	foundClineMd := false
+	for _, init := range inits {
+		path := init.Path()
+		if path == ".clinerules/commands/spectr" {
+			foundClineDir = true
 		}
-		priorities[p.Priority()] = p.ID()
+		if path == "CLINE.md" {
+			foundClineMd = true
+		}
+	}
+
+	if !foundClineDir {
+		t.Error("ClineProvider should return initializer for .clinerules/commands/spectr")
+	}
+	if !foundClineMd {
+		t.Error("ClineProvider should return initializer for CLINE.md")
 	}
 }
 
-func TestExpandPath(t *testing.T) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		t.Fatalf(
-			"Failed to get home directory: %v",
-			err,
-		)
+// TestContinueProvider tests that ContinueProvider returns correct initializers
+func TestContinueProvider(t *testing.T) {
+	p := &ContinueProvider{}
+	ctx := context.Background()
+
+	inits := p.Initializers(ctx)
+
+	if len(inits) != 2 {
+		t.Errorf("ContinueProvider should return 2 initializers, got %d", len(inits))
 	}
 
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "Path not starting with tilde",
-			input:    ".config/test",
-			expected: ".config/test",
-		},
-		{
-			name:  "Path starting with tilde slash",
-			input: "~/.config/test",
-			expected: filepath.Join(
-				homeDir,
-				".config/test",
-			),
-		},
-		{
-			name:     "Absolute path",
-			input:    "/absolute/path",
-			expected: "/absolute/path",
-		},
-		{
-			name:     "Tilde only without slash",
-			input:    "~",
-			expected: "~",
-		},
+	// Verify paths contain continue directory
+	foundContinue := false
+	for _, init := range inits {
+		if init.Path() == ".continue/commands/spectr" {
+			foundContinue = true
+		}
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := expandPath(tt.input)
-			if result != tt.expected {
-				t.Errorf(
-					"expandPath(%q) = %q, want %q",
-					tt.input,
-					result,
-					tt.expected,
-				)
-			}
-		})
+	if !foundContinue {
+		t.Error("ContinueProvider should return initializer for .continue/commands/spectr")
 	}
 }
 
-func TestIsGlobalPath(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{
-			name:     "Path starting with tilde slash",
-			input:    "~/.config/test",
-			expected: true,
-		},
-		{
-			name:     "Path starting with absolute slash",
-			input:    "/absolute/path",
-			expected: true,
-		},
-		{
-			name:     "Relative path with dot",
-			input:    ".foo/bar",
-			expected: false,
-		},
-		{
-			name:     "Simple relative path",
-			input:    "foo/bar",
-			expected: false,
-		},
-		{
-			name:     "Current directory dot",
-			input:    "./foo",
-			expected: false,
-		},
-		{
-			name:     "Parent directory",
-			input:    "../foo",
-			expected: false,
-		},
+// TestWindsurfProvider tests that WindsurfProvider returns correct initializers
+func TestWindsurfProvider(t *testing.T) {
+	p := &WindsurfProvider{}
+	ctx := context.Background()
+
+	inits := p.Initializers(ctx)
+
+	if len(inits) != 2 {
+		t.Errorf("WindsurfProvider should return 2 initializers, got %d", len(inits))
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := isGlobalPath(tt.input)
-			if result != tt.expected {
-				t.Errorf(
-					"isGlobalPath(%q) = %v, want %v",
-					tt.input,
-					result,
-					tt.expected,
-				)
-			}
-		})
+	// Verify paths
+	foundWindsurf := false
+	for _, init := range inits {
+		path := init.Path()
+		if path == ".windsurf/commands/spectr" {
+			foundWindsurf = true
+		}
+	}
+
+	if !foundWindsurf {
+		t.Error("WindsurfProvider should return initializer for .windsurf/commands/spectr")
 	}
 }
 
+// TestAiderProvider tests that AiderProvider returns correct initializers
+func TestAiderProvider(t *testing.T) {
+	p := &AiderProvider{}
+	ctx := context.Background()
+
+	inits := p.Initializers(ctx)
+
+	if len(inits) != 2 {
+		t.Errorf("AiderProvider should return 2 initializers, got %d", len(inits))
+	}
+
+	// Verify paths
+	foundAider := false
+	for _, init := range inits {
+		path := init.Path()
+		if path == ".aider/commands/spectr" {
+			foundAider = true
+		}
+	}
+
+	if !foundAider {
+		t.Error("AiderProvider should return initializer for .aider/commands/spectr")
+	}
+}
+
+// TestCostrictProvider tests that CostrictProvider returns correct initializers
+func TestCostrictProvider(t *testing.T) {
+	p := &CostrictProvider{}
+	ctx := context.Background()
+
+	inits := p.Initializers(ctx)
+
+	if len(inits) != 3 {
+		t.Errorf("CostrictProvider should return 3 initializers, got %d", len(inits))
+	}
+
+	// Verify paths
+	foundCostrict := false
+	foundCostrictMd := false
+	for _, init := range inits {
+		path := init.Path()
+		if path == ".costrict/commands/spectr" {
+			foundCostrict = true
+		}
+		if path == "COSTRICT.md" {
+			foundCostrictMd = true
+		}
+	}
+
+	if !foundCostrict {
+		t.Error("CostrictProvider should return initializer for .costrict/commands/spectr")
+	}
+	if !foundCostrictMd {
+		t.Error("CostrictProvider should return initializer for COSTRICT.md")
+	}
+}
+
+// TestKilocodeProvider tests that KilocodeProvider returns correct initializers
+func TestKilocodeProvider(t *testing.T) {
+	p := &KilocodeProvider{}
+	ctx := context.Background()
+
+	inits := p.Initializers(ctx)
+
+	if len(inits) != 2 {
+		t.Errorf("KilocodeProvider should return 2 initializers, got %d", len(inits))
+	}
+
+	// Verify paths
+	foundKilocode := false
+	for _, init := range inits {
+		if init.Path() == ".kilocode/commands/spectr" {
+			foundKilocode = true
+		}
+	}
+
+	if !foundKilocode {
+		t.Error("KilocodeProvider should return initializer for .kilocode/commands/spectr")
+	}
+}
+
+// TestAntigravityProvider tests that AntigravityProvider returns correct initializers
+func TestAntigravityProvider(t *testing.T) {
+	p := &AntigravityProvider{}
+	ctx := context.Background()
+
+	inits := p.Initializers(ctx)
+
+	if len(inits) != 3 {
+		t.Errorf("AntigravityProvider should return 3 initializers, got %d", len(inits))
+	}
+
+	// Verify paths
+	foundAntigravity := false
+	foundAgents := false
+	for _, init := range inits {
+		path := init.Path()
+		if path == ".agent/workflows/spectr" {
+			foundAntigravity = true
+		}
+		if path == "AGENTS.md" {
+			foundAgents = true
+		}
+	}
+
+	if !foundAntigravity {
+		t.Error("AntigravityProvider should return initializer for .agent/workflows/spectr")
+	}
+	if !foundAgents {
+		t.Error("AntigravityProvider should return initializer for AGENTS.md")
+	}
+}
+
+// TestCodexProvider tests that CodexProvider returns correct initializers
 func TestCodexProvider(t *testing.T) {
-	p := NewCodexProvider()
+	p := &CodexProvider{}
+	ctx := context.Background()
 
-	if p.ID() != "codex" {
-		t.Errorf("ID() = %s, want codex", p.ID())
+	inits := p.Initializers(ctx)
+
+	// CodexProvider currently returns 1 initializer (AGENTS.md)
+	// TODO: Will return more when global slash commands are implemented
+	if len(inits) != 1 {
+		t.Errorf("CodexProvider should return 1 initializer, got %d", len(inits))
 	}
-	if p.Name() != "Codex CLI" {
-		t.Errorf(
-			"Name() = %s, want Codex CLI",
-			p.Name(),
-		)
+
+	// Verify paths
+	foundAgents := false
+	for _, init := range inits {
+		path := init.Path()
+		if path == "AGENTS.md" {
+			foundAgents = true
+		}
 	}
-	if p.Priority() != PriorityCodex {
-		t.Errorf(
-			"Priority() = %d, want %d",
-			p.Priority(),
-			PriorityCodex,
-		)
-	}
-	if p.ConfigFile() != "AGENTS.md" {
-		t.Errorf(
-			"ConfigFile() = %s, want AGENTS.md",
-			p.ConfigFile(),
-		)
-	}
-	if !p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = false, want true",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
-	}
-	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
-		)
+
+	if !foundAgents {
+		t.Error("CodexProvider should return initializer for AGENTS.md")
 	}
 }
 
-func TestOpencodeProvider(t *testing.T) {
-	p := NewOpencodeProvider()
+// TestAllProvidersReturnInitializers verifies all providers return at least one initializer
+func TestAllProvidersReturnInitializers(t *testing.T) {
+	ctx := context.Background()
 
-	if p.ID() != "opencode" {
+	providers := []Provider{
+		&ClaudeProvider{},
+		&GeminiProvider{},
+		&CursorProvider{},
+		&ClineProvider{},
+		&ContinueProvider{},
+		&WindsurfProvider{},
+		&AiderProvider{},
+		&CostrictProvider{},
+		&KilocodeProvider{},
+		&AntigravityProvider{},
+		&CodexProvider{},
+	}
+
+	for _, p := range providers {
+		inits := p.Initializers(ctx)
+		if len(inits) == 0 {
+			t.Errorf("Provider %T should return at least one initializer", p)
+		}
+
+		// Verify all initializers have non-empty paths
+		for i, init := range inits {
+			if init.Path() == "" {
+				t.Errorf("Provider %T initializer %d has empty path", p, i)
+			}
+		}
+	}
+}
+
+// TestInitializersAreIdempotent verifies that calling Initializers multiple times
+// returns consistent results (same number of initializers with same paths)
+func TestInitializersAreIdempotent(t *testing.T) {
+	ctx := context.Background()
+	p := &ClaudeProvider{}
+
+	inits1 := p.Initializers(ctx)
+	inits2 := p.Initializers(ctx)
+
+	if len(inits1) != len(inits2) {
 		t.Errorf(
-			"ID() = %s, want opencode",
-			p.ID(),
+			"ClaudeProvider should return same number of initializers: got %d and %d",
+			len(inits1),
+			len(inits2),
 		)
 	}
-	if p.Name() != "OpenCode" {
-		t.Errorf(
-			"Name() = %s, want OpenCode",
-			p.Name(),
-		)
+
+	// Verify paths match
+	paths1 := make(map[string]bool)
+	for _, init := range inits1 {
+		paths1[init.Path()] = true
 	}
-	if p.Priority() != PriorityOpencode {
-		t.Errorf(
-			"Priority() = %d, want %d",
-			p.Priority(),
-			PriorityOpencode,
-		)
+
+	paths2 := make(map[string]bool)
+	for _, init := range inits2 {
+		paths2[init.Path()] = true
 	}
-	if p.ConfigFile() != "" {
-		t.Errorf(
-			"ConfigFile() = %s, want empty string",
-			p.ConfigFile(),
-		)
+
+	for path := range paths1 {
+		if !paths2[path] {
+			t.Errorf("Path %s found in first call but not second", path)
+		}
 	}
-	if p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = true, want false",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
-	}
-	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
-		)
-	}
-	if p.GetProposalCommandPath() != ".opencode/command/spectr/proposal.md" {
-		t.Errorf(
-			"GetProposalCommandPath() = %s, want .opencode/command/spectr/proposal.md",
-			p.GetProposalCommandPath(),
-		)
-	}
-	if p.GetApplyCommandPath() != ".opencode/command/spectr/apply.md" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .opencode/command/spectr/apply.md",
-			p.GetApplyCommandPath(),
-		)
+
+	for path := range paths2 {
+		if !paths1[path] {
+			t.Errorf("Path %s found in second call but not first", path)
+		}
 	}
 }

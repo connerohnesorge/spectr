@@ -1,32 +1,29 @@
 package providers
 
-func init() {
-	Register(NewClaudeProvider())
-}
+import (
+	"context"
 
-// ClaudeProvider implements the Provider interface for Claude Code.
-// Claude Code uses CLAUDE.md and .claude/commands/ for slash commands.
-type ClaudeProvider struct {
-	BaseProvider
-}
+	"github.com/connerohnesorge/spectr/internal/domain"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
+)
 
-// NewClaudeProvider creates a new Claude Code provider.
-func NewClaudeProvider() *ClaudeProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".claude/commands",
-		".md",
-	)
+// ClaudeProvider configures Claude Code.
+type ClaudeProvider struct{}
 
-	return &ClaudeProvider{
-		BaseProvider: BaseProvider{
-			id:            "claude-code",
-			name:          "Claude Code",
-			priority:      PriorityClaudeCode,
-			configFile:    "CLAUDE.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*ClaudeProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		initializers.NewDirectoryInitializer(".claude/commands/spectr"),
+		initializers.NewConfigFileInitializer(
+			"CLAUDE.md",
+			"instruction-pointer.md.tmpl",
+		),
+		initializers.NewSlashCommandsInitializer(
+			".claude/commands/spectr",
+			".md",
+			[]domain.SlashCommand{
+				domain.SlashProposal,
+				domain.SlashApply,
+			},
+		),
 	}
 }

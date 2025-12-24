@@ -1,31 +1,20 @@
 package providers
 
-func init() {
-	Register(NewCodexProvider())
-}
+import (
+	"context"
 
-// CodexProvider implements the Provider interface for Codex CLI.
-// Codex uses AGENTS.md and global ~/.codex/prompts/spectr/ for commands.
-type CodexProvider struct {
-	BaseProvider
-}
+	//nolint:revive // long import path is unavoidable
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+)
 
-// NewCodexProvider creates a new Codex CLI provider.
-func NewCodexProvider() *CodexProvider {
-	// Codex uses global paths, not project-relative paths
-	proposalPath := "~/.codex/prompts/spectr-proposal.md"
-	applyPath := "~/.codex/prompts/spectr-apply.md"
+// CodexProvider configures Codex CLI.
+// Codex uses AGENTS.md and global ~/.codex/prompts/ for commands.
+type CodexProvider struct{}
 
-	return &CodexProvider{
-		BaseProvider: BaseProvider{
-			id:            "codex",
-			name:          "Codex CLI",
-			priority:      PriorityCodex,
-			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*CodexProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		initializers.NewConfigFileInitializer("AGENTS.md", "AGENTS.md.tmpl"),
+		// TODO: Add global slash commands for ~/.codex/prompts/
+		// Requires a custom global filesystem initializer.
 	}
 }

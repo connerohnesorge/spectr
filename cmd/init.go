@@ -110,7 +110,7 @@ func runNonInteractiveInit(c *InitCmd) error {
 
 	// Validate provider IDs
 	for _, id := range selectedProviders {
-		if providers.Get(id) == nil {
+		if providers.GetRegistration(id) == nil {
 			return fmt.Errorf(
 				"invalid provider ID: %s",
 				id,

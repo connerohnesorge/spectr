@@ -1,32 +1,30 @@
 package providers
 
-func init() {
-	Register(NewCrushProvider())
-}
+import (
+	"context"
 
-// CrushProvider implements the Provider interface for Crush.
-// Crush uses CRUSH.md for instructions and .crush/commands/ for slash commands.
-type CrushProvider struct {
-	BaseProvider
-}
+	"github.com/connerohnesorge/spectr/internal/domain"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers" //nolint:revive
+)
 
-// NewCrushProvider creates a new Crush provider.
-func NewCrushProvider() *CrushProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".crush/commands",
-		".md",
-	)
+// CrushProvider configures Crush.
+// Crush uses CRUSH.md and .crush/commands/ for slash commands.
+type CrushProvider struct{}
 
-	return &CrushProvider{
-		BaseProvider: BaseProvider{
-			id:            "crush",
-			name:          "Crush",
-			priority:      PriorityCrush,
-			configFile:    "CRUSH.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*CrushProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		initializers.NewDirectoryInitializer(".crush/commands/spectr"),
+		initializers.NewConfigFileInitializer(
+			"CRUSH.md",
+			"instruction-pointer.md.tmpl",
+		),
+		initializers.NewSlashCommandsInitializer(
+			".crush/commands/spectr",
+			".md",
+			[]domain.SlashCommand{
+				domain.SlashProposal,
+				domain.SlashApply,
+			},
+		),
 	}
 }

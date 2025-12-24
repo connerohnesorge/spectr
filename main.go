@@ -8,10 +8,16 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/connerohnesorge/spectr/cmd"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 	kongcompletion "github.com/jotaen/kong-completion"
 )
 
 func main() {
+	// Register all built-in providers at startup
+	if err := providers.RegisterAllProviders(); err != nil {
+		panic(err) // Fatal error if provider registration fails
+	}
+
 	cli := &cmd.CLI{}
 	app := kong.Must(
 		cli,

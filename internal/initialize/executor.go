@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/connerohnesorge/spectr/internal/domain"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
@@ -261,7 +262,7 @@ func (e *InitExecutor) createAgentsMd(
 
 	// Render template
 	content, err := e.tm.RenderAgents(
-		providers.DefaultTemplateContext(),
+		domain.DefaultTemplateContext(),
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -298,8 +299,8 @@ func (e *InitExecutor) configureProviders(
 	}
 
 	for _, providerID := range selectedProviderIDs {
-		provider := providers.Get(providerID)
-		if provider == nil {
+		reg := providers.GetRegistration(providerID)
+		if reg == nil {
 			result.Errors = append(
 				result.Errors,
 				fmt.Sprintf(
@@ -311,34 +312,15 @@ func (e *InitExecutor) configureProviders(
 			continue
 		}
 
-		// Check if already configured
-		wasConfigured := provider.IsConfigured(
-			e.projectPath,
+		// TODO: Call initializers and execute them
+		// For now, just log that we would configure this provider
+		result.Errors = append(
+			result.Errors,
+			fmt.Sprintf(
+				"provider %s: initializer execution not yet implemented",
+				reg.Name,
+			),
 		)
-
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"failed to configure %s: %v",
-					provider.Name(),
-					err,
-				),
-			)
-
-			continue
-		}
-
-		// Track created/updated files
-		filePaths := provider.GetFilePaths()
-		if wasConfigured {
-			result.UpdatedFiles = append(
-				result.UpdatedFiles,
-				filePaths...)
-		} else {
-			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
-		}
 	}
 
 	return nil

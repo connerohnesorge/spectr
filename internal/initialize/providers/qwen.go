@@ -1,32 +1,32 @@
 package providers
 
-func init() {
-	Register(NewQwenProvider())
-}
+import (
+	"context"
 
-// QwenProvider implements the Provider interface for Qwen Code.
+	"github.com/connerohnesorge/spectr/internal/domain"
+
+	//nolint:revive // long import path is unavoidable
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+)
+
+// QwenProvider configures Qwen Code.
 // Qwen uses QWEN.md and .qwen/commands/ for slash commands.
-type QwenProvider struct {
-	BaseProvider
-}
+type QwenProvider struct{}
 
-// NewQwenProvider creates a new Qwen Code provider.
-func NewQwenProvider() *QwenProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".qwen/commands",
-		".md",
-	)
-
-	return &QwenProvider{
-		BaseProvider: BaseProvider{
-			id:            "qwen",
-			name:          "Qwen Code",
-			priority:      PriorityQwen,
-			configFile:    "QWEN.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*QwenProvider) Initializers(_ context.Context) []Initializer {
+	return []Initializer{
+		initializers.NewDirectoryInitializer(".qwen/commands/spectr"),
+		initializers.NewConfigFileInitializer(
+			"QWEN.md",
+			"instruction-pointer.md.tmpl",
+		),
+		initializers.NewSlashCommandsInitializer(
+			".qwen/commands/spectr",
+			".md",
+			[]domain.SlashCommand{
+				domain.SlashProposal,
+				domain.SlashApply,
+			},
+		),
 	}
 }

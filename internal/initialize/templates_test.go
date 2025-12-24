@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/domain"
 )
 
 func TestNewTemplateManager(t *testing.T) {
@@ -147,7 +147,7 @@ func TestTemplateManager_RenderAgents(
 	}
 
 	got, err := tm.RenderAgents(
-		providers.DefaultTemplateContext(),
+		domain.DefaultTemplateContext(),
 	)
 	if err != nil {
 		t.Fatalf("RenderAgents() error = %v", err)
@@ -201,7 +201,7 @@ func TestTemplateManager_RenderInstructionPointer(
 	}
 
 	got, err := tm.RenderInstructionPointer(
-		providers.DefaultTemplateContext(),
+		domain.DefaultTemplateContext(),
 	)
 	if err != nil {
 		t.Fatalf(
@@ -313,7 +313,7 @@ func TestTemplateManager_RenderSlashCommand(
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tm.RenderSlashCommand(
 				tt.commandType,
-				providers.DefaultTemplateContext(),
+				domain.DefaultTemplateContext(),
 			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf(
@@ -412,7 +412,7 @@ func TestTemplateManager_AllTemplatesCompile(
 
 	t.Run("agents template", func(t *testing.T) {
 		_, err := tm.RenderAgents(
-			providers.DefaultTemplateContext(),
+			domain.DefaultTemplateContext(),
 		)
 		if err != nil {
 			t.Errorf(
@@ -426,7 +426,7 @@ func TestTemplateManager_AllTemplatesCompile(
 		"instruction pointer template",
 		func(t *testing.T) {
 			_, err := tm.RenderInstructionPointer(
-				providers.DefaultTemplateContext(),
+				domain.DefaultTemplateContext(),
 			)
 			if err != nil {
 				t.Errorf(
@@ -442,7 +442,7 @@ func TestTemplateManager_AllTemplatesCompile(
 		for _, cmd := range commands {
 			_, err := tm.RenderSlashCommand(
 				cmd,
-				providers.DefaultTemplateContext(),
+				domain.DefaultTemplateContext(),
 			)
 			if err != nil {
 				t.Errorf(
@@ -586,5 +586,194 @@ func TestTemplateManager_EmptyTechStack(
 		t.Error(
 			"Missing Tech Stack section with empty slice",
 		)
+	}
+}
+
+// Test type-safe accessor methods (Task 2.4)
+
+func TestTemplateManager_InstructionPointer(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	ref := tm.InstructionPointer()
+
+	// Verify TemplateRef fields
+	if ref.Name != "instruction-pointer.md.tmpl" {
+		t.Errorf("InstructionPointer().Name = %q, want %q", ref.Name, "instruction-pointer.md.tmpl")
+	}
+	if ref.Template == nil {
+		t.Error("InstructionPointer().Template is nil")
+	}
+
+	// Verify it can render
+	ctx := domain.DefaultTemplateContext()
+	result, err := ref.Render(ctx)
+	if err != nil {
+		t.Errorf("InstructionPointer().Render() error = %v", err)
+	}
+	if !strings.Contains(result, "Spectr Instructions") {
+		t.Error("InstructionPointer() rendered content missing expected text")
+	}
+}
+
+func TestTemplateManager_Agents(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	ref := tm.Agents()
+
+	// Verify TemplateRef fields
+	if ref.Name != "AGENTS.md.tmpl" {
+		t.Errorf("Agents().Name = %q, want %q", ref.Name, "AGENTS.md.tmpl")
+	}
+	if ref.Template == nil {
+		t.Error("Agents().Template is nil")
+	}
+
+	// Verify it can render
+	ctx := domain.DefaultTemplateContext()
+	result, err := ref.Render(ctx)
+	if err != nil {
+		t.Errorf("Agents().Render() error = %v", err)
+	}
+	if !strings.Contains(result, "Spectr Instructions") {
+		t.Error("Agents() rendered content missing expected text")
+	}
+}
+
+func TestTemplateManager_Project(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	ref := tm.Project()
+
+	// Verify TemplateRef fields
+	if ref.Name != "project.md.tmpl" {
+		t.Errorf("Project().Name = %q, want %q", ref.Name, "project.md.tmpl")
+	}
+	if ref.Template == nil {
+		t.Error("Project().Template is nil")
+	}
+
+	// Note: Project template requires ProjectContext, not TemplateContext
+	// So we can't use ref.Render() directly. Just verify the ref is valid.
+}
+
+func TestTemplateManager_CIWorkflow(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	ref := tm.CIWorkflow()
+
+	// Verify TemplateRef fields
+	if ref.Name != "spectr-ci.yml.tmpl" {
+		t.Errorf("CIWorkflow().Name = %q, want %q", ref.Name, "spectr-ci.yml.tmpl")
+	}
+	if ref.Template == nil {
+		t.Error("CIWorkflow().Template is nil")
+	}
+
+	// CI workflow template has no variables, so we can render with empty context
+	ctx := domain.TemplateContext{}
+	result, err := ref.Render(ctx)
+	if err != nil {
+		t.Errorf("CIWorkflow().Render() error = %v", err)
+	}
+	if !strings.Contains(result, "Spectr Validation") {
+		t.Error("CIWorkflow() rendered content missing expected text")
+	}
+}
+
+func TestTemplateManager_SlashCommand(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	tests := []struct {
+		name         string
+		cmd          domain.SlashCommand
+		expectedName string
+		expectedText string
+	}{
+		{
+			name:         "proposal command",
+			cmd:          domain.SlashProposal,
+			expectedName: "slash-proposal.md.tmpl",
+			expectedText: "Guardrails",
+		},
+		{
+			name:         "apply command",
+			cmd:          domain.SlashApply,
+			expectedName: "slash-apply.md.tmpl",
+			expectedText: "Guardrails",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ref := tm.SlashCommand(tt.cmd)
+
+			// Verify TemplateRef fields
+			if ref.Name != tt.expectedName {
+				t.Errorf("SlashCommand(%v).Name = %q, want %q", tt.cmd, ref.Name, tt.expectedName)
+			}
+			if ref.Template == nil {
+				t.Error("SlashCommand().Template is nil")
+			}
+
+			// Verify it can render
+			ctx := domain.DefaultTemplateContext()
+			result, err := ref.Render(ctx)
+			if err != nil {
+				t.Errorf("SlashCommand(%v).Render() error = %v", tt.cmd, err)
+			}
+			if !strings.Contains(result, tt.expectedText) {
+				t.Errorf(
+					"SlashCommand(%v) rendered content missing expected text %q",
+					tt.cmd,
+					tt.expectedText,
+				)
+			}
+		})
+	}
+}
+
+func TestTemplateManager_AllAccessorsReturnValidRefs(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	// Test that all accessor methods return non-nil TemplateRefs
+	refs := []struct {
+		name string
+		ref  domain.TemplateRef
+	}{
+		{"InstructionPointer", tm.InstructionPointer()},
+		{"Agents", tm.Agents()},
+		{"Project", tm.Project()},
+		{"CIWorkflow", tm.CIWorkflow()},
+		{"SlashCommand(Proposal)", tm.SlashCommand(domain.SlashProposal)},
+		{"SlashCommand(Apply)", tm.SlashCommand(domain.SlashApply)},
+	}
+
+	for _, ref := range refs {
+		t.Run(ref.name, func(t *testing.T) {
+			if ref.ref.Name == "" {
+				t.Errorf("%s returned empty Name", ref.name)
+			}
+			if ref.ref.Template == nil {
+				t.Errorf("%s returned nil Template", ref.name)
+			}
+		})
 	}
 }

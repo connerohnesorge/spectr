@@ -105,12 +105,12 @@ func runNonInteractiveInit(c *InitCmd) error {
 	// Handle "all" special case
 	selectedProviders := c.Tools
 	if len(c.Tools) == 1 && c.Tools[0] == "all" {
-		selectedProviders = providers.IDs()
+		selectedProviders = providers.ProviderIDs()
 	}
 
 	// Validate provider IDs
 	for _, id := range selectedProviders {
-		if providers.Get(id) == nil {
+		if _, ok := providers.GetProvider(id); !ok {
 			return fmt.Errorf(
 				"invalid provider ID: %s",
 				id,

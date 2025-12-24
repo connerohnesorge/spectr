@@ -1,32 +1,44 @@
 package providers
 
+import (
+	"context"
+
+	"github.com/connerohnesorge/spectr/internal/initialize/templates"
+)
+
 func init() {
-	Register(NewClineProvider())
+	_ = RegisterProvider(Registration{
+		ID:       "cline",
+		Name:     "Cline",
+		Priority: PriorityCline,
+		Provider: &ClineProvider{},
+	})
 }
 
 // ClineProvider implements the Provider interface for Cline.
 // Cline uses CLINE.md and .clinerules/commands/ for slash commands.
-type ClineProvider struct {
-	BaseProvider
-}
+type ClineProvider struct{}
 
-// NewClineProvider creates a new Cline provider.
-func NewClineProvider() *ClineProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".clinerules/commands",
-		".md",
-	)
-
-	return &ClineProvider{
-		BaseProvider: BaseProvider{
-			id:            "cline",
-			name:          "Cline",
-			priority:      PriorityCline,
-			configFile:    "CLINE.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*ClineProvider) Initializers(
+	_ context.Context,
+) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(
+			".clinerules/commands/spectr",
+		),
+		NewConfigFileInitializer(
+			"CLINE.md",
+			func(tm TemplateManager) any {
+				return tm.InstructionPointer()
+			},
+		),
+		NewSlashCommandsInitializer(
+			".clinerules/commands/spectr",
+			".md",
+			[]templates.SlashCommand{
+				templates.SlashProposal,
+				templates.SlashApply,
+			},
+		),
 	}
 }

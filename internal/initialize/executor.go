@@ -5,11 +5,15 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/templates"
+	"github.com/spf13/afero"
 )
 
 // InitExecutor handles the actual initialization process
@@ -286,8 +290,8 @@ func (e *InitExecutor) createAgentsMd(
 	return nil
 }
 
-// configureProviders configures the selected providers using the new interface-driven architecture.
-// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+// configureProviders configures the selected providers using the new initializer-based architecture.
+// Collects initializers from all providers, deduplicates them, sorts by type, and executes them.
 func (e *InitExecutor) configureProviders(
 	selectedProviderIDs []string,
 	spectrDir string,
@@ -297,9 +301,38 @@ func (e *InitExecutor) configureProviders(
 		return nil // No providers to configure
 	}
 
+	// Task 6.1: Create dual filesystems
+	// Project-relative filesystem (for CLAUDE.md, .claude/commands/, etc.)
+	projectFs := afero.NewBasePathFs(
+		afero.NewOsFs(),
+		e.projectPath,
+	)
+
+	// Global filesystem (for ~/.config/tool/commands/, etc.)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf(
+			"failed to get user home directory: %w",
+			err,
+		)
+	}
+	globalFs := afero.NewBasePathFs(
+		afero.NewOsFs(),
+		homeDir,
+	)
+
+	// Create configuration
+	cfg := &providers.Config{
+		SpectrDir: "spectr",
+	}
+
+	// Task 6.2 & 6.3: Collect initializers from selected providers
+	var allInitializers []providers.Initializer
 	for _, providerID := range selectedProviderIDs {
-		provider := providers.Get(providerID)
-		if provider == nil {
+		reg, ok := providers.GetProvider(
+			providerID,
+		)
+		if !ok {
 			result.Errors = append(
 				result.Errors,
 				fmt.Sprintf(
@@ -311,18 +344,49 @@ func (e *InitExecutor) configureProviders(
 			continue
 		}
 
-		// Check if already configured
-		wasConfigured := provider.IsConfigured(
-			e.projectPath,
-		)
+		// Collect initializers from this provider
+		ctx := context.Background()
+		inits := reg.Provider.Initializers(ctx)
+		allInitializers = append(
+			allInitializers,
+			inits...)
+	}
 
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
+	// Task 6.4: Deduplicate initializers by path
+	dedupedInitializers := dedupeInitializers(
+		allInitializers,
+	)
+
+	// Task 6.5: Sort initializers by type
+	sortedInitializers := sortInitializers(
+		dedupedInitializers,
+	)
+
+	// Create a template manager adapter that satisfies providers.TemplateManager interface
+	tmAdapter := &templateManagerAdapter{tm: e.tm}
+
+	// Task 6.6: Execute initializers
+	for _, init := range sortedInitializers {
+		// Select filesystem based on initializer scope
+		fs := projectFs
+		if init.IsGlobal() {
+			fs = globalFs
+		}
+
+		// Execute initializer
+		initResult, err := init.Init(
+			context.Background(),
+			fs,
+			cfg,
+			tmAdapter,
+		)
+		// Task 6.8: Handle partial failures - continue with rest
+		if err != nil {
 			result.Errors = append(
 				result.Errors,
 				fmt.Sprintf(
-					"failed to configure %s: %v",
-					provider.Name(),
+					"failed to initialize %s: %v",
+					init.Path(),
 					err,
 				),
 			)
@@ -330,18 +394,75 @@ func (e *InitExecutor) configureProviders(
 			continue
 		}
 
-		// Track created/updated files
-		filePaths := provider.GetFilePaths()
-		if wasConfigured {
-			result.UpdatedFiles = append(
-				result.UpdatedFiles,
-				filePaths...)
-		} else {
-			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
-		}
+		// Task 6.7: Aggregate InitResult into ExecutionResult
+		result.CreatedFiles = append(
+			result.CreatedFiles,
+			initResult.CreatedFiles...)
+		result.UpdatedFiles = append(
+			result.UpdatedFiles,
+			initResult.UpdatedFiles...)
 	}
 
 	return nil
+}
+
+// dedupeInitializers removes duplicate initializers by path.
+// Same path = run once, even if multiple providers return it.
+func dedupeInitializers(
+	all []providers.Initializer,
+) []providers.Initializer {
+	seen := make(map[string]bool)
+	var result []providers.Initializer
+	for _, init := range all {
+		key := init.Path()
+		if !seen[key] {
+			seen[key] = true
+			result = append(result, init)
+		}
+	}
+
+	return result
+}
+
+// sortInitializers sorts initializers by type to guarantee execution order:
+// 1. DirectoryInitializer   - Create directories first
+// 2. ConfigFileInitializer  - Then config files
+// 3. SlashCommandsInitializer - Then slash commands
+func sortInitializers(
+	all []providers.Initializer,
+) []providers.Initializer {
+	sorted := make(
+		[]providers.Initializer,
+		len(all),
+	)
+	copy(sorted, all)
+
+	sort.SliceStable(sorted, func(i, j int) bool {
+		return initializerPriority(
+			sorted[i],
+		) < initializerPriority(
+			sorted[j],
+		)
+	})
+
+	return sorted
+}
+
+// initializerPriority returns the execution priority for an initializer type.
+// Lower numbers execute first.
+func initializerPriority(
+	init providers.Initializer,
+) int {
+	switch init.(type) {
+	case *providers.DirectoryInitializer:
+		return 1
+	case *providers.ConfigFileInitializer:
+		return 2
+	case *providers.SlashCommandsInitializer:
+		return 3
+	default:
+		return 999 // Unknown types execute last
+	}
 }
 
 // createCIWorkflow creates the .github/workflows/spectr-ci.yml file
@@ -395,6 +516,72 @@ func (e *InitExecutor) createCIWorkflow(
 	}
 
 	return nil
+}
+
+// templateManagerAdapter adapts *TemplateManager to satisfy providers.TemplateManager interface.
+// This is needed because the concrete TemplateManager returns templates.TemplateRef,
+// but the interface requires interface{} to avoid import cycles.
+type templateManagerAdapter struct {
+	tm *TemplateManager
+}
+
+// RenderAgents delegates to the concrete TemplateManager
+func (a *templateManagerAdapter) RenderAgents(
+	ctx providers.TemplateContext,
+) (string, error) {
+	return a.tm.RenderAgents(ctx)
+}
+
+// RenderInstructionPointer delegates to the concrete TemplateManager
+func (a *templateManagerAdapter) RenderInstructionPointer(
+	ctx providers.TemplateContext,
+) (string, error) {
+	return a.tm.RenderInstructionPointer(ctx)
+}
+
+// RenderSlashCommand delegates to the concrete TemplateManager
+func (a *templateManagerAdapter) RenderSlashCommand(
+	commandType string,
+	ctx providers.TemplateContext,
+) (string, error) {
+	return a.tm.RenderSlashCommand(
+		commandType,
+		ctx,
+	)
+}
+
+// InstructionPointer returns the template reference as interface{}
+func (a *templateManagerAdapter) InstructionPointer() interface{} {
+	return a.tm.InstructionPointer()
+}
+
+// Agents returns the template reference as interface{}
+func (a *templateManagerAdapter) Agents() interface{} {
+	return a.tm.Agents()
+}
+
+// Project returns the template reference as interface{}
+func (a *templateManagerAdapter) Project() interface{} {
+	return a.tm.Project()
+}
+
+// CIWorkflow returns the template reference as interface{}
+func (a *templateManagerAdapter) CIWorkflow() interface{} {
+	return a.tm.CIWorkflow()
+}
+
+// SlashCommand returns the template reference as interface{}
+func (a *templateManagerAdapter) SlashCommand(
+	cmd interface{},
+) interface{} {
+	// Type assert cmd to templates.SlashCommand
+	slashCmd, ok := cmd.(templates.SlashCommand)
+	if !ok {
+		// Return nil if conversion fails - will be caught by initializer
+		return nil
+	}
+
+	return a.tm.SlashCommand(slashCmd)
 }
 
 // FormatNextStepsMessage returns a formatted next steps message for display after initialization

@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/templates"
 )
 
 //go:embed templates/**/*.tmpl
@@ -147,4 +148,49 @@ func (tm *TemplateManager) RenderCIWorkflow() (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+// Type-safe accessor methods that return TemplateRef
+
+// InstructionPointer returns the instruction-pointer.md.tmpl template reference
+func (tm *TemplateManager) InstructionPointer() templates.TemplateRef {
+	return templates.NewTemplateRef(
+		"instruction-pointer.md.tmpl",
+		tm.templates,
+	)
+}
+
+// Agents returns the AGENTS.md.tmpl template reference
+func (tm *TemplateManager) Agents() templates.TemplateRef {
+	return templates.NewTemplateRef(
+		"AGENTS.md.tmpl",
+		tm.templates,
+	)
+}
+
+// Project returns the project.md.tmpl template reference
+func (tm *TemplateManager) Project() templates.TemplateRef {
+	return templates.NewTemplateRef(
+		"project.md.tmpl",
+		tm.templates,
+	)
+}
+
+// CIWorkflow returns the spectr-ci.yml.tmpl template reference
+func (tm *TemplateManager) CIWorkflow() templates.TemplateRef {
+	return templates.NewTemplateRef(
+		"spectr-ci.yml.tmpl",
+		tm.templates,
+	)
+}
+
+// SlashCommand returns the template reference for the given slash
+// command type
+func (tm *TemplateManager) SlashCommand(
+	cmd templates.SlashCommand,
+) templates.TemplateRef {
+	return templates.NewTemplateRef(
+		cmd.TemplateName(),
+		tm.templates,
+	)
 }

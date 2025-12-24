@@ -1,33 +1,44 @@
 package providers
 
+import (
+	"context"
+
+	"github.com/connerohnesorge/spectr/internal/initialize/templates"
+)
+
 func init() {
-	Register(NewAntigravityProvider())
+	_ = RegisterProvider(Registration{
+		ID:       "antigravity",
+		Name:     "Antigravity",
+		Priority: PriorityAntigravity,
+		Provider: &AntigravityProvider{},
+	})
 }
 
 // AntigravityProvider implements the Provider interface for Antigravity.
-//
 // Antigravity uses AGENTS.md and .agent/workflows/ for slash commands.
-type AntigravityProvider struct {
-	BaseProvider
-}
+type AntigravityProvider struct{}
 
-// NewAntigravityProvider creates a new Antigravity provider.
-func NewAntigravityProvider() *AntigravityProvider {
-	proposalPath, applyPath := PrefixedCommandPaths(
-		".agent/workflows",
-		".md",
-	)
-
-	return &AntigravityProvider{
-		BaseProvider: BaseProvider{
-			id:            "antigravity",
-			name:          "Antigravity",
-			priority:      PriorityAntigravity,
-			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*AntigravityProvider) Initializers(
+	_ context.Context,
+) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(
+			".agent/workflows",
+		),
+		NewConfigFileInitializer(
+			"AGENTS.md",
+			func(tm TemplateManager) any {
+				return tm.Agents()
+			},
+		),
+		NewSlashCommandsInitializer(
+			".agent/workflows",
+			".md",
+			[]templates.SlashCommand{
+				templates.SlashProposal,
+				templates.SlashApply,
+			},
+		),
 	}
 }

@@ -1,31 +1,44 @@
 package providers
 
+import (
+	"context"
+
+	"github.com/connerohnesorge/spectr/internal/initialize/templates"
+)
+
 func init() {
-	Register(NewCodexProvider())
+	_ = RegisterProvider(Registration{
+		ID:       "codex",
+		Name:     "Codex CLI",
+		Priority: PriorityCodex,
+		Provider: &CodexProvider{},
+	})
 }
 
 // CodexProvider implements the Provider interface for Codex CLI.
-// Codex uses AGENTS.md and global ~/.codex/prompts/spectr/ for commands.
-type CodexProvider struct {
-	BaseProvider
-}
+// Codex uses AGENTS.md and global ~/.codex/prompts/ for commands.
+type CodexProvider struct{}
 
-// NewCodexProvider creates a new Codex CLI provider.
-func NewCodexProvider() *CodexProvider {
-	// Codex uses global paths, not project-relative paths
-	proposalPath := "~/.codex/prompts/spectr-proposal.md"
-	applyPath := "~/.codex/prompts/spectr-apply.md"
-
-	return &CodexProvider{
-		BaseProvider: BaseProvider{
-			id:            "codex",
-			name:          "Codex CLI",
-			priority:      PriorityCodex,
-			configFile:    "AGENTS.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+func (*CodexProvider) Initializers(
+	_ context.Context,
+) []Initializer {
+	return []Initializer{
+		NewGlobalDirectoryInitializer(
+			".codex/prompts",
+		),
+		NewConfigFileInitializer(
+			"AGENTS.md",
+			func(tm TemplateManager) any {
+				return tm.Agents()
+			},
+		),
+		NewGlobalSlashCommandsInitializer(
+			".codex/prompts",
+			".md",
+			[]templates.SlashCommand{
+				templates.SlashProposal,
+				templates.SlashApply,
+			},
+		),
 	}
 }

@@ -100,17 +100,20 @@ providers.Register(providers.Registration{
 
 ### 3. Built-in Initializers
 
-**Decision**: Provide three composable initializers:
+**Decision**: Provide three composable initializers with type-safe template selection:
 
 ```go
 // Creates directories (e.g., .claude/commands/spectr/)
 func NewDirectoryInitializer(paths ...string) Initializer
 
 // Creates/updates instruction file with markers
-func NewConfigFileInitializer(path string, template string) Initializer
+// Uses TemplateGetter for compile-time checked template selection
+type TemplateGetter func(*TemplateManager) TemplateRef
+func NewConfigFileInitializer(path string, getTemplate TemplateGetter) Initializer
 
 // Creates slash commands from templates
-func NewSlashCommandsInitializer(dir, ext string, format CommandFormat) Initializer
+// Uses []SlashCommand for compile-time checked command selection
+func NewSlashCommandsInitializer(dir, ext string, commands []SlashCommand) Initializer
 ```
 
 **Deduplication**: When multiple providers share an initializer with same config, run once.
@@ -171,8 +174,14 @@ type ClaudeProvider struct{}
 func (p *ClaudeProvider) Initializers(ctx context.Context) []Initializer {
     return []Initializer{
         NewDirectoryInitializer(".claude/commands/spectr"),
-        NewConfigFileInitializer("CLAUDE.md", InstructionTemplate),
-        NewSlashCommandsInitializer(".claude/commands/spectr", ".md", FormatMarkdown),
+        // Type-safe: (*TemplateManager).InstructionPointer is a method reference
+        // Compiler catches typos - no runtime surprises
+        NewConfigFileInitializer("CLAUDE.md", (*TemplateManager).InstructionPointer),
+        // Type-safe: SlashProposal/SlashApply are typed constants
+        NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []SlashCommand{
+            SlashProposal,
+            SlashApply,
+        }),
     }
 }
 
@@ -194,8 +203,11 @@ type GeminiProvider struct{}
 func (p *GeminiProvider) Initializers(ctx context.Context) []Initializer {
     return []Initializer{
         NewDirectoryInitializer(".gemini/commands/spectr"),
-        // No config file for Gemini
-        NewSlashCommandsInitializer(".gemini/commands/spectr", ".toml", FormatTOML),
+        // No config file for Gemini - uses TOML slash commands only
+        NewSlashCommandsInitializer(".gemini/commands/spectr", ".toml", []SlashCommand{
+            SlashProposal,
+            SlashApply,
+        }),
     }
 }
 ```
@@ -294,6 +306,120 @@ type Initializer interface {
 - Each initializer implements own template rendering - More code duplication
 - Pass templates as strings - Less flexible, harder to maintain
 
+### 7. Type-Safe Template Selection
+
+**Decision**: Use typed template references instead of raw strings for compile-time safety.
+
+**Problem**: The original design had raw string inputs like:
+```go
+// Unsafe: typo "instrction-pointer" would fail at runtime
+NewConfigFileInitializer("CLAUDE.md", "instruction-pointer")
+```
+
+**Solution**: Define typed template accessors on TemplateManager:
+
+```go
+// TemplateRef is a type-safe reference to a parsed template
+type TemplateRef struct {
+    name     string              // template file name (e.g., "instruction-pointer.md.tmpl")
+    template *template.Template  // pre-parsed template
+}
+
+// Render executes the template with the given context
+func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
+    var buf bytes.Buffer
+    if err := tr.template.ExecuteTemplate(&buf, tr.name, ctx); err != nil {
+        return "", fmt.Errorf("failed to render template %s: %w", tr.name, err)
+    }
+    return buf.String(), nil
+}
+
+// TemplateManager exposes type-safe accessors for each template
+type TemplateManager struct {
+    templates *template.Template
+}
+
+// InstructionPointer returns the instruction-pointer.md.tmpl template reference
+func (tm *TemplateManager) InstructionPointer() TemplateRef {
+    return TemplateRef{
+        name:     "instruction-pointer.md.tmpl",
+        template: tm.templates,
+    }
+}
+
+// Agents returns the AGENTS.md.tmpl template reference
+func (tm *TemplateManager) Agents() TemplateRef {
+    return TemplateRef{
+        name:     "AGENTS.md.tmpl",
+        template: tm.templates,
+    }
+}
+
+// SlashCommand type for compile-time checked slash command types
+type SlashCommand int
+
+const (
+    SlashProposal SlashCommand = iota
+    SlashApply
+)
+
+// SlashCommand returns a template reference for the given slash command type
+func (tm *TemplateManager) SlashCommand(cmd SlashCommand) TemplateRef {
+    names := map[SlashCommand]string{
+        SlashProposal: "slash-proposal.md.tmpl",
+        SlashApply:    "slash-apply.md.tmpl",
+    }
+    return TemplateRef{
+        name:     names[cmd],
+        template: tm.templates,
+    }
+}
+```
+
+**Updated initializer constructors**:
+
+```go
+// ConfigFileInitializer now receives a TemplateRef getter function
+// The getter is called with TemplateManager at Init() time
+type TemplateGetter func(*TemplateManager) TemplateRef
+
+func NewConfigFileInitializer(path string, getTemplate TemplateGetter) Initializer {
+    return &ConfigFileInitializer{
+        path:        path,
+        getTemplate: getTemplate,
+    }
+}
+
+// Usage - compile-time checked:
+NewConfigFileInitializer("CLAUDE.md", (*TemplateManager).InstructionPointer)
+
+// SlashCommandsInitializer receives slice of SlashCommand types
+func NewSlashCommandsInitializer(dir, ext string, commands []SlashCommand) Initializer {
+    return &SlashCommandsInitializer{
+        dir:      dir,
+        ext:      ext,
+        commands: commands,
+    }
+}
+
+// Usage - compile-time checked:
+NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []SlashCommand{
+    SlashProposal,
+    SlashApply,
+})
+```
+
+**Benefits**:
+- Compile-time errors for invalid template names (typos caught by compiler)
+- IDE autocomplete for available templates
+- Refactoring-safe: renaming a template accessor updates all usages
+- Clear documentation of available templates through method signatures
+
+**Alternatives considered:**
+- String constants (`const TemplateInstructionPointer = "instruction-pointer"`) - Still strings, can be used incorrectly
+- Template name validation at startup - Runtime error, not compile-time
+- Passing `*template.Template` directly - Leaks implementation detail, harder to mock in tests
+
 ## Resolved Questions
 
 | Question | Decision |
@@ -304,6 +430,7 @@ type Initializer interface {
 | Template variable location? | Derived from SpectrDir via methods |
 | Global paths support? | Two fs instances (projectFs, globalFs) |
 | Deduplication key? | By file path (simple and effective) |
+| Template selection type safety? | TemplateRef accessors with method references; compile-time checked |
 
 ## Future Considerations (Out of Scope)
 

@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `cursor`
 - Name: `Cursor`
-- Priority: 9
+- Priority: 8
 - Config File: (none - Cursor has no instruction file)
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Cursor provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `cursor`, Name `Cursor`, Priority 9
+- **AND** registration SHALL include ID `cursor`, Name `Cursor`, Priority 8
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers

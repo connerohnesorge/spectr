@@ -30,29 +30,23 @@ The system SHALL define a `Provider` interface that returns a list of initialize
 - **AND** the initializers MAY be empty if the provider requires no setup
 
 ### Requirement: Initializer Interface
-The system SHALL define an `Initializer` interface with `Init`, `IsSetup`, `Path`, and `IsGlobal` methods.
+The system SHALL define an `Initializer` interface with `Init` and `IsSetup` methods.
 
 #### Scenario: Initializer setup check
-- **WHEN** `IsSetup(fs, cfg)` is called on an initializer
-- **THEN** it SHALL return `true` if the initializer's artifacts already exist
+- **WHEN** `IsSetup(projectFs, globalFs, cfg)` is called on an initializer
+- **THEN** it SHALL receive both project and global filesystems
+- **AND** it SHALL return `true` if the initializer's artifacts already exist
 - **AND** it SHALL return `false` if setup is needed
+- **AND** the initializer SHALL decide internally which filesystem to check based on its configuration
 
 #### Scenario: Initializer execution
-- **WHEN** `Init(ctx, fs, cfg, tm)` is called on an initializer
-- **THEN** it SHALL create or update the necessary files in the filesystem
+- **WHEN** `Init(ctx, projectFs, globalFs, cfg, tm)` is called on an initializer
+- **THEN** it SHALL receive both project and global filesystems
+- **AND** it SHALL decide internally which filesystem to use based on its configuration
+- **AND** it SHALL create or update the necessary files in the appropriate filesystem
 - **AND** it SHALL return an `InitResult` containing created and updated file paths
 - **AND** it SHALL return an error if initialization fails
 - **AND** it SHALL be idempotent (safe to run multiple times)
-
-#### Scenario: Initializer path identification
-- **WHEN** `Path()` is called on an initializer
-- **THEN** it SHALL return the file or directory path this initializer manages
-- **AND** the path SHALL be used for deduplication
-
-#### Scenario: Initializer global flag
-- **WHEN** `IsGlobal()` is called on an initializer
-- **THEN** it SHALL return `true` if the initializer uses the global filesystem
-- **AND** it SHALL return `false` if the initializer uses the project filesystem
 
 ### Requirement: Config Struct
 The system SHALL provide a `Config` struct containing initialization configuration.
@@ -86,8 +80,9 @@ The system SHALL support registering providers explicitly from a central locatio
 - **AND** individual provider files SHALL NOT contain `init()` functions for registration
 
 #### Scenario: Retrieve registered providers
-- **WHEN** providers are queried
-- **THEN** the system SHALL return providers sorted by priority (lower first)
+- **WHEN** providers are queried via `RegisteredProviders() []Registration`
+- **THEN** the system SHALL return all registered providers sorted by priority (lower first)
+- **AND** the function SHALL be callable after `RegisterAllProviders()` completes
 
 ### Requirement: Filesystem Abstraction
 The system SHALL use `afero.Fs` rooted at project directory for all file operations.
@@ -148,15 +143,16 @@ The system SHALL provide a built-in `DirectoryInitializer` for creating director
 - **AND** it SHALL create parent directories as needed
 
 ### Requirement: Initializer Deduplication
-The system SHALL deduplicate initializers by file path when multiple providers are configured.
+The system SHALL deduplicate initializers by configuration when multiple providers are configured.
 
 #### Scenario: Shared initializer deduplication
-- **WHEN** multiple providers return initializers with the same path
+- **WHEN** multiple providers return initializers with the same configuration (path and global flag)
 - **THEN** the system SHALL run the initializer only once
-- **AND** deduplication SHALL be based on the `Path()` return value
+- **AND** deduplication SHALL be based on an internal `dedupeKey()` method that combines path and global flag
+- **AND** each initializer type SHALL implement `dedupeKey()` returning a unique string (e.g., "dir:project:.claude/commands/spectr")
 
-#### Scenario: Different paths run separately
-- **WHEN** providers return initializers with different paths
+#### Scenario: Different configurations run separately
+- **WHEN** providers return initializers with different paths or different filesystem targets
 - **THEN** all initializers SHALL run
 
 ### Requirement: Initializer Ordering
@@ -185,16 +181,35 @@ The system SHALL return file change information from each initializer.
 - **THEN** the executor SHALL accumulate all `InitResult` values
 - **AND** the accumulated results SHALL be returned in the `ExecutionResult`
 
+### Requirement: ExecutionResult Type
+The system SHALL define an `ExecutionResult` type for aggregated initialization results.
+
+#### Scenario: ExecutionResult structure
+- **WHEN** initialization completes
+- **THEN** the system SHALL return an `ExecutionResult` containing:
+  - `CreatedFiles []string` - all files created across all initializers
+  - `UpdatedFiles []string` - all files updated across all initializers
+  - `Errors []error` - any errors encountered during initialization
+
+#### Scenario: aggregateResults function
+- **WHEN** all initializers have completed
+- **THEN** the `aggregateResults(results []InitResult, errors []error) ExecutionResult` function SHALL combine all results
+- **AND** it SHALL concatenate all created files into a single slice
+- **AND** it SHALL concatenate all updated files into a single slice
+- **AND** it SHALL collect all errors encountered
+
 ### Requirement: Dual Filesystem Support
-The system SHALL provide two filesystem instances for project and global paths.
+The system SHALL provide two filesystem instances to all initializers.
 
-#### Scenario: Project filesystem
-- **WHEN** an initializer has `IsGlobal() == false`
-- **THEN** it SHALL receive the project filesystem rooted at the project directory
+#### Scenario: Filesystem provision
+- **WHEN** an initializer's `Init()` or `IsSetup()` method is called
+- **THEN** it SHALL receive both `projectFs` (rooted at project directory) and `globalFs` (rooted at user's home directory)
+- **AND** the initializer SHALL decide internally which filesystem to use based on its configuration
 
-#### Scenario: Global filesystem
-- **WHEN** an initializer has `IsGlobal() == true`
-- **THEN** it SHALL receive the global filesystem rooted at the user's home directory
+#### Scenario: Initializer configuration
+- **WHEN** an initializer is constructed
+- **THEN** it MAY be configured to use either the project or global filesystem
+- **AND** this configuration is internal to the initializer (not exposed via interface methods)
 
 ### Requirement: Partial Failure Handling
 The system SHALL handle partial initialization failures gracefully.

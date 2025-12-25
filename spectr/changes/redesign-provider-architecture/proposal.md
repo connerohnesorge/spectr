@@ -2,7 +2,7 @@
 
 ## Why
 
-The current provider system has 17 providers, each implementing a 12-method interface with significant code duplication. Most providers embed `BaseProvider` and only vary in configuration values. This redesign introduces a composable initializer architecture that:
+The current provider system has 15 providers, each implementing a 12-method interface with significant code duplication. Most providers embed `BaseProvider` and only vary in configuration values. This redesign introduces a composable initializer architecture that:
 
 1. Reduces boilerplate by separating provider identity from initialization logic
 2. Enables shared initializers (ConfigFile, SlashCommands, Directory) to be reused and deduped
@@ -24,7 +24,7 @@ The current provider system has 17 providers, each implementing a 12-method inte
 - **BREAKING**: Remove all provider `init()` functions that call `Register()`
 - **NEW**: `internal/domain` package containing shared domain types (`TemplateRef`, `SlashCommand`, `TemplateContext`) to break import cycles
 - **NEW**: `internal/domain` package embeds slash command templates (`slash-proposal.md.tmpl`, `slash-apply.md.tmpl`) moved from `internal/initialize/templates/tools/`
-- **NEW**: `Initializer` interface with `Init(ctx, fs, cfg, tm)` and `IsSetup(fs, cfg)` methods
+- **NEW**: `Initializer` interface with `Init(ctx, projectFs, globalFs, cfg, tm)` and `IsSetup(projectFs, globalFs, cfg)` methods
 - **NEW**: Built-in initializers: `DirectoryInitializer`, `ConfigFileInitializer`, `SlashCommandsInitializer`
 - **NEW**: `Config` struct with `SpectrDir` field; other paths derived (SpecsDir = SpectrDir/specs, etc.)
 - **NEW**: Two filesystem instances: `projectFs` (project-relative) and `globalFs` (home directory)
@@ -38,7 +38,7 @@ The current provider system has 17 providers, each implementing a 12-method inte
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Change detection | InitResult return value | Each initializer returns files it created/updated; explicit and testable |
-| Initializer ordering | Implicit, documented guarantee | Directory → ConfigFile → SlashCommands; simple and predictable |
+| Initializer ordering | Documented guarantee (implicit by type) | Directory → ConfigFile → SlashCommands; simple and predictable |
 | Partial failure | No rollback, report failures | Keep simple; users can re-run init |
 | Template variables | Derive from SpectrDir | SpecsDir = SpectrDir/specs, etc.; single source of truth |
 | Global paths | Two fs instances | projectFs and globalFs; supports ~/.config/tool/ patterns |
@@ -46,7 +46,7 @@ The current provider system has 17 providers, each implementing a 12-method inte
 
 ## Impact
 
-- Affected specs: `support-*` (all 17 provider specs), `cli-interface` (init command)
+- Affected specs: `support-*` (all 15 provider specs), `cli-interface` (init command)
 
 ## Affected Code
 

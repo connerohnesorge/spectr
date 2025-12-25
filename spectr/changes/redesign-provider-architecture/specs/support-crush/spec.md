@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `crush`
 - Name: `Crush`
-- Priority: 16 (after existing providers)
+- Priority: 14
 - Config File: `CRUSH.md`
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Crush provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `crush`, Name `Crush`, Priority 16
+- **AND** registration SHALL include ID `crush`, Name `Crush`, Priority 14
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
@@ -23,7 +23,7 @@ The provider SHALL be configured with these settings:
 #### Scenario: Provider metadata
 - **WHEN** provider is registered
 - **THEN** the provider name is "Crush"
-- **AND** it appears in the provider list after Continue (priority 15)
+- **AND** it appears in the provider list after Continue (priority 13)
 
 ### Requirement: Crush Instruction File
 The provider SHALL create and maintain a `CRUSH.md` instruction file in the project root.

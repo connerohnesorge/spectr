@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `continue`
 - Name: `Continue`
-- Priority: 15
+- Priority: 13
 - Config File: (none)
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Continue provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `continue`, Name `Continue`, Priority 15
+- **AND** registration SHALL include ID `continue`, Name `Continue`, Priority 13
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
@@ -23,7 +23,7 @@ The provider SHALL be configured with these settings:
 #### Scenario: Provider metadata
 - **WHEN** the provider is registered
 - **THEN** it SHALL have name `Continue`
-- **AND** priority SHALL be 15
+- **AND** priority SHALL be 13
 
 ### Requirement: Continue Slash Commands
 The provider SHALL create slash commands in `.continue/commands/spectr/` directory.

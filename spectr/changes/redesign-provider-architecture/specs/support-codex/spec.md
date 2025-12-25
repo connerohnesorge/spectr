@@ -4,26 +4,26 @@
 The provider SHALL be configured with these settings:
 - ID: `codex`
 - Name: `Codex CLI`
-- Priority: 10
+- Priority: 9
 - Config File: `AGENTS.md`
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Codex provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `codex`, Name `Codex CLI`, Priority 10
+- **AND** registration SHALL include ID `codex`, Name `Codex CLI`, Priority 9
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers with global paths
 - **WHEN** the provider's Initializers() method is called
-- **THEN** it SHALL return a DirectoryInitializer for `~/.codex/prompts/` with IsGlobal() = true
+- **THEN** it SHALL return a DirectoryInitializer for `~/.codex/prompts/` configured for global filesystem
 - **AND** it SHALL return a ConfigFileInitializer for `AGENTS.md`
-- **AND** it SHALL return a SlashCommandsInitializer for global slash commands with IsGlobal() = true
+- **AND** it SHALL return a SlashCommandsInitializer for global slash commands configured for global filesystem
 
 #### Scenario: Provider metadata
 - **WHEN** provider is registered
 - **THEN** the provider name is "Codex CLI"
-- **AND** it appears after Cursor (priority 9) and before Aider (priority 11)
+- **AND** it appears after Cursor (priority 8) and before Aider (priority 10)
 
 #### Scenario: Instruction file
 - **WHEN** the provider returns initializers
@@ -34,17 +34,18 @@ The provider SHALL create slash commands in the global `~/.codex/prompts/` direc
 
 #### Scenario: Global command directory structure
 - **WHEN** the provider returns initializers
-- **THEN** DirectoryInitializer with IsGlobal() = true SHALL create `~/.codex/prompts/spectr/` directory
+- **THEN** DirectoryInitializer configured for global filesystem SHALL create `~/.codex/prompts/` directory
 - **AND** the directory is created in user's home directory via globalFs
 
 #### Scenario: Command paths
-- **WHEN** the SlashCommandsInitializer with IsGlobal() = true executes
+- **WHEN** the SlashCommandsInitializer configured for global filesystem executes
 - **THEN** it creates `~/.codex/prompts/spectr-proposal.md`
 - **AND** it creates `~/.codex/prompts/spectr-apply.md`
 
 #### Scenario: Global path handling
-- **WHEN** initializers with IsGlobal() = true execute
-- **THEN** the executor provides the globalFs filesystem rooted at user's home directory
+- **WHEN** initializers configured for global filesystem execute
+- **THEN** the executor provides both projectFs and globalFs filesystems
+- **AND** the initializer uses globalFs based on its internal configuration
 - **AND** paths work correctly regardless of current project directory
 
 ### Requirement: Codex Command Format

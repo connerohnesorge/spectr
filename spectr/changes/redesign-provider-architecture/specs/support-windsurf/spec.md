@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `windsurf`
 - Name: `Windsurf`
-- Priority: 13
+- Priority: 11
 - Config File: (none)
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Windsurf provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `windsurf`, Name `Windsurf`, Priority 13
+- **AND** registration SHALL include ID `windsurf`, Name `Windsurf`, Priority 11
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
@@ -22,9 +22,9 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider priority ordering
 - **WHEN** providers are registered
-- **THEN** Windsurf SHALL have priority 13
-- **AND** it SHALL be listed after Aider (priority 11)
-- **AND** it SHALL be listed before Kilocode (priority 14)
+- **THEN** Windsurf SHALL have priority 11
+- **AND** it SHALL be listed after Aider (priority 10)
+- **AND** it SHALL be listed before Kilocode (priority 12)
 
 ### Requirement: Windsurf Slash Commands
 The provider SHALL create slash commands in `.windsurf/commands/spectr/` directory.

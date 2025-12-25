@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `qwen`
 - Name: `Qwen Code`
-- Priority: 6
+- Priority: 5
 - Config File: `QWEN.md`
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Qwen provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `qwen`, Name `Qwen Code`, Priority 6
+- **AND** registration SHALL include ID `qwen`, Name `Qwen Code`, Priority 5
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers

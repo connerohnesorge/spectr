@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `antigravity`
 - Name: `Antigravity`
-- Priority: 7
+- Priority: 6
 - Config File: `AGENTS.md`
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Antigravity provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `antigravity`, Name `Antigravity`, Priority 7
+- **AND** registration SHALL include ID `antigravity`, Name `Antigravity`, Priority 6
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers

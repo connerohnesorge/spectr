@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `kilocode`
 - Name: `Kilocode`
-- Priority: 14
+- Priority: 12
 - Config File: (none)
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Kilocode provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `kilocode`, Name `Kilocode`, Priority 14
+- **AND** registration SHALL include ID `kilocode`, Name `Kilocode`, Priority 12
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
@@ -22,7 +22,7 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider priority
 - **WHEN** providers are sorted by priority
-- **THEN** Kilocode SHALL have priority 14
+- **THEN** Kilocode SHALL have priority 12
 
 #### Scenario: Command format check
 - **WHEN** the provider is registered

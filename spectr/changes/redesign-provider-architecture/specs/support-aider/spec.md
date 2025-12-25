@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `aider`
 - Name: `Aider`
-- Priority: 11
+- Priority: 10
 - Config File: (none)
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Aider provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `aider`, Name `Aider`, Priority 11
+- **AND** registration SHALL include ID `aider`, Name `Aider`, Priority 10
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers

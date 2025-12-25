@@ -2,7 +2,7 @@
 
 ## Context
 
-Spectr supports 17 AI CLI/IDE tools (Claude Code, Cursor, Cline, etc.) through a provider system. Each provider configures:
+Spectr supports 15 AI CLI/IDE tools (Claude Code, Cursor, Cline, etc.) through a provider system. Each provider configures:
 1. An instruction file (e.g., `CLAUDE.md`) with marker-based updates
 2. Slash commands (e.g., `.claude/commands/spectr/proposal.md`)
 
@@ -22,7 +22,7 @@ The current implementation has each provider implement a 12-method interface, wi
 - Reduce provider authoring to ~10 lines of registration code
 - Enable sharing and deduplication of common initialization logic
 - Improve testability of initialization steps
-- Maintain support for all 17 current providers
+- Maintain support for all 15 current providers
 - Use `afero.Fs` rooted at project for cleaner path handling
 - Explicit change tracking via InitResult return values
 - Break import cycles with a dedicated `internal/domain` package
@@ -182,17 +182,12 @@ type InitResult struct {
 type Initializer interface {
     // Init creates or updates files. Returns result with file changes and error if initialization fails.
     // Must be idempotent (safe to run multiple times).
-    Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
+    // Receives both filesystems - initializer decides which to use based on its configuration.
+    Init(ctx context.Context, projectFs, globalFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
 
     // IsSetup returns true if this initializer's artifacts already exist.
-    IsSetup(fs afero.Fs, cfg *Config) bool
-
-    // Path returns the file/directory path this initializer manages.
-    // Used for deduplication: same path = run once.
-    Path() string
-
-    // IsGlobal returns true if this initializer uses globalFs instead of projectFs.
-    IsGlobal() bool
+    // Receives both filesystems - initializer checks the appropriate one.
+    IsSetup(projectFs, globalFs afero.Fs, cfg *Config) bool
 }
 
 type Config struct {
@@ -260,15 +255,35 @@ type Registration struct {
 // RegisterAllProviders registers all built-in providers.
 // Called once at application startup (e.g., from main() or cmd/root.go).
 // Returns error if any registration fails.
+// RegisteredProviders returns all registered providers sorted by priority (lowest first).
+func RegisteredProviders() []Registration {
+    result := make([]Registration, 0, len(registry))
+    for _, reg := range registry {
+        result = append(result, reg)
+    }
+    sort.Slice(result, func(i, j int) bool {
+        return result[i].Priority < result[j].Priority
+    })
+    return result
+}
+
 func RegisterAllProviders() error {
     providers := []Registration{
         {ID: "claude-code", Name: "Claude Code", Priority: 1, Provider: &ClaudeProvider{}},
         {ID: "gemini", Name: "Gemini CLI", Priority: 2, Provider: &GeminiProvider{}},
-        {ID: "cursor", Name: "Cursor", Priority: 3, Provider: &CursorProvider{}},
-        {ID: "cline", Name: "Cline", Priority: 4, Provider: &ClineProvider{}},
-        {ID: "aider", Name: "Aider", Priority: 5, Provider: &AiderProvider{}},
-        {ID: "opencode", Name: "OpenCode", Priority: 6, Provider: &OpencodeProvider{}},
-        // ... all other providers
+        {ID: "costrict", Name: "Costrict", Priority: 3, Provider: &CostrictProvider{}},
+        {ID: "qoder", Name: "Qoder", Priority: 4, Provider: &QoderProvider{}},
+        {ID: "qwen", Name: "Qwen", Priority: 5, Provider: &QwenProvider{}},
+        {ID: "antigravity", Name: "Antigravity", Priority: 6, Provider: &AntigravityProvider{}},
+        {ID: "cline", Name: "Cline", Priority: 7, Provider: &ClineProvider{}},
+        {ID: "cursor", Name: "Cursor", Priority: 8, Provider: &CursorProvider{}},
+        {ID: "codex", Name: "Codex CLI", Priority: 9, Provider: &CodexProvider{}},
+        {ID: "aider", Name: "Aider", Priority: 10, Provider: &AiderProvider{}},
+        {ID: "windsurf", Name: "Windsurf", Priority: 11, Provider: &WindsurfProvider{}},
+        {ID: "kilocode", Name: "Kilocode", Priority: 12, Provider: &KilocodeProvider{}},
+        {ID: "continue", Name: "Continue", Priority: 13, Provider: &ContinueProvider{}},
+        {ID: "crush", Name: "Crush", Priority: 14, Provider: &CrushProvider{}},
+        {ID: "opencode", Name: "OpenCode", Priority: 15, Provider: &OpencodeProvider{}},
     }
 
     for _, reg := range providers {
@@ -428,27 +443,49 @@ type ExecutorContext struct {
 **Rationale**:
 - Project paths are cleaner and easier to test
 - Global paths support tools like Aider that use ~/.config/
-- Initializers declare via `IsGlobal()` which fs to use
+- Initializers receive both filesystems and decide internally which to use based on their configuration
 
 ### 5. File Change Detection
 
 **Decision**: Each initializer returns an `InitResult` containing the files it created/updated.
 
 ```go
+// ExecutionResult aggregates results from all initializers
+type ExecutionResult struct {
+    CreatedFiles []string  // All files created across all initializers
+    UpdatedFiles []string  // All files updated across all initializers
+    Errors       []error   // Any errors encountered during initialization
+}
+
+// aggregateResults combines multiple InitResult values into a single ExecutionResult
+func aggregateResults(results []InitResult, errors []error) ExecutionResult {
+    var created, updated []string
+    for _, r := range results {
+        created = append(created, r.CreatedFiles...)
+        updated = append(updated, r.UpdatedFiles...)
+    }
+    return ExecutionResult{
+        CreatedFiles: created,
+        UpdatedFiles: updated,
+        Errors:       errors,
+    }
+}
+
 // Collect results from all initializers
 var allResults []InitResult
+var initErrors []error
 
 for _, init := range allInitializers {
-    result, err := init.Init(ctx, fs, cfg, tm)
+    result, err := init.Init(ctx, projectFs, globalFs, cfg, tm)
     if err != nil {
-        errors = append(errors, err)
+        initErrors = append(initErrors, err)
         continue
     }
     allResults = append(allResults, result)
 }
 
 // Aggregate into ExecutionResult
-executionResult := aggregateResults(allResults)
+executionResult := aggregateResults(allResults, initErrors)
 ```
 
 **Rationale**: Explicit change tracking; initializers know what they create; works in non-git projects; more testable.
@@ -547,16 +584,23 @@ func initializerPriority(init Initializer) int {
 
 ### 9. Initializer Deduplication
 
-**Decision**: Deduplicate by file path. Same path = run once.
+**Decision**: Deduplicate by initializer identity. Same initializer configuration = run once.
 
-When initializers are collected from multiple providers:
+When initializers are collected from multiple providers, deduplication is based on the initializer's internal configuration (path and global flag):
 
 ```go
+// dedupeKey returns a unique key for deduplication based on initializer configuration.
+// Each initializer type implements this internally.
+type deduplicatable interface {
+    dedupeKey() string
+}
+
 func dedupeInitializers(all []Initializer) []Initializer {
     seen := make(map[string]bool)
     var result []Initializer
     for _, init := range all {
-        key := init.Path() // Simple: just the path
+        // Get dedup key from initializer (e.g., "project:/CLAUDE.md" or "global:/.codex/prompts/")
+        key := init.(deduplicatable).dedupeKey()
         if !seen[key] {
             seen[key] = true
             result = append(result, init)
@@ -564,11 +608,16 @@ func dedupeInitializers(all []Initializer) []Initializer {
     }
     return result
 }
+
+// Example dedupeKey implementations:
+// DirectoryInitializer:     "dir:project:.claude/commands/spectr" or "dir:global:.codex/prompts"
+// ConfigFileInitializer:    "cfg:project:CLAUDE.md"
+// SlashCommandsInitializer: "cmd:project:.claude/commands/spectr:.md"
 ```
 
-**Example**: If Claude Code and Cline both return `ConfigFileInitializer{path: "CLAUDE.md"}`, only one runs.
+**Example**: If Claude Code and Cline both return `ConfigFileInitializer{path: "CLAUDE.md", global: false}`, only one runs.
 
-**Rationale**: Path-based deduplication is simple and covers the common case (multiple providers sharing same file).
+**Rationale**: Configuration-based deduplication is simple and covers the common case (multiple providers sharing same file).
 
 ## Risks / Trade-offs
 
@@ -587,7 +636,7 @@ This migration follows a **zero technical debt** policy - no compatibility shims
 ### Migration Steps
 
 1. Implement new provider system (new files, new types)
-2. Migrate all 16 providers in-place (delete old code, write new code in same file)
+2. Migrate all 15 providers in-place (delete old code, write new code in same file)
 3. **Completely remove** old registration system - no `Register(p Provider)` function kept around
 4. Update docs to explain re-initialization requirement
 5. No rollback needed - old configs continue to work
@@ -620,7 +669,7 @@ This approach:
 The migration happens in a single change. There is no "partial migration" state where some providers use init() and others don't. The tasks are ordered to ensure:
 
 1. New system is fully implemented first (sections 0-4)
-2. All 16 providers are migrated together (section 5)
+2. All 15 providers are migrated together (section 5)
 3. Old code is completely removed (section 7)
 
 This ensures no ambiguity about which registration approach to use.
@@ -652,8 +701,8 @@ The only valid reason to keep deprecated code would be if external code depends 
 
 ```go
 type Initializer interface {
-    Init(ctx context.Context, fs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
-    IsSetup(fs afero.Fs, cfg *Config) bool
+    Init(ctx context.Context, projectFs, globalFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
+    IsSetup(projectFs, globalFs afero.Fs, cfg *Config) bool
 }
 ```
 
@@ -723,15 +772,15 @@ NewConfigFileInitializer("CLAUDE.md", "instruction-pointer")
 ```go
 // TemplateRef is a type-safe reference to a parsed template
 type TemplateRef struct {
-    name     string              // template file name (e.g., "instruction-pointer.md.tmpl")
-    template *template.Template  // pre-parsed template
+    Name     string              // template file name (e.g., "instruction-pointer.md.tmpl")
+    Template *template.Template  // pre-parsed template
 }
 
 // Render executes the template with the given context
 func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
     var buf bytes.Buffer
-    if err := tr.template.ExecuteTemplate(&buf, tr.name, ctx); err != nil {
-        return "", fmt.Errorf("failed to render template %s: %w", tr.name, err)
+    if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
+        return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)
     }
     return buf.String(), nil
 }
@@ -744,16 +793,16 @@ type TemplateManager struct {
 // InstructionPointer returns the instruction-pointer.md.tmpl template reference
 func (tm *TemplateManager) InstructionPointer() TemplateRef {
     return TemplateRef{
-        name:     "instruction-pointer.md.tmpl",
-        template: tm.templates,
+        Name:     "instruction-pointer.md.tmpl",
+        Template: tm.templates,
     }
 }
 
 // Agents returns the AGENTS.md.tmpl template reference
 func (tm *TemplateManager) Agents() TemplateRef {
     return TemplateRef{
-        name:     "AGENTS.md.tmpl",
-        template: tm.templates,
+        Name:     "AGENTS.md.tmpl",
+        Template: tm.templates,
     }
 }
 
@@ -823,11 +872,13 @@ NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []SlashCommand{
 | Initializer ordering? | Implicit ordering by type (Directory → ConfigFile → SlashCommands) |
 | Rollback on partial failure? | No rollback; report failures, users re-run init |
 | Template variable location? | Derived from SpectrDir via methods |
-| Global paths support? | Two fs instances (projectFs, globalFs) |
-| Deduplication key? | By file path (simple and effective) |
+| Global paths support? | Two fs instances (projectFs, globalFs) passed to Init() and IsSetup() |
+| Deduplication key? | By initializer configuration (path + global flag via internal dedupeKey()) |
 | Template selection type safety? | TemplateRef accessors with method references; compile-time checked |
 | Import cycle resolution? | New `internal/domain` package with shared types (`TemplateRef`, `SlashCommand`, `TemplateContext`) |
 | Registration error handling? | No init() - explicit `RegisterAllProviders()` called at startup with proper error propagation |
+| Initializer interface methods? | Two methods only: `Init()` and `IsSetup()` - both receive both filesystems |
+| TemplateRef field visibility? | Public fields (`Name`, `Template`) for external package access |
 
 ## Future Considerations (Out of Scope)
 

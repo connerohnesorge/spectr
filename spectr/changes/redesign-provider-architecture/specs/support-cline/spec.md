@@ -4,14 +4,14 @@
 The provider SHALL be configured with these settings:
 - ID: `cline`
 - Name: `Cline`
-- Priority: 8
+- Priority: 7
 - Config File: `CLINE.md`
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Cline provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `cline`, Name `Cline`, Priority 8
+- **AND** registration SHALL include ID `cline`, Name `Cline`, Priority 7
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers

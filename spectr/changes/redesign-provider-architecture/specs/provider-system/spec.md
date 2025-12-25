@@ -14,7 +14,8 @@ The system SHALL define a `internal/domain` package containing shared domain typ
 - **THEN** it SHALL use `domain.SlashCommand` from `internal/domain`
 - **AND** `SlashCommand` SHALL be a typed constant (`SlashProposal`, `SlashApply`)
 - **AND** `SlashCommand` SHALL have a `String()` method for debugging
-- **AND** slash command templates SHALL be accessed via `TemplateManager.SlashCommand(cmd)`, not via a method on `SlashCommand`
+- **AND** Markdown templates SHALL be accessed via `TemplateManager.SlashCommand(cmd)`
+- **AND** TOML templates SHALL be accessed via `TemplateManager.TOMLSlashCommand(cmd)`
 
 #### Scenario: TemplateContext in domain package
 - **WHEN** code needs template context with path variables
@@ -25,8 +26,9 @@ The system SHALL define a `internal/domain` package containing shared domain typ
 The system SHALL define a `Provider` interface that returns a list of initializers.
 
 #### Scenario: Provider returns initializers
-- **WHEN** a provider is queried for its initializers
-- **THEN** it SHALL return a slice of `Initializer` implementations
+- **WHEN** a provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **THEN** it SHALL receive a TemplateManager for resolving template references
+- **AND** it SHALL return a slice of `Initializer` implementations
 - **AND** the initializers MAY be empty if the provider requires no setup
 
 ### Requirement: Initializer Interface
@@ -95,6 +97,11 @@ The system SHALL use `afero.Fs` rooted at project directory for all file operati
 ### Requirement: ConfigFile Initializer
 The system SHALL provide a built-in `ConfigFileInitializer` for marker-based file updates.
 
+#### Scenario: ConfigFileInitializer construction
+- **WHEN** a ConfigFileInitializer is created
+- **THEN** it SHALL receive a TemplateRef directly (not a function)
+- **AND** the TemplateRef SHALL be resolved at provider construction time when Initializers() is called
+
 #### Scenario: Create new config file
 - **WHEN** the config file does not exist
 - **THEN** the initializer SHALL create it with the instruction content between markers
@@ -122,37 +129,55 @@ The system SHALL provide a built-in `ConfigFileInitializer` for marker-based fil
 - **AND** this prevents duplicate marker blocks and orphaned start markers
 
 ### Requirement: SlashCommands Initializer
-The system SHALL provide a built-in `SlashCommandsInitializer` for creating slash commands.
+The system SHALL provide built-in slash command initializers with separate types for filesystem and format.
 
-#### Scenario: Create proposal command
-- **WHEN** the initializer runs
-- **THEN** it SHALL create a `proposal` command file in the specified directory
-- **AND** the file SHALL use the specified format (Markdown or TOML)
+#### Scenario: Create project Markdown slash commands
+- **WHEN** `SlashCommandsInitializer` runs
+- **THEN** it SHALL create `proposal.md` and `apply.md` command files in the project filesystem
+- **AND** it SHALL use `slash-proposal.md.tmpl` and `slash-apply.md.tmpl` templates
 
-#### Scenario: Create apply command
-- **WHEN** the initializer runs
-- **THEN** it SHALL create an `apply` command file in the specified directory
-- **AND** the file SHALL use the specified format (Markdown or TOML)
+#### Scenario: Create global Markdown slash commands
+- **WHEN** `GlobalSlashCommandsInitializer` runs
+- **THEN** it SHALL create `proposal.md` and `apply.md` command files in the global filesystem (user home)
+- **AND** it SHALL use `slash-proposal.md.tmpl` and `slash-apply.md.tmpl` templates
+
+#### Scenario: Create TOML slash commands
+- **WHEN** `TOMLSlashCommandsInitializer` runs
+- **THEN** it SHALL create `proposal.toml` and `apply.toml` command files in the project filesystem
+- **AND** it SHALL use `slash-proposal.toml.tmpl` and `slash-apply.toml.tmpl` templates
+- **AND** the templates SHALL produce TOML files with `description` and `prompt` fields
+- **NOTE**: Only Gemini uses this initializer type
 
 ### Requirement: Directory Initializer
-The system SHALL provide a built-in `DirectoryInitializer` for creating directories.
+The system SHALL provide built-in directory initializers with separate types for local vs global filesystem.
 
-#### Scenario: Create directories
-- **WHEN** the initializer runs
-- **THEN** it SHALL create all specified directories if they do not exist
+#### Scenario: Create project directories
+- **WHEN** `DirectoryInitializer` runs
+- **THEN** it SHALL create all specified directories in the project filesystem if they do not exist
+- **AND** it SHALL create parent directories as needed
+
+#### Scenario: Create global directories
+- **WHEN** `GlobalDirectoryInitializer` runs
+- **THEN** it SHALL create all specified directories in the global filesystem (user home) if they do not exist
 - **AND** it SHALL create parent directories as needed
 
 ### Requirement: Initializer Deduplication
-The system SHALL deduplicate initializers by configuration when multiple providers are configured.
+The system SHALL deduplicate initializers by type and path when multiple providers are configured.
+
+#### Scenario: Optional deduplicatable interface
+- **WHEN** initializers are collected for execution
+- **THEN** the system SHALL check if each initializer implements the optional `deduplicatable` interface
+- **AND** initializers implementing `deduplicatable` SHALL provide a `dedupeKey() string` method
+- **AND** initializers NOT implementing `deduplicatable` SHALL always run
 
 #### Scenario: Shared initializer deduplication
-- **WHEN** multiple providers return initializers with the same configuration (path and global flag)
+- **WHEN** multiple providers return initializers with the same dedup key
 - **THEN** the system SHALL run the initializer only once
-- **AND** deduplication SHALL be based on an internal `dedupeKey()` method that combines path and global flag
-- **AND** each initializer type SHALL implement `dedupeKey()` returning a unique string (e.g., "dir:project:.claude/commands/spectr")
+- **AND** the dedup key SHALL include the type name (e.g., "DirectoryInitializer:.claude/commands/spectr")
+- **AND** separate types (`DirectoryInitializer` vs `GlobalDirectoryInitializer`) SHALL have different keys
 
 #### Scenario: Different configurations run separately
-- **WHEN** providers return initializers with different paths or different filesystem targets
+- **WHEN** providers return initializers with different paths or different types
 - **THEN** all initializers SHALL run
 
 ### Requirement: Initializer Ordering
@@ -160,8 +185,8 @@ The system SHALL execute initializers in a guaranteed order by type.
 
 #### Scenario: Directory initializers run first
 - **WHEN** initializers are collected for execution
-- **THEN** `DirectoryInitializer` SHALL run before `ConfigFileInitializer`
-- **AND** `ConfigFileInitializer` SHALL run before `SlashCommandsInitializer`
+- **THEN** `DirectoryInitializer` and `GlobalDirectoryInitializer` SHALL run before `ConfigFileInitializer`
+- **AND** `ConfigFileInitializer` SHALL run before `SlashCommandsInitializer`, `GlobalSlashCommandsInitializer`, and `TOMLSlashCommandsInitializer`
 
 #### Scenario: Ordering is guaranteed
 - **WHEN** documentation describes initializer ordering
@@ -191,12 +216,12 @@ The system SHALL define an `ExecutionResult` type for aggregated initialization 
   - `UpdatedFiles []string` - all files updated across all initializers
   - `Errors []error` - any errors encountered during initialization
 
-#### Scenario: aggregateResults function
-- **WHEN** all initializers have completed
+#### Scenario: aggregateResults function (success case)
+- **WHEN** all initializers have completed successfully
 - **THEN** the `aggregateResults(results []InitResult, errors []error) ExecutionResult` function SHALL combine all results
 - **AND** it SHALL concatenate all created files into a single slice
 - **AND** it SHALL concatenate all updated files into a single slice
-- **AND** it SHALL collect all errors encountered
+- **AND** the errors parameter SHALL be nil in the success case (due to fail-fast behavior, errors never accumulate)
 
 ### Requirement: Dual Filesystem Support
 The system SHALL provide two filesystem instances to all initializers.
@@ -211,14 +236,16 @@ The system SHALL provide two filesystem instances to all initializers.
 - **THEN** it MAY be configured to use either the project or global filesystem
 - **AND** this configuration is internal to the initializer (not exposed via interface methods)
 
-### Requirement: Partial Failure Handling
-The system SHALL handle partial initialization failures gracefully.
+### Requirement: Fail-Fast Error Handling
+The system SHALL stop on the first initialization error.
 
 #### Scenario: Initializer failure
 - **WHEN** an initializer fails during execution
-- **THEN** the system SHALL report which initializers failed
+- **THEN** the system SHALL stop immediately (fail-fast)
+- **AND** the system SHALL return partial results (files created before failure)
+- **AND** the system SHALL return the error in ExecutionResult.Errors
 - **AND** the system SHALL NOT rollback successful initializers
-- **AND** the user SHALL be able to re-run `spectr init` to retry
+- **AND** the user SHALL be able to fix the issue and re-run `spectr init`
 
 ### Requirement: Zero Technical Debt - No Compatibility Shims
 The system SHALL NOT provide compatibility shims for deprecated registration patterns.

@@ -9,7 +9,10 @@ import (
 
 // formatMarkdownCommand formats a slash command as a Markdown file.
 // It wraps the content with YAML frontmatter and spectr markers.
-func formatMarkdownCommand(cmd domain.SlashCommand, content string) string {
+func formatMarkdownCommand(
+	cmd domain.SlashCommand,
+	content string,
+) string {
 	var frontmatter string
 
 	const (
@@ -32,7 +35,10 @@ func formatMarkdownCommand(cmd domain.SlashCommand, content string) string {
 
 // formatTOMLCommand formats a slash command as a TOML file.
 // It creates a TOML agent block with spectr markers around the content.
-func formatTOMLCommand(cmd domain.SlashCommand, content string) string {
+func formatTOMLCommand(
+	cmd domain.SlashCommand,
+	content string,
+) string {
 	var description string
 
 	switch cmd {

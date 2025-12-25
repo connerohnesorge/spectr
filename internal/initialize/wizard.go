@@ -119,13 +119,18 @@ func NewWizardModel(
 	selectedProviders := make(map[string]bool)
 
 	// Create filesystem rooted at project path for checking setup status
-	projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+	projectFs := afero.NewBasePathFs(
+		afero.NewOsFs(),
+		projectPath,
+	)
 	cfg := initializers.DefaultConfig()
 
 	for _, reg := range allProviders {
 		// Check if all initializers are set up
 		isConfigured := true
-		initializersList := reg.Provider.Initializers(context.Background())
+		initializersList := reg.Provider.Initializers(
+			context.Background(),
+		)
 		for _, init := range initializersList {
 			if !init.IsSetup(projectFs, cfg) {
 				isConfigured = false

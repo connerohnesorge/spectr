@@ -15,7 +15,9 @@ import (
 func main() {
 	// Register all built-in providers at startup
 	if err := providers.RegisterAllProviders(); err != nil {
-		panic(err) // Fatal error if provider registration fails
+		panic(
+			err,
+		) // Fatal error if provider registration fails
 	}
 
 	cli := &cmd.CLI{}

@@ -313,10 +313,3 @@ func RegisterAllProviders() error {
 
 	return nil
 }
-
-// Register is a no-op shim for backward compatibility.
-//
-// Deprecated: Use RegisterProvider with Registration struct.
-func Register(_ any) {
-	// No-op. Providers now use Registration-based API.
-}

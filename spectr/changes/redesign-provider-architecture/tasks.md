@@ -31,9 +31,13 @@ Create `internal/domain` package to break import cycles with shared types.
 
 - [ ] 0.8 Move `internal/initialize/templates/tools/slash-apply.md.tmpl` to `internal/domain/templates/slash-apply.md.tmpl`
 
-- [ ] 0.9 Verify `internal/domain/slashcmd.go` has ONLY `String()` method, no `TemplateName()`
+- [ ] 0.9 Create `internal/domain/templates/slash-proposal.toml.tmpl` for Gemini TOML format with `description` and `prompt` fields
 
-- [ ] 0.10 Delete empty `internal/initialize/templates/tools/` directory after moving templates
+- [ ] 0.10 Create `internal/domain/templates/slash-apply.toml.tmpl` for Gemini TOML format with `description` and `prompt` fields
+
+- [ ] 0.11 Verify `internal/domain/slashcmd.go` has ONLY `String()` method, no `TemplateName()`
+
+- [ ] 0.12 Delete empty `internal/initialize/templates/tools/` directory after moving templates
 
 ---
 
@@ -47,7 +51,7 @@ Create the new provider system types and interfaces.
 
 - [ ] 1.3 Create `internal/initialize/providers/config.go` with `Config` struct (`SpectrDir`) and derived path methods: `SpecsDir()`, `ChangesDir()`, `ProjectFile()`, `AgentsFile()`
 
-- [ ] 1.4 Rewrite `internal/initialize/providers/provider.go` with minimal `Provider` interface returning `[]Initializer`; DELETE old 12-method interface, BaseProvider, TemplateRenderer, old TemplateContext
+- [ ] 1.4 Rewrite `internal/initialize/providers/provider.go` with minimal `Provider` interface returning `Initializers(ctx, tm *TemplateManager) []Initializer`; DELETE old 12-method interface, BaseProvider, TemplateRenderer, old TemplateContext
 
 - [ ] 1.5 Create `internal/initialize/providers/registration.go` with `Registration` struct: `ID`, `Name`, `Priority`, `Provider`
 
@@ -61,7 +65,9 @@ Update TemplateManager to use domain types and provide type-safe accessors.
 
 - [ ] 2.2 Add type-safe accessor methods to TemplateManager: `InstructionPointer() domain.TemplateRef`, `Agents() domain.TemplateRef`
 
-- [ ] 2.3 Add `SlashCommand(cmd domain.SlashCommand) domain.TemplateRef` method to TemplateManager
+- [ ] 2.3 Add `SlashCommand(cmd domain.SlashCommand) domain.TemplateRef` method to TemplateManager (Markdown templates)
+
+- [ ] 2.3a Add `TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef` method to TemplateManager (TOML templates)
 
 - [ ] 2.4 Add unit tests in `internal/initialize/templates_test.go` verifying all accessors return valid `domain.TemplateRef` and Render() works
 
@@ -73,17 +79,20 @@ Update TemplateManager to use domain types and provide type-safe accessors.
 
 Create the three reusable initializer implementations.
 
-- [ ] 3.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer`: creates directories, internal `global` flag, implements `dedupeKey()`
+- [ ] 3.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer` (project fs) and `GlobalDirectoryInitializer` (global fs): creates directories, implements optional `deduplicatable` interface with `dedupeKey()`
 
-- [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`: marker-based updates, orphaned marker handling with `strings.LastIndex`, prevents duplicate blocks
+- [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`: takes TemplateRef directly (not function), marker-based updates, orphaned marker handling with `strings.LastIndex`, prevents duplicate blocks
 
-- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with `SlashCommandsInitializer`: creates proposal/apply files, supports Markdown and TOML formats, internal `global` flag
+- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with three initializer types:
+  - `SlashCommandsInitializer` (project fs, Markdown .md)
+  - `GlobalSlashCommandsInitializer` (global fs, Markdown .md)
+  - `TOMLSlashCommandsInitializer` (project fs, TOML .toml for Gemini)
 
-- [ ] 3.4 Add unit tests for `DirectoryInitializer` in `directory_test.go` using `afero.MemMapFs`: creates dirs, IsSetup checks, project and global filesystem modes
+- [ ] 3.4 Add unit tests for `DirectoryInitializer` and `GlobalDirectoryInitializer` in `directory_test.go` using `afero.MemMapFs`: creates dirs, IsSetup checks, separate types for project vs global filesystem
 
-- [ ] 3.5 Add unit tests for `ConfigFileInitializer` in `configfile_test.go` using `afero.MemMapFs`: new file, update between markers, orphaned start with trailing end, orphaned start with no end, no duplicate blocks
+- [ ] 3.5 Add unit tests for `ConfigFileInitializer` in `configfile_test.go` using `afero.MemMapFs`: new file, update between markers, orphaned start with trailing end, orphaned start with no end, no duplicate blocks, TemplateRef usage
 
-- [ ] 3.6 Add unit tests for `SlashCommandsInitializer` in `slashcmds_test.go` using `afero.MemMapFs`: Markdown format, TOML format, IsSetup checks
+- [ ] 3.6 Add unit tests for all three slash command initializers in `slashcmds_test.go` using `afero.MemMapFs`: SlashCommandsInitializer (Markdown), GlobalSlashCommandsInitializer (Markdown), TOMLSlashCommandsInitializer (TOML)
 
 ---
 
@@ -129,7 +138,7 @@ Migrate all 15 providers to new interface. Each migration DELETEs old BaseProvid
 
 - [ ] 5.8 Migrate `cursor.go` (Priority 8): No config file, commands `.cursorrules/commands/spectr/`
 
-- [ ] 5.9 Migrate `codex.go` (Priority 9, global paths): Config file `AGENTS.md`, commands `~/.codex/prompts/` with prefixed names, uses globalFs
+- [ ] 5.9 Migrate `codex.go` (Priority 9, global paths): Config file `AGENTS.md`, commands `~/.codex/prompts/` with prefixed names, uses `GlobalDirectoryInitializer` and `GlobalSlashCommandsInitializer`
 
 - [ ] 5.10 Migrate `aider.go` (Priority 10): No config file, commands `.aider/commands/spectr/`
 
@@ -157,15 +166,15 @@ Update the executor to use the new provider system.
 
 - [ ] 6.4 Implement initializer collection from selected providers in `executor.go`
 
-- [ ] 6.5 Implement initializer deduplication by `dedupeKey()` in `executor.go`
+- [ ] 6.5 Implement initializer deduplication using optional `deduplicatable` interface in `executor.go`
 
-- [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer (3)
+- [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer/GlobalDirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer/GlobalSlashCommandsInitializer/TOMLSlashCommandsInitializer (3)
 
-- [ ] 6.7 Update `configureProviders()` to pass both filesystems, collect InitResult, handle errors without stopping
+- [ ] 6.7 Update `configureProviders()` to pass both filesystems and TemplateManager, collect InitResult, fail-fast on first error
 
-- [ ] 6.8 Use `aggregateResults(allResults, errors)` to combine all InitResult into ExecutionResult
+- [ ] 6.8 Use `aggregateResults(allResults, nil)` to combine all InitResult into ExecutionResult on success
 
-- [ ] 6.9 Handle partial failures: log errors, continue with remaining initializers, include all errors in ExecutionResult.Errors
+- [ ] 6.9 Implement fail-fast behavior: stop on first error, return partial results with single error in ExecutionResult.Errors
 
 ---
 
@@ -237,15 +246,15 @@ Comprehensive testing before completion.
 
 | Phase | Tasks | Description |
 |-------|-------|-------------|
-| 0 | 0.1-0.10 | Domain package with shared types |
+| 0 | 0.1-0.12 | Domain package with shared types + TOML templates |
 | 1 | 1.1-1.5 | Core interfaces and types |
-| 2 | 2.1-2.5 | Type-safe template system |
-| 3 | 3.1-3.6 | Built-in initializers |
+| 2 | 2.1-2.5 + 2.3a | Type-safe template system (Markdown + TOML accessors) |
+| 3 | 3.1-3.6 | Built-in initializers (Local + Global + TOML types) |
 | 4 | 4.1-4.8 | New registry (no init()) |
 | 5 | 5.1-5.15 | Migrate all 15 providers |
-| 6 | 6.1-6.9 | Executor integration |
+| 6 | 6.1-6.9 | Executor integration (fail-fast) |
 | 7 | 7.1-7.8 | Remove old code |
 | 8 | 8.1-8.6 | Test cleanup |
 | 9 | 9.1-9.9 | Final verification |
 
-**Total: 68 tasks**
+**Total: 71 tasks**

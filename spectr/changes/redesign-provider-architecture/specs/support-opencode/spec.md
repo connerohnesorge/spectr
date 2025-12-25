@@ -15,10 +15,10 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's Initializers() method is called
-- **THEN** it SHALL return a DirectoryInitializer for `.opencode/commands/spectr/`
-- **AND** it SHALL return a SlashCommandsInitializer for Markdown format slash commands
-- **AND** it SHALL NOT return a ConfigFileInitializer (OpenCode uses JSON config)
+- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for `.opencode/commands/spectr/`
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
+- **AND** it SHALL NOT return a `ConfigFileInitializer` (OpenCode uses JSON config)
 
 #### Scenario: Provider metadata
 - **WHEN** provider is registered

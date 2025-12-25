@@ -15,7 +15,7 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
 - **THEN** it SHALL return a `DirectoryInitializer` for `.opencode/commands/spectr/`
 - **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
 - **AND** it SHALL NOT return a `ConfigFileInitializer` (OpenCode uses JSON config)
@@ -35,11 +35,11 @@ The provider SHALL create slash commands in `.opencode/commands/spectr/` directo
 
 #### Scenario: Command paths
 - **WHEN** the SlashCommandsInitializer executes
-- **THEN** it creates `.opencode/commands/spectr/proposal.md`
-- **AND** it creates `.opencode/commands/spectr/apply.md`
+- **THEN** it SHALL create `.opencode/commands/spectr/proposal.md`
+- **AND** it SHALL create `.opencode/commands/spectr/apply.md`
 
 #### Scenario: Command format
 - **WHEN** slash command files are created
-- **THEN** they use Markdown format with `.md` extension
-- **AND** each file includes YAML frontmatter
-- **AND** frontmatter includes `description` field
+- **THEN** they SHALL use Markdown format with `.md` extension
+- **AND** each file SHALL include YAML frontmatter
+- **AND** frontmatter SHALL include `description` field

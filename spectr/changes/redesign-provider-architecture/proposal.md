@@ -19,9 +19,10 @@ The current provider system has 15 providers, each implementing a 12-method inte
 
 - **BREAKING**: Remove current `Provider` interface (12 methods) and `BaseProvider` struct
 - **BREAKING**: Replace with minimal `Provider` interface returning `[]Initializer`
-- **BREAKING**: Provider metadata (ID, name, priority) moves to registration time
+- **BREAKING**: Provider metadata (ID, name, priority) moves to `Registration` struct at registration time
 - **BREAKING**: **COMPLETELY REMOVE** old `Register(p Provider)` function and all `init()` registration - zero tech debt policy means NO deprecated `Register(_ any)` compatibility shim
 - **BREAKING**: Remove all provider `init()` functions that call `Register()`
+- **BREAKING**: All markdown markers standardized to `<!-- spectr:start -->` and `<!-- spectr:end -->` (lowercase) for consistency
 - **NEW**: `internal/domain` package containing shared domain types (`TemplateRef`, `SlashCommand`, `TemplateContext`) to break import cycles
 - **NEW**: `internal/domain` package embeds slash command templates moved from `internal/initialize/templates/tools/`:
   - `slash-proposal.md.tmpl`, `slash-apply.md.tmpl` (Markdown format)
@@ -45,12 +46,17 @@ The current provider system has 15 providers, each implementing a 12-method inte
 |----------|--------|-----------|
 | Change detection | InitResult return value | Each initializer returns files it created/updated; explicit and testable |
 | Initializer ordering | Documented guarantee (implicit by type) | Directory → ConfigFile → SlashCommands; simple and predictable |
-| Partial failure | Fail-fast | Stop on first error, return partial results; user fixes and re-runs |
+| Partial failure | Fail-fast, no rollback | Stop on first error, files remain on disk; user fixes and re-runs |
+| Registration failure | Partial registrations kept | Successfully registered providers remain; no rollback |
 | Template variables | Derive from SpectrDir | SpecsDir = SpectrDir/specs, etc.; single source of truth |
 | Global paths | Separate initializer types | GlobalDirectoryInitializer, GlobalSlashCommandsInitializer for ~/.config/tool/ patterns |
-| Deduplication | By type + path | Optional deduplicatable interface; same type+path = initialize once |
+| Deduplication | By type + path, then sort | Dedupe first by key, then sort by type priority; execute in order |
 | Template selection | TemplateRef directly | ConfigFileInitializer takes TemplateRef, not function; Provider.Initializers() receives TemplateManager |
 | TOML support | Separate initializer type | TOMLSlashCommandsInitializer for Gemini; uses .toml.tmpl templates |
+| Marker format | Lowercase `<!-- spectr:start/end -->` | ALL markdown markers use lowercase for consistency |
+| Template collision | Last-wins precedence | Later template overwrites earlier; no error |
+| Filesystem root | os.UserHomeDir() to afero.Fs | Explicit Go stdlib function, converted to afero.Fs |
+| Directory creation | Recursive (MkdirAll style) | Create all missing parents automatically |
 
 ## Impact
 

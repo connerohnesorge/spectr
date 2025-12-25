@@ -15,7 +15,7 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers with global paths
-- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
 - **THEN** it SHALL return a `GlobalDirectoryInitializer` for `~/.codex/prompts/`
 - **AND** it SHALL return a `ConfigFileInitializer` for `AGENTS.md` with TemplateRef from TemplateManager
 - **AND** it SHALL return a `GlobalSlashCommandsInitializer` for global slash commands
@@ -39,8 +39,8 @@ The provider SHALL create slash commands in the global `~/.codex/prompts/` direc
 
 #### Scenario: Command paths
 - **WHEN** the `GlobalSlashCommandsInitializer` executes
-- **THEN** it creates `~/.codex/prompts/spectr-proposal.md`
-- **AND** it creates `~/.codex/prompts/spectr-apply.md`
+- **THEN** it SHALL create `~/.codex/prompts/spectr-proposal.md`
+- **AND** it SHALL create `~/.codex/prompts/spectr-apply.md`
 
 #### Scenario: Global path handling
 - **WHEN** Global* initializers execute
@@ -53,7 +53,7 @@ The provider SHALL use Markdown format with YAML frontmatter for slash commands.
 
 #### Scenario: Command format
 - **WHEN** slash command files are created
-- **THEN** they use Markdown format with `.md` extension
-- **AND** each file includes YAML frontmatter
-- **AND** frontmatter includes `description` field
+- **THEN** they SHALL use Markdown format with `.md` extension
+- **AND** each file SHALL include YAML frontmatter
+- **AND** frontmatter SHALL include `description` field
 

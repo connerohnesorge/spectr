@@ -15,7 +15,7 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
 - **THEN** it SHALL return a `DirectoryInitializer` for `.costrict/commands/spectr/`
 - **AND** it SHALL return a `ConfigFileInitializer` for `COSTRICT.md` with TemplateRef from TemplateManager
 - **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
@@ -26,7 +26,7 @@ The provider SHALL create and maintain a `COSTRICT.md` instruction file in the p
 #### Scenario: Instruction file creation
 - **WHEN** `spectr init` runs with CoStrict provider selected
 - **THEN** the ConfigFileInitializer creates `COSTRICT.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
 
 #### Scenario: Instruction file updates
 - **WHEN** `spectr init` runs in a project with CoStrict provider
@@ -42,11 +42,11 @@ The provider SHALL create slash commands in `.costrict/commands/spectr/` directo
 
 #### Scenario: Command paths
 - **WHEN** the SlashCommandsInitializer executes
-- **THEN** it creates `.costrict/commands/spectr/proposal.md`
-- **AND** it creates `.costrict/commands/spectr/apply.md`
+- **THEN** it SHALL create `.costrict/commands/spectr/proposal.md`
+- **AND** it SHALL create `.costrict/commands/spectr/apply.md`
 
 #### Scenario: Command format
 - **WHEN** slash command files are created
-- **THEN** they use Markdown format with YAML frontmatter
-- **AND** frontmatter includes `description` field
+- **THEN** they SHALL use Markdown format with YAML frontmatter
+- **AND** frontmatter SHALL include `description` field
 

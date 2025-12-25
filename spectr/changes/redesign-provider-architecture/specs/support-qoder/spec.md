@@ -15,7 +15,7 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
 - **THEN** it SHALL return a `DirectoryInitializer` for `.qoder/commands/spectr/`
 - **AND** it SHALL return a `ConfigFileInitializer` for `QODER.md` with TemplateRef from TemplateManager
 - **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
@@ -32,7 +32,7 @@ The provider SHALL create and maintain a `QODER.md` instruction file in the proj
 #### Scenario: Instruction file creation
 - **WHEN** `spectr init` runs with Qoder provider selected
 - **THEN** the ConfigFileInitializer creates `QODER.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
 
 #### Scenario: Instruction file update
 - **WHEN** `spectr init` runs
@@ -49,12 +49,12 @@ The provider SHALL create slash commands in `.qoder/commands/spectr/` directory.
 
 #### Scenario: Standard command paths
 - **WHEN** the SlashCommandsInitializer executes
-- **THEN** it creates `.qoder/commands/spectr/proposal.md`
-- **AND** it creates `.qoder/commands/spectr/apply.md`
+- **THEN** it SHALL create `.qoder/commands/spectr/proposal.md`
+- **AND** it SHALL create `.qoder/commands/spectr/apply.md`
 
 #### Scenario: Command format
 - **WHEN** slash command files are created
-- **THEN** they use Markdown format with `.md` extension
-- **AND** each file includes YAML frontmatter at the top
-- **AND** frontmatter includes a `description` field
+- **THEN** they SHALL use Markdown format with `.md` extension
+- **AND** each file SHALL include YAML frontmatter at the top
+- **AND** frontmatter SHALL include a `description` field
 

@@ -15,7 +15,7 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
 - **THEN** it SHALL return a `DirectoryInitializer` for `.gemini/commands/spectr/`
 - **AND** it SHALL return a `TOMLSlashCommandsInitializer` for TOML format slash commands
 - **AND** it SHALL NOT return a `ConfigFileInitializer` (Gemini has no instruction file)
@@ -29,12 +29,12 @@ The provider SHALL create slash commands in `.gemini/commands/spectr/` directory
 
 #### Scenario: Command paths
 - **WHEN** the `TOMLSlashCommandsInitializer` executes
-- **THEN** it creates `.gemini/commands/spectr/proposal.toml`
-- **AND** it creates `.gemini/commands/spectr/apply.toml`
+- **THEN** it SHALL create `.gemini/commands/spectr/proposal.toml`
+- **AND** it SHALL create `.gemini/commands/spectr/apply.toml`
 
 #### Scenario: TOML command format
 - **WHEN** slash command files are created by `TOMLSlashCommandsInitializer`
-- **THEN** they use TOML format with `.toml` extension
-- **AND** include `description` field with command description
-- **AND** include `prompt` field with command content
+- **THEN** they SHALL use TOML format with `.toml` extension
+- **AND** it SHALL include `description` field with command description
+- **AND** it SHALL include `prompt` field with command content
 

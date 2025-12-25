@@ -25,9 +25,18 @@ The system SHALL define a `internal/domain` package containing shared domain typ
 ### Requirement: Provider Interface
 The system SHALL define a `Provider` interface that returns a list of initializers.
 
+```go
+type Provider interface {
+    // Initializers returns the list of initializers for this provider.
+    // Receives TemplateManager to allow passing TemplateRef directly to initializers.
+    Initializers(ctx context.Context, tm *TemplateManager) []Initializer
+}
+```
+
 #### Scenario: Provider returns initializers
-- **WHEN** a provider's `Initializers(ctx, tm *TemplateManager)` method is called
-- **THEN** it SHALL receive a TemplateManager for resolving template references
+- **WHEN** a provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
+- **THEN** it SHALL receive a context.Context for cancellation and deadlines
+- **AND** it SHALL receive a TemplateManager for resolving template references
 - **AND** it SHALL return a slice of `Initializer` implementations
 - **AND** the initializers MAY be empty if the provider requires no setup
 
@@ -37,8 +46,8 @@ The system SHALL define an `Initializer` interface with `Init` and `IsSetup` met
 #### Scenario: Initializer setup check
 - **WHEN** `IsSetup(projectFs, globalFs, cfg)` is called on an initializer
 - **THEN** it SHALL receive both project and global filesystems
-- **AND** it SHALL return `true` if the initializer's artifacts already exist
-- **AND** it SHALL return `false` if setup is needed
+- **AND** it SHALL return `true` if and only if ALL of the initializer's artifacts already exist
+- **AND** it SHALL return `false` if ANY artifact is missing or setup is needed
 - **AND** the initializer SHALL decide internally which filesystem to check based on its configuration
 
 #### Scenario: Initializer execution
@@ -65,12 +74,31 @@ The system SHALL provide a `Config` struct containing initialization configurati
 - **AND** `ProjectFile()` SHALL return `SpectrDir + "/project.md"`
 - **AND** `AgentsFile()` SHALL return `SpectrDir + "/AGENTS.md"`
 
+### Requirement: Registration Struct
+The system SHALL define a `Registration` struct containing provider metadata and implementation.
+
+```go
+type Registration struct {
+    ID       string   // Unique identifier (kebab-case, e.g., "claude-code")
+    Name     string   // Human-readable name (e.g., "Claude Code")
+    Priority int      // Display order (lower = higher priority)
+    Provider Provider // Implementation
+}
+```
+
+#### Scenario: Registration fields
+- **WHEN** a Registration is created
+- **THEN** it SHALL have an `ID` field containing a unique kebab-case identifier
+- **AND** it SHALL have a `Name` field containing a human-readable name
+- **AND** it SHALL have a `Priority` field containing an integer for display ordering (lower values = higher priority)
+- **AND** it SHALL have a `Provider` field containing the Provider implementation
+
 ### Requirement: Provider Registration (Explicit, No init())
 The system SHALL support registering providers explicitly from a central location, not via init() functions.
 
 #### Scenario: Register provider with metadata
 - **WHEN** a provider is registered via `RegisterProvider(reg Registration) error`
-- **THEN** the registration SHALL include ID, Name, Priority, and Provider implementation
+- **THEN** the registration SHALL use the Registration struct with ID, Name, Priority, and Provider
 - **AND** the system SHALL reject duplicate provider IDs with a clear error
 - **AND** the function SHALL return an error (not panic) for invalid registrations
 
@@ -79,12 +107,37 @@ The system SHALL support registering providers explicitly from a central locatio
 - **THEN** it SHALL call `RegisterAllProviders()` explicitly from `cmd/root.go` or `main()`
 - **AND** the function SHALL register all built-in providers in one place
 - **AND** the function SHALL return an error if any registration fails
+- **AND** if any registration fails, successfully registered providers SHALL remain registered (no rollback)
 - **AND** individual provider files SHALL NOT contain `init()` functions for registration
 
 #### Scenario: Retrieve registered providers
 - **WHEN** providers are queried via `RegisteredProviders() []Registration`
 - **THEN** the system SHALL return all registered providers sorted by priority (lower first)
 - **AND** the function SHALL be callable after `RegisterAllProviders()` completes
+
+### Requirement: TemplateManager Interface
+The system SHALL provide a `TemplateManager` for resolving and rendering templates.
+
+```go
+type TemplateManager interface {
+    // Render renders a template by name with the given data.
+    // Returns the rendered string or an error if rendering fails.
+    Render(templateName string, data interface{}) (string, error)
+}
+```
+
+#### Scenario: TemplateManager rendering
+- **WHEN** a template is rendered via `TemplateManager.Render(templateName, data)`
+- **THEN** the template SHALL be looked up by name
+- **AND** the template SHALL be executed with the provided data
+- **AND** the rendered string SHALL be returned
+- **AND** an error SHALL be returned if the template is not found or rendering fails
+
+#### Scenario: Template resolution
+- **WHEN** templates are resolved
+- **THEN** templates from `internal/initialize/templates` SHALL be available (AGENTS.md.tmpl, instruction-pointer.md.tmpl)
+- **AND** templates from `internal/domain` SHALL be available (slash-*.md.tmpl, slash-*.toml.tmpl)
+- **AND** if duplicate template names exist, the last-wins precedence SHALL apply
 
 ### Requirement: Filesystem Abstraction
 The system SHALL use `afero.Fs` rooted at project directory for all file operations.
@@ -93,6 +146,12 @@ The system SHALL use `afero.Fs` rooted at project directory for all file operati
 - **WHEN** an initializer accesses files
 - **THEN** all paths SHALL be relative to the project root
 - **AND** the filesystem SHALL be created via `afero.NewBasePathFs(osFs, projectPath)`
+
+#### Scenario: Global filesystem root
+- **WHEN** the global filesystem is created
+- **THEN** it SHALL be rooted at the user's home directory
+- **AND** the home directory SHALL be obtained via `os.UserHomeDir()`
+- **AND** the filesystem SHALL be created as `afero.NewBasePathFs(afero.NewOsFs(), homeDir)` to create an afero.Fs instance
 
 ### Requirement: ConfigFile Initializer
 The system SHALL provide a built-in `ConfigFileInitializer` for marker-based file updates.
@@ -113,11 +172,12 @@ The system SHALL provide a built-in `ConfigFileInitializer` for marker-based fil
 
 #### Scenario: Config file markers
 - **WHEN** content is written to a config file
-- **THEN** it SHALL be wrapped with `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **THEN** it SHALL be wrapped with `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
+- **NOTE**: All markdown markers use lowercase `start`/`end` for consistency
 
 #### Scenario: Orphaned start marker handling
 - **WHEN** a config file contains a start marker but the end marker is missing immediately after
-- **THEN** the initializer SHALL search for an end marker anywhere after the start position using `strings.LastIndex`
+- **THEN** the initializer SHALL search for an end marker anywhere after the start position using `strings.Index` on a slice starting from the position after the start marker
 - **AND** if an end marker is found after the start marker, the initializer SHALL use it to perform the update
 - **AND** if no end marker exists anywhere after the start, the initializer SHALL replace content from the start marker onward with the new block (start + content + end)
 - **AND** the initializer SHALL NOT append a duplicate block that leaves orphaned markers
@@ -127,6 +187,27 @@ The system SHALL provide a built-in `ConfigFileInitializer` for marker-based fil
 - **THEN** the initializer SHALL trim content from position X onward
 - **AND** insert the complete new block (startMarker + newContent + endMarker)
 - **AND** this prevents duplicate marker blocks and orphaned start markers
+
+#### Scenario: Missing markers in existing file
+- **WHEN** ConfigFileInitializer finds an existing file but markers are missing
+- **THEN** the initializer SHALL insert start and end markers at the end of the file
+- **AND** insert the content between the newly created markers
+- **AND** preserve all existing file content
+
+#### Scenario: Orphaned end marker (end without start)
+- **WHEN** a config file contains an end marker without a preceding start marker
+- **THEN** the initializer SHALL return an error indicating corrupted marker structure
+- **AND** the error message SHALL indicate the orphaned end marker position
+
+#### Scenario: Nested markers (start before previous end)
+- **WHEN** a config file contains a start marker before the previous start marker's end marker
+- **THEN** the initializer SHALL return an error indicating nested markers are not supported
+- **AND** the error message SHALL indicate both marker positions
+
+#### Scenario: Multiple start markers without end
+- **WHEN** a config file contains multiple start markers without end markers between them
+- **THEN** the initializer SHALL return an error indicating multiple unpaired start markers
+- **AND** the error message SHALL indicate the positions of the duplicate start markers
 
 ### Requirement: SlashCommands Initializer
 The system SHALL provide built-in slash command initializers with separate types for filesystem and format.
@@ -154,12 +235,12 @@ The system SHALL provide built-in directory initializers with separate types for
 #### Scenario: Create project directories
 - **WHEN** `DirectoryInitializer` runs
 - **THEN** it SHALL create all specified directories in the project filesystem if they do not exist
-- **AND** it SHALL create parent directories as needed
+- **AND** it SHALL recursively create parent directories as needed (like `os.MkdirAll`)
 
 #### Scenario: Create global directories
 - **WHEN** `GlobalDirectoryInitializer` runs
 - **THEN** it SHALL create all specified directories in the global filesystem (user home) if they do not exist
-- **AND** it SHALL create parent directories as needed
+- **AND** it SHALL recursively create parent directories as needed (like `os.MkdirAll`)
 
 ### Requirement: Initializer Deduplication
 The system SHALL deduplicate initializers by type and path when multiple providers are configured.
@@ -170,11 +251,18 @@ The system SHALL deduplicate initializers by type and path when multiple provide
 - **AND** initializers implementing `deduplicatable` SHALL provide a `dedupeKey() string` method
 - **AND** initializers NOT implementing `deduplicatable` SHALL always run
 
+#### Scenario: Deduplication timing
+- **WHEN** initializers are prepared for execution
+- **THEN** the system SHALL first deduplicate initializers (remove duplicates by key)
+- **AND** then sort the deduplicated list by type priority
+- **AND** then execute in the resulting order
+
 #### Scenario: Shared initializer deduplication
 - **WHEN** multiple providers return initializers with the same dedup key
 - **THEN** the system SHALL run the initializer only once
 - **AND** the dedup key SHALL include the type name (e.g., "DirectoryInitializer:.claude/commands/spectr")
 - **AND** separate types (`DirectoryInitializer` vs `GlobalDirectoryInitializer`) SHALL have different keys
+- **AND** the dedup key format SHALL be: `<TypeName>:<path>` where TypeName is the concrete type name
 
 #### Scenario: Different configurations run separately
 - **WHEN** providers return initializers with different paths or different types
@@ -187,6 +275,12 @@ The system SHALL execute initializers in a guaranteed order by type.
 - **WHEN** initializers are collected for execution
 - **THEN** `DirectoryInitializer` and `GlobalDirectoryInitializer` SHALL run before `ConfigFileInitializer`
 - **AND** `ConfigFileInitializer` SHALL run before `SlashCommandsInitializer`, `GlobalSlashCommandsInitializer`, and `TOMLSlashCommandsInitializer`
+
+#### Scenario: Ordering within same category
+- **WHEN** multiple initializers of the same type exist (e.g., multiple SlashCommandsInitializer instances)
+- **THEN** the order of execution within that category is unspecified
+- **AND** implementations MAY use any stable ordering (e.g., registration order, alphabetical)
+- **AND** implementations SHALL NOT rely on a specific order within the same type category
 
 #### Scenario: Ordering is guaranteed
 - **WHEN** documentation describes initializer ordering
@@ -209,19 +303,27 @@ The system SHALL return file change information from each initializer.
 ### Requirement: ExecutionResult Type
 The system SHALL define an `ExecutionResult` type for aggregated initialization results.
 
+```go
+type ExecutionResult struct {
+    CreatedFiles []string // all files created across all initializers
+    UpdatedFiles []string // all files updated across all initializers
+    Error        error    // the error that caused execution to stop, or nil if successful
+}
+```
+
 #### Scenario: ExecutionResult structure
 - **WHEN** initialization completes
 - **THEN** the system SHALL return an `ExecutionResult` containing:
   - `CreatedFiles []string` - all files created across all initializers
   - `UpdatedFiles []string` - all files updated across all initializers
-  - `Errors []error` - any errors encountered during initialization
+  - `Error error` - the error that caused execution to stop, or nil if successful
 
-#### Scenario: aggregateResults function (success case)
-- **WHEN** all initializers have completed successfully
-- **THEN** the `aggregateResults(results []InitResult, errors []error) ExecutionResult` function SHALL combine all results
+#### Scenario: aggregateResults function
+- **WHEN** initializers have been executed
+- **THEN** the `aggregateResults(results []InitResult, err error) ExecutionResult` function SHALL combine all results
 - **AND** it SHALL concatenate all created files into a single slice
 - **AND** it SHALL concatenate all updated files into a single slice
-- **AND** the errors parameter SHALL be nil in the success case (due to fail-fast behavior, errors never accumulate)
+- **AND** it SHALL set the Error field to the provided error (nil on success, non-nil on failure)
 
 ### Requirement: Dual Filesystem Support
 The system SHALL provide two filesystem instances to all initializers.
@@ -236,6 +338,12 @@ The system SHALL provide two filesystem instances to all initializers.
 - **THEN** it MAY be configured to use either the project or global filesystem
 - **AND** this configuration is internal to the initializer (not exposed via interface methods)
 
+#### Scenario: Filesystem selection is internal
+- **WHEN** an initializer determines which filesystem to use
+- **THEN** the choice SHALL be based on the initializer's internal configuration
+- **AND** no external decision matrix or rules SHALL be enforced
+- **AND** initializers receive both filesystems and decide which to use based on their purpose
+
 ### Requirement: Fail-Fast Error Handling
 The system SHALL stop on the first initialization error.
 
@@ -243,9 +351,16 @@ The system SHALL stop on the first initialization error.
 - **WHEN** an initializer fails during execution
 - **THEN** the system SHALL stop immediately (fail-fast)
 - **AND** the system SHALL return partial results (files created before failure)
-- **AND** the system SHALL return the error in ExecutionResult.Errors
-- **AND** the system SHALL NOT rollback successful initializers
+- **AND** the system SHALL return the error in ExecutionResult.Error
+- **AND** the system SHALL NOT rollback successful initializers - files created before the error SHALL remain on disk
 - **AND** the user SHALL be able to fix the issue and re-run `spectr init`
+
+#### Scenario: Partial results persistence
+- **WHEN** execution fails partway through (e.g., 2 files created successfully, 3rd file fails)
+- **THEN** all files created before the error SHALL remain on disk
+- **AND** the ExecutionResult.CreatedFiles SHALL list those files
+- **AND** no rollback or cleanup SHALL occur automatically
+- **AND** the user can inspect the partial state to diagnose the issue
 
 ### Requirement: Zero Technical Debt - No Compatibility Shims
 The system SHALL NOT provide compatibility shims for deprecated registration patterns.

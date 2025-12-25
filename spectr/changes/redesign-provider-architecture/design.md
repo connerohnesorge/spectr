@@ -294,6 +294,7 @@ func RegisterAllProviders() error {
 
     for _, reg := range providers {
         if err := RegisterProvider(reg); err != nil {
+            // Note: Successfully registered providers remain registered (no rollback)
             return fmt.Errorf("failed to register %s provider: %w", reg.ID, err)
         }
     }
@@ -392,16 +393,24 @@ func NewTOMLSlashCommandsInitializer(dir string, commands []SlashCommand) Initia
 
 **ConfigFileInitializer Marker Handling**:
 
-The ConfigFileInitializer uses `<!-- spectr:START -->` and `<!-- spectr:END -->` markers to update instruction files. It must handle orphaned markers correctly:
+The ConfigFileInitializer uses `<!-- spectr:start -->` and `<!-- spectr:end -->` markers (lowercase) to update instruction files. It must handle various edge cases:
 
 ```go
 // Pseudocode for marker handling logic
-func updateWithMarkers(content, newContent, startMarker, endMarker string) string {
+func updateWithMarkers(content, newContent string) (string, error) {
+    startMarker := "<!-- spectr:start -->"
+    endMarker := "<!-- spectr:end -->"
+
     startIdx := strings.Index(content, startMarker)
 
     if startIdx == -1 {
-        // No markers exist - append new block at end
-        return content + "\n\n" + startMarker + newContent + endMarker
+        // No start marker - check for orphaned end marker
+        endIdx := strings.Index(content, endMarker)
+        if endIdx != -1 {
+            return "", fmt.Errorf("orphaned end marker at position %d without start marker", endIdx)
+        }
+        // No markers exist - append new block at end with markers
+        return content + "\n\n" + startMarker + "\n" + newContent + "\n" + endMarker, nil
     }
 
     // Start marker found - look for end marker AFTER the start
@@ -409,36 +418,59 @@ func updateWithMarkers(content, newContent, startMarker, endMarker string) strin
     endIdx := strings.Index(content[searchFrom:], endMarker)
 
     if endIdx != -1 {
-        // Normal case: both markers present
+        // Normal case: both markers present and properly paired
         endIdx += searchFrom // Adjust to absolute position
+
+        // Check for nested start marker before end
+        nextStartIdx := strings.Index(content[searchFrom:endIdx], startMarker)
+        if nextStartIdx != -1 {
+            return "", fmt.Errorf("nested start marker at position %d before end marker at %d", searchFrom+nextStartIdx, endIdx)
+        }
+
         before := content[:startIdx]
         after := content[endIdx+len(endMarker):]
-        return before + startMarker + newContent + endMarker + after
+        return before + startMarker + "\n" + newContent + "\n" + endMarker + after, nil
     }
 
     // Start marker exists but no end marker immediately after
     // Search for trailing end marker anywhere in the file
-    trailingEndIdx := strings.LastIndex(content, endMarker)
-
-    if trailingEndIdx > startIdx {
+    trailingEndIdx := strings.Index(content[searchFrom:], endMarker)
+    if trailingEndIdx != -1 {
+        trailingEndIdx += searchFrom
         // Found end marker after start - use it
         before := content[:startIdx]
         after := content[trailingEndIdx+len(endMarker):]
-        return before + startMarker + newContent + endMarker + after
+        return before + startMarker + "\n" + newContent + "\n" + endMarker + after, nil
+    }
+
+    // Check for multiple start markers without end
+    nextStartIdx := strings.Index(content[searchFrom:], startMarker)
+    if nextStartIdx != -1 {
+        return "", fmt.Errorf("multiple start markers at positions %d and %d without end markers", startIdx, searchFrom+nextStartIdx)
     }
 
     // No end marker anywhere after start - orphaned start marker
     // Replace everything from start marker onward with new block
     before := content[:startIdx]
-    return before + startMarker + newContent + endMarker
+    return before + startMarker + "\n" + newContent + "\n" + endMarker, nil
 }
 ```
 
+**Marker Format**: ALL markdown markers use lowercase `<!-- spectr:start -->` and `<!-- spectr:end -->` for consistency across all providers.
+
+**Edge Cases Handled**:
+- **Missing markers**: Insert at end of file with markers
+- **Orphaned end marker**: Return error (corrupted file)
+- **Nested markers**: Return error (not supported)
+- **Multiple start markers**: Return error (ambiguous)
+- **Orphaned start marker**: Replace from start marker to end of file
+- **Normal case**: Replace content between existing markers
+
 **Rationale**:
 - **Prevents duplicate blocks**: Don't append when start marker already exists
-- **Handles corrupted files**: Recovers from missing end markers
-- **Uses trailing end marker**: If end marker exists elsewhere, use it
-- **Clean replacement**: Orphaned start markers are replaced, not duplicated
+- **Error on corruption**: Fail fast for orphaned end, nested, or multiple starts
+- **Recovers gracefully**: Create markers if missing, use trailing end if found
+- **Consistent format**: Lowercase markers across all providers
 
 ### 4. Filesystem Abstraction
 
@@ -449,7 +481,9 @@ func updateWithMarkers(content, newContent, startMarker, endMarker string) strin
 projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
 
 // Global filesystem (for ~/.config/tool/commands/, etc.)
-globalFs := afero.NewBasePathFs(afero.NewOsFs(), os.UserHomeDir())
+// Uses os.UserHomeDir() and converts to afero.Fs
+homeDir, _ := os.UserHomeDir()
+globalFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
 
 // Executor provides both to initializers based on IsGlobal()
 type ExecutorContext struct {
@@ -472,13 +506,13 @@ type ExecutorContext struct {
 ```go
 // ExecutionResult aggregates results from all initializers
 type ExecutionResult struct {
-    CreatedFiles []string  // All files created across all initializers
-    UpdatedFiles []string  // All files updated across all initializers
-    Errors       []error   // Any errors encountered during initialization
+    CreatedFiles []string // All files created across all initializers
+    UpdatedFiles []string // All files updated across all initializers
+    Error        error    // The error that caused execution to stop, or nil if successful
 }
 
 // aggregateResults combines multiple InitResult values into a single ExecutionResult
-func aggregateResults(results []InitResult, errors []error) ExecutionResult {
+func aggregateResults(results []InitResult, err error) ExecutionResult {
     var created, updated []string
     for _, r := range results {
         created = append(created, r.CreatedFiles...)
@@ -487,7 +521,7 @@ func aggregateResults(results []InitResult, errors []error) ExecutionResult {
     return ExecutionResult{
         CreatedFiles: created,
         UpdatedFiles: updated,
-        Errors:       errors,
+        Error:        err,
     }
 }
 
@@ -498,11 +532,8 @@ for _, init := range allInitializers {
     result, err := init.Init(ctx, projectFs, globalFs, cfg, tm)
     if err != nil {
         // Fail fast: return immediately on first error
-        return ExecutionResult{
-            CreatedFiles: collectCreatedFiles(allResults),
-            UpdatedFiles: collectUpdatedFiles(allResults),
-            Errors:       []error{err},
-        }, err
+        // Files created before error remain on disk (no rollback)
+        return aggregateResults(allResults, err), err
     }
     allResults = append(allResults, result)
 }
@@ -606,6 +637,9 @@ func initializerPriority(init Initializer) int {
         return 99
     }
 }
+
+// Note: Order within the same category (same priority) is unspecified.
+// Implementations may use any stable ordering (e.g., registration order, alphabetical).
 ```
 
 **Rationale**: Directories must exist before files can be written. This ordering is implicit but guaranteed.
@@ -639,6 +673,12 @@ func dedupeInitializers(all []Initializer) []Initializer {
     }
     return result
 }
+
+// Execution flow:
+// 1. Collect initializers from all providers
+// 2. Deduplicate (remove duplicates by key)
+// 3. Sort by type priority
+// 4. Execute in order (fail-fast on error)
 
 // Example dedupeKey implementations (type name encodes filesystem and format):
 // DirectoryInitializer:           "DirectoryInitializer:.claude/commands/spectr"
@@ -770,11 +810,13 @@ func NewTemplateManager() (*TemplateManager, error) {
     }
 
     // Merge: add domain templates to main template set
+    // If duplicate template names exist, last-wins precedence applies
     for _, t := range domainTmpl.Templates() {
         if _, err := mainTmpl.AddParseTree(t.Name(), t.Tree); err != nil {
             return nil, fmt.Errorf("failed to merge template %s: %w", t.Name(), err)
         }
     }
+    // Note: Template name collisions result in last-wins (later template overwrites earlier)
 
     return &TemplateManager{
         templates: mainTmpl,

@@ -15,10 +15,10 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers with global paths
-- **WHEN** the provider's Initializers() method is called
-- **THEN** it SHALL return a DirectoryInitializer for `~/.codex/prompts/` configured for global filesystem
-- **AND** it SHALL return a ConfigFileInitializer for `AGENTS.md`
-- **AND** it SHALL return a SlashCommandsInitializer for global slash commands configured for global filesystem
+- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **THEN** it SHALL return a `GlobalDirectoryInitializer` for `~/.codex/prompts/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `AGENTS.md` with TemplateRef from TemplateManager
+- **AND** it SHALL return a `GlobalSlashCommandsInitializer` for global slash commands
 
 #### Scenario: Provider metadata
 - **WHEN** provider is registered
@@ -34,18 +34,18 @@ The provider SHALL create slash commands in the global `~/.codex/prompts/` direc
 
 #### Scenario: Global command directory structure
 - **WHEN** the provider returns initializers
-- **THEN** DirectoryInitializer configured for global filesystem SHALL create `~/.codex/prompts/` directory
+- **THEN** `GlobalDirectoryInitializer` SHALL create `~/.codex/prompts/` directory
 - **AND** the directory is created in user's home directory via globalFs
 
 #### Scenario: Command paths
-- **WHEN** the SlashCommandsInitializer configured for global filesystem executes
+- **WHEN** the `GlobalSlashCommandsInitializer` executes
 - **THEN** it creates `~/.codex/prompts/spectr-proposal.md`
 - **AND** it creates `~/.codex/prompts/spectr-apply.md`
 
 #### Scenario: Global path handling
-- **WHEN** initializers configured for global filesystem execute
+- **WHEN** Global* initializers execute
 - **THEN** the executor provides both projectFs and globalFs filesystems
-- **AND** the initializer uses globalFs based on its internal configuration
+- **AND** the Global* initializers use globalFs automatically (no configuration flag needed)
 - **AND** paths work correctly regardless of current project directory
 
 ### Requirement: Codex Command Format

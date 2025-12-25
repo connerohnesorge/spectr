@@ -15,10 +15,10 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's Initializers() method is called
-- **THEN** it SHALL return a DirectoryInitializer for `.clinerules/commands/spectr/`
-- **AND** it SHALL return a ConfigFileInitializer for `CLINE.md`
-- **AND** it SHALL return a SlashCommandsInitializer for Markdown format slash commands
+- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for `.clinerules/commands/spectr/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `CLINE.md` with TemplateRef from TemplateManager
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
 
 ### Requirement: Cline Instruction File
 The provider SHALL create and maintain a `CLINE.md` instruction file in the project root.

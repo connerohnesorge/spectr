@@ -23,9 +23,15 @@ The current provider system has 15 providers, each implementing a 12-method inte
 - **BREAKING**: **COMPLETELY REMOVE** old `Register(p Provider)` function and all `init()` registration - zero tech debt policy means NO deprecated `Register(_ any)` compatibility shim
 - **BREAKING**: Remove all provider `init()` functions that call `Register()`
 - **NEW**: `internal/domain` package containing shared domain types (`TemplateRef`, `SlashCommand`, `TemplateContext`) to break import cycles
-- **NEW**: `internal/domain` package embeds slash command templates (`slash-proposal.md.tmpl`, `slash-apply.md.tmpl`) moved from `internal/initialize/templates/tools/`
+- **NEW**: `internal/domain` package embeds slash command templates moved from `internal/initialize/templates/tools/`:
+  - `slash-proposal.md.tmpl`, `slash-apply.md.tmpl` (Markdown format)
+  - `slash-proposal.toml.tmpl`, `slash-apply.toml.tmpl` (TOML format for Gemini)
 - **NEW**: `Initializer` interface with `Init(ctx, projectFs, globalFs, cfg, tm)` and `IsSetup(projectFs, globalFs, cfg)` methods
-- **NEW**: Built-in initializers: `DirectoryInitializer`, `ConfigFileInitializer`, `SlashCommandsInitializer`
+- **NEW**: Built-in initializers with separate types for filesystem and format:
+  - `DirectoryInitializer`, `GlobalDirectoryInitializer`
+  - `ConfigFileInitializer`
+  - `SlashCommandsInitializer` (Markdown), `GlobalSlashCommandsInitializer` (Markdown)
+  - `TOMLSlashCommandsInitializer` (TOML for Gemini)
 - **NEW**: `Config` struct with `SpectrDir` field; other paths derived (SpecsDir = SpectrDir/specs, etc.)
 - **NEW**: Two filesystem instances: `projectFs` (project-relative) and `globalFs` (home directory)
 - **REMOVED**: `GetFilePaths()`, `HasConfigFile()`, `HasSlashCommands()` methods
@@ -39,10 +45,12 @@ The current provider system has 15 providers, each implementing a 12-method inte
 |----------|--------|-----------|
 | Change detection | InitResult return value | Each initializer returns files it created/updated; explicit and testable |
 | Initializer ordering | Documented guarantee (implicit by type) | Directory → ConfigFile → SlashCommands; simple and predictable |
-| Partial failure | No rollback, report failures | Keep simple; users can re-run init |
+| Partial failure | Fail-fast | Stop on first error, return partial results; user fixes and re-runs |
 | Template variables | Derive from SpectrDir | SpecsDir = SpectrDir/specs, etc.; single source of truth |
-| Global paths | Two fs instances | projectFs and globalFs; supports ~/.config/tool/ patterns |
-| Deduplication | By file path | Same path = initialize once; prevents redundant writes |
+| Global paths | Separate initializer types | GlobalDirectoryInitializer, GlobalSlashCommandsInitializer for ~/.config/tool/ patterns |
+| Deduplication | By type + path | Optional deduplicatable interface; same type+path = initialize once |
+| Template selection | TemplateRef directly | ConfigFileInitializer takes TemplateRef, not function; Provider.Initializers() receives TemplateManager |
+| TOML support | Separate initializer type | TOMLSlashCommandsInitializer for Gemini; uses .toml.tmpl templates |
 
 ## Impact
 
@@ -51,7 +59,9 @@ The current provider system has 15 providers, each implementing a 12-method inte
 ## Affected Code
 
 - `internal/domain/*.go` - New domain package with shared types (`TemplateRef`, `SlashCommand`, `TemplateContext`)
-- `internal/domain/templates/*.tmpl` - Slash command templates moved from `internal/initialize/templates/tools/`
+- `internal/domain/templates/*.tmpl` - Slash command templates:
+  - `slash-proposal.md.tmpl`, `slash-apply.md.tmpl` (moved from `internal/initialize/templates/tools/`)
+  - `slash-proposal.toml.tmpl`, `slash-apply.toml.tmpl` (new for Gemini TOML format)
 - `internal/domain/templates.go` - Embed directive for domain templates
 - `internal/initialize/providers/*.go` - Complete rewrite with explicit registration error handling
 - `internal/initialize/providers/initializers/*.go` - New initializer implementations

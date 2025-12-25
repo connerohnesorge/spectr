@@ -15,10 +15,10 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's Initializers() method is called
-- **THEN** it SHALL return a DirectoryInitializer for `.claude/commands/spectr/`
-- **AND** it SHALL return a ConfigFileInitializer for `CLAUDE.md`
-- **AND** it SHALL return a SlashCommandsInitializer for slash commands in Markdown format
+- **WHEN** the provider's `Initializers(ctx, tm *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for `.claude/commands/spectr/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `CLAUDE.md` with TemplateRef from TemplateManager
+- **AND** it SHALL return a `SlashCommandsInitializer` for slash commands in Markdown format
 
 ### Requirement: Claude Code Instruction File
 The provider SHALL create and maintain a `CLAUDE.md` instruction file in the project root.

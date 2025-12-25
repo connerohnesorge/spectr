@@ -134,6 +134,8 @@ The slash command templates (`slash-proposal.md.tmpl`, `slash-apply.md.tmpl`) wi
 2. **Template file locations:**
    - Move: `internal/initialize/templates/tools/slash-proposal.md.tmpl` → `internal/domain/templates/slash-proposal.md.tmpl`
    - Move: `internal/initialize/templates/tools/slash-apply.md.tmpl` → `internal/domain/templates/slash-apply.md.tmpl`
+   - Create: `internal/domain/templates/slash-proposal.toml.tmpl` (for Gemini TOML format)
+   - Create: `internal/domain/templates/slash-apply.toml.tmpl` (for Gemini TOML format)
 
 3. **Template access via TemplateManager:**
    Templates are accessed through `TemplateManager.SlashCommand(cmd)`, NOT via a method on `SlashCommand` itself. This keeps template rendering concerns separate from the domain type.
@@ -145,8 +147,10 @@ internal/domain                    <- shared types + embedded slash templates
     ├── slashcmd.go                <- SlashCommand enum (NO TemplateName method)
     ├── templates.go               <- embed.FS for slash command templates
     └── templates/                 <- embedded template files
-        ├── slash-proposal.md.tmpl
-        └── slash-apply.md.tmpl
+        ├── slash-proposal.md.tmpl     <- Markdown format
+        ├── slash-apply.md.tmpl        <- Markdown format
+        ├── slash-proposal.toml.tmpl   <- TOML format (Gemini)
+        └── slash-apply.toml.tmpl      <- TOML format (Gemini)
 
 internal/initialize/templates      <- main template manager
     ├── imports domain             <- uses domain.TemplateRef, domain.TemplateContext, domain.TemplateFS
@@ -170,7 +174,9 @@ internal/initialize/providers
 
 ```go
 type Provider interface {
-    Initializers(ctx context.Context) []Initializer
+    // Initializers returns the list of initializers for this provider.
+    // Receives TemplateManager to allow passing TemplateRef directly to ConfigFileInitializer.
+    Initializers(ctx context.Context, tm *TemplateManager) []Initializer
 }
 
 // InitResult contains the files created or modified by an initializer.
@@ -352,21 +358,35 @@ func Register(_ any) {
 
 ### 3. Built-in Initializers
 
-**Decision**: Provide three composable initializers with type-safe template selection:
+**Decision**: Provide composable initializers with type-safe template selection. Use separate types for local vs global filesystem operations.
 
 ```go
-// Creates directories (e.g., .claude/commands/spectr/)
+// Creates directories in project filesystem (e.g., .claude/commands/spectr/)
 func NewDirectoryInitializer(paths ...string) Initializer
 
-// Creates/updates instruction file with markers
-// Uses TemplateGetter for compile-time checked template selection
-type TemplateGetter func(*TemplateManager) TemplateRef
-func NewConfigFileInitializer(path string, getTemplate TemplateGetter) Initializer
+// Creates directories in global filesystem (e.g., ~/.codex/prompts/)
+func NewGlobalDirectoryInitializer(paths ...string) Initializer
 
-// Creates slash commands from templates
+// Creates/updates instruction file with markers
+// Takes TemplateRef directly (not a function) for simpler API
+func NewConfigFileInitializer(path string, template TemplateRef) Initializer
+
+// Creates Markdown slash commands from templates in project filesystem
 // Uses []SlashCommand for compile-time checked command selection
-func NewSlashCommandsInitializer(dir, ext string, commands []SlashCommand) Initializer
+func NewSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer
+
+// Creates Markdown slash commands from templates in global filesystem
+func NewGlobalSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer
+
+// Creates TOML slash commands from templates in project filesystem (Gemini only)
+func NewTOMLSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer
 ```
+
+**Rationale for separate types**:
+- Clear intent: Type name makes filesystem and format choice explicit
+- No constructor parameters for format/filesystem: `TOMLSlashCommandsInitializer` vs `SlashCommandsInitializer`
+- Type-safe deduplication: can dedupe by type + path without checking internal flags
+- Simpler API: no `ext` parameter needed
 
 **Deduplication**: When multiple providers share an initializer with same config, run once.
 
@@ -471,21 +491,24 @@ func aggregateResults(results []InitResult, errors []error) ExecutionResult {
     }
 }
 
-// Collect results from all initializers
+// Fail-fast execution: stop on first error
 var allResults []InitResult
-var initErrors []error
 
 for _, init := range allInitializers {
     result, err := init.Init(ctx, projectFs, globalFs, cfg, tm)
     if err != nil {
-        initErrors = append(initErrors, err)
-        continue
+        // Fail fast: return immediately on first error
+        return ExecutionResult{
+            CreatedFiles: collectCreatedFiles(allResults),
+            UpdatedFiles: collectUpdatedFiles(allResults),
+            Errors:       []error{err},
+        }, err
     }
     allResults = append(allResults, result)
 }
 
-// Aggregate into ExecutionResult
-executionResult := aggregateResults(allResults, initErrors)
+// All succeeded
+return aggregateResults(allResults, nil), nil
 ```
 
 **Rationale**: Explicit change tracking; initializers know what they create; works in non-git projects; more testable.
@@ -506,14 +529,14 @@ import (
 // No init() - registration happens in RegisterAllProviders().
 type ClaudeProvider struct{}
 
-func (p *ClaudeProvider) Initializers(ctx context.Context) []Initializer {
+func (p *ClaudeProvider) Initializers(ctx context.Context, tm *TemplateManager) []Initializer {
     return []Initializer{
         NewDirectoryInitializer(".claude/commands/spectr"),
-        // Type-safe: (*TemplateManager).InstructionPointer is a method reference
-        // Compiler catches typos - no runtime surprises
-        NewConfigFileInitializer("CLAUDE.md", (*TemplateManager).InstructionPointer),
+        // TemplateRef passed directly - simpler API, template resolved at provider construction
+        NewConfigFileInitializer("CLAUDE.md", tm.InstructionPointer()),
         // Type-safe: domain.SlashProposal/domain.SlashApply are typed constants from domain package
-        NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []domain.SlashCommand{
+        // SlashCommandsInitializer creates Markdown files (.md)
+        NewSlashCommandsInitializer(".claude/commands/spectr", []domain.SlashCommand{
             domain.SlashProposal,
             domain.SlashApply,
         }),
@@ -537,17 +560,22 @@ import (
 // No init() - registration happens in RegisterAllProviders().
 type GeminiProvider struct{}
 
-func (p *GeminiProvider) Initializers(ctx context.Context) []Initializer {
+func (p *GeminiProvider) Initializers(ctx context.Context, tm *TemplateManager) []Initializer {
     return []Initializer{
         NewDirectoryInitializer(".gemini/commands/spectr"),
         // No config file for Gemini - uses TOML slash commands only
-        NewSlashCommandsInitializer(".gemini/commands/spectr", ".toml", []domain.SlashCommand{
+        // TOMLSlashCommandsInitializer uses slash-*.toml.tmpl templates
+        NewTOMLSlashCommandsInitializer(".gemini/commands/spectr", []domain.SlashCommand{
             domain.SlashProposal,
             domain.SlashApply,
         }),
     }
 }
 ```
+
+**Template Files by Initializer Type**:
+- `SlashCommandsInitializer` / `GlobalSlashCommandsInitializer` → `slash-proposal.md.tmpl`, `slash-apply.md.tmpl`
+- `TOMLSlashCommandsInitializer` → `slash-proposal.toml.tmpl`, `slash-apply.toml.tmpl`
 
 ### 8. Initializer Ordering (Documented Guarantee)
 
@@ -568,11 +596,11 @@ func sortInitializers(all []Initializer) []Initializer {
 
 func initializerPriority(init Initializer) int {
     switch init.(type) {
-    case *DirectoryInitializer:
+    case *DirectoryInitializer, *GlobalDirectoryInitializer:
         return 1
     case *ConfigFileInitializer:
         return 2
-    case *SlashCommandsInitializer:
+    case *SlashCommandsInitializer, *GlobalSlashCommandsInitializer, *TOMLSlashCommandsInitializer:
         return 3
     default:
         return 99
@@ -586,11 +614,11 @@ func initializerPriority(init Initializer) int {
 
 **Decision**: Deduplicate by initializer identity. Same initializer configuration = run once.
 
-When initializers are collected from multiple providers, deduplication is based on the initializer's internal configuration (path and global flag):
+When initializers are collected from multiple providers, deduplication is based on the initializer type and path. The separate Global* types make this explicit:
 
 ```go
-// dedupeKey returns a unique key for deduplication based on initializer configuration.
-// Each initializer type implements this internally.
+// deduplicatable is an optional interface for initializers that support deduplication.
+// Initializers that implement this interface can be deduplicated based on their key.
 type deduplicatable interface {
     dedupeKey() string
 }
@@ -599,25 +627,34 @@ func dedupeInitializers(all []Initializer) []Initializer {
     seen := make(map[string]bool)
     var result []Initializer
     for _, init := range all {
-        // Get dedup key from initializer (e.g., "project:/CLAUDE.md" or "global:/.codex/prompts/")
-        key := init.(deduplicatable).dedupeKey()
-        if !seen[key] {
+        // Check if initializer supports deduplication
+        if d, ok := init.(deduplicatable); ok {
+            key := d.dedupeKey()
+            if seen[key] {
+                continue // Skip duplicate
+            }
             seen[key] = true
-            result = append(result, init)
         }
+        result = append(result, init)
     }
     return result
 }
 
-// Example dedupeKey implementations:
-// DirectoryInitializer:     "dir:project:.claude/commands/spectr" or "dir:global:.codex/prompts"
-// ConfigFileInitializer:    "cfg:project:CLAUDE.md"
-// SlashCommandsInitializer: "cmd:project:.claude/commands/spectr:.md"
+// Example dedupeKey implementations (type name encodes filesystem and format):
+// DirectoryInitializer:           "DirectoryInitializer:.claude/commands/spectr"
+// GlobalDirectoryInitializer:     "GlobalDirectoryInitializer:.codex/prompts"
+// ConfigFileInitializer:          "ConfigFileInitializer:CLAUDE.md"
+// SlashCommandsInitializer:       "SlashCommandsInitializer:.claude/commands/spectr"
+// GlobalSlashCommandsInitializer: "GlobalSlashCommandsInitializer:.codex/prompts"
+// TOMLSlashCommandsInitializer:   "TOMLSlashCommandsInitializer:.gemini/commands/spectr"
 ```
 
-**Example**: If Claude Code and Cline both return `ConfigFileInitializer{path: "CLAUDE.md", global: false}`, only one runs.
+**Example**: If Claude Code and Cline both return `ConfigFileInitializer{path: "CLAUDE.md"}`, only one runs.
 
-**Rationale**: Configuration-based deduplication is simple and covers the common case (multiple providers sharing same file).
+**Rationale**:
+- Type-based keys: `GlobalDirectoryInitializer` and `DirectoryInitializer` have different type names, preventing accidental deduplication across filesystem boundaries
+- Optional interface: Initializers that don't need deduplication don't have to implement it
+- Simple and covers the common case (multiple providers sharing same file)
 
 ## Risks / Trade-offs
 
@@ -806,12 +843,25 @@ func (tm *TemplateManager) Agents() TemplateRef {
     }
 }
 
-// SlashCommand returns a template reference for the given slash command type.
-// Templates are loaded from domain.TemplateFS and merged with main templates.
+// SlashCommand returns a Markdown template reference for the given slash command type.
+// Used by SlashCommandsInitializer and GlobalSlashCommandsInitializer.
 func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
     names := map[domain.SlashCommand]string{
         domain.SlashProposal: "slash-proposal.md.tmpl",
         domain.SlashApply:    "slash-apply.md.tmpl",
+    }
+    return domain.TemplateRef{
+        Name:     names[cmd],
+        Template: tm.templates,
+    }
+}
+
+// TOMLSlashCommand returns a TOML template reference for the given slash command type.
+// Used by TOMLSlashCommandsInitializer (Gemini only).
+func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+    names := map[domain.SlashCommand]string{
+        domain.SlashProposal: "slash-proposal.toml.tmpl",
+        domain.SlashApply:    "slash-apply.toml.tmpl",
     }
     return domain.TemplateRef{
         Name:     names[cmd],
@@ -823,31 +873,42 @@ func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.Template
 **Updated initializer constructors**:
 
 ```go
-// ConfigFileInitializer now receives a TemplateRef getter function
-// The getter is called with TemplateManager at Init() time
-type TemplateGetter func(*TemplateManager) TemplateRef
-
-func NewConfigFileInitializer(path string, getTemplate TemplateGetter) Initializer {
+// ConfigFileInitializer receives TemplateRef directly
+// TemplateRef is resolved at provider construction time when Initializers() is called
+func NewConfigFileInitializer(path string, template TemplateRef) Initializer {
     return &ConfigFileInitializer{
-        path:        path,
-        getTemplate: getTemplate,
+        path:     path,
+        template: template,
     }
 }
 
-// Usage - compile-time checked:
-NewConfigFileInitializer("CLAUDE.md", (*TemplateManager).InstructionPointer)
+// Usage - compile-time checked, TemplateRef passed directly:
+// Provider.Initializers(ctx, tm) receives TemplateManager
+NewConfigFileInitializer("CLAUDE.md", tm.InstructionPointer())
 
-// SlashCommandsInitializer receives slice of SlashCommand types
-func NewSlashCommandsInitializer(dir, ext string, commands []SlashCommand) Initializer {
+// SlashCommandsInitializer receives slice of SlashCommand types (creates .md files)
+func NewSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer {
     return &SlashCommandsInitializer{
         dir:      dir,
-        ext:      ext,
         commands: commands,
     }
 }
 
-// Usage - compile-time checked:
-NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []SlashCommand{
+// TOMLSlashCommandsInitializer receives slice of SlashCommand types (creates .toml files)
+func NewTOMLSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer {
+    return &TOMLSlashCommandsInitializer{
+        dir:      dir,
+        commands: commands,
+    }
+}
+
+// Usage - compile-time checked, type determines format:
+NewSlashCommandsInitializer(".claude/commands/spectr", []SlashCommand{
+    SlashProposal,
+    SlashApply,
+})
+
+NewTOMLSlashCommandsInitializer(".gemini/commands/spectr", []SlashCommand{
     SlashProposal,
     SlashApply,
 })
@@ -870,15 +931,17 @@ NewSlashCommandsInitializer(".claude/commands/spectr", ".md", []SlashCommand{
 |----------|----------|
 | Change detection approach? | InitResult return value from each Initializer |
 | Initializer ordering? | Implicit ordering by type (Directory → ConfigFile → SlashCommands) |
-| Rollback on partial failure? | No rollback; report failures, users re-run init |
+| Partial failure handling? | Fail-fast: stop on first error, return partial results |
 | Template variable location? | Derived from SpectrDir via methods |
-| Global paths support? | Two fs instances (projectFs, globalFs) passed to Init() and IsSetup() |
-| Deduplication key? | By initializer configuration (path + global flag via internal dedupeKey()) |
-| Template selection type safety? | TemplateRef accessors with method references; compile-time checked |
+| Global paths support? | Separate types: `GlobalDirectoryInitializer`, `GlobalSlashCommandsInitializer` |
+| Deduplication key? | By type name + path via optional `deduplicatable` interface |
+| Template selection type safety? | TemplateRef passed directly to ConfigFileInitializer; Provider.Initializers() receives TemplateManager |
 | Import cycle resolution? | New `internal/domain` package with shared types (`TemplateRef`, `SlashCommand`, `TemplateContext`) |
-| Registration error handling? | No init() - explicit `RegisterAllProviders()` called at startup with proper error propagation |
+| Registration error handling? | No init() - explicit `RegisterAllProviders()` called in `cmd/root.go` with proper error propagation |
 | Initializer interface methods? | Two methods only: `Init()` and `IsSetup()` - both receive both filesystems |
 | TemplateRef field visibility? | Public fields (`Name`, `Template`) for external package access |
+| TOML template support? | Separate `TOMLSlashCommandsInitializer` type with dedicated `TOMLSlashCommand()` accessor |
+| Frontmatter structure? | Minimal: only `description` field required |
 
 ## Future Considerations (Out of Scope)
 

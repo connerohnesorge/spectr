@@ -189,15 +189,29 @@ type Initializer interface {
     // Init creates or updates files. Returns result with file changes and error if initialization fails.
     // Must be idempotent (safe to run multiple times).
     // Receives both filesystems - initializer decides which to use based on its configuration.
-    Init(ctx context.Context, projectFs, globalFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
+    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
 
     // IsSetup returns true if this initializer's artifacts already exist.
     // Receives both filesystems - initializer checks the appropriate one.
-    IsSetup(projectFs, globalFs afero.Fs, cfg *Config) bool
+    IsSetup(projectFs, homeFs afero.Fs, cfg *Config) bool
 }
 
 type Config struct {
     SpectrDir string // e.g., "spectr" (relative to fs root)
+}
+
+// Validate checks Config fields for basic correctness.
+func (c *Config) Validate() error {
+    if c.SpectrDir == "" {
+        return fmt.Errorf("SpectrDir must not be empty")
+    }
+    if strings.HasPrefix(c.SpectrDir, "/") {
+        return fmt.Errorf("SpectrDir must be relative, not absolute")
+    }
+    if strings.Contains(c.SpectrDir, "..") {
+        return fmt.Errorf("SpectrDir must not contain path traversal")
+    }
+    return nil
 }
 
 // Derived paths (computed, not stored):
@@ -359,14 +373,14 @@ func Register(_ any) {
 
 ### 3. Built-in Initializers
 
-**Decision**: Provide composable initializers with type-safe template selection. Use separate types for local vs global filesystem operations.
+**Decision**: Provide composable initializers with type-safe template selection. Use separate types for project vs home filesystem operations.
 
 ```go
 // Creates directories in project filesystem (e.g., .claude/commands/spectr/)
 func NewDirectoryInitializer(paths ...string) Initializer
 
-// Creates directories in global filesystem (e.g., ~/.codex/prompts/)
-func NewGlobalDirectoryInitializer(paths ...string) Initializer
+// Creates directories in home filesystem (e.g., ~/.codex/prompts/)
+func NewHomeDirectoryInitializer(paths ...string) Initializer
 
 // Creates/updates instruction file with markers
 // Takes TemplateRef directly (not a function) for simpler API
@@ -376,8 +390,12 @@ func NewConfigFileInitializer(path string, template TemplateRef) Initializer
 // Uses []SlashCommand for compile-time checked command selection
 func NewSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer
 
-// Creates Markdown slash commands from templates in global filesystem
-func NewGlobalSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer
+// Creates Markdown slash commands from templates in home filesystem
+func NewHomeSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer
+
+// Creates Markdown slash commands with custom prefix (for Antigravity, Codex)
+// Output: {dir}/{prefix}{command}.md (e.g., .agent/workflows/spectr-proposal.md)
+func NewPrefixedSlashCommandsInitializer(dir, prefix string, commands []SlashCommand) Initializer
 
 // Creates TOML slash commands from templates in project filesystem (Gemini only)
 func NewTOMLSlashCommandsInitializer(dir string, commands []SlashCommand) Initializer
@@ -388,6 +406,17 @@ func NewTOMLSlashCommandsInitializer(dir string, commands []SlashCommand) Initia
 - No constructor parameters for format/filesystem: `TOMLSlashCommandsInitializer` vs `SlashCommandsInitializer`
 - Type-safe deduplication: can dedupe by type + path without checking internal flags
 - Simpler API: no `ext` parameter needed
+- PrefixedSlashCommandsInitializer handles special cases (Antigravity, Codex) with custom naming
+
+**Special Provider Path Exceptions**:
+
+| Provider | Path Pattern | Notes |
+|----------|--------------|-------|
+| Standard | `.tool/commands/spectr/proposal.md` | Subdirectory structure |
+| Antigravity | `.agent/workflows/spectr-proposal.md` | Prefix naming, no subdirectory |
+| Codex | `~/.codex/prompts/spectr-proposal.md` | Home + prefix naming |
+
+These are intentional design exceptions, not bugs. Antigravity and Codex intentionally share `AGENTS.md` as their config file - both use the same file with same markers. Deduplication handles this - only one ConfigFileInitializer runs.
 
 **Deduplication**: When multiple providers share an initializer with same config, run once.
 
@@ -474,21 +503,25 @@ func updateWithMarkers(content, newContent string) (string, error) {
 
 ### 4. Filesystem Abstraction
 
-**Decision**: Use two filesystem instances to support both project-relative and global paths.
+**Decision**: Use two filesystem instances to support both project-relative and home directory paths.
 
 ```go
 // Project-relative filesystem (for CLAUDE.md, .claude/commands/, etc.)
 projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
 
-// Global filesystem (for ~/.config/tool/commands/, etc.)
+// Home filesystem (for ~/.config/tool/commands/, etc.)
 // Uses os.UserHomeDir() and converts to afero.Fs
-homeDir, _ := os.UserHomeDir()
-globalFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
+// MUST return error if home directory cannot be determined
+homeDir, err := os.UserHomeDir()
+if err != nil {
+    return nil, fmt.Errorf("failed to get home directory: %w", err)
+}
+homeFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
 
-// Executor provides both to initializers based on IsGlobal()
+// Executor provides both to initializers
 type ExecutorContext struct {
     ProjectFs afero.Fs
-    GlobalFs  afero.Fs
+    HomeFs    afero.Fs
     Config    *Config
     Templates *TemplateManager
 }
@@ -496,8 +529,8 @@ type ExecutorContext struct {
 
 **Rationale**:
 - Project paths are cleaner and easier to test
-- Global paths support tools like Aider that use ~/.config/
-- Initializers receive both filesystems and decide internally which to use based on their configuration
+- Home paths support tools like Codex that use ~/.codex/
+- Initializers receive both filesystems and decide internally which to use based on their type (Home* initializers use homeFs)
 
 ### 5. File Change Detection
 
@@ -505,14 +538,14 @@ type ExecutorContext struct {
 
 ```go
 // ExecutionResult aggregates results from all initializers
+// Note: Error is returned separately from runInitializers(), not stored in this struct
 type ExecutionResult struct {
     CreatedFiles []string // All files created across all initializers
     UpdatedFiles []string // All files updated across all initializers
-    Error        error    // The error that caused execution to stop, or nil if successful
 }
 
 // aggregateResults combines multiple InitResult values into a single ExecutionResult
-func aggregateResults(results []InitResult, err error) ExecutionResult {
+func aggregateResults(results []InitResult) ExecutionResult {
     var created, updated []string
     for _, r := range results {
         created = append(created, r.CreatedFiles...)
@@ -521,7 +554,6 @@ func aggregateResults(results []InitResult, err error) ExecutionResult {
     return ExecutionResult{
         CreatedFiles: created,
         UpdatedFiles: updated,
-        Error:        err,
     }
 }
 
@@ -529,17 +561,18 @@ func aggregateResults(results []InitResult, err error) ExecutionResult {
 var allResults []InitResult
 
 for _, init := range allInitializers {
-    result, err := init.Init(ctx, projectFs, globalFs, cfg, tm)
+    result, err := init.Init(ctx, projectFs, homeFs, cfg, tm)
     if err != nil {
         // Fail fast: return immediately on first error
         // Files created before error remain on disk (no rollback)
-        return aggregateResults(allResults, err), err
+        // Return partial results so user knows what was created
+        return aggregateResults(allResults), err
     }
     allResults = append(allResults, result)
 }
 
 // All succeeded
-return aggregateResults(allResults, nil), nil
+return aggregateResults(allResults), nil
 ```
 
 **Rationale**: Explicit change tracking; initializers know what they create; works in non-git projects; more testable.
@@ -605,8 +638,18 @@ func (p *GeminiProvider) Initializers(ctx context.Context, tm *TemplateManager) 
 ```
 
 **Template Files by Initializer Type**:
-- `SlashCommandsInitializer` / `GlobalSlashCommandsInitializer` → `slash-proposal.md.tmpl`, `slash-apply.md.tmpl`
+- `SlashCommandsInitializer` / `HomeSlashCommandsInitializer` / `PrefixedSlashCommandsInitializer` → `slash-proposal.md.tmpl`, `slash-apply.md.tmpl`
 - `TOMLSlashCommandsInitializer` → `slash-proposal.toml.tmpl`, `slash-apply.toml.tmpl`
+
+**TOML Template Structure** (Gemini only):
+```toml
+description = "Create a Spectr change proposal"
+prompt = """
+{{ .Content }}
+"""
+```
+
+Minimal structure with `description` and `prompt` fields only.
 
 ### 8. Initializer Ordering (Documented Guarantee)
 
@@ -627,11 +670,11 @@ func sortInitializers(all []Initializer) []Initializer {
 
 func initializerPriority(init Initializer) int {
     switch init.(type) {
-    case *DirectoryInitializer, *GlobalDirectoryInitializer:
+    case *DirectoryInitializer, *HomeDirectoryInitializer:
         return 1
     case *ConfigFileInitializer:
         return 2
-    case *SlashCommandsInitializer, *GlobalSlashCommandsInitializer, *TOMLSlashCommandsInitializer:
+    case *SlashCommandsInitializer, *HomeSlashCommandsInitializer, *PrefixedSlashCommandsInitializer, *TOMLSlashCommandsInitializer:
         return 3
     default:
         return 99
@@ -646,9 +689,9 @@ func initializerPriority(init Initializer) int {
 
 ### 9. Initializer Deduplication
 
-**Decision**: Deduplicate by initializer identity. Same initializer configuration = run once.
+**Decision**: Deduplicate by initializer identity. Same initializer configuration = run once. Keep **first** occurrence when duplicates are found.
 
-When initializers are collected from multiple providers, deduplication is based on the initializer type and path. The separate Global* types make this explicit:
+When initializers are collected from multiple providers, deduplication is based on the initializer type and path. Earlier providers (lower priority number = higher priority) take precedence. If Claude (priority 1) and Cline (priority 7) both create CLAUDE.md, Claude's initializer is kept. The separate Home* types make this explicit:
 
 ```go
 // deduplicatable is an optional interface for initializers that support deduplication.
@@ -680,19 +723,28 @@ func dedupeInitializers(all []Initializer) []Initializer {
 // 3. Sort by type priority
 // 4. Execute in order (fail-fast on error)
 
+// Path normalization: Paths are normalized before generating deduplication keys.
+// - Remove trailing slashes
+// - Normalize path separators
+// - Clean path (remove redundant `.` and `..`)
+func (d *DirectoryInitializer) dedupeKey() string {
+    return fmt.Sprintf("DirectoryInitializer:%s", filepath.Clean(d.path))
+}
+
 // Example dedupeKey implementations (type name encodes filesystem and format):
-// DirectoryInitializer:           "DirectoryInitializer:.claude/commands/spectr"
-// GlobalDirectoryInitializer:     "GlobalDirectoryInitializer:.codex/prompts"
-// ConfigFileInitializer:          "ConfigFileInitializer:CLAUDE.md"
-// SlashCommandsInitializer:       "SlashCommandsInitializer:.claude/commands/spectr"
-// GlobalSlashCommandsInitializer: "GlobalSlashCommandsInitializer:.codex/prompts"
-// TOMLSlashCommandsInitializer:   "TOMLSlashCommandsInitializer:.gemini/commands/spectr"
+// DirectoryInitializer:             "DirectoryInitializer:.claude/commands/spectr"
+// HomeDirectoryInitializer:         "HomeDirectoryInitializer:.codex/prompts"
+// ConfigFileInitializer:            "ConfigFileInitializer:CLAUDE.md"
+// SlashCommandsInitializer:         "SlashCommandsInitializer:.claude/commands/spectr"
+// HomeSlashCommandsInitializer:     "HomeSlashCommandsInitializer:.codex/prompts"
+// PrefixedSlashCommandsInitializer: "PrefixedSlashCommandsInitializer:.agent/workflows:spectr-"
+// TOMLSlashCommandsInitializer:     "TOMLSlashCommandsInitializer:.gemini/commands/spectr"
 ```
 
 **Example**: If Claude Code and Cline both return `ConfigFileInitializer{path: "CLAUDE.md"}`, only one runs.
 
 **Rationale**:
-- Type-based keys: `GlobalDirectoryInitializer` and `DirectoryInitializer` have different type names, preventing accidental deduplication across filesystem boundaries
+- Type-based keys: `HomeDirectoryInitializer` and `DirectoryInitializer` have different type names, preventing accidental deduplication across filesystem boundaries
 - Optional interface: Initializers that don't need deduplication don't have to implement it
 - Simple and covers the common case (multiple providers sharing same file)
 
@@ -778,8 +830,8 @@ The only valid reason to keep deprecated code would be if external code depends 
 
 ```go
 type Initializer interface {
-    Init(ctx context.Context, projectFs, globalFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
-    IsSetup(projectFs, globalFs afero.Fs, cfg *Config) bool
+    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
+    IsSetup(projectFs, homeFs afero.Fs, cfg *Config) bool
 }
 ```
 
@@ -886,7 +938,7 @@ func (tm *TemplateManager) Agents() TemplateRef {
 }
 
 // SlashCommand returns a Markdown template reference for the given slash command type.
-// Used by SlashCommandsInitializer and GlobalSlashCommandsInitializer.
+// Used by SlashCommandsInitializer, HomeSlashCommandsInitializer, and PrefixedSlashCommandsInitializer.
 func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
     names := map[domain.SlashCommand]string{
         domain.SlashProposal: "slash-proposal.md.tmpl",
@@ -967,23 +1019,51 @@ NewTOMLSlashCommandsInitializer(".gemini/commands/spectr", []SlashCommand{
 - Template name validation at startup - Runtime error, not compile-time
 - Passing `*template.Template` directly - Leaks implementation detail, harder to mock in tests
 
+### 10. TemplateContext Creation
+
+**Decision**: TemplateContext is derived from Config.SpectrDir in the executor.
+
+```go
+func templateContextFromConfig(cfg *Config) domain.TemplateContext {
+    return domain.TemplateContext{
+        BaseDir:     cfg.SpectrDir,
+        SpecsDir:    cfg.SpecsDir(),
+        ChangesDir:  cfg.ChangesDir(),
+        ProjectFile: cfg.ProjectFile(),
+        AgentsFile:  cfg.AgentsFile(),
+    }
+}
+```
+
+This ensures all template variables are derived from a single source of truth (Config.SpectrDir).
+
 ## Resolved Questions
 
 | Question | Decision |
 |----------|----------|
 | Change detection approach? | InitResult return value from each Initializer |
 | Initializer ordering? | Implicit ordering by type (Directory → ConfigFile → SlashCommands) |
-| Partial failure handling? | Fail-fast: stop on first error, return partial results |
+| Partial failure handling? | Fail-fast: stop on first error, return partial results from successful initializers |
 | Template variable location? | Derived from SpectrDir via methods |
-| Global paths support? | Separate types: `GlobalDirectoryInitializer`, `GlobalSlashCommandsInitializer` |
-| Deduplication key? | By type name + path via optional `deduplicatable` interface |
+| Home paths support? | Separate types: `HomeDirectoryInitializer`, `HomeSlashCommandsInitializer`, `PrefixedSlashCommandsInitializer` |
+| Deduplication key? | By type name + path via optional `deduplicatable` interface; keep first occurrence |
 | Template selection type safety? | TemplateRef passed directly to ConfigFileInitializer; Provider.Initializers() receives TemplateManager |
 | Import cycle resolution? | New `internal/domain` package with shared types (`TemplateRef`, `SlashCommand`, `TemplateContext`) |
-| Registration error handling? | No init() - explicit `RegisterAllProviders()` called in `cmd/root.go` with proper error propagation |
+| Registration error handling? | No init() - explicit `RegisterAllProviders()` called in `cmd/init.go` with proper error propagation |
 | Initializer interface methods? | Two methods only: `Init()` and `IsSetup()` - both receive both filesystems |
 | TemplateRef field visibility? | Public fields (`Name`, `Template`) for external package access |
 | TOML template support? | Separate `TOMLSlashCommandsInitializer` type with dedicated `TOMLSlashCommand()` accessor |
 | Frontmatter structure? | Minimal: only `description` field required |
+| Marker search algorithm? | Use `strings.Index` (first occurrence) for all marker searches |
+| os.UserHomeDir() failure? | Fail initialization entirely; home directory access is required |
+| Directory already exists? | Silent success (MkdirAll style); don't report in UpdatedFiles |
+| Re-run behavior? | Always re-run all initializers regardless of IsSetup() status; initializers are idempotent |
+| IsSetup() purpose? | For setup wizard to show which providers are already configured; not used to skip initializers |
+| ConfigFileInitializer idempotency? | Content between markers is replaced; content outside markers is preserved |
+| TemplateContext creation? | Derived from Config.SpectrDir in executor via `templateContextFromConfig(cfg)` |
+| Template collision? | Last-wins precedence, silent (no warning or error) |
+| SlashCommand filename? | Use `SlashCommand.String()` method combined with extension (e.g., `proposal.md`) |
+| Provider priority constraints? | Priorities must be unique positive integers; gaps are allowed |
 
 ## Future Considerations (Out of Scope)
 

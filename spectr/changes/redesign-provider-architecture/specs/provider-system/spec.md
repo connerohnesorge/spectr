@@ -44,15 +44,15 @@ type Provider interface {
 The system SHALL define an `Initializer` interface with `Init` and `IsSetup` methods.
 
 #### Scenario: Initializer setup check
-- **WHEN** `IsSetup(projectFs, globalFs, cfg)` is called on an initializer
-- **THEN** it SHALL receive both project and global filesystems
+- **WHEN** `IsSetup(projectFs, homeFs, cfg)` is called on an initializer
+- **THEN** it SHALL receive both project and home filesystems
 - **AND** it SHALL return `true` if and only if ALL of the initializer's artifacts already exist
 - **AND** it SHALL return `false` if ANY artifact is missing or setup is needed
 - **AND** the initializer SHALL decide internally which filesystem to check based on its configuration
 
 #### Scenario: Initializer execution
-- **WHEN** `Init(ctx, projectFs, globalFs, cfg, tm)` is called on an initializer
-- **THEN** it SHALL receive both project and global filesystems
+- **WHEN** `Init(ctx, projectFs, homeFs, cfg, tm)` is called on an initializer
+- **THEN** it SHALL receive both project and home filesystems
 - **AND** it SHALL decide internally which filesystem to use based on its configuration
 - **AND** it SHALL create or update the necessary files in the appropriate filesystem
 - **AND** it SHALL return an `InitResult` containing created and updated file paths
@@ -147,10 +147,11 @@ The system SHALL use `afero.Fs` rooted at project directory for all file operati
 - **THEN** all paths SHALL be relative to the project root
 - **AND** the filesystem SHALL be created via `afero.NewBasePathFs(osFs, projectPath)`
 
-#### Scenario: Global filesystem root
-- **WHEN** the global filesystem is created
+#### Scenario: Home filesystem root
+- **WHEN** the home filesystem is created
 - **THEN** it SHALL be rooted at the user's home directory
 - **AND** the home directory SHALL be obtained via `os.UserHomeDir()`
+- **AND** if `os.UserHomeDir()` returns an error, initialization SHALL fail entirely
 - **AND** the filesystem SHALL be created as `afero.NewBasePathFs(afero.NewOsFs(), homeDir)` to create an afero.Fs instance
 
 ### Requirement: ConfigFile Initializer
@@ -217,10 +218,16 @@ The system SHALL provide built-in slash command initializers with separate types
 - **THEN** it SHALL create `proposal.md` and `apply.md` command files in the project filesystem
 - **AND** it SHALL use `slash-proposal.md.tmpl` and `slash-apply.md.tmpl` templates
 
-#### Scenario: Create global Markdown slash commands
-- **WHEN** `GlobalSlashCommandsInitializer` runs
-- **THEN** it SHALL create `proposal.md` and `apply.md` command files in the global filesystem (user home)
+#### Scenario: Create home Markdown slash commands
+- **WHEN** `HomeSlashCommandsInitializer` runs
+- **THEN** it SHALL create `proposal.md` and `apply.md` command files in the home filesystem (user home)
 - **AND** it SHALL use `slash-proposal.md.tmpl` and `slash-apply.md.tmpl` templates
+
+#### Scenario: Create prefixed Markdown slash commands
+- **WHEN** `PrefixedSlashCommandsInitializer` runs with prefix `spectr-`
+- **THEN** it SHALL create `spectr-proposal.md` and `spectr-apply.md` command files
+- **AND** it SHALL use `slash-proposal.md.tmpl` and `slash-apply.md.tmpl` templates
+- **NOTE**: Used by Antigravity and Codex for non-standard path patterns
 
 #### Scenario: Create TOML slash commands
 - **WHEN** `TOMLSlashCommandsInitializer` runs
@@ -230,17 +237,19 @@ The system SHALL provide built-in slash command initializers with separate types
 - **NOTE**: Only Gemini uses this initializer type
 
 ### Requirement: Directory Initializer
-The system SHALL provide built-in directory initializers with separate types for local vs global filesystem.
+The system SHALL provide built-in directory initializers with separate types for project vs home filesystem.
 
 #### Scenario: Create project directories
 - **WHEN** `DirectoryInitializer` runs
 - **THEN** it SHALL create all specified directories in the project filesystem if they do not exist
 - **AND** it SHALL recursively create parent directories as needed (like `os.MkdirAll`)
+- **AND** it SHALL succeed silently if the directory already exists
 
-#### Scenario: Create global directories
-- **WHEN** `GlobalDirectoryInitializer` runs
-- **THEN** it SHALL create all specified directories in the global filesystem (user home) if they do not exist
+#### Scenario: Create home directories
+- **WHEN** `HomeDirectoryInitializer` runs
+- **THEN** it SHALL create all specified directories in the home filesystem (user home) if they do not exist
 - **AND** it SHALL recursively create parent directories as needed (like `os.MkdirAll`)
+- **AND** it SHALL succeed silently if the directory already exists
 
 ### Requirement: Initializer Deduplication
 The system SHALL deduplicate initializers by type and path when multiple providers are configured.
@@ -261,7 +270,8 @@ The system SHALL deduplicate initializers by type and path when multiple provide
 - **WHEN** multiple providers return initializers with the same dedup key
 - **THEN** the system SHALL run the initializer only once
 - **AND** the dedup key SHALL include the type name (e.g., "DirectoryInitializer:.claude/commands/spectr")
-- **AND** separate types (`DirectoryInitializer` vs `GlobalDirectoryInitializer`) SHALL have different keys
+- **AND** separate types (`DirectoryInitializer` vs `HomeDirectoryInitializer`) SHALL have different keys
+- **AND** paths SHALL be normalized (filepath.Clean) before generating keys
 - **AND** the dedup key format SHALL be: `<TypeName>:<path>` where TypeName is the concrete type name
 
 #### Scenario: Different configurations run separately
@@ -273,8 +283,8 @@ The system SHALL execute initializers in a guaranteed order by type.
 
 #### Scenario: Directory initializers run first
 - **WHEN** initializers are collected for execution
-- **THEN** `DirectoryInitializer` and `GlobalDirectoryInitializer` SHALL run before `ConfigFileInitializer`
-- **AND** `ConfigFileInitializer` SHALL run before `SlashCommandsInitializer`, `GlobalSlashCommandsInitializer`, and `TOMLSlashCommandsInitializer`
+- **THEN** `DirectoryInitializer` and `HomeDirectoryInitializer` SHALL run before `ConfigFileInitializer`
+- **AND** `ConfigFileInitializer` SHALL run before `SlashCommandsInitializer`, `HomeSlashCommandsInitializer`, `PrefixedSlashCommandsInitializer`, and `TOMLSlashCommandsInitializer`
 
 #### Scenario: Ordering within same category
 - **WHEN** multiple initializers of the same type exist (e.g., multiple SlashCommandsInitializer instances)
@@ -307,8 +317,8 @@ The system SHALL define an `ExecutionResult` type for aggregated initialization 
 type ExecutionResult struct {
     CreatedFiles []string // all files created across all initializers
     UpdatedFiles []string // all files updated across all initializers
-    Error        error    // the error that caused execution to stop, or nil if successful
 }
+// Note: Error is returned separately from the execution function, not stored in this struct
 ```
 
 #### Scenario: ExecutionResult structure
@@ -316,33 +326,33 @@ type ExecutionResult struct {
 - **THEN** the system SHALL return an `ExecutionResult` containing:
   - `CreatedFiles []string` - all files created across all initializers
   - `UpdatedFiles []string` - all files updated across all initializers
-  - `Error error` - the error that caused execution to stop, or nil if successful
+- **AND** errors SHALL be returned separately from the execution function (not stored in ExecutionResult)
 
 #### Scenario: aggregateResults function
 - **WHEN** initializers have been executed
-- **THEN** the `aggregateResults(results []InitResult, err error) ExecutionResult` function SHALL combine all results
+- **THEN** the `aggregateResults(results []InitResult) ExecutionResult` function SHALL combine all results
 - **AND** it SHALL concatenate all created files into a single slice
 - **AND** it SHALL concatenate all updated files into a single slice
-- **AND** it SHALL set the Error field to the provided error (nil on success, non-nil on failure)
 
 ### Requirement: Dual Filesystem Support
 The system SHALL provide two filesystem instances to all initializers.
 
 #### Scenario: Filesystem provision
 - **WHEN** an initializer's `Init()` or `IsSetup()` method is called
-- **THEN** it SHALL receive both `projectFs` (rooted at project directory) and `globalFs` (rooted at user's home directory)
-- **AND** the initializer SHALL decide internally which filesystem to use based on its configuration
+- **THEN** it SHALL receive both `projectFs` (rooted at project directory) and `homeFs` (rooted at user's home directory)
+- **AND** the initializer SHALL decide internally which filesystem to use based on its type
 
 #### Scenario: Initializer configuration
 - **WHEN** an initializer is constructed
-- **THEN** it MAY be configured to use either the project or global filesystem
-- **AND** this configuration is internal to the initializer (not exposed via interface methods)
+- **THEN** it MAY be configured to use either the project or home filesystem
+- **AND** this configuration is determined by the initializer type (Home* types use homeFs)
 
-#### Scenario: Filesystem selection is internal
+#### Scenario: Filesystem selection by type
 - **WHEN** an initializer determines which filesystem to use
-- **THEN** the choice SHALL be based on the initializer's internal configuration
-- **AND** no external decision matrix or rules SHALL be enforced
-- **AND** initializers receive both filesystems and decide which to use based on their purpose
+- **THEN** the choice SHALL be based on the initializer's type
+- **AND** `HomeDirectoryInitializer` and `HomeSlashCommandsInitializer` SHALL use `homeFs`
+- **AND** `DirectoryInitializer`, `SlashCommandsInitializer`, `PrefixedSlashCommandsInitializer`, `ConfigFileInitializer`, and `TOMLSlashCommandsInitializer` SHALL use `projectFs`
+- **AND** initializers receive both filesystems but use only the appropriate one based on their type
 
 ### Requirement: Fail-Fast Error Handling
 The system SHALL stop on the first initialization error.
@@ -350,15 +360,16 @@ The system SHALL stop on the first initialization error.
 #### Scenario: Initializer failure
 - **WHEN** an initializer fails during execution
 - **THEN** the system SHALL stop immediately (fail-fast)
-- **AND** the system SHALL return partial results (files created before failure)
-- **AND** the system SHALL return the error in ExecutionResult.Error
+- **AND** the system SHALL return partial results (files created before failure) in ExecutionResult
+- **AND** the system SHALL return the error separately (not stored in ExecutionResult)
 - **AND** the system SHALL NOT rollback successful initializers - files created before the error SHALL remain on disk
 - **AND** the user SHALL be able to fix the issue and re-run `spectr init`
 
 #### Scenario: Partial results persistence
 - **WHEN** execution fails partway through (e.g., 2 files created successfully, 3rd file fails)
 - **THEN** all files created before the error SHALL remain on disk
-- **AND** the ExecutionResult.CreatedFiles SHALL list those files
+- **AND** the returned ExecutionResult.CreatedFiles SHALL list those files
+- **AND** the returned error SHALL describe the failure
 - **AND** no rollback or cleanup SHALL occur automatically
 - **AND** the user can inspect the partial state to diagnose the issue
 

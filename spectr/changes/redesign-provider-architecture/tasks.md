@@ -8,6 +8,10 @@ This document defines the implementation tasks for redesigning the provider arch
 - Zero technical debt: Complete removal of old code, no compatibility shims
 - Clean break: No backwards compatibility, users must re-run `spectr init`
 - 15 providers total (compacted priorities 1-15)
+- Fail-fast semantics: Stop on first error, return partial results from successful initializers
+- Deduplication order: Keep first occurrence (lower priority number = higher priority)
+- Marker search: Use `strings.Index` (first occurrence) for all marker searches
+- All marker edge cases (orphaned end, nested start, multiple starts) are error conditions
 
 ---
 
@@ -45,11 +49,11 @@ Create `internal/domain` package to break import cycles with shared types.
 
 Create the new provider system types and interfaces.
 
-- [ ] 1.1 Create `internal/initialize/providers/initializer.go` with `Initializer` interface: `Init(ctx, projectFs, globalFs, cfg, tm) (InitResult, error)` and `IsSetup(projectFs, globalFs, cfg) bool`
+- [ ] 1.1 Create `internal/initialize/providers/initializer.go` with `Initializer` interface: `Init(ctx, projectFs, homeFs, cfg, tm) (InitResult, error)` and `IsSetup(projectFs, homeFs, cfg) bool`
 
-- [ ] 1.2 Create `internal/initialize/providers/result.go` with `InitResult` struct (`CreatedFiles`, `UpdatedFiles`), `ExecutionResult` struct (adds `Errors`), and `aggregateResults()` function
+- [ ] 1.2 Create `internal/initialize/providers/result.go` with `InitResult` struct (`CreatedFiles`, `UpdatedFiles`), `ExecutionResult` struct (`CreatedFiles`, `UpdatedFiles` - no Error field, error returned separately), and `aggregateResults()` function
 
-- [ ] 1.3 Create `internal/initialize/providers/config.go` with `Config` struct (`SpectrDir`) and derived path methods: `SpecsDir()`, `ChangesDir()`, `ProjectFile()`, `AgentsFile()`
+- [ ] 1.3 Create `internal/initialize/providers/config.go` with `Config` struct (`SpectrDir`), `Validate()` method (non-empty, no absolute paths, no path traversal), and derived path methods: `SpecsDir()`, `ChangesDir()`, `ProjectFile()`, `AgentsFile()`
 
 - [ ] 1.4 Rewrite `internal/initialize/providers/provider.go` with minimal `Provider` interface returning `Initializers(ctx, tm *TemplateManager) []Initializer`; DELETE old 12-method interface, BaseProvider, TemplateRenderer, old TemplateContext
 
@@ -79,20 +83,21 @@ Update TemplateManager to use domain types and provide type-safe accessors.
 
 Create the three reusable initializer implementations.
 
-- [ ] 3.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer` (project fs) and `GlobalDirectoryInitializer` (global fs): creates directories, implements optional `deduplicatable` interface with `dedupeKey()`
+- [ ] 3.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer` (project fs) and `HomeDirectoryInitializer` (home fs): creates directories with MkdirAll (silent success if exists), implements optional `deduplicatable` interface with `dedupeKey()` using `filepath.Clean()` for path normalization
 
-- [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`: takes TemplateRef directly (not function), marker-based updates, orphaned marker handling with `strings.LastIndex`, prevents duplicate blocks
+- [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`: takes TemplateRef directly (not function), marker-based updates, orphaned marker handling with `strings.Index` (first occurrence), prevents duplicate blocks, errors on: orphaned end, nested start, multiple starts
 
-- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with three initializer types:
+- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with four initializer types:
   - `SlashCommandsInitializer` (project fs, Markdown .md)
-  - `GlobalSlashCommandsInitializer` (global fs, Markdown .md)
+  - `HomeSlashCommandsInitializer` (home fs, Markdown .md)
+  - `PrefixedSlashCommandsInitializer` (project fs, Markdown .md with prefix, for Antigravity/Codex)
   - `TOMLSlashCommandsInitializer` (project fs, TOML .toml for Gemini)
 
-- [ ] 3.4 Add unit tests for `DirectoryInitializer` and `GlobalDirectoryInitializer` in `directory_test.go` using `afero.MemMapFs`: creates dirs, IsSetup checks, separate types for project vs global filesystem
+- [ ] 3.4 Add unit tests for `DirectoryInitializer` and `HomeDirectoryInitializer` in `directory_test.go` using `afero.MemMapFs`: creates dirs, IsSetup checks, separate types for project vs home filesystem, silent success if dir exists
 
-- [ ] 3.5 Add unit tests for `ConfigFileInitializer` in `configfile_test.go` using `afero.MemMapFs`: new file, update between markers, orphaned start with trailing end, orphaned start with no end, no duplicate blocks, TemplateRef usage
+- [ ] 3.5 Add unit tests for `ConfigFileInitializer` in `configfile_test.go` using `afero.MemMapFs`: new file, update between markers, orphaned start with trailing end, orphaned start with no end, no duplicate blocks, TemplateRef usage, error cases: orphaned end marker, nested start markers, multiple start markers
 
-- [ ] 3.6 Add unit tests for all three slash command initializers in `slashcmds_test.go` using `afero.MemMapFs`: SlashCommandsInitializer (Markdown), GlobalSlashCommandsInitializer (Markdown), TOMLSlashCommandsInitializer (TOML)
+- [ ] 3.6 Add unit tests for all four slash command initializers in `slashcmds_test.go` using `afero.MemMapFs`: SlashCommandsInitializer (Markdown), HomeSlashCommandsInitializer (Markdown), PrefixedSlashCommandsInitializer (Markdown with prefix), TOMLSlashCommandsInitializer (TOML)
 
 ---
 
@@ -132,13 +137,13 @@ Migrate all 15 providers to new interface. Each migration DELETEs old BaseProvid
 
 - [ ] 5.5 Migrate `qwen.go` (Priority 5): Config file `QWEN.md`, commands `.qwen/commands/spectr/`
 
-- [ ] 5.6 Migrate `antigravity.go` (Priority 6, non-standard paths): Config file `AGENTS.md`, commands `.agent/workflows/` with prefixed names `spectr-proposal.md`, `spectr-apply.md`
+- [ ] 5.6 Migrate `antigravity.go` (Priority 6, non-standard paths): Config file `AGENTS.md`, commands `.agent/workflows/` with `PrefixedSlashCommandsInitializer` using prefix `spectr-` → `spectr-proposal.md`, `spectr-apply.md`
 
 - [ ] 5.7 Migrate `cline.go` (Priority 7): Config file `CLINE.md`, commands `.clinerules/commands/spectr/`
 
 - [ ] 5.8 Migrate `cursor.go` (Priority 8): No config file, commands `.cursorrules/commands/spectr/`
 
-- [ ] 5.9 Migrate `codex.go` (Priority 9, global paths): Config file `AGENTS.md`, commands `~/.codex/prompts/` with prefixed names, uses `GlobalDirectoryInitializer` and `GlobalSlashCommandsInitializer`
+- [ ] 5.9 Migrate `codex.go` (Priority 9, home paths): Config file `AGENTS.md`, commands `~/.codex/prompts/` with `HomeDirectoryInitializer` and `PrefixedSlashCommandsInitializer` using prefix `spectr-` → `spectr-proposal.md`, `spectr-apply.md`
 
 - [ ] 5.10 Migrate `aider.go` (Priority 10): No config file, commands `.aider/commands/spectr/`
 
@@ -158,23 +163,25 @@ Migrate all 15 providers to new interface. Each migration DELETEs old BaseProvid
 
 Update the executor to use the new provider system.
 
-- [ ] 6.1 Update `cmd/root.go` or entry point to call `providers.RegisterAllProviders()` with error handling at startup
+- [ ] 6.1 Update `cmd/init.go` to call `providers.RegisterAllProviders()` with error handling when init command is invoked
 
-- [ ] 6.2 Create dual filesystem in `executor.go`: `projectFs` rooted at project, `globalFs` rooted at home directory
+- [ ] 6.2 Create dual filesystem in `executor.go`: `projectFs` rooted at project, `homeFs` rooted at home directory (fail if os.UserHomeDir() errors)
 
 - [ ] 6.3 Update `executor.go` to use `RegisteredProviders()` for sorted provider list
 
 - [ ] 6.4 Implement initializer collection from selected providers in `executor.go`
 
-- [ ] 6.5 Implement initializer deduplication using optional `deduplicatable` interface in `executor.go`
+- [ ] 6.4a Create `templateContextFromConfig(cfg *Config) domain.TemplateContext` in `executor.go` to derive TemplateContext from Config.SpectrDir
 
-- [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer/GlobalDirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer/GlobalSlashCommandsInitializer/TOMLSlashCommandsInitializer (3)
+- [ ] 6.5 Implement initializer deduplication using optional `deduplicatable` interface in `executor.go` (keep first occurrence)
+
+- [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer/HomeDirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer/HomeSlashCommandsInitializer/PrefixedSlashCommandsInitializer/TOMLSlashCommandsInitializer (3)
 
 - [ ] 6.7 Update `configureProviders()` to pass both filesystems and TemplateManager, collect InitResult, fail-fast on first error
 
-- [ ] 6.8 Use `aggregateResults(allResults, nil)` to combine all InitResult into ExecutionResult on success
+- [ ] 6.8 Use `aggregateResults(allResults)` to combine all InitResult into ExecutionResult on success
 
-- [ ] 6.9 Implement fail-fast behavior: stop on first error, return partial results with single error in ExecutionResult.Errors
+- [ ] 6.9 Implement fail-fast behavior: stop on first error, return partial ExecutionResult and error separately (error not stored in ExecutionResult)
 
 ---
 
@@ -232,7 +239,7 @@ Comprehensive testing before completion.
 
 - [ ] 9.5 Manual test: `spectr init` with Gemini provider - verify TOML format in .gemini/commands/spectr/
 
-- [ ] 9.6 Manual test: `spectr init` with Codex provider - verify global paths in ~/.codex/prompts/
+- [ ] 9.6 Manual test: `spectr init` with Codex provider - verify home paths in ~/.codex/prompts/
 
 - [ ] 9.7 Verify InitResult reports correct created/updated files
 
@@ -249,12 +256,13 @@ Comprehensive testing before completion.
 | 0 | 0.1-0.12 | Domain package with shared types + TOML templates |
 | 1 | 1.1-1.5 | Core interfaces and types |
 | 2 | 2.1-2.5 + 2.3a | Type-safe template system (Markdown + TOML accessors) |
-| 3 | 3.1-3.6 | Built-in initializers (Local + Global + TOML types) |
+| 3 | 3.1-3.6 | Built-in initializers (Local + Home + Prefixed + TOML types) |
 | 4 | 4.1-4.8 | New registry (no init()) |
 | 5 | 5.1-5.15 | Migrate all 15 providers |
-| 6 | 6.1-6.9 | Executor integration (fail-fast) |
+| 6 | 6.1-6.9 + 6.4a | Executor integration (fail-fast, error returned separately, TemplateContext creation) |
 | 7 | 7.1-7.8 | Remove old code |
 | 8 | 8.1-8.6 | Test cleanup |
 | 9 | 9.1-9.9 | Final verification |
 
-**Total: 71 tasks**
+**Total: 72 tasks**
+

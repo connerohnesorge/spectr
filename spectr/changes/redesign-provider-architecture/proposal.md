@@ -27,14 +27,15 @@ The current provider system has 15 providers, each implementing a 12-method inte
 - **NEW**: `internal/domain` package embeds slash command templates moved from `internal/initialize/templates/tools/`:
   - `slash-proposal.md.tmpl`, `slash-apply.md.tmpl` (Markdown format)
   - `slash-proposal.toml.tmpl`, `slash-apply.toml.tmpl` (TOML format for Gemini)
-- **NEW**: `Initializer` interface with `Init(ctx, projectFs, globalFs, cfg, tm)` and `IsSetup(projectFs, globalFs, cfg)` methods
+- **NEW**: `Initializer` interface with `Init(ctx, projectFs, homeFs, cfg, tm)` and `IsSetup(projectFs, homeFs, cfg)` methods
 - **NEW**: Built-in initializers with separate types for filesystem and format:
-  - `DirectoryInitializer`, `GlobalDirectoryInitializer`
+  - `DirectoryInitializer`, `HomeDirectoryInitializer`
   - `ConfigFileInitializer`
-  - `SlashCommandsInitializer` (Markdown), `GlobalSlashCommandsInitializer` (Markdown)
+  - `SlashCommandsInitializer` (Markdown), `HomeSlashCommandsInitializer` (Markdown)
+  - `PrefixedSlashCommandsInitializer` (Markdown with prefix for Antigravity/Codex)
   - `TOMLSlashCommandsInitializer` (TOML for Gemini)
 - **NEW**: `Config` struct with `SpectrDir` field; other paths derived (SpecsDir = SpectrDir/specs, etc.)
-- **NEW**: Two filesystem instances: `projectFs` (project-relative) and `globalFs` (home directory)
+- **NEW**: Two filesystem instances: `projectFs` (project-relative) and `homeFs` (home directory)
 - **REMOVED**: `GetFilePaths()`, `HasConfigFile()`, `HasSlashCommands()` methods
 - **NEW**: `Initializer.Init()` returns `InitResult` containing created/updated files (explicit change tracking)
 - **CHANGED**: Provider registration uses explicit `RegisterAllProviders()` called at startup (no init() in provider files, proper error propagation)
@@ -49,7 +50,7 @@ The current provider system has 15 providers, each implementing a 12-method inte
 | Partial failure | Fail-fast, no rollback | Stop on first error, files remain on disk; user fixes and re-runs |
 | Registration failure | Partial registrations kept | Successfully registered providers remain; no rollback |
 | Template variables | Derive from SpectrDir | SpecsDir = SpectrDir/specs, etc.; single source of truth |
-| Global paths | Separate initializer types | GlobalDirectoryInitializer, GlobalSlashCommandsInitializer for ~/.config/tool/ patterns |
+| Home paths | Separate initializer types | HomeDirectoryInitializer, HomeSlashCommandsInitializer, PrefixedSlashCommandsInitializer for ~/.config/tool/ patterns |
 | Deduplication | By type + path, then sort | Dedupe first by key, then sort by type priority; execute in order |
 | Template selection | TemplateRef directly | ConfigFileInitializer takes TemplateRef, not function; Provider.Initializers() receives TemplateManager |
 | TOML support | Separate initializer type | TOMLSlashCommandsInitializer for Gemini; uses .toml.tmpl templates |

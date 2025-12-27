@@ -7,6 +7,7 @@ description: Implement an approved Spectr change and keep tasks in sync.
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
 - Refer to `spectr/AGENTS.md` and `spectr/project.md` (located inside the `spectr/` directory—run `ls spectr`) if you need additional Spectr conventions or clarifications.
+- Run linting and tests after each delegation/implementation to ensure the partial implementation is valid.
 
 # Steps
 Track these steps as TODOs and complete them one by one.
@@ -20,7 +21,6 @@ Track these steps as TODOs and complete them one by one.
 # Reference
 - Read `spectr/changes/<id>/proposal.md` for proposal details.
 - Read `spectr/changes/<id>/specs/<capability>/spec.md` for delta specs.
--
 
 <!-- spectr:END -->
 

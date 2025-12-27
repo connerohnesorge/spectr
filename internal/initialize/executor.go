@@ -5,17 +5,22 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
+	"github.com/connerohnesorge/spectr/internal/domain"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/templates"
+	"github.com/spf13/afero"
 )
 
 // InitExecutor handles the actual initialization process
 type InitExecutor struct {
 	projectPath string
-	tm          *TemplateManager
+	tm          *templates.TemplateManager
 }
 
 // NewInitExecutor creates a new initialization executor
@@ -40,7 +45,7 @@ func NewInitExecutor(
 	}
 
 	// Initialize template manager
-	tm, err := NewTemplateManager()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
 		return nil,
 			fmt.Errorf(
@@ -115,7 +120,7 @@ func (e *InitExecutor) Execute(
 		)
 	}
 
-	// 5. Configure selected providers
+	// 5. Configure selected providers using new architecture
 	err = e.configureProviders(
 		selectedProviderIDs,
 		spectrDir,
@@ -204,7 +209,7 @@ func (e *InitExecutor) createProjectMd(
 
 	// Render template
 	content, err := e.tm.RenderProject(
-		ProjectContext{
+		templates.ProjectContext{
 			ProjectName: projectName,
 			Description: "Add your project description here",
 			TechStack: []string{
@@ -261,7 +266,7 @@ func (e *InitExecutor) createAgentsMd(
 
 	// Render template
 	content, err := e.tm.RenderAgents(
-		providers.DefaultTemplateContext(),
+		domain.DefaultTemplateContext(),
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -287,7 +292,7 @@ func (e *InitExecutor) createAgentsMd(
 }
 
 // configureProviders configures the selected providers using the new interface-driven architecture.
-// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+// This implementation uses the composable initializer pattern.
 func (e *InitExecutor) configureProviders(
 	selectedProviderIDs []string,
 	spectrDir string,
@@ -297,51 +302,148 @@ func (e *InitExecutor) configureProviders(
 		return nil // No providers to configure
 	}
 
-	for _, providerID := range selectedProviderIDs {
-		provider := providers.Get(providerID)
-		if provider == nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"provider %s not found",
-					providerID,
-				),
-			)
+	// Task 8.2: Create dual filesystem
+	// Project filesystem rooted at project directory
+	projectFs := afero.NewBasePathFs(afero.NewOsFs(), e.projectPath)
 
-			continue
-		}
+	// Home filesystem rooted at home directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get home directory: %w", err)
+	}
+	homeFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
 
-		// Check if already configured
-		wasConfigured := provider.IsConfigured(
-			e.projectPath,
-		)
+	// Create Config from spectrDir
+	cfg := &providers.Config{
+		SpectrDir: "spectr", // relative to project root
+	}
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("invalid config: %w", err)
+	}
 
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"failed to configure %s: %v",
-					provider.Name(),
-					err,
-				),
-			)
+	// Task 8.5: Create TemplateContext from Config
+	tmplCtx := templateContextFromConfig(cfg)
+	_ = tmplCtx // Will be used when rendering templates in initializers
 
-			continue
-		}
+	// Task 8.3: Use RegisteredProviders() to get sorted provider list
+	allRegistrations := providers.RegisteredProviders()
 
-		// Track created/updated files
-		filePaths := provider.GetFilePaths()
-		if wasConfigured {
-			result.UpdatedFiles = append(
-				result.UpdatedFiles,
-				filePaths...)
-		} else {
-			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
+	// Filter to only selected providers (maintain priority order)
+	var selectedProviders []providers.Registration
+	for _, reg := range allRegistrations {
+		for _, id := range selectedProviderIDs {
+			if reg.ID == id {
+				selectedProviders = append(selectedProviders, reg)
+
+				break
+			}
 		}
 	}
 
+	// Task 8.4: Collect initializers from selected providers
+	ctx := context.Background()
+	var allInitializers []providers.Initializer
+
+	for _, reg := range selectedProviders {
+		inits := reg.Provider.Initializers(ctx, e.tm)
+		allInitializers = append(allInitializers, inits...)
+	}
+
+	// Task 8.7: Sort initializers by type priority
+	sortedInitializers := sortInitializers(allInitializers)
+
+	// Task 8.6: Deduplicate initializers (keep first occurrence)
+	deduplicatedInitializers := deduplicateInitializers(sortedInitializers)
+
+	// Task 8.8, 8.9, 8.10: Execute initializers with fail-fast behavior
+	initResults := make([]providers.InitResult, 0, len(deduplicatedInitializers))
+
+	for _, init := range deduplicatedInitializers {
+		// Pass both filesystems and TemplateManager to initializer
+		initResult, err := init.Init(ctx, projectFs, homeFs, cfg, e.tm)
+		if err != nil {
+			// Task 8.10: Fail-fast - stop on first error
+			// Return partial results from successful initializers
+			partialExecResult := providers.AggregateResults(initResults)
+			result.CreatedFiles = append(result.CreatedFiles, partialExecResult.CreatedFiles...)
+			result.UpdatedFiles = append(result.UpdatedFiles, partialExecResult.UpdatedFiles...)
+
+			return fmt.Errorf("initializer failed: %w", err)
+		}
+		initResults = append(initResults, initResult)
+	}
+
+	// Task 8.9: Aggregate all results on success
+	execResult := providers.AggregateResults(initResults)
+	result.CreatedFiles = append(result.CreatedFiles, execResult.CreatedFiles...)
+	result.UpdatedFiles = append(result.UpdatedFiles, execResult.UpdatedFiles...)
+
 	return nil
+}
+
+// templateContextFromConfig derives TemplateContext from Config.SpectrDir (Task 8.5)
+func templateContextFromConfig(cfg *providers.Config) domain.TemplateContext {
+	return domain.TemplateContext{
+		BaseDir:     cfg.SpectrDir,
+		SpecsDir:    cfg.SpecsDir(),
+		ChangesDir:  cfg.ChangesDir(),
+		ProjectFile: cfg.ProjectFile(),
+		AgentsFile:  cfg.AgentsFile(),
+	}
+}
+
+// sortInitializers sorts initializers by type priority (Task 8.7)
+// Order: Directory (1) -> ConfigFile (2) -> SlashCommands (3)
+func sortInitializers(inits []providers.Initializer) []providers.Initializer {
+	sorted := make([]providers.Initializer, len(inits))
+	copy(sorted, inits)
+
+	sort.SliceStable(sorted, func(i, j int) bool {
+		return initializerPriority(sorted[i]) < initializerPriority(sorted[j])
+	})
+
+	return sorted
+}
+
+// initializerPriority returns the execution priority for an initializer type
+func initializerPriority(init providers.Initializer) int {
+	switch init.(type) {
+	case *providers.DirectoryInitializer, *providers.HomeDirectoryInitializer:
+		return 1
+	case *providers.ConfigFileInitializer:
+		return 2
+	case *providers.SlashCommandsInitializer, *providers.HomeSlashCommandsInitializer,
+		*providers.PrefixedSlashCommandsInitializer, *providers.HomePrefixedSlashCommandsInitializer,
+		*providers.TOMLSlashCommandsInitializer:
+		return 3
+	default:
+		return 99 // Unknown types go last
+	}
+}
+
+// deduplicatable is the optional interface for initializers that support deduplication
+type deduplicatable interface {
+	dedupeKey() string
+}
+
+// deduplicateInitializers removes duplicate initializers, keeping first occurrence (Task 8.6)
+func deduplicateInitializers(inits []providers.Initializer) []providers.Initializer {
+	seen := make(map[string]bool)
+	result := make([]providers.Initializer, 0, len(inits))
+
+	for _, init := range inits {
+		// Check if initializer implements deduplicatable interface
+		if d, ok := init.(deduplicatable); ok {
+			key := d.dedupeKey()
+			if seen[key] {
+				continue // Skip duplicate
+			}
+			seen[key] = true
+		}
+		result = append(result, init)
+	}
+
+	return result
 }
 
 // createCIWorkflow creates the .github/workflows/spectr-ci.yml file

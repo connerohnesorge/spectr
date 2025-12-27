@@ -71,7 +71,7 @@ linters:
           severity: warning
           disabled: false
           exclude: [""]
-          arguments: [4]
+          arguments: [5]
         # https://github.com/mgechev/revive/blob/HEAD/RULES_DESCRIPTIONS.md#atomic
         - name: atomic
           severity: warning

@@ -8,9 +8,21 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
+// setupProviders resets and registers all providers for testing
+func setupProviders(t *testing.T) {
+	t.Helper()
+	providers.ResetRegistry()
+	if err := providers.RegisterAllProviders(); err != nil {
+		t.Fatalf("Failed to register providers: %v", err)
+	}
+}
+
 func TestNewWizardModel(t *testing.T) {
+	setupProviders(t)
 	// Test creating a new wizard model
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
@@ -51,6 +63,7 @@ func TestNewWizardModel(t *testing.T) {
 }
 
 func TestWizardStepTransitions(t *testing.T) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -95,6 +108,7 @@ func TestWizardStepTransitions(t *testing.T) {
 
 //nolint:revive // cognitive-complexity - comprehensive test coverage
 func TestWizardRenderFunctions(t *testing.T) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -195,6 +209,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 }
 
 func TestGetSelectedProviderIDs(t *testing.T) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -251,6 +266,7 @@ func TestGetSelectedProviderIDs(t *testing.T) {
 func TestNewWizardModelWithConfiguredProviders(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Create a temp directory with a configured provider
 	tempDir := t.TempDir()
 
@@ -337,6 +353,7 @@ func TestNewWizardModelWithConfiguredProviders(
 func TestNewWizardModelNoConfiguredProviders(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Create an empty temp directory
 	tempDir := t.TempDir()
 
@@ -361,10 +378,16 @@ func TestNewWizardModelNoConfiguredProviders(
 	}
 
 	// Verify no providers are pre-selected
-	if len(wizard.selectedProviders) != 0 {
+	selectedCount := 0
+	for _, selected := range wizard.selectedProviders {
+		if selected {
+			selectedCount++
+		}
+	}
+	if selectedCount != 0 {
 		t.Errorf(
 			"Expected no providers to be selected, but got %d selected",
-			len(wizard.selectedProviders),
+			selectedCount,
 		)
 	}
 }
@@ -372,6 +395,7 @@ func TestNewWizardModelNoConfiguredProviders(
 func TestNewWizardModelWithCIWorkflowConfigured(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Create a temp directory with CI workflow file
 	tempDir := t.TempDir()
 
@@ -433,6 +457,7 @@ func TestNewWizardModelWithCIWorkflowConfigured(
 func TestNewWizardModelWithoutCIWorkflow(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Create an empty temp directory
 	tempDir := t.TempDir()
 
@@ -464,6 +489,7 @@ func TestNewWizardModelWithoutCIWorkflow(
 func TestRenderSelectShowsConfiguredIndicator(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Create wizard with manually set configured provider
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
@@ -516,6 +542,7 @@ func findSubstring(s, substr string) bool {
 func TestHandleCompleteKeysCopyOnError(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Test that pressing 'c' on error screen (m.err != nil) does NOT return tea.Quit
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
@@ -551,6 +578,7 @@ func TestHandleCompleteKeysCopyOnError(
 func TestRenderCompleteShowsCopyHintOnSuccess(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Test that renderComplete() on success screen contains "c: copy"
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
@@ -585,6 +613,7 @@ func TestRenderCompleteShowsCopyHintOnSuccess(
 func TestRenderCompleteHidesCopyHintOnError(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Test that renderComplete() on error screen does NOT contain "c: copy"
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
@@ -675,6 +704,7 @@ func TestPopulateContextPromptHasNoSurroundingQuotes(
 func TestHandleReviewKeysToggleCIWorkflow(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	// Test that pressing space on review screen toggles CI workflow option
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
@@ -727,6 +757,7 @@ func TestHandleReviewKeysToggleCIWorkflow(
 func TestRenderReviewShowsCIWorkflowOption(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -765,6 +796,7 @@ func TestRenderReviewShowsCIWorkflowOption(
 func TestRenderReviewShowsCIWorkflowConfigured(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -790,6 +822,7 @@ func TestRenderReviewShowsCIWorkflowConfigured(
 }
 
 func TestProviderFilteringLogic(t *testing.T) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -827,12 +860,12 @@ func TestProviderFilteringLogic(t *testing.T) {
 	// Verify all results contain "claude" (case-insensitive)
 	for _, provider := range wizard.filteredProviders {
 		if !strings.Contains(
-			strings.ToLower(provider.Name()),
+			strings.ToLower(provider.Name),
 			"claude",
 		) {
 			t.Errorf(
 				"Provider %s should not match 'claude'",
-				provider.Name(),
+				provider.Name,
 			)
 		}
 	}
@@ -863,6 +896,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 }
 
 func TestCursorAdjustmentOnFilter(t *testing.T) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -905,6 +939,7 @@ func TestCursorAdjustmentOnFilter(t *testing.T) {
 func TestSelectionPreservedDuringFiltering(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -916,7 +951,7 @@ func TestSelectionPreservedDuringFiltering(
 
 	// Select all providers
 	for _, provider := range wizard.allProviders {
-		wizard.selectedProviders[provider.ID()] = true
+		wizard.selectedProviders[provider.ID] = true
 	}
 
 	originalSelectionCount := len(
@@ -959,6 +994,7 @@ func TestSelectionPreservedDuringFiltering(
 }
 
 func TestSearchModeActivation(t *testing.T) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -992,6 +1028,7 @@ func TestSearchModeActivation(t *testing.T) {
 }
 
 func TestSearchModeExitWithEscape(t *testing.T) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -1047,6 +1084,7 @@ func TestSearchModeExitWithEscape(t *testing.T) {
 func TestRenderSelectShowsSearchInput(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -1082,6 +1120,7 @@ func TestRenderSelectShowsSearchInput(
 func TestRenderSelectShowsSearchHotkey(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -1107,6 +1146,7 @@ func TestRenderSelectShowsSearchHotkey(
 func TestRenderSelectShowsNoMatchMessage(
 	t *testing.T,
 ) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -1135,6 +1175,7 @@ func TestRenderSelectShowsNoMatchMessage(
 }
 
 func TestSpaceToggleInSearchMode(t *testing.T) {
+	setupProviders(t)
 	cmd := &InitCmd{Path: "/tmp/test-project"}
 	wizard, err := NewWizardModel(cmd)
 	if err != nil {
@@ -1150,7 +1191,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 
 	// Ensure first provider is not selected
 	if len(wizard.filteredProviders) > 0 {
-		wizard.selectedProviders[wizard.filteredProviders[0].ID()] = false
+		wizard.selectedProviders[wizard.filteredProviders[0].ID] = false
 	}
 
 	// Simulate pressing space key while in search mode
@@ -1168,7 +1209,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 		return
 	}
 
-	providerID := updatedWizard.filteredProviders[0].ID()
+	providerID := updatedWizard.filteredProviders[0].ID
 	if !updatedWizard.selectedProviders[providerID] {
 		t.Errorf(
 			"Expected provider %s to be selected after space press",

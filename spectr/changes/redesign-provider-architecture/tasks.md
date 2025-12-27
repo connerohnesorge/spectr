@@ -87,17 +87,18 @@ Create the three reusable initializer implementations.
 
 - [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`: takes TemplateRef directly (not function), marker-based updates, orphaned marker handling with `strings.Index` (first occurrence), prevents duplicate blocks, errors on: orphaned end, nested start, multiple starts
 
-- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with four initializer types:
+- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with five initializer types (all use early binding with map[SlashCommand]TemplateRef):
   - `SlashCommandsInitializer` (project fs, Markdown .md)
   - `HomeSlashCommandsInitializer` (home fs, Markdown .md)
-  - `PrefixedSlashCommandsInitializer` (project fs, Markdown .md with prefix, for Antigravity/Codex)
+  - `PrefixedSlashCommandsInitializer` (project fs, Markdown .md with prefix, for Antigravity)
+  - `HomePrefixedSlashCommandsInitializer` (home fs, Markdown .md with prefix, for Codex)
   - `TOMLSlashCommandsInitializer` (project fs, TOML .toml for Gemini)
 
 - [ ] 3.4 Add unit tests for `DirectoryInitializer` and `HomeDirectoryInitializer` in `directory_test.go` using `afero.MemMapFs`: creates dirs, IsSetup checks, separate types for project vs home filesystem, silent success if dir exists
 
 - [ ] 3.5 Add unit tests for `ConfigFileInitializer` in `configfile_test.go` using `afero.MemMapFs`: new file, update between markers, orphaned start with trailing end, orphaned start with no end, no duplicate blocks, TemplateRef usage, error cases: orphaned end marker, nested start markers, multiple start markers
 
-- [ ] 3.6 Add unit tests for all four slash command initializers in `slashcmds_test.go` using `afero.MemMapFs`: SlashCommandsInitializer (Markdown), HomeSlashCommandsInitializer (Markdown), PrefixedSlashCommandsInitializer (Markdown with prefix), TOMLSlashCommandsInitializer (TOML)
+- [ ] 3.6 Add unit tests for all five slash command initializers in `slashcmds_test.go` using `afero.MemMapFs`: SlashCommandsInitializer (Markdown), HomeSlashCommandsInitializer (Markdown), PrefixedSlashCommandsInitializer (Markdown with prefix), HomePrefixedSlashCommandsInitializer (Markdown with prefix on home fs), TOMLSlashCommandsInitializer (TOML)
 
 ---
 
@@ -143,7 +144,7 @@ Migrate all 15 providers to new interface. Each migration DELETEs old BaseProvid
 
 - [ ] 5.8 Migrate `cursor.go` (Priority 8): No config file, commands `.cursorrules/commands/spectr/`
 
-- [ ] 5.9 Migrate `codex.go` (Priority 9, home paths): Config file `AGENTS.md`, commands `~/.codex/prompts/` with `HomeDirectoryInitializer` and `PrefixedSlashCommandsInitializer` using prefix `spectr-` → `spectr-proposal.md`, `spectr-apply.md`
+- [ ] 5.9 Migrate `codex.go` (Priority 9, home paths): Config file `AGENTS.md`, commands `~/.codex/prompts/` with `HomeDirectoryInitializer` and `HomePrefixedSlashCommandsInitializer` using prefix `spectr-` → `spectr-proposal.md`, `spectr-apply.md`
 
 - [ ] 5.10 Migrate `aider.go` (Priority 10): No config file, commands `.aider/commands/spectr/`
 
@@ -175,7 +176,7 @@ Update the executor to use the new provider system.
 
 - [ ] 6.5 Implement initializer deduplication using optional `deduplicatable` interface in `executor.go` (keep first occurrence)
 
-- [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer/HomeDirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer/HomeSlashCommandsInitializer/PrefixedSlashCommandsInitializer/TOMLSlashCommandsInitializer (3)
+- [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer/HomeDirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer/HomeSlashCommandsInitializer/PrefixedSlashCommandsInitializer/HomePrefixedSlashCommandsInitializer/TOMLSlashCommandsInitializer (3)
 
 - [ ] 6.7 Update `configureProviders()` to pass both filesystems and TemplateManager, collect InitResult, fail-fast on first error
 

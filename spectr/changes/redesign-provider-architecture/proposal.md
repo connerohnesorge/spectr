@@ -11,7 +11,7 @@ The current provider system has 15 providers, each implementing a 12-method inte
 
 ## Scope
 
-**Minimal viable**: Focus on reducing boilerplate while keeping behavior identical. No new features, no new instruction files (those belong in a separate proposal).
+**Behavioral equivalence**: Architectural refactor maintaining identical user-facing behavior. No new user-facing features, no new instruction file formats (those belong in a separate proposal). Internal implementation uses new patterns (domain package, initializer interface, dual filesystems) to eliminate boilerplate.
 
 **Zero technical debt policy**: Complete removal of old registration system. No compatibility shims, no deprecated functions that silently swallow calls. Clean break with compile-time errors to force explicit migration.
 
@@ -32,7 +32,8 @@ The current provider system has 15 providers, each implementing a 12-method inte
   - `DirectoryInitializer`, `HomeDirectoryInitializer`
   - `ConfigFileInitializer`
   - `SlashCommandsInitializer` (Markdown), `HomeSlashCommandsInitializer` (Markdown)
-  - `PrefixedSlashCommandsInitializer` (Markdown with prefix for Antigravity/Codex)
+  - `PrefixedSlashCommandsInitializer` (Markdown with prefix for Antigravity)
+  - `HomePrefixedSlashCommandsInitializer` (Markdown with prefix for Codex, home fs)
   - `TOMLSlashCommandsInitializer` (TOML for Gemini)
 - **NEW**: `Config` struct with `SpectrDir` field; other paths derived (SpecsDir = SpectrDir/specs, etc.)
 - **NEW**: Two filesystem instances: `projectFs` (project-relative) and `homeFs` (home directory)
@@ -48,16 +49,18 @@ The current provider system has 15 providers, each implementing a 12-method inte
 | Change detection | InitResult return value | Each initializer returns files it created/updated; explicit and testable |
 | Initializer ordering | Documented guarantee (implicit by type) | Directory → ConfigFile → SlashCommands; simple and predictable |
 | Partial failure | Fail-fast, no rollback | Stop on first error, files remain on disk; user fixes and re-runs |
-| Registration failure | Partial registrations kept | Successfully registered providers remain; no rollback |
+| Registration failure | Fail-fast, application exits | Stop on first error; application won't start if any provider fails to register |
 | Template variables | Derive from SpectrDir | SpecsDir = SpectrDir/specs, etc.; single source of truth |
-| Home paths | Separate initializer types | HomeDirectoryInitializer, HomeSlashCommandsInitializer, PrefixedSlashCommandsInitializer for ~/.config/tool/ patterns |
-| Deduplication | By type + path, then sort | Dedupe first by key, then sort by type priority; execute in order |
+| Home paths | Separate initializer types | HomeDirectoryInitializer, HomeSlashCommandsInitializer, HomePrefixedSlashCommandsInitializer for ~/.config/tool/ patterns |
+| Deduplication | By type + path, provider priority wins | Sort by type (stable), then dedupe (keep first); higher-priority provider's initializer kept |
 | Template selection | TemplateRef directly | ConfigFileInitializer takes TemplateRef, not function; Provider.Initializers() receives TemplateManager |
 | TOML support | Separate initializer type | TOMLSlashCommandsInitializer for Gemini; uses .toml.tmpl templates |
 | Marker format | Lowercase `<!-- spectr:start/end -->` | ALL markdown markers use lowercase for consistency |
 | Template collision | Last-wins precedence | Later template overwrites earlier; no error |
 | Filesystem root | os.UserHomeDir() to afero.Fs | Explicit Go stdlib function, converted to afero.Fs |
+| Home directory failure | Fail initialization entirely | Home directory access required; initialization aborts if unavailable |
 | Directory creation | Recursive (MkdirAll style) | Create all missing parents automatically |
+| Slash command update | Always overwrite | Idempotent behavior; user modifications lost on re-init |
 
 ## Impact
 

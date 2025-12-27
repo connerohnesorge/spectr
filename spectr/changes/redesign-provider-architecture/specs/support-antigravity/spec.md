@@ -18,7 +18,7 @@ The provider SHALL be configured with these settings:
 - **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
 - **THEN** it SHALL return a `DirectoryInitializer` for `.agent/workflows/`
 - **AND** it SHALL return a `ConfigFileInitializer` for `AGENTS.md` with TemplateRef from TemplateManager
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands in `.agent/workflows/`
+- **AND** it SHALL return a `PrefixedSlashCommandsInitializer` with prefix `spectr-` for Markdown format slash commands in `.agent/workflows/`
 
 #### Scenario: Configuration file location
 - **WHEN** the provider is initialized

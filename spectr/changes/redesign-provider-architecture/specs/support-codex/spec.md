@@ -18,7 +18,7 @@ The provider SHALL be configured with these settings:
 - **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
 - **THEN** it SHALL return a `HomeDirectoryInitializer` for `~/.codex/prompts/`
 - **AND** it SHALL return a `ConfigFileInitializer` for `AGENTS.md` with TemplateRef from TemplateManager
-- **AND** it SHALL return a `PrefixedSlashCommandsInitializer` with prefix `spectr-` for home slash commands
+- **AND** it SHALL return a `HomePrefixedSlashCommandsInitializer` with prefix `spectr-` for home slash commands
 
 #### Scenario: Provider metadata
 - **WHEN** provider is registered

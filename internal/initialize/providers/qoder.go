@@ -1,32 +1,30 @@
 package providers
 
-func init() {
-	Register(NewQoderProvider())
-}
+import (
+	"context"
+
+	"github.com/connerohnesorge/spectr/internal/domain"
+	"github.com/connerohnesorge/spectr/internal/templates"
+)
 
 // QoderProvider implements the Provider interface for Qoder.
-// Qoder uses QODER.md and .qoder/commands/ for slash commands.
-type QoderProvider struct {
-	BaseProvider
-}
+// Qoder uses QODER.md and .qoder/commands/spectr/ for slash commands.
+type QoderProvider struct{}
 
-// NewQoderProvider creates a new Qoder provider.
-func NewQoderProvider() *QoderProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".qoder/commands",
-		".md",
-	)
-
-	return &QoderProvider{
-		BaseProvider: BaseProvider{
-			id:            "qoder",
-			name:          "Qoder",
-			priority:      PriorityQoder,
-			configFile:    "QODER.md",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for Qoder provider.
+func (*QoderProvider) Initializers(
+	_ context.Context,
+	tm *templates.TemplateManager,
+) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".qoder/commands/spectr"),
+		NewConfigFileInitializer("QODER.md", tm.InstructionPointer()),
+		NewSlashCommandsInitializer(
+			".qoder/commands/spectr",
+			map[domain.SlashCommand]domain.TemplateRef{
+				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
+				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+			},
+		),
 	}
 }

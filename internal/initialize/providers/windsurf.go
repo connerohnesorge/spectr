@@ -1,32 +1,29 @@
 package providers
 
-func init() {
-	Register(NewWindsurfProvider())
-}
+import (
+	"context"
+
+	"github.com/connerohnesorge/spectr/internal/domain"
+	"github.com/connerohnesorge/spectr/internal/templates"
+)
 
 // WindsurfProvider implements the Provider interface for Windsurf.
-// Windsurf uses .windsurf/commands/ for slash commands (no config file).
-type WindsurfProvider struct {
-	BaseProvider
-}
+// Windsurf uses .windsurf/commands/spectr/ for slash commands (no config file).
+type WindsurfProvider struct{}
 
-// NewWindsurfProvider creates a new Windsurf provider.
-func NewWindsurfProvider() *WindsurfProvider {
-	proposalPath, applyPath := StandardCommandPaths(
-		".windsurf/commands",
-		".md",
-	)
-
-	return &WindsurfProvider{
-		BaseProvider: BaseProvider{
-			id:            "windsurf",
-			name:          "Windsurf",
-			priority:      PriorityWindsurf,
-			configFile:    "",
-			proposalPath:  proposalPath,
-			applyPath:     applyPath,
-			commandFormat: FormatMarkdown,
-			frontmatter:   StandardFrontmatter(),
-		},
+// Initializers returns the initializers for Windsurf provider.
+func (*WindsurfProvider) Initializers(
+	_ context.Context,
+	tm *templates.TemplateManager,
+) []Initializer {
+	return []Initializer{
+		NewDirectoryInitializer(".windsurf/commands/spectr"),
+		NewSlashCommandsInitializer(
+			".windsurf/commands/spectr",
+			map[domain.SlashCommand]domain.TemplateRef{
+				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
+				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+			},
+		),
 	}
 }

@@ -1,665 +1,601 @@
 package providers
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
+	"context"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/domain"
+	"github.com/connerohnesorge/spectr/internal/templates"
 )
 
-// mockTemplateRenderer implements TemplateRenderer for testing
-type mockTemplateRenderer struct {
-	agentsContent         string
-	instructionPtrContent string
-	slashContent          map[string]string
-}
-
-func newMockRenderer() *mockTemplateRenderer {
-	return &mockTemplateRenderer{
-		agentsContent:         "# Test AGENTS content",
-		instructionPtrContent: "# Spectr Instructions\nRead spectr/AGENTS.md",
-		slashContent: map[string]string{
-			"proposal": "Proposal command content",
-			"apply":    "Apply command content",
-		},
-	}
-}
-
-func (m *mockTemplateRenderer) RenderAgents(
-	_ TemplateContext,
-) (string, error) {
-	return m.agentsContent, nil
-}
-
-func (m *mockTemplateRenderer) RenderInstructionPointer(
-	_ TemplateContext,
-) (string, error) {
-	return m.instructionPtrContent, nil
-}
-
-func (m *mockTemplateRenderer) RenderSlashCommand(
-	command string,
-	_ TemplateContext,
-) (string, error) {
-	return m.slashContent[command], nil
-}
-
+// TestClaudeProvider tests the Claude Code provider returns expected initializers
 func TestClaudeProvider(t *testing.T) {
-	p := NewClaudeProvider()
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
 
-	if p.ID() != "claude-code" {
-		t.Errorf(
-			"ID() = %s, want claude-code",
-			p.ID(),
-		)
+	p := &ClaudeProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 3 initializers: Directory, ConfigFile, SlashCommands
+	if len(inits) != 3 {
+		t.Errorf("ClaudeProvider.Initializers() returned %d initializers, want 3", len(inits))
 	}
-	if p.Name() != "Claude Code" {
-		t.Errorf(
-			"Name() = %s, want Claude Code",
-			p.Name(),
-		)
+
+	// Check types
+	if _, ok := inits[0].(*DirectoryInitializer); !ok {
+		t.Errorf("ClaudeProvider.Initializers()[0] = %T, want *DirectoryInitializer", inits[0])
 	}
-	if p.Priority() != PriorityClaudeCode {
-		t.Errorf(
-			"Priority() = %d, want %d",
-			p.Priority(),
-			PriorityClaudeCode,
-		)
+	if _, ok := inits[1].(*ConfigFileInitializer); !ok {
+		t.Errorf("ClaudeProvider.Initializers()[1] = %T, want *ConfigFileInitializer", inits[1])
 	}
-	if p.ConfigFile() != "CLAUDE.md" {
-		t.Errorf(
-			"ConfigFile() = %s, want CLAUDE.md",
-			p.ConfigFile(),
-		)
+	if _, ok := inits[2].(*SlashCommandsInitializer); !ok {
+		t.Errorf("ClaudeProvider.Initializers()[2] = %T, want *SlashCommandsInitializer", inits[2])
 	}
-	if p.GetProposalCommandPath() != ".claude/commands/spectr/proposal.md" {
-		t.Errorf(
-			"GetProposalCommandPath() = %s, want .claude/commands/spectr/proposal.md",
-			p.GetProposalCommandPath(),
-		)
+
+	// Check paths
+	if dir, ok := inits[0].(*DirectoryInitializer); ok {
+		if len(dir.paths) != 1 || dir.paths[0] != ".claude/commands/spectr" {
+			t.Errorf(
+				"DirectoryInitializer paths = %v, want [\".claude/commands/spectr\"]",
+				dir.paths,
+			)
+		}
 	}
-	if p.GetApplyCommandPath() != ".claude/commands/spectr/apply.md" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .claude/commands/spectr/apply.md",
-			p.GetApplyCommandPath(),
-		)
+	if config, ok := inits[1].(*ConfigFileInitializer); ok {
+		if config.path != "CLAUDE.md" {
+			t.Errorf("ConfigFileInitializer path = %s, want CLAUDE.md", config.path)
+		}
 	}
-	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
-		)
+	slash, ok := inits[2].(*SlashCommandsInitializer)
+	if !ok {
+		return
 	}
-	if !p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = false, want true",
-		)
+	if slash.dir != ".claude/commands/spectr" {
+		t.Errorf("SlashCommandsInitializer dir = %s, want .claude/commands/spectr", slash.dir)
 	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
+	if len(slash.commands) != 2 {
+		t.Errorf("SlashCommandsInitializer has %d commands, want 2", len(slash.commands))
 	}
 }
 
+// TestGeminiProvider tests the Gemini provider returns expected initializers
 func TestGeminiProvider(t *testing.T) {
-	p := NewGeminiProvider()
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
 
-	if p.ID() != "gemini" {
-		t.Errorf("ID() = %s, want gemini", p.ID())
+	p := &GeminiProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 2 initializers: Directory, TOMLSlashCommands (no config file)
+	if len(inits) != 2 {
+		t.Errorf("GeminiProvider.Initializers() returned %d initializers, want 2", len(inits))
 	}
-	if p.Name() != "Gemini CLI" {
+
+	// Check types
+	if _, ok := inits[0].(*DirectoryInitializer); !ok {
+		t.Errorf("GeminiProvider.Initializers()[0] = %T, want *DirectoryInitializer", inits[0])
+	}
+	if _, ok := inits[1].(*TOMLSlashCommandsInitializer); !ok {
 		t.Errorf(
-			"Name() = %s, want Gemini CLI",
-			p.Name(),
+			"GeminiProvider.Initializers()[1] = %T, want *TOMLSlashCommandsInitializer",
+			inits[1],
 		)
 	}
-	if p.ConfigFile() != "" {
+
+	// Check paths
+	if dir, ok := inits[0].(*DirectoryInitializer); ok {
+		if len(dir.paths) != 1 || dir.paths[0] != ".gemini/commands/spectr" {
+			t.Errorf(
+				"DirectoryInitializer paths = %v, want [\".gemini/commands/spectr\"]",
+				dir.paths,
+			)
+		}
+	}
+	toml, ok := inits[1].(*TOMLSlashCommandsInitializer)
+	if !ok {
+		return
+	}
+	if toml.dir != ".gemini/commands/spectr" {
 		t.Errorf(
-			"ConfigFile() = %s, want empty",
-			p.ConfigFile(),
+			"TOMLSlashCommandsInitializer dir = %s, want .gemini/commands/spectr",
+			toml.dir,
 		)
 	}
-	if p.GetProposalCommandPath() != ".gemini/commands/spectr/proposal.toml" {
-		t.Errorf(
-			"GetProposalCommandPath() = %s, want .gemini/commands/spectr/proposal.toml",
-			p.GetProposalCommandPath(),
-		)
-	}
-	if p.GetApplyCommandPath() != ".gemini/commands/spectr/apply.toml" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .gemini/commands/spectr/apply.toml",
-			p.GetApplyCommandPath(),
-		)
-	}
-	if p.CommandFormat() != FormatTOML {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatTOML",
-			p.CommandFormat(),
-		)
-	}
-	if p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = true, want false",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
+	if len(toml.commands) != 2 {
+		t.Errorf("TOMLSlashCommandsInitializer has %d commands, want 2", len(toml.commands))
 	}
 }
 
+// TestCostrictProvider tests the Costrict provider returns expected initializers
+func TestCostrictProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &CostrictProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 3 initializers: Directory, ConfigFile, SlashCommands
+	if len(inits) != 3 {
+		t.Errorf("CostrictProvider.Initializers() returned %d initializers, want 3", len(inits))
+	}
+
+	// Check config file path
+	config, ok := inits[1].(*ConfigFileInitializer)
+	if !ok {
+		return
+	}
+	if config.path != "COSTRICT.md" {
+		t.Errorf("ConfigFileInitializer path = %s, want COSTRICT.md", config.path)
+	}
+}
+
+// TestQoderProvider tests the Qoder provider returns expected initializers
+func TestQoderProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &QoderProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 3 initializers: Directory, ConfigFile, SlashCommands
+	if len(inits) != 3 {
+		t.Errorf("QoderProvider.Initializers() returned %d initializers, want 3", len(inits))
+	}
+
+	// Check config file path
+	config, ok := inits[1].(*ConfigFileInitializer)
+	if !ok {
+		return
+	}
+	if config.path != "QODER.md" {
+		t.Errorf("ConfigFileInitializer path = %s, want QODER.md", config.path)
+	}
+}
+
+// TestQwenProvider tests the Qwen provider returns expected initializers
+func TestQwenProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &QwenProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 3 initializers: Directory, ConfigFile, SlashCommands
+	if len(inits) != 3 {
+		t.Errorf("QwenProvider.Initializers() returned %d initializers, want 3", len(inits))
+	}
+
+	// Check config file path
+	config, ok := inits[1].(*ConfigFileInitializer)
+	if !ok {
+		return
+	}
+	if config.path != "QWEN.md" {
+		t.Errorf("ConfigFileInitializer path = %s, want QWEN.md", config.path)
+	}
+}
+
+// TestAntigravityProvider tests the Antigravity provider returns expected initializers
+func TestAntigravityProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &AntigravityProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 3 initializers: Directory, ConfigFile, PrefixedSlashCommands
+	if len(inits) != 3 {
+		t.Errorf("AntigravityProvider.Initializers() returned %d initializers, want 3", len(inits))
+	}
+
+	// Check types
+	if _, ok := inits[0].(*DirectoryInitializer); !ok {
+		t.Errorf("AntigravityProvider.Initializers()[0] = %T, want *DirectoryInitializer", inits[0])
+	}
+	if _, ok := inits[1].(*ConfigFileInitializer); !ok {
+		t.Errorf(
+			"AntigravityProvider.Initializers()[1] = %T, want *ConfigFileInitializer",
+			inits[1],
+		)
+	}
+	if _, ok := inits[2].(*PrefixedSlashCommandsInitializer); !ok {
+		t.Errorf(
+			"AntigravityProvider.Initializers()[2] = %T, want *PrefixedSlashCommandsInitializer",
+			inits[2],
+		)
+	}
+
+	// Check paths
+	if dir, ok := inits[0].(*DirectoryInitializer); ok {
+		if len(dir.paths) != 1 || dir.paths[0] != ".agent/workflows" {
+			t.Errorf("DirectoryInitializer paths = %v, want [\".agent/workflows\"]", dir.paths)
+		}
+	}
+	if config, ok := inits[1].(*ConfigFileInitializer); ok {
+		if config.path != "AGENTS.md" {
+			t.Errorf("ConfigFileInitializer path = %s, want AGENTS.md", config.path)
+		}
+	}
+	prefixed, ok := inits[2].(*PrefixedSlashCommandsInitializer)
+	if !ok {
+		return
+	}
+	if prefixed.dir != ".agent/workflows" {
+		t.Errorf(
+			"PrefixedSlashCommandsInitializer dir = %s, want .agent/workflows",
+			prefixed.dir,
+		)
+	}
+	if prefixed.prefix != "spectr-" {
+		t.Errorf("PrefixedSlashCommandsInitializer prefix = %s, want spectr-", prefixed.prefix)
+	}
+}
+
+// TestClineProvider tests the Cline provider returns expected initializers
+func TestClineProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &ClineProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 3 initializers: Directory, ConfigFile, SlashCommands
+	if len(inits) != 3 {
+		t.Errorf("ClineProvider.Initializers() returned %d initializers, want 3", len(inits))
+	}
+
+	// Check config file path
+	config, ok := inits[1].(*ConfigFileInitializer)
+	if !ok {
+		return
+	}
+	if config.path != "CLINE.md" {
+		t.Errorf("ConfigFileInitializer path = %s, want CLINE.md", config.path)
+	}
+}
+
+// TestCursorProvider tests the Cursor provider returns expected initializers
 func TestCursorProvider(t *testing.T) {
-	p := NewCursorProvider()
-
-	if p.ID() != "cursor" {
-		t.Errorf("ID() = %s, want cursor", p.ID())
-	}
-	if p.ConfigFile() != "" {
-		t.Errorf(
-			"ConfigFile() should be empty for cursor, got %s",
-			p.ConfigFile(),
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"Cursor should have slash commands",
-		)
-	}
-	if p.HasConfigFile() {
-		t.Error(
-			"Cursor should not have config file",
-		)
-	}
-}
-
-func TestBaseProviderConfigure(t *testing.T) {
-	tmpDir, err := os.MkdirTemp(
-		"",
-		"spectr-test-*",
-	)
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
 	if err != nil {
-		t.Fatalf(
-			"Failed to create temp dir: %v",
-			err,
-		)
-	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	p := NewClaudeProvider()
-	tm := newMockRenderer()
-
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
-	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
+		t.Fatalf("Failed to create template manager: %v", err)
 	}
 
-	// Check config file was created
-	configPath := filepath.Join(
-		tmpDir,
-		"CLAUDE.md",
-	)
-	if !FileExists(configPath) {
-		t.Error("Config file was not created")
+	p := &CursorProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 2 initializers: Directory, SlashCommands (no config file)
+	if len(inits) != 2 {
+		t.Errorf("CursorProvider.Initializers() returned %d initializers, want 2", len(inits))
 	}
 
-	// Check slash command files were created
-	commands := []string{"proposal", "apply"}
-	for _, cmd := range commands {
-		cmdPath := filepath.Join(
-			tmpDir,
-			".claude/commands/spectr",
-			cmd+".md",
-		)
-		if !FileExists(cmdPath) {
-			t.Errorf(
-				"Slash command file not created: %s",
-				cmdPath,
-			)
-		}
+	// Check types (no ConfigFileInitializer)
+	if _, ok := inits[0].(*DirectoryInitializer); !ok {
+		t.Errorf("CursorProvider.Initializers()[0] = %T, want *DirectoryInitializer", inits[0])
+	}
+	if _, ok := inits[1].(*SlashCommandsInitializer); !ok {
+		t.Errorf("CursorProvider.Initializers()[1] = %T, want *SlashCommandsInitializer", inits[1])
 	}
 }
 
-func TestBaseProviderIsConfigured(t *testing.T) {
-	tmpDir, err := os.MkdirTemp(
-		"",
-		"spectr-test-*",
-	)
-	if err != nil {
-		t.Fatalf(
-			"Failed to create temp dir: %v",
-			err,
-		)
-	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	p := NewClaudeProvider()
-
-	// Should not be configured initially
-	if p.IsConfigured(tmpDir) {
-		t.Error(
-			"Should not be configured initially",
-		)
-	}
-
-	// Configure it
-	tm := newMockRenderer()
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
-	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
-	}
-
-	// Should be configured now
-	if !p.IsConfigured(tmpDir) {
-		t.Error(
-			"Should be configured after Configure()",
-		)
-	}
-}
-
-func TestBaseProviderGetFilePaths(t *testing.T) {
-	p := NewClaudeProvider()
-	paths := p.GetFilePaths()
-
-	// Should have config file + 2 slash command files
-	expectedPaths := []string{
-		"CLAUDE.md",
-		".claude/commands/spectr/proposal.md",
-		".claude/commands/spectr/apply.md",
-	}
-
-	if len(paths) != len(expectedPaths) {
-		t.Errorf(
-			"Expected %d paths, got %d",
-			len(expectedPaths),
-			len(paths),
-		)
-	}
-
-	for _, expected := range expectedPaths {
-		found := false
-		for _, path := range paths {
-			if path == expected {
-				found = true
-
-				break
-			}
-		}
-		if !found {
-			t.Errorf(
-				"Expected path %s not found in GetFilePaths()",
-				expected,
-			)
-		}
-	}
-}
-
-func TestGeminiProviderConfigure(t *testing.T) {
-	tmpDir, err := os.MkdirTemp(
-		"",
-		"spectr-test-*",
-	)
-	if err != nil {
-		t.Fatalf(
-			"Failed to create temp dir: %v",
-			err,
-		)
-	}
-	defer func() { _ = os.RemoveAll(tmpDir) }()
-
-	p := NewGeminiProvider()
-	tm := newMockRenderer()
-
-	err = p.Configure(
-		tmpDir,
-		filepath.Join(tmpDir, "spectr"),
-		tm,
-	)
-	if err != nil {
-		t.Fatalf("Configure failed: %v", err)
-	}
-
-	// Check TOML files were created
-	commands := []string{"proposal", "apply"}
-	for _, cmd := range commands {
-		cmdPath := filepath.Join(
-			tmpDir,
-			".gemini/commands/spectr",
-			cmd+".toml",
-		)
-		if !FileExists(cmdPath) {
-			t.Errorf(
-				"TOML command file not created: %s",
-				cmdPath,
-			)
-		}
-
-		// Verify content is TOML format
-		content, err := os.ReadFile(cmdPath)
-		if err != nil {
-			t.Errorf(
-				"Failed to read %s: %v",
-				cmdPath,
-				err,
-			)
-
-			continue
-		}
-		if !strings.Contains(
-			string(content),
-			"description =",
-		) {
-			t.Errorf(
-				"File %s doesn't look like TOML",
-				cmdPath,
-			)
-		}
-		if !strings.Contains(
-			string(content),
-			"prompt =",
-		) {
-			t.Errorf(
-				"File %s missing prompt field",
-				cmdPath,
-			)
-		}
-	}
-}
-
-func TestSlashOnlyProviderGetFilePaths(
-	t *testing.T,
-) {
-	p := NewCursorProvider()
-	paths := p.GetFilePaths()
-
-	// Should have only slash command files (no config file)
-	expectedPaths := []string{
-		".cursorrules/commands/spectr/proposal.md",
-		".cursorrules/commands/spectr/apply.md",
-	}
-
-	if len(paths) != len(expectedPaths) {
-		t.Errorf(
-			"Expected %d paths, got %d",
-			len(expectedPaths),
-			len(paths),
-		)
-	}
-}
-
-func TestAllProvidersHaveRequiredFields(
-	t *testing.T,
-) {
-	allProviders := All()
-
-	for _, p := range allProviders {
-		if p.ID() == "" {
-			t.Error(
-				"Found provider with empty ID",
-			)
-		}
-		if p.Name() == "" {
-			t.Errorf(
-				"Provider %s has empty Name",
-				p.ID(),
-			)
-		}
-		if p.Priority() < 1 {
-			t.Errorf(
-				"Provider %s has invalid priority: %d",
-				p.ID(),
-				p.Priority(),
-			)
-		}
-
-		// All providers should have slash commands
-		if !p.HasSlashCommands() {
-			t.Errorf(
-				"Provider %s has no slash commands",
-				p.ID(),
-			)
-		}
-		// Check that at least one command path is set
-		if p.GetProposalCommandPath() == "" &&
-			p.GetApplyCommandPath() == "" {
-			t.Errorf(
-				"Provider %s has no command paths set",
-				p.ID(),
-			)
-		}
-	}
-}
-
-func TestPrioritiesAreUnique(t *testing.T) {
-	allProviders := All()
-	priorities := make(map[int]string)
-
-	for _, p := range allProviders {
-		if existingID, exists := priorities[p.Priority()]; exists {
-			t.Errorf(
-				"Duplicate priority %d for providers %s and %s",
-				p.Priority(),
-				existingID,
-				p.ID(),
-			)
-		}
-		priorities[p.Priority()] = p.ID()
-	}
-}
-
-func TestExpandPath(t *testing.T) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		t.Fatalf(
-			"Failed to get home directory: %v",
-			err,
-		)
-	}
-
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "Path not starting with tilde",
-			input:    ".config/test",
-			expected: ".config/test",
-		},
-		{
-			name:  "Path starting with tilde slash",
-			input: "~/.config/test",
-			expected: filepath.Join(
-				homeDir,
-				".config/test",
-			),
-		},
-		{
-			name:     "Absolute path",
-			input:    "/absolute/path",
-			expected: "/absolute/path",
-		},
-		{
-			name:     "Tilde only without slash",
-			input:    "~",
-			expected: "~",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := expandPath(tt.input)
-			if result != tt.expected {
-				t.Errorf(
-					"expandPath(%q) = %q, want %q",
-					tt.input,
-					result,
-					tt.expected,
-				)
-			}
-		})
-	}
-}
-
-func TestIsGlobalPath(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{
-			name:     "Path starting with tilde slash",
-			input:    "~/.config/test",
-			expected: true,
-		},
-		{
-			name:     "Path starting with absolute slash",
-			input:    "/absolute/path",
-			expected: true,
-		},
-		{
-			name:     "Relative path with dot",
-			input:    ".foo/bar",
-			expected: false,
-		},
-		{
-			name:     "Simple relative path",
-			input:    "foo/bar",
-			expected: false,
-		},
-		{
-			name:     "Current directory dot",
-			input:    "./foo",
-			expected: false,
-		},
-		{
-			name:     "Parent directory",
-			input:    "../foo",
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := isGlobalPath(tt.input)
-			if result != tt.expected {
-				t.Errorf(
-					"isGlobalPath(%q) = %v, want %v",
-					tt.input,
-					result,
-					tt.expected,
-				)
-			}
-		})
-	}
-}
-
+// TestCodexProvider tests the Codex provider returns expected initializers
 func TestCodexProvider(t *testing.T) {
-	p := NewCodexProvider()
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
 
-	if p.ID() != "codex" {
-		t.Errorf("ID() = %s, want codex", p.ID())
+	p := &CodexProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 3 initializers: HomeDirectory, ConfigFile, HomePrefixedSlashCommands
+	if len(inits) != 3 {
+		t.Errorf("CodexProvider.Initializers() returned %d initializers, want 3", len(inits))
 	}
-	if p.Name() != "Codex CLI" {
+
+	// Check types (uses home filesystem)
+	if _, ok := inits[0].(*HomeDirectoryInitializer); !ok {
+		t.Errorf("CodexProvider.Initializers()[0] = %T, want *HomeDirectoryInitializer", inits[0])
+	}
+	if _, ok := inits[1].(*ConfigFileInitializer); !ok {
+		t.Errorf("CodexProvider.Initializers()[1] = %T, want *ConfigFileInitializer", inits[1])
+	}
+	if _, ok := inits[2].(*HomePrefixedSlashCommandsInitializer); !ok {
 		t.Errorf(
-			"Name() = %s, want Codex CLI",
-			p.Name(),
+			"CodexProvider.Initializers()[2] = %T, want *HomePrefixedSlashCommandsInitializer",
+			inits[2],
 		)
 	}
-	if p.Priority() != PriorityCodex {
+
+	// Check paths
+	if homeDir, ok := inits[0].(*HomeDirectoryInitializer); ok {
+		if len(homeDir.paths) != 1 || homeDir.paths[0] != ".codex/prompts" {
+			t.Errorf(
+				"HomeDirectoryInitializer paths = %v, want [\".codex/prompts\"]",
+				homeDir.paths,
+			)
+		}
+	}
+	if config, ok := inits[1].(*ConfigFileInitializer); ok {
+		if config.path != "AGENTS.md" {
+			t.Errorf("ConfigFileInitializer path = %s, want AGENTS.md", config.path)
+		}
+	}
+	homePrefixed, ok := inits[2].(*HomePrefixedSlashCommandsInitializer)
+	if !ok {
+		return
+	}
+	if homePrefixed.dir != ".codex/prompts" {
 		t.Errorf(
-			"Priority() = %d, want %d",
-			p.Priority(),
-			PriorityCodex,
+			"HomePrefixedSlashCommandsInitializer dir = %s, want .codex/prompts",
+			homePrefixed.dir,
 		)
 	}
-	if p.ConfigFile() != "AGENTS.md" {
+	if homePrefixed.prefix != "spectr-" {
 		t.Errorf(
-			"ConfigFile() = %s, want AGENTS.md",
-			p.ConfigFile(),
-		)
-	}
-	if !p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = false, want true",
-		)
-	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
-	}
-	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
+			"HomePrefixedSlashCommandsInitializer prefix = %s, want spectr-",
+			homePrefixed.prefix,
 		)
 	}
 }
 
-func TestOpencodeProvider(t *testing.T) {
-	p := NewOpencodeProvider()
+// TestAiderProvider tests the Aider provider returns expected initializers
+func TestAiderProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
 
-	if p.ID() != "opencode" {
+	p := &AiderProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 2 initializers: Directory, SlashCommands (no config file)
+	if len(inits) != 2 {
+		t.Errorf("AiderProvider.Initializers() returned %d initializers, want 2", len(inits))
+	}
+}
+
+// TestWindsurfProvider tests the Windsurf provider returns expected initializers
+func TestWindsurfProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &WindsurfProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 2 initializers: Directory, SlashCommands (no config file)
+	if len(inits) != 2 {
+		t.Errorf("WindsurfProvider.Initializers() returned %d initializers, want 2", len(inits))
+	}
+}
+
+// TestKilocodeProvider tests the Kilocode provider returns expected initializers
+func TestKilocodeProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &KilocodeProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 2 initializers: Directory, SlashCommands (no config file)
+	if len(inits) != 2 {
+		t.Errorf("KilocodeProvider.Initializers() returned %d initializers, want 2", len(inits))
+	}
+}
+
+// TestContinueProvider tests the Continue provider returns expected initializers
+func TestContinueProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &ContinueProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 2 initializers: Directory, SlashCommands (no config file)
+	if len(inits) != 2 {
+		t.Errorf("ContinueProvider.Initializers() returned %d initializers, want 2", len(inits))
+	}
+}
+
+// TestCrushProvider tests the Crush provider returns expected initializers
+func TestCrushProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &CrushProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 3 initializers: Directory, ConfigFile, SlashCommands
+	if len(inits) != 3 {
+		t.Errorf("CrushProvider.Initializers() returned %d initializers, want 3", len(inits))
+	}
+
+	// Check config file path
+	config, ok := inits[1].(*ConfigFileInitializer)
+	if !ok {
+		return
+	}
+	if config.path != "CRUSH.md" {
+		t.Errorf("ConfigFileInitializer path = %s, want CRUSH.md", config.path)
+	}
+}
+
+// TestOpencodeProvider tests the OpenCode provider returns expected initializers
+func TestOpencodeProvider(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
+	}
+
+	p := &OpencodeProvider{}
+	inits := p.Initializers(ctx, tm)
+
+	// Expect 2 initializers: Directory, SlashCommands (no config file)
+	if len(inits) != 2 {
+		t.Errorf("OpencodeProvider.Initializers() returned %d initializers, want 2", len(inits))
+	}
+
+	// Check paths - OpenCode uses .opencode/command/spectr (note: command not commands)
+	dir, ok := inits[0].(*DirectoryInitializer)
+	if !ok {
+		return
+	}
+	if len(dir.paths) != 1 || dir.paths[0] != ".opencode/command/spectr" {
 		t.Errorf(
-			"ID() = %s, want opencode",
-			p.ID(),
+			"DirectoryInitializer paths = %v, want [\".opencode/command/spectr\"]",
+			dir.paths,
 		)
 	}
-	if p.Name() != "OpenCode" {
-		t.Errorf(
-			"Name() = %s, want OpenCode",
-			p.Name(),
-		)
+}
+
+// TestProviderSlashCommands tests that providers set up slash commands correctly
+func TestProviderSlashCommands(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
 	}
-	if p.Priority() != PriorityOpencode {
-		t.Errorf(
-			"Priority() = %d, want %d",
-			p.Priority(),
-			PriorityOpencode,
-		)
+
+	tests := []struct {
+		name     string
+		provider Provider
+	}{
+		{"Claude", &ClaudeProvider{}},
+		{"Gemini", &GeminiProvider{}},
+		{"Costrict", &CostrictProvider{}},
+		{"Qoder", &QoderProvider{}},
+		{"Qwen", &QwenProvider{}},
+		{"Antigravity", &AntigravityProvider{}},
+		{"Cline", &ClineProvider{}},
+		{"Cursor", &CursorProvider{}},
+		{"Codex", &CodexProvider{}},
+		{"Aider", &AiderProvider{}},
+		{"Windsurf", &WindsurfProvider{}},
+		{"Kilocode", &KilocodeProvider{}},
+		{"Continue", &ContinueProvider{}},
+		{"Crush", &CrushProvider{}},
+		{"OpenCode", &OpencodeProvider{}},
 	}
-	if p.ConfigFile() != "" {
-		t.Errorf(
-			"ConfigFile() = %s, want empty string",
-			p.ConfigFile(),
-		)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inits := tt.provider.Initializers(ctx, tm)
+
+			// Every provider should have at least one slash command initializer
+			hasSlashCommands := false
+			for _, init := range inits {
+				switch init.(type) {
+				case *SlashCommandsInitializer, *HomeSlashCommandsInitializer,
+					*PrefixedSlashCommandsInitializer, *HomePrefixedSlashCommandsInitializer,
+					*TOMLSlashCommandsInitializer:
+					hasSlashCommands = true
+				}
+			}
+
+			if !hasSlashCommands {
+				t.Errorf("%s provider has no slash command initializer", tt.name)
+			}
+		})
 	}
-	if p.HasConfigFile() {
-		t.Error(
-			"HasConfigFile() = true, want false",
-		)
+}
+
+// TestProviderSlashCommandsHaveBothCommands tests that all slash command initializers include both proposal and apply
+func TestProviderSlashCommandsHaveBothCommands(t *testing.T) {
+	ctx := context.Background()
+	tm, err := templates.NewTemplateManager()
+	if err != nil {
+		t.Fatalf("Failed to create template manager: %v", err)
 	}
-	if !p.HasSlashCommands() {
-		t.Error(
-			"HasSlashCommands() = false, want true",
-		)
+
+	tests := []struct {
+		name     string
+		provider Provider
+	}{
+		{"Claude", &ClaudeProvider{}},
+		{"Gemini", &GeminiProvider{}},
+		{"Costrict", &CostrictProvider{}},
+		{"Qoder", &QoderProvider{}},
+		{"Qwen", &QwenProvider{}},
+		{"Antigravity", &AntigravityProvider{}},
+		{"Cline", &ClineProvider{}},
+		{"Cursor", &CursorProvider{}},
+		{"Codex", &CodexProvider{}},
+		{"Aider", &AiderProvider{}},
+		{"Windsurf", &WindsurfProvider{}},
+		{"Kilocode", &KilocodeProvider{}},
+		{"Continue", &ContinueProvider{}},
+		{"Crush", &CrushProvider{}},
+		{"OpenCode", &OpencodeProvider{}},
 	}
-	if p.CommandFormat() != FormatMarkdown {
-		t.Errorf(
-			"CommandFormat() = %d, want FormatMarkdown",
-			p.CommandFormat(),
-		)
-	}
-	if p.GetProposalCommandPath() != ".opencode/command/spectr/proposal.md" {
-		t.Errorf(
-			"GetProposalCommandPath() = %s, want .opencode/command/spectr/proposal.md",
-			p.GetProposalCommandPath(),
-		)
-	}
-	if p.GetApplyCommandPath() != ".opencode/command/spectr/apply.md" {
-		t.Errorf(
-			"GetApplyCommandPath() = %s, want .opencode/command/spectr/apply.md",
-			p.GetApplyCommandPath(),
-		)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inits := tt.provider.Initializers(ctx, tm)
+
+			for _, init := range inits {
+				var commands map[domain.SlashCommand]domain.TemplateRef
+
+				switch si := init.(type) {
+				case *SlashCommandsInitializer:
+					commands = si.commands
+				case *HomeSlashCommandsInitializer:
+					commands = si.commands
+				case *PrefixedSlashCommandsInitializer:
+					commands = si.commands
+				case *HomePrefixedSlashCommandsInitializer:
+					commands = si.commands
+				case *TOMLSlashCommandsInitializer:
+					commands = si.commands
+				}
+
+				if commands == nil {
+					continue
+				}
+				// Check for both proposal and apply
+				if _, hasProposal := commands[domain.SlashProposal]; !hasProposal {
+					t.Errorf("%s slash commands missing SlashProposal", tt.name)
+				}
+				if _, hasApply := commands[domain.SlashApply]; !hasApply {
+					t.Errorf("%s slash commands missing SlashApply", tt.name)
+				}
+			}
+		})
 	}
 }

@@ -15,10 +15,16 @@ The provider SHALL be configured with these settings:
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's Initializers() method is called
-- **THEN** it SHALL return a DirectoryInitializer for `.claude/commands/spectr/`
-- **AND** it SHALL return a ConfigFileInitializer for `CLAUDE.md`
-- **AND** it SHALL return a SlashCommandsInitializer for slash commands in Markdown format
+- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for `.claude/commands/spectr/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `CLAUDE.md` with TemplateRef from TemplateManager
+- **AND** it SHALL return a `SlashCommandsInitializer` for slash commands in Markdown format
+
+#### Scenario: Provider metadata
+- **WHEN** the provider is registered
+- **THEN** the provider name SHALL be "Claude Code"
+- **AND** the provider priority SHALL be 1 (highest priority)
+- **AND** the provider ID SHALL be "claude-code"
 
 ### Requirement: Claude Code Instruction File
 The provider SHALL create and maintain a `CLAUDE.md` instruction file in the project root.
@@ -26,7 +32,7 @@ The provider SHALL create and maintain a `CLAUDE.md` instruction file in the pro
 #### Scenario: Instruction file creation
 - **WHEN** `spectr init` runs with Claude Code provider selected
 - **THEN** the ConfigFileInitializer creates `CLAUDE.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
 
 #### Scenario: Instruction file updates
 - **WHEN** `spectr init` runs in a project with Claude Code provider
@@ -43,12 +49,12 @@ The provider SHALL create slash commands in `.claude/commands/spectr/` directory
 
 #### Scenario: Command paths
 - **WHEN** the SlashCommandsInitializer executes
-- **THEN** it creates `.claude/commands/spectr/proposal.md`
-- **AND** it creates `.claude/commands/spectr/apply.md`
+- **THEN** it SHALL create `.claude/commands/spectr/proposal.md`
+- **AND** it SHALL create `.claude/commands/spectr/apply.md`
 
 #### Scenario: Command format
 - **WHEN** slash command files are created
-- **THEN** they use Markdown format with `.md` extension
-- **AND** each file includes YAML frontmatter
-- **AND** frontmatter includes `description` field
+- **THEN** they SHALL use Markdown format with `.md` extension
+- **AND** each file SHALL include YAML frontmatter
+- **AND** frontmatter SHALL include `description` field
 

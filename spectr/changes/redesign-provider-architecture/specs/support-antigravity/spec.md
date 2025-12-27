@@ -4,21 +4,21 @@
 The provider SHALL be configured with these settings:
 - ID: `antigravity`
 - Name: `Antigravity`
-- Priority: 7
+- Priority: 6
 - Config File: `AGENTS.md`
 - Command Format: Markdown
 
 #### Scenario: Provider registration
 - **WHEN** the Antigravity provider is registered
 - **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `antigravity`, Name `Antigravity`, Priority 7
+- **AND** registration SHALL include ID `antigravity`, Name `Antigravity`, Priority 6
 - **AND** the Provider implementation SHALL return initializers
 
 #### Scenario: Provider returns initializers
-- **WHEN** the provider's Initializers() method is called
-- **THEN** it SHALL return a DirectoryInitializer for `.agent/workflows/`
-- **AND** it SHALL return a ConfigFileInitializer for `AGENTS.md`
-- **AND** it SHALL return a SlashCommandsInitializer for Markdown format slash commands in `.agent/workflows/`
+- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for `.agent/workflows/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `AGENTS.md` with TemplateRef from TemplateManager
+- **AND** it SHALL return a `PrefixedSlashCommandsInitializer` with prefix `spectr-` for Markdown format slash commands in `.agent/workflows/`
 
 #### Scenario: Configuration file location
 - **WHEN** the provider is initialized
@@ -31,11 +31,11 @@ The provider SHALL create and maintain an `AGENTS.md` instruction file in the pr
 #### Scenario: Instruction file creation
 - **WHEN** `spectr init` runs with Antigravity provider selected
 - **THEN** the ConfigFileInitializer creates `AGENTS.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
 
 #### Scenario: Instruction file updates
 - **WHEN** `spectr init` runs for Antigravity provider
-- **THEN** the ConfigFileInitializer updates content between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **THEN** the ConfigFileInitializer updates content between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
 - **AND** preserves content outside the markers
 
 ### Requirement: Antigravity Slash Commands
@@ -48,12 +48,12 @@ The provider SHALL create slash commands in `.agent/workflows/` directory.
 
 #### Scenario: Command file paths
 - **WHEN** the SlashCommandsInitializer executes
-- **THEN** it creates `.agent/workflows/spectr-proposal.md`
-- **AND** it creates `.agent/workflows/spectr-apply.md`
+- **THEN** it SHALL create `.agent/workflows/spectr-proposal.md`
+- **AND** it SHALL create `.agent/workflows/spectr-apply.md`
 
 #### Scenario: Command file format
 - **WHEN** slash command files are created
-- **THEN** they use Markdown format with `.md` extension
-- **AND** each file includes YAML frontmatter at the top
-- **AND** frontmatter includes a `description` field
+- **THEN** they SHALL use Markdown format with `.md` extension
+- **AND** each file SHALL include YAML frontmatter at the top
+- **AND** frontmatter SHALL include a `description` field
 

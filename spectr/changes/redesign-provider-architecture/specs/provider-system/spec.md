@@ -6,8 +6,23 @@ The system SHALL define a `internal/domain` package containing shared domain typ
 #### Scenario: TemplateRef in domain package
 - **WHEN** code needs to reference a template
 - **THEN** it SHALL use `domain.TemplateRef` from `internal/domain`
-- **AND** `TemplateRef` SHALL have `Name` and `Template` fields
-- **AND** `TemplateRef` SHALL have a `Render(ctx TemplateContext) (string, error)` method
+- **AND** `TemplateRef` SHALL have the following structure:
+
+```go
+type TemplateRef struct {
+    Name     string             // template file name (e.g., "instruction-pointer.md.tmpl")
+    Template *template.Template // pre-parsed template
+}
+
+// Render executes the template with the given context.
+func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
+    var buf bytes.Buffer
+    if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
+        return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)
+    }
+    return buf.String(), nil
+}
+```
 
 #### Scenario: SlashCommand in domain package
 - **WHEN** code needs to reference a slash command type
@@ -20,7 +35,40 @@ The system SHALL define a `internal/domain` package containing shared domain typ
 #### Scenario: TemplateContext in domain package
 - **WHEN** code needs template context with path variables
 - **THEN** it SHALL use `domain.TemplateContext` from `internal/domain`
+- **AND** the struct SHALL have the following definition:
+
+```go
+// TemplateContext holds path-related template variables for dynamic directory names.
+type TemplateContext struct {
+    BaseDir     string // e.g., "spectr"
+    SpecsDir    string // e.g., "spectr/specs"
+    ChangesDir  string // e.g., "spectr/changes"
+    ProjectFile string // e.g., "spectr/project.md"
+    AgentsFile  string // e.g., "spectr/AGENTS.md"
+}
+
+// DefaultTemplateContext returns a TemplateContext with default values.
+func DefaultTemplateContext() TemplateContext {
+    return TemplateContext{
+        BaseDir:     "spectr",
+        SpecsDir:    "spectr/specs",
+        ChangesDir:  "spectr/changes",
+        ProjectFile: "spectr/project.md",
+        AgentsFile:  "spectr/AGENTS.md",
+    }
+}
+```
+
 - **AND** `domain.DefaultTemplateContext()` SHALL return default path values
+
+#### Scenario: TemplateContext derived from Config
+- **WHEN** the executor needs to create a TemplateContext from Config
+- **THEN** it SHALL use `templateContextFromConfig(cfg *Config)` to derive the values
+- **AND** `BaseDir` SHALL equal `cfg.SpectrDir`
+- **AND** `SpecsDir` SHALL equal `cfg.SpecsDir()`
+- **AND** `ChangesDir` SHALL equal `cfg.ChangesDir()`
+- **AND** `ProjectFile` SHALL equal `cfg.ProjectFile()`
+- **AND** `AgentsFile` SHALL equal `cfg.AgentsFile()`
 
 ### Requirement: Provider Interface
 The system SHALL define a `Provider` interface that returns a list of initializers.
@@ -42,6 +90,27 @@ type Provider interface {
 
 ### Requirement: Initializer Interface
 The system SHALL define an `Initializer` interface with `Init` and `IsSetup` methods.
+
+```go
+// InitResult contains the files created or modified by an initializer.
+type InitResult struct {
+    CreatedFiles []string // files created by this initializer
+    UpdatedFiles []string // files updated by this initializer
+}
+
+type Initializer interface {
+    // Init creates or updates files. Returns result with file changes and error if initialization fails.
+    // Must be idempotent (safe to run multiple times).
+    // Receives both filesystems - initializer decides which to use based on its type.
+    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
+
+    // IsSetup returns true if this initializer's artifacts already exist.
+    // Receives both filesystems - initializer checks the appropriate one.
+    // PURPOSE: Used by the setup wizard to show which providers are already configured.
+    // NOT used to skip initializers during execution - Init() always runs (idempotent).
+    IsSetup(projectFs, homeFs afero.Fs, cfg *Config) bool
+}
+```
 
 #### Scenario: Initializer setup check
 - **WHEN** `IsSetup(projectFs, homeFs, cfg)` is called on an initializer
@@ -119,11 +188,26 @@ The system SHALL support registering providers explicitly from a central locatio
 The system SHALL provide a `TemplateManager` for resolving and rendering templates.
 
 ```go
-type TemplateManager interface {
-    // Render renders a template by name with the given data.
-    // Returns the rendered string or an error if rendering fails.
-    Render(templateName string, data interface{}) (string, error)
+type TemplateManager struct {
+    templates *template.Template
 }
+
+// Render renders a template by name with the given data.
+func (tm *TemplateManager) Render(templateName string, data interface{}) (string, error)
+
+// InstructionPointer returns the instruction-pointer.md.tmpl template reference.
+func (tm *TemplateManager) InstructionPointer() domain.TemplateRef
+
+// Agents returns the AGENTS.md.tmpl template reference.
+func (tm *TemplateManager) Agents() domain.TemplateRef
+
+// SlashCommand returns a Markdown template reference for the given slash command type.
+// Used by SlashCommandsInitializer, HomeSlashCommandsInitializer, PrefixedSlashCommandsInitializer, and HomePrefixedSlashCommandsInitializer.
+func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef
+
+// TOMLSlashCommand returns a TOML template reference for the given slash command type.
+// Used by TOMLSlashCommandsInitializer (Gemini only).
+func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef
 ```
 
 #### Scenario: TemplateManager rendering
@@ -132,6 +216,18 @@ type TemplateManager interface {
 - **AND** the template SHALL be executed with the provided data
 - **AND** the rendered string SHALL be returned
 - **AND** an error SHALL be returned if the template is not found or rendering fails
+
+#### Scenario: TemplateManager SlashCommand accessor
+- **WHEN** `TemplateManager.SlashCommand(cmd)` is called with a SlashCommand
+- **THEN** it SHALL return a `domain.TemplateRef` for the corresponding Markdown template
+- **AND** `SlashProposal` SHALL map to `slash-proposal.md.tmpl`
+- **AND** `SlashApply` SHALL map to `slash-apply.md.tmpl`
+
+#### Scenario: TemplateManager TOMLSlashCommand accessor
+- **WHEN** `TemplateManager.TOMLSlashCommand(cmd)` is called with a SlashCommand
+- **THEN** it SHALL return a `domain.TemplateRef` for the corresponding TOML template
+- **AND** `SlashProposal` SHALL map to `slash-proposal.toml.tmpl`
+- **AND** `SlashApply` SHALL map to `slash-apply.toml.tmpl`
 
 #### Scenario: Template resolution
 - **WHEN** templates are resolved
@@ -157,10 +253,23 @@ The system SHALL use `afero.Fs` rooted at project directory for all file operati
 ### Requirement: ConfigFile Initializer
 The system SHALL provide a built-in `ConfigFileInitializer` for marker-based file updates.
 
+```go
+// ConfigFileInitializer creates or updates a config file with marker-based content.
+type ConfigFileInitializer struct {
+    path     string           // target file path (e.g., "CLAUDE.md", "AGENTS.md")
+    template domain.TemplateRef // template to render for content between markers
+}
+
+// NewConfigFileInitializer creates a ConfigFileInitializer for the given path and template.
+func NewConfigFileInitializer(path string, template domain.TemplateRef) *ConfigFileInitializer
+```
+
 #### Scenario: ConfigFileInitializer construction
-- **WHEN** a ConfigFileInitializer is created
-- **THEN** it SHALL receive a TemplateRef directly (not a function)
+- **WHEN** a ConfigFileInitializer is created via `NewConfigFileInitializer(path, template)`
+- **THEN** it SHALL receive a file path (e.g., "CLAUDE.md", "AGENTS.md")
+- **AND** it SHALL receive a TemplateRef directly (not a function)
 - **AND** the TemplateRef SHALL be resolved at provider construction time when Initializers() is called
+- **AND** the initializer SHALL use `projectFs` for all file operations
 
 #### Scenario: Create new config file
 - **WHEN** the config file does not exist
@@ -173,8 +282,15 @@ The system SHALL provide a built-in `ConfigFileInitializer` for marker-based fil
 
 #### Scenario: Config file markers
 - **WHEN** content is written to a config file
-- **THEN** it SHALL be wrapped with `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
-- **NOTE**: All markdown markers use lowercase `start`/`end` for consistency
+- **THEN** it SHALL be wrapped with `<!-- spectr:start -->` and `<!-- spectr:end -->` markers (lowercase)
+- **NOTE**: All markdown markers use lowercase `start`/`end` for consistency when writing
+
+#### Scenario: Case-insensitive marker matching
+- **WHEN** searching for markers in existing files
+- **THEN** the search SHALL be case-insensitive for backward compatibility
+- **AND** both `<!-- spectr:START -->` (uppercase) and `<!-- spectr:start -->` (lowercase) SHALL be recognized
+- **AND** when writing new markers, the system SHALL always use lowercase
+- **AND** this ensures behavioral equivalence with files created by older versions
 
 #### Scenario: Orphaned start marker handling
 - **WHEN** a config file contains a start marker but the end marker is missing immediately after
@@ -225,9 +341,15 @@ The system SHALL provide built-in slash command initializers with separate types
 
 #### Scenario: Create prefixed Markdown slash commands
 - **WHEN** `PrefixedSlashCommandsInitializer` runs with prefix `spectr-`
-- **THEN** it SHALL create `spectr-proposal.md` and `spectr-apply.md` command files
+- **THEN** it SHALL create `spectr-proposal.md` and `spectr-apply.md` command files in the project filesystem
 - **AND** it SHALL use `slash-proposal.md.tmpl` and `slash-apply.md.tmpl` templates
-- **NOTE**: Used by Antigravity and Codex for non-standard path patterns
+- **NOTE**: Used by Antigravity for non-standard path patterns in project directory
+
+#### Scenario: Create home prefixed Markdown slash commands
+- **WHEN** `HomePrefixedSlashCommandsInitializer` runs with prefix `spectr-`
+- **THEN** it SHALL create `spectr-proposal.md` and `spectr-apply.md` command files in the home filesystem
+- **AND** it SHALL use `slash-proposal.md.tmpl` and `slash-apply.md.tmpl` templates
+- **NOTE**: Used by Codex for home directory paths with prefixed filenames (e.g., `~/.codex/prompts/spectr-proposal.md`)
 
 #### Scenario: Create TOML slash commands
 - **WHEN** `TOMLSlashCommandsInitializer` runs
@@ -253,6 +375,21 @@ The system SHALL provide built-in directory initializers with separate types for
 
 ### Requirement: Initializer Deduplication
 The system SHALL deduplicate initializers by type and path when multiple providers are configured.
+
+```go
+// deduplicatable is an optional interface for initializers that support deduplication.
+// Initializers that implement this interface can be deduplicated based on their key.
+// Note: lowercase name indicates this is a private/internal interface.
+type deduplicatable interface {
+    // dedupeKey returns a unique key for deduplication.
+    // Format: "<TypeName>:<path>" where TypeName is the concrete type name.
+    // Examples:
+    //   - "DirectoryInitializer:.claude/commands/spectr"
+    //   - "ConfigFileInitializer:CLAUDE.md"
+    //   - "HomePrefixedSlashCommandsInitializer:.codex/prompts:spectr-"
+    dedupeKey() string
+}
+```
 
 #### Scenario: Optional deduplicatable interface
 - **WHEN** initializers are collected for execution

@@ -10,7 +10,7 @@ This document defines the implementation tasks for redesigning the provider arch
 - 15 providers total (compacted priorities 1-15)
 - Fail-fast semantics: Stop on first error, return partial results from successful initializers
 - Deduplication order: Keep first occurrence (lower priority number = higher priority)
-- Marker search: Use `strings.Index` (first occurrence) for all marker searches
+- Marker search: Use case-insensitive matching for reading (matches both `<!-- spectr:START -->` and `<!-- spectr:start -->`), always write lowercase markers
 - All marker edge cases (orphaned end, nested start, multiple starts) are error conditions
 
 ---
@@ -19,7 +19,11 @@ This document defines the implementation tasks for redesigning the provider arch
 
 Create `internal/domain` package to break import cycles with shared types.
 
-- [ ] 0.1 Create `internal/domain/template.go` with `TemplateRef` struct (public fields `Name`, `Template`), `Render()` method, `TemplateContext` struct, and `DefaultTemplateContext()` function
+- [ ] 0.1 Create `internal/domain/template.go` with:
+  - `TemplateRef` struct with public fields: `Name string`, `Template *template.Template`
+  - `Render(ctx TemplateContext) (string, error)` method on TemplateRef
+  - `TemplateContext` struct with fields: `BaseDir`, `SpecsDir`, `ChangesDir`, `ProjectFile`, `AgentsFile` (all strings)
+  - `DefaultTemplateContext()` function returning TemplateContext with default "spectr" paths
 
 - [ ] 0.2 Create `internal/domain/slashcmd.go` with `SlashCommand` typed int, `SlashProposal`/`SlashApply` constants, and `String()` method (NO `TemplateName()`)
 
@@ -85,14 +89,20 @@ Create the three reusable initializer implementations.
 
 - [ ] 3.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer` (project fs) and `HomeDirectoryInitializer` (home fs): creates directories with MkdirAll (silent success if exists), implements optional `deduplicatable` interface with `dedupeKey()` using `filepath.Clean()` for path normalization
 
-- [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`: takes TemplateRef directly (not function), marker-based updates, orphaned marker handling with `strings.Index` (first occurrence), prevents duplicate blocks, errors on: orphaned end, nested start, multiple starts
+- [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`:
+  - Constructor: `NewConfigFileInitializer(path string, template domain.TemplateRef)`
+  - Case-insensitive marker matching for reading (matches both uppercase and lowercase markers)
+  - Always writes lowercase markers (`<!-- spectr:start -->` and `<!-- spectr:end -->`)
+  - Orphaned marker handling with `strings.Index` (first occurrence)
+  - Prevents duplicate blocks, implements `deduplicatable` with dedupeKey: "ConfigFileInitializer:{path}"
+  - Error cases: orphaned end, nested start, multiple starts
 
-- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with five initializer types (all use early binding with map[SlashCommand]TemplateRef):
-  - `SlashCommandsInitializer` (project fs, Markdown .md)
-  - `HomeSlashCommandsInitializer` (home fs, Markdown .md)
-  - `PrefixedSlashCommandsInitializer` (project fs, Markdown .md with prefix, for Antigravity)
-  - `HomePrefixedSlashCommandsInitializer` (home fs, Markdown .md with prefix, for Codex)
-  - `TOMLSlashCommandsInitializer` (project fs, TOML .toml for Gemini)
+- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with five initializer types (all use early binding with map[SlashCommand]TemplateRef, all implement `deduplicatable` interface):
+  - `SlashCommandsInitializer` (project fs, Markdown .md, dedupeKey: "SlashCommandsInitializer:{dir}")
+  - `HomeSlashCommandsInitializer` (home fs, Markdown .md, dedupeKey: "HomeSlashCommandsInitializer:{dir}")
+  - `PrefixedSlashCommandsInitializer` (project fs, Markdown .md with prefix, for Antigravity, dedupeKey: "PrefixedSlashCommandsInitializer:{dir}:{prefix}")
+  - `HomePrefixedSlashCommandsInitializer` (home fs, Markdown .md with prefix, for Codex, dedupeKey: "HomePrefixedSlashCommandsInitializer:{dir}:{prefix}")
+  - `TOMLSlashCommandsInitializer` (project fs, TOML .toml for Gemini, dedupeKey: "TOMLSlashCommandsInitializer:{dir}")
 
 - [ ] 3.4 Add unit tests for `DirectoryInitializer` and `HomeDirectoryInitializer` in `directory_test.go` using `afero.MemMapFs`: creates dirs, IsSetup checks, separate types for project vs home filesystem, silent success if dir exists
 
@@ -265,5 +275,5 @@ Comprehensive testing before completion.
 | 8 | 8.1-8.6 | Test cleanup |
 | 9 | 9.1-9.9 | Final verification |
 
-**Total: 72 tasks**
+**Total: 85 tasks**
 

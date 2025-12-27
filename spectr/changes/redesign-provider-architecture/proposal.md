@@ -22,7 +22,7 @@ The current provider system has 15 providers, each implementing a 12-method inte
 - **BREAKING**: Provider metadata (ID, name, priority) moves to `Registration` struct at registration time
 - **BREAKING**: **COMPLETELY REMOVE** old `Register(p Provider)` function and all `init()` registration - zero tech debt policy means NO deprecated `Register(_ any)` compatibility shim
 - **BREAKING**: Remove all provider `init()` functions that call `Register()`
-- **BREAKING**: All markdown markers standardized to `<!-- spectr:start -->` and `<!-- spectr:end -->` (lowercase) for consistency
+- **CHANGED**: Marker matching is case-insensitive for reading (matches both `<!-- spectr:START -->` and `<!-- spectr:start -->`), always writes lowercase for consistency
 - **NEW**: `internal/domain` package containing shared domain types (`TemplateRef`, `SlashCommand`, `TemplateContext`) to break import cycles
 - **NEW**: `internal/domain` package embeds slash command templates moved from `internal/initialize/templates/tools/`:
   - `slash-proposal.md.tmpl`, `slash-apply.md.tmpl` (Markdown format)
@@ -55,7 +55,7 @@ The current provider system has 15 providers, each implementing a 12-method inte
 | Deduplication | By type + path, provider priority wins | Sort by type (stable), then dedupe (keep first); higher-priority provider's initializer kept |
 | Template selection | TemplateRef directly | ConfigFileInitializer takes TemplateRef, not function; Provider.Initializers() receives TemplateManager |
 | TOML support | Separate initializer type | TOMLSlashCommandsInitializer for Gemini; uses .toml.tmpl templates |
-| Marker format | Lowercase `<!-- spectr:start/end -->` | ALL markdown markers use lowercase for consistency |
+| Marker format | Case-insensitive read, lowercase write | Read both uppercase/lowercase for backward compatibility, always write lowercase |
 | Template collision | Last-wins precedence | Later template overwrites earlier; no error |
 | Filesystem root | os.UserHomeDir() to afero.Fs | Explicit Go stdlib function, converted to afero.Fs |
 | Home directory failure | Fail initialization entirely | Home directory access required; initialization aborts if unavailable |

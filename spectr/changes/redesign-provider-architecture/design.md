@@ -428,58 +428,73 @@ These are intentional design exceptions, not bugs. Antigravity and Codex intenti
 
 **ConfigFileInitializer Marker Handling**:
 
-The ConfigFileInitializer uses `<!-- spectr:start -->` and `<!-- spectr:end -->` markers (lowercase) to update instruction files. It must handle various edge cases:
+The ConfigFileInitializer uses `<!-- spectr:start -->` and `<!-- spectr:end -->` markers to update instruction files. **Marker matching is case-insensitive for reading** (matches both uppercase and lowercase), but **always writes lowercase markers**. This ensures behavioral equivalence with files created by older versions.
 
 ```go
 // Pseudocode for marker handling logic
+// Note: findMarkerCaseInsensitive returns the index and length of the matched marker
+func findMarkerCaseInsensitive(content string, marker string) (index int, length int) {
+    lower := strings.ToLower(content)
+    lowerMarker := strings.ToLower(marker)
+    idx := strings.Index(lower, lowerMarker)
+    if idx == -1 {
+        return -1, 0
+    }
+    return idx, len(marker)
+}
+
 func updateWithMarkers(content, newContent string) (string, error) {
+    // Always write lowercase markers
     startMarker := "<!-- spectr:start -->"
     endMarker := "<!-- spectr:end -->"
 
-    startIdx := strings.Index(content, startMarker)
+    // Case-insensitive search for existing markers
+    startIdx, _ := findMarkerCaseInsensitive(content, startMarker)
 
     if startIdx == -1 {
-        // No start marker - check for orphaned end marker
-        endIdx := strings.Index(content, endMarker)
+        // No start marker - check for orphaned end marker (case-insensitive)
+        endIdx, _ := findMarkerCaseInsensitive(content, endMarker)
         if endIdx != -1 {
             return "", fmt.Errorf("orphaned end marker at position %d without start marker", endIdx)
         }
-        // No markers exist - append new block at end with markers
+        // No markers exist - append new block at end with lowercase markers
         return content + "\n\n" + startMarker + "\n" + newContent + "\n" + endMarker, nil
     }
 
-    // Start marker found - look for end marker AFTER the start
+    // Start marker found - look for end marker AFTER the start (case-insensitive)
     searchFrom := startIdx + len(startMarker)
-    endIdx := strings.Index(content[searchFrom:], endMarker)
+    endIdx, _ := findMarkerCaseInsensitive(content[searchFrom:], endMarker)
 
     if endIdx != -1 {
         // Normal case: both markers present and properly paired
         endIdx += searchFrom // Adjust to absolute position
 
-        // Check for nested start marker before end
-        nextStartIdx := strings.Index(content[searchFrom:endIdx], startMarker)
+        // Check for nested start marker before end (case-insensitive)
+        nextStartIdx, _ := findMarkerCaseInsensitive(content[searchFrom:endIdx], startMarker)
         if nextStartIdx != -1 {
             return "", fmt.Errorf("nested start marker at position %d before end marker at %d", searchFrom+nextStartIdx, endIdx)
         }
 
         before := content[:startIdx]
         after := content[endIdx+len(endMarker):]
+        // Always write lowercase markers
         return before + startMarker + "\n" + newContent + "\n" + endMarker + after, nil
     }
 
     // Start marker exists but no end marker immediately after
-    // Search for trailing end marker anywhere in the file
-    trailingEndIdx := strings.Index(content[searchFrom:], endMarker)
+    // Search for trailing end marker anywhere in the file (case-insensitive)
+    trailingEndIdx, _ := findMarkerCaseInsensitive(content[searchFrom:], endMarker)
     if trailingEndIdx != -1 {
         trailingEndIdx += searchFrom
         // Found end marker after start - use it
         before := content[:startIdx]
         after := content[trailingEndIdx+len(endMarker):]
+        // Always write lowercase markers
         return before + startMarker + "\n" + newContent + "\n" + endMarker + after, nil
     }
 
-    // Check for multiple start markers without end
-    nextStartIdx := strings.Index(content[searchFrom:], startMarker)
+    // Check for multiple start markers without end (case-insensitive)
+    nextStartIdx, _ := findMarkerCaseInsensitive(content[searchFrom:], startMarker)
     if nextStartIdx != -1 {
         return "", fmt.Errorf("multiple start markers at positions %d and %d without end markers", startIdx, searchFrom+nextStartIdx)
     }
@@ -491,7 +506,7 @@ func updateWithMarkers(content, newContent string) (string, error) {
 }
 ```
 
-**Marker Format**: ALL markdown markers use lowercase `<!-- spectr:start -->` and `<!-- spectr:end -->` for consistency across all providers.
+**Marker Format**: Marker matching is **case-insensitive for reading** (matches both `<!-- spectr:START -->` and `<!-- spectr:start -->`), but **always writes lowercase** `<!-- spectr:start -->` and `<!-- spectr:end -->` for consistency across all providers. This ensures behavioral equivalence with files created by older versions.
 
 **Edge Cases Handled**:
 - **Missing markers**: Insert at end of file with markers
@@ -1070,7 +1085,7 @@ This ensures all template variables are derived from a single source of truth (C
 | TemplateRef field visibility? | Public fields (`Name`, `Template`) for external package access |
 | TOML template support? | Separate `TOMLSlashCommandsInitializer` type with dedicated `TOMLSlashCommand()` accessor |
 | Frontmatter structure? | Minimal: only `description` field required |
-| Marker search algorithm? | Use `strings.Index` (first occurrence) for all marker searches |
+| Marker search algorithm? | Case-insensitive matching via `strings.ToLower()` for reading; always write lowercase markers |
 | os.UserHomeDir() failure? | Fail initialization entirely; home directory access is required |
 | Directory already exists? | Silent success (MkdirAll style); don't report in UpdatedFiles |
 | Re-run behavior? | Always re-run all initializers regardless of IsSetup() status; initializers are idempotent |

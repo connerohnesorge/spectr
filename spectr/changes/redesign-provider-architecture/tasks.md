@@ -20,12 +20,12 @@ This document defines the implementation tasks for redesigning the provider arch
 Create `internal/domain` package to break import cycles with shared types.
 
 - [ ] 0.1 Create `internal/domain/template.go` with:
-  - `TemplateRef` struct with public fields: `Name string`, `Template *template.Template`
-  - `Render(ctx TemplateContext) (string, error)` method on TemplateRef
-  - `TemplateContext` struct with fields: `BaseDir`, `SpecsDir`, `ChangesDir`, `ProjectFile`, `AgentsFile` (all strings)
-  - `DefaultTemplateContext()` function returning TemplateContext with default "spectr" paths
+  - `TemplateRef` struct with public fields: `Name string`, `Template *template.Template` (see design.md §0 Domain Package, specs/provider-system/spec.md "TemplateRef in domain package")
+  - `Render(ctx TemplateContext) (string, error)` method on TemplateRef (see design.md §0)
+  - `TemplateContext` struct with fields: `BaseDir`, `SpecsDir`, `ChangesDir`, `ProjectFile`, `AgentsFile` (all strings) (see design.md §0, specs/provider-system/spec.md "TemplateContext in domain package")
+  - `DefaultTemplateContext()` function returning TemplateContext with default "spectr" paths (see design.md §0)
 
-- [ ] 0.2 Create `internal/domain/slashcmd.go` with `SlashCommand` typed int, `SlashProposal`/`SlashApply` constants, and `String()` method (NO `TemplateName()`)
+- [ ] 0.2 Create `internal/domain/slashcmd.go` with `SlashCommand` typed int, `SlashProposal`/`SlashApply` constants, and `String()` method (NO `TemplateName()`) (see design.md §0 Domain Package, specs/provider-system/spec.md "SlashCommand in domain package")
 
 - [ ] 0.3 Create `internal/domain/template_test.go` with tests for TemplateRef.Render() and DefaultTemplateContext()
 
@@ -53,15 +53,15 @@ Create `internal/domain` package to break import cycles with shared types.
 
 Create the new provider system types and interfaces.
 
-- [ ] 1.1 Create `internal/initialize/providers/initializer.go` with `Initializer` interface: `Init(ctx, projectFs, homeFs, cfg, tm) (InitResult, error)` and `IsSetup(projectFs, homeFs, cfg) bool`
+- [ ] 1.1 Create `internal/initialize/providers/initializer.go` with `Initializer` interface: `Init(ctx, projectFs, homeFs, cfg, tm) (InitResult, error)` and `IsSetup(projectFs, homeFs, cfg) bool` (see design.md §1 Provider Interface, specs/provider-system/spec.md "Initializer Interface")
 
-- [ ] 1.2 Create `internal/initialize/providers/result.go` with `InitResult` struct (`CreatedFiles`, `UpdatedFiles`), `ExecutionResult` struct (`CreatedFiles`, `UpdatedFiles` - no Error field, error returned separately), and `aggregateResults()` function
+- [ ] 1.2 Create `internal/initialize/providers/result.go` with `InitResult` struct (`CreatedFiles`, `UpdatedFiles`), `ExecutionResult` struct (`CreatedFiles`, `UpdatedFiles` - no Error field, error returned separately), and `aggregateResults()` function (see design.md §5 File Change Detection, specs/provider-system/spec.md "Initialize Result" and "ExecutionResult Type")
 
-- [ ] 1.3 Create `internal/initialize/providers/config.go` with `Config` struct (`SpectrDir`), `Validate()` method (non-empty, no absolute paths, no path traversal), and derived path methods: `SpecsDir()`, `ChangesDir()`, `ProjectFile()`, `AgentsFile()`
+- [ ] 1.3 Create `internal/initialize/providers/config.go` with `Config` struct (`SpectrDir`), `Validate()` method (non-empty, no absolute paths, no path traversal), and derived path methods: `SpecsDir()`, `ChangesDir()`, `ProjectFile()`, `AgentsFile()` (see design.md §1 Provider Interface, specs/provider-system/spec.md "Config Struct")
 
-- [ ] 1.4 Rewrite `internal/initialize/providers/provider.go` with minimal `Provider` interface returning `Initializers(ctx, tm *TemplateManager) []Initializer`; DELETE old 12-method interface, BaseProvider, TemplateRenderer, old TemplateContext
+- [ ] 1.4 Rewrite `internal/initialize/providers/provider.go` with minimal `Provider` interface returning `Initializers(ctx, tm *TemplateManager) []Initializer`; DELETE old 12-method interface, BaseProvider, TemplateRenderer, old TemplateContext (see design.md §1 Provider Interface, specs/provider-system/spec.md "Provider Interface")
 
-- [ ] 1.5 Create `internal/initialize/providers/registration.go` with `Registration` struct: `ID`, `Name`, `Priority`, `Provider`
+- [ ] 1.5 Create `internal/initialize/providers/registration.go` with `Registration` struct: `ID`, `Name`, `Priority`, `Provider` (see design.md §2 Registration API, specs/provider-system/spec.md "Registration Struct")
 
 ---
 
@@ -69,13 +69,13 @@ Create the new provider system types and interfaces.
 
 Update TemplateManager to use domain types and provide type-safe accessors.
 
-- [ ] 2.1 Update `internal/initialize/templates.go` to import `internal/domain`, merge templates from `templateFS` and `domain.TemplateFS` in `NewTemplateManager()`
+- [ ] 2.1 Update `internal/initialize/templates.go` to import `internal/domain`, merge templates from `templateFS` and `domain.TemplateFS` in `NewTemplateManager()` (see design.md §6 TemplateManager Integration, specs/provider-system/spec.md "TemplateManager Interface")
 
-- [ ] 2.2 Add type-safe accessor methods to TemplateManager: `InstructionPointer() domain.TemplateRef`, `Agents() domain.TemplateRef`
+- [ ] 2.2 Add type-safe accessor methods to TemplateManager: `InstructionPointer() domain.TemplateRef`, `Agents() domain.TemplateRef` (see design.md §7 Type-Safe Template Selection, specs/provider-system/spec.md "TemplateManager Interface")
 
-- [ ] 2.3 Add `SlashCommand(cmd domain.SlashCommand) domain.TemplateRef` method to TemplateManager (Markdown templates)
+- [ ] 2.3 Add `SlashCommand(cmd domain.SlashCommand) domain.TemplateRef` method to TemplateManager (Markdown templates) (see design.md §7 Type-Safe Template Selection, specs/provider-system/spec.md "TemplateManager SlashCommand accessor")
 
-- [ ] 2.3a Add `TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef` method to TemplateManager (TOML templates)
+- [ ] 2.3a Add `TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef` method to TemplateManager (TOML templates) (see design.md §7 Type-Safe Template Selection, specs/provider-system/spec.md "TemplateManager TOMLSlashCommand accessor")
 
 - [ ] 2.4 Add unit tests in `internal/initialize/templates_test.go` verifying all accessors return valid `domain.TemplateRef` and Render() works
 
@@ -87,22 +87,22 @@ Update TemplateManager to use domain types and provide type-safe accessors.
 
 Create the three reusable initializer implementations.
 
-- [ ] 3.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer` (project fs) and `HomeDirectoryInitializer` (home fs): creates directories with MkdirAll (silent success if exists), implements optional `deduplicatable` interface with `dedupeKey()` using `filepath.Clean()` for path normalization
+- [ ] 3.1 Create `internal/initialize/providers/initializers/directory.go` with `DirectoryInitializer` (project fs) and `HomeDirectoryInitializer` (home fs): creates directories with MkdirAll (silent success if exists), implements optional `deduplicatable` interface with `dedupeKey()` using `filepath.Clean()` for path normalization (see design.md §3 Built-in Initializers, design.md §9 Initializer Deduplication, specs/provider-system/spec.md "Directory Initializer")
 
 - [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`:
-  - Constructor: `NewConfigFileInitializer(path string, template domain.TemplateRef)`
-  - Case-insensitive marker matching for reading (matches both uppercase and lowercase markers)
-  - Always writes lowercase markers (`<!-- spectr:start -->` and `<!-- spectr:end -->`)
-  - Orphaned marker handling with `strings.Index` (first occurrence)
-  - Prevents duplicate blocks, implements `deduplicatable` with dedupeKey: "ConfigFileInitializer:{path}"
-  - Error cases: orphaned end, nested start, multiple starts
+  - Constructor: `NewConfigFileInitializer(path string, template domain.TemplateRef)` (see design.md §3 Built-in Initializers)
+  - Case-insensitive marker matching for reading (matches both uppercase and lowercase markers) (see design.md §3 ConfigFileInitializer Marker Handling, specs/provider-system/spec.md "Case-insensitive marker matching")
+  - Always writes lowercase markers (`<!-- spectr:start -->` and `<!-- spectr:end -->`) (see design.md §3, specs/provider-system/spec.md "Config file markers")
+  - Orphaned marker handling with `strings.Index` (first occurrence) (see design.md §3, specs/provider-system/spec.md "Orphaned start marker handling")
+  - Prevents duplicate blocks, implements `deduplicatable` with dedupeKey: "ConfigFileInitializer:{path}" (see design.md §9 Initializer Deduplication)
+  - Error cases: orphaned end, nested start, multiple starts (see design.md §3, specs/provider-system/spec.md "ConfigFile Initializer" scenarios)
 
-- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with five initializer types (all use early binding with map[SlashCommand]TemplateRef, all implement `deduplicatable` interface):
-  - `SlashCommandsInitializer` (project fs, Markdown .md, dedupeKey: "SlashCommandsInitializer:{dir}")
-  - `HomeSlashCommandsInitializer` (home fs, Markdown .md, dedupeKey: "HomeSlashCommandsInitializer:{dir}")
-  - `PrefixedSlashCommandsInitializer` (project fs, Markdown .md with prefix, for Antigravity, dedupeKey: "PrefixedSlashCommandsInitializer:{dir}:{prefix}")
-  - `HomePrefixedSlashCommandsInitializer` (home fs, Markdown .md with prefix, for Codex, dedupeKey: "HomePrefixedSlashCommandsInitializer:{dir}:{prefix}")
-  - `TOMLSlashCommandsInitializer` (project fs, TOML .toml for Gemini, dedupeKey: "TOMLSlashCommandsInitializer:{dir}")
+- [ ] 3.3 Create `internal/initialize/providers/initializers/slashcmds.go` with five initializer types (all use early binding with map[SlashCommand]TemplateRef, all implement `deduplicatable` interface) (see design.md §3 Built-in Initializers, specs/provider-system/spec.md "SlashCommands Initializer"):
+  - `SlashCommandsInitializer` (project fs, Markdown .md, dedupeKey: "SlashCommandsInitializer:{dir}") (see specs/provider-system/spec.md "Create project Markdown slash commands")
+  - `HomeSlashCommandsInitializer` (home fs, Markdown .md, dedupeKey: "HomeSlashCommandsInitializer:{dir}") (see specs/provider-system/spec.md "Create home Markdown slash commands")
+  - `PrefixedSlashCommandsInitializer` (project fs, Markdown .md with prefix, for Antigravity, dedupeKey: "PrefixedSlashCommandsInitializer:{dir}:{prefix}") (see specs/provider-system/spec.md "Create prefixed Markdown slash commands")
+  - `HomePrefixedSlashCommandsInitializer` (home fs, Markdown .md with prefix, for Codex, dedupeKey: "HomePrefixedSlashCommandsInitializer:{dir}:{prefix}") (see specs/provider-system/spec.md "Create home prefixed Markdown slash commands")
+  - `TOMLSlashCommandsInitializer` (project fs, TOML .toml for Gemini, dedupeKey: "TOMLSlashCommandsInitializer:{dir}") (see specs/provider-system/spec.md "Create TOML slash commands")
 
 - [ ] 3.4 Add unit tests for `DirectoryInitializer` and `HomeDirectoryInitializer` in `directory_test.go` using `afero.MemMapFs`: creates dirs, IsSetup checks, separate types for project vs home filesystem, silent success if dir exists
 
@@ -116,17 +116,17 @@ Create the three reusable initializer implementations.
 
 Replace old registry with explicit registration (no init()).
 
-- [ ] 4.1 Rewrite `internal/initialize/providers/registry.go` with new Registry using `Registration` struct, package-level `registry` map
+- [ ] 4.1 Rewrite `internal/initialize/providers/registry.go` with new Registry using `Registration` struct, package-level `registry` map (see design.md §2 Registration API, specs/provider-system/spec.md "Provider Registration")
 
-- [ ] 4.2 Implement `RegisterProvider(reg Registration) error` with validation: non-empty ID, non-nil Provider, reject duplicates with error (not panic)
+- [ ] 4.2 Implement `RegisterProvider(reg Registration) error` with validation: non-empty ID, non-nil Provider, reject duplicates with error (not panic) (see design.md §2, specs/provider-system/spec.md "Register provider with metadata")
 
-- [ ] 4.3 Implement registry query methods: `RegisteredProviders() []Registration`, `Get(id) (Registration, bool)`, `Count() int`
+- [ ] 4.3 Implement registry query methods: `RegisteredProviders() []Registration`, `Get(id) (Registration, bool)`, `Count() int` (see design.md §2, specs/provider-system/spec.md "Retrieve registered providers")
 
-- [ ] 4.4 Ensure `RegisteredProviders()` returns providers sorted by Priority (lower first)
+- [ ] 4.4 Ensure `RegisteredProviders()` returns providers sorted by Priority (lower first) (see design.md §2, specs/provider-system/spec.md "Retrieve registered providers")
 
-- [ ] 4.5 Ensure `RegisterProvider` returns clear error for duplicate IDs: `fmt.Errorf("provider %q already registered", reg.ID)`
+- [ ] 4.5 Ensure `RegisterProvider` returns clear error for duplicate IDs: `fmt.Errorf("provider %q already registered", reg.ID)` (see design.md §2, specs/provider-system/spec.md "Register provider with metadata")
 
-- [ ] 4.6 Create `RegisterAllProviders() error` that explicitly registers all 15 providers with priorities 1-15: claude-code, gemini, costrict, qoder, qwen, antigravity, cline, cursor, codex, aider, windsurf, kilocode, continue, crush, opencode
+- [ ] 4.6 Create `RegisterAllProviders() error` that explicitly registers all 15 providers with priorities 1-15: claude-code, gemini, costrict, qoder, qwen, antigravity, cline, cursor, codex, aider, windsurf, kilocode, continue, crush, opencode (see design.md §2 Registration API, specs/provider-system/spec.md "RegisterAllProviders at startup")
 
 - [ ] 4.7 Rewrite `registry_test.go` with tests for: valid registration, empty ID rejection, nil Provider rejection, duplicate ID rejection, priority sorting, Get() correctness
 
@@ -174,25 +174,25 @@ Migrate all 15 providers to new interface. Each migration DELETEs old BaseProvid
 
 Update the executor to use the new provider system.
 
-- [ ] 6.1 Update `cmd/init.go` to call `providers.RegisterAllProviders()` with error handling when init command is invoked
+- [ ] 6.1 Update `cmd/init.go` to call `providers.RegisterAllProviders()` with error handling when init command is invoked (see design.md §2 Registration API, specs/provider-system/spec.md "RegisterAllProviders at startup")
 
-- [ ] 6.2 Create dual filesystem in `executor.go`: `projectFs` rooted at project, `homeFs` rooted at home directory (fail if os.UserHomeDir() errors)
+- [ ] 6.2 Create dual filesystem in `executor.go`: `projectFs` rooted at project, `homeFs` rooted at home directory (fail if os.UserHomeDir() errors) (see design.md §4 Filesystem Abstraction, specs/provider-system/spec.md "Dual Filesystem Support")
 
-- [ ] 6.3 Update `executor.go` to use `RegisteredProviders()` for sorted provider list
+- [ ] 6.3 Update `executor.go` to use `RegisteredProviders()` for sorted provider list (see design.md §2 Registration API)
 
-- [ ] 6.4 Implement initializer collection from selected providers in `executor.go`
+- [ ] 6.4 Implement initializer collection from selected providers in `executor.go` (see design.md §1 Provider Interface)
 
-- [ ] 6.4a Create `templateContextFromConfig(cfg *Config) domain.TemplateContext` in `executor.go` to derive TemplateContext from Config.SpectrDir
+- [ ] 6.4a Create `templateContextFromConfig(cfg *Config) domain.TemplateContext` in `executor.go` to derive TemplateContext from Config.SpectrDir (see design.md §10 TemplateContext Creation, specs/provider-system/spec.md "TemplateContext derived from Config")
 
-- [ ] 6.5 Implement initializer deduplication using optional `deduplicatable` interface in `executor.go` (keep first occurrence)
+- [ ] 6.5 Implement initializer deduplication using optional `deduplicatable` interface in `executor.go` (keep first occurrence) (see design.md §9 Initializer Deduplication, specs/provider-system/spec.md "Initializer Deduplication")
 
-- [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer/HomeDirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer/HomeSlashCommandsInitializer/PrefixedSlashCommandsInitializer/HomePrefixedSlashCommandsInitializer/TOMLSlashCommandsInitializer (3)
+- [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer/HomeDirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer/HomeSlashCommandsInitializer/PrefixedSlashCommandsInitializer/HomePrefixedSlashCommandsInitializer/TOMLSlashCommandsInitializer (3) (see design.md §8 Initializer Ordering, specs/provider-system/spec.md "Initializer Ordering")
 
-- [ ] 6.7 Update `configureProviders()` to pass both filesystems and TemplateManager, collect InitResult, fail-fast on first error
+- [ ] 6.7 Update `configureProviders()` to pass both filesystems and TemplateManager, collect InitResult, fail-fast on first error (see design.md §5 File Change Detection, specs/provider-system/spec.md "Fail-Fast Error Handling")
 
-- [ ] 6.8 Use `aggregateResults(allResults)` to combine all InitResult into ExecutionResult on success
+- [ ] 6.8 Use `aggregateResults(allResults)` to combine all InitResult into ExecutionResult on success (see design.md §5 File Change Detection, specs/provider-system/spec.md "aggregateResults function")
 
-- [ ] 6.9 Implement fail-fast behavior: stop on first error, return partial ExecutionResult and error separately (error not stored in ExecutionResult)
+- [ ] 6.9 Implement fail-fast behavior: stop on first error, return partial ExecutionResult and error separately (error not stored in ExecutionResult) (see design.md §5 File Change Detection, specs/provider-system/spec.md "Fail-Fast Error Handling")
 
 ---
 
@@ -200,17 +200,17 @@ Update the executor to use the new provider system.
 
 Complete removal of deprecated code. Zero technical debt.
 
-- [ ] 7.1 Remove old 12-method Provider interface from `provider.go` (already replaced in 1.4)
+- [ ] 7.1 Remove old 12-method Provider interface from `provider.go` (already replaced in 1.4) (see design.md §1 Provider Interface - old interface being removed)
 
-- [ ] 7.2 Remove `BaseProvider` struct and all its methods from `provider.go`
+- [ ] 7.2 Remove `BaseProvider` struct and all its methods from `provider.go` (see design.md Context section - mentions current problems with BaseProvider)
 
-- [ ] 7.3 Remove `TemplateRenderer` interface from `provider.go`
+- [ ] 7.3 Remove `TemplateRenderer` interface from `provider.go` (see design.md §6 TemplateManager Integration - replaced by TemplateManager)
 
-- [ ] 7.4 Remove old `TemplateContext` and `DefaultTemplateContext()` from `provider.go` (now in domain)
+- [ ] 7.4 Remove old `TemplateContext` and `DefaultTemplateContext()` from `provider.go` (now in domain) (see design.md §0 Domain Package - moved to internal/domain)
 
-- [ ] 7.5 DELETE entire `helpers.go` file: `EnsureDir`, `FileExists`, `UpdateFileWithMarkers` now in initializers
+- [ ] 7.5 DELETE entire `helpers.go` file: `EnsureDir`, `FileExists`, `UpdateFileWithMarkers` now in initializers (see design.md §3 Built-in Initializers - functionality moved to initializer types)
 
-- [ ] 7.6 COMPLETELY DELETE old registry functions: `Register(p Provider)`, old Get/All/IDs/Count, `WithConfigFile()`, `WithSlashCommands()`, `Reset()` - NO compatibility shims
+- [ ] 7.6 COMPLETELY DELETE old registry functions: `Register(p Provider)`, old Get/All/IDs/Count, `WithConfigFile()`, `WithSlashCommands()`, `Reset()` - NO compatibility shims (see design.md §2 Registration API and Migration Plan "Zero Technical Debt Policy", specs/provider-system/spec.md "Zero Technical Debt - No Compatibility Shims")
 
 - [ ] 7.7 Clean up `constants.go`: DELETE `StandardFrontmatter()`, `StandardCommandPaths()`, `PrefixedCommandPaths()`
 

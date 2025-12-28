@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/list"
 	"github.com/connerohnesorge/spectr/internal/pr"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
@@ -78,8 +79,13 @@ func (c *ListCmd) Run() error {
 		)
 	}
 
+	cfg, err := config.Load(projectPath)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	// Create lister instance for the project
-	lister := list.NewLister(projectPath)
+	lister := list.NewLister(projectPath, cfg.Dir)
 
 	// Route to appropriate listing function
 	if c.All {
@@ -89,14 +95,14 @@ func (c *ListCmd) Run() error {
 		return c.listSpecs(lister, projectPath)
 	}
 
-	return c.listChanges(lister, projectPath)
+	return c.listChanges(lister, projectPath, cfg.Dir)
 }
 
 // listChanges retrieves and displays changes in the requested format.
 // It handles interactive mode, JSON, long, and default text formats.
 func (c *ListCmd) listChanges(
 	lister *list.Lister,
-	projectPath string,
+	projectPath, spectrDir string,
 ) error {
 	// Retrieve all changes from the project
 	changes, err := lister.ListChanges()
@@ -129,6 +135,7 @@ func (c *ListCmd) listChanges(
 			return c.runArchiveWorkflow(
 				archiveID,
 				projectPath,
+				spectrDir,
 			)
 		}
 
@@ -137,6 +144,7 @@ func (c *ListCmd) listChanges(
 			return c.runPRWorkflow(
 				prID,
 				projectPath,
+				spectrDir,
 			)
 		}
 
@@ -174,7 +182,7 @@ func (c *ListCmd) listChanges(
 
 // runArchiveWorkflow executes the archive workflow for a change.
 func (*ListCmd) runArchiveWorkflow(
-	changeID, projectPath string,
+	changeID, projectPath, spectrDir string,
 ) error {
 	// Create archive command with the selected change ID
 	archiveCmd := &archive.ArchiveCmd{
@@ -185,7 +193,7 @@ func (*ListCmd) runArchiveWorkflow(
 
 	// Run the archive workflow
 	// Result is discarded for interactive usage - already prints to terminal
-	if _, err := archive.Archive(archiveCmd, projectPath); err != nil {
+	if _, err := archive.Archive(archiveCmd, projectPath, spectrDir); err != nil {
 		return fmt.Errorf(
 			"archive workflow failed: %w",
 			err,
@@ -197,15 +205,16 @@ func (*ListCmd) runArchiveWorkflow(
 
 // runPRWorkflow executes the PR proposal workflow for a change.
 func (*ListCmd) runPRWorkflow(
-	changeID, projectPath string,
+	changeID, projectPath, spectrDir string,
 ) error {
-	config := pr.PRConfig{
+	prConfig := pr.PRConfig{
 		ChangeID:    changeID,
 		Mode:        pr.ModeProposal,
 		ProjectRoot: projectPath,
+		SpectrDir:   spectrDir,
 	}
 
-	result, err := pr.ExecutePR(config)
+	result, err := pr.ExecutePR(prConfig)
 	if err != nil {
 		return fmt.Errorf(
 			"pr workflow failed: %w",

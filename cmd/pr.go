@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/git"
 	"github.com/connerohnesorge/spectr/internal/list"
@@ -58,9 +59,15 @@ func (c *PRRemoveCmd) Run() error {
 		)
 	}
 
+	cfg, err := config.Load(projectRoot)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	changeID, err := resolveOrSelectChangeID(
 		c.ChangeID,
 		projectRoot,
+		cfg.Dir,
 	)
 	if err != nil {
 		var userCancelledErr *specterrs.UserCancelledError
@@ -71,7 +78,7 @@ func (c *PRRemoveCmd) Run() error {
 		return err
 	}
 
-	config := pr.PRConfig{
+	prConfig := pr.PRConfig{
 		ChangeID:    changeID,
 		Mode:        pr.ModeRemove,
 		BaseBranch:  c.Base,
@@ -79,9 +86,10 @@ func (c *PRRemoveCmd) Run() error {
 		Force:       c.Force,
 		DryRun:      c.DryRun,
 		ProjectRoot: projectRoot,
+		SpectrDir:   cfg.Dir,
 	}
 
-	result, err := pr.ExecutePR(config)
+	result, err := pr.ExecutePR(prConfig)
 	if err != nil {
 		return fmt.Errorf(
 			"pr remove failed: %w",
@@ -104,9 +112,15 @@ func (c *PRArchiveCmd) Run() error {
 		)
 	}
 
+	cfg, err := config.Load(projectRoot)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	changeID, err := resolveOrSelectChangeID(
 		c.ChangeID,
 		projectRoot,
+		cfg.Dir,
 	)
 	if err != nil {
 		var userCancelledErr *specterrs.UserCancelledError
@@ -117,7 +131,7 @@ func (c *PRArchiveCmd) Run() error {
 		return err
 	}
 
-	config := pr.PRConfig{
+	prConfig := pr.PRConfig{
 		ChangeID:    changeID,
 		Mode:        pr.ModeArchive,
 		BaseBranch:  c.Base,
@@ -126,9 +140,10 @@ func (c *PRArchiveCmd) Run() error {
 		DryRun:      c.DryRun,
 		SkipSpecs:   c.SkipSpecs,
 		ProjectRoot: projectRoot,
+		SpectrDir:   cfg.Dir,
 	}
 
-	result, err := pr.ExecutePR(config)
+	result, err := pr.ExecutePR(prConfig)
 	if err != nil {
 		return fmt.Errorf(
 			"pr archive failed: %w",
@@ -151,6 +166,11 @@ func (c *PRProposalCmd) Run() error {
 		)
 	}
 
+	cfg, err := config.Load(projectRoot)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	var changeID string
 
 	// For proposal command without explicit ID, filter to unmerged changes only
@@ -158,10 +178,11 @@ func (c *PRProposalCmd) Run() error {
 		changeID, err = selectChangeForProposal(
 			projectRoot,
 			c.Base,
+			cfg.Dir,
 		)
 	} else {
 		// Explicit ID provided - resolve without filtering
-		changeID, err = resolveOrSelectChangeID(c.ChangeID, projectRoot)
+		changeID, err = resolveOrSelectChangeID(c.ChangeID, projectRoot, cfg.Dir)
 	}
 
 	if err != nil {
@@ -173,7 +194,7 @@ func (c *PRProposalCmd) Run() error {
 		return err
 	}
 
-	config := pr.PRConfig{
+	prConfig := pr.PRConfig{
 		ChangeID:    changeID,
 		Mode:        pr.ModeProposal,
 		BaseBranch:  c.Base,
@@ -181,9 +202,10 @@ func (c *PRProposalCmd) Run() error {
 		Force:       c.Force,
 		DryRun:      c.DryRun,
 		ProjectRoot: projectRoot,
+		SpectrDir:   cfg.Dir,
 	}
 
-	result, err := pr.ExecutePR(config)
+	result, err := pr.ExecutePR(prConfig)
 	if err != nil {
 		return fmt.Errorf(
 			"pr proposal failed: %w",
@@ -199,17 +221,19 @@ func (c *PRProposalCmd) Run() error {
 // resolveOrSelectChangeID resolves a partial change ID or prompts for
 // interactive selection if no ID is provided.
 func resolveOrSelectChangeID(
-	changeID, projectRoot string,
+	changeID, projectRoot, spectrDir string,
 ) (string, error) {
 	if changeID == "" {
 		return selectChangeInteractive(
 			projectRoot,
+			spectrDir,
 		)
 	}
 
 	result, err := discovery.ResolveChangeID(
 		changeID,
 		projectRoot,
+		spectrDir,
 	)
 	if err != nil {
 		return "", err
@@ -228,9 +252,9 @@ func resolveOrSelectChangeID(
 
 // selectChangeInteractive prompts the user to select a change interactively.
 func selectChangeInteractive(
-	projectRoot string,
+	projectRoot, spectrDir string,
 ) (string, error) {
-	lister := list.NewLister(projectRoot)
+	lister := list.NewLister(projectRoot, spectrDir)
 
 	changes, err := lister.ListChanges()
 	if err != nil {
@@ -272,9 +296,9 @@ func selectChangeInteractive(
 // filtering out changes that already exist on the base branch.
 // This ensures only unmerged proposals are shown for PR creation.
 func selectChangeForProposal(
-	projectRoot, baseBranch string,
+	projectRoot, baseBranch, spectrDir string,
 ) (string, error) {
-	lister := list.NewLister(projectRoot)
+	lister := list.NewLister(projectRoot, spectrDir)
 
 	changes, err := lister.ListChanges()
 	if err != nil {
@@ -314,6 +338,7 @@ func selectChangeForProposal(
 	unmergedChanges, err := list.FilterChangesNotOnRef(
 		changes,
 		ref,
+		spectrDir,
 	)
 	if err != nil {
 		return "", fmt.Errorf(

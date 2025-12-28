@@ -29,6 +29,7 @@ func TestDetermineItemType_ChangeOnly(
 		tmpDir,
 		"add-feature",
 		nil,
+		"spectr",
 	)
 	assert.NoError(t, err)
 	assert.True(t, info.IsChange)
@@ -52,6 +53,7 @@ func TestDetermineItemType_SpecOnly(
 		tmpDir,
 		"user-auth",
 		nil,
+		"spectr",
 	)
 	assert.NoError(t, err)
 	assert.False(t, info.IsChange)
@@ -76,6 +78,7 @@ func TestDetermineItemType_BothExists(
 		tmpDir,
 		"user-auth",
 		nil,
+		"spectr",
 	)
 	assert.Error(t, err)
 	assert.Contains(
@@ -106,6 +109,7 @@ func TestDetermineItemType_NotFound(
 		tmpDir,
 		"nonexistent",
 		nil,
+		"spectr",
 	)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "not found")
@@ -128,6 +132,7 @@ func TestDetermineItemType_ExplicitTypeChange(
 		tmpDir,
 		"add-feature",
 		&typeFlag,
+		"spectr",
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, ItemTypeChange, info.ItemType)
@@ -150,6 +155,7 @@ func TestDetermineItemType_ExplicitTypeSpec(
 		tmpDir,
 		"user-auth",
 		&typeFlag,
+		"spectr",
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, ItemTypeSpec, info.ItemType)
@@ -174,6 +180,7 @@ func TestDetermineItemType_ExplicitTypeOverridesBoth(
 		tmpDir,
 		"user-auth",
 		&typeFlag,
+		"spectr",
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, ItemTypeChange, info.ItemType)
@@ -184,6 +191,7 @@ func TestDetermineItemType_ExplicitTypeOverridesBoth(
 		tmpDir,
 		"user-auth",
 		&typeFlag,
+		"spectr",
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, ItemTypeSpec, info.ItemType)
@@ -207,6 +215,7 @@ func TestDetermineItemType_ExplicitTypeNotFound(
 		tmpDir,
 		"nonexistent",
 		&typeFlag,
+		"spectr",
 	)
 	assert.Error(t, err)
 	assert.Contains(
@@ -221,6 +230,7 @@ func TestDetermineItemType_ExplicitTypeNotFound(
 		tmpDir,
 		"nonexistent",
 		&typeFlag,
+		"spectr",
 	)
 	assert.Error(t, err)
 	assert.Contains(
@@ -248,6 +258,7 @@ func TestDetermineItemType_ExplicitTypeWrongType(
 		tmpDir,
 		"add-feature",
 		&typeFlag,
+		"spectr",
 	)
 	assert.Error(t, err)
 	assert.Contains(
@@ -262,6 +273,7 @@ func TestDetermineItemType_ExplicitTypeWrongType(
 		tmpDir,
 		"user-auth",
 		&typeFlag,
+		"spectr",
 	)
 	assert.Error(t, err)
 	assert.Contains(
@@ -280,6 +292,7 @@ func TestDetermineItemType_DiscoveryFailure(
 		"/nonexistent/path",
 		"test",
 		nil,
+		"spectr",
 	)
 	assert.Error(t, err)
 }
@@ -301,6 +314,7 @@ func TestValidateItemByType_Change(t *testing.T) {
 		tmpDir,
 		"add-feature",
 		ItemTypeChange,
+		"spectr",
 	)
 
 	assert.NoError(t, err)
@@ -325,6 +339,7 @@ func TestValidateItemByType_Spec(t *testing.T) {
 		tmpDir,
 		"user-auth",
 		ItemTypeSpec,
+		"spectr",
 	)
 
 	assert.NoError(t, err)
@@ -351,6 +366,7 @@ func TestValidateItemByType_InvalidChange(
 		tmpDir,
 		"bad-change",
 		ItemTypeChange,
+		"spectr",
 	)
 
 	// Should get an error or invalid report
@@ -464,7 +480,7 @@ func TestValidateSingleItem_InvalidContent(
 	// Create invalid spec
 	specDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"specs",
 		"bad-spec",
 	)
@@ -546,7 +562,7 @@ func setupTestProject(
 	// Create changes directory
 	changesDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"changes",
 	)
 	err := os.MkdirAll(changesDir, testDirPerm)
@@ -576,7 +592,7 @@ func setupTestProject(
 	// Create specs directory
 	specsDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"specs",
 	)
 	err = os.MkdirAll(specsDir, testDirPerm)
@@ -610,7 +626,7 @@ func createValidChange(
 
 	changeDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"changes",
 		changeName,
 	)
@@ -697,7 +713,7 @@ func createInvalidChange(
 
 	changeDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"changes",
 		changeName,
 	)
@@ -726,7 +742,7 @@ func createValidSpec(
 
 	specDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"specs",
 		specName,
 	)

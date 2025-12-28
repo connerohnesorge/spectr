@@ -2,7 +2,12 @@
 // for archiving completed changes.
 package archive
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+
+	"github.com/connerohnesorge/spectr/internal/config"
+)
 
 // ArchiveCmd represents the archive command configuration
 type ArchiveCmd struct {
@@ -14,9 +19,20 @@ type ArchiveCmd struct {
 
 // Run executes the archive command
 func (c *ArchiveCmd) Run() error {
+	// Load config from current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get working directory: %w", err)
+	}
+
+	cfg, err := config.Load(cwd)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	// Pass empty string to use current working directory
 	// Result is discarded for CLI usage - already prints to terminal
-	_, err := Archive(c, "")
+	_, err = Archive(c, "", cfg.Dir)
 	if err != nil {
 		return fmt.Errorf(
 			"archive failed: %w",

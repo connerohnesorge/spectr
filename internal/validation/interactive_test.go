@@ -33,6 +33,7 @@ func TestRunInteractiveValidation_NotTTY(
 	err = RunInteractiveValidation(
 		"/test",
 		false,
+		"spectr",
 	)
 
 	// Restore stdout before assertions
@@ -59,7 +60,7 @@ func TestValidateItems(t *testing.T) {
 
 	specPath := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"specs",
 		"test-spec",
 		"spec.md",
@@ -104,7 +105,7 @@ func TestValidateItems_MultipleItems(
 			ItemType: ItemTypeSpec,
 			Path: filepath.Join(
 				tmpDir,
-				SpectrDir,
+				"spectr",
 				"specs",
 				"spec1",
 				"spec.md",
@@ -115,7 +116,7 @@ func TestValidateItems_MultipleItems(
 			ItemType: ItemTypeSpec,
 			Path: filepath.Join(
 				tmpDir,
-				SpectrDir,
+				"spectr",
 				"specs",
 				"spec2",
 				"spec.md",
@@ -151,7 +152,7 @@ func TestValidateItems_WithFailures(
 	// Create invalid spec
 	badSpecDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"specs",
 		"bad-spec",
 	)
@@ -174,7 +175,7 @@ func TestValidateItems_WithFailures(
 			ItemType: ItemTypeSpec,
 			Path: filepath.Join(
 				tmpDir,
-				SpectrDir,
+				"spectr",
 				"specs",
 				"good-spec",
 				"spec.md",
@@ -273,6 +274,7 @@ func TestHandleMenuSelection_All(t *testing.T) {
 		int(menuSelectionAll),
 		tmpDir,
 		false,
+		"spectr",
 	)
 	assert.NoError(t, err)
 }
@@ -294,6 +296,7 @@ func TestHandleMenuSelection_Changes(
 		int(menuSelectionChanges),
 		tmpDir,
 		false,
+		"spectr",
 	)
 	assert.NoError(t, err)
 }
@@ -314,6 +317,7 @@ func TestHandleMenuSelection_Specs(t *testing.T) {
 		int(menuSelectionSpecs),
 		tmpDir,
 		false,
+		"spectr",
 	)
 	assert.NoError(t, err)
 }
@@ -330,6 +334,7 @@ func TestHandleMenuSelection_Invalid(
 		999,
 		tmpDir,
 		false,
+		"spectr",
 	)
 	assert.NoError(t, err)
 }
@@ -365,7 +370,7 @@ func TestRunValidationAndPrint_JSON(
 			ItemType: ItemTypeSpec,
 			Path: filepath.Join(
 				tmpDir,
-				SpectrDir,
+				"spectr",
 				"specs",
 				"test-spec",
 				"spec.md",

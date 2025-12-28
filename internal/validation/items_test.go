@@ -165,7 +165,7 @@ func TestGetAllItems(t *testing.T) {
 		[]string{"add-feature", "fix-bug"},
 		[]string{"user-auth", "payment"})
 
-	items, err := GetAllItems(tmpDir)
+	items, err := GetAllItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(items))
@@ -191,7 +191,7 @@ func TestGetAllItems_EmptyProject(t *testing.T) {
 	tmpDir := t.TempDir()
 	setupTestProject(t, tmpDir, nil, nil)
 
-	items, err := GetAllItems(tmpDir)
+	items, err := GetAllItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(items))
@@ -207,7 +207,7 @@ func TestGetAllItems_OnlyChanges(t *testing.T) {
 		nil,
 	)
 
-	items, err := GetAllItems(tmpDir)
+	items, err := GetAllItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(items))
@@ -230,7 +230,7 @@ func TestGetAllItems_OnlySpecs(t *testing.T) {
 		[]string{"user-auth", "payment"},
 	)
 
-	items, err := GetAllItems(tmpDir)
+	items, err := GetAllItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(items))
@@ -248,7 +248,7 @@ func TestGetAllItems_DiscoveryError(
 	t *testing.T,
 ) {
 	// Use a path that will cause discovery to fail
-	_, err := GetAllItems("/nonexistent/path")
+	_, err := GetAllItems("/nonexistent/path", "spectr")
 
 	// Should not error because discovery returns empty slice for nonexistent dirs
 	// This is by design in the discovery package
@@ -269,7 +269,7 @@ func TestGetChangeItems(t *testing.T) {
 		[]string{"user-auth", "payment"},
 	)
 
-	items, err := GetChangeItems(tmpDir)
+	items, err := GetChangeItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(items))
@@ -294,7 +294,7 @@ func TestGetChangeItems(t *testing.T) {
 		)
 		expectedPath := filepath.Join(
 			tmpDir,
-			SpectrDir,
+			"spectr",
 			"changes",
 			item.Name,
 		)
@@ -312,7 +312,7 @@ func TestGetChangeItems_Empty(t *testing.T) {
 		[]string{"user-auth"},
 	)
 
-	items, err := GetChangeItems(tmpDir)
+	items, err := GetChangeItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(items))
@@ -330,14 +330,14 @@ func TestGetChangeItems_PathConstruction(
 		nil,
 	)
 
-	items, err := GetChangeItems(tmpDir)
+	items, err := GetChangeItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))
 
 	expectedPath := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"changes",
 		"add-feature",
 	)
@@ -358,7 +358,7 @@ func TestGetSpecItems(t *testing.T) {
 		},
 	)
 
-	items, err := GetSpecItems(tmpDir)
+	items, err := GetSpecItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 3, len(items))
@@ -383,7 +383,7 @@ func TestGetSpecItems(t *testing.T) {
 		)
 		expectedPath := filepath.Join(
 			tmpDir,
-			SpectrDir,
+			"spectr",
 			"specs",
 			item.Name,
 			"spec.md",
@@ -402,7 +402,7 @@ func TestGetSpecItems_Empty(t *testing.T) {
 		nil,
 	)
 
-	items, err := GetSpecItems(tmpDir)
+	items, err := GetSpecItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(items))
@@ -420,14 +420,14 @@ func TestGetSpecItems_PathConstruction(
 		[]string{"user-auth"},
 	)
 
-	items, err := GetSpecItems(tmpDir)
+	items, err := GetSpecItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))
 
 	expectedPath := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"specs",
 		"user-auth",
 		"spec.md",
@@ -455,6 +455,7 @@ func TestGetChangeItems_DiscoveryFailure(
 	// Discovery should handle non-existent paths gracefully
 	items, err := GetChangeItems(
 		"/nonexistent/path",
+		"spectr",
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(items))
@@ -467,6 +468,7 @@ func TestGetSpecItems_DiscoveryFailure(
 	// Discovery should handle non-existent paths gracefully
 	items, err := GetSpecItems(
 		"/nonexistent/path",
+		"spectr",
 	)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(items))
@@ -489,8 +491,8 @@ func TestGetAllItems_OrderConsistency(
 	)
 
 	// Get items multiple times
-	items1, err1 := GetAllItems(tmpDir)
-	items2, err2 := GetAllItems(tmpDir)
+	items1, err1 := GetAllItems(tmpDir, "spectr")
+	items2, err2 := GetAllItems(tmpDir, "spectr")
 
 	assert.NoError(t, err1)
 	assert.NoError(t, err2)
@@ -545,7 +547,7 @@ func TestGetChangeItems_WithArchive(
 	// Create archived change
 	archiveDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"changes",
 		"archive",
 		"old-change",
@@ -559,7 +561,7 @@ func TestGetChangeItems_WithArchive(
 	)
 	assert.NoError(t, err)
 
-	items, err := GetChangeItems(tmpDir)
+	items, err := GetChangeItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))
@@ -583,7 +585,7 @@ func TestGetChangeItems_WithHidden(t *testing.T) {
 	// Create hidden directory
 	hiddenDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"changes",
 		".hidden",
 	)
@@ -596,7 +598,7 @@ func TestGetChangeItems_WithHidden(t *testing.T) {
 	)
 	assert.NoError(t, err)
 
-	items, err := GetChangeItems(tmpDir)
+	items, err := GetChangeItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))
@@ -620,7 +622,7 @@ func TestGetSpecItems_WithHidden(t *testing.T) {
 	// Create hidden directory
 	hiddenDir := filepath.Join(
 		tmpDir,
-		SpectrDir,
+		"spectr",
 		"specs",
 		".hidden",
 	)
@@ -633,7 +635,7 @@ func TestGetSpecItems_WithHidden(t *testing.T) {
 	)
 	assert.NoError(t, err)
 
-	items, err := GetSpecItems(tmpDir)
+	items, err := GetSpecItems(tmpDir, "spectr")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(items))

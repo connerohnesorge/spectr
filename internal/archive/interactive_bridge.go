@@ -7,8 +7,9 @@ import (
 // newListerForArchive creates a lister for the archive package
 func newListerForArchive(
 	projectPath string,
+	spectrDir string,
 ) *list.Lister {
-	return list.NewLister(projectPath)
+	return list.NewLister(projectPath, spectrDir)
 }
 
 // runInteractiveArchiveForArchiver wraps the list package's

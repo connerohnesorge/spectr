@@ -57,7 +57,7 @@ More details here.`
 	}
 
 	// Test listing
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 	changes, err := lister.ListChanges()
 	if err != nil {
 		t.Fatalf("ListChanges failed: %v", err)
@@ -105,7 +105,7 @@ More details here.`
 
 func TestListChanges_NoChanges(t *testing.T) {
 	tmpDir := t.TempDir()
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 	changes, err := lister.ListChanges()
 	if err != nil {
 		t.Fatalf("ListChanges failed: %v", err)
@@ -139,7 +139,7 @@ func TestListChanges_FallbackTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 	changes, err := lister.ListChanges()
 	if err != nil {
 		t.Fatalf("ListChanges failed: %v", err)
@@ -192,7 +192,7 @@ Reset feature
 	}
 
 	// Test listing
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 	specs, err := lister.ListSpecs()
 	if err != nil {
 		t.Fatalf("ListSpecs failed: %v", err)
@@ -228,7 +228,7 @@ Reset feature
 
 func TestListSpecs_NoSpecs(t *testing.T) {
 	tmpDir := t.TempDir()
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 	specs, err := lister.ListSpecs()
 	if err != nil {
 		t.Fatalf("ListSpecs failed: %v", err)
@@ -264,7 +264,7 @@ func TestListSpecs_FallbackTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 	specs, err := lister.ListSpecs()
 	if err != nil {
 		t.Fatalf("ListSpecs failed: %v", err)
@@ -342,7 +342,7 @@ func TestListAll(t *testing.T) {
 	}
 
 	// Test listing all items
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 	items, err := lister.ListAll(nil)
 	if err != nil {
 		t.Fatalf("ListAll failed: %v", err)
@@ -426,7 +426,7 @@ func TestListAll_FilterByType(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 
 	// Test filtering for changes only
 	changeType := ItemTypeChange
@@ -504,7 +504,7 @@ func TestListAll_NoSorting(t *testing.T) {
 		}
 	}
 
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 
 	// Test with sorting disabled
 	items, err := lister.ListAll(&ListAllOptions{
@@ -541,7 +541,7 @@ func TestListAll_NoSorting(t *testing.T) {
 
 func TestListAll_Empty(t *testing.T) {
 	tmpDir := t.TempDir()
-	lister := NewLister(tmpDir)
+	lister := NewLister(tmpDir, "spectr")
 
 	items, err := lister.ListAll(nil)
 	if err != nil {
@@ -597,6 +597,7 @@ func TestFilterChangesNotOnRef_EmptySlice(
 	result, err := FilterChangesNotOnRef(
 		changes,
 		"origin/main",
+		"spectr",
 	)
 	if err != nil {
 		t.Fatalf(
@@ -698,6 +699,7 @@ func TestFilterChangesNotOnRef_Integration(
 			result, err := FilterChangesNotOnRef(
 				tc.changes,
 				tc.ref,
+				"spectr",
 			)
 			if err != nil {
 				t.Fatalf(
@@ -811,6 +813,7 @@ func TestFilterChangesNotOnRef_MixedChanges(
 	result, err := FilterChangesNotOnRef(
 		changes,
 		"origin/main",
+		"spectr",
 	)
 	if err != nil {
 		t.Fatalf(
@@ -923,6 +926,7 @@ func TestFilterChangesNotOnRef_PreservesChangeInfo(
 	result, err := FilterChangesNotOnRef(
 		changes,
 		"origin/main",
+		"spectr",
 	)
 	if err != nil {
 		t.Fatalf(

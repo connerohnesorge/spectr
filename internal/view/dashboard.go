@@ -16,11 +16,11 @@ import (
 // and summary metrics.
 //
 // The function performs the following steps:
-//  1. Discovers all changes in spectr/changes/ directory
+//  1. Discovers all changes in {spectrDir}/changes/ directory
 //  2. Parses each change's proposal.md for title
 //  3. Parses each change's tasks.md for task completion status
 //  4. Categorizes changes as active (incomplete) or completed
-//  5. Discovers all specs in spectr/specs/ directory
+//  5. Discovers all specs in {spectrDir}/specs/ directory
 //  6. Parses each spec's spec.md for title and requirement count
 //  7. Sorts results per design specification (active changes by
 //     completion ascending, specs by requirement count descending)
@@ -30,6 +30,7 @@ import (
 //nolint:revive // cognitive-complexity justified for data collection
 func CollectData(
 	projectPath string,
+	spectrDir string,
 ) (*DashboardData, error) {
 	var (
 		proposalPath string
@@ -46,6 +47,7 @@ func CollectData(
 	// Discover all changes
 	changeIDs, err := discovery.GetActiveChanges(
 		projectPath,
+		spectrDir,
 	)
 	if err != nil {
 		return nil, err
@@ -56,7 +58,7 @@ func CollectData(
 		var title string
 		changeDir := filepath.Join(
 			projectPath,
-			"spectr",
+			spectrDir,
 			"changes",
 			changeID,
 		)
@@ -135,6 +137,7 @@ func CollectData(
 	// Discover all specs
 	specIDs, err := discovery.GetSpecs(
 		projectPath,
+		spectrDir,
 	)
 	if err != nil {
 		return nil, err
@@ -144,7 +147,7 @@ func CollectData(
 	for _, specID := range specIDs {
 		specPath := filepath.Join(
 			projectPath,
-			"spectr",
+			spectrDir,
 			"specs",
 			specID,
 			"spec.md",

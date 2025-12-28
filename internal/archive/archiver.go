@@ -41,6 +41,7 @@ import (
 func Archive(
 	cmd *ArchiveCmd,
 	workingDir string,
+	spectrDir string,
 ) (ArchiveResult, error) {
 	changeID := cmd.ChangeID
 
@@ -73,7 +74,7 @@ func Archive(
 	// Check if spectr directory exists
 	spectrRoot := filepath.Join(
 		projectRoot,
-		"spectr",
+		spectrDir,
 	)
 	_, err = os.Stat(spectrRoot)
 	if os.IsNotExist(err) {
@@ -87,6 +88,7 @@ func Archive(
 	if changeID == "" {
 		selectedID, err = selectChangeInteractive(
 			projectRoot,
+			spectrDir,
 		)
 		var userCancelledErr *specterrs.UserCancelledError
 		if errors.As(err, &userCancelledErr) {
@@ -103,7 +105,7 @@ func Archive(
 	} else {
 		var result discovery.ResolveResult
 		// Resolve partial ID to full change ID
-		result, err = discovery.ResolveChangeID(changeID, projectRoot)
+		result, err = discovery.ResolveChangeID(changeID, projectRoot, spectrDir)
 		if err != nil {
 			return ArchiveResult{}, err
 		}
@@ -206,10 +208,11 @@ func Archive(
 // Returns ErrUserCancelled if the user cancels the selection.
 func selectChangeInteractive(
 	projectRoot string,
+	spectrDir string,
 ) (string, error) {
 	// Import list package functions
 	// Note: This will be done at the package level
-	lister := newListerForArchive(projectRoot)
+	lister := newListerForArchive(projectRoot, spectrDir)
 	changes, err := lister.ListChanges()
 	if err != nil {
 		return "", fmt.Errorf(

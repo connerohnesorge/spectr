@@ -54,6 +54,7 @@ func executeArchiveInWorktree(
 	result, err := archive.Archive(
 		archiveCmd,
 		worktreePath,
+		config.SpectrDir,
 	)
 	if err != nil {
 		return archive.ArchiveResult{}, err

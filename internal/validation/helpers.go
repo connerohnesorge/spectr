@@ -14,8 +14,6 @@ const (
 	ItemTypeChange = "change"
 	// ItemTypeSpec represents a spec item type
 	ItemTypeSpec = "spec"
-	// SpectrDir is the base directory for spectr files
-	SpectrDir = "spectr"
 )
 
 // ItemTypeInfo holds information about an item's type
@@ -29,9 +27,11 @@ type ItemTypeInfo struct {
 func DetermineItemType(
 	projectPath, itemName string,
 	typeFlag *string,
+	spectrDir string,
 ) (ItemTypeInfo, error) {
 	changes, err := discovery.GetActiveChangeIDs(
 		projectPath,
+		spectrDir,
 	)
 	if err != nil {
 		return ItemTypeInfo{}, fmt.Errorf(
@@ -42,6 +42,7 @@ func DetermineItemType(
 
 	specs, err := discovery.GetSpecIDs(
 		projectPath,
+		spectrDir,
 	)
 	if err != nil {
 		return ItemTypeInfo{}, fmt.Errorf(
@@ -106,11 +107,12 @@ func DetermineItemType(
 func ValidateItemByType(
 	validator *Validator,
 	projectPath, itemName, itemType string,
+	spectrDir string,
 ) (*ValidationReport, error) {
 	if itemType == ItemTypeChange {
 		changePath := filepath.Join(
 			projectPath,
-			SpectrDir,
+			spectrDir,
 			"changes",
 			itemName,
 		)
@@ -122,7 +124,7 @@ func ValidateItemByType(
 
 	specPath := filepath.Join(
 		projectPath,
-		SpectrDir,
+		spectrDir,
 		"specs",
 		itemName,
 		"spec.md",

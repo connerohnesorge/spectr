@@ -13,17 +13,19 @@ import (
 // Lister handles listing operations for changes and specs
 type Lister struct {
 	projectPath string
+	spectrDir   string
 }
 
-// NewLister creates a new Lister for the given project path
-func NewLister(projectPath string) *Lister {
-	return &Lister{projectPath: projectPath}
+// NewLister creates a new Lister for the given project path and spectr directory
+func NewLister(projectPath string, spectrDir string) *Lister {
+	return &Lister{projectPath: projectPath, spectrDir: spectrDir}
 }
 
 // ListChanges retrieves information about all active changes
 func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 	changeIDs, err := discovery.GetActiveChanges(
 		l.projectPath,
+		l.spectrDir,
 	)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -40,7 +42,7 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 	for _, id := range changeIDs {
 		changeDir := filepath.Join(
 			l.projectPath,
-			"spectr",
+			l.spectrDir,
 			"changes",
 			id,
 		)
@@ -92,6 +94,7 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 func (l *Lister) ListSpecs() ([]SpecInfo, error) {
 	specIDs, err := discovery.GetSpecs(
 		l.projectPath,
+		l.spectrDir,
 	)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -104,7 +107,7 @@ func (l *Lister) ListSpecs() ([]SpecInfo, error) {
 	for _, id := range specIDs {
 		specPath := filepath.Join(
 			l.projectPath,
-			"spectr",
+			l.spectrDir,
 			"specs",
 			id,
 			"spec.md",
@@ -212,12 +215,13 @@ func (l *Lister) ListAll(
 func FilterChangesNotOnRef(
 	changes []ChangeInfo,
 	ref string,
+	spectrDir string,
 ) ([]ChangeInfo, error) {
 	var unmerged []ChangeInfo
 
 	for _, change := range changes {
 		changePath := filepath.Join(
-			"spectr",
+			spectrDir,
 			"changes",
 			change.ID,
 		)

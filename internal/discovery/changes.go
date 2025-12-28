@@ -8,14 +8,15 @@ import (
 	"strings"
 )
 
-// GetActiveChanges finds all active changes in spectr/changes/,
+// GetActiveChanges finds all active changes in {spectrDir}/changes/,
 // excluding archive directory
 func GetActiveChanges(
 	projectPath string,
+	spectrDir string,
 ) ([]string, error) {
 	changesDir := filepath.Join(
 		projectPath,
-		"spectr",
+		spectrDir,
 		"changes",
 	)
 
@@ -72,13 +73,14 @@ func GetActiveChanges(
 }
 
 // GetActiveChangeIDs returns a list of active change IDs
-// (directory names under spectr/changes/, excluding archive/)
+// (directory names under {spectrDir}/changes/, excluding archive/)
 // Returns empty slice (not error) if the directory doesn't exist
 // Results are sorted alphabetically for consistency
 func GetActiveChangeIDs(
 	projectRoot string,
+	spectrDir string,
 ) ([]string, error) {
-	return GetActiveChanges(projectRoot)
+	return GetActiveChanges(projectRoot, spectrDir)
 }
 
 // ResolveResult contains the resolved change ID and whether it was a partial
@@ -102,9 +104,11 @@ type ResolveResult struct {
 // - Multiple changes match the partial ID (ambiguous)
 func ResolveChangeID(
 	partialID, projectRoot string,
+	spectrDir string,
 ) (ResolveResult, error) {
 	changes, err := GetActiveChangeIDs(
 		projectRoot,
+		spectrDir,
 	)
 	if err != nil {
 		return ResolveResult{},

@@ -70,7 +70,7 @@ func TestGetSpecs(t *testing.T) {
 	}
 
 	// Test discovery
-	specs, err := GetSpecs(tmpDir)
+	specs, err := GetSpecs(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf("GetSpecs failed: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestGetSpecs(t *testing.T) {
 
 func TestGetSpecs_EmptyDirectory(t *testing.T) {
 	tmpDir := t.TempDir()
-	specs, err := GetSpecs(tmpDir)
+	specs, err := GetSpecs(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"Expected no error, got: %v",
@@ -154,7 +154,7 @@ func TestGetSpecIDs(t *testing.T) {
 	}
 
 	// Test GetSpecIDs
-	specs, err := GetSpecIDs(tmpDir)
+	specs, err := GetSpecIDs(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf("GetSpecIDs failed: %v", err)
 	}
@@ -192,7 +192,7 @@ func TestGetSpecIDs(t *testing.T) {
 
 func TestGetSpecIDs_EmptyDirectory(t *testing.T) {
 	tmpDir := t.TempDir()
-	specs, err := GetSpecIDs(tmpDir)
+	specs, err := GetSpecIDs(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"Expected no error, got: %v",
@@ -232,7 +232,7 @@ func TestGetActiveChangeIDs_MissingProposalMd(
 	}
 
 	// Test that it's excluded
-	changes, err := GetActiveChangeIDs(tmpDir)
+	changes, err := GetActiveChangeIDs(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"GetActiveChangeIDs failed: %v",
@@ -271,7 +271,7 @@ func TestGetSpecIDs_MissingSpecMd(t *testing.T) {
 	}
 
 	// Test that it's excluded
-	specs, err := GetSpecIDs(tmpDir)
+	specs, err := GetSpecIDs(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf("GetSpecIDs failed: %v", err)
 	}

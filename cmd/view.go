@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/view"
 )
 
@@ -48,14 +49,20 @@ func (c *ViewCmd) Run() error {
 		)
 	}
 
+	cfg, err := config.Load(projectPath)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	// Collect dashboard data from the project
-	data, err := view.CollectData(projectPath)
+	data, err := view.CollectData(projectPath, cfg.Dir)
 	if err != nil {
 		// Handle missing spectr directory error
 		if os.IsNotExist(err) {
 			return fmt.Errorf(
-				"spectr directory not found: %w\n"+
+				"%s directory not found: %w\n"+
 					"Hint: Run 'spectr init' to initialize Spectr",
+				cfg.Dir,
 				err,
 			)
 		}

@@ -141,7 +141,7 @@ func TestArchive_PartialIDPrefix(t *testing.T) {
 		Yes:      true,       // Skip confirmations
 	}
 
-	_, err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
 	}
@@ -231,7 +231,7 @@ func TestArchive_PartialIDSubstring(
 		Yes:      true,
 	}
 
-	_, err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
 	}
@@ -278,7 +278,7 @@ func TestArchive_PartialIDAmbiguous(
 		Yes:      true,
 	}
 
-	_, err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir, "spectr")
 
 	if err == nil {
 		t.Fatal(
@@ -312,7 +312,7 @@ func TestArchive_PartialIDNoMatch(t *testing.T) {
 		Yes:      true,
 	}
 
-	_, err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir, "spectr")
 
 	if err == nil {
 		t.Fatal(
@@ -355,7 +355,7 @@ func TestArchive_ExactIDNoResolutionMessage(
 		Yes:      true,
 	}
 
-	_, err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
 	}
@@ -405,7 +405,7 @@ func TestArchive_CaseInsensitiveMatch(
 		Yes:      true,
 	}
 
-	_, err := Archive(cmd, tmpDir)
+	_, err := Archive(cmd, tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf("Archive failed: %v", err)
 	}

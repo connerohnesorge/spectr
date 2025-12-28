@@ -93,7 +93,7 @@ func TestGetActiveChanges(t *testing.T) {
 	}
 
 	// Test discovery
-	changes, err := GetActiveChanges(tmpDir)
+	changes, err := GetActiveChanges(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"GetActiveChanges failed: %v",
@@ -145,7 +145,7 @@ func TestGetActiveChanges_EmptyDirectory(
 	t *testing.T,
 ) {
 	tmpDir := t.TempDir()
-	changes, err := GetActiveChanges(tmpDir)
+	changes, err := GetActiveChanges(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"Expected no error, got: %v",
@@ -164,7 +164,7 @@ func TestGetActiveChangeIDs_EmptyDirectory(
 	t *testing.T,
 ) {
 	tmpDir := t.TempDir()
-	changes, err := GetActiveChangeIDs(tmpDir)
+	changes, err := GetActiveChangeIDs(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"Expected no error, got: %v",
@@ -224,7 +224,7 @@ func TestGetActiveChangeIDs(t *testing.T) {
 	)
 
 	// Test GetActiveChangeIDs
-	changes, err := GetActiveChangeIDs(tmpDir)
+	changes, err := GetActiveChangeIDs(tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"GetActiveChangeIDs failed: %v",
@@ -291,6 +291,7 @@ func TestResolveChangeID_ExactMatch(
 	result, err := ResolveChangeID(
 		"add-feature",
 		tmpDir,
+		"spectr",
 	)
 	if err != nil {
 		t.Fatalf(
@@ -340,6 +341,7 @@ func TestResolveChangeID_UniquePrefixMatch(
 	result, err := ResolveChangeID(
 		"refactor",
 		tmpDir,
+		"spectr",
 	)
 	if err != nil {
 		t.Fatalf(
@@ -390,6 +392,7 @@ func TestResolveChangeID_UniqueSubstringMatch(
 	result, err := ResolveChangeID(
 		"unified",
 		tmpDir,
+		"spectr",
 	)
 	if err != nil {
 		t.Fatalf(
@@ -437,7 +440,7 @@ func TestResolveChangeID_MultiplePrefixMatches(
 		"# Test",
 	)
 
-	_, err := ResolveChangeID("add", tmpDir)
+	_, err := ResolveChangeID("add", tmpDir, "spectr")
 	if err == nil {
 		t.Fatal(
 			"Expected error for ambiguous prefix match",
@@ -480,7 +483,7 @@ func TestResolveChangeID_MultipleSubstringMatches(
 		"# Test",
 	)
 
-	_, err := ResolveChangeID("search", tmpDir)
+	_, err := ResolveChangeID("search", tmpDir, "spectr")
 	if err == nil {
 		t.Fatal(
 			"Expected error for ambiguous substring match",
@@ -518,6 +521,7 @@ func TestResolveChangeID_NoMatch(t *testing.T) {
 	_, err := ResolveChangeID(
 		"nonexistent",
 		tmpDir,
+		"spectr",
 	)
 	if err == nil {
 		t.Fatal("Expected error for no match")
@@ -557,6 +561,7 @@ func TestResolveChangeID_CaseInsensitive(
 	result, err := ResolveChangeID(
 		"REFACTOR",
 		tmpDir,
+		"spectr",
 	)
 	if err != nil {
 		t.Fatalf(
@@ -576,6 +581,7 @@ func TestResolveChangeID_CaseInsensitive(
 	result, err = ResolveChangeID(
 		"Unified",
 		tmpDir,
+		"spectr",
 	)
 	if err != nil {
 		t.Fatalf(
@@ -618,7 +624,7 @@ func TestResolveChangeID_PrefixPreferredOverSubstring(
 		"# Test",
 	)
 
-	result, err := ResolveChangeID("add", tmpDir)
+	result, err := ResolveChangeID("add", tmpDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"Expected no error, got: %v",
@@ -651,7 +657,7 @@ func TestResolveChangeID_EmptyChanges(
 		t.Fatal(err)
 	}
 
-	_, err := ResolveChangeID("anything", tmpDir)
+	_, err := ResolveChangeID("anything", tmpDir, "spectr")
 	if err == nil {
 		t.Fatal(
 			"Expected error for empty changes directory",

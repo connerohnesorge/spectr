@@ -24,6 +24,7 @@ type PRConfig struct {
 	DryRun      bool   // Show what would be done without executing
 	SkipSpecs   bool   // For archive mode: pass --skip-specs to archive command
 	ProjectRoot string // Project root directory (for source change)
+	SpectrDir   string // Spectr directory name (e.g., "spectr" or custom name)
 }
 
 // PRResult contains the result of the PR workflow.
@@ -484,6 +485,7 @@ func validatePrerequisites(
 	// Check change exists
 	changes, err := discovery.GetActiveChangeIDs(
 		projectRoot,
+		config.SpectrDir,
 	)
 	if err != nil {
 		return fmt.Errorf("list changes: %w", err)
@@ -500,8 +502,9 @@ func validatePrerequisites(
 
 	if !found {
 		return fmt.Errorf(
-			"change '%s' not found in spectr/changes/",
+			"change '%s' not found in %s/changes/",
 			config.ChangeID,
+			config.SpectrDir,
 		)
 	}
 

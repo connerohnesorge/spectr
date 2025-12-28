@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 	"github.com/connerohnesorge/spectr/internal/validation"
@@ -33,9 +34,14 @@ func (c *ValidateCmd) Run() error {
 		)
 	}
 
+	cfg, err := config.Load(projectPath)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	// Check if bulk validation flags are set
 	if c.All || c.Changes || c.Specs {
-		return c.runBulkValidation(projectPath)
+		return c.runBulkValidation(projectPath, cfg.Dir)
 	}
 
 	// If no item name provided
@@ -47,6 +53,7 @@ func (c *ValidateCmd) Run() error {
 		return validation.RunInteractiveValidation(
 			projectPath,
 			c.JSON,
+			cfg.Dir,
 		)
 	}
 
@@ -54,12 +61,13 @@ func (c *ValidateCmd) Run() error {
 	return c.runDirectValidation(
 		projectPath,
 		*c.ItemName,
+		cfg.Dir,
 	)
 }
 
 // runDirectValidation validates a single item (change or spec)
 func (c *ValidateCmd) runDirectValidation(
-	projectPath, itemName string,
+	projectPath, itemName, spectrDir string,
 ) error {
 	// Normalize the item path to extract ID and infer type
 	normalizedID, inferredType := discovery.NormalizeItemPath(
@@ -74,7 +82,7 @@ func (c *ValidateCmd) runDirectValidation(
 
 	// Determine item type
 	info, err := validation.DetermineItemType(
-		projectPath, normalizedID, typeHint,
+		projectPath, normalizedID, typeHint, spectrDir,
 	)
 	if err != nil {
 		return err
@@ -87,6 +95,7 @@ func (c *ValidateCmd) runDirectValidation(
 		projectPath,
 		normalizedID,
 		info.ItemType,
+		spectrDir,
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -115,13 +124,14 @@ func (c *ValidateCmd) runDirectValidation(
 
 // runBulkValidation validates multiple items based on flags
 func (c *ValidateCmd) runBulkValidation(
-	projectPath string,
+	projectPath, spectrDir string,
 ) error {
 	validator := validation.NewValidator()
 
 	// Determine what to validate
 	items, err := c.getItemsToValidate(
 		projectPath,
+		spectrDir,
 	)
 	if err != nil {
 		return err
@@ -155,18 +165,20 @@ func (c *ValidateCmd) runBulkValidation(
 
 // getItemsToValidate returns the items to validate based on flags
 func (c *ValidateCmd) getItemsToValidate(
-	projectPath string,
+	projectPath, spectrDir string,
 ) ([]validation.ValidationItem, error) {
 	switch {
 	case c.All:
-		return validation.GetAllItems(projectPath)
+		return validation.GetAllItems(projectPath, spectrDir)
 	case c.Changes:
 		return validation.GetChangeItems(
 			projectPath,
+			spectrDir,
 		)
 	case c.Specs:
 		return validation.GetSpecItems(
 			projectPath,
+			spectrDir,
 		)
 	default:
 		return nil, nil

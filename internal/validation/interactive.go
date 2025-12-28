@@ -48,6 +48,7 @@ var menuChoices = []string{
 func RunInteractiveValidation(
 	projectPath string,
 	jsonOutput bool,
+	spectrDir string,
 ) error {
 	// Check if running in a TTY
 	if !isatty.IsTerminal(os.Stdout.Fd()) {
@@ -72,6 +73,7 @@ func RunInteractiveValidation(
 		selection,
 		projectPath,
 		jsonOutput,
+		spectrDir,
 	)
 }
 
@@ -90,21 +92,23 @@ func handleMenuSelection(
 	selection int,
 	projectPath string,
 	jsonOutput bool,
+	spectrDir string,
 ) error {
 	var items []ValidationItem
 	var err error
 
 	switch menuSelection(selection) {
 	case menuSelectionAll:
-		items, err = GetAllItems(projectPath)
+		items, err = GetAllItems(projectPath, spectrDir)
 	case menuSelectionChanges:
-		items, err = GetChangeItems(projectPath)
+		items, err = GetChangeItems(projectPath, spectrDir)
 	case menuSelectionSpecs:
-		items, err = GetSpecItems(projectPath)
+		items, err = GetSpecItems(projectPath, spectrDir)
 	case menuSelectionPickItem:
 		return runItemPicker(
 			projectPath,
 			jsonOutput,
+			spectrDir,
 		)
 	default:
 		return nil
@@ -127,8 +131,9 @@ func handleMenuSelection(
 func runItemPicker(
 	projectPath string,
 	jsonOutput bool,
+	spectrDir string,
 ) error {
-	items, err := GetAllItems(projectPath)
+	items, err := GetAllItems(projectPath, spectrDir)
 	if err != nil {
 		return fmt.Errorf(
 			"error loading items: %w",

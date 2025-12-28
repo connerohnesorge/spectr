@@ -8,13 +8,14 @@ import (
 	"strings"
 )
 
-// GetSpecs finds all specs in spectr/specs/ that contain spec.md
+// GetSpecs finds all specs in {spectrDir}/specs/ that contain spec.md
 func GetSpecs(
 	projectPath string,
+	spectrDir string,
 ) ([]string, error) {
 	specsDir := filepath.Join(
 		projectPath,
-		"spectr",
+		spectrDir,
 		"specs",
 	)
 
@@ -62,11 +63,12 @@ func GetSpecs(
 	return specs, nil
 }
 
-// GetSpecIDs returns a list of spec IDs (directory names under spectr/specs/)
+// GetSpecIDs returns a list of spec IDs (directory names under {spectrDir}/specs/)
 // Returns empty slice (not error) if the directory doesn't exist
 // Results are sorted alphabetically for consistency
 func GetSpecIDs(
 	projectRoot string,
+	spectrDir string,
 ) ([]string, error) {
-	return GetSpecs(projectRoot)
+	return GetSpecs(projectRoot, spectrDir)
 }

@@ -7,6 +7,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/posener/complete"
 )
@@ -22,8 +23,14 @@ func PredictChangeIDs() complete.Predictor {
 				return nil
 			}
 
+			cfg, err := config.Load(projectPath)
+			if err != nil {
+				return nil
+			}
+
 			changeIDs, err := discovery.GetActiveChangeIDs(
 				projectPath,
+				cfg.Dir,
 			)
 			if err != nil {
 				return nil
@@ -45,8 +52,14 @@ func PredictSpecIDs() complete.Predictor {
 				return nil
 			}
 
+			cfg, err := config.Load(projectPath)
+			if err != nil {
+				return nil
+			}
+
 			specIDs, err := discovery.GetSpecIDs(
 				projectPath,
+				cfg.Dir,
 			)
 			if err != nil {
 				return nil
@@ -74,10 +87,16 @@ func PredictItems() complete.Predictor {
 				return nil
 			}
 
+			cfg, err := config.Load(projectPath)
+			if err != nil {
+				return nil
+			}
+
 			var items []string
 
 			changeIDs, err := discovery.GetActiveChangeIDs(
 				projectPath,
+				cfg.Dir,
 			)
 			if err == nil {
 				items = append(
@@ -87,6 +106,7 @@ func PredictItems() complete.Predictor {
 
 			specIDs, err := discovery.GetSpecIDs(
 				projectPath,
+				cfg.Dir,
 			)
 			if err == nil {
 				items = append(items, specIDs...)

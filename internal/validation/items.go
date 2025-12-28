@@ -48,13 +48,14 @@ func CreateValidationItems(
 // GetAllItems returns all changes and specs from the project path.
 func GetAllItems(
 	projectPath string,
+	spectrDir string,
 ) ([]ValidationItem, error) {
-	changes, err := GetChangeItems(projectPath)
+	changes, err := GetChangeItems(projectPath, spectrDir)
 	if err != nil {
 		return nil, err
 	}
 
-	specs, err := GetSpecItems(projectPath)
+	specs, err := GetSpecItems(projectPath, spectrDir)
 	if err != nil {
 		return nil, err
 	}
@@ -65,9 +66,11 @@ func GetAllItems(
 // GetChangeItems returns all changes from the project path.
 func GetChangeItems(
 	projectPath string,
+	spectrDir string,
 ) ([]ValidationItem, error) {
 	changeIDs, err := discovery.GetActiveChangeIDs(
 		projectPath,
+		spectrDir,
 	)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -78,7 +81,7 @@ func GetChangeItems(
 
 	basePath := filepath.Join(
 		projectPath,
-		SpectrDir,
+		spectrDir,
 		"changes",
 	)
 
@@ -93,9 +96,11 @@ func GetChangeItems(
 // GetSpecItems returns all specs from the project path.
 func GetSpecItems(
 	projectPath string,
+	spectrDir string,
 ) ([]ValidationItem, error) {
 	specIDs, err := discovery.GetSpecIDs(
 		projectPath,
+		spectrDir,
 	)
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -106,7 +111,7 @@ func GetSpecItems(
 
 	basePath := filepath.Join(
 		projectPath,
-		SpectrDir,
+		spectrDir,
 		"specs",
 	)
 

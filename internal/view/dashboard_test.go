@@ -19,7 +19,7 @@ func TestCollectData(t *testing.T) {
 		)
 	}
 
-	data, err := CollectData(projectPath)
+	data, err := CollectData(projectPath, "spectr")
 	if err != nil {
 		t.Fatalf("CollectData failed: %v", err)
 	}
@@ -228,7 +228,7 @@ func TestCollectData_EmptyProject(t *testing.T) {
 	}
 
 	// Collect data
-	data, err := CollectData(tempDir)
+	data, err := CollectData(tempDir, "spectr")
 	if err != nil {
 		t.Fatalf(
 			"CollectData failed on empty project: %v",
@@ -354,7 +354,7 @@ func TestCollectData_OnlyActiveChanges(
 	}
 
 	// Collect data
-	data, err := CollectData(tempDir)
+	data, err := CollectData(tempDir, "spectr")
 	if err != nil {
 		t.Fatalf("CollectData failed: %v", err)
 	}
@@ -477,7 +477,7 @@ func TestCollectData_OnlyCompletedChanges(
 	}
 
 	// Collect data
-	data, err := CollectData(tempDir)
+	data, err := CollectData(tempDir, "spectr")
 	if err != nil {
 		t.Fatalf("CollectData failed: %v", err)
 	}
@@ -601,7 +601,7 @@ func TestCollectData_ChangeWithZeroTasks(
 	}
 
 	// Collect data
-	data, err := CollectData(tempDir)
+	data, err := CollectData(tempDir, "spectr")
 	if err != nil {
 		t.Fatalf("CollectData failed: %v", err)
 	}

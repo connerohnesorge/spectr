@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
@@ -49,8 +50,14 @@ func (c *AcceptCmd) Run() error {
 		)
 	}
 
+	cfg, err := config.Load(projectRoot)
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
 	changeID, err := c.resolveChangeID(
 		projectRoot,
+		cfg.Dir,
 	)
 	if err != nil {
 		var userCancelledErr *specterrs.UserCancelledError
@@ -61,18 +68,19 @@ func (c *AcceptCmd) Run() error {
 		return err
 	}
 
-	return c.processChange(projectRoot, changeID)
+	return c.processChange(projectRoot, changeID, cfg.Dir)
 }
 
 // processChange handles the conversion of tasks.md to tasks.jsonc.
 // It validates that the change directory and tasks.md exist,
 // validates the change, parses the markdown file, and writes the JSONC output.
 func (c *AcceptCmd) processChange(
-	projectRoot, changeID string,
+	projectRoot, changeID, spectrDir string,
 ) error {
 	changeDir, tasksMdPath, err := resolveChangePaths(
 		projectRoot,
 		changeID,
+		spectrDir,
 	)
 	if err != nil {
 		return err
@@ -126,11 +134,11 @@ func (c *AcceptCmd) processChange(
 // resolveChangePaths validates and returns the change directory and
 // tasks.md path.
 func resolveChangePaths(
-	projectRoot, changeID string,
+	projectRoot, changeID, spectrDir string,
 ) (changeDir, tasksMdPath string, err error) {
 	changeDir = filepath.Join(
 		projectRoot,
-		"spectr",
+		spectrDir,
 		"changes",
 		changeID,
 	)
@@ -240,7 +248,7 @@ func (*AcceptCmd) runValidation(
 // resolve the full ID. Otherwise, it prompts for interactive selection
 // (unless NoInteractive is set).
 func (c *AcceptCmd) resolveChangeID(
-	projectRoot string,
+	projectRoot, spectrDir string,
 ) (string, error) {
 	if c.ChangeID != "" {
 		// Normalize path to extract change ID
@@ -251,6 +259,7 @@ func (c *AcceptCmd) resolveChangeID(
 		result, err := discovery.ResolveChangeID(
 			normalizedID,
 			projectRoot,
+			spectrDir,
 		)
 		if err != nil {
 			return "", err
@@ -271,7 +280,7 @@ func (c *AcceptCmd) resolveChangeID(
 		return "", &specterrs.MissingChangeIDError{}
 	}
 
-	return selectChangeInteractive(projectRoot)
+	return selectChangeInteractive(projectRoot, spectrDir)
 }
 
 // taskParseState tracks state during tasks.md parsing.

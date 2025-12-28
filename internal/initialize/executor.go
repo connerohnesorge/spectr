@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/spf13/afero"
 
@@ -134,13 +135,14 @@ func (e *InitExecutor) Execute(
 		homeFs,
 		spectrDir,
 	)
+
+	// Merge provider results into main result (even on error, to preserve partial results)
+	result.CreatedFiles = append(result.CreatedFiles, providerResult.CreatedFiles...)
+	result.UpdatedFiles = append(result.UpdatedFiles, providerResult.UpdatedFiles...)
+
 	if err != nil {
 		return result, fmt.Errorf("failed to configure providers: %w", err)
 	}
-
-	// Merge provider results into main result
-	result.CreatedFiles = append(result.CreatedFiles, providerResult.CreatedFiles...)
-	result.UpdatedFiles = append(result.UpdatedFiles, providerResult.UpdatedFiles...)
 
 	// 7. Create CI workflow if enabled
 	if ciWorkflowEnabled {
@@ -409,38 +411,21 @@ func initializerPriority(init providers.Initializer) int {
 
 	switch {
 	// Priority 1: Directory initializers
-	case contains(typeName, "DirectoryInitializer") || contains(typeName, "HomeDirectoryInitializer"):
+	case strings.Contains(typeName, "DirectoryInitializer") || strings.Contains(typeName, "HomeDirectoryInitializer"):
 		return 1
 	// Priority 2: Config file initializers
-	case contains(typeName, "ConfigFileInitializer"):
+	case strings.Contains(typeName, "ConfigFileInitializer"):
 		return 2
 	// Priority 3: Slash command initializers
-	case contains(typeName, "SlashCommandsInitializer") ||
-		contains(typeName, "HomeSlashCommandsInitializer") ||
-		contains(typeName, "PrefixedSlashCommandsInitializer") ||
-		contains(typeName, "HomePrefixedSlashCommandsInitializer") ||
-		contains(typeName, "TOMLSlashCommandsInitializer"):
+	case strings.Contains(typeName, "SlashCommandsInitializer") ||
+		strings.Contains(typeName, "HomeSlashCommandsInitializer") ||
+		strings.Contains(typeName, "PrefixedSlashCommandsInitializer") ||
+		strings.Contains(typeName, "HomePrefixedSlashCommandsInitializer") ||
+		strings.Contains(typeName, "TOMLSlashCommandsInitializer"):
 		return 3
 	default:
 		return 99 // Unknown types go last
 	}
-}
-
-// contains checks if a string contains a substring (helper for type checking)
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) &&
-		(s == substr || len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || findSubstring(s, substr)))
-}
-
-// findSubstring finds a substring in a string
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-
-	return false
 }
 
 // dedupeInitializers removes duplicate initializers (Task 8.6)

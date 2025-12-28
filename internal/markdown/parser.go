@@ -1610,7 +1610,7 @@ func (ip *inlineParser) isFlankingDelimiter(
 func (ip *inlineParser) applyUnderscoreRestriction(
 	pos int,
 	canOpen, canClose bool,
-) (newCanOpen bool, newCanClose bool) {
+) (newCanOpen, newCanClose bool) {
 	// Get character before
 	charBefore := ' '
 	if pos > 0 {

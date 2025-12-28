@@ -2,6 +2,7 @@ package providers
 
 import (
 	"errors"
+	"path/filepath"
 	"strings"
 )
 
@@ -22,7 +23,7 @@ func (c *Config) Validate() error {
 		return errors.New("SpectrDir must not be empty")
 	}
 
-	if strings.HasPrefix(c.SpectrDir, "/") {
+	if filepath.IsAbs(c.SpectrDir) {
 		return errors.New("SpectrDir must be relative, not absolute")
 	}
 

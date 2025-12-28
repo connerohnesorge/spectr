@@ -636,9 +636,6 @@ func (p *parser) tryParseCodeFence() Node {
 			contentParts = append(
 				contentParts,
 				lineContent,
-			)
-			contentParts = append(
-				contentParts,
 				[]byte{'\n'},
 			)
 		}

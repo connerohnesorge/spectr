@@ -267,7 +267,7 @@ func TestNewWizardModelWithConfiguredProviders(
 	err := os.WriteFile(
 		claudeFile,
 		[]byte("# Claude Configuration\n"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -283,7 +283,7 @@ func TestNewWizardModelWithConfiguredProviders(
 		"commands",
 		"spectr",
 	)
-	err = os.MkdirAll(commandsDir, 0755)
+	err = os.MkdirAll(commandsDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create commands directory: %v",
@@ -386,7 +386,7 @@ func TestNewWizardModelWithCIWorkflowConfigured(
 		".github",
 		"workflows",
 	)
-	err := os.MkdirAll(workflowDir, 0755)
+	err := os.MkdirAll(workflowDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create workflows directory: %v",

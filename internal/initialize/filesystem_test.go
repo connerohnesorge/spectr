@@ -743,7 +743,7 @@ func TestBackupFile(t *testing.T) {
 			err := os.WriteFile(
 				originalFile,
 				content,
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(

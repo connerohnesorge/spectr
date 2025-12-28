@@ -484,7 +484,7 @@ func TestExpandPath(t *testing.T) {
 			input: "~/.config/test",
 			expected: filepath.Join(
 				homeDir,
-				".config/test",
+				".config", "test",
 			),
 		},
 		{

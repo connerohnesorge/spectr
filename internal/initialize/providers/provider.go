@@ -24,7 +24,7 @@
 //
 //	type MyToolProvider struct{}
 //
-//	func (p *MyToolProvider) Initializers(ctx context.Context, tm *TemplateManager) []Initializer { //nolint:lll
+//	func (p *MyToolProvider) Initializers(ctx context.Context, tm TemplateManager) []Initializer { //nolint:lll
 //		return []Initializer{
 //			NewDirectoryInitializer(".mytool/commands/spectr"),
 //			NewConfigFileInitializer("MYTOOL.md", tm.InstructionPointer()),
@@ -87,7 +87,7 @@ type Provider interface {
 	// Example:
 	//	func (p *ClaudeProvider) Initializers(
 	//		ctx context.Context,
-	//		tm *TemplateManager,
+	//		tm TemplateManager,
 	//	) []Initializer {
 	//		return []Initializer{
 	//			NewDirectoryInitializer(".claude/commands/spectr"),
@@ -108,5 +108,5 @@ type Provider interface {
 	//			),
 	//		}
 	//	}
-	Initializers(ctx context.Context, tm *TemplateManager) []Initializer
+	Initializers(ctx context.Context, tm TemplateManager) []Initializer
 }

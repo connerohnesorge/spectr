@@ -697,7 +697,7 @@ func TestHandleReviewKeysToggleCIWorkflow(
 	// Simulate pressing space key
 	keyMsg := tea.KeyMsg{Type: tea.KeySpace}
 	newModel, _ := wizard.Update(keyMsg)
-	updatedWizard, ok := newModel.(WizardModel)
+	updatedWizard, ok := newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",
@@ -714,7 +714,7 @@ func TestHandleReviewKeysToggleCIWorkflow(
 	// Toggle again
 	keyMsg = tea.KeyMsg{Type: tea.KeySpace}
 	newModel, _ = updatedWizard.Update(keyMsg)
-	updatedWizard, ok = newModel.(WizardModel)
+	updatedWizard, ok = newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",
@@ -981,7 +981,7 @@ func TestSearchModeActivation(t *testing.T) {
 		Runes: []rune{'/'},
 	}
 	newModel, _ := wizard.Update(keyMsg)
-	updatedWizard, ok := newModel.(WizardModel)
+	updatedWizard, ok := newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",
@@ -1015,7 +1015,7 @@ func TestSearchModeExitWithEscape(t *testing.T) {
 	// Simulate pressing Escape key
 	keyMsg := tea.KeyMsg{Type: tea.KeyEsc}
 	newModel, _ := wizard.Update(keyMsg)
-	updatedWizard, ok := newModel.(WizardModel)
+	updatedWizard, ok := newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",
@@ -1161,7 +1161,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 	// Simulate pressing space key while in search mode
 	keyMsg := tea.KeyMsg{Type: tea.KeySpace}
 	newModel, _ := wizard.Update(keyMsg)
-	updatedWizard, ok := newModel.(WizardModel)
+	updatedWizard, ok := newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",

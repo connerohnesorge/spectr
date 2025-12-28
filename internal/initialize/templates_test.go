@@ -240,11 +240,12 @@ func TestTemplateManager_RenderInstructionPointer(
 		}
 	}
 
-	// Verify it's a concise pointer (less than 20 lines as per spec)
+	// Verify it's reasonably sized (expanded from original 20 lines to include
+	// helpful guidance on ADDED vs MODIFIED, common errors, and validation commands)
 	lineCount := strings.Count(got, "\n") + 1
-	if lineCount > 20 {
+	if lineCount > 100 {
 		t.Errorf(
-			"RenderInstructionPointer() output too long: got %d lines, expected at most 20",
+			"RenderInstructionPointer() output too long: got %d lines, expected at most 100",
 			lineCount,
 		)
 	}

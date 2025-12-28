@@ -3,6 +3,60 @@
 
 These instructions are for AI assistants working in this project.
 
+## Critical: Before Creating Delta Specs
+
+**MANDATORY PRE-FLIGHT CHECKLIST** - Follow this BEFORE writing any `## ADDED/MODIFIED/REMOVED Requirements`:
+
+### 1. Read the Base Spec First
+- If using `## MODIFIED Requirements`, you MUST read `spectr/specs/<capability>/spec.md` FIRST
+- Verify the exact requirement name exists in the base spec
+- Copy the FULL requirement block (requirement + all scenarios)
+- Only then paste into your delta spec and modify
+
+### 2. Choose ADDED vs MODIFIED Correctly
+- **ADDED**: New requirement that doesn't exist in base spec
+- **MODIFIED**: Existing requirement you're changing
+- **Rule**: If you haven't read the base spec yet, you CANNOT use MODIFIED
+
+### 3. Validate Before Submission
+- Every `## ADDED/MODIFIED/REMOVED Requirements` section MUST have at least one requirement
+- Every requirement MUST have at least one `#### Scenario:` (4 hashtags, not bullets)
+- MODIFIED requirements MUST match names in base spec exactly (case-insensitive)
+- Run `spectr validate <change-id>` before marking complete
+
+### Common Validation Errors to Avoid
+
+**"requirement does not exist in base spec"**
+- **Cause**: Used `## MODIFIED Requirements` for a requirement that doesn't exist
+- **Fix**: Use `## ADDED Requirements` instead, OR verify spelling matches base spec exactly
+
+**"Requirements section is empty (no requirements found)"**
+- **Cause**: Created section header (`## ADDED Requirements`) but forgot to add requirements
+- **Fix**: Remove empty sections OR add at least one requirement with scenario
+
+**"Requirement must have at least one scenario"**
+- **Cause**: Requirement exists but has no `#### Scenario:` blocks
+- **Fix**: Add at least one scenario with WHEN/THEN structure
+
+## ADDED vs MODIFIED Decision Tree
+
+Before writing delta specs:
+
+1. **Does this requirement exist in the base spec?**
+   - YES → Read `spectr/specs/<capability>/spec.md` and find it
+     - Found exact match? → Use `## MODIFIED Requirements`
+     - Not found? → Check spelling, then use `## ADDED Requirements`
+   - NO/UNSURE → Use `## ADDED Requirements` (safer default)
+
+2. **If using MODIFIED:**
+   - Read base spec: `spectr/specs/<capability>/spec.md`
+   - Copy FULL requirement block (header + description + all scenarios)
+   - Paste into delta spec under `## MODIFIED Requirements`
+   - Edit to reflect new behavior
+   - Keep at least one `#### Scenario:`
+
+## Opening the Full Agent Guide
+
 Always open `@/spectr/AGENTS.md` when the request:
 - Mentions planning or proposals (words like proposal, spec, change, plan)
 - Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
@@ -13,10 +67,29 @@ Use `@/spectr/AGENTS.md` to learn:
 - Spec format and conventions
 - Project structure and guidelines
 
+## Task Delegation Paths
+
 When delegating tasks from a change proposal to subagents:
 - Provide the proposal path: `spectr/changes/<id>/proposal.md`
 - Include task context: `spectr/changes/<id>/tasks.jsonc`
 - Reference delta specs: `spectr/changes/<id>/specs/<capability>/spec.md`
+
+## Quick Validation Commands
+
+Before delegating tasks or marking complete:
+
+```bash
+# Validate a specific change
+spectr validate <change-id>
+
+# Read base spec to verify requirement names
+cat spectr/specs/<capability>/spec.md | grep "### Requirement:"
+
+# List all capabilities to find the right one
+ls spectr/specs/
+```
+
+**Remember**: MODIFIED requires the requirement to exist in base spec. When in doubt, use ADDED.
 
 <!-- spectr:end -->
 

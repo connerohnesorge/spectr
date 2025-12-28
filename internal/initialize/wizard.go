@@ -221,9 +221,9 @@ func (m WizardModel) handleIntroKeys(
 	msg tea.KeyMsg,
 ) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "q", "ctrl+c":
+	case keyQuit, keyCtrlC:
 		return m, tea.Quit
-	case "enter":
+	case keyEnter:
 		m.step = StepSelect
 
 		return m, nil
@@ -242,7 +242,7 @@ func (m WizardModel) handleSelectKeys(
 
 	// Normal mode key handling
 	switch msg.String() {
-	case "q", "ctrl+c":
+	case keyQuit, keyCtrlC:
 		return m, tea.Quit
 	case "up", "k":
 		if m.cursor > 0 {
@@ -258,7 +258,7 @@ func (m WizardModel) handleSelectKeys(
 			provider := m.filteredProviders[m.cursor]
 			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
 		}
-	case "enter":
+	case keyEnter:
 		// Confirm and move to review
 		m.step = StepReview
 
@@ -372,7 +372,7 @@ func (m WizardModel) handleReviewKeys(
 	msg tea.KeyMsg,
 ) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "q", "ctrl+c":
+	case keyQuit, keyCtrlC:
 		return m, tea.Quit
 	case "backspace", "esc":
 		// Go back to selection

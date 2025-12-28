@@ -9,6 +9,18 @@ import (
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
+const testSpecWithExistingFeature = `# Test Spec
+
+## Requirements
+
+### Requirement: Existing Feature
+Content.
+
+#### Scenario: Test
+- **WHEN** action
+- **THEN** result
+`
+
 func TestValidatePostMerge_Success(t *testing.T) {
 	validSpec := `# Test Spec
 
@@ -157,17 +169,7 @@ func TestValidatePreMerge_ModifiedRequirementExists(
 	tmpDir := t.TempDir()
 
 	// Create base spec
-	baseContent := `# Test Spec
-
-## Requirements
-
-### Requirement: Existing Feature
-Content.
-
-#### Scenario: Test
-- **WHEN** action
-- **THEN** result
-`
+	baseContent := testSpecWithExistingFeature
 	basePath := filepath.Join(tmpDir, "base.md")
 	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
 		t.Fatal(err)
@@ -202,17 +204,7 @@ func TestValidatePreMerge_ModifiedRequirementDoesNotExist(
 	tmpDir := t.TempDir()
 
 	// Create base spec
-	baseContent := `# Test Spec
-
-## Requirements
-
-### Requirement: Existing Feature
-Content.
-
-#### Scenario: Test
-- **WHEN** action
-- **THEN** result
-`
+	baseContent := testSpecWithExistingFeature
 	basePath := filepath.Join(tmpDir, "base.md")
 	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
 		t.Fatal(err)
@@ -255,17 +247,7 @@ func TestValidatePreMerge_AddedRequirementAlreadyExists(
 	tmpDir := t.TempDir()
 
 	// Create base spec
-	baseContent := `# Test Spec
-
-## Requirements
-
-### Requirement: Existing Feature
-Content.
-
-#### Scenario: Test
-- **WHEN** action
-- **THEN** result
-`
+	baseContent := testSpecWithExistingFeature
 	basePath := filepath.Join(tmpDir, "base.md")
 	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
 		t.Fatal(err)

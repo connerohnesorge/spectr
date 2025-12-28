@@ -7,6 +7,11 @@ import (
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
+const (
+	testChangeID = "test-change"
+	testSpecID   = "test-spec"
+)
+
 func TestItemType_String(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -37,7 +42,7 @@ func TestItemType_String(t *testing.T) {
 
 func TestNewChangeItem(t *testing.T) {
 	change := ChangeInfo{
-		ID:         "test-change",
+		ID:         testChangeID,
 		Title:      "Test Change",
 		DeltaCount: 3,
 		TaskStatus: parsers.TaskStatus{
@@ -63,11 +68,11 @@ func TestNewChangeItem(t *testing.T) {
 			"NewChangeItem() Spec should be nil",
 		)
 	}
-	if item.ID() != "test-change" {
+	if item.ID() != testChangeID {
 		t.Errorf(
 			"Item.ID() = %v, want %v",
 			item.ID(),
-			"test-change",
+			testChangeID,
 		)
 	}
 	if item.Title() != "Test Change" {
@@ -81,7 +86,7 @@ func TestNewChangeItem(t *testing.T) {
 
 func TestNewSpecItem(t *testing.T) {
 	spec := SpecInfo{
-		ID:               "test-spec",
+		ID:               testSpecID,
 		Title:            "Test Spec",
 		RequirementCount: 10,
 	}
@@ -103,11 +108,11 @@ func TestNewSpecItem(t *testing.T) {
 			"NewSpecItem() Change should be nil",
 		)
 	}
-	if item.ID() != "test-spec" {
+	if item.ID() != testSpecID {
 		t.Errorf(
 			"Item.ID() = %v, want %v",
 			item.ID(),
-			"test-spec",
+			testSpecID,
 		)
 	}
 	if item.Title() != "Test Spec" {
@@ -282,7 +287,7 @@ func TestItemList_Specs(t *testing.T) {
 
 func TestItem_JSONMarshaling(t *testing.T) {
 	change := ChangeInfo{
-		ID:         "test-change",
+		ID:         testChangeID,
 		Title:      "Test Change",
 		DeltaCount: 3,
 		TaskStatus: parsers.TaskStatus{
@@ -315,7 +320,7 @@ func TestItem_JSONMarshaling(t *testing.T) {
 	if decoded.Change == nil {
 		t.Fatal("Decoded Change is nil")
 	}
-	if decoded.Change.ID != "test-change" {
+	if decoded.Change.ID != testChangeID {
 		t.Errorf(
 			"Decoded Change.ID = %v, want test-change",
 			decoded.Change.ID,

@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+const parserTestValidation = "validation"
+
 func TestParse_EmptyDocument(t *testing.T) {
 	doc, errors := Parse([]byte{})
 
@@ -1421,7 +1423,7 @@ func TestParse_Wikilink_Simple(t *testing.T) {
 			wikilink := child.(*NodeWikilink)
 			if string(
 				wikilink.Target(),
-			) == "validation" {
+			) == parserTestValidation {
 				foundWikilink = true
 			}
 		}
@@ -1462,7 +1464,7 @@ func TestParse_Wikilink_WithDisplay(
 			wikilink := child.(*NodeWikilink)
 			if string(
 				wikilink.Target(),
-			) == "validation" &&
+			) == parserTestValidation &&
 				string(
 					wikilink.Display(),
 				) == "display text" {
@@ -1504,7 +1506,7 @@ func TestParse_Wikilink_WithAnchor(t *testing.T) {
 			wikilink := child.(*NodeWikilink)
 			if string(
 				wikilink.Target(),
-			) == "validation" &&
+			) == parserTestValidation &&
 				string(
 					wikilink.Anchor(),
 				) == "section" {
@@ -1546,7 +1548,7 @@ func TestParse_Wikilink_Full(t *testing.T) {
 			wikilink := child.(*NodeWikilink)
 			if string(
 				wikilink.Target(),
-			) == "validation" {
+			) == parserTestValidation {
 				foundWikilink = true
 			}
 		}

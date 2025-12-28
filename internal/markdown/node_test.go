@@ -2,7 +2,15 @@
 package markdown
 
 import (
+	"bytes"
 	"testing"
+)
+
+const (
+	deltaCAdded    = "ADDED"
+	deltaWhen      = "WHEN"
+	deltaModified  = "MODIFIED"
+	testExampleURL = "https://example.com"
 )
 
 // Helper function to create a bool pointer
@@ -58,7 +66,7 @@ func TestNodeInterface_Section(t *testing.T) {
 		WithSource(source).
 		WithLevel(2).
 		WithTitle([]byte("My Section")).
-		WithDeltaType("ADDED").
+		WithDeltaType(deltaCAdded).
 		Build()
 
 	if node == nil {
@@ -87,7 +95,7 @@ func TestNodeInterface_Section(t *testing.T) {
 			string(section.Title()),
 		)
 	}
-	if section.DeltaType() != "ADDED" {
+	if section.DeltaType() != deltaCAdded {
 		t.Errorf(
 			"expected DeltaType 'ADDED', got '%s'",
 			section.DeltaType(),
@@ -216,7 +224,7 @@ func TestNodeInterface_ListItem(t *testing.T) {
 		WithEnd(15).
 		WithSource(source).
 		WithChecked(boolPtr(false)).
-		WithKeyword("WHEN").
+		WithKeyword(deltaWhen).
 		Build()
 
 	if node == nil {
@@ -240,7 +248,7 @@ func TestNodeInterface_ListItem(t *testing.T) {
 	if isChecked {
 		t.Error("expected isChecked to be false")
 	}
-	if item.Keyword() != "WHEN" {
+	if item.Keyword() != deltaWhen {
 		t.Errorf(
 			"expected Keyword 'WHEN', got '%s'",
 			item.Keyword(),
@@ -503,7 +511,7 @@ func TestNodeInterface_Link(t *testing.T) {
 		WithStart(0).
 		WithEnd(35).
 		WithSource(source).
-		WithURL([]byte("https://example.com")).
+		WithURL([]byte(testExampleURL)).
 		WithLinkTitle([]byte("Title")).
 		Build()
 
@@ -523,7 +531,7 @@ func TestNodeInterface_Link(t *testing.T) {
 	link := node.(*NodeLink)
 	if string(
 		link.URL(),
-	) != "https://example.com" {
+	) != testExampleURL {
 		t.Errorf(
 			"expected URL 'https://example.com', got '%s'",
 			string(link.URL()),
@@ -545,7 +553,7 @@ func TestNodeInterface_LinkDef(t *testing.T) {
 		WithStart(0).
 		WithEnd(34).
 		WithSource(source).
-		WithURL([]byte("https://example.com")).
+		WithURL([]byte(testExampleURL)).
 		WithLinkTitle([]byte("Title")).
 		Build()
 
@@ -565,7 +573,7 @@ func TestNodeInterface_LinkDef(t *testing.T) {
 	linkDef := node.(*NodeLinkDef)
 	if string(
 		linkDef.URL(),
-	) != "https://example.com" {
+	) != testExampleURL {
 		t.Errorf(
 			"expected URL 'https://example.com', got '%s'",
 			string(linkDef.URL()),
@@ -739,7 +747,7 @@ func TestHash_IncludesTypeSpecificFields_Section(
 		WithSource(source).
 		WithLevel(2).
 		WithTitle([]byte("Section")).
-		WithDeltaType("ADDED").
+		WithDeltaType(deltaCAdded).
 		Build()
 
 	node2 := NewNodeBuilder(NodeTypeSection).
@@ -1444,7 +1452,7 @@ func TestNodeBuilder_ToBuilder(t *testing.T) {
 		WithSource([]byte("## My Section")).
 		WithLevel(2).
 		WithTitle([]byte("My Section")).
-		WithDeltaType("ADDED").
+		WithDeltaType(deltaCAdded).
 		Build()
 
 	section := original.(*NodeSection)
@@ -1457,7 +1465,7 @@ func TestNodeBuilder_ToBuilder(t *testing.T) {
 	}
 
 	// Modify the builder
-	builder.WithDeltaType("MODIFIED")
+	builder.WithDeltaType(deltaModified)
 
 	// Build new node
 	modified := builder.Build()
@@ -1466,7 +1474,7 @@ func TestNodeBuilder_ToBuilder(t *testing.T) {
 	}
 
 	modifiedSection := modified.(*NodeSection)
-	if modifiedSection.DeltaType() != "MODIFIED" {
+	if modifiedSection.DeltaType() != deltaModified {
 		t.Errorf(
 			"expected DeltaType 'MODIFIED', got '%s'",
 			modifiedSection.DeltaType(),
@@ -1474,7 +1482,7 @@ func TestNodeBuilder_ToBuilder(t *testing.T) {
 	}
 
 	// Original should be unchanged
-	if section.DeltaType() != "ADDED" {
+	if section.DeltaType() != deltaCAdded {
 		t.Errorf(
 			"expected original DeltaType 'ADDED', got '%s'",
 			section.DeltaType(),
@@ -1519,18 +1527,14 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 					WithSource([]byte("## sec")).
 					WithLevel(2).
 					WithTitle([]byte("sec")).
-					WithDeltaType("ADDED").
+					WithDeltaType(deltaCAdded).
 					Build()
 			},
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeSection)
 				r := rebuilt.(*NodeSection)
 				if o.Level() != r.Level() ||
-					string(
-						o.Title(),
-					) != string(
-						r.Title(),
-					) ||
+					!bytes.Equal(o.Title(), r.Title()) ||
 					o.DeltaType() != r.DeltaType() {
 					t.Error(
 						"Section fields should match",
@@ -1614,7 +1618,7 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 					WithEnd(10).
 					WithSource([]byte("- [ ] item")).
 					WithChecked(boolPtr(false)).
-					WithKeyword("WHEN").
+					WithKeyword(deltaWhen).
 					Build()
 			},
 			func(t *testing.T, original, rebuilt Node) {
@@ -1646,16 +1650,8 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeCodeBlock)
 				r := rebuilt.(*NodeCodeBlock)
-				if string(
-					o.Language(),
-				) != string(
-					r.Language(),
-				) ||
-					string(
-						o.Content(),
-					) != string(
-						r.Content(),
-					) {
+				if !bytes.Equal(o.Language(), r.Language()) ||
+					!bytes.Equal(o.Content(), r.Content()) {
 					t.Error(
 						"CodeBlock fields should match",
 					)
@@ -1671,23 +1667,15 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 					WithStart(0).
 					WithEnd(10).
 					WithSource([]byte("[t](url)")).
-					WithURL([]byte("https://example.com")).
+					WithURL([]byte(testExampleURL)).
 					WithLinkTitle([]byte("Title")).
 					Build()
 			},
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeLink)
 				r := rebuilt.(*NodeLink)
-				if string(
-					o.URL(),
-				) != string(
-					r.URL(),
-				) ||
-					string(
-						o.Title(),
-					) != string(
-						r.Title(),
-					) {
+				if !bytes.Equal(o.URL(), r.URL()) ||
+					!bytes.Equal(o.Title(), r.Title()) {
 					t.Error(
 						"Link fields should match",
 					)
@@ -1703,23 +1691,15 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 					WithStart(0).
 					WithEnd(10).
 					WithSource([]byte("[ref]: url")).
-					WithURL([]byte("https://example.com")).
+					WithURL([]byte(testExampleURL)).
 					WithLinkTitle([]byte("Title")).
 					Build()
 			},
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeLinkDef)
 				r := rebuilt.(*NodeLinkDef)
-				if string(
-					o.URL(),
-				) != string(
-					r.URL(),
-				) ||
-					string(
-						o.Title(),
-					) != string(
-						r.Title(),
-					) {
+				if !bytes.Equal(o.URL(), r.URL()) ||
+					!bytes.Equal(o.Title(), r.Title()) {
 					t.Error(
 						"LinkDef fields should match",
 					)
@@ -1743,21 +1723,9 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeWikilink)
 				r := rebuilt.(*NodeWikilink)
-				if string(
-					o.Target(),
-				) != string(
-					r.Target(),
-				) ||
-					string(
-						o.Display(),
-					) != string(
-						r.Display(),
-					) ||
-					string(
-						o.Anchor(),
-					) != string(
-						r.Anchor(),
-					) {
+				if !bytes.Equal(o.Target(), r.Target()) ||
+					!bytes.Equal(o.Display(), r.Display()) ||
+					!bytes.Equal(o.Anchor(), r.Anchor()) {
 					t.Error(
 						"Wikilink fields should match",
 					)
@@ -1974,7 +1942,7 @@ func TestEqual_TypeSpecific_Section(
 		WithEnd(10).WithSource(source).
 		WithLevel(2).
 		WithTitle([]byte("Section")).
-		WithDeltaType("ADDED").
+		WithDeltaType(deltaCAdded).
 		Build()
 
 	node2 := NewNodeBuilder(NodeTypeSection).
@@ -1982,7 +1950,7 @@ func TestEqual_TypeSpecific_Section(
 		WithEnd(10).WithSource(source).
 		WithLevel(2).
 		WithTitle([]byte("Section")).
-		WithDeltaType("ADDED").
+		WithDeltaType(deltaCAdded).
 		Build()
 
 	if !node1.Equal(node2) {
@@ -1997,7 +1965,7 @@ func TestEqual_TypeSpecific_Section(
 		WithEnd(10).WithSource(source).
 		WithLevel(3).
 		WithTitle([]byte("Section")).
-		WithDeltaType("ADDED").
+		WithDeltaType(deltaCAdded).
 		Build()
 
 	if node1.Equal(node3) {
@@ -2027,7 +1995,7 @@ func TestEqual_TypeSpecific_Section(
 		WithEnd(10).WithSource(source).
 		WithLevel(2).
 		WithTitle([]byte("Different")).
-		WithDeltaType("ADDED").
+		WithDeltaType(deltaCAdded).
 		Build()
 
 	if node1.Equal(node5) {
@@ -2152,14 +2120,14 @@ func TestEqual_TypeSpecific_ListItem(
 		WithStart(0).
 		WithEnd(10).WithSource(source).
 		WithChecked(boolPtr(false)).
-		WithKeyword("WHEN").
+		WithKeyword(deltaWhen).
 		Build()
 
 	node2 := NewNodeBuilder(NodeTypeListItem).
 		WithStart(0).
 		WithEnd(10).WithSource(source).
 		WithChecked(boolPtr(false)).
-		WithKeyword("WHEN").
+		WithKeyword(deltaWhen).
 		Build()
 
 	if !node1.Equal(node2) {
@@ -2173,7 +2141,7 @@ func TestEqual_TypeSpecific_ListItem(
 		WithStart(0).
 		WithEnd(10).WithSource(source).
 		WithChecked(boolPtr(true)).
-		WithKeyword("WHEN").
+		WithKeyword(deltaWhen).
 		Build()
 
 	if node1.Equal(node3) {
@@ -2186,7 +2154,7 @@ func TestEqual_TypeSpecific_ListItem(
 	node4 := NewNodeBuilder(NodeTypeListItem).
 		WithStart(0).
 		WithEnd(10).WithSource(source).
-		WithKeyword("WHEN").
+		WithKeyword(deltaWhen).
 		Build()
 
 	if node1.Equal(node4) {
@@ -2270,14 +2238,14 @@ func TestEqual_TypeSpecific_Link(t *testing.T) {
 	node1 := NewNodeBuilder(NodeTypeLink).
 		WithStart(0).
 		WithEnd(11).WithSource(source).
-		WithURL([]byte("https://example.com")).
+		WithURL([]byte(testExampleURL)).
 		WithLinkTitle([]byte("Title")).
 		Build()
 
 	node2 := NewNodeBuilder(NodeTypeLink).
 		WithStart(0).
 		WithEnd(11).WithSource(source).
-		WithURL([]byte("https://example.com")).
+		WithURL([]byte(testExampleURL)).
 		WithLinkTitle([]byte("Title")).
 		Build()
 
@@ -2305,7 +2273,7 @@ func TestEqual_TypeSpecific_Link(t *testing.T) {
 	node4 := NewNodeBuilder(NodeTypeLink).
 		WithStart(0).
 		WithEnd(11).WithSource(source).
-		WithURL([]byte("https://example.com")).
+		WithURL([]byte(testExampleURL)).
 		WithLinkTitle([]byte("Different")).
 		Build()
 
@@ -2324,14 +2292,14 @@ func TestEqual_TypeSpecific_LinkDef(
 	node1 := NewNodeBuilder(NodeTypeLinkDef).
 		WithStart(0).
 		WithEnd(10).WithSource(source).
-		WithURL([]byte("https://example.com")).
+		WithURL([]byte(testExampleURL)).
 		WithLinkTitle([]byte("Title")).
 		Build()
 
 	node2 := NewNodeBuilder(NodeTypeLinkDef).
 		WithStart(0).
 		WithEnd(10).WithSource(source).
-		WithURL([]byte("https://example.com")).
+		WithURL([]byte(testExampleURL)).
 		WithLinkTitle([]byte("Title")).
 		Build()
 

@@ -13,6 +13,11 @@ import (
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
+const (
+	interactiveTestSpecID   = "test-spec"
+	interactiveTestChangeID = "test-change"
+)
+
 func TestRunInteractiveChanges_EmptyList(
 	t *testing.T,
 ) {
@@ -171,7 +176,7 @@ func TestInteractiveModel_HandleEdit(
 ) {
 	// Create a temporary test directory with a spec file
 	tmpDir := t.TempDir()
-	specID := "test-spec"
+	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
 	err := mkdirAll(specDir, 0755)
 	if err != nil {
@@ -238,7 +243,7 @@ func TestInteractiveModel_HandleEdit(
 		"change mode opens proposal",
 		func(t *testing.T) {
 			// Create a change proposal file
-			changeID := "test-change"
+			changeID := interactiveTestChangeID
 			changeDir := tmpDir + "/spectr/changes/" + changeID
 			err := mkdirAll(changeDir, 0755)
 			if err != nil {
@@ -513,7 +518,7 @@ func TestHandleToggleFilter(t *testing.T) {
 func TestEditorOpensOnEKey(t *testing.T) {
 	// Create a temporary test directory with a spec file
 	tmpDir := t.TempDir()
-	specID := "test-spec"
+	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
 	err := os.MkdirAll(specDir, 0755)
 	if err != nil {
@@ -614,7 +619,7 @@ func TestEditorOpensOnEKey(t *testing.T) {
 func TestEditorOpensForChangeItems(t *testing.T) {
 	// Create a temporary test directory with a change proposal file
 	tmpDir := t.TempDir()
-	changeID := "test-change"
+	changeID := interactiveTestChangeID
 	changeDir := tmpDir + "/spectr/changes/" + changeID
 	err := os.MkdirAll(changeDir, 0755)
 	if err != nil {
@@ -718,7 +723,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create spec file
-	specID := "test-spec"
+	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
 	err := os.MkdirAll(specDir, 0755)
 	if err != nil {
@@ -740,7 +745,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	}
 
 	// Create change file
-	changeID := "test-change"
+	changeID := interactiveTestChangeID
 	changeDir := tmpDir + "/spectr/changes/" + changeID
 	err = os.MkdirAll(changeDir, 0755)
 	if err != nil {
@@ -966,7 +971,7 @@ func TestHandleArchive_SpecMode(t *testing.T) {
 		},
 	}
 	rows := []table.Row{
-		{"test-spec", "Test Spec", "5"},
+		{interactiveTestSpecID, "Test Spec", "5"},
 	}
 	tbl := table.New(
 		table.WithColumns(columns),
@@ -1022,13 +1027,13 @@ func TestHandleArchive_UnifiedMode_Change(
 	}
 	rows := []table.Row{
 		{
-			"test-change",
+			interactiveTestChangeID,
 			"CHANGE",
 			"Test Change",
 			"Tasks: 3/5",
 		},
 		{
-			"test-spec",
+			interactiveTestSpecID,
 			"SPEC",
 			"Test Spec",
 			"Reqs: 5",
@@ -1056,7 +1061,7 @@ func TestHandleArchive_UnifiedMode_Change(
 			"Expected archiveRequested to be true for CHANGE in unified mode",
 		)
 	}
-	if updatedModel.selectedID != "test-change" {
+	if updatedModel.selectedID != interactiveTestChangeID {
 		t.Errorf(
 			"Expected selectedID to be 'test-change', got '%s'",
 			updatedModel.selectedID,
@@ -1087,7 +1092,7 @@ func TestHandleArchive_UnifiedMode_Spec(
 	}
 	rows := []table.Row{
 		{
-			"test-spec",
+			interactiveTestSpecID,
 			"SPEC",
 			"Test Spec",
 			"Reqs: 5",
@@ -1200,7 +1205,7 @@ func TestHandlePR_SpecMode(t *testing.T) {
 		},
 	}
 	rows := []table.Row{
-		{"test-spec", "Test Spec", "5"},
+		{interactiveTestSpecID, "Test Spec", "5"},
 	}
 	tbl := table.New(
 		table.WithColumns(columns),
@@ -1254,13 +1259,13 @@ func TestHandlePR_UnifiedMode(t *testing.T) {
 	}
 	rows := []table.Row{
 		{
-			"test-change",
+			interactiveTestChangeID,
 			"CHANGE",
 			"Test Change",
 			"Tasks: 3/5",
 		},
 		{
-			"test-spec",
+			interactiveTestSpecID,
 			"SPEC",
 			"Test Spec",
 			"Reqs: 5",
@@ -3410,7 +3415,7 @@ func TestBuildUnifiedRows_ResponsiveColumns(
 ) {
 	items := ItemList{
 		NewChangeItem(ChangeInfo{
-			ID:         "test-change",
+			ID:         interactiveTestChangeID,
 			Title:      "Test Change",
 			DeltaCount: 2,
 			TaskStatus: parsers.TaskStatus{
@@ -3419,7 +3424,7 @@ func TestBuildUnifiedRows_ResponsiveColumns(
 			},
 		}),
 		NewSpecItem(SpecInfo{
-			ID:               "test-spec",
+			ID:               interactiveTestSpecID,
 			Title:            "Test Spec",
 			RequirementCount: 6,
 		}),
@@ -3566,7 +3571,7 @@ func TestWindowSizeMsg_TriggersRebuild(
 	}
 	rows := []table.Row{
 		{
-			"test-change",
+			interactiveTestChangeID,
 			"Test Change",
 			"2",
 			"3/5",
@@ -3581,7 +3586,7 @@ func TestWindowSizeMsg_TriggersRebuild(
 
 	changes := []ChangeInfo{
 		{
-			ID:         "test-change",
+			ID:         interactiveTestChangeID,
 			Title:      "Test Change",
 			DeltaCount: 2,
 			TaskStatus: parsers.TaskStatus{

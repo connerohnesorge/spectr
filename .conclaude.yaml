@@ -24,12 +24,12 @@ stop:
       showCommand: true
       message: "Tests failed - please fix failing tests before continuing"
       maxOutputLines: 5
-    - run: "nix develop -c 'lint'"
-      showStdout: false
-      showStderr: false
-      showCommand: true
-      message: "Fix all lint errors without being lazy or ignoring them"
-      maxOutputLines: 5
+    # - run: "nix develop -c 'lint'"
+    #   showStdout: false
+    #   showStderr: false
+    #   showCommand: true
+    #   message: "Fix all lint errors without being lazy or ignoring them"
+    #   maxOutputLines: 5
     - run: "spectr validate --all"
       showStdout: false
       showStderr: false

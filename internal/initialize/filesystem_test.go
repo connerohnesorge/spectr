@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -305,11 +306,7 @@ func TestWriteFile(t *testing.T) {
 				)
 			}
 
-			if string(
-				readContent,
-			) != string(
-				content,
-			) {
+			if !bytes.Equal(readContent, content) {
 				t.Errorf(
 					"expected content %q, got %q",
 					content,
@@ -681,11 +678,7 @@ func TestBackupFile(t *testing.T) {
 				)
 			}
 
-			if string(
-				backupContent,
-			) != string(
-				content,
-			) {
+			if !bytes.Equal(backupContent, content) {
 				t.Errorf(
 					"backup content %q does not match original %q",
 					backupContent,

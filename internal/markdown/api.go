@@ -348,7 +348,7 @@ func (f *sectionFinder) VisitSection(
 	n *NodeSection,
 ) error {
 	name := string(n.Title())
-	if strings.ToLower(name) == f.targetName {
+	if strings.EqualFold(name, f.targetName) {
 		start, end := n.Span()
 		f.found = &Section{
 			Name:    name,
@@ -420,9 +420,7 @@ func FindRequirement(
 	targetName := strings.ToLower(name)
 
 	for _, req := range requirements {
-		if strings.ToLower(
-			req.Name,
-		) == targetName {
+		if strings.EqualFold(req.Name, targetName) {
 			return req, true
 		}
 	}

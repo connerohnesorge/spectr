@@ -720,8 +720,8 @@ func TestCopyFile(t *testing.T) {
 			dstInfo, _ := os.Stat(dstPath)
 
 			// Check executable bit is preserved
-			srcExec := srcInfo.Mode() & 0111
-			dstExec := dstInfo.Mode() & 0111
+			srcExec := srcInfo.Mode() & 0o111
+			dstExec := dstInfo.Mode() & 0o111
 			if srcExec != dstExec {
 				t.Errorf(
 					"copyFile() exec bits = %o, want %o",

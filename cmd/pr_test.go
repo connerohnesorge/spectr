@@ -435,7 +435,7 @@ func TestPRArchiveCmd_HasRunMethod(t *testing.T) {
 	}
 
 	if runType.NumOut() > 0 &&
-		runType.Out(0).Name() != "error" {
+		runType.Out(0).Name() != errorTypeName {
 		t.Errorf(
 			"Run method should return error, got %s",
 			runType.Out(0).Name(),
@@ -468,7 +468,7 @@ func TestPRProposalCmd_HasRunMethod(
 	}
 
 	if runType.NumOut() > 0 &&
-		runType.Out(0).Name() != "error" {
+		runType.Out(0).Name() != errorTypeName {
 		t.Errorf(
 			"Run method should return error, got %s",
 			runType.Out(0).Name(),
@@ -1027,7 +1027,7 @@ func TestPRRemoveCmd_HasRunMethod(t *testing.T) {
 	}
 
 	if runType.NumOut() > 0 &&
-		runType.Out(0).Name() != "error" {
+		runType.Out(0).Name() != errorTypeName {
 		t.Errorf(
 			"Run method should return error, got %s",
 			runType.Out(0).Name(),

@@ -427,7 +427,7 @@ func TestFileExists(t *testing.T) {
 			err := os.WriteFile(
 				testFile,
 				[]byte("test"),
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -454,7 +454,7 @@ func TestFileExists(t *testing.T) {
 			)
 
 			// Create directory
-			err := os.Mkdir(testDir, 0755)
+			err := os.Mkdir(testDir, 0o755)
 			if err != nil {
 				t.Fatalf(
 					"failed to create test directory: %v",
@@ -514,7 +514,7 @@ func TestIsSpectrInitialized(t *testing.T) {
 			)
 
 			// Create spectr directory and project.md
-			err := os.Mkdir(spectrDir, 0755)
+			err := os.Mkdir(spectrDir, 0o755)
 			if err != nil {
 				t.Fatalf(
 					"failed to create spectr directory: %v",
@@ -525,7 +525,7 @@ func TestIsSpectrInitialized(t *testing.T) {
 			err = os.WriteFile(
 				projectFile,
 				[]byte("# Project"),
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(

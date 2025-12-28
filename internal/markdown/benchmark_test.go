@@ -392,7 +392,7 @@ func BenchmarkParseIncrementalSmallEdit(
 	copy(newDoc[:editPos], mediumDoc[:editPos])
 	copy(
 		newDoc[editPos:editPos+5],
-		[]byte("test "),
+		"test ",
 	)
 	copy(newDoc[editPos+5:], mediumDoc[editPos:])
 
@@ -463,7 +463,7 @@ func BenchmarkParseIncrementalWithState(
 	copy(newDoc[:editPos], mediumDoc[:editPos])
 	copy(
 		newDoc[editPos:editPos+5],
-		[]byte("test "),
+		"test ",
 	)
 	copy(newDoc[editPos+5:], mediumDoc[editPos:])
 
@@ -492,7 +492,7 @@ func BenchmarkParseFullVsIncremental(
 	copy(newDoc[:editPos], mediumDoc[:editPos])
 	copy(
 		newDoc[editPos:editPos+5],
-		[]byte("test "),
+		"test ",
 	)
 	copy(newDoc[editPos+5:], mediumDoc[editPos:])
 

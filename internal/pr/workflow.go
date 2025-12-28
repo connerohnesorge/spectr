@@ -431,7 +431,7 @@ func createPRAndFinalize(
 
 	// Create PR
 	prURL, manualURL, err := createPR(
-		ctx.platformInfo,
+		&ctx.platformInfo,
 		ctx.branchName,
 		baseBranchName,
 		prTitle,

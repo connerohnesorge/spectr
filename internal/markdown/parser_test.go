@@ -920,7 +920,7 @@ func TestParse_Link_Inline(t *testing.T) {
 			link := child.(*NodeLink)
 			if string(
 				link.URL(),
-			) == "https://example.com" {
+			) == testExampleURL {
 				foundLink = true
 
 				break
@@ -961,7 +961,7 @@ func TestParse_Link_WithTitle(t *testing.T) {
 			link := child.(*NodeLink)
 			if string(
 				link.URL(),
-			) == "https://example.com" {
+			) == testExampleURL {
 				// Title parsing may or may not be implemented
 				return
 			}
@@ -983,7 +983,7 @@ func TestParse_ReferenceLink_Full(t *testing.T) {
 					link := inline.(*NodeLink)
 					if string(
 						link.URL(),
-					) == "https://example.com" {
+					) == testExampleURL {
 						foundLink = true
 					}
 				}
@@ -1013,7 +1013,7 @@ func TestParse_ReferenceLink_Collapsed(
 					link := inline.(*NodeLink)
 					if string(
 						link.URL(),
-					) == "https://example.com" {
+					) == testExampleURL {
 						foundLink = true
 					}
 				}
@@ -1043,7 +1043,7 @@ func TestParse_ReferenceLink_Shortcut(
 					link := inline.(*NodeLink)
 					if string(
 						link.URL(),
-					) == "https://example.com" {
+					) == testExampleURL {
 						foundLink = true
 					}
 				}
@@ -1072,7 +1072,7 @@ func TestParse_ReferenceLink_CaseInsensitive(
 					link := inline.(*NodeLink)
 					if string(
 						link.URL(),
-					) == "https://example.com" {
+					) == testExampleURL {
 						foundLink = true
 					}
 				}

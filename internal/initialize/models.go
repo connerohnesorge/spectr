@@ -3,9 +3,9 @@ package initialize
 // InitCmd represents the init command with all its flags
 type InitCmd struct {
 	Path           string   `arg:"" optional:"" help:"Project path"`
-	PathFlag       string   `                   help:"Alt project path"        name:"path"            short:"p"` //nolint:lll,revive
-	Tools          []string `                   help:"Tools list"              name:"tools"           short:"t"` //nolint:lll,revive
-	NonInteractive bool     `                   help:"Non-interactive"         name:"non-interactive"`           //nolint:lll,revive
+	PathFlag       string   `                   help:"Alt project path"        name:"path"            short:"p"` //nolint:lll,revive // long struct tags required for CLI framework
+	Tools          []string `                   help:"Tools list"              name:"tools"           short:"t"` //nolint:lll,revive // long struct tags required for CLI framework
+	NonInteractive bool     `                   help:"Non-interactive"         name:"non-interactive"`           //nolint:lll,revive // long struct tags required for CLI framework
 	CIWorkflow     bool     `                   help:"Create CI workflow file" name:"ci-workflow"`               //nolint:lll,revive
 }
 

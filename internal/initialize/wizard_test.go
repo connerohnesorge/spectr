@@ -10,6 +10,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+const (
+	testProviderClaude      = "claude"
+	testProviderNonexistent = "nonexistentprovider123"
+)
+
 func TestNewWizardModel(t *testing.T) {
 	// Test creating a new wizard model
 	cmd := &InitCmd{Path: "/tmp/test-project"}
@@ -815,7 +820,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	}
 
 	// Test filtering with "claude" - should match Claude Code
-	wizard.searchQuery = "claude"
+	wizard.searchQuery = testProviderClaude
 	wizard.applyProviderFilter()
 
 	if len(wizard.filteredProviders) == 0 {
@@ -828,7 +833,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	for _, provider := range wizard.filteredProviders {
 		if !strings.Contains(
 			strings.ToLower(provider.Name()),
-			"claude",
+			testProviderClaude,
 		) {
 			t.Errorf(
 				"Provider %s should not match 'claude'",
@@ -852,7 +857,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	}
 
 	// Test filtering with non-matching query
-	wizard.searchQuery = "nonexistentprovider123"
+	wizard.searchQuery = testProviderNonexistent
 	wizard.applyProviderFilter()
 
 	if len(wizard.filteredProviders) != 0 {
@@ -876,7 +881,7 @@ func TestCursorAdjustmentOnFilter(t *testing.T) {
 	wizard.cursor = len(wizard.allProviders) - 1
 
 	// Apply a filter that reduces the list significantly
-	wizard.searchQuery = "claude"
+	wizard.searchQuery = testProviderClaude
 	wizard.applyProviderFilter()
 
 	// Cursor should be adjusted to be within bounds
@@ -891,7 +896,7 @@ func TestCursorAdjustmentOnFilter(t *testing.T) {
 	}
 
 	// Test with no matches - cursor should be 0
-	wizard.searchQuery = "nonexistentprovider123"
+	wizard.searchQuery = testProviderNonexistent
 	wizard.applyProviderFilter()
 
 	if wizard.cursor != 0 {
@@ -924,7 +929,7 @@ func TestSelectionPreservedDuringFiltering(
 	)
 
 	// Apply a filter that shows only some providers
-	wizard.searchQuery = "claude"
+	wizard.searchQuery = testProviderClaude
 	wizard.applyProviderFilter()
 
 	// Verify selection count is preserved (filtering shouldn't affect selections)
@@ -1003,8 +1008,8 @@ func TestSearchModeExitWithEscape(t *testing.T) {
 
 	wizard.step = StepSelect
 	wizard.searchMode = true
-	wizard.searchQuery = "claude"
-	wizard.searchInput.SetValue("claude")
+	wizard.searchQuery = testProviderClaude
+	wizard.searchInput.SetValue(testProviderClaude)
 	wizard.applyProviderFilter()
 
 	// Simulate pressing Escape key
@@ -1118,7 +1123,7 @@ func TestRenderSelectShowsNoMatchMessage(
 
 	wizard.step = StepSelect
 	wizard.searchMode = true
-	wizard.searchQuery = "nonexistentprovider123"
+	wizard.searchQuery = testProviderNonexistent
 	wizard.applyProviderFilter()
 
 	output := wizard.renderSelect()

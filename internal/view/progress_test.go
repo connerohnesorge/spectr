@@ -39,7 +39,7 @@ func TestRenderBar(t *testing.T) {
 			name:       "75% complete",
 			completed:  75,
 			total:      100,
-			wantFilled: 15, // 0.75 * 20 = 15
+			wantFilled: 15,
 			wantPerc:   "75%",
 		},
 		{

@@ -313,7 +313,7 @@ func MatchFlexibleTask(
 	var contentStart int
 
 	// Check if starts with digit
-	if len(rest) > 0 && rest[0] >= '0' &&
+	if rest != "" && rest[0] >= '0' &&
 		rest[0] <= '9' {
 		// Parse number: digits, optional dot, optional more digits
 		i := 0
@@ -378,7 +378,7 @@ func MatchNumberedSection(
 	rest := line[3:]
 
 	// Must start with digits
-	if len(rest) == 0 || rest[0] < '0' ||
+	if rest == "" || rest[0] < '0' ||
 		rest[0] > '9' {
 		return "", false
 	}
@@ -473,7 +473,7 @@ func MatchAnySection(
 //	ExtractHeaderLevel("### Section") // returns 3
 //	ExtractHeaderLevel("Not a header") // returns 0
 func ExtractHeaderLevel(line string) int {
-	if len(line) == 0 || line[0] != '#' {
+	if line == "" || line[0] != '#' {
 		return 0
 	}
 
@@ -526,7 +526,7 @@ func IsBlankLine(line string) bool {
 // after optional leading whitespace.
 func IsListItem(line string) bool {
 	trimmed := strings.TrimLeft(line, " \t")
-	if len(trimmed) == 0 {
+	if trimmed == "" {
 		return false
 	}
 
@@ -560,7 +560,7 @@ func IsListItem(line string) bool {
 // IsCodeFence checks if a line starts a code fence (``` or ~~~).
 // Returns true and the fence character ('`' or '~') if it's a fence,
 // or false and 0 otherwise.
-func IsCodeFence(line string) (bool, rune) {
+func IsCodeFence(line string) (isFence bool, delimiter rune) {
 	trimmed := strings.TrimLeft(line, " \t")
 
 	if strings.HasPrefix(trimmed, "```") {
@@ -653,7 +653,7 @@ func ExtractListMarker(
 	line string,
 ) (marker string, ok bool) {
 	trimmed := strings.TrimLeft(line, " \t")
-	if len(trimmed) == 0 {
+	if trimmed == "" {
 		return "", false
 	}
 

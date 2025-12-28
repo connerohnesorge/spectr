@@ -20,6 +20,7 @@ linters:
     - errname
     - prealloc
     # - gosec
+    # - gochecknoinits
     - goconst
     - intrange
     - usestdlibvars

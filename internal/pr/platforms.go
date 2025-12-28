@@ -49,13 +49,13 @@ type createPRInput struct {
 //
 //nolint:revive // argument-limit - kept for API compatibility
 func createPR(
-	platform git.PlatformInfo,
+	platform *git.PlatformInfo,
 	branchName, baseBranch, title, body string,
 	draft bool,
 	worktreePath string,
 ) (prURL, manualURL string, err error) {
-	input := createPRInput{
-		platform:     platform,
+	input := &createPRInput{
+		platform:     *platform,
 		branchName:   branchName,
 		baseBranch:   baseBranch,
 		title:        title,
@@ -69,7 +69,7 @@ func createPR(
 
 // doCreatePR is the internal implementation of createPR.
 func doCreatePR(
-	input createPRInput,
+	input *createPRInput,
 ) (prURL, manualURL string, err error) {
 	args := prCreateArgs{
 		branchName:   input.branchName,
@@ -81,7 +81,7 @@ func doCreatePR(
 	}
 
 	result, err := createPRForPlatform(
-		input.platform,
+		&input.platform,
 		args,
 	)
 	if err != nil {
@@ -94,7 +94,7 @@ func doCreatePR(
 // createPRForPlatform dispatches to the platform-specific PR creator.
 // Returns an error for unknown or unsupported platforms.
 func createPRForPlatform(
-	platform git.PlatformInfo,
+	platform *git.PlatformInfo,
 	args prCreateArgs,
 ) (*prResult, error) {
 	switch platform.Platform {
@@ -236,7 +236,7 @@ func createGiteaPR(
 // createBitbucketPR handles Bitbucket which has no standard CLI.
 // It returns a manual URL for the user to create the PR.
 func createBitbucketPR(
-	platform git.PlatformInfo,
+	platform *git.PlatformInfo,
 	args prCreateArgs,
 ) (*prResult, error) {
 	manualURL := fmt.Sprintf(

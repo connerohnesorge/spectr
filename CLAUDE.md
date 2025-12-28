@@ -193,13 +193,17 @@ When you receive a project:
 - **Tester verifies ALL navigation links work** with Playwright
 
 Note that if you are waiting for an action to complete you should not return, you must call a Bash(sleep {best estimate of seconds to sleep until complete}).
-**Verifying tester results**: Tester outputs may be incomplete or inaccurate due to context window limitations. After EVERY tester success:
-1. Review any screenshots or visual evidence provided
-2. Cross-check claims against actual code or command outputs
-3. Re-run at least one test independently to validate results
+**Verifying tester results**: Tester outputs may be incomplete or inaccurate due to context window limitations or halucinations.
+
+After EVERY tester success:
+1. Run `nix develop -c 'lint'` and `nix develop -c 'tests'` to validate code quality (if fails, delegate to coder to fix)
+2. Review any screenshots or visual evidence provided
+3. Cross-check claims against actual code or command outputs
+4. Re-run at least one test independently to validate results
 
 Only mark a task complete after this verification passes.
-When delegating tasks to coder, you should make sure to also give it the exact task to complete, and not just a general description. Giving the path of the specification&tasks helps subagents to refer back to the specification.
+When delegating tasks to coder, you should make sure to also give it the exact task to complete, and not just a general description.
+Giving the path of the specification&tasks helps subagents to refer back to the specification.
 
 <!-- spectr:START -->
 # Spectr Instructions

@@ -1,6 +1,9 @@
 ---
 name: coder
-description: Implementation specialist that writes code to fulfill specific todo items. Use when a coding task needs to be implemented.
+description: 
+   Implementation specialist that writes code to fulfill specific todo items. Use when a coding task needs to be implemented.
+   USE WHEN you need to implement a specific todo item.
+   DO NOT use when you need to implement a general task containing multiple todo or task items.
 tools: Read, Write, Edit, Glob, Grep, Bash, Task
 model: sonnet
 ---

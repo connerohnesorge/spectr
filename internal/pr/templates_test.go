@@ -103,7 +103,7 @@ func TestRenderCommitMessage_Archive(
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := RenderCommitMessage(
-				tt.data,
+				&tt.data,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -143,7 +143,7 @@ func TestRenderCommitMessage_Archive(
 				},
 			}
 			result, err := RenderCommitMessage(
-				data,
+				&data,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -218,7 +218,7 @@ func TestRenderCommitMessage_Proposal(
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := RenderCommitMessage(
-				tt.data,
+				&tt.data,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -267,7 +267,7 @@ func TestRenderCommitMessage_InvalidMode(
 				Mode:     tt.mode,
 			}
 			result, err := RenderCommitMessage(
-				data,
+				&data,
 			)
 			if err == nil {
 				t.Errorf(
@@ -388,7 +388,7 @@ func TestRenderPRBody_Archive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := RenderPRBody(tt.data)
+			result, err := RenderPRBody(&tt.data)
 			if err != nil {
 				t.Fatalf(
 					"RenderPRBody() error = %v",
@@ -465,7 +465,7 @@ func TestRenderPRBody_Proposal(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := RenderPRBody(tt.data)
+			result, err := RenderPRBody(&tt.data)
 			if err != nil {
 				t.Fatalf(
 					"RenderPRBody() error = %v",
@@ -510,7 +510,7 @@ func TestRenderPRBody_InvalidMode(t *testing.T) {
 				ChangeID: "test-change",
 				Mode:     tt.mode,
 			}
-			result, err := RenderPRBody(data)
+			result, err := RenderPRBody(&data)
 			if err == nil {
 				t.Errorf(
 					"RenderPRBody() expected error for mode %q, got result: %s",
@@ -651,7 +651,7 @@ func TestRenderCommitMessage_Remove(
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := RenderCommitMessage(
-				tt.data,
+				&tt.data,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -704,7 +704,7 @@ func TestRenderPRBody_Remove(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := RenderPRBody(tt.data)
+			result, err := RenderPRBody(&tt.data)
 			if err != nil {
 				t.Fatalf(
 					"RenderPRBody() error = %v",

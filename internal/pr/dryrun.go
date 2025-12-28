@@ -88,7 +88,7 @@ func printCommitStep(config PRConfig) {
 	}
 
 	commitMsg, _ := RenderCommitMessage(
-		commitData,
+		&commitData,
 	)
 
 	for _, line := range strings.Split(commitMsg, "\n") {

@@ -8,7 +8,19 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
+
+// TestMain runs before all tests and ensures providers are registered
+func TestMain(m *testing.M) {
+	// Register all providers for tests
+	if err := providers.RegisterAllProviders(); err != nil {
+		panic("Failed to register providers: " + err.Error())
+	}
+
+	// Run tests - return value handled automatically as of Go 1.15
+	m.Run()
+}
 
 func TestNewWizardModel(t *testing.T) {
 	// Test creating a new wizard model
@@ -497,22 +509,6 @@ func TestRenderSelectShowsConfiguredIndicator(
 	}
 }
 
-// Helper function to check if a string contains a substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) &&
-		(s == substr || len(s) > len(substr) && findSubstring(s, substr))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-
-	return false
-}
-
 func TestHandleCompleteKeysCopyOnError(
 	t *testing.T,
 ) {
@@ -827,12 +823,12 @@ func TestProviderFilteringLogic(t *testing.T) {
 	// Verify all results contain "claude" (case-insensitive)
 	for _, provider := range wizard.filteredProviders {
 		if !strings.Contains(
-			strings.ToLower(provider.Name()),
+			strings.ToLower(provider.Name),
 			"claude",
 		) {
 			t.Errorf(
 				"Provider %s should not match 'claude'",
-				provider.Name(),
+				provider.Name,
 			)
 		}
 	}
@@ -916,7 +912,7 @@ func TestSelectionPreservedDuringFiltering(
 
 	// Select all providers
 	for _, provider := range wizard.allProviders {
-		wizard.selectedProviders[provider.ID()] = true
+		wizard.selectedProviders[provider.ID] = true
 	}
 
 	originalSelectionCount := len(
@@ -1150,7 +1146,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 
 	// Ensure first provider is not selected
 	if len(wizard.filteredProviders) > 0 {
-		wizard.selectedProviders[wizard.filteredProviders[0].ID()] = false
+		wizard.selectedProviders[wizard.filteredProviders[0].ID] = false
 	}
 
 	// Simulate pressing space key while in search mode
@@ -1168,7 +1164,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 		return
 	}
 
-	providerID := updatedWizard.filteredProviders[0].ID()
+	providerID := updatedWizard.filteredProviders[0].ID
 	if !updatedWizard.selectedProviders[providerID] {
 		t.Errorf(
 			"Expected provider %s to be selected after space press",

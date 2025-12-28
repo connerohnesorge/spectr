@@ -18,6 +18,11 @@ type InitCmd struct {
 
 // Run executes the init command
 func (c *InitCmd) Run() error {
+	// Register all providers with error handling
+	if err := providers.RegisterAllProviders(); err != nil {
+		return fmt.Errorf("failed to register providers: %w", err)
+	}
+
 	// Determine project path - positional arg takes precedence over flag
 	projectPath := c.Path
 	if projectPath == "" {
@@ -105,12 +110,17 @@ func runNonInteractiveInit(c *InitCmd) error {
 	// Handle "all" special case
 	selectedProviders := c.Tools
 	if len(c.Tools) == 1 && c.Tools[0] == "all" {
-		selectedProviders = providers.IDs()
+		// Get all provider IDs from registered providers
+		allProviders := providers.RegisteredProviders()
+		selectedProviders = make([]string, len(allProviders))
+		for i, reg := range allProviders {
+			selectedProviders[i] = reg.ID
+		}
 	}
 
 	// Validate provider IDs
 	for _, id := range selectedProviders {
-		if providers.Get(id) == nil {
+		if _, exists := providers.Get(id); !exists {
 			return fmt.Errorf(
 				"invalid provider ID: %s",
 				id,

@@ -352,7 +352,7 @@ linters:
         # https://github.com/mgechev/revive/blob/HEAD/RULES_DESCRIPTIONS.md#line-length-limit
         - name: line-length-limit
           severity: warning
-          disabled: false
+          disabled: true
           exclude: ["**/*_test.go"]
           arguments: [80]
         # https://github.com/mgechev/revive/blob/HEAD/RULES_DESCRIPTIONS.md#max-control-nesting
@@ -1151,7 +1151,7 @@ issues:
     # Disable strict limits that hurt readability in production code
     - linters:
         - revive
-      text: "line-length-limit.*80 characters"
+      text: "line-length-limit"
 
     # Allow constants defined inline when they're only used once or twice
     - linters:

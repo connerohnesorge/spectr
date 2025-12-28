@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/domain"
 )
 
 func TestNewTemplateManager(t *testing.T) {
@@ -147,7 +147,7 @@ func TestTemplateManager_RenderAgents(
 	}
 
 	got, err := tm.RenderAgents(
-		providers.DefaultTemplateContext(),
+		domain.DefaultTemplateContext(),
 	)
 	if err != nil {
 		t.Fatalf("RenderAgents() error = %v", err)
@@ -201,7 +201,7 @@ func TestTemplateManager_RenderInstructionPointer(
 	}
 
 	got, err := tm.RenderInstructionPointer(
-		providers.DefaultTemplateContext(),
+		domain.DefaultTemplateContext(),
 	)
 	if err != nil {
 		t.Fatalf(
@@ -313,7 +313,7 @@ func TestTemplateManager_RenderSlashCommand(
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tm.RenderSlashCommand(
 				tt.commandType,
-				providers.DefaultTemplateContext(),
+				domain.DefaultTemplateContext(),
 			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf(
@@ -412,7 +412,7 @@ func TestTemplateManager_AllTemplatesCompile(
 
 	t.Run("agents template", func(t *testing.T) {
 		_, err := tm.RenderAgents(
-			providers.DefaultTemplateContext(),
+			domain.DefaultTemplateContext(),
 		)
 		if err != nil {
 			t.Errorf(
@@ -426,7 +426,7 @@ func TestTemplateManager_AllTemplatesCompile(
 		"instruction pointer template",
 		func(t *testing.T) {
 			_, err := tm.RenderInstructionPointer(
-				providers.DefaultTemplateContext(),
+				domain.DefaultTemplateContext(),
 			)
 			if err != nil {
 				t.Errorf(
@@ -442,7 +442,7 @@ func TestTemplateManager_AllTemplatesCompile(
 		for _, cmd := range commands {
 			_, err := tm.RenderSlashCommand(
 				cmd,
-				providers.DefaultTemplateContext(),
+				domain.DefaultTemplateContext(),
 			)
 			if err != nil {
 				t.Errorf(
@@ -586,5 +586,209 @@ func TestTemplateManager_EmptyTechStack(
 		t.Error(
 			"Missing Tech Stack section with empty slice",
 		)
+	}
+}
+
+func TestTemplateManager_InstructionPointer(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	// Get the TemplateRef
+	ref := tm.InstructionPointer()
+
+	// Verify TemplateRef fields
+	if ref.Name != "instruction-pointer.md.tmpl" {
+		t.Errorf("InstructionPointer().Name = %q, want %q", ref.Name, "instruction-pointer.md.tmpl")
+	}
+	if ref.Template == nil {
+		t.Error("InstructionPointer().Template is nil")
+	}
+
+	// Verify Render() works
+	ctx := domain.DefaultTemplateContext()
+	rendered, err := ref.Render(ctx)
+	if err != nil {
+		t.Fatalf("InstructionPointer().Render() error = %v", err)
+	}
+
+	// Check for expected content
+	expectedContent := []string{
+		"# Spectr Instructions",
+		"spectr/AGENTS.md",
+	}
+	for _, content := range expectedContent {
+		if !strings.Contains(rendered, content) {
+			t.Errorf("InstructionPointer().Render() missing expected content %q", content)
+		}
+	}
+}
+
+func TestTemplateManager_Agents(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	// Get the TemplateRef
+	ref := tm.Agents()
+
+	// Verify TemplateRef fields
+	if ref.Name != "AGENTS.md.tmpl" {
+		t.Errorf("Agents().Name = %q, want %q", ref.Name, "AGENTS.md.tmpl")
+	}
+	if ref.Template == nil {
+		t.Error("Agents().Template is nil")
+	}
+
+	// Verify Render() works
+	ctx := domain.DefaultTemplateContext()
+	rendered, err := ref.Render(ctx)
+	if err != nil {
+		t.Fatalf("Agents().Render() error = %v", err)
+	}
+
+	// Check for expected content
+	expectedContent := []string{
+		"# Spectr Instructions",
+		"## TL;DR Quick Checklist",
+	}
+	for _, content := range expectedContent {
+		if !strings.Contains(rendered, content) {
+			t.Errorf("Agents().Render() missing expected content %q", content)
+		}
+	}
+}
+
+func TestTemplateManager_SlashCommand(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	tests := []struct {
+		name        string
+		cmd         domain.SlashCommand
+		wantName    string
+		wantContent []string
+	}{
+		{
+			name:     "proposal command",
+			cmd:      domain.SlashProposal,
+			wantName: "slash-proposal.md.tmpl",
+			wantContent: []string{
+				"# Guardrails",
+				"proposal.md",
+			},
+		},
+		{
+			name:     "apply command",
+			cmd:      domain.SlashApply,
+			wantName: "slash-apply.md.tmpl",
+			wantContent: []string{
+				"# Guardrails",
+				"tasks.json",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Get the TemplateRef
+			ref := tm.SlashCommand(tt.cmd)
+
+			// Verify TemplateRef fields
+			if ref.Name != tt.wantName {
+				t.Errorf("SlashCommand(%v).Name = %q, want %q", tt.cmd, ref.Name, tt.wantName)
+			}
+			if ref.Template == nil {
+				t.Error("SlashCommand().Template is nil")
+			}
+
+			// Verify Render() works
+			ctx := domain.DefaultTemplateContext()
+			rendered, err := ref.Render(ctx)
+			if err != nil {
+				t.Fatalf("SlashCommand(%v).Render() error = %v", tt.cmd, err)
+			}
+
+			// Check for expected content
+			for _, content := range tt.wantContent {
+				if !strings.Contains(rendered, content) {
+					t.Errorf(
+						"SlashCommand(%v).Render() missing expected content %q",
+						tt.cmd,
+						content,
+					)
+				}
+			}
+		})
+	}
+}
+
+func TestTemplateManager_TOMLSlashCommand(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	tests := []struct {
+		name        string
+		cmd         domain.SlashCommand
+		wantName    string
+		wantContent []string
+	}{
+		{
+			name:     "TOML proposal command",
+			cmd:      domain.SlashProposal,
+			wantName: "slash-proposal.toml.tmpl",
+			wantContent: []string{
+				"description =",
+				"prompt =",
+			},
+		},
+		{
+			name:     "TOML apply command",
+			cmd:      domain.SlashApply,
+			wantName: "slash-apply.toml.tmpl",
+			wantContent: []string{
+				"description =",
+				"prompt =",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Get the TemplateRef
+			ref := tm.TOMLSlashCommand(tt.cmd)
+
+			// Verify TemplateRef fields
+			if ref.Name != tt.wantName {
+				t.Errorf("TOMLSlashCommand(%v).Name = %q, want %q", tt.cmd, ref.Name, tt.wantName)
+			}
+			if ref.Template == nil {
+				t.Error("TOMLSlashCommand().Template is nil")
+			}
+
+			// Verify Render() works
+			ctx := domain.DefaultTemplateContext()
+			rendered, err := ref.Render(ctx)
+			if err != nil {
+				t.Fatalf("TOMLSlashCommand(%v).Render() error = %v", tt.cmd, err)
+			}
+
+			// Check for expected content
+			for _, content := range tt.wantContent {
+				if !strings.Contains(rendered, content) {
+					t.Errorf(
+						"TOMLSlashCommand(%v).Render() missing expected content %q",
+						tt.cmd,
+						content,
+					)
+				}
+			}
+		})
 	}
 }

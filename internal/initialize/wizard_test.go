@@ -19,7 +19,8 @@ const (
 
 // TestMain registers all providers before running tests.
 func TestMain(m *testing.M) {
-	providers.RegisterAll()
+	providers.ResetRegistry()
+	_ = providers.RegisterAllProviders() // Ignore error - tests reset registry
 	m.Run()
 }
 
@@ -267,14 +268,16 @@ func TestNewWizardModelWithConfiguredProviders(
 	// Create a temp directory with a configured provider
 	tempDir := t.TempDir()
 
-	// Create CLAUDE.md to make claude-code provider configured
+	// Create CLAUDE.md with spectr markers to make claude-code provider configured
 	claudeFile := filepath.Join(
 		tempDir,
 		"CLAUDE.md",
 	)
 	err := os.WriteFile(
 		claudeFile,
-		[]byte("# Claude Configuration\n"),
+		[]byte(
+			"# Claude Configuration\n\n<!-- spectr:start -->\nSpectr instructions\n<!-- spectr:end -->\n",
+		),
 		0o644,
 	)
 	if err != nil {
@@ -812,18 +815,18 @@ func TestProviderFilteringLogic(t *testing.T) {
 		)
 	}
 
-	// Initial state should have all providers in filteredProviders
+	// Initial state should have all providers in filteredRegistrations
 	if len(
-		wizard.filteredProviders,
+		wizard.filteredRegistrations,
 	) != len(
-		wizard.allProviders,
+		wizard.allRegistrations,
 	) {
 		t.Errorf(
-			"Expected filteredProviders to equal allProviders, got %d vs %d",
+			"Expected filteredRegistrations to equal allRegistrations, got %d vs %d",
 			len(
-				wizard.filteredProviders,
+				wizard.filteredRegistrations,
 			),
-			len(wizard.allProviders),
+			len(wizard.allRegistrations),
 		)
 	}
 
@@ -831,21 +834,21 @@ func TestProviderFilteringLogic(t *testing.T) {
 	wizard.searchQuery = testProviderClaude
 	wizard.applyProviderFilter()
 
-	if len(wizard.filteredProviders) == 0 {
+	if len(wizard.filteredRegistrations) == 0 {
 		t.Error(
 			"Expected at least one provider to match 'claude'",
 		)
 	}
 
 	// Verify all results contain "claude" (case-insensitive)
-	for _, provider := range wizard.filteredProviders {
+	for _, reg := range wizard.filteredRegistrations {
 		if !strings.Contains(
-			strings.ToLower(provider.Name()),
+			strings.ToLower(reg.Name),
 			testProviderClaude,
 		) {
 			t.Errorf(
 				"Provider %s should not match 'claude'",
-				provider.Name(),
+				reg.Name,
 			)
 		}
 	}
@@ -855,9 +858,9 @@ func TestProviderFilteringLogic(t *testing.T) {
 	wizard.applyProviderFilter()
 
 	if len(
-		wizard.filteredProviders,
+		wizard.filteredRegistrations,
 	) != len(
-		wizard.allProviders,
+		wizard.allRegistrations,
 	) {
 		t.Error(
 			"Expected empty query to restore all providers",
@@ -868,7 +871,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	wizard.searchQuery = testProviderNonexistent
 	wizard.applyProviderFilter()
 
-	if len(wizard.filteredProviders) != 0 {
+	if len(wizard.filteredRegistrations) != 0 {
 		t.Error(
 			"Expected no providers to match 'nonexistentprovider123'",
 		)
@@ -927,9 +930,9 @@ func TestSelectionPreservedDuringFiltering(
 		)
 	}
 
-	// Select all providers
-	for _, provider := range wizard.allProviders {
-		wizard.selectedProviders[provider.ID()] = true
+	// Select all providers using registrations (which have the ID field)
+	for _, reg := range wizard.allRegistrations {
+		wizard.selectedProviders[reg.ID] = true
 	}
 
 	originalSelectionCount := len(
@@ -1162,8 +1165,8 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 	wizard.cursor = 0
 
 	// Ensure first provider is not selected
-	if len(wizard.filteredProviders) > 0 {
-		wizard.selectedProviders[wizard.filteredProviders[0].ID()] = false
+	if len(wizard.filteredRegistrations) > 0 {
+		wizard.selectedProviders[wizard.filteredRegistrations[0].ID] = false
 	}
 
 	// Simulate pressing space key while in search mode
@@ -1177,11 +1180,11 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 	}
 
 	// Verify provider is now selected
-	if len(updatedWizard.filteredProviders) == 0 {
+	if len(updatedWizard.filteredRegistrations) == 0 {
 		return
 	}
 
-	providerID := updatedWizard.filteredProviders[0].ID()
+	providerID := updatedWizard.filteredRegistrations[0].ID
 	if !updatedWizard.selectedProviders[providerID] {
 		t.Errorf(
 			"Expected provider %s to be selected after space press",

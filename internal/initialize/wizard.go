@@ -43,14 +43,16 @@ type WizardModel struct {
 	executing            bool
 	executionResult      *ExecutionResult
 	err                  error
-	allProviders         []providers.Provider // sorted providers for display
-	ciWorkflowEnabled    bool                 // whether user wants CI workflow created
-	ciWorkflowConfigured bool                 // whether .github/workflows/spectr-ci.yml already exists
+	allProviders         []providers.Provider     // sorted providers for display (legacy compatibility)
+	allRegistrations     []providers.Registration // sorted registrations (new architecture)
+	ciWorkflowEnabled    bool                     // whether user wants CI workflow created
+	ciWorkflowConfigured bool                     // whether .github/workflows/spectr-ci.yml already exists
 	// Search mode state
-	searchMode        bool                 // whether search mode is active
-	searchQuery       string               // current search query
-	searchInput       textinput.Model      // text input for search
-	filteredProviders []providers.Provider // providers matching search query
+	searchMode            bool                     // whether search mode is active
+	searchQuery           string                   // current search query
+	searchInput           textinput.Model          // text input for search
+	filteredProviders     []providers.Provider     // providers matching search query (legacy)
+	filteredRegistrations []providers.Registration // registrations matching search query (new)
 }
 
 // ExecutionResult holds the result of initialization
@@ -110,21 +112,28 @@ func NewWizardModel(
 		)
 	}
 
-	allProviders := providers.All()
+	// Use RegisteredProviders() for the new architecture
+	// This gives us access to both the Registration (with ID, Name) and Provider
+	allRegistrations := providers.RegisteredProviders()
+	allProviders := make([]providers.Provider, len(allRegistrations))
+	for i, reg := range allRegistrations {
+		allProviders[i] = reg.Provider
+	}
 
 	configuredProviders := make(map[string]bool)
 	selectedProviders := make(map[string]bool)
 
-	for _, provider := range allProviders {
-		isConfigured := provider.IsConfigured(
+	// Check each provider's configuration status using the registration's ID
+	for _, reg := range allRegistrations {
+		isConfigured := reg.Provider.IsConfigured(
 			projectPath,
 		)
 
-		configuredProviders[provider.ID()] = isConfigured
+		configuredProviders[reg.ID] = isConfigured
 
 		// Pre-select already-configured providers
 		if isConfigured {
-			selectedProviders[provider.ID()] = true
+			selectedProviders[reg.ID] = true
 		}
 	}
 
@@ -155,11 +164,13 @@ func NewWizardModel(
 		configuredProviders:  configuredProviders,
 		cursor:               0,
 		allProviders:         allProviders,
+		allRegistrations:     allRegistrations,
 		ciWorkflowEnabled:    ciWorkflowEnabled,
 		ciWorkflowConfigured: ciWorkflowConfigured,
 		searchInput:          searchInput,
 		// Initially show all providers
-		filteredProviders: allProviders,
+		filteredProviders:     allProviders,
+		filteredRegistrations: allRegistrations,
 	}, nil
 }
 
@@ -249,14 +260,14 @@ func (m *WizardModel) handleSelectKeys(
 			m.cursor--
 		}
 	case "down", "j":
-		if m.cursor < len(m.filteredProviders)-1 {
+		if m.cursor < len(m.filteredRegistrations)-1 {
 			m.cursor++
 		}
 	case " ":
 		// Toggle selection on filtered list
-		if m.cursor < len(m.filteredProviders) {
-			provider := m.filteredProviders[m.cursor]
-			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+		if m.cursor < len(m.filteredRegistrations) {
+			reg := m.filteredRegistrations[m.cursor]
+			m.selectedProviders[reg.ID] = !m.selectedProviders[reg.ID]
 		}
 	case keyEnter:
 		// Confirm and move to review
@@ -265,8 +276,8 @@ func (m *WizardModel) handleSelectKeys(
 		return m, nil
 	case "a":
 		// Select all (from full list, not just filtered)
-		for _, provider := range m.allProviders {
-			m.selectedProviders[provider.ID()] = true
+		for _, reg := range m.allRegistrations {
+			m.selectedProviders[reg.ID] = true
 		}
 	case "n":
 		// Deselect all
@@ -298,6 +309,7 @@ func (m *WizardModel) handleSearchModeInput(
 		m.searchQuery = ""
 		m.searchInput.SetValue("")
 		m.filteredProviders = m.allProviders
+		m.filteredRegistrations = m.allRegistrations
 		m.cursor = 0
 
 		return m, nil
@@ -316,16 +328,16 @@ func (m *WizardModel) handleSearchModeInput(
 		return m, nil
 	case tea.KeyDown:
 		// Allow navigation while searching
-		if m.cursor < len(m.filteredProviders)-1 {
+		if m.cursor < len(m.filteredRegistrations)-1 {
 			m.cursor++
 		}
 
 		return m, nil
 	case tea.KeySpace:
 		// Toggle selection on filtered list while in search mode
-		if m.cursor < len(m.filteredProviders) {
-			provider := m.filteredProviders[m.cursor]
-			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+		if m.cursor < len(m.filteredRegistrations) {
+			reg := m.filteredRegistrations[m.cursor]
+			m.selectedProviders[reg.ID] = !m.selectedProviders[reg.ID]
 		}
 
 		return m, nil
@@ -347,20 +359,23 @@ func (m *WizardModel) applyProviderFilter() {
 
 	if query == "" {
 		m.filteredProviders = m.allProviders
+		m.filteredRegistrations = m.allRegistrations
 	} else {
 		m.filteredProviders = make([]providers.Provider, 0)
-		for _, provider := range m.allProviders {
-			if strings.Contains(strings.ToLower(provider.Name()), query) {
-				m.filteredProviders = append(m.filteredProviders, provider)
+		m.filteredRegistrations = make([]providers.Registration, 0)
+		for i, reg := range m.allRegistrations {
+			if strings.Contains(strings.ToLower(reg.Name), query) {
+				m.filteredProviders = append(m.filteredProviders, m.allProviders[i])
+				m.filteredRegistrations = append(m.filteredRegistrations, reg)
 			}
 		}
 	}
 
 	// Adjust cursor position to stay within bounds
-	if len(m.filteredProviders) > 0 {
-		if m.cursor >= len(m.filteredProviders) {
+	if len(m.filteredRegistrations) > 0 {
+		if m.cursor >= len(m.filteredRegistrations) {
 			m.cursor = len(
-				m.filteredProviders,
+				m.filteredRegistrations,
 			) - 1
 		}
 	} else {
@@ -505,7 +520,7 @@ func (m *WizardModel) renderSelect() string {
 	}
 
 	// Render filtered providers or show no match message
-	if len(m.filteredProviders) == 0 &&
+	if len(m.filteredRegistrations) == 0 &&
 		m.searchQuery != "" {
 		b.WriteString(dimmedStyle.Render(
 			fmt.Sprintf(
@@ -514,7 +529,7 @@ func (m *WizardModel) renderSelect() string {
 			),
 		))
 	} else {
-		b.WriteString(m.renderProviderGroup(m.filteredProviders, 0))
+		b.WriteString(m.renderProviderGroup(m.filteredRegistrations, 0))
 	}
 
 	// Configured indicator explanation
@@ -546,12 +561,12 @@ func (m *WizardModel) renderSelect() string {
 }
 
 func (m *WizardModel) renderProviderGroup(
-	providersList []providers.Provider,
+	registrations []providers.Registration,
 	offset int,
 ) string {
 	var b strings.Builder
 
-	for i, provider := range providersList {
+	for i, reg := range registrations {
 		actualIndex := offset + i
 		cursor := " "
 		if m.cursor == actualIndex {
@@ -559,7 +574,7 @@ func (m *WizardModel) renderProviderGroup(
 		}
 
 		checkbox := "[ ]"
-		if m.selectedProviders[provider.ID()] {
+		if m.selectedProviders[reg.ID] {
 			checkbox = selectedStyle.Render("[✓]")
 		}
 
@@ -568,12 +583,12 @@ func (m *WizardModel) renderProviderGroup(
 			"  %s %s %s",
 			cursor,
 			checkbox,
-			provider.Name(),
+			reg.Name,
 		)
 
 		// Add configured indicator if provider is already configured
 		configuredIndicator := ""
-		if m.configuredProviders[provider.ID()] {
+		if m.configuredProviders[reg.ID] {
 			configuredIndicator = subtleStyle.Render(
 				" (configured)",
 			)
@@ -585,7 +600,7 @@ func (m *WizardModel) renderProviderGroup(
 				cursorStyle.Render(line),
 			)
 			b.WriteString(configuredIndicator)
-		case m.selectedProviders[provider.ID()]:
+		case m.selectedProviders[reg.ID]:
 			b.WriteString(
 				selectedStyle.Render(line),
 			)
@@ -683,12 +698,12 @@ func (m *WizardModel) renderSelectedProviders(
 		count,
 	)
 
-	for _, provider := range m.allProviders {
-		if !m.selectedProviders[provider.ID()] {
+	for _, reg := range m.allRegistrations {
+		if !m.selectedProviders[reg.ID] {
 			continue
 		}
 		b.WriteString(successStyle.Render("  ✓ "))
-		b.WriteString(provider.Name())
+		b.WriteString(reg.Name)
 		b.WriteString("\n")
 	}
 	b.WriteString("\n")

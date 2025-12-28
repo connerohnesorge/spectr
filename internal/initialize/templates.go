@@ -4,36 +4,64 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"text/template"
+	"html/template"
 
-	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/domain"
 )
 
 //go:embed templates/**/*.tmpl
 var templateFS embed.FS
 
-// TemplateManager manages embedded templates for initialization
+// TemplateManager manages embedded templates for initialization.
+// It merges templates from:
+// 1. internal/initialize/templates (main templates: AGENTS.md, instruction-pointer.md)
+// 2. internal/domain (slash command templates: slash-proposal.md, slash-apply.md)
 type TemplateManager struct {
 	templates *template.Template
 }
 
 // NewTemplateManager creates a new template manager with all
-// embedded templates loaded
+// embedded templates loaded from both internal/initialize/templates
+// and internal/domain/templates.
 func NewTemplateManager() (*TemplateManager, error) {
-	// Parse all embedded templates
-	tmpl, err := template.ParseFS(
+	// Parse main templates from internal/initialize/templates
+	mainTmpl, err := template.ParseFS(
 		templateFS,
 		"templates/**/*.tmpl",
 	)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"failed to parse templates: %w",
+			"failed to parse main templates: %w",
 			err,
 		)
 	}
 
+	// Parse domain templates (slash commands) from internal/domain/templates
+	domainTmpl, err := template.ParseFS(
+		domain.TemplateFS,
+		"templates/*.tmpl",
+	)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to parse domain templates: %w",
+			err,
+		)
+	}
+
+	// Merge: add domain templates to main template set
+	// If duplicate template names exist, last-wins precedence applies
+	for _, t := range domainTmpl.Templates() {
+		if _, err := mainTmpl.AddParseTree(t.Name(), t.Tree); err != nil {
+			return nil, fmt.Errorf(
+				"failed to merge template %s: %w",
+				t.Name(),
+				err,
+			)
+		}
+	}
+
 	return &TemplateManager{
-		templates: tmpl,
+		templates: mainTmpl,
 	}, nil
 }
 
@@ -61,7 +89,7 @@ func (tm *TemplateManager) RenderProject(
 // RenderAgents renders the AGENTS.md template with the given template context
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderAgents(
-	ctx *providers.TemplateContext,
+	ctx *domain.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
@@ -83,7 +111,7 @@ func (tm *TemplateManager) RenderAgents(
 // This is a short pointer that directs AI assistants to read the AGENTS.md file
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderInstructionPointer(
-	ctx *providers.TemplateContext,
+	ctx *domain.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
@@ -103,11 +131,11 @@ func (tm *TemplateManager) RenderInstructionPointer(
 }
 
 // RenderSlashCommand renders a slash command template with the given context
-// commandType must be one of: "proposal", "apply", "archive"
+// commandType must be one of: "proposal", "apply"
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderSlashCommand(
 	commandType string,
-	ctx *providers.TemplateContext,
+	ctx *domain.TemplateContext,
 ) (string, error) {
 	templateName := fmt.Sprintf(
 		"slash-%s.md.tmpl",
@@ -123,6 +151,78 @@ func (tm *TemplateManager) RenderSlashCommand(
 		return "", fmt.Errorf(
 			"failed to render slash command template %s: %w",
 			commandType,
+			err,
+		)
+	}
+
+	return buf.String(), nil
+}
+
+// InstructionPointer returns a TemplateRef for the instruction-pointer.md.tmpl template.
+// This is a type-safe accessor that provides compile-time safety for template names.
+func (tm *TemplateManager) InstructionPointer() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "instruction-pointer.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// Agents returns a TemplateRef for the AGENTS.md.tmpl template.
+// This is a type-safe accessor that provides compile-time safety for template names.
+func (tm *TemplateManager) Agents() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "AGENTS.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// SlashCommand returns a TemplateRef for the Markdown slash command template
+// corresponding to the given SlashCommand type.
+// Used by SlashCommandsInitializer, HomeSlashCommandsInitializer,
+// and PrefixedSlashCommandsInitializer.
+func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+	names := map[domain.SlashCommand]string{
+		domain.SlashProposal: "slash-proposal.md.tmpl",
+		domain.SlashApply:    "slash-apply.md.tmpl",
+	}
+
+	return domain.TemplateRef{
+		Name:     names[cmd],
+		Template: tm.templates,
+	}
+}
+
+// TOMLSlashCommand returns a TemplateRef for the TOML slash command template
+// corresponding to the given SlashCommand type.
+// Used by TOMLSlashCommandsInitializer (Gemini only).
+func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+	names := map[domain.SlashCommand]string{
+		domain.SlashProposal: "slash-proposal.toml.tmpl",
+		domain.SlashApply:    "slash-apply.toml.tmpl",
+	}
+
+	return domain.TemplateRef{
+		Name:     names[cmd],
+		Template: tm.templates,
+	}
+}
+
+// Render renders a template with the given TemplateRef and context.
+// This is a convenience method for rendering templates using TemplateRef.
+func (tm *TemplateManager) Render(
+	ref domain.TemplateRef,
+	ctx *domain.TemplateContext,
+) (string, error) {
+	var buf bytes.Buffer
+	err := tm.templates.ExecuteTemplate(
+		&buf,
+		ref.Name,
+		ctx,
+	)
+	if err != nil {
+		return "", fmt.Errorf(
+			"failed to render template %s: %w",
+			ref.Name,
 			err,
 		)
 	}

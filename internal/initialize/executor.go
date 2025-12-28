@@ -5,17 +5,24 @@
 package initialize
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
+	"github.com/connerohnesorge/spectr/internal/domain"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
+	"github.com/connerohnesorge/spectr/internal/initialize/providers/initializers"
+	"github.com/spf13/afero"
 )
 
 // InitExecutor handles the actual initialization process
 type InitExecutor struct {
 	projectPath string
 	tm          *TemplateManager
+	projectFs   afero.Fs // Filesystem rooted at project directory
+	homeFs      afero.Fs // Filesystem rooted at home directory
 }
 
 // NewInitExecutor creates a new initialization executor
@@ -49,9 +56,21 @@ func NewInitExecutor(
 			)
 	}
 
+	// Create dual filesystem: projectFs rooted at project, homeFs rooted at home directory
+	// Task 8.2: Fail if os.UserHomeDir() errors
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get home directory: %w", err)
+	}
+
+	projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+	homeFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
+
 	return &InitExecutor{
 		projectPath: projectPath,
 		tm:          tm,
+		projectFs:   projectFs,
+		homeFs:      homeFs,
 	}, nil
 }
 
@@ -261,7 +280,7 @@ func (e *InitExecutor) createAgentsMd(
 
 	// Render template
 	content, err := e.tm.RenderAgents(
-		providers.DefaultTemplateContext(),
+		defaultTemplateContext(),
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -286,8 +305,8 @@ func (e *InitExecutor) createAgentsMd(
 	return nil
 }
 
-// configureProviders configures the selected providers using the new interface-driven architecture.
-// Each provider handles both its instruction file AND slash commands in a single Configure() call.
+// configureProviders configures the selected providers using the new initializer-based architecture.
+// Uses dual filesystems, collects initializers, deduplicates, sorts by type, and executes with fail-fast.
 func (e *InitExecutor) configureProviders(
 	selectedProviderIDs []string,
 	spectrDir string,
@@ -297,51 +316,116 @@ func (e *InitExecutor) configureProviders(
 		return nil // No providers to configure
 	}
 
-	for _, providerID := range selectedProviderIDs {
-		provider := providers.Get(providerID)
-		if provider == nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"provider %s not found",
-					providerID,
-				),
-			)
+	// Create config from spectrDir
+	cfg := &domain.Config{SpectrDir: spectrDir}
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("invalid config: %w", err)
+	}
 
+	// Task 8.3: Get all registered providers sorted by priority
+	allRegistrations := providers.RegisteredProviders()
+
+	// Task 8.4: Collect initializers from selected providers
+	// Process in priority order (allRegistrations is already sorted)
+	var allInitializers []domain.Initializer
+	for _, reg := range allRegistrations {
+		// Only process selected providers
+		isSelected := false
+		for _, id := range selectedProviderIDs {
+			if id == reg.ID {
+				isSelected = true
+
+				break
+			}
+		}
+		if !isSelected {
 			continue
 		}
 
-		// Check if already configured
-		wasConfigured := provider.IsConfigured(
-			e.projectPath,
-		)
+		// Get initializers from provider
+		inits := reg.Provider.Initializers(context.Background(), e.tm)
+		allInitializers = append(allInitializers, inits...)
+	}
 
-		// Configure the provider (handles both instruction file + slash commands)
-		if err := provider.Configure(e.projectPath, spectrDir, e.tm); err != nil {
-			result.Errors = append(
-				result.Errors,
-				fmt.Sprintf(
-					"failed to configure %s: %v",
-					provider.Name(),
-					err,
-				),
-			)
+	// Task 8.7: Sort initializers by type priority (stable sort preserves provider order)
+	sortInitializersByType(allInitializers)
 
-			continue
+	// Task 8.6: Deduplicate initializers (keep first occurrence)
+	deduplicatedInits := dedupeInitializers(allInitializers)
+
+	// Task 8.8, 8.9, 8.10: Execute initializers with fail-fast, merge results inline
+	for _, init := range deduplicatedInits {
+		initResult, err := init.Init(context.Background(), e.projectFs, e.homeFs, cfg, e.tm)
+		if err != nil {
+			// Task 8.10: Fail-fast - stop on first error, return partial result
+			return fmt.Errorf("initializer failed: %w", err)
 		}
-
-		// Track created/updated files
-		filePaths := provider.GetFilePaths()
-		if wasConfigured {
-			result.UpdatedFiles = append(
-				result.UpdatedFiles,
-				filePaths...)
-		} else {
-			result.CreatedFiles = append(result.CreatedFiles, filePaths...)
-		}
+		// Task 8.9: Merge ExecutionResults inline
+		result.CreatedFiles = append(result.CreatedFiles, initResult.CreatedFiles...)
+		result.UpdatedFiles = append(result.UpdatedFiles, initResult.UpdatedFiles...)
 	}
 
 	return nil
+}
+
+// Task 8.5: templateContextFromConfig derives TemplateContext from Config.SpectrDir
+func templateContextFromConfig(cfg *domain.Config) domain.TemplateContext {
+	return domain.TemplateContext{
+		BaseDir:     cfg.SpectrDir,
+		SpecsDir:    cfg.SpecsDir(),
+		ChangesDir:  cfg.ChangesDir(),
+		ProjectFile: cfg.ProjectFile(),
+		AgentsFile:  cfg.AgentsFile(),
+	}
+}
+
+// Task 8.7: sortInitializersByType sorts initializers by type priority using stable sort.
+// Priority 1: DirectoryInitializer, HomeDirectoryInitializer
+// Priority 2: ConfigFileInitializer
+// Priority 3: SlashCommandsInitializer, HomeSlashCommandsInitializer, PrefixedSlashCommandsInitializer,
+//
+//	HomePrefixedSlashCommandsInitializer, TOMLSlashCommandsInitializer
+func sortInitializersByType(inits []domain.Initializer) {
+	sort.SliceStable(inits, func(i, j int) bool {
+		return initializerPriority(inits[i]) < initializerPriority(inits[j])
+	})
+}
+
+// initializerPriority returns the type-based priority for an initializer.
+func initializerPriority(init domain.Initializer) int {
+	switch init.(type) {
+	case *initializers.DirectoryInitializer, *initializers.HomeDirectoryInitializer:
+		return 1
+	case *initializers.ConfigFileInitializer:
+		return 2
+	case *initializers.SlashCommandsInitializer, *initializers.HomeSlashCommandsInitializer,
+		*initializers.PrefixedSlashCommandsInitializer, *initializers.HomePrefixedSlashCommandsInitializer,
+		*initializers.TOMLSlashCommandsInitializer:
+		return 3
+	default:
+		return 99
+	}
+}
+
+// Task 8.6: dedupeInitializers deduplicates initializers using the optional Deduplicatable interface.
+// Keeps first occurrence when duplicates are found.
+func dedupeInitializers(inits []domain.Initializer) []domain.Initializer {
+	seen := make(map[string]bool)
+	result := make([]domain.Initializer, 0, len(inits))
+
+	for _, init := range inits {
+		// Check if initializer supports deduplication via the Deduplicatable interface
+		if d, ok := init.(initializers.Deduplicatable); ok {
+			key := d.DedupeKey()
+			if seen[key] {
+				continue // Skip duplicate
+			}
+			seen[key] = true
+		}
+		result = append(result, init)
+	}
+
+	return result
 }
 
 // createCIWorkflow creates the .github/workflows/spectr-ci.yml file
@@ -419,4 +503,16 @@ Next steps:
 
 ────────────────────────────────────────────────────────────────
 `
+}
+
+// defaultTemplateContext returns a default TemplateContext with standard paths.
+// This is used for rendering templates during initialization.
+func defaultTemplateContext() *domain.TemplateContext {
+	return &domain.TemplateContext{
+		BaseDir:     "spectr",
+		SpecsDir:    "spectr/specs",
+		ChangesDir:  "spectr/changes",
+		ProjectFile: "spectr/project.md",
+		AgentsFile:  "spectr/AGENTS.md",
+	}
 }

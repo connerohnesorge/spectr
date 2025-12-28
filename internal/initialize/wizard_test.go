@@ -124,7 +124,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty intro output",
 			)
 		}
-		if !contains(output, "Spectr") {
+		if !strings.Contains(output, "Spectr") {
 			t.Error(
 				"Expected intro to contain 'Spectr'",
 			)
@@ -139,7 +139,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty select output",
 			)
 		}
-		if !contains(
+		if !strings.Contains(
 			output,
 			"Select AI Tools to Configure",
 		) {
@@ -158,7 +158,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty review output",
 			)
 		}
-		if !contains(
+		if !strings.Contains(
 			output,
 			"Review Your Selections",
 		) {
@@ -176,7 +176,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty execute output",
 			)
 		}
-		if !contains(output, "Initializing") {
+		if !strings.Contains(output, "Initializing") {
 			t.Error(
 				"Expected execute screen to contain 'Initializing'",
 			)
@@ -198,7 +198,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty complete output",
 			)
 		}
-		if !contains(output, "Successfully") {
+		if !strings.Contains(output, "Successfully") {
 			t.Error(
 				"Expected complete screen to contain 'Successfully'",
 			)

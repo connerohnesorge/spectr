@@ -275,6 +275,11 @@ func createSlashCommands(
 		AgentsFile:  cfg.AgentsFile(),
 	}
 
+	// Create parent directory if it doesn't exist
+	if err := fs.MkdirAll(dir, 0755); err != nil {
+		return InitResult{}, fmt.Errorf("failed to create directory %s: %w", dir, err)
+	}
+
 	var created []string
 	var updated []string
 
@@ -334,6 +339,11 @@ func createPrefixedSlashCommands(
 		ChangesDir:  cfg.ChangesDir(),
 		ProjectFile: cfg.ProjectFile(),
 		AgentsFile:  cfg.AgentsFile(),
+	}
+
+	// Create parent directory if it doesn't exist
+	if err := fs.MkdirAll(dir, 0755); err != nil {
+		return InitResult{}, fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
 	var created []string

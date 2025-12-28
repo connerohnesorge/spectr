@@ -213,7 +213,9 @@ func TestBaseProviderConfigure(t *testing.T) {
 	for _, cmd := range commands {
 		cmdPath := filepath.Join(
 			tmpDir,
-			".claude/commands/spectr",
+			".claude",
+			"commands",
+			"spectr",
 			cmd+".md",
 		)
 		if !FileExists(cmdPath) {
@@ -333,7 +335,9 @@ func TestGeminiProviderConfigure(t *testing.T) {
 	for _, cmd := range commands {
 		cmdPath := filepath.Join(
 			tmpDir,
-			".gemini/commands/spectr",
+			".gemini",
+			"commands",
+			"spectr",
 			cmd+".toml",
 		)
 		if !FileExists(cmdPath) {

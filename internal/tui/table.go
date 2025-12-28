@@ -32,7 +32,7 @@ type TablePicker struct {
 
 // NewTablePicker creates a new TablePicker with the given configuration.
 func NewTablePicker(
-	config TableConfig,
+	config *TableConfig,
 ) *TablePicker {
 	height := config.Height
 	if height == 0 {

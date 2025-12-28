@@ -90,7 +90,7 @@ func (t NodeType) String() string {
 	case NodeTypeWikilink:
 		return "Wikilink"
 	default:
-		return "Unknown"
+		return unknownTokenType
 	}
 }
 

@@ -8,11 +8,13 @@ import (
 	"github.com/alecthomas/assert/v2"
 )
 
+const testProjectPath = "/test/project"
+
 // TestCreateValidationItems_Changes tests creating validation items for changes
 func TestCreateValidationItems_Changes(
 	t *testing.T,
 ) {
-	projectPath := "/test/project"
+	projectPath := testProjectPath
 	basePath := "/test/project/spectr/changes"
 	changeIDs := []string{
 		"add-feature",
@@ -51,7 +53,7 @@ func TestCreateValidationItems_Changes(
 func TestCreateValidationItems_Specs(
 	t *testing.T,
 ) {
-	projectPath := "/test/project"
+	projectPath := testProjectPath
 	basePath := "/test/project/spectr/specs"
 	specIDs := []string{
 		"user-auth",
@@ -91,7 +93,7 @@ func TestCreateValidationItems_Specs(
 func TestCreateValidationItems_EmptyList(
 	t *testing.T,
 ) {
-	projectPath := "/test/project"
+	projectPath := testProjectPath
 	basePath := "/test/project/spectr/specs"
 
 	items := CreateValidationItems(

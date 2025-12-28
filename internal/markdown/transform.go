@@ -30,7 +30,7 @@ func (a TransformAction) String() string {
 	case ActionDelete:
 		return "Delete"
 	default:
-		return "Unknown"
+		return unknownTokenType
 	}
 }
 

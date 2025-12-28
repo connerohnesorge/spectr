@@ -89,7 +89,7 @@ func runInteractiveInit(c *InitCmd) error {
 	}
 
 	// Check if there were errors during execution
-	wizardModel, ok := finalModel.(initialize.WizardModel)
+	wizardModel, ok := finalModel.(*initialize.WizardModel)
 	if !ok {
 		return &specterrs.WizardModelCastError{}
 	}

@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -305,11 +306,7 @@ func TestWriteFile(t *testing.T) {
 				)
 			}
 
-			if string(
-				readContent,
-			) != string(
-				content,
-			) {
+			if !bytes.Equal(readContent, content) {
 				t.Errorf(
 					"expected content %q, got %q",
 					content,
@@ -430,7 +427,7 @@ func TestFileExists(t *testing.T) {
 			err := os.WriteFile(
 				testFile,
 				[]byte("test"),
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -457,7 +454,7 @@ func TestFileExists(t *testing.T) {
 			)
 
 			// Create directory
-			err := os.Mkdir(testDir, 0755)
+			err := os.Mkdir(testDir, 0o755)
 			if err != nil {
 				t.Fatalf(
 					"failed to create test directory: %v",
@@ -517,7 +514,7 @@ func TestIsSpectrInitialized(t *testing.T) {
 			)
 
 			// Create spectr directory and project.md
-			err := os.Mkdir(spectrDir, 0755)
+			err := os.Mkdir(spectrDir, 0o755)
 			if err != nil {
 				t.Fatalf(
 					"failed to create spectr directory: %v",
@@ -528,7 +525,7 @@ func TestIsSpectrInitialized(t *testing.T) {
 			err = os.WriteFile(
 				projectFile,
 				[]byte("# Project"),
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -568,7 +565,7 @@ func TestIsSpectrInitialized(t *testing.T) {
 			)
 
 			// Create spectr directory but not project.md
-			err := os.Mkdir(spectrDir, 0755)
+			err := os.Mkdir(spectrDir, 0o755)
 			if err != nil {
 				t.Fatalf(
 					"failed to create spectr directory: %v",
@@ -613,7 +610,7 @@ func TestBackupFile(t *testing.T) {
 			err := os.WriteFile(
 				originalFile,
 				content,
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -681,11 +678,7 @@ func TestBackupFile(t *testing.T) {
 				)
 			}
 
-			if string(
-				backupContent,
-			) != string(
-				content,
-			) {
+			if !bytes.Equal(backupContent, content) {
 				t.Errorf(
 					"backup content %q does not match original %q",
 					backupContent,
@@ -750,7 +743,7 @@ func TestBackupFile(t *testing.T) {
 			err := os.WriteFile(
 				originalFile,
 				content,
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(

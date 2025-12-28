@@ -92,8 +92,8 @@ type TemplateContext struct {
 }
 
 // DefaultTemplateContext returns a TemplateContext with default values.
-func DefaultTemplateContext() TemplateContext {
-	return TemplateContext{
+func DefaultTemplateContext() *TemplateContext {
+	return &TemplateContext{
 		BaseDir:     "spectr",
 		SpecsDir:    "spectr/specs",
 		ChangesDir:  "spectr/changes",
@@ -164,17 +164,17 @@ type Provider interface {
 type TemplateRenderer interface {
 	// RenderAgents renders the AGENTS.md template content.
 	RenderAgents(
-		ctx TemplateContext,
+		ctx *TemplateContext,
 	) (string, error)
 	// RenderInstructionPointer renders a short pointer template that directs
 	// AI assistants to read spectr/AGENTS.md for full instructions.
 	RenderInstructionPointer(
-		ctx TemplateContext,
+		ctx *TemplateContext,
 	) (string, error)
 	// RenderSlashCommand renders a slash command template (proposal or apply).
 	RenderSlashCommand(
 		command string,
-		ctx TemplateContext,
+		ctx *TemplateContext,
 	) (string, error)
 }
 

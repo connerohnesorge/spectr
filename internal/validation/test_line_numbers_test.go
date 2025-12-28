@@ -37,7 +37,7 @@ The system provides user authentication.
 	specsDir := filepath.Join(changeDir, "specs")
 
 	// Create directories
-	if err := os.MkdirAll(specsDir, 0755); err != nil {
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create specs directory: %v",
 			err,
@@ -48,14 +48,14 @@ The system provides user authentication.
 	for path, content := range specs {
 		fullPath := filepath.Join(specsDir, path)
 		dir := filepath.Dir(fullPath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf(
 				"Failed to create directory %s: %v",
 				dir,
 				err,
 			)
 		}
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 			t.Fatalf(
 				"Failed to write file %s: %v",
 				fullPath,

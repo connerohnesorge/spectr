@@ -25,7 +25,7 @@ The system SHALL support new functionality.
 - **THEN** feature responds
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -88,7 +88,7 @@ The system SHALL have original behavior.
 - **THEN** original result
 `
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -105,7 +105,7 @@ The system SHALL have updated behavior.
 - **THEN** updated result
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -166,7 +166,7 @@ Should be removed.
 - **THEN** result
 `
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -179,7 +179,7 @@ Should be removed.
 **Reason**: No longer needed
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -227,7 +227,7 @@ Content here.
 - **THEN** result
 `
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -240,7 +240,7 @@ Content here.
 - TO: ` + "`" + `### Requirement: New Name` + "`" + `
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -315,7 +315,7 @@ Will be renamed.
 - **THEN** result
 `
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -351,7 +351,7 @@ Updated content.
 - TO: ` + "`" + `### Requirement: Renamed Feature` + "`" + `
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -456,7 +456,7 @@ Content C.
 - **THEN** result
 `
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -473,7 +473,7 @@ Updated content B.
 - **THEN** updated result
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -533,7 +533,7 @@ Content.
 - **THEN** result
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -569,7 +569,7 @@ func TestMergeSpec_ErrorOnNoDeltas(t *testing.T) {
 Just a regular spec.
 `
 	deltaPath := filepath.Join(tmpDir, "delta.md")
-	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0644); err != nil {
+	if err := os.WriteFile(deltaPath, []byte(deltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

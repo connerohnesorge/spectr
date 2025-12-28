@@ -42,7 +42,7 @@ The system SHALL provide user authentication functionality.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -99,7 +99,7 @@ This is just some content without proper sections.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -152,7 +152,7 @@ The system SHALL provide user authentication functionality.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -249,7 +249,7 @@ func setupValidChangeDirectory(
 		"specs",
 		"auth",
 	)
-	err := os.MkdirAll(specsDir, 0755)
+	err := os.MkdirAll(specsDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create test directories: %v",
@@ -275,7 +275,7 @@ The system SHALL require two-factor authentication for all users.
 	err = os.WriteFile(
 		specPath,
 		[]byte(deltaContent),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -301,7 +301,7 @@ func TestValidator_ValidateChange_InvalidChange(
 		"specs",
 		"auth",
 	)
-	err := os.MkdirAll(specsDir, 0755)
+	err := os.MkdirAll(specsDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create test directories: %v",
@@ -315,7 +315,7 @@ func TestValidator_ValidateChange_InvalidChange(
 	err = os.WriteFile(
 		specPath,
 		[]byte(deltaContent),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -528,7 +528,7 @@ func TestValidator_IntegrationWithMultipleCapabilities(
 		"specs",
 		"auth",
 	)
-	err := os.MkdirAll(authDir, 0755)
+	err := os.MkdirAll(authDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create auth directory: %v",
@@ -549,7 +549,7 @@ The system SHALL support OAuth 2.0 authentication.
 	err = os.WriteFile(
 		filepath.Join(authDir, "spec.md"),
 		[]byte(authContent),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -564,7 +564,7 @@ The system SHALL support OAuth 2.0 authentication.
 		"specs",
 		"notifications",
 	)
-	err = os.MkdirAll(notifDir, 0755)
+	err = os.MkdirAll(notifDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create notifications directory: %v",
@@ -585,7 +585,7 @@ The system SHALL send email notifications for authentication events.
 	err = os.WriteFile(
 		filepath.Join(notifDir, "spec.md"),
 		[]byte(notifContent),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -599,7 +599,7 @@ The system SHALL send email notifications for authentication events.
 		specsRoot,
 		"notifications",
 	)
-	err = os.MkdirAll(notifBaseDir, 0755)
+	err = os.MkdirAll(notifBaseDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create notifications base directory: %v",
@@ -620,7 +620,7 @@ The system SHALL send email notifications.
 	err = os.WriteFile(
 		filepath.Join(notifBaseDir, "spec.md"),
 		[]byte(notifBaseContent),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(

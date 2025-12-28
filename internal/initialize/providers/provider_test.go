@@ -26,20 +26,20 @@ func newMockRenderer() *mockTemplateRenderer {
 }
 
 func (m *mockTemplateRenderer) RenderAgents(
-	_ TemplateContext,
+	_ *TemplateContext,
 ) (string, error) {
 	return m.agentsContent, nil
 }
 
 func (m *mockTemplateRenderer) RenderInstructionPointer(
-	_ TemplateContext,
+	_ *TemplateContext,
 ) (string, error) {
 	return m.instructionPtrContent, nil
 }
 
 func (m *mockTemplateRenderer) RenderSlashCommand(
 	command string,
-	_ TemplateContext,
+	_ *TemplateContext,
 ) (string, error) {
 	return m.slashContent[command], nil
 }
@@ -213,7 +213,9 @@ func TestBaseProviderConfigure(t *testing.T) {
 	for _, cmd := range commands {
 		cmdPath := filepath.Join(
 			tmpDir,
-			".claude/commands/spectr",
+			".claude",
+			"commands",
+			"spectr",
 			cmd+".md",
 		)
 		if !FileExists(cmdPath) {
@@ -333,7 +335,9 @@ func TestGeminiProviderConfigure(t *testing.T) {
 	for _, cmd := range commands {
 		cmdPath := filepath.Join(
 			tmpDir,
-			".gemini/commands/spectr",
+			".gemini",
+			"commands",
+			"spectr",
 			cmd+".toml",
 		)
 		if !FileExists(cmdPath) {
@@ -480,7 +484,7 @@ func TestExpandPath(t *testing.T) {
 			input: "~/.config/test",
 			expected: filepath.Join(
 				homeDir,
-				".config/test",
+				".config", "test",
 			),
 		},
 		{

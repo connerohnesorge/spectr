@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	testDirPerm  = 0755
-	testFilePerm = 0644
+	testDirPerm  = 0o755
+	testFilePerm = 0o644
 )
 
 // TestDetermineItemType_ChangeOnly tests when item exists only as a change

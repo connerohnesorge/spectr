@@ -49,13 +49,13 @@ type createPRInput struct {
 //
 //nolint:revive // argument-limit - kept for API compatibility
 func createPR(
-	platform git.PlatformInfo,
+	platform *git.PlatformInfo,
 	branchName, baseBranch, title, body string,
 	draft bool,
 	worktreePath string,
 ) (prURL, manualURL string, err error) {
-	input := createPRInput{
-		platform:     platform,
+	input := &createPRInput{
+		platform:     *platform,
 		branchName:   branchName,
 		baseBranch:   baseBranch,
 		title:        title,
@@ -69,7 +69,7 @@ func createPR(
 
 // doCreatePR is the internal implementation of createPR.
 func doCreatePR(
-	input createPRInput,
+	input *createPRInput,
 ) (prURL, manualURL string, err error) {
 	args := prCreateArgs{
 		branchName:   input.branchName,
@@ -81,8 +81,8 @@ func doCreatePR(
 	}
 
 	result, err := createPRForPlatform(
-		input.platform,
-		args,
+		&input.platform,
+		&args,
 	)
 	if err != nil {
 		return "", "", err
@@ -94,8 +94,8 @@ func doCreatePR(
 // createPRForPlatform dispatches to the platform-specific PR creator.
 // Returns an error for unknown or unsupported platforms.
 func createPRForPlatform(
-	platform git.PlatformInfo,
-	args prCreateArgs,
+	platform *git.PlatformInfo,
+	args *prCreateArgs,
 ) (*prResult, error) {
 	switch platform.Platform {
 	case git.PlatformGitHub:
@@ -125,7 +125,7 @@ func createPRForPlatform(
 // createGitHubPR creates a GitHub pull request using the gh CLI.
 // It writes the PR body to a temp file and uses --body-file.
 func createGitHubPR(
-	args prCreateArgs,
+	args *prCreateArgs,
 ) (*prResult, error) {
 	fmt.Println("Creating GitHub pull request...")
 
@@ -166,7 +166,7 @@ func createGitHubPR(
 // createGitLabMR creates a GitLab merge request using the glab CLI.
 // GitLab uses --description instead of --body-file.
 func createGitLabMR(
-	args prCreateArgs,
+	args *prCreateArgs,
 ) (*prResult, error) {
 	fmt.Println(
 		"Creating GitLab merge request...",
@@ -204,7 +204,7 @@ func createGitLabMR(
 // createGiteaPR creates a Gitea pull request using the tea CLI.
 // Gitea uses --description and --base for the target branch.
 func createGiteaPR(
-	args prCreateArgs,
+	args *prCreateArgs,
 ) (*prResult, error) {
 	fmt.Println("Creating Gitea pull request...")
 
@@ -236,8 +236,8 @@ func createGiteaPR(
 // createBitbucketPR handles Bitbucket which has no standard CLI.
 // It returns a manual URL for the user to create the PR.
 func createBitbucketPR(
-	platform git.PlatformInfo,
-	args prCreateArgs,
+	platform *git.PlatformInfo,
+	args *prCreateArgs,
 ) (*prResult, error) {
 	manualURL := fmt.Sprintf(
 		"%s/pull-requests/new?source=%s&dest=%s",

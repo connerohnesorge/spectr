@@ -4,6 +4,8 @@ import (
 	"testing"
 )
 
+const testValidation = "validation"
+
 func TestParseSpec(t *testing.T) {
 	content := []byte(`# Title
 
@@ -298,7 +300,7 @@ For more info: [[another-spec|Display Text#anchor-name]].
 	// Test first wikilink (simple)
 	if len(wikilinks) > 0 {
 		wl := wikilinks[0]
-		if wl.Target != "validation" {
+		if wl.Target != testValidation {
 			t.Errorf(
 				"Expected target 'validation', got '%s'",
 				wl.Target,

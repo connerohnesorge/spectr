@@ -177,7 +177,7 @@ func init() {
 
 // RenderCommitMessage renders the appropriate commit message based on the mode.
 func RenderCommitMessage(
-	data CommitTemplateData,
+	data *CommitTemplateData,
 ) (string, error) {
 	var buf bytes.Buffer
 	var err error
@@ -214,7 +214,7 @@ func RenderCommitMessage(
 
 // RenderPRBody renders the appropriate PR body based on the mode.
 func RenderPRBody(
-	data PRTemplateData,
+	data *PRTemplateData,
 ) (string, error) {
 	var buf bytes.Buffer
 	var err error

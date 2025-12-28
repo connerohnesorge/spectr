@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+const parserTestValidation = "validation"
+
 func TestParse_EmptyDocument(t *testing.T) {
 	doc, errors := Parse([]byte{})
 
@@ -918,7 +920,7 @@ func TestParse_Link_Inline(t *testing.T) {
 			link := child.(*NodeLink)
 			if string(
 				link.URL(),
-			) == "https://example.com" {
+			) == testExampleURL {
 				foundLink = true
 
 				break
@@ -959,7 +961,7 @@ func TestParse_Link_WithTitle(t *testing.T) {
 			link := child.(*NodeLink)
 			if string(
 				link.URL(),
-			) == "https://example.com" {
+			) == testExampleURL {
 				// Title parsing may or may not be implemented
 				return
 			}
@@ -981,7 +983,7 @@ func TestParse_ReferenceLink_Full(t *testing.T) {
 					link := inline.(*NodeLink)
 					if string(
 						link.URL(),
-					) == "https://example.com" {
+					) == testExampleURL {
 						foundLink = true
 					}
 				}
@@ -1011,7 +1013,7 @@ func TestParse_ReferenceLink_Collapsed(
 					link := inline.(*NodeLink)
 					if string(
 						link.URL(),
-					) == "https://example.com" {
+					) == testExampleURL {
 						foundLink = true
 					}
 				}
@@ -1041,7 +1043,7 @@ func TestParse_ReferenceLink_Shortcut(
 					link := inline.(*NodeLink)
 					if string(
 						link.URL(),
-					) == "https://example.com" {
+					) == testExampleURL {
 						foundLink = true
 					}
 				}
@@ -1070,7 +1072,7 @@ func TestParse_ReferenceLink_CaseInsensitive(
 					link := inline.(*NodeLink)
 					if string(
 						link.URL(),
-					) == "https://example.com" {
+					) == testExampleURL {
 						foundLink = true
 					}
 				}
@@ -1421,7 +1423,7 @@ func TestParse_Wikilink_Simple(t *testing.T) {
 			wikilink := child.(*NodeWikilink)
 			if string(
 				wikilink.Target(),
-			) == "validation" {
+			) == parserTestValidation {
 				foundWikilink = true
 			}
 		}
@@ -1462,7 +1464,7 @@ func TestParse_Wikilink_WithDisplay(
 			wikilink := child.(*NodeWikilink)
 			if string(
 				wikilink.Target(),
-			) == "validation" &&
+			) == parserTestValidation &&
 				string(
 					wikilink.Display(),
 				) == "display text" {
@@ -1504,7 +1506,7 @@ func TestParse_Wikilink_WithAnchor(t *testing.T) {
 			wikilink := child.(*NodeWikilink)
 			if string(
 				wikilink.Target(),
-			) == "validation" &&
+			) == parserTestValidation &&
 				string(
 					wikilink.Anchor(),
 				) == "section" {
@@ -1546,7 +1548,7 @@ func TestParse_Wikilink_Full(t *testing.T) {
 			wikilink := child.(*NodeWikilink)
 			if string(
 				wikilink.Target(),
-			) == "validation" {
+			) == parserTestValidation {
 				foundWikilink = true
 			}
 		}

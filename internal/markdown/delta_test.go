@@ -323,7 +323,7 @@ Content of modified section.
 			continue
 		}
 
-		if len(result) == 0 {
+		if result == "" {
 			t.Error(
 				"expected non-empty content for ADDED section",
 			)
@@ -699,7 +699,7 @@ func TestGetDeltaSummary(t *testing.T) {
 
 	summary := GetDeltaSummary(delta)
 
-	if len(summary) == 0 {
+	if summary == "" {
 		t.Error("expected non-empty summary")
 	}
 
@@ -828,7 +828,7 @@ func TestIsDeltaSectionHeader(t *testing.T) {
 // Helper function to check if string contains substring
 func containsSubstring(s, substr string) bool {
 	return len(s) >= len(substr) &&
-		(s == substr || len(s) > 0 && containsSubstringHelper(s, substr))
+		(s == substr || s != "" && containsSubstringHelper(s, substr))
 }
 
 func containsSubstringHelper(

@@ -692,7 +692,7 @@ func (interactiveModel) Init() tea.Cmd {
 }
 
 // Update handles messages
-func (m interactiveModel) Update(
+func (m *interactiveModel) Update(
 	msg tea.Msg,
 ) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
@@ -702,7 +702,7 @@ func (m interactiveModel) Update(
 		// Handle search mode input
 		if m.searchMode {
 			var handled bool
-			m, cmd, handled = m.handleSearchModeInput(typedMsg)
+			cmd, handled = m.handleSearchModeInput(typedMsg)
 			if handled {
 				return m, cmd
 			}
@@ -715,7 +715,7 @@ func (m interactiveModel) Update(
 			return m, tea.Quit
 
 		case "enter":
-			m = m.handleEnter()
+			m.handleEnter()
 
 			return m, tea.Quit
 
@@ -725,7 +725,7 @@ func (m interactiveModel) Update(
 		case "t":
 			// Toggle filter type in unified mode
 			if m.itemType == itemTypeAll {
-				m = m.handleToggleFilter()
+				m.handleToggleFilter()
 
 				return m, nil
 			}
@@ -737,7 +737,7 @@ func (m interactiveModel) Update(
 			return m.handlePR()
 
 		case "/":
-			m = m.toggleSearchMode()
+			m.toggleSearchMode()
 
 			return m, nil
 
@@ -766,7 +766,7 @@ func (m interactiveModel) Update(
 		// Store terminal width for responsive column calculations
 		m.terminalWidth = typedMsg.Width
 		// Trigger table rebuild to apply new column widths
-		m = m.rebuildTableForWidth()
+		m.rebuildTableForWidth()
 
 		return m, nil
 	}
@@ -779,16 +779,16 @@ func (m interactiveModel) Update(
 
 // handleEnter handles the enter key press for copying selected ID
 // or selecting in selection mode
-func (m interactiveModel) handleEnter() interactiveModel {
+func (m *interactiveModel) handleEnter() {
 	cursor := m.table.Cursor()
 	if cursor < 0 ||
 		cursor >= len(m.table.Rows()) {
-		return m
+		return
 	}
 
 	row := m.table.Rows()[cursor]
 	if len(row) == 0 {
-		return m
+		return
 	}
 
 	// ID is in first column for all modes
@@ -796,12 +796,12 @@ func (m interactiveModel) handleEnter() interactiveModel {
 
 	// In selection mode, just select without copying to clipboard
 	if m.selectionMode {
-		return m
+		return
 	}
 
 	// In stdout mode, just set selectedID and return (no clipboard copy)
 	if m.stdoutMode {
-		return m
+		return
 	}
 
 	// Otherwise, copy to clipboard
@@ -810,12 +810,10 @@ func (m interactiveModel) handleEnter() interactiveModel {
 	if err != nil {
 		m.err = err
 	}
-
-	return m
 }
 
 // handleEdit handles the 'e' key press for opening file in editor
-func (m interactiveModel) handleEdit() (interactiveModel, tea.Cmd) {
+func (m *interactiveModel) handleEdit() (tea.Model, tea.Cmd) {
 	// Get the selected row
 	cursor := m.table.Cursor()
 	if cursor < 0 ||
@@ -887,7 +885,7 @@ func (m interactiveModel) handleEdit() (interactiveModel, tea.Cmd) {
 	c := exec.Command(
 		editor,
 		filePath,
-	) //nolint:gosec
+	) //nolint:gosec // G204: User controls EDITOR env var, intentional for opening editor
 
 	return m, tea.ExecProcess(
 		c,
@@ -899,7 +897,7 @@ func (m interactiveModel) handleEdit() (interactiveModel, tea.Cmd) {
 
 // handleToggleFilter toggles between showing all items,
 // only changes, and only specs
-func (m interactiveModel) handleToggleFilter() interactiveModel {
+func (m *interactiveModel) handleToggleFilter() {
 	// Cycle through filter states: all -> changes -> specs -> all
 	if m.filterType == nil {
 		// Currently showing all, switch to changes only
@@ -918,13 +916,11 @@ func (m interactiveModel) handleToggleFilter() interactiveModel {
 	}
 
 	// Rebuild the table with the new filter
-	m = rebuildUnifiedTable(m)
-
-	return m
+	rebuildUnifiedTable(m)
 }
 
 // handleArchive handles the 'a' key press for archiving a change
-func (m interactiveModel) handleArchive() (interactiveModel, tea.Cmd) {
+func (m *interactiveModel) handleArchive() (tea.Model, tea.Cmd) {
 	cursor := m.table.Cursor()
 	if cursor < 0 ||
 		cursor >= len(m.table.Rows()) {
@@ -963,7 +959,7 @@ func (m interactiveModel) handleArchive() (interactiveModel, tea.Cmd) {
 }
 
 // handlePR handles the 'P' key press for entering PR mode
-func (m interactiveModel) handlePR() (interactiveModel, tea.Cmd) {
+func (m *interactiveModel) handlePR() (tea.Model, tea.Cmd) {
 	// Only available in changes mode
 	if m.itemType != itemTypeChange {
 		return m, nil
@@ -990,8 +986,8 @@ func (m interactiveModel) handlePR() (interactiveModel, tea.Cmd) {
 // rebuildUnifiedTable rebuilds the table based on current filter
 // and terminal width (for responsive columns)
 func rebuildUnifiedTable(
-	m interactiveModel,
-) interactiveModel {
+	m *interactiveModel,
+) {
 	var items ItemList
 	if m.filterType == nil {
 		items = m.allItems
@@ -1044,16 +1040,14 @@ func rebuildUnifiedTable(
 		m.projectPath,
 	)
 	// Preserve showHelp state (no reset needed here)
-
-	return m
 }
 
 // applyFilter filters the table rows based on the search query.
 // Memory optimization: reuses pre-allocated filteredRows buffer to reduce
 // GC pressure during interactive search (which triggers on every keystroke).
-func (m interactiveModel) applyFilter() interactiveModel {
+func (m *interactiveModel) applyFilter() {
 	if len(m.allRows) == 0 {
-		return m
+		return
 	}
 
 	query := strings.ToLower(m.searchQuery)
@@ -1085,8 +1079,6 @@ func (m interactiveModel) applyFilter() interactiveModel {
 	} else {
 		m.table.SetCursor(0)
 	}
-
-	return m
 }
 
 // newTextInput creates a new text input for search
@@ -1122,10 +1114,10 @@ func rowMatchesQuery(
 }
 
 // handleSearchModeInput handles keyboard input when in search mode
-// Returns (model, cmd, handled) - handled is true if the input was processed
-func (m interactiveModel) handleSearchModeInput(
+// Returns (cmd, handled) - handled is true if the input was processed
+func (m *interactiveModel) handleSearchModeInput(
 	keyMsg tea.KeyMsg,
-) (interactiveModel, tea.Cmd, bool) {
+) (tea.Cmd, bool) {
 	var cmd tea.Cmd
 
 	//nolint:exhaustive // Only handling specific keys
@@ -1135,45 +1127,43 @@ func (m interactiveModel) handleSearchModeInput(
 		m.searchMode = false
 		m.searchQuery = ""
 		m.searchInput.SetValue("")
-		m = m.applyFilter()
+		m.applyFilter()
 
-		return m, nil, true
+		return nil, true
 	case tea.KeyEnter:
 		// Exit search mode but keep filter applied
 		m.searchMode = false
 
-		return m, nil, true
+		return nil, true
 	default:
 		// Update text input and filter
 		m.searchInput, cmd = m.searchInput.Update(
 			keyMsg,
 		)
 		m.searchQuery = m.searchInput.Value()
-		m = m.applyFilter()
+		m.applyFilter()
 
-		return m, cmd, true
+		return cmd, true
 	}
 }
 
 // toggleSearchMode toggles search mode on/off
-func (m interactiveModel) toggleSearchMode() interactiveModel {
+func (m *interactiveModel) toggleSearchMode() {
 	if m.searchMode {
 		m.searchMode = false
 		m.searchQuery = ""
 		m.searchInput.SetValue("")
-		m = m.applyFilter()
+		m.applyFilter()
 	} else {
 		m.searchMode = true
 		m.searchInput.Focus()
 	}
-
-	return m
 }
 
 // rebuildTableForWidth rebuilds the table with columns adjusted for the
 // current terminal width. This is called when the terminal is resized.
 // It preserves cursor position and search state during the rebuild.
-func (m interactiveModel) rebuildTableForWidth() interactiveModel {
+func (m *interactiveModel) rebuildTableForWidth() {
 	// Store current cursor position to restore after rebuild
 	currentCursor := m.table.Cursor()
 
@@ -1187,11 +1177,11 @@ func (m interactiveModel) rebuildTableForWidth() interactiveModel {
 	// Rebuild table based on item type
 	switch m.itemType {
 	case itemTypeAll:
-		m = rebuildUnifiedTable(m)
+		rebuildUnifiedTable(m)
 	case itemTypeChange:
-		m = m.rebuildChangesTable(width)
+		m.rebuildChangesTable(width)
 	case itemTypeSpec:
-		m = m.rebuildSpecsTable(width)
+		m.rebuildSpecsTable(width)
 	}
 
 	// Restore cursor position (bounded to row count)
@@ -1206,18 +1196,16 @@ func (m interactiveModel) rebuildTableForWidth() interactiveModel {
 
 	// Re-apply search filter if active
 	if m.searchQuery != "" {
-		m = m.applyFilter()
+		m.applyFilter()
 	}
-
-	return m
 }
 
 // rebuildChangesTable rebuilds the changes table with responsive columns
-func (m interactiveModel) rebuildChangesTable(
+func (m *interactiveModel) rebuildChangesTable(
 	width int,
-) interactiveModel {
+) {
 	if len(m.changesData) == 0 {
-		return m
+		return
 	}
 
 	columns := calculateChangesColumns(width)
@@ -1241,16 +1229,14 @@ func (m interactiveModel) rebuildChangesTable(
 
 	m.table = t
 	m.allRows = rows
-
-	return m
 }
 
 // rebuildSpecsTable rebuilds the specs table with responsive columns
-func (m interactiveModel) rebuildSpecsTable(
+func (m *interactiveModel) rebuildSpecsTable(
 	width int,
-) interactiveModel {
+) {
 	if len(m.specsData) == 0 {
-		return m
+		return
 	}
 
 	columns := calculateSpecsColumns(width)
@@ -1274,12 +1260,10 @@ func (m interactiveModel) rebuildSpecsTable(
 
 	m.table = t
 	m.allRows = rows
-
-	return m
 }
 
 // getEditFilePath returns the file path to edit based on item type
-func (m interactiveModel) getEditFilePath(
+func (m *interactiveModel) getEditFilePath(
 	itemID string,
 	itemType string,
 ) string {
@@ -1297,7 +1281,7 @@ func (m interactiveModel) getEditFilePath(
 }
 
 // View renders the model
-func (m interactiveModel) View() string {
+func (m *interactiveModel) View() string {
 	if m.quitting {
 		if m.archiveRequested &&
 			m.selectedID != "" {
@@ -1421,7 +1405,7 @@ func RunInteractiveChanges(
 
 	tui.ApplyTableStyles(&t)
 
-	m := interactiveModel{
+	m := &interactiveModel{
 		table:         t,
 		itemType:      itemTypeChange,
 		projectPath:   projectPath,
@@ -1449,7 +1433,7 @@ func RunInteractiveChanges(
 	}
 
 	// Check if there was an error during execution
-	if fm, ok := finalModel.(interactiveModel); ok {
+	if fm, ok := finalModel.(*interactiveModel); ok {
 		if fm.err != nil {
 			// Don't return error, just warn - clipboard failure shouldn't
 			// stop the command
@@ -1511,7 +1495,7 @@ func RunInteractiveArchive(
 
 	tui.ApplyTableStyles(&t)
 
-	m := interactiveModel{
+	m := &interactiveModel{
 		table:         t,
 		itemType:      itemTypeChange,
 		projectPath:   projectPath,
@@ -1538,7 +1522,7 @@ func RunInteractiveArchive(
 	}
 
 	// Check if there was an error during execution
-	if fm, ok := finalModel.(interactiveModel); ok {
+	if fm, ok := finalModel.(*interactiveModel); ok {
 		if fm.err != nil {
 			// Don't return error, just warn
 			fmt.Fprintf(
@@ -1594,7 +1578,7 @@ func RunInteractiveSpecs(
 
 	tui.ApplyTableStyles(&t)
 
-	m := interactiveModel{
+	m := &interactiveModel{
 		table:         t,
 		itemType:      itemTypeSpec,
 		projectPath:   projectPath,
@@ -1622,7 +1606,7 @@ func RunInteractiveSpecs(
 	}
 
 	// Check if there was an error during execution
-	fm, ok := finalModel.(interactiveModel)
+	fm, ok := finalModel.(*interactiveModel)
 	if ok && fm.err != nil {
 		// Don't return error, just warn - clipboard failure
 		// shouldn't stop the command.
@@ -1672,7 +1656,7 @@ func RunInteractiveAll(
 
 	tui.ApplyTableStyles(&t)
 
-	m := interactiveModel{
+	m := &interactiveModel{
 		table:         t,
 		itemType:      itemTypeAll,
 		projectPath:   projectPath,
@@ -1701,7 +1685,7 @@ func RunInteractiveAll(
 	}
 
 	// Check if there was an error during execution
-	if fm, ok := finalModel.(interactiveModel); ok &&
+	if fm, ok := finalModel.(*interactiveModel); ok &&
 		fm.err != nil {
 		// Don't return error, just warn - clipboard failure shouldn't
 		// stop the command

@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+const errorTypeName = "error"
+
 func TestCLIStructure(t *testing.T) {
 	// Check that CLI struct has Init field
 	cli := &CLI{}
@@ -87,7 +89,7 @@ func TestInitCmdHasRunMethod(t *testing.T) {
 	}
 
 	if runType.NumOut() > 0 &&
-		runType.Out(0).Name() != "error" {
+		runType.Out(0).Name() != errorTypeName {
 		t.Errorf(
 			"Run method should return error, got %s",
 			runType.Out(0).Name(),

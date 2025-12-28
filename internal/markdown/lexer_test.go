@@ -1,8 +1,11 @@
 package markdown
 
 import (
+	"bytes"
 	"testing"
 )
+
+const testHello = "hello"
 
 // TestLexer_EmptyInput verifies that empty input returns only EOF.
 func TestLexer_EmptyInput(t *testing.T) {
@@ -174,21 +177,21 @@ func TestLexer_Text(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"simple word", "hello", "hello"},
+		{"simple word", testHello, testHello},
 		{
 			"word stops at delimiter",
-			"hello*",
-			"hello",
+			testHello + "*",
+			testHello,
 		},
 		{
 			"word stops at space",
-			"hello world",
-			"hello",
+			testHello + " world",
+			testHello,
 		},
 		{
 			"word stops at newline",
-			"hello\n",
-			"hello",
+			testHello + "\n",
+			testHello,
 		},
 	}
 
@@ -1031,11 +1034,11 @@ func TestLexer_InvalidUTF8MidText(t *testing.T) {
 			tok.Type,
 		)
 	}
-	if string(tok.Source) != "hello" {
+	if string(tok.Source) != testHello {
 		t.Errorf(
 			"token 0: Source=%q, want %q",
 			tok.Source,
-			"hello",
+			testHello,
 		)
 	}
 
@@ -1864,11 +1867,7 @@ func TestLexer_PeekDoesNotAdvance(t *testing.T) {
 			tok2.End,
 		)
 	}
-	if string(
-		tok1.Source,
-	) != string(
-		tok2.Source,
-	) {
+	if !bytes.Equal(tok1.Source, tok2.Source) {
 		t.Errorf(
 			"Peek returned different Source: %q vs %q",
 			tok1.Source,

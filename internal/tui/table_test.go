@@ -26,7 +26,7 @@ func TestNewTablePicker(t *testing.T) {
 		ProjectPath: "/test/path",
 	}
 
-	picker := NewTablePicker(config)
+	picker := NewTablePicker(&config)
 
 	if picker == nil {
 		t.Fatal("NewTablePicker returned nil")
@@ -62,7 +62,7 @@ func TestTablePicker_WithAction(t *testing.T) {
 	}
 
 	called := false
-	picker := NewTablePicker(config).
+	picker := NewTablePicker(&config).
 		WithAction("e", "edit", func(_ table.Row) (tea.Cmd, *ActionResult) {
 			called = true
 
@@ -100,7 +100,7 @@ func TestTablePicker_generateHelpText(
 		ProjectPath: "/test",
 	}
 
-	picker := NewTablePicker(config).
+	picker := NewTablePicker(&config).
 		WithAction("e", "edit", func(_ table.Row) (tea.Cmd, *ActionResult) { return nil, nil }).
 		WithAction("a", "archive", func(_ table.Row) (tea.Cmd, *ActionResult) { return nil, nil })
 
@@ -153,7 +153,7 @@ func TestTablePicker_SetRows(t *testing.T) {
 		Rows:    initialRows,
 	}
 
-	picker := NewTablePicker(config)
+	picker := NewTablePicker(&config)
 
 	// Verify initial state
 	if !strings.Contains(
@@ -215,7 +215,7 @@ func TestTablePicker_ActionResult(t *testing.T) {
 		},
 	}
 
-	picker := NewTablePicker(config)
+	picker := NewTablePicker(&config)
 
 	// The first call returns the string representation
 	model, _ := picker.Update(
@@ -226,7 +226,7 @@ func TestTablePicker_ActionResult(t *testing.T) {
 	// Check if result was set (this tests the action was called but won't work
 	// because tea.KeyMsg for enter is special)
 	// Let's test with a regular key
-	picker2 := NewTablePicker(TableConfig{
+	picker2 := NewTablePicker(&TableConfig{
 		Columns: columns,
 		Rows:    rows,
 		Actions: map[string]Action{
@@ -278,7 +278,7 @@ func TestTablePicker_View(t *testing.T) {
 		ProjectPath: "/test",
 	}
 
-	picker := NewTablePicker(config)
+	picker := NewTablePicker(&config)
 	view := picker.View()
 
 	// View should contain table and minimal footer (showHelp=false by default)
@@ -350,7 +350,7 @@ func TestTablePicker_QuitView(t *testing.T) {
 			rows := []table.Row{{"1"}}
 
 			picker := NewTablePicker(
-				TableConfig{
+				&TableConfig{
 					Columns: columns,
 					Rows:    rows,
 				},

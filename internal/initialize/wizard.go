@@ -164,12 +164,12 @@ func NewWizardModel(
 }
 
 // Init is the Bubbletea Init function
-func (WizardModel) Init() tea.Cmd {
+func (*WizardModel) Init() tea.Cmd {
 	return nil
 }
 
 // Update is the Bubbletea Update function
-func (m WizardModel) Update(
+func (m *WizardModel) Update(
 	msg tea.Msg,
 ) (tea.Model, tea.Cmd) {
 	switch typedMsg := msg.(type) {
@@ -200,7 +200,7 @@ func (m WizardModel) Update(
 }
 
 // View is the Bubbletea View function
-func (m WizardModel) View() string {
+func (m *WizardModel) View() string {
 	switch m.step {
 	case StepIntro:
 		return m.renderIntro()
@@ -217,13 +217,13 @@ func (m WizardModel) View() string {
 	return ""
 }
 
-func (m WizardModel) handleIntroKeys(
+func (m *WizardModel) handleIntroKeys(
 	msg tea.KeyMsg,
 ) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "q", "ctrl+c":
+	case keyQuit, keyCtrlC:
 		return m, tea.Quit
-	case "enter":
+	case keyEnter:
 		m.step = StepSelect
 
 		return m, nil
@@ -232,7 +232,7 @@ func (m WizardModel) handleIntroKeys(
 	return m, nil
 }
 
-func (m WizardModel) handleSelectKeys(
+func (m *WizardModel) handleSelectKeys(
 	msg tea.KeyMsg,
 ) (tea.Model, tea.Cmd) {
 	// Handle search mode input
@@ -242,7 +242,7 @@ func (m WizardModel) handleSelectKeys(
 
 	// Normal mode key handling
 	switch msg.String() {
-	case "q", "ctrl+c":
+	case keyQuit, keyCtrlC:
 		return m, tea.Quit
 	case "up", "k":
 		if m.cursor > 0 {
@@ -258,7 +258,7 @@ func (m WizardModel) handleSelectKeys(
 			provider := m.filteredProviders[m.cursor]
 			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
 		}
-	case "enter":
+	case keyEnter:
 		// Confirm and move to review
 		m.step = StepReview
 
@@ -285,7 +285,7 @@ func (m WizardModel) handleSelectKeys(
 }
 
 // handleSearchModeInput handles keyboard input when in search mode
-func (m WizardModel) handleSearchModeInput(
+func (m *WizardModel) handleSearchModeInput(
 	msg tea.KeyMsg,
 ) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
@@ -368,11 +368,11 @@ func (m *WizardModel) applyProviderFilter() {
 	}
 }
 
-func (m WizardModel) handleReviewKeys(
+func (m *WizardModel) handleReviewKeys(
 	msg tea.KeyMsg,
 ) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "q", "ctrl+c":
+	case keyQuit, keyCtrlC:
 		return m, tea.Quit
 	case "backspace", "esc":
 		// Go back to selection
@@ -399,7 +399,7 @@ func (m WizardModel) handleReviewKeys(
 	return m, nil
 }
 
-func (m WizardModel) handleCompleteKeys(
+func (m *WizardModel) handleCompleteKeys(
 	msg tea.KeyMsg,
 ) (tea.Model, tea.Cmd) {
 	switch msg.String() {
@@ -421,7 +421,7 @@ func (m WizardModel) handleCompleteKeys(
 	return m, nil
 }
 
-func (m WizardModel) renderIntro() string {
+func (m *WizardModel) renderIntro() string {
 	var b strings.Builder
 
 	// ASCII art banner
@@ -478,7 +478,7 @@ func (m WizardModel) renderIntro() string {
 	return b.String()
 }
 
-func (m WizardModel) renderSelect() string {
+func (m *WizardModel) renderSelect() string {
 	var b strings.Builder
 
 	b.WriteString(
@@ -545,7 +545,7 @@ func (m WizardModel) renderSelect() string {
 	return b.String()
 }
 
-func (m WizardModel) renderProviderGroup(
+func (m *WizardModel) renderProviderGroup(
 	providersList []providers.Provider,
 	offset int,
 ) string {
@@ -603,7 +603,7 @@ func (m WizardModel) renderProviderGroup(
 	return b.String()
 }
 
-func (m WizardModel) renderReview() string {
+func (m *WizardModel) renderReview() string {
 	var b strings.Builder
 
 	b.WriteString(
@@ -655,7 +655,7 @@ func (m WizardModel) renderReview() string {
 }
 
 // renderSelectedProviders displays the selected providers or warning if none
-func (m WizardModel) renderSelectedProviders(
+func (m *WizardModel) renderSelectedProviders(
 	b *strings.Builder,
 	count int,
 ) {
@@ -695,7 +695,7 @@ func (m WizardModel) renderSelectedProviders(
 }
 
 // renderCreationPlan displays what files will be created
-func (m WizardModel) renderCreationPlan(
+func (m *WizardModel) renderCreationPlan(
 	b *strings.Builder,
 	count int,
 ) {
@@ -743,7 +743,7 @@ func (m WizardModel) renderCreationPlan(
 	}
 }
 
-func (WizardModel) renderExecute() string {
+func (*WizardModel) renderExecute() string {
 	var b strings.Builder
 
 	b.WriteString(
@@ -767,7 +767,7 @@ func (WizardModel) renderExecute() string {
 	return b.String()
 }
 
-func (m WizardModel) renderComplete() string {
+func (m *WizardModel) renderComplete() string {
 	var b strings.Builder
 
 	if m.err != nil {
@@ -799,7 +799,7 @@ func (m WizardModel) renderComplete() string {
 }
 
 // renderError displays initialization errors
-func (m WizardModel) renderError(
+func (m *WizardModel) renderError(
 	b *strings.Builder,
 ) {
 	b.WriteString(
@@ -832,7 +832,7 @@ func (m WizardModel) renderError(
 }
 
 // renderExecutionResults displays created/updated files and warnings
-func (m WizardModel) renderExecutionResults(
+func (m *WizardModel) renderExecutionResults(
 	b *strings.Builder,
 ) {
 	if len(m.executionResult.CreatedFiles) > 0 {
@@ -881,7 +881,7 @@ func (m WizardModel) renderExecutionResults(
 	}
 }
 
-func (m WizardModel) getSelectedProviderIDs() []string {
+func (m *WizardModel) getSelectedProviderIDs() []string {
 	var selected []string
 	for id, isSelected := range m.selectedProviders {
 		if isSelected {
@@ -927,7 +927,7 @@ func executeInit(
 }
 
 // GetError returns the error from the wizard (if any)
-func (m WizardModel) GetError() error {
+func (m *WizardModel) GetError() error {
 	return m.err
 }
 

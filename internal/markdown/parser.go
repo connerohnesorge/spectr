@@ -636,9 +636,6 @@ func (p *parser) tryParseCodeFence() Node {
 			contentParts = append(
 				contentParts,
 				lineContent,
-			)
-			contentParts = append(
-				contentParts,
 				[]byte{'\n'},
 			)
 		}
@@ -1610,7 +1607,7 @@ func (ip *inlineParser) isFlankingDelimiter(
 func (ip *inlineParser) applyUnderscoreRestriction(
 	pos int,
 	canOpen, canClose bool,
-) (bool, bool) {
+) (newCanOpen, newCanClose bool) {
 	// Get character before
 	charBefore := ' '
 	if pos > 0 {

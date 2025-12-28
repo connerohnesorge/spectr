@@ -10,6 +10,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+const (
+	testProviderClaude      = "claude"
+	testProviderNonexistent = "nonexistentprovider123"
+)
+
 func TestNewWizardModel(t *testing.T) {
 	// Test creating a new wizard model
 	cmd := &InitCmd{Path: "/tmp/test-project"}
@@ -262,7 +267,7 @@ func TestNewWizardModelWithConfiguredProviders(
 	err := os.WriteFile(
 		claudeFile,
 		[]byte("# Claude Configuration\n"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -278,7 +283,7 @@ func TestNewWizardModelWithConfiguredProviders(
 		"commands",
 		"spectr",
 	)
-	err = os.MkdirAll(commandsDir, 0755)
+	err = os.MkdirAll(commandsDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create commands directory: %v",
@@ -298,7 +303,7 @@ func TestNewWizardModelWithConfiguredProviders(
 		err = os.WriteFile(
 			filePath,
 			[]byte("# Command\n"),
-			0644,
+			0o644,
 		)
 		if err != nil {
 			t.Fatalf(
@@ -381,7 +386,7 @@ func TestNewWizardModelWithCIWorkflowConfigured(
 		".github",
 		"workflows",
 	)
-	err := os.MkdirAll(workflowDir, 0755)
+	err := os.MkdirAll(workflowDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create workflows directory: %v",
@@ -396,7 +401,7 @@ func TestNewWizardModelWithCIWorkflowConfigured(
 	err = os.WriteFile(
 		workflowFile,
 		[]byte("name: Spectr Validation\n"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -692,7 +697,7 @@ func TestHandleReviewKeysToggleCIWorkflow(
 	// Simulate pressing space key
 	keyMsg := tea.KeyMsg{Type: tea.KeySpace}
 	newModel, _ := wizard.Update(keyMsg)
-	updatedWizard, ok := newModel.(WizardModel)
+	updatedWizard, ok := newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",
@@ -709,7 +714,7 @@ func TestHandleReviewKeysToggleCIWorkflow(
 	// Toggle again
 	keyMsg = tea.KeyMsg{Type: tea.KeySpace}
 	newModel, _ = updatedWizard.Update(keyMsg)
-	updatedWizard, ok = newModel.(WizardModel)
+	updatedWizard, ok = newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",
@@ -815,7 +820,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	}
 
 	// Test filtering with "claude" - should match Claude Code
-	wizard.searchQuery = "claude"
+	wizard.searchQuery = testProviderClaude
 	wizard.applyProviderFilter()
 
 	if len(wizard.filteredProviders) == 0 {
@@ -828,7 +833,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	for _, provider := range wizard.filteredProviders {
 		if !strings.Contains(
 			strings.ToLower(provider.Name()),
-			"claude",
+			testProviderClaude,
 		) {
 			t.Errorf(
 				"Provider %s should not match 'claude'",
@@ -852,7 +857,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	}
 
 	// Test filtering with non-matching query
-	wizard.searchQuery = "nonexistentprovider123"
+	wizard.searchQuery = testProviderNonexistent
 	wizard.applyProviderFilter()
 
 	if len(wizard.filteredProviders) != 0 {
@@ -876,7 +881,7 @@ func TestCursorAdjustmentOnFilter(t *testing.T) {
 	wizard.cursor = len(wizard.allProviders) - 1
 
 	// Apply a filter that reduces the list significantly
-	wizard.searchQuery = "claude"
+	wizard.searchQuery = testProviderClaude
 	wizard.applyProviderFilter()
 
 	// Cursor should be adjusted to be within bounds
@@ -891,7 +896,7 @@ func TestCursorAdjustmentOnFilter(t *testing.T) {
 	}
 
 	// Test with no matches - cursor should be 0
-	wizard.searchQuery = "nonexistentprovider123"
+	wizard.searchQuery = testProviderNonexistent
 	wizard.applyProviderFilter()
 
 	if wizard.cursor != 0 {
@@ -924,7 +929,7 @@ func TestSelectionPreservedDuringFiltering(
 	)
 
 	// Apply a filter that shows only some providers
-	wizard.searchQuery = "claude"
+	wizard.searchQuery = testProviderClaude
 	wizard.applyProviderFilter()
 
 	// Verify selection count is preserved (filtering shouldn't affect selections)
@@ -976,7 +981,7 @@ func TestSearchModeActivation(t *testing.T) {
 		Runes: []rune{'/'},
 	}
 	newModel, _ := wizard.Update(keyMsg)
-	updatedWizard, ok := newModel.(WizardModel)
+	updatedWizard, ok := newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",
@@ -1003,14 +1008,14 @@ func TestSearchModeExitWithEscape(t *testing.T) {
 
 	wizard.step = StepSelect
 	wizard.searchMode = true
-	wizard.searchQuery = "claude"
-	wizard.searchInput.SetValue("claude")
+	wizard.searchQuery = testProviderClaude
+	wizard.searchInput.SetValue(testProviderClaude)
 	wizard.applyProviderFilter()
 
 	// Simulate pressing Escape key
 	keyMsg := tea.KeyMsg{Type: tea.KeyEsc}
 	newModel, _ := wizard.Update(keyMsg)
-	updatedWizard, ok := newModel.(WizardModel)
+	updatedWizard, ok := newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",
@@ -1118,7 +1123,7 @@ func TestRenderSelectShowsNoMatchMessage(
 
 	wizard.step = StepSelect
 	wizard.searchMode = true
-	wizard.searchQuery = "nonexistentprovider123"
+	wizard.searchQuery = testProviderNonexistent
 	wizard.applyProviderFilter()
 
 	output := wizard.renderSelect()
@@ -1156,7 +1161,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 	// Simulate pressing space key while in search mode
 	keyMsg := tea.KeyMsg{Type: tea.KeySpace}
 	newModel, _ := wizard.Update(keyMsg)
-	updatedWizard, ok := newModel.(WizardModel)
+	updatedWizard, ok := newModel.(*WizardModel)
 	if !ok {
 		t.Fatal(
 			"Failed to cast model to WizardModel",

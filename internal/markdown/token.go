@@ -63,6 +63,8 @@ const (
 	TokenX
 )
 
+const unknownTokenType = "Unknown"
+
 // String returns a human-readable name for the token type.
 // This is useful for debugging and error messages.
 //
@@ -114,7 +116,7 @@ func (t TokenType) String() string {
 	case TokenX:
 		return "X"
 	default:
-		return "Unknown"
+		return unknownTokenType
 	}
 }
 

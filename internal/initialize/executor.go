@@ -316,8 +316,8 @@ func (e *InitExecutor) configureProviders(
 		return nil // No providers to configure
 	}
 
-	// Create config from spectrDir
-	cfg := &domain.Config{SpectrDir: spectrDir}
+	// Create config with relative path (projectFs is already rooted at project directory)
+	cfg := &domain.Config{SpectrDir: "spectr"}
 	if err := cfg.Validate(); err != nil {
 		return fmt.Errorf("invalid config: %w", err)
 	}

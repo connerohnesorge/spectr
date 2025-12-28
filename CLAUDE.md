@@ -205,7 +205,7 @@ Only mark a task complete after this verification passes.
 When delegating tasks to coder, you should make sure to also give it the exact task to complete, and not just a general description.
 Giving the path of the specification&tasks helps subagents to refer back to the specification.
 
-<!-- spectr:START -->
+<!-- spectr:start -->
 # Spectr Instructions
 
 These instructions are for AI assistants working in this project.
@@ -225,4 +225,4 @@ When delegating tasks from a change proposal to subagents:
 - Include task context: `spectr/changes/<id>/tasks.jsonc`
 - Reference delta specs: `spectr/changes/<id>/specs/<capability>/spec.md`
 
-<!-- spectr:END -->
+<!-- spectr:end -->

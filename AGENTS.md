@@ -194,7 +194,7 @@ When you receive a project:
 **You are the conductor with perfect memory (200k context). The subagents are specialists you hire for individual tasks. Together you build amazing things!** 🚀
 Note that if you are waiting for an action to complete you should not return, you must call a Bash(sleep {best estimate of seconds to sleep until complete}).
 
-<!-- spectr:START -->
+<!-- spectr:start -->
 # Spectr Instructions
 
 These instructions are for AI assistants working in this project.
@@ -214,7 +214,7 @@ When delegating tasks from a change proposal to subagents:
 - Include task context: `spectr/changes/<id>/tasks.jsonc`
 - Reference delta specs: `spectr/changes/<id>/specs/<capability>/spec.md`
 
-<!-- spectr:END -->
+<!-- spectr:end -->
 
 <project>
 ./.

@@ -8,12 +8,20 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
 const (
 	testProviderClaude      = "claude"
 	testProviderNonexistent = "nonexistentprovider123"
 )
+
+// TestMain registers all providers before running tests.
+func TestMain(m *testing.M) {
+	providers.RegisterAll()
+	m.Run()
+}
 
 func TestNewWizardModel(t *testing.T) {
 	// Test creating a new wizard model

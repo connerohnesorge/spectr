@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewCrushProvider())
-}
-
 // CrushProvider implements the Provider interface for Crush.
 // Crush uses CRUSH.md for instructions and .crush/commands/ for slash commands.
 type CrushProvider struct {

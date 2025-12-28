@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewOpencodeProvider())
-}
-
 // OpencodeProvider implements the Provider interface for OpenCode.
 // OpenCode uses .opencode/command/spectr/ for slash commands.
 // It has no instruction file as it uses JSON configuration.

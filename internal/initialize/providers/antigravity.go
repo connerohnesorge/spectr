@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewAntigravityProvider())
-}
-
 // AntigravityProvider implements the Provider interface for Antigravity.
 //
 // Antigravity uses AGENTS.md and .agent/workflows/ for slash commands.

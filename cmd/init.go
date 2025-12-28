@@ -18,6 +18,9 @@ type InitCmd struct {
 
 // Run executes the init command
 func (c *InitCmd) Run() error {
+	// Register all providers at startup
+	providers.RegisterAll()
+
 	// Determine project path - positional arg takes precedence over flag
 	projectPath := c.Path
 	if projectPath == "" {

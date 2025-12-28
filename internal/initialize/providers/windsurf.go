@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewWindsurfProvider())
-}
-
 // WindsurfProvider implements the Provider interface for Windsurf.
 // Windsurf uses .windsurf/commands/ for slash commands (no config file).
 type WindsurfProvider struct {

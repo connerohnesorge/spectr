@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewContinueProvider())
-}
-
 // ContinueProvider implements the Provider interface for Continue.
 // Continue uses .continue/commands/ for slash commands (no config file).
 type ContinueProvider struct {

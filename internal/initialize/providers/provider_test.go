@@ -7,6 +7,12 @@ import (
 	"testing"
 )
 
+// TestMain registers all providers before running tests.
+func TestMain(m *testing.M) {
+	RegisterAll()
+	m.Run()
+}
+
 // mockTemplateRenderer implements TemplateRenderer for testing
 type mockTemplateRenderer struct {
 	agentsContent         string

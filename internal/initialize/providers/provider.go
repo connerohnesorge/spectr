@@ -11,16 +11,15 @@
 //
 // # Adding a New Provider
 //
-// To add a new AI CLI provider, create a new file
-// (e.g., providers/mytools.go) with:
+// To add a new AI CLI provider:
+//  1. Create a new file (e.g., providers/mytools.go)
+//  2. Implement the Provider interface with a NewXxxProvider() constructor
+//  3. Register the provider in providers/registry.go's RegisterAll() function:
+//     Register(NewMyToolProvider())
 //
 // Example:
 //
 //	package providers
-//
-//	func init() {
-//		Register(&MyToolProvider{})
-//	}
 //
 //	type MyToolProvider struct {
 //		BaseProvider
@@ -50,6 +49,12 @@
 //				},
 //			},
 //		}
+//	}
+//
+// Example of what NOT to do (outdated pattern):
+//
+//	func init() {
+//		Register(&MyToolProvider{})  // Removed - now use RegisterAll()
 //	}
 //
 // The BaseProvider handles all common logic.

@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewAiderProvider())
-}
-
 // AiderProvider implements the Provider interface for Aider.
 // Aider uses .aider/commands/ for slash commands (no config file).
 type AiderProvider struct {

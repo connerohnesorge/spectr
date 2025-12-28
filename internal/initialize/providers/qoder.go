@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewQoderProvider())
-}
-
 // QoderProvider implements the Provider interface for Qoder.
 // Qoder uses QODER.md and .qoder/commands/ for slash commands.
 type QoderProvider struct {

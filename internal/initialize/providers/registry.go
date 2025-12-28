@@ -32,6 +32,27 @@ func Register(p Provider) {
 	registry[p.ID()] = p
 }
 
+// RegisterAll registers all AI CLI tool providers in the global registry.
+// This function should be called during initialization before any provider
+// queries are made. It panics if any provider is already registered.
+func RegisterAll() {
+	Register(NewClaudeProvider())
+	Register(NewClineProvider())
+	Register(NewContinueProvider())
+	Register(NewGeminiProvider())
+	Register(NewCursorProvider())
+	Register(NewCostrictProvider())
+	Register(NewQoderProvider())
+	Register(NewQwenProvider())
+	Register(NewAntigravityProvider())
+	Register(NewCodexProvider())
+	Register(NewOpencodeProvider())
+	Register(NewAiderProvider())
+	Register(NewWindsurfProvider())
+	Register(NewKilocodeProvider())
+	Register(NewCrushProvider())
+}
+
 // Get retrieves a provider by its ID.
 // Returns nil if the provider is not found.
 func Get(id string) Provider {

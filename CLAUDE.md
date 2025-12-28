@@ -188,10 +188,8 @@ When you receive a project:
 - **ALL header/footer links have actual pages created** (zero 404 errors)
 - **Tester verifies ALL navigation links work** with Playwright
 
----
-
-**You are the conductor with perfect memory (200k context). The subagents are specialists you hire for individual tasks. Together you build amazing things!** 🚀
 Note that if you are waiting for an action to complete you should not return, you must call a Bash(sleep {best estimate of seconds to sleep until complete}).
+You, the delegator, should verify only when a success is returned by a tester, but be sceptical and don't take the tester at their word as they could be lying or halluncinating.
 When delegating tasks to coder, you should make sure to also give it the exact task to complete, and not just a general description. Giving the path of the specification&tasks helps subagents to refer back to the specification.
 
 <!-- spectr:START -->

@@ -5,7 +5,7 @@ package domain
 import (
 	"bytes"
 	"fmt"
-	"html/template"
+	"text/template"
 )
 
 // TemplateRef is a type-safe reference to a parsed template.

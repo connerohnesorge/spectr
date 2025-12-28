@@ -1,9 +1,9 @@
 package domain
 
 import (
-	"html/template"
 	"strings"
 	"testing"
+	"text/template"
 )
 
 func TestTemplateRef_Render(t *testing.T) {

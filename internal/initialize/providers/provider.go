@@ -108,5 +108,5 @@ type Provider interface {
 	//			),
 	//		}
 	//	}
-	Initializers(ctx context.Context, tm TemplateManager) []Initializer
+	Initializers(ctx context.Context, tm *TemplateManager) []Initializer
 }

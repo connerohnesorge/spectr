@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"html/template"
+	"text/template"
 
 	"github.com/connerohnesorge/spectr/internal/domain"
 )

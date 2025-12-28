@@ -2,9 +2,9 @@ package providers
 
 import (
 	"context"
-	"html/template"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/connerohnesorge/spectr/internal/domain"
 	"github.com/spf13/afero"

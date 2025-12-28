@@ -178,7 +178,7 @@ func TestInteractiveModel_HandleEdit(
 	tmpDir := t.TempDir()
 	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
-	err := mkdirAll(specDir, 0755)
+	err := mkdirAll(specDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create test directory: %v",
@@ -190,7 +190,7 @@ func TestInteractiveModel_HandleEdit(
 	err = writeFile(
 		specPath,
 		[]byte("# Test Spec"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -249,7 +249,7 @@ func TestInteractiveModel_HandleEdit(
 			// Create a change proposal file
 			changeID := interactiveTestChangeID
 			changeDir := tmpDir + "/spectr/changes/" + changeID
-			err := mkdirAll(changeDir, 0755)
+			err := mkdirAll(changeDir, 0o755)
 			if err != nil {
 				t.Fatalf(
 					"Failed to create change directory: %v",
@@ -260,7 +260,7 @@ func TestInteractiveModel_HandleEdit(
 			err = writeFile(
 				proposalPath,
 				[]byte("# Test Change"),
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -532,7 +532,7 @@ func TestEditorOpensOnEKey(t *testing.T) {
 	tmpDir := t.TempDir()
 	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
-	err := os.MkdirAll(specDir, 0755)
+	err := os.MkdirAll(specDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create test directory: %v",
@@ -544,7 +544,7 @@ func TestEditorOpensOnEKey(t *testing.T) {
 	err = os.WriteFile(
 		specPath,
 		[]byte("# Test Spec"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -633,7 +633,7 @@ func TestEditorOpensForChangeItems(t *testing.T) {
 	tmpDir := t.TempDir()
 	changeID := interactiveTestChangeID
 	changeDir := tmpDir + "/spectr/changes/" + changeID
-	err := os.MkdirAll(changeDir, 0755)
+	err := os.MkdirAll(changeDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create test directory: %v",
@@ -645,7 +645,7 @@ func TestEditorOpensForChangeItems(t *testing.T) {
 	err = os.WriteFile(
 		proposalPath,
 		[]byte("# Test Change"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -737,7 +737,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	// Create spec file
 	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
-	err := os.MkdirAll(specDir, 0755)
+	err := os.MkdirAll(specDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create spec directory: %v",
@@ -747,7 +747,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	err = os.WriteFile(
 		specDir+"/spec.md",
 		[]byte("# Test Spec"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -759,7 +759,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	// Create change file
 	changeID := interactiveTestChangeID
 	changeDir := tmpDir + "/spectr/changes/" + changeID
-	err = os.MkdirAll(changeDir, 0755)
+	err = os.MkdirAll(changeDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create change directory: %v",
@@ -769,7 +769,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	err = os.WriteFile(
 		changeDir+"/proposal.md",
 		[]byte("# Test Change"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(

@@ -7,9 +7,9 @@ import "fmt"
 // ArchiveCmd represents the archive command configuration
 type ArchiveCmd struct {
 	ChangeID   string `arg:"" optional:"" predictor:"changeID"`
-	Yes        bool   `                                        name:"yes"         short:"y" help:"Skip confirmation"` //nolint:lll,revive
-	SkipSpecs  bool   `                                        name:"skip-specs"            help:"Skip spec updates"` //nolint:lll,revive
-	NoValidate bool   `                                        name:"no-validate"           help:"Skip validation"`   //nolint:lll,revive
+	Yes        bool   `                                        name:"yes"         short:"y" help:"Skip confirmation"` //nolint:lll,revive // Kong struct tag with alignment
+	SkipSpecs  bool   `                                        name:"skip-specs"            help:"Skip spec updates"` //nolint:lll,revive // Kong struct tag with alignment
+	NoValidate bool   `                                        name:"no-validate"           help:"Skip validation"`   //nolint:lll,revive // Kong struct tag with alignment
 }
 
 // Run executes the archive command

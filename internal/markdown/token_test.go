@@ -67,7 +67,7 @@ func TestTokenType_String_NotEmpty(t *testing.T) {
 				i,
 			)
 		}
-		if s == "Unknown" {
+		if s == unknownTokenType {
 			t.Errorf(
 				"TokenType(%d).String() returned 'Unknown' for a defined token type",
 				i,

@@ -278,13 +278,13 @@ func TestCopyDir(t *testing.T) {
 					srcDir,
 					path,
 				)
-				if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+				if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
 					t.Fatalf(
 						"Failed to create directory: %v",
 						err,
 					)
 				}
-				if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 					t.Fatalf(
 						"Failed to write file %s: %v",
 						path,
@@ -653,7 +653,7 @@ func TestCopyFile(t *testing.T) {
 			)
 
 			content := "This is the file content\nwith multiple lines"
-			if err := os.WriteFile(srcPath, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(srcPath, []byte(content), 0o644); err != nil {
 				t.Fatalf(
 					"Failed to write source file: %v",
 					err,
@@ -701,7 +701,7 @@ func TestCopyFile(t *testing.T) {
 			)
 
 			content := "#!/bin/bash\necho hello"
-			if err := os.WriteFile(srcPath, []byte(content), 0755); err != nil {
+			if err := os.WriteFile(srcPath, []byte(content), 0o755); err != nil {
 				t.Fatalf(
 					"Failed to write source file: %v",
 					err,
@@ -767,7 +767,7 @@ func TestCleanupLocalChange(t *testing.T) {
 			)
 
 			// Create the directory structure
-			if err := os.MkdirAll(changeDir, 0755); err != nil {
+			if err := os.MkdirAll(changeDir, 0o755); err != nil {
 				t.Fatalf(
 					"Failed to create change directory: %v",
 					err,
@@ -786,14 +786,14 @@ func TestCleanupLocalChange(t *testing.T) {
 					changeDir,
 					path,
 				)
-				if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+				if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
 					t.Fatalf(
 						"Failed to create directory for %s: %v",
 						path,
 						err,
 					)
 				}
-				if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 					t.Fatalf(
 						"Failed to write file %s: %v",
 						path,
@@ -866,7 +866,7 @@ func TestCleanupLocalChange(t *testing.T) {
 				"spectr",
 				"changes",
 			)
-			if err := os.MkdirAll(changesDir, 0755); err != nil {
+			if err := os.MkdirAll(changesDir, 0o755); err != nil {
 				t.Fatalf(
 					"Failed to create changes directory: %v",
 					err,
@@ -904,7 +904,7 @@ func TestCleanupLocalChange(t *testing.T) {
 				"changes",
 				changeID,
 			)
-			if err := os.MkdirAll(changeDir, 0755); err != nil {
+			if err := os.MkdirAll(changeDir, 0o755); err != nil {
 				t.Fatalf(
 					"Failed to create change directory: %v",
 					err,
@@ -916,7 +916,7 @@ func TestCleanupLocalChange(t *testing.T) {
 				changeDir,
 				"proposal.md",
 			)
-			if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+			if err := os.WriteFile(testFile, []byte("test"), 0o644); err != nil {
 				t.Fatalf(
 					"Failed to write test file: %v",
 					err,
@@ -930,7 +930,7 @@ func TestCleanupLocalChange(t *testing.T) {
 				"changes",
 				changeID,
 			)
-			if err := os.MkdirAll(wrongChangeDir, 0755); err != nil {
+			if err := os.MkdirAll(wrongChangeDir, 0o755); err != nil {
 				t.Fatalf(
 					"Failed to create wrong change directory: %v",
 					err,
@@ -940,7 +940,7 @@ func TestCleanupLocalChange(t *testing.T) {
 				wrongChangeDir,
 				"proposal.md",
 			)
-			if err := os.WriteFile(wrongTestFile, []byte("wrong"), 0644); err != nil {
+			if err := os.WriteFile(wrongTestFile, []byte("wrong"), 0o644); err != nil {
 				t.Fatalf(
 					"Failed to write wrong test file: %v",
 					err,
@@ -1079,7 +1079,7 @@ func TestCleanupTriggersForRemoveMode(
 			)
 
 			// Create the directory structure with files
-			if err := os.MkdirAll(changeDir, 0755); err != nil {
+			if err := os.MkdirAll(changeDir, 0o755); err != nil {
 				t.Fatalf(
 					"Failed to create change directory: %v",
 					err,
@@ -1095,7 +1095,7 @@ func TestCleanupTriggersForRemoveMode(
 					changeDir,
 					fileName,
 				)
-				if err := os.WriteFile(filePath, []byte("test content"), 0644); err != nil {
+				if err := os.WriteFile(filePath, []byte("test content"), 0o644); err != nil {
 					t.Fatalf(
 						"Failed to write %s: %v",
 						fileName,

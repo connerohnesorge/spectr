@@ -627,7 +627,7 @@ func findPreMergeErrorLine(
 // extractSectionAndReqName extracts the section name and requirement name from an error message
 func extractSectionAndReqName(
 	errMsg string,
-) (sectionName string, reqName string) {
+) (sectionName, reqName string) {
 	// Determine section name based on error message
 	switch {
 	case strings.Contains(errMsg, "MODIFIED requirement"):

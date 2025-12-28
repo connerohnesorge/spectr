@@ -330,9 +330,6 @@ linters:
         # Detects function literals that can be simplified.
         # https://go-critic.com/overview.html#unlambda
         - unlambda
-        # Detects unnamed results that may benefit from names.
-        # https://go-critic.com/overview.html#unnamedresult
-        - unnamedResult
         # Detects unnecessary braced statement blocks.
         # https://go-critic.com/overview.html#unnecessaryblock
         - unnecessaryBlock

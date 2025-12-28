@@ -88,7 +88,7 @@ No actual requirement blocks here.
 				tmpDir,
 				"spec.md",
 			)
-			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+			if err := os.WriteFile(filePath, []byte(tt.content), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -157,7 +157,7 @@ Content for second feature.
 
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "spec.md")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

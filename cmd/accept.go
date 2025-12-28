@@ -22,19 +22,19 @@ import (
 )
 
 // filePerm is the standard file permission for created files (rw-r--r--)
-const filePerm = 0644
+const filePerm = 0o644
 
 // AcceptCmd represents the accept command for converting tasks.md to
 // tasks.jsonc. This command parses the human-readable tasks.md file and
 // produces a machine-readable tasks.jsonc file with structured task data.
 type AcceptCmd struct {
 	// ChangeID is the optional change identifier to process
-	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change"` //nolint:lll,revive
+	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change"` //nolint:lll,revive // Kong struct tag exceeds line length
 	// DryRun enables preview mode without writing files
-	DryRun bool `                                        help:"Preview without writing" name:"dry-run"` //nolint:lll,revive
+	DryRun bool `                                        help:"Preview without writing" name:"dry-run"` //nolint:lll,revive // Kong struct tag with alignment padding
 
 	// NoInteractive disables interactive prompts
-	NoInteractive bool `help:"Disable prompts" name:"no-interactive"` //nolint:lll,revive
+	NoInteractive bool `help:"Disable prompts" name:"no-interactive"` //nolint:lll,revive // Kong struct tag exceeds line length
 }
 
 // Run executes the accept command.
@@ -106,7 +106,7 @@ func (c *AcceptCmd) processChange(
 
 	if c.DryRun {
 		fmt.Printf(
-			"Would convert: %s\nwould write to: %s\nWould remove: %s\nFound %d tasks\n", //nolint:lll,revive
+			"Would convert: %s\nwould write to: %s\nWould remove: %s\nFound %d tasks\n", //nolint:lll,revive // Long format string for dry-run output
 			tasksMdPath,
 			tasksJSONPath,
 			tasksMdPath,

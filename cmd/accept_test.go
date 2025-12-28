@@ -501,7 +501,7 @@ func TestParseTasksMd(t *testing.T) {
 				"tasks.md",
 			)
 
-			if err := os.WriteFile(tasksMdPath, []byte(tt.markdown), 0644); err != nil {
+			if err := os.WriteFile(tasksMdPath, []byte(tt.markdown), 0o644); err != nil {
 				t.Fatalf(
 					"failed to write test file: %v",
 					err,
@@ -736,7 +736,7 @@ func TestWriteTasksJsonFilePermissions(
 	}
 
 	// Verify file permissions are 0644
-	expectedPerm := os.FileMode(0644)
+	expectedPerm := os.FileMode(0o644)
 	if info.Mode().Perm() != expectedPerm {
 		t.Errorf(
 			"file permissions = %o, want %o",

@@ -28,7 +28,7 @@ The system SHALL support another feature.
 
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "spec.md")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -80,7 +80,7 @@ The system SHALL have updated behavior.
 
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "spec.md")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -123,7 +123,7 @@ func TestParseDeltaSpec_Removed(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "spec.md")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -174,7 +174,7 @@ func TestParseDeltaSpec_Renamed(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "spec.md")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -259,7 +259,7 @@ Modified content.
 
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "spec.md")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -323,7 +323,7 @@ This is not a delta operation.
 
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "spec.md")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -362,7 +362,7 @@ func TestParseDeltaSpec_EmptySections(
 
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "spec.md")
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

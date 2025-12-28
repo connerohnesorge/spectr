@@ -46,7 +46,7 @@ func TestExtractTitle(t *testing.T) {
 				tmpDir,
 				"test.md",
 			)
-			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+			if err := os.WriteFile(filePath, []byte(tt.content), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -72,7 +72,7 @@ func TestExtractTitle_NoHeading(t *testing.T) {
 	tmpDir := t.TempDir()
 	filePath := filepath.Join(tmpDir, "test.md")
 	content := "Some content without heading\n\nMore content"
-	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -149,7 +149,7 @@ Not a task line`,
 				tmpDir,
 				"tasks.md",
 			)
-			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+			if err := os.WriteFile(filePath, []byte(tt.content), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -213,7 +213,7 @@ func TestCountDeltas(t *testing.T) {
 		"specs",
 		"test-spec",
 	)
-	if err := os.MkdirAll(specsDir, 0755); err != nil {
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -229,7 +229,7 @@ func TestCountDeltas(t *testing.T) {
 ### Requirement: Old Feature
 `
 	specPath := filepath.Join(specsDir, "spec.md")
-	if err := os.WriteFile(specPath, []byte(specContent), 0644); err != nil {
+	if err := os.WriteFile(specPath, []byte(specContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -279,7 +279,7 @@ Description
 ### Requirement: Feature 3
 Description
 `
-	if err := os.WriteFile(specPath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(specPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -308,7 +308,7 @@ func TestCountRequirements_NoRequirements(
 
 Some content without requirements
 `
-	if err := os.WriteFile(specPath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(specPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -342,7 +342,7 @@ func TestReadTasksJson(t *testing.T) {
 		{"id": "1.3", "section": "Implementation", "description": "Task 3", "status": "pending"}
 	]
 }`
-	if err := os.WriteFile(tasksJsonPath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(tasksJsonPath, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -451,7 +451,7 @@ func TestCountTasks_FromJsonc(t *testing.T) {
 				tmpDir,
 				"tasks.jsonc",
 			)
-			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+			if err := os.WriteFile(filePath, []byte(tt.content), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -502,7 +502,7 @@ func TestCountTasks_JsoncPreferredOverMarkdown(
 			{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
 		]
 	}`
-	if err := os.WriteFile(filepath.Join(tmpDir, "tasks.jsonc"), []byte(jsoncContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "tasks.jsonc"), []byte(jsoncContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -513,7 +513,7 @@ func TestCountTasks_JsoncPreferredOverMarkdown(
 - [ ] Task 3
 - [x] Task 4
 - [x] Task 5`
-	if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -555,7 +555,7 @@ func TestCountTasks_IgnoresLegacyJson(
 				{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
 			]
 		}`
-			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -565,7 +565,7 @@ func TestCountTasks_IgnoresLegacyJson(
 - [ ] Task 2
 - [x] Task 3
 - [x] Task 4`
-			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -610,7 +610,7 @@ func TestCountTasks_IgnoresLegacyJson(
 				{"id": "1.3", "section": "Impl", "description": "Task 3", "status": "completed"}
 			]
 		}`
-			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.jsonc"), []byte(jsoncContent), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.jsonc"), []byte(jsoncContent), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -622,7 +622,7 @@ func TestCountTasks_IgnoresLegacyJson(
 				{"id": "1.2", "section": "Impl", "description": "Task 2", "status": "pending"}
 			]
 		}`
-			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.json"), []byte(jsonContent), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -633,7 +633,7 @@ func TestCountTasks_IgnoresLegacyJson(
 - [ ] Task 3
 - [ ] Task 4
 - [ ] Task 5`
-			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(tmpDir, "tasks.md"), []byte(mdContent), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -846,7 +846,7 @@ func TestReadTasksJsonWithComments(t *testing.T) {
 				tmpDir,
 				"tasks.jsonc",
 			)
-			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+			if err := os.WriteFile(filePath, []byte(tt.content), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
@@ -1001,7 +1001,7 @@ func TestCountTasksFromJson_AllScenarios(
 				tmpDir,
 				"tasks.jsonc",
 			)
-			if err := os.WriteFile(filePath, []byte(tt.content), 0644); err != nil {
+			if err := os.WriteFile(filePath, []byte(tt.content), 0o644); err != nil {
 				t.Fatal(err)
 			}
 

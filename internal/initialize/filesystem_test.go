@@ -565,7 +565,7 @@ func TestIsSpectrInitialized(t *testing.T) {
 			)
 
 			// Create spectr directory but not project.md
-			err := os.Mkdir(spectrDir, 0755)
+			err := os.Mkdir(spectrDir, 0o755)
 			if err != nil {
 				t.Fatalf(
 					"failed to create spectr directory: %v",
@@ -610,7 +610,7 @@ func TestBackupFile(t *testing.T) {
 			err := os.WriteFile(
 				originalFile,
 				content,
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(

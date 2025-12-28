@@ -219,7 +219,7 @@ parseLoop:
 	// If dot was seen but no digits after it, include the dot in numEnd
 	// This handles "1. Task" format where numEnd would be 1 but dot is at position 1
 	if dotSeen && dotPos >= 0 &&
-		dotPos+1 > numEnd {
+		dotPos >= numEnd {
 		numEnd = dotPos + 1
 	}
 

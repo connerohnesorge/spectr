@@ -303,7 +303,7 @@ func TestNewWizardModelWithConfiguredProviders(
 		err = os.WriteFile(
 			filePath,
 			[]byte("# Command\n"),
-			0644,
+			0o644,
 		)
 		if err != nil {
 			t.Fatalf(
@@ -401,7 +401,7 @@ func TestNewWizardModelWithCIWorkflowConfigured(
 	err = os.WriteFile(
 		workflowFile,
 		[]byte("name: Spectr Validation\n"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(

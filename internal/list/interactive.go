@@ -885,7 +885,7 @@ func (m *interactiveModel) handleEdit() (tea.Model, tea.Cmd) {
 	c := exec.Command(
 		editor,
 		filePath,
-	) //nolint:gosec
+	) //nolint:gosec // G204: User controls EDITOR env var, intentional for opening editor
 
 	return m, tea.ExecProcess(
 		c,

@@ -33,7 +33,7 @@ The system SHALL provide user authentication functionality.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -91,7 +91,7 @@ Some content here but no Requirements section.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -164,7 +164,7 @@ The system provides some feature.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -233,7 +233,7 @@ The system SHALL provide some feature.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -306,7 +306,7 @@ The system SHALL provide some feature.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -393,7 +393,7 @@ The system provides some feature.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -488,7 +488,7 @@ The system MUST provide feature three.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -570,7 +570,7 @@ The system SHALL provide some feature.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -636,7 +636,7 @@ The system SHALL provide some feature.
 	err := os.WriteFile(
 		specPath,
 		[]byte(content),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(

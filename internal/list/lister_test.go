@@ -16,7 +16,7 @@ func TestListChanges(t *testing.T) {
 		"spectr",
 		"changes",
 	)
-	if err := os.MkdirAll(changesDir, 0755); err != nil {
+	if err := os.MkdirAll(changesDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -25,7 +25,7 @@ func TestListChanges(t *testing.T) {
 		changesDir,
 		"add-feature",
 	)
-	if err := os.MkdirAll(filepath.Join(changeDir, "specs", "test-spec"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(changeDir, "specs", "test-spec"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -33,7 +33,7 @@ func TestListChanges(t *testing.T) {
 	proposalContent := `# Change: Add Amazing Feature
 
 More details here.`
-	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -42,7 +42,7 @@ More details here.`
 - [x] Task 1
 - [ ] Task 2
 - [x] Task 3`
-	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -52,7 +52,7 @@ More details here.`
 
 ## MODIFIED Requirements
 ### Requirement: Updated Feature`
-	if err := os.WriteFile(filepath.Join(changeDir, "specs", "test-spec", "spec.md"), []byte(specContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "specs", "test-spec", "spec.md"), []byte(specContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -129,13 +129,13 @@ func TestListChanges_FallbackTitle(t *testing.T) {
 		changesDir,
 		"test-change",
 	)
-	if err := os.MkdirAll(changeDir, 0755); err != nil {
+	if err := os.MkdirAll(changeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	// Write proposal.md without H1 heading
 	proposalContent := `Some content without heading`
-	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -172,7 +172,7 @@ func TestListSpecs(t *testing.T) {
 		specsDir,
 		"authentication",
 	)
-	if err := os.MkdirAll(specDir, 0755); err != nil {
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -187,7 +187,7 @@ Reset feature
 
 ### Requirement: Two-Factor Auth
 2FA feature`
-	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -252,7 +252,7 @@ func TestListSpecs_FallbackTitle(t *testing.T) {
 		specsDir,
 		"test-spec",
 	)
-	if err := os.MkdirAll(specDir, 0755); err != nil {
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -260,7 +260,7 @@ func TestListSpecs_FallbackTitle(t *testing.T) {
 	specContent := `Some content without heading
 
 ### Requirement: Feature`
-	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -299,24 +299,24 @@ func TestListAll(t *testing.T) {
 		changesDir,
 		"add-feature",
 	)
-	if err := os.MkdirAll(filepath.Join(changeDir, "specs", "test-spec"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(changeDir, "specs", "test-spec"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	proposalContent := `# Change: Add Feature`
-	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	tasksContent := `## Tasks
 - [x] Task 1`
-	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	specDeltaContent := `## ADDED Requirements
 ### Requirement: New Feature`
-	if err := os.WriteFile(filepath.Join(changeDir, "specs", "test-spec", "spec.md"), []byte(specDeltaContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "specs", "test-spec", "spec.md"), []byte(specDeltaContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -330,14 +330,14 @@ func TestListAll(t *testing.T) {
 		specsDir,
 		"authentication",
 	)
-	if err := os.MkdirAll(specDir, 0755); err != nil {
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	specContent := `# Authentication
 
 ### Requirement: User Login`
-	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -396,12 +396,12 @@ func TestListAll_FilterByType(t *testing.T) {
 		changesDir,
 		"add-feature",
 	)
-	if err := os.MkdirAll(changeDir, 0755); err != nil {
+	if err := os.MkdirAll(changeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	proposalContent := `# Change: Add Feature`
-	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -415,14 +415,14 @@ func TestListAll_FilterByType(t *testing.T) {
 		specsDir,
 		"authentication",
 	)
-	if err := os.MkdirAll(specDir, 0755); err != nil {
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	specContent := `# Authentication
 
 ### Requirement: User Login`
-	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte(specContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -494,12 +494,12 @@ func TestListAll_NoSorting(t *testing.T) {
 	)
 	for _, id := range []string{"zebra-change", "alpha-change"} {
 		changeDir := filepath.Join(changesDir, id)
-		if err := os.MkdirAll(changeDir, 0755); err != nil {
+		if err := os.MkdirAll(changeDir, 0o755); err != nil {
 			t.Fatal(err)
 		}
 
 		content := `# Change: Test`
-		if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(content), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(content), 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}

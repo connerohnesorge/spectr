@@ -171,7 +171,7 @@ func TestValidatePreMerge_ModifiedRequirementExists(
 	// Create base spec
 	baseContent := testSpecWithExistingFeature
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -206,7 +206,7 @@ func TestValidatePreMerge_ModifiedRequirementDoesNotExist(
 	// Create base spec
 	baseContent := testSpecWithExistingFeature
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -249,7 +249,7 @@ func TestValidatePreMerge_AddedRequirementAlreadyExists(
 	// Create base spec
 	baseContent := testSpecWithExistingFeature
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -302,7 +302,7 @@ Content.
 - **THEN** result
 `
 	basePath := filepath.Join(tmpDir, "base.md")
-	if err := os.WriteFile(basePath, []byte(baseContent), 0644); err != nil {
+	if err := os.WriteFile(basePath, []byte(baseContent), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewCodexProvider())
-}
-
 // CodexProvider implements the Provider interface for Codex CLI.
 // Codex uses AGENTS.md and global ~/.codex/prompts/spectr/ for commands.
 type CodexProvider struct {

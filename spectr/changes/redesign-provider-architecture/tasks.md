@@ -21,13 +21,16 @@ Create `internal/domain` package to break import cycles with shared types.
 
 - [ ] 0.1 Create `internal/domain/template.go` with:
   - `TemplateRef` struct with public fields: `Name string`, `Template *template.Template` (see design.md §0 Domain Package, specs/provider-system/spec.md "TemplateRef in domain package")
-  - `Render(ctx TemplateContext) (string, error)` method on TemplateRef (see design.md §0)
+  - NOTE: TemplateRef has NO Render method - rendering is done by TemplateManager
   - `TemplateContext` struct with fields: `BaseDir`, `SpecsDir`, `ChangesDir`, `ProjectFile`, `AgentsFile` (all strings) (see design.md §0, specs/provider-system/spec.md "TemplateContext in domain package")
-  - `DefaultTemplateContext()` function returning TemplateContext with default "spectr" paths (see design.md §0)
+  - NOTE: TemplateContext is created via templateContextFromConfig(cfg), NOT via a DefaultTemplateContext() function
 
 - [ ] 0.2 Create `internal/domain/slashcmd.go` with `SlashCommand` typed int, `SlashProposal`/`SlashApply` constants, and `String()` method (NO `TemplateName()`) (see design.md §0 Domain Package, specs/provider-system/spec.md "SlashCommand in domain package")
 
-- [ ] 0.3 Create `internal/domain/template_test.go` with tests for TemplateRef.Render() and DefaultTemplateContext()
+- [ ] 0.3 Create `internal/domain/template_test.go` with tests for:
+  - TemplateRef struct field access (Name, Template)
+  - TemplateContext struct field access
+  - NOTE: No tests for Render() or DefaultTemplateContext() - these don't exist
 
 - [ ] 0.4 Create `internal/domain/slashcmd_test.go` with tests for SlashCommand.String()
 
@@ -53,9 +56,9 @@ Create `internal/domain` package to break import cycles with shared types.
 
 Create the new provider system types and interfaces.
 
-- [ ] 1.1 Create `internal/initialize/providers/initializer.go` with `Initializer` interface: `Init(ctx, projectFs, homeFs, cfg, tm) (InitResult, error)` and `IsSetup(projectFs, homeFs, cfg) bool` (see design.md §1 Provider Interface, specs/provider-system/spec.md "Initializer Interface")
+- [ ] 1.1 Create `internal/initialize/providers/initializer.go` with `Initializer` interface: `Init(ctx, projectFs, homeFs, cfg, tm) (ExecutionResult, error)` and `IsSetup(projectFs, homeFs, cfg) bool` (see design.md §1 Provider Interface, specs/provider-system/spec.md "Initializer Interface")
 
-- [ ] 1.2 Create `internal/initialize/providers/result.go` with `InitResult` struct (`CreatedFiles`, `UpdatedFiles`), `ExecutionResult` struct (`CreatedFiles`, `UpdatedFiles` - no Error field, error returned separately), and `aggregateResults()` function (see design.md §5 File Change Detection, specs/provider-system/spec.md "Initialize Result" and "ExecutionResult Type")
+- [ ] 1.2 Create `internal/initialize/providers/result.go` with `ExecutionResult` struct (`CreatedFiles`, `UpdatedFiles` - no Error field, error returned separately) (see design.md §5 File Change Detection, specs/provider-system/spec.md "ExecutionResult Type")
 
 - [ ] 1.3 Create `internal/initialize/providers/config.go` with `Config` struct (`SpectrDir`), `Validate()` method (non-empty, no absolute paths, no path traversal), and derived path methods: `SpecsDir()`, `ChangesDir()`, `ProjectFile()`, `AgentsFile()` (see design.md §1 Provider Interface, specs/provider-system/spec.md "Config Struct")
 
@@ -91,6 +94,8 @@ Create the three reusable initializer implementations.
 
 - [ ] 3.2 Create `internal/initialize/providers/initializers/configfile.go` with `ConfigFileInitializer`:
   - Constructor: `NewConfigFileInitializer(path string, template domain.TemplateRef)` (see design.md §3 Built-in Initializers)
+  - Rendering: Uses `tm.Render(templateRef.Name, ctx)` where ctx comes from templateContextFromConfig(cfg)
+  - NOTE: Does NOT call templateRef.Render() - that method doesn't exist
   - Case-insensitive marker matching for reading (matches both uppercase and lowercase markers) (see design.md §3 ConfigFileInitializer Marker Handling, specs/provider-system/spec.md "Case-insensitive marker matching")
   - Always writes lowercase markers (`<!-- spectr:start -->` and `<!-- spectr:end -->`) (see design.md §3, specs/provider-system/spec.md "Config file markers")
   - Orphaned marker handling with `strings.Index` (first occurrence) (see design.md §3, specs/provider-system/spec.md "Orphaned start marker handling")
@@ -188,9 +193,9 @@ Update the executor to use the new provider system.
 
 - [ ] 6.6 Implement initializer sorting by type in `executor.go`: DirectoryInitializer/HomeDirectoryInitializer (1), ConfigFileInitializer (2), SlashCommandsInitializer/HomeSlashCommandsInitializer/PrefixedSlashCommandsInitializer/HomePrefixedSlashCommandsInitializer/TOMLSlashCommandsInitializer (3) (see design.md §8 Initializer Ordering, specs/provider-system/spec.md "Initializer Ordering")
 
-- [ ] 6.7 Update `configureProviders()` to pass both filesystems and TemplateManager, collect InitResult, fail-fast on first error (see design.md §5 File Change Detection, specs/provider-system/spec.md "Fail-Fast Error Handling")
+- [ ] 6.7 Update `configureProviders()` to pass both filesystems and TemplateManager, collect ExecutionResult, fail-fast on first error (see design.md §5 File Change Detection, specs/provider-system/spec.md "Fail-Fast Error Handling")
 
-- [ ] 6.8 Use `aggregateResults(allResults)` to combine all InitResult into ExecutionResult on success (see design.md §5 File Change Detection, specs/provider-system/spec.md "aggregateResults function")
+- [ ] 6.8 Merge ExecutionResults inline in the executor by appending CreatedFiles and UpdatedFiles slices (see design.md §5 File Change Detection, specs/provider-system/spec.md "ExecutionResult from executor")
 
 - [ ] 6.9 Implement fail-fast behavior: stop on first error, return partial ExecutionResult and error separately (error not stored in ExecutionResult) (see design.md §5 File Change Detection, specs/provider-system/spec.md "Fail-Fast Error Handling")
 
@@ -232,7 +237,7 @@ Update tests to match new architecture.
 
 - [ ] 8.5 Add integration test in `executor_test.go` for full initialization flow using `afero.MemMapFs`
 
-- [ ] 8.6 Add integration test for InitResult accumulation: CreatedFiles, UpdatedFiles, Errors all correct
+- [ ] 8.6 Add integration test for ExecutionResult accumulation: CreatedFiles, UpdatedFiles, Errors all correct
 
 ---
 
@@ -252,7 +257,7 @@ Comprehensive testing before completion.
 
 - [ ] 9.6 Manual test: `spectr init` with Codex provider - verify home paths in ~/.codex/prompts/
 
-- [ ] 9.7 Verify InitResult reports correct created/updated files
+- [ ] 9.7 Verify ExecutionResult reports correct created/updated files
 
 - [ ] 9.8 Verify initializer ordering: directories first, then config files, then slash commands
 

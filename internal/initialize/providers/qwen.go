@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewQwenProvider())
-}
-
 // QwenProvider implements the Provider interface for Qwen Code.
 // Qwen uses QWEN.md and .qwen/commands/ for slash commands.
 type QwenProvider struct {

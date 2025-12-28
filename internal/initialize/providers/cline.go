@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewClineProvider())
-}
-
 // ClineProvider implements the Provider interface for Cline.
 // Cline uses CLINE.md and .clinerules/commands/ for slash commands.
 type ClineProvider struct {

@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewKilocodeProvider())
-}
-
 // KilocodeProvider implements the Provider interface for Kilocode.
 // Kilocode uses .kilocode/commands/ for slash commands (no config file).
 type KilocodeProvider struct {

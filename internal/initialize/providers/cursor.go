@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewCursorProvider())
-}
-
 // CursorProvider implements the Provider interface for Cursor.
 // Cursor uses .cursorrules/commands/ for slash commands (no config file).
 type CursorProvider struct {

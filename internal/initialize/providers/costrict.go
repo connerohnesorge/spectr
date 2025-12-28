@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewCostrictProvider())
-}
-
 // CostrictProvider implements the Provider interface for CoStrict.
 // CoStrict uses COSTRICT.md and .costrict/commands/ for slash commands.
 type CostrictProvider struct {

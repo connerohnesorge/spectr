@@ -1,9 +1,5 @@
 package providers
 
-func init() {
-	Register(NewClaudeProvider())
-}
-
 // ClaudeProvider implements the Provider interface for Claude Code.
 // Claude Code uses CLAUDE.md and .claude/commands/ for slash commands.
 type ClaudeProvider struct {

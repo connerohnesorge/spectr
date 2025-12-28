@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-func init() {
-	Register(NewGeminiProvider())
-}
-
 // GeminiProvider implements the Provider interface for Gemini CLI.
 // Gemini uses ~/.gemini/commands/ for TOML-based slash commands
 // (no instruction file).

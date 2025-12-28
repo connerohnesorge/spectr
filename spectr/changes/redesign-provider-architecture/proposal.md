@@ -38,7 +38,7 @@ The current provider system has 15 providers, each implementing a 12-method inte
 - **NEW**: `Config` struct with `SpectrDir` field; other paths derived (SpecsDir = SpectrDir/specs, etc.)
 - **NEW**: Two filesystem instances: `projectFs` (project-relative) and `homeFs` (home directory)
 - **REMOVED**: `GetFilePaths()`, `HasConfigFile()`, `HasSlashCommands()` methods
-- **NEW**: `Initializer.Init()` returns `InitResult` containing created/updated files (explicit change tracking)
+- **NEW**: `Initializer.Init()` returns `ExecutionResult` containing created/updated files (explicit change tracking)
 - **CHANGED**: Provider registration uses explicit `RegisterAllProviders()` called at startup (no init() in provider files, proper error propagation)
 - **MIGRATION**: Users must re-run `spectr init` (clean break, no automatic migration)
 
@@ -46,7 +46,7 @@ The current provider system has 15 providers, each implementing a 12-method inte
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Change detection | InitResult return value | Each initializer returns files it created/updated; explicit and testable |
+| Change detection | ExecutionResult return value | Each initializer returns files it created/updated; explicit and testable |
 | Initializer ordering | Documented guarantee (implicit by type) | Directory → ConfigFile → SlashCommands; simple and predictable |
 | Partial failure | Fail-fast, no rollback | Stop on first error, files remain on disk; user fixes and re-runs |
 | Registration failure | Fail-fast, application exits | Stop on first error; application won't start if any provider fails to register |
@@ -75,7 +75,7 @@ The current provider system has 15 providers, each implementing a 12-method inte
 - `internal/domain/templates.go` - Embed directive for domain templates
 - `internal/initialize/providers/*.go` - Complete rewrite with explicit registration error handling
 - `internal/initialize/providers/initializers/*.go` - New initializer implementations
-- `internal/initialize/providers/result.go` - New InitResult type
+- `internal/initialize/providers/result.go` - New ExecutionResult type
 - `internal/initialize/templates/*.go` - Updated to use domain types from `internal/domain`
 - `internal/initialize/executor.go` - Simplified provider orchestration with result collection
 - `internal/initialize/wizard.go` - Provider selection UI unchanged

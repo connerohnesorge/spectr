@@ -13,16 +13,11 @@ type TemplateRef struct {
     Name     string             // template file name (e.g., "instruction-pointer.md.tmpl")
     Template *template.Template // pre-parsed template
 }
-
-// Render executes the template with the given context.
-func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
-    var buf bytes.Buffer
-    if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
-        return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)
-    }
-    return buf.String(), nil
-}
 ```
+
+- **AND** rendering SHALL be performed by TemplateManager, not by TemplateRef
+- **AND** TemplateRef is a lightweight typed handle without rendering logic
+- **AND** initializers SHALL call `tm.Render(templateRef.Name, ctx)` to render templates
 
 #### Scenario: SlashCommand in domain package
 - **WHEN** code needs to reference a slash command type
@@ -39,27 +34,18 @@ func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
 
 ```go
 // TemplateContext holds path-related template variables for dynamic directory names.
+// Created via templateContextFromConfig(cfg) in the executor, not via defaults.
 type TemplateContext struct {
-    BaseDir     string // e.g., "spectr"
-    SpecsDir    string // e.g., "spectr/specs"
-    ChangesDir  string // e.g., "spectr/changes"
-    ProjectFile string // e.g., "spectr/project.md"
-    AgentsFile  string // e.g., "spectr/AGENTS.md"
-}
-
-// DefaultTemplateContext returns a TemplateContext with default values.
-func DefaultTemplateContext() TemplateContext {
-    return TemplateContext{
-        BaseDir:     "spectr",
-        SpecsDir:    "spectr/specs",
-        ChangesDir:  "spectr/changes",
-        ProjectFile: "spectr/project.md",
-        AgentsFile:  "spectr/AGENTS.md",
-    }
+    BaseDir     string // e.g., "spectr" (from cfg.SpectrDir)
+    SpecsDir    string // e.g., "spectr/specs" (from cfg.SpecsDir())
+    ChangesDir  string // e.g., "spectr/changes" (from cfg.ChangesDir())
+    ProjectFile string // e.g., "spectr/project.md" (from cfg.ProjectFile())
+    AgentsFile  string // e.g., "spectr/AGENTS.md" (from cfg.AgentsFile())
 }
 ```
 
-- **AND** `domain.DefaultTemplateContext()` SHALL return default path values
+- **AND** TemplateContext instances SHALL be created via `templateContextFromConfig(cfg)`, not via a DefaultTemplateContext function
+- **AND** all path values SHALL be derived from Config.SpectrDir, not hardcoded defaults
 
 #### Scenario: TemplateContext derived from Config
 - **WHEN** the executor needs to create a TemplateContext from Config
@@ -92,17 +78,11 @@ type Provider interface {
 The system SHALL define an `Initializer` interface with `Init` and `IsSetup` methods.
 
 ```go
-// InitResult contains the files created or modified by an initializer.
-type InitResult struct {
-    CreatedFiles []string // files created by this initializer
-    UpdatedFiles []string // files updated by this initializer
-}
-
 type Initializer interface {
     // Init creates or updates files. Returns result with file changes and error if initialization fails.
     // Must be idempotent (safe to run multiple times).
     // Receives both filesystems - initializer decides which to use based on its type.
-    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
+    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (ExecutionResult, error)
 
     // IsSetup returns true if this initializer's artifacts already exist.
     // Receives both filesystems - initializer checks the appropriate one.
@@ -124,7 +104,7 @@ type Initializer interface {
 - **THEN** it SHALL receive both project and home filesystems
 - **AND** it SHALL decide internally which filesystem to use based on its configuration
 - **AND** it SHALL create or update the necessary files in the appropriate filesystem
-- **AND** it SHALL return an `InitResult` containing created and updated file paths
+- **AND** it SHALL return an `ExecutionResult` containing created and updated file paths
 - **AND** it SHALL return an error if initialization fails
 - **AND** it SHALL be idempotent (safe to run multiple times)
 
@@ -382,11 +362,35 @@ The system SHALL deduplicate initializers by type and path when multiple provide
 // Note: lowercase name indicates this is a private/internal interface.
 type deduplicatable interface {
     // dedupeKey returns a unique key for deduplication.
-    // Format: "<TypeName>:<path>" where TypeName is the concrete type name.
-    // Examples:
-    //   - "DirectoryInitializer:.claude/commands/spectr"
-    //   - "ConfigFileInitializer:CLAUDE.md"
-    //   - "HomePrefixedSlashCommandsInitializer:.codex/prompts:spectr-"
+    // The key represents the "scope" or "territory" that the initializer operates on.
+    // Format varies by initializer category:
+    //
+    // Directory-based (creates/ensures directory exists):
+    //   Format: "<TypeName>:<directory>"
+    //   Examples:
+    //     - "DirectoryInitializer:.claude/commands/spectr"
+    //     - "HomeDirectoryInitializer:.codex/prompts"
+    //
+    // File-based (creates/updates specific file):
+    //   Format: "<TypeName>:<file_path>"
+    //   Examples:
+    //     - "ConfigFileInitializer:CLAUDE.md"
+    //     - "ConfigFileInitializer:AGENTS.md"
+    //
+    // Directory+files (creates multiple files in directory):
+    //   Format: "<TypeName>:<directory>"
+    //   Examples:
+    //     - "SlashCommandsInitializer:.claude/commands/spectr"
+    //     - "HomeSlashCommandsInitializer:.codex/prompts"
+    //     - "TOMLSlashCommandsInitializer:.gemini/commands/spectr"
+    //
+    // Prefixed (creates multiple prefixed files in directory):
+    //   Format: "<TypeName>:<directory>:<prefix>"
+    //   Examples:
+    //     - "PrefixedSlashCommandsInitializer:.agent/workflows:spectr-"
+    //     - "HomePrefixedSlashCommandsInitializer:.codex/prompts:spectr-"
+    //
+    // Note: Paths are normalized with filepath.Clean before key generation.
     dedupeKey() string
 }
 ```
@@ -421,7 +425,7 @@ The system SHALL execute initializers in a guaranteed order by type.
 #### Scenario: Directory initializers run first
 - **WHEN** initializers are collected for execution
 - **THEN** `DirectoryInitializer` and `HomeDirectoryInitializer` SHALL run before `ConfigFileInitializer`
-- **AND** `ConfigFileInitializer` SHALL run before `SlashCommandsInitializer`, `HomeSlashCommandsInitializer`, `PrefixedSlashCommandsInitializer`, and `TOMLSlashCommandsInitializer`
+- **AND** `ConfigFileInitializer` SHALL run before `SlashCommandsInitializer`, `HomeSlashCommandsInitializer`, `PrefixedSlashCommandsInitializer`, `HomePrefixedSlashCommandsInitializer`, and `TOMLSlashCommandsInitializer`
 
 #### Scenario: Ordering within same category
 - **WHEN** multiple initializers of the same type exist (e.g., multiple SlashCommandsInitializer instances)
@@ -434,42 +438,28 @@ The system SHALL execute initializers in a guaranteed order by type.
 - **THEN** it SHALL be a documented API guarantee
 - **AND** implementers MAY rely on this ordering
 
-### Requirement: Initialize Result
-The system SHALL return file change information from each initializer.
-
-#### Scenario: Initializer returns result
-- **WHEN** `Init()` is called on an initializer
-- **THEN** it SHALL return an `InitResult` containing created and updated files
-- **AND** the `InitResult` SHALL have `CreatedFiles` and `UpdatedFiles` fields
-
-#### Scenario: Result accumulation
-- **WHEN** multiple initializers are executed
-- **THEN** the executor SHALL accumulate all `InitResult` values
-- **AND** the accumulated results SHALL be returned in the `ExecutionResult`
-
 ### Requirement: ExecutionResult Type
-The system SHALL define an `ExecutionResult` type for aggregated initialization results.
+The system SHALL define an `ExecutionResult` type for initialization results.
 
 ```go
 type ExecutionResult struct {
-    CreatedFiles []string // all files created across all initializers
-    UpdatedFiles []string // all files updated across all initializers
+    CreatedFiles []string // files created
+    UpdatedFiles []string // files updated
 }
-// Note: Error is returned separately from the execution function, not stored in this struct
+// Note: Error is returned separately, not stored in this struct
 ```
 
-#### Scenario: ExecutionResult structure
-- **WHEN** initialization completes
-- **THEN** the system SHALL return an `ExecutionResult` containing:
-  - `CreatedFiles []string` - all files created across all initializers
-  - `UpdatedFiles []string` - all files updated across all initializers
-- **AND** errors SHALL be returned separately from the execution function (not stored in ExecutionResult)
+#### Scenario: ExecutionResult from initializer
+- **WHEN** `Init()` is called on an initializer
+- **THEN** it SHALL return an `ExecutionResult` containing created and updated files
+- **AND** errors SHALL be returned separately (second return value)
 
-#### Scenario: aggregateResults function
-- **WHEN** initializers have been executed
-- **THEN** the `aggregateResults(results []InitResult) ExecutionResult` function SHALL combine all results
-- **AND** it SHALL concatenate all created files into a single slice
-- **AND** it SHALL concatenate all updated files into a single slice
+#### Scenario: ExecutionResult from executor
+- **WHEN** multiple initializers are executed
+- **THEN** the executor SHALL combine all results into a single `ExecutionResult`
+- **AND** it SHALL concatenate all `CreatedFiles` slices
+- **AND** it SHALL concatenate all `UpdatedFiles` slices
+- **AND** on error, it SHALL return partial results from initializers that succeeded
 
 ### Requirement: Dual Filesystem Support
 The system SHALL provide two filesystem instances to all initializers.
@@ -487,7 +477,7 @@ The system SHALL provide two filesystem instances to all initializers.
 #### Scenario: Filesystem selection by type
 - **WHEN** an initializer determines which filesystem to use
 - **THEN** the choice SHALL be based on the initializer's type
-- **AND** `HomeDirectoryInitializer` and `HomeSlashCommandsInitializer` SHALL use `homeFs`
+- **AND** `HomeDirectoryInitializer`, `HomeSlashCommandsInitializer`, and `HomePrefixedSlashCommandsInitializer` SHALL use `homeFs`
 - **AND** `DirectoryInitializer`, `SlashCommandsInitializer`, `PrefixedSlashCommandsInitializer`, `ConfigFileInitializer`, and `TOMLSlashCommandsInitializer` SHALL use `projectFs`
 - **AND** initializers receive both filesystems but use only the appropriate one based on their type
 

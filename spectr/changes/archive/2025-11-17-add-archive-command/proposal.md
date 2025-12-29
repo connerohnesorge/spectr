@@ -1,7 +1,9 @@
 # Change: Add Archive Command for Completing and Applying Changes
 
 ## Why
+
 After implementing and deploying a Spectr change, users currently have no automated way to:
+
 1. Move the change to an archive with a dated timestamp
 2. Apply delta specs to the main specification files
 3. Validate that the change is complete and correct before archiving
@@ -10,6 +12,7 @@ After implementing and deploying a Spectr change, users currently have no automa
 OpenSpec provides a robust archive command (`openspec archive`) that handles all these tasks systematically. Spectr should have equivalent functionality to complete the change lifecycle and maintain spec-change consistency.
 
 ## What Changes
+
 - Add new `archive` command that moves completed changes to `spectr/changes/archive/YYYY-MM-DD-<change-id>/`
 - Implement delta spec application that merges ADDED/MODIFIED/REMOVED/RENAMED requirements into main specs
 - Add pre-archive validation of change delta specs and proposal
@@ -31,6 +34,7 @@ OpenSpec provides a robust archive command (`openspec archive`) that handles all
 - Archive naming format: `YYYY-MM-DD-<change-id>` for chronological sorting
 
 ## Impact
+
 - **Affected specs**: `cli-framework` (extends existing command set)
 - **New spec**: `archive-workflow` - Defines archive command behavior and spec merging
 - **Affected code**:
@@ -48,6 +52,7 @@ OpenSpec provides a robust archive command (`openspec archive`) that handles all
     - `specs.go` - Find main specs that need updates
 
 ## Benefits
+
 - **Complete workflow**: Users can now scaffold → implement → validate → archive changes
 - **Spec consistency**: Automated merging prevents manual errors
 - **Audit trail**: Dated archives provide deployment history
@@ -56,12 +61,15 @@ OpenSpec provides a robust archive command (`openspec archive`) that handles all
 - **Alignment**: Matches OpenSpec's proven archive command semantics
 
 ## Migration Notes
+
 This is a new capability. Existing changes can be archived using:
+
 ```bash
 spectr archive <change-id>
 ```
 
 For changes that only modify tooling/documentation without spec updates:
+
 ```bash
 spectr archive <change-id> --skip-specs
 ```

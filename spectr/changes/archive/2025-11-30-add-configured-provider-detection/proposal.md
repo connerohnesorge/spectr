@@ -3,6 +3,7 @@
 ## Why
 
 When running `spectr init` on a project that already has some providers configured, users have no visual indication of which tools are already set up. This forces users to either:
+
 1. Manually check file existence before running init
 2. Accidentally re-select already-configured providers (harmless but confusing)
 3. Miss the opportunity to understand their current configuration state

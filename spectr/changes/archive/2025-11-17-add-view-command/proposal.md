@@ -1,9 +1,11 @@
 # Change: Add View Command for Dashboard Display
 
 ## Why
+
 Spectr currently lacks a comprehensive dashboard that provides a quick overview of the entire project state. Users must run multiple commands (`list`, `validate`) or manually navigate directories to understand active changes, task progress, and available specifications. A view command that aggregates this information into a single, visual dashboard would dramatically improve project visibility and developer productivity. OpenSpec provides such a dashboard—Spectr should offer equivalent functionality to give users an at-a-glance understanding of their spec-driven development workflow.
 
 ## What Changes
+
 - Add new `view` command to the CLI that displays a comprehensive project dashboard
 - Show summary metrics for specifications, active changes, and completed changes
 - Display active changes with visual progress bars based on task completion
@@ -16,6 +18,7 @@ Spectr currently lacks a comprehensive dashboard that provides a quick overview 
 - Provide helpful footer with navigation hints to related commands
 
 ## Impact
+
 - **Affected specs**: `cli-framework` (extends existing)
 - **Affected code**:
   - `cmd/root.go` - Add ViewCmd struct to CLI
@@ -30,6 +33,7 @@ Spectr currently lacks a comprehensive dashboard that provides a quick overview 
   - May need additional styling package or use lipgloss for colors and formatting
 
 ## Benefits
+
 - **Project visibility**: Single command provides complete project overview
 - **Progress tracking**: Visual progress bars show task completion at a glance
 - **Developer productivity**: Reduces cognitive load by aggregating key information

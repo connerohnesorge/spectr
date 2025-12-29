@@ -164,7 +164,7 @@ The system SHALL handle git operation errors gracefully, providing clear error m
 
 - **WHEN** user runs `spectr archive my-feature --pr` for a GitHub repository
 - **AND** the `gh` CLI tool is not installed
-- **THEN** an error is displayed: "gh not found. Install from https://github.com/cli/cli"
+- **THEN** an error is displayed: "gh not found. Install from <https://github.com/cli/cli>"
 - **AND** the archive operation completes successfully
 - **AND** the branch is created and pushed
 - **AND** user can manually create PR using gh after installation
@@ -197,7 +197,7 @@ The system SHALL display the PR URL after successful PR creation to provide imme
 - **WHEN** archive with `--pr` flag completes successfully
 - **AND** the PR is created
 - **THEN** a success message displays the PR URL
-- **AND** the message format is "PR created: https://github.com/owner/repo/pull/123" (or equivalent for GitLab/Gitea)
+- **AND** the message format is "PR created: <https://github.com/owner/repo/pull/123>" (or equivalent for GitLab/Gitea)
 - **AND** the command exits with code 0
 
 #### Scenario: Display success after archive confirmation

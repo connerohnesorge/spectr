@@ -7,11 +7,13 @@ Rename the `spectr pr new` subcommand to `spectr pr proposal` to align with the 
 ## Motivation
 
 The slash commands in `.claude/commands/spectr/` use the term "proposal" for creating change proposals:
+
 - `/spectr:proposal` - Scaffold a new Spectr change
 - `/spectr:apply` - Implement an approved change
 - `/spectr:sync` - Detect spec drift
 
 However, the CLI uses `spectr pr new` for creating PR-based proposals, which creates cognitive dissonance:
+
 - Users familiar with slash commands expect "proposal" terminology
 - "new" is generic and doesn't convey the purpose (creating a proposal for review)
 - "proposal" matches the workflow concept documented in `spectr/AGENTS.md`
@@ -26,6 +28,7 @@ After:  spectr pr proposal <change-id>
 ```
 
 The command's behavior remains identical:
+
 - Creates a PR containing a Spectr change proposal for review
 - Copies the change to an isolated git worktree without archiving
 - Original change remains in `spectr/changes/<change-id>/`

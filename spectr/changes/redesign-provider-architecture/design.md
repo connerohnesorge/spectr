@@ -3,12 +3,14 @@
 ## Context
 
 Spectr supports 15 AI CLI/IDE tools (Claude Code, Cursor, Cline, etc.) through a provider system. Each provider configures:
+
 1. An instruction file (e.g., `CLAUDE.md`) with marker-based updates
 2. Slash commands (e.g., `.claude/commands/spectr/proposal.md`)
 
 The current implementation has each provider implement a 12-method interface, with most embedding `BaseProvider`. This leads to ~50 lines of boilerplate per provider when the actual variance is just configuration values.
 
 **Current Problems:**
+
 1. **Import cycle**: `providers.TemplateManager` cannot import `internal/initialize/templates` without creating an import cycle, forcing the use of `any` as placeholder types
 2. **Silent registration failures**: Provider registration in `init()` assigns errors to the blank identifier, silently discarding failures
 
@@ -19,6 +21,7 @@ The current implementation has each provider implement a 12-method interface, wi
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Reduce provider authoring to ~10 lines of registration code
 - Enable sharing and deduplication of common initialization logic
 - Improve testability of initialization steps
@@ -29,6 +32,7 @@ The current implementation has each provider implement a 12-method interface, wi
 - Fail-fast registration with explicit error handling (no silent failures)
 
 **Non-Goals:**
+
 - Runtime plugin loading (all providers compiled in)
 - Backwards compatibility with existing configurations
 - Rollback on partial failure
@@ -41,6 +45,7 @@ The current implementation has each provider implement a 12-method interface, wi
 **Decision**: Create `internal/domain` package containing shared domain types to break import cycles.
 
 **Problem**: The current architecture has an import cycle issue:
+
 - `providers.TemplateManager` needs to reference template types like `TemplateRef` and `SlashCommand`
 - These types are defined in `internal/initialize/templates`
 - But `templates` cannot import `providers` and vice versa without creating a cycle
@@ -103,6 +108,7 @@ func (s SlashCommand) String() string {
 The slash command templates (`slash-proposal.md.tmpl`, `slash-apply.md.tmpl`) will be moved from `internal/initialize/templates/tools/` into the `internal/domain` package. This achieves full consolidation by:
 
 1. **Embedding templates in domain package:**
+
    ```go
    // internal/domain/templates.go
    package domain
@@ -123,6 +129,7 @@ The slash command templates (`slash-proposal.md.tmpl`, `slash-apply.md.tmpl`) wi
    Templates are accessed through `TemplateManager.SlashCommand(cmd)`, NOT via a method on `SlashCommand` itself. This keeps template rendering concerns separate from the domain type.
 
 **Import structure after change:**
+
 ```
 internal/domain                    <- shared types + embedded slash templates
     ├── template.go                <- TemplateRef, TemplateContext
@@ -145,6 +152,7 @@ internal/initialize/providers
 ```
 
 **Benefits:**
+
 - Clean separation of domain types from implementation
 - No import cycles possible (domain has no internal dependencies)
 - Types can be shared freely between packages
@@ -205,6 +213,7 @@ func (c *Config) AgentsFile() string  { return c.SpectrDir + "/AGENTS.md" }
 ```
 
 **Alternatives considered:**
+
 - Keep metadata in Provider interface (current design) - More boilerplate
 - Use functional options pattern - Harder to test
 - Store all paths in Config - Redundant, error-prone
@@ -214,6 +223,7 @@ func (c *Config) AgentsFile() string  { return c.SpectrDir + "/AGENTS.md" }
 **Decision**: Register providers explicitly from a central location, not via `init()`.
 
 **Problem**: The current `init()` pattern has multiple issues:
+
 ```go
 // CURRENT (BAD):
 // 1. Error is discarded - registration failures are silent
@@ -295,6 +305,7 @@ func RegisterAllProviders() error {
 ```
 
 **Application startup (cmd/root.go or main.go):**
+
 ```go
 func init() {
     // Single init() that calls explicit registration with error handling
@@ -313,6 +324,7 @@ func main() {
 ```
 
 **Rationale**:
+
 - **Testability**: Tests can call `RegisterProvider()` individually or skip registration entirely
 - **Clarity**: All registrations in one place, easy to see what providers exist
 - **Error handling**: Errors are explicit and propagated, not silently discarded
@@ -342,6 +354,7 @@ func Register(_ any) {
 6. **No benefit**: This is a single change that migrates all providers at once - there's no partial migration state where compatibility is needed
 
 **Our approach instead:**
+
 - Complete removal of old `Register()` function
 - Any code calling it will fail to compile
 - Developers get clear error: `undefined: Register`
@@ -384,6 +397,7 @@ func NewTOMLSlashCommandsInitializer(dir string, commands map[SlashCommand]Templ
 ```
 
 **Rationale for separate types**:
+
 - Clear intent: Type name makes filesystem and format choice explicit
 - No constructor parameters for format/filesystem: `TOMLSlashCommandsInitializer` vs `SlashCommandsInitializer`
 - Type-safe deduplication: can dedupe by type + path without checking internal flags
@@ -485,6 +499,7 @@ func updateWithMarkers(content, newContent string) (string, error) {
 **Marker Format**: Marker matching is **case-insensitive for reading** (matches both `<!-- spectr:START -->` and `<!-- spectr:start -->`), but **always writes lowercase** `<!-- spectr:start -->` and `<!-- spectr:end -->` for consistency across all providers. This ensures behavioral equivalence with files created by older versions.
 
 **Edge Cases Handled**:
+
 - **Missing markers**: Insert at end of file with markers
 - **Orphaned end marker**: Return error (corrupted file)
 - **Nested markers**: Return error (not supported)
@@ -493,6 +508,7 @@ func updateWithMarkers(content, newContent string) (string, error) {
 - **Normal case**: Replace content between existing markers
 
 **Rationale**:
+
 - **Prevents duplicate blocks**: Don't append when start marker already exists
 - **Error on corruption**: Fail fast for orphaned end, nested, or multiple starts
 - **Recovers gracefully**: Create markers if missing, use trailing end if found
@@ -525,6 +541,7 @@ type ExecutorContext struct {
 ```
 
 **Rationale**:
+
 - Project paths are cleaner and easier to test
 - Home paths support tools like Codex that use ~/.codex/
 - Initializers receive both filesystems and decide internally which to use based on their type (Home* initializers use homeFs)
@@ -629,10 +646,12 @@ func (p *GeminiProvider) Initializers(ctx context.Context, tm *TemplateManager) 
 ```
 
 **Template Files by Initializer Type**:
+
 - `SlashCommandsInitializer` / `HomeSlashCommandsInitializer` / `PrefixedSlashCommandsInitializer` / `HomePrefixedSlashCommandsInitializer` → `slash-proposal.md.tmpl`, `slash-apply.md.tmpl`
 - `TOMLSlashCommandsInitializer` → `slash-proposal.toml.tmpl`, `slash-apply.toml.tmpl`
 
 **TOML Template Structure** (Gemini only):
+
 ```toml
 description = "Create a Spectr change proposal"
 prompt = """
@@ -643,6 +662,7 @@ prompt = """
 Minimal structure with `description` and `prompt` fields only.
 
 **TOML/Slash Command Update Behavior**:
+
 - All slash command initializers (TOML and Markdown) always overwrite existing files
 - This ensures idempotent behavior: running `spectr init` multiple times produces consistent results
 - User modifications to slash command files will be lost on re-initialization
@@ -743,6 +763,7 @@ func (d *DirectoryInitializer) dedupeKey() string {
 **Example**: If Claude Code and Cline both return `ConfigFileInitializer{path: "CLAUDE.md"}`, only one runs.
 
 **Rationale**:
+
 - Type-based keys: `HomeDirectoryInitializer` and `DirectoryInitializer` have different type names, preventing accidental deduplication across filesystem boundaries
 - Optional interface: Initializers that don't need deduplication don't have to implement it
 - Simple and covers the common case (multiple providers sharing same file)
@@ -772,6 +793,7 @@ This migration follows a **zero technical debt** policy - no compatibility shims
 ### No Compatibility Shims
 
 **We will NOT do this:**
+
 ```go
 // BAD: Deprecated compatibility shim that silently swallows calls
 func Register(_ any) {
@@ -780,12 +802,14 @@ func Register(_ any) {
 ```
 
 This approach:
+
 - Hides migration problems instead of surfacing them
 - Creates technical debt
 - Makes it unclear which registration method to use
 - Allows old code to "work" but not actually register providers
 
 **Instead, we do this:**
+
 - Remove `func Register(p Provider)` entirely from registry.go
 - Remove all `init()` functions from provider files
 - Implement `RegisterAllProviders()` in one central location
@@ -876,6 +900,7 @@ func NewTemplateManager() (*TemplateManager, error) {
 ```
 
 **Rationale**:
+
 - Reuses existing `TemplateManager` from `internal/initialize/templates.go`
 - Merges templates from both `internal/initialize` and `internal/domain` packages
 - Avoids duplicating template rendering logic in each initializer
@@ -883,6 +908,7 @@ func NewTemplateManager() (*TemplateManager, error) {
 - Domain package remains dependency-free (only exposes embed.FS, doesn't use it)
 
 **Alternatives considered:**
+
 - Each initializer implements own template rendering - More code duplication
 - Pass templates as strings - Less flexible, harder to maintain
 - Keep all templates in `internal/initialize` - Creates import cycle for domain types
@@ -892,6 +918,7 @@ func NewTemplateManager() (*TemplateManager, error) {
 **Decision**: Use typed template references instead of raw strings for compile-time safety.
 
 **Problem**: The original design had raw string inputs like:
+
 ```go
 // Unsafe: typo "instrction-pointer" would fail at runtime
 NewConfigFileInitializer("CLAUDE.md", "instruction-pointer")
@@ -1004,12 +1031,14 @@ NewTOMLSlashCommandsInitializer(".gemini/commands/spectr", map[domain.SlashComma
 ```
 
 **Benefits**:
+
 - Compile-time errors for invalid template names (typos caught by compiler)
 - IDE autocomplete for available templates
 - Refactoring-safe: renaming a template accessor updates all usages
 - Clear documentation of available templates through method signatures
 
 **Alternatives considered:**
+
 - String constants (`const TemplateInstructionPointer = "instruction-pointer"`) - Still strings, can be used incorrectly
 - Template name validation at startup - Runtime error, not compile-time
 - Passing `*template.Template` directly - Leaks implementation detail, harder to mock in tests

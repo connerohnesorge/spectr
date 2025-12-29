@@ -1,6 +1,7 @@
 ## Context
 
 Spectr currently has 35+ inline error strings scattered across 10+ files. Only 2 errors are defined as constants/variables. This makes errors:
+
 - Hard to find and audit
 - Difficult to ensure consistency
 - Impossible to reuse across packages
@@ -9,12 +10,14 @@ Spectr currently has 35+ inline error strings scattered across 10+ files. Only 2
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Centralize all error definitions in one package
 - Provide custom types with structured fields for programmatic access
 - Support standard error wrapping (`Unwrap()`)
 - Maintain backward-compatible error messages
 
 **Non-Goals:**
+
 - Creating a complex error hierarchy
 - Adding error codes or internationalization
 - Changing error message wording (preserve existing messages)
@@ -26,6 +29,7 @@ Spectr currently has 35+ inline error strings scattered across 10+ files. Only 2
 **Rationale:** Custom types provide structured fields for rich context and enable type-based error checking with `errors.As()`. The user explicitly requested this approach.
 
 **Alternatives considered:**
+
 - Sentinel errors: Simpler but no structured context
 - Mixed approach: More complex to maintain
 
@@ -34,6 +38,7 @@ Spectr currently has 35+ inline error strings scattered across 10+ files. Only 2
 **Rationale:** Groups related errors logically, scales well, and matches the existing `internal/` package structure.
 
 **Alternatives considered:**
+
 - Single file: Would become unwieldy with 20+ types
 - Flat with prefixes: Less clear organization
 

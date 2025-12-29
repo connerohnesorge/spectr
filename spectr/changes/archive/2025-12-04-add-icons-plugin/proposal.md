@@ -1,9 +1,11 @@
 # Change: Add Starlight Icons Plugin to Documentation Site
 
 ## Why
+
 The Spectr documentation site currently lacks visual iconography in the sidebar navigation, code blocks, and file tree components. The starlight-plugin-icons plugin provides access to over 200,000 icons from the Iconify library via UnoCSS integration, enabling enhanced visual navigation and improved content organization through icon-based visual cues. This plugin extends Starlight's functionality by wrapping the Starlight integration and adding build-time icon processing capabilities.
 
 ## What Changes
+
 - Install `starlight-plugin-icons` package and UnoCSS dependencies in docs/ project
 - Install UnoCSS Astro integration (`unocss`) as a prerequisite
 - Create `uno.config.ts` configuration file with `presetStarlightIcons()`
@@ -16,6 +18,7 @@ The Spectr documentation site currently lacks visual iconography in the sidebar 
 - Test icon functionality with basic functional testing
 
 ## Impact
+
 - **Affected specs**: `documentation` (MODIFIED - adds icon integration requirements)
 - **Affected files**:
   - Modified `docs/package.json` - Add starlight-plugin-icons, unocss, and icon collection dependencies
@@ -33,6 +36,7 @@ The Spectr documentation site currently lacks visual iconography in the sidebar 
   - Access to 200,000+ Iconify icons for documentation content
 
 ## Benefits
+
 - **Visual navigation**: Icons provide quick visual cues for navigation structure
 - **Improved scannability**: Code blocks and file trees become easier to scan with automatic language icons
 - **Consistency**: Unified icon system across all documentation components via Iconify
@@ -43,9 +47,11 @@ The Spectr documentation site currently lacks visual iconography in the sidebar 
 ## Technical Context
 
 ### Integration Pattern
+
 Unlike typical Starlight plugins that use the `plugins` array, starlight-plugin-icons uses a **wrapper pattern** where the `Icons()` function wraps the entire Starlight configuration. This allows the plugin to intercept and enhance the sidebar configuration with icon support.
 
 **Before:**
+
 ```javascript
 starlight({
   title: 'Spectr',
@@ -54,6 +60,7 @@ starlight({
 ```
 
 **After:**
+
 ```javascript
 Icons({
   starlight: {
@@ -64,23 +71,28 @@ Icons({
 ```
 
 ### UnoCSS Requirement
+
 The plugin requires UnoCSS to be installed and configured as it uses UnoCSS's icon preset to render icons from Iconify at build time. The `presetStarlightIcons()` preset provides optimized configuration for Starlight's specific needs.
 
 ### Icon Collection Management
+
 Icons are provided through installable `@iconify-json/*` packages. Each icon collection (e.g., Material Design, Phosphor, Heroicons) is a separate npm package that can be installed on-demand. The plugin uses the format `i-<collection>:<name>` to reference icons (e.g., `i-ph:rocket-launch-duotone`).
 
 ### Prerequisites
+
 - Astro 4+ (currently using 5.16.0 ✓)
 - Starlight 0.35+ (currently using 0.36.3 ✓)
 - UnoCSS Astro integration (to be installed)
 
 ## Out of Scope
+
 - Custom icon styling beyond default configuration (using plugin defaults)
 - Adding icons to all sidebar entries immediately (icons are optional per entry)
 - Creating custom icon collections (using Iconify's existing collections)
 - Replacing existing Starlight plugins (Icons wrapper is compatible with existing plugins)
 
 ## References
+
 - [starlight-plugin-icons Documentation](https://docs.rettend.me/starlight-plugin-icons)
 - [starlight-plugin-icons GitHub Repository](https://github.com/Rettend/starlight-plugin-icons)
 - [Iconify Icon Gallery](https://icones.js.org/)

@@ -27,6 +27,7 @@ spectr/changes/my-change/
 ### Example Information Loss
 
 **Original tasks.md:**
+
 ```markdown
 ## 1. Implementation
 
@@ -37,6 +38,7 @@ spectr/changes/my-change/
 ```
 
 **Converted tasks.jsonc (loses formatting):**
+
 ```jsonc
 {
   "tasks": [
@@ -92,15 +94,18 @@ spectr/changes/my-change/
 ### Trade-offs
 
 **Pros:**
+
 - Simple implementation (remove file deletion)
 - Preserves all original information
 - Flexible workflow (users can edit either file)
 
 **Cons:**
+
 - Two files to maintain (could diverge)
 - Slightly more complex mental model (which file is source of truth?)
 
 **Mitigation:**
+
 - Document that tasks.jsonc is the runtime source of truth
 - Add validation warning if files diverge
 - Consider `spectr sync-tasks` command in future to sync tasks.md ← tasks.jsonc
@@ -108,12 +113,15 @@ spectr/changes/my-change/
 ## Alternatives Considered
 
 ### Alternative 1: Add `unaccept` Subcommand
+
 **Rejected**: More complex, still doesn't preserve original formatting
 
 ### Alternative 2: Enhance tasks.jsonc with Metadata
+
 **Rejected**: Too complex, adds significant schema changes
 
 ### Alternative 3: Best-Effort Reconstruction
+
 **Rejected**: Cannot recover lost formatting (backticks, links, comments)
 
 ## Success Criteria

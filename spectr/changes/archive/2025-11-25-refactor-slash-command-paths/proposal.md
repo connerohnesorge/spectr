@@ -3,6 +3,7 @@
 ## Why
 
 The current `SlashDir()` method returns a single directory for all slash commands, forcing a rigid file structure (`{slashDir}/spectr-{cmd}.md`). This prevents providers from having:
+
 - Different locations for each command type
 - Custom file naming conventions (not just `spectr-{cmd}`)
 - Mixed formats within a provider (e.g., one command as TOML, another as markdown)

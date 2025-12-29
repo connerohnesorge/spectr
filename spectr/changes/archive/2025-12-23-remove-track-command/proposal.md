@@ -11,6 +11,7 @@ The `spectr track` command provides automated git commits when task statuses cha
 ## Scope
 
 ### Code Removal
+
 - Remove `cmd/track.go` - Track command implementation
 - Remove `cmd/track_test.go` - Track command tests
 - Remove `internal/track/` package - All track-related infrastructure:
@@ -22,6 +23,7 @@ The `spectr track` command provides automated git commits when task statuses cha
 - Remove `TrackCmd` from `cmd/root.go` CLI struct
 
 ### Spec Updates
+
 - Remove "Track Command" requirement from `cli-interface` spec
 - Remove "Track Command Flags" requirement from `cli-interface` spec
 

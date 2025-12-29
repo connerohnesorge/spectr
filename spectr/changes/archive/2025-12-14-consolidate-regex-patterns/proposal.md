@@ -3,6 +3,7 @@
 ## Why
 
 The codebase has 28+ regex patterns scattered across 6 files for parsing markdown structure:
+
 - `internal/parsers/parsers.go` (3 patterns)
 - `internal/parsers/delta_parser.go` (10 patterns)
 - `internal/parsers/requirement_parser.go` (3 patterns)
@@ -11,6 +12,7 @@ The codebase has 28+ regex patterns scattered across 6 files for parsing markdow
 - `cmd/accept.go` (2 patterns)
 
 This causes several issues:
+
 1. **Duplication**: Same patterns (e.g., `^###\s+Requirement:`) appear in 4+ files
 2. **Inconsistency**: Subtle variations exist (some use `(?m)`, some don't)
 3. **No caching**: Patterns recompiled on every function call
@@ -18,6 +20,7 @@ This causes several issues:
 5. **Migration friction**: The upcoming `replace-regex-with-blackfriday` change must touch all 6 files
 
 Consolidating regex patterns into `internal/regex/` will:
+
 - Eliminate duplication immediately
 - Pre-compile patterns once at package init
 - Provide a single comparison point for blackfriday migration
@@ -63,6 +66,7 @@ Consolidating regex patterns into `internal/regex/` will:
 ## Relationship to Other Changes
 
 This change is a **prerequisite** for `replace-regex-with-blackfriday`. After this change:
+
 1. Blackfriday migration replaces `internal/regex/` with `internal/markdown/`
 2. Comparison tests can compare `regex.Match*()` vs `markdown.Parse*()`
 3. Cleaner diff: one package replacement instead of 6 file rewrites

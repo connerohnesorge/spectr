@@ -1,5 +1,7 @@
 ## Context
+
 Spectr currently uses a consolidated `internal/regex/` package with pre-compiled regex patterns for parsing markdown spec files. While this works, regex-based parsing has limitations:
+
 - Error messages lack precise location (line + column)
 - Patterns are fragile when edge cases arise
 - Adding new markdown features requires new regex patterns
@@ -14,6 +16,7 @@ The user requested eliminating all regex from the codebase and implementing a pr
 The following decisions were made based on user input:
 
 ### Core Architecture Decisions
+
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
 | Markdown scope | **Full CommonMark subset** | Support headers, lists, code blocks, emphasis, links - not just minimal Spectr patterns |
@@ -22,6 +25,7 @@ The following decisions were made based on user input:
 | API approach | **Clean slate API** | New `internal/markdown/` package with improved API; requires updating all call sites |
 
 ### Token and Lexer Decisions
+
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
 | Token granularity | **Fine-grained** | Each delimiter is separate token (e.g., `*`, `*`, text, `*`, `*` for bold). Maximum flexibility for error recovery. |
@@ -29,6 +33,7 @@ The following decisions were made based on user input:
 | Lexer API | **Internal only** | Lexer is implementation detail. Only expose parser API. Simpler public interface. |
 
 ### AST Decisions
+
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
 | AST mutability | **Immutable with builders** | Nodes are read-only after creation. Use builder/transform functions to create modified copies. Thread-safe, predictable. |
@@ -43,6 +48,7 @@ The following decisions were made based on user input:
 | Parent pointers | **No parent pointers** | Nodes only reference children. Parent passed via visitor context. Simpler, truly immutable. |
 
 ### Parser Decisions
+
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
 | Incremental parsing | **Tree-sitter style** | Full incremental with tree diffing. Maximum performance but significant complexity. |
@@ -51,6 +57,7 @@ The following decisions were made based on user input:
 | Emphasis handling | **CommonMark strict** | Follow CommonMark spec exactly for delimiter matching. Handles edge cases like `*a _b* c_` correctly. |
 
 ### Additional Feature Decisions
+
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
 | AST printer | **Normalized printer** | Regenerate markdown with consistent, minimal formatting. Useful for auto-formatting. |
@@ -66,6 +73,7 @@ The following decisions were made based on user input:
 ## Goals / Non-Goals
 
 ### Goals
+
 - Replace all regex-based markdown parsing with a token-based lexer/parser
 - Provide line and column numbers in all parse errors
 - Support CommonMark subset: headers, lists, code blocks, emphasis, links
@@ -74,6 +82,7 @@ The following decisions were made based on user input:
 - Clean, well-tested API in `internal/markdown/` package
 
 ### Non-Goals
+
 - Full CommonMark compliance (we focus on what Spectr needs)
 - Table support
 - HTML passthrough
@@ -108,18 +117,22 @@ The following decisions were made based on user input:
 ## Decisions
 
 ### Decision 1: Token-Based Lexer/Parser Architecture
+
 **What**: Separate lexer (tokenizer) and parser passes.
 **Why**:
+
 - Clear separation of concerns
 - Tokens are testable independently
 - Parser logic is cleaner without character-level handling
 - Easy to add new token types
 
 **Alternatives considered**:
+
 - Line-based state machine: Simpler but harder to extend for inline formatting
 - Recursive descent without lexer: Mixes tokenization with parsing
 
 ### Decision 2: Fine-Grained Token Types
+
 Token types are fine-grained with each delimiter as a separate token. See `specs/tokens/spec.md` for complete specification.
 
 ```go
@@ -168,6 +181,7 @@ type Token struct {
 ```
 
 ### Decision 3: Immutable AST Node Types
+
 Nodes are immutable with content hashing for identity. See `specs/ast/spec.md` for complete specification.
 
 ```go
@@ -220,6 +234,7 @@ func (n *Node) Position(idx *LineIndex) Position {
 ```
 
 ### Decision 4: Error Structure
+
 ```go
 type ParseError struct {
     Offset   int           // Byte offset where error occurred
@@ -238,6 +253,7 @@ func (e ParseError) Error() string {
 ```
 
 ### Decision 5: Collected Errors with Recovery
+
 **What**: Parser collects all errors and continues parsing via error recovery.
 **Why**: Better UX - users see all problems at once, not one at a time.
 
@@ -255,6 +271,7 @@ func Parse(source []byte) ParseResult {
 ```
 
 ### Decision 6: Tree-Sitter Style Incremental Parsing
+
 **What**: Full incremental parsing with diff-based edit detection and subtree reuse.
 **Why**: Maximum performance for editor integrations and repeated validation.
 
@@ -279,6 +296,7 @@ type EditRegion struct {
 ```
 
 ### Decision 7: Visitor Pattern for AST Traversal
+
 **What**: Classic visitor pattern with double dispatch.
 **Why**: Type-safe, extensible for different operations.
 
@@ -302,6 +320,7 @@ var SkipChildren = errors.New("skip children")
 ```
 
 ### Decision 8: Package Structure
+
 ```
 internal/markdown/
 ├── doc.go              # Package documentation
@@ -343,6 +362,7 @@ internal/markdown/
 ```
 
 ### Decision 9: Migration Strategy
+
 1. Create `internal/markdown/` package alongside `internal/regex/`
 2. Implement lexer with comprehensive tests
 3. Implement parser with comprehensive tests
@@ -356,6 +376,7 @@ internal/markdown/
 The lexer operates primarily on a line-by-line basis for block elements, with inline tokenization for emphasis, code, and links.
 
 ### Block-Level State Machine
+
 ```
 ┌─────────┐     '#'      ┌──────────┐
 │  START  │ ──────────── │  HEADER  │ ─── count '#' chars ─── emit TokenH1..H6
@@ -383,7 +404,9 @@ The lexer operates primarily on a line-by-line basis for block elements, with in
 ```
 
 ### Inline Tokenization
+
 For text within paragraphs, list items, and headers:
+
 ```
 ┌──────────┐    '**' or '__'    ┌────────┐
 │  INLINE  │ ────────────────── │  BOLD  │
@@ -407,11 +430,14 @@ For text within paragraphs, list items, and headers:
 ```
 
 ### Link Definition Handling
+
 Reference-style links require a two-pass approach:
+
 1. **First pass**: Collect all link definitions `[ref]: url "optional title"` at block level
 2. **Second pass**: Resolve `[text][ref]` references using collected definitions
 
 Link definitions:
+
 - Must appear at start of line (no leading whitespace except for continuation)
 - Format: `[label]: destination "optional title"`
 - Labels are case-insensitive for matching
@@ -419,15 +445,18 @@ Link definitions:
 - Are removed from final output (not rendered)
 
 ### Wikilink Handling (Spectr Extension)
+
 Wikilinks provide a convenient way to link between specs and changes:
 
 **Syntax**:
+
 - `[[spec-name]]` - link to spec, display text is spec name
 - `[[spec-name|Display Text]]` - link to spec with custom display text
 - `[[changes/my-change]]` - link to a change
 - `[[validation#Requirement: Spec File Validation]]` - link to specific requirement
 
 **Resolution**:
+
 - Parser produces `NodeWikilink` with `Target` and optional `Display` fields
 - Resolution is deferred to rendering/validation layer (not parser's job)
 - Resolution rules:
@@ -437,6 +466,7 @@ Wikilinks provide a convenient way to link between specs and changes:
 - Unresolved wikilinks should be flagged by validation
 
 **Token structure**:
+
 ```go
 type WikilinkToken struct {
     Target  string  // e.g., "validation" or "changes/my-change"
@@ -448,7 +478,9 @@ type WikilinkToken struct {
 ```
 
 ### Emphasis Disambiguation Rules
+
 Following CommonMark spec section 6.2-6.4:
+
 1. **Delimiter run**: sequence of `*` or `_` not preceded/followed by same char
 2. **Left-flanking**: not followed by whitespace, and either not followed by punctuation OR preceded by whitespace/punctuation
 3. **Right-flanking**: not preceded by whitespace, and either not preceded by punctuation OR followed by whitespace/punctuation
@@ -462,37 +494,46 @@ Implementation will track delimiter stack for proper matching.
 The parser will recognize Spectr-specific patterns:
 
 ### Requirement Headers
+
 ```markdown
 ### Requirement: Name Here
 ```
+
 Parsed as `NodeRequirement` with `Content = "Name Here"`
 
 ### Scenario Headers
+
 ```markdown
 #### Scenario: Description Here
 ```
+
 Parsed as `NodeScenario` with `Content = "Description Here"`
 
 ### WHEN/THEN/AND Bullets
+
 ```markdown
 - **WHEN** condition
 - **THEN** result
 - **AND** additional
 ```
+
 Parsed as `NodeTaskItem` with special `Keyword` field.
 
 ### Delta Sections
+
 ```markdown
 ## ADDED Requirements
 ## MODIFIED Requirements
 ## REMOVED Requirements
 ## RENAMED Requirements
 ```
+
 Recognized as `NodeSection` with `DeltaType` field.
 
 ## Non-Markdown Regex (Retained)
 
 The following regex patterns in `internal/git/platform.go` are NOT markdown-related and will be retained or converted separately:
+
 - SSH URL pattern: `^(?:[\w-]+@)?([^:]+):(.+)$`
 - HTTPS URL pattern: `^(?:https?|ssh|git)://(?:[\w-]+@)?([^/]+)/(.+)$`
 
@@ -501,19 +542,25 @@ These could optionally be converted to string parsing functions for consistency,
 ## Risks / Trade-offs
 
 ### Risk: Performance Regression
+
 **Mitigation**: Benchmark lexer and parser against regex implementation. Token-based parsing is typically faster than regex for structured content.
 
 ### Risk: Edge Cases in Lexer
+
 **Mitigation**: Comprehensive test suite with edge cases from CommonMark spec test suite. Fuzzing tests.
 
 ### Risk: Breaking Existing Functionality
+
 **Mitigation**:
+
 - Maintain parallel implementations during migration
 - Extensive integration tests comparing old vs new output
 - Gradual migration with feature flags if needed
 
 ### Trade-off: Increased Code Size
+
 Handbuilt parser is more code than regex patterns, but:
+
 - Code is more readable and maintainable
 - Tests are clearer
 - Errors are better
@@ -521,6 +568,7 @@ Handbuilt parser is more code than regex patterns, but:
 ## Migration Plan
 
 ### Phase 1: Core Package (Est. complexity: Medium)
+
 1. Create `internal/markdown/token.go` with token types
 2. Create `internal/markdown/lexer.go` with lexer
 3. Create `internal/markdown/node.go` with AST types
@@ -528,12 +576,14 @@ Handbuilt parser is more code than regex patterns, but:
 5. Comprehensive unit tests for each component
 
 ### Phase 2: API and Spec Parsing (Est. complexity: Medium)
+
 1. Create `internal/markdown/api.go` with public API
 2. Create `internal/markdown/spec.go` for Spectr-specific parsing
 3. Create `internal/markdown/delta.go` for delta parsing
 4. Integration tests against real spec files
 
 ### Phase 3: Migration (Est. complexity: Low-Medium per file)
+
 1. Update `internal/parsers/requirement_parser.go`
 2. Update `internal/parsers/delta_parser.go`
 3. Update `internal/validation/parser.go`
@@ -542,12 +592,15 @@ Handbuilt parser is more code than regex patterns, but:
 6. Update `internal/validation/change_rules.go`
 
 ### Phase 4: Cleanup
+
 1. Delete `internal/regex/` package
 2. Update validation spec (remove regex-related requirements)
 3. Update documentation
 
 ### Rollback
+
 If issues arise:
+
 - Revert migration commits
 - `internal/regex/` remains functional until fully migrated
 - No parallel runtime overhead (one or the other, not both)

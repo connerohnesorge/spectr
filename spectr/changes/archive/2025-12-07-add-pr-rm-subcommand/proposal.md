@@ -3,6 +3,7 @@
 ## Why
 
 When a change proposal is abandoned, stale, or superseded, there is no convenient way to create a PR that cleanly removes it from the repository. Currently, users must manually:
+
 1. Delete the change directory locally
 2. Stage and commit the deletion
 3. Create a branch and push

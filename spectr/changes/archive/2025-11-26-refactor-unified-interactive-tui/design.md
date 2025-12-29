@@ -11,6 +11,7 @@ Both share similar patterns but are completely independent, leading to ~1100 lin
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Create a shared `internal/tui` package with composable components
 - Reduce code duplication by 40-50%
 - Maintain exact same user-facing behavior
@@ -18,6 +19,7 @@ Both share similar patterns but are completely independent, leading to ~1100 lin
 - Make adding new interactive features easier
 
 **Non-Goals:**
+
 - Adding new features to the interactive modes
 - Changing the visual appearance
 - Supporting additional TUI libraries
@@ -43,6 +45,7 @@ internal/tui/
 ### Decision: TablePicker as primary building block
 
 The `TablePicker` will be a configurable table-based selector that supports:
+
 - Configurable columns
 - Row data as `[]table.Row`
 - Configurable key actions (map of key -> callback)
@@ -51,12 +54,14 @@ The `TablePicker` will be a configurable table-based selector that supports:
 - Help text generation from registered actions
 
 **Alternatives considered:**
+
 - Embedding bubbletea models directly - rejected as it still requires duplication of Update logic
 - Using interfaces for shared behavior - rejected as too abstract for the concrete use cases
 
 ### Decision: Keep domain logic in consuming packages
 
 The `list` and `validation` packages will remain responsible for:
+
 - Building their specific data structures
 - Defining domain-specific actions (archive, edit, validate)
 - Handling domain-specific messages
@@ -83,12 +88,15 @@ picker := tui.NewTablePicker(columns, rows).
 ## Risks / Trade-offs
 
 **Risk:** Over-abstraction
+
 - **Mitigation:** Start with only clearly shared code. If something is used in only one place, keep it there.
 
 **Risk:** Breaking existing behavior
+
 - **Mitigation:** Write comprehensive tests before refactoring. Run `go test ./...` after each change.
 
 **Risk:** Increased complexity for simple changes
+
 - **Mitigation:** Keep the API simple. If adding a feature requires touching `internal/tui`, that's fine - it should be easy.
 
 ## Migration Plan

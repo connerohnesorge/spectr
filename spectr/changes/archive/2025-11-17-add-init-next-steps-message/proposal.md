@@ -7,6 +7,7 @@ After running `spectr init`, users are left without clear guidance on what to do
 ## What Changes
 
 Add a helpful "Next steps" message at the end of the initialization process that provides:
+
 - Clear, copy-paste ready prompts for AI assistants
 - Three progressive steps: populate project context, create first change, learn workflow
 - References to key files (spectr/project.md, spectr/AGENTS.md)

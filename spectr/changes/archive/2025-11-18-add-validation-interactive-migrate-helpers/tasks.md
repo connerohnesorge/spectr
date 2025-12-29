@@ -1,10 +1,12 @@
 ## 1. Preparation and Analysis
+
 - [x] 1.1 Review existing helper files to understand all exported functions and types
 - [x] 1.2 Review existing TUI patterns in internal/list/interactive.go for consistency
 - [x] 1.3 Identify all import dependencies for migrated code
 - [x] 1.4 Plan package structure for internal/validation/ additions
 
 ## 2. Migrate Helper Files to Internal Package
+
 - [x] 2.1 Create internal/validation/helpers.go with functions from cmd/validate_helpers.go
   - [x] 2.1.1 Migrate determineItemType and itemTypeInfo
   - [x] 2.1.2 Migrate validateItemByType
@@ -32,6 +34,7 @@
   - [x] 2.5.3 Delete cmd/validate_print.go
 
 ## 3. Implement Interactive Validation TUI
+
 - [x] 3.1 Create internal/validation/interactive.go following list/interactive.go patterns
   - [x] 3.1.1 Define interactiveValidationModel struct with bubbletea.Model interface
   - [x] 3.1.2 Implement Init() method
@@ -54,6 +57,7 @@
   - [x] 3.4.3 Show validation progress during execution
 
 ## 4. Testing
+
 - [x] 4.1 Run existing validation tests to ensure no regressions
   - [x] 4.1.1 Run go test ./internal/validation/...
   - [x] 4.1.2 Verify all existing tests pass
@@ -77,6 +81,7 @@
   - [x] 4.4.7 Test in non-TTY environment (CI simulation)
 
 ## 5. Documentation and Validation
+
 - [x] 5.1 Run linter and fix any issues
   - [x] 5.1.1 Run golangci-lint run
   - [x] 5.1.2 Fix any linting errors

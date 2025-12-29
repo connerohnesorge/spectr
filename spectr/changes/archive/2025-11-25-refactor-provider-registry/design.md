@@ -1,12 +1,14 @@
 ## Context
 
 The current tool registry (`internal/init/`) manages AI CLI tool configurations through:
+
 - `tool_definitions.go`: Global maps (`toolConfigs`, `slashToolConfigs`) with hardcoded configuration
 - `registry.go`: `ToolRegistry` struct wrapping a map of `ToolDefinition` pointers
 - `configurator.go`: `GenericConfigurator` that reads from global maps
 - Separate "config" and "slash" tool entries with a mapping between them
 
 Adding a new provider (e.g., Gemini CLI with TOML-based commands) requires:
+
 1. Adding constants to `tool_definitions.go`
 2. Adding entries to multiple global maps
 3. Potentially modifying `configurator.go` for format differences
@@ -16,6 +18,7 @@ This proposal introduces a Go-idiomatic interface-driven pattern with **one inte
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Define a single `Provider` interface per tool (not separate config/slash)
 - Create one Go file per provider under `internal/init/providers/`
 - Each provider handles both its instruction file AND slash commands
@@ -23,6 +26,7 @@ This proposal introduces a Go-idiomatic interface-driven pattern with **one inte
 - Make adding new providers a single-file addition
 
 **Non-Goals:**
+
 - Changing the CLI user experience (same commands, same flags)
 - Supporting runtime provider discovery (compile-time registration is sufficient)
 - Supporting user-defined providers (out of scope for this change)
@@ -66,6 +70,7 @@ const (
 ### Decision: Per-Provider Files
 
 Create `internal/init/providers/` directory with:
+
 - `provider.go` - Interface definition and base helpers
 - `registry.go` - Global registry and registration functions
 - `claude.go` - Claude Code (CLAUDE.md + .claude/commands/)
@@ -89,6 +94,7 @@ func init() {
 ### Decision: TOML Command Format Support
 
 Gemini uses TOML for custom commands:
+
 ```toml
 # ~/.gemini/commands/spectr-proposal.toml
 description = "Scaffold a new Spectr change and validate strictly."

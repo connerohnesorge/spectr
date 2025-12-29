@@ -5,6 +5,7 @@
 The `spectr init` command SHALL display a formatted "Next steps" message after successful initialization that provides users with clear, actionable guidance for getting started with Spectr.
 
 The message SHALL include:
+
 1. Three progressive steps with copy-paste ready prompts for AI assistants
 2. Visual separators to make the message stand out
 3. References to key Spectr files and documentation

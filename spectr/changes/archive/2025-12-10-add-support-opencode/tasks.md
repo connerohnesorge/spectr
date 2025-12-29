@@ -1,4 +1,5 @@
 ## 1. Implementation
+
 - [ ] 1.1 Add `PriorityOpencode` constant to `internal/initialize/providers/constants.go`
 - [ ] 1.2 Create `internal/initialize/providers/opencode.go` with OpenCode provider implementation
 - [ ] 1.3 Create `internal/initialize/providers/opencode_test.go` with provider tests

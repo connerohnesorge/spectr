@@ -11,6 +11,7 @@ The `redesign-provider-architecture` change exemplifies this: 60+ tasks, 9 secti
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Enable delta specs to have their own `tasks.jsonc` files
 - Provide summary view in root file for quick status overview
 - Auto-generate hierarchical structure from `tasks.md` during accept
@@ -18,6 +19,7 @@ The `redesign-provider-architecture` change exemplifies this: 60+ tasks, 9 secti
 - Keep the format simple enough for agents to understand and edit
 
 **Non-Goals:**
+
 - Deeply nested hierarchies (max 2 levels: root → capability)
 - Complex dependency graphs between tasks
 - Task file splitting by arbitrary criteria (only by capability)
@@ -27,6 +29,7 @@ The `redesign-provider-architecture` change exemplifies this: 60+ tasks, 9 secti
 ### Decision 1: File Structure
 
 Root `tasks.jsonc` contains summary and references:
+
 ```jsonc
 {
   "version": 2,
@@ -58,6 +61,7 @@ Root `tasks.jsonc` contains summary and references:
 ```
 
 Delta spec `specs/support-aider/tasks.jsonc`:
+
 ```jsonc
 {
   "version": 2,
@@ -78,6 +82,7 @@ Delta spec `specs/support-aider/tasks.jsonc`:
 ```
 
 **Rationale:**
+
 - `version: 2` distinguishes new format from legacy `version: 1`
 - `summary` enables agents to see progress without reading all files
 - `children` syntax is explicit about the relationship
@@ -87,6 +92,7 @@ Delta spec `specs/support-aider/tasks.jsonc`:
 ### Decision 2: Auto-Split Logic in `spectr accept`
 
 When running `spectr accept <change-id>`:
+
 1. Parse `tasks.md` into sections
 2. For each section, check if a matching delta spec exists: `specs/<section-kebab>/spec.md`
 3. If match found, split those tasks into `specs/<section-kebab>/tasks.jsonc`
@@ -94,6 +100,7 @@ When running `spectr accept <change-id>`:
 5. Sections without matching delta specs remain in root as flat tasks
 
 **Matching rules:**
+
 - Section name "5. Migrate Providers" → check `specs/migrate-providers/`
 - Section name "Support Aider" → check `specs/support-aider/`
 - Exact match required (kebab-case normalized)
@@ -101,6 +108,7 @@ When running `spectr accept <change-id>`:
 ### Decision 3: Task ID Schema
 
 Hierarchical IDs follow dot notation:
+
 - Root task: `"5"`
 - Child task: `"5.1"`, `"5.2"`
 - Nested (if needed): `"5.1.1"`
@@ -110,6 +118,7 @@ The parent task ID becomes the prefix for all children. This maintains compatibi
 ### Decision 4: Resolution Order
 
 When multiple sources exist:
+
 1. Explicit `children` references are resolved first
 2. Then `includes` glob patterns are processed
 3. Duplicate detection by file path (same file = processed once)
@@ -119,6 +128,7 @@ This allows explicit ordering control via `children` while defaulting to glob di
 ### Decision 5: `spectr tasks` Command
 
 New command for viewing tasks:
+
 ```bash
 # Show summary (default)
 spectr tasks <change-id>

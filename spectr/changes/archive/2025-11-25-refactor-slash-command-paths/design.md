@@ -7,12 +7,14 @@ Gemini CLI requires TOML files instead of markdown, forcing it to override 5+ me
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Replace single `SlashDir()` with three explicit path methods
 - Each method returns a complete relative path including filename
 - Simplify provider implementations that need custom paths
 - Maintain backward-compatible behavior for standard providers
 
 **Non-Goals:**
+
 - Changing command content generation (templates unchanged)
 - Adding new command types
 - Modifying instruction file handling (`ConfigFile()`)
@@ -22,6 +24,7 @@ Gemini CLI requires TOML files instead of markdown, forcing it to override 5+ me
 ### Decision: Three separate path methods
 
 Replace `SlashDir() string` with:
+
 ```go
 GetProposalCommandPath() string  // e.g., ".claude/commands/spectr-proposal.md"
 GetArchiveCommandPath() string   // e.g., ".claude/commands/spectr-archive.md"
@@ -29,11 +32,13 @@ GetApplyCommandPath() string     // e.g., ".claude/commands/spectr-apply.md"
 ```
 
 **Why separate methods instead of `GetCommandPath(cmd string)`:**
+
 - Type safety: compile-time verification of command names
 - Explicit: each command path is independently configurable
 - No magic strings: callers don't need to know valid command names
 
 **Why relative paths:**
+
 - Consistent with `ConfigFile()` which returns relative paths
 - Callers (Configure, IsConfigured, GetFilePaths) already have `projectPath`
 - Easier to test (no absolute paths in expected values)
@@ -41,6 +46,7 @@ GetApplyCommandPath() string     // e.g., ".claude/commands/spectr-apply.md"
 ### Decision: Update BaseProvider with helper fields
 
 Instead of a single `slashDir` field, use three path fields:
+
 ```go
 type BaseProvider struct {
     id              string
@@ -61,6 +67,7 @@ Rejected because it adds complexity without solving the core problem (Gemini wou
 ### Decision: HasSlashCommands checks any path
 
 `HasSlashCommands()` returns true if ANY of the three paths is non-empty:
+
 ```go
 func (p *BaseProvider) HasSlashCommands() bool {
     return p.proposalPath != "" || p.archivePath != "" || p.applyPath != ""

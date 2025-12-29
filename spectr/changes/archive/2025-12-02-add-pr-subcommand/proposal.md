@@ -5,6 +5,7 @@
 Users need a streamlined way to create pull requests for Spectr changes without polluting their working directory. The current workflow requires manual steps: checkout new branch, archive/copy change, stage, commit, push, create PR. This is error-prone and tedious.
 
 A dedicated `spectr pr` subcommand with `archive` and `new` variants provides:
+
 - Complete isolation via git worktrees - user's working directory is never modified
 - Automatic platform detection (GitHub, GitLab, Gitea, Forgejo, Bitbucket)
 - Structured commit messages and PR bodies with change metadata

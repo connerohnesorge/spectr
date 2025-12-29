@@ -8,6 +8,7 @@ The codebase has three separate implementations of interactive table TUIs with s
 2. **`internal/validation/interactive.go`** (~450 lines) - handles validation menu and item picker
 
 Both implementations duplicate:
+
 - Table styling logic (`applyTableStyles`)
 - String truncation logic (`truncateString`)
 - Bubbletea model patterns (Init, Update, View)

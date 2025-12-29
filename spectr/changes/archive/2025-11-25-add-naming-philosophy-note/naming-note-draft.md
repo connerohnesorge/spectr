@@ -5,6 +5,7 @@ You might wonder: does the name of your specs folder and CLI tool actually matte
 ### Alternatives Evaluated
 
 We considered several naming approaches:
+
 - `specs/` - Common but generic; easily confused with documentation folders
 - `specifications/` - Descriptive but verbose; slower to type in CLI workflows
 - `requirements/` - Often associated with waterfall methodologies; less distinct

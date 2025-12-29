@@ -3,6 +3,7 @@
 ## 1. Foundation - Internal Packages
 
 ### 1.1 Create validation types package
+
 - [x] 1.1.1 Create `internal/validation/types.go`
 - [x] 1.1.2 Define `ValidationLevel` enum (ERROR, WARNING, INFO)
 - [x] 1.1.3 Define `ValidationIssue` struct (level, path, message)
@@ -12,6 +13,7 @@
 - [x] 1.1.7 Write unit tests for type marshaling/unmarshaling
 
 ### 1.2 Create markdown parser utilities
+
 - [x] 1.2.1 Create `internal/validation/parser.go`
 - [x] 1.2.2 Implement `ExtractSections(content string) map[string]string` for ## headers
 - [x] 1.2.3 Implement `ExtractRequirements(content string) []Requirement` for ### headers
@@ -21,6 +23,7 @@
 - [x] 1.2.7 Write unit tests with various markdown formats
 
 ### 1.3 Create discovery package
+
 - [x] 1.3.1 Create `internal/discovery/discovery.go`
 - [x] 1.3.2 Implement `GetActiveChangeIDs(projectRoot string) ([]string, error)`
 - [x] 1.3.3 Implement `GetSpecIDs(projectRoot string) ([]string, error)`
@@ -31,6 +34,7 @@
 ## 2. Core Validation Logic
 
 ### 2.1 Create spec validator
+
 - [x] 2.1.1 Create `internal/validation/spec_rules.go`
 - [x] 2.1.2 Implement `ValidateSpecFile(path string, strictMode bool) (*ValidationReport, error)`
 - [x] 2.1.3 Check for "## Purpose" section presence (ERROR if missing)
@@ -45,6 +49,7 @@
 - [x] 2.1.12 Write comprehensive unit tests
 
 ### 2.2 Create change delta validator
+
 - [x] 2.2.1 Create `internal/validation/change_rules.go`
 - [x] 2.2.2 Implement `ValidateChangeDeltaSpecs(changeDir string, strictMode bool) (*ValidationReport, error)`
 - [x] 2.2.3 Scan changeDir/specs/ for capability subdirectories
@@ -62,6 +67,7 @@
 - [x] 2.2.15 Write comprehensive unit tests with fixture files
 
 ### 2.3 Create main validator orchestrator
+
 - [x] 2.3.1 Create `internal/validation/validator.go`
 - [x] 2.3.2 Define `Validator` struct with strictMode field
 - [x] 2.3.3 Implement `NewValidator(strictMode bool) *Validator` constructor
@@ -74,6 +80,7 @@
 ## 3. CLI Command Implementation
 
 ### 3.1 Create validate command file
+
 - [x] 3.1.1 Create `cmd/validate.go`
 - [x] 3.1.2 Define `ValidateCmd` struct with Kong tags
 - [x] 3.1.3 Add `ItemName *string` field with `arg:"" optional:"" help:"..."`
@@ -86,6 +93,7 @@
 - [x] 3.1.10 Add `NoInteractive bool` field with `name:"no-interactive" help:"..."`
 
 ### 3.2 Implement Run method - routing logic
+
 - [x] 3.2.1 Implement `(c *ValidateCmd) Run() error`
 - [x] 3.2.2 Check if bulk flags (--all, --changes, --specs) are set
 - [x] 3.2.3 If bulk flags set, call `runBulkValidation()` and return
@@ -94,6 +102,7 @@
 - [x] 3.2.6 If ItemName provided, call `runDirectValidation()` and return
 
 ### 3.3 Implement direct validation
+
 - [x] 3.3.1 Create `runDirectValidation(itemName string) error` method
 - [x] 3.3.2 Use discovery to get list of changes and specs
 - [x] 3.3.3 Check if itemName exists in changes list
@@ -106,6 +115,7 @@
 - [x] 3.3.10 Set exit code based on validation result
 
 ### 3.4 Implement bulk validation
+
 - [x] 3.4.1 Create `runBulkValidation() error` method
 - [x] 3.4.2 Determine scope from flags (all, changes-only, specs-only)
 - [x] 3.4.3 Use discovery to get relevant item lists
@@ -118,6 +128,7 @@
 - [x] 3.4.10 Set exit code (1 if any failures)
 
 ### 3.5 Implement interactive mode
+
 - [x] 3.5.1 Create `runInteractiveMode() error` method
 - [x] 3.5.2 Check if stdin is TTY, error if not
 - [x] 3.5.3 Use interactive prompt library (e.g., promptui or survey)
@@ -127,6 +138,7 @@
 - [x] 3.5.7 Handle user cancellation gracefully
 
 ### 3.6 Implement output formatting
+
 - [x] 3.6.1 Create `printReport(itemType, itemName string, report *ValidationReport)` method
 - [x] 3.6.2 For JSON mode, marshal report to JSON and print
 - [x] 3.6.3 For human mode, print "✓ valid" or "✗ has issues"
@@ -139,6 +151,7 @@
 ## 4. CLI Integration
 
 ### 4.1 Wire validate command into CLI
+
 - [x] 4.1.1 Open `cmd/root.go`
 - [x] 4.1.2 Add `Validate ValidateCmd` field to `CLI` struct
 - [x] 4.1.3 Add appropriate struct tag: `cmd:"" help:"Validate specs and changes"`
@@ -147,6 +160,7 @@
 ## 5. Testing
 
 ### 5.1 Unit tests for validation rules
+
 - [x] 5.1.1 Test spec validation with valid spec
 - [x] 5.1.2 Test spec validation with missing Purpose
 - [x] 5.1.3 Test spec validation with missing Requirements
@@ -155,6 +169,7 @@
 - [x] 5.1.6 Test spec validation with incorrect scenario format
 
 ### 5.2 Unit tests for change validation
+
 - [x] 5.2.1 Test change validation with valid deltas
 - [x] 5.2.2 Test change validation with no deltas
 - [x] 5.2.3 Test change validation with empty delta sections
@@ -163,6 +178,7 @@
 - [x] 5.2.6 Test change validation with cross-section conflicts
 
 ### 5.3 Integration tests
+
 - [x] 5.3.1 Create test fixtures in testdata/ directory
 - [x] 5.3.2 Test end-to-end: validate valid spec file
 - [x] 5.3.3 Test end-to-end: validate invalid spec file
@@ -172,6 +188,7 @@
 - [x] 5.3.7 Test JSON output parsing
 
 ### 5.4 CLI tests
+
 - [x] 5.4.1 Test command registration in root CLI
 - [x] 5.4.2 Test flag parsing (all combinations)
 - [x] 5.4.3 Test exit codes for success and failure
@@ -181,16 +198,19 @@
 ## 6. Documentation and Polish
 
 ### 6.1 Update documentation
+
 - [x] 6.1.1 Update README with validate command usage
 - [x] 6.1.2 Add examples to spectr/AGENTS.md if applicable
 - [x] 6.1.3 Document validation rules in project documentation
 
 ### 6.2 Error message polish
+
 - [x] 6.2.1 Review all error messages for clarity
 - [x] 6.2.2 Ensure remediation guidance is helpful and accurate
 - [x] 6.2.3 Add examples to error messages where useful
 
 ### 6.3 Performance testing
+
 - [x] 6.3.1 Create large test project (50+ specs and changes)
 - [x] 6.3.2 Benchmark bulk validation performance
 - [x] 6.3.3 Tune concurrency if needed
@@ -199,17 +219,20 @@
 ## 7. Validation and Cleanup
 
 ### 7.1 Self-validation
+
 - [x] 7.1.1 Use the new validate command on this change proposal
 - [x] 7.1.2 Fix any issues found
 - [x] 7.1.3 Ensure all specs in project validate successfully
 
 ### 7.2 Code review prep
+
 - [x] 7.2.1 Run `go fmt` on all new code
 - [x] 7.2.2 Run `go vet` and fix warnings
 - [x] 7.2.3 Run `go test ./...` and ensure all tests pass
 - [x] 7.2.4 Check test coverage (aim for >80%)
 
 ### 7.3 Final verification
+
 - [x] 7.3.1 Test on fresh clone of repository
 - [x] 7.3.2 Verify `go build` succeeds
 - [x] 7.3.3 Verify `spectr validate --help` displays correctly

@@ -5,6 +5,7 @@
 The template rendering system SHALL support dynamic path variables for all directory and file references, allowing template content to be decoupled from specific path names while maintaining backward-compatible defaults.
 
 The `TemplateContext` struct SHALL provide the following fields with default values:
+
 - `BaseDir`: The root Spectr directory name (default: `spectr`)
 - `SpecsDir`: The specifications directory path (default: `spectr/specs`)
 - `ChangesDir`: The changes directory path (default: `spectr/changes`)

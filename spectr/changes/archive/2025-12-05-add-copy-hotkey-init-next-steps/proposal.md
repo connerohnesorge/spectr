@@ -13,6 +13,7 @@ Currently, users must manually select and copy this text from the terminal. This
 Add a 'c' hotkey to the Next Steps completion screen in the interactive init wizard that copies the "populate project context" prompt (step 1) to the clipboard and exits. This allows users to quickly paste the prompt into their AI coding assistant without manual text selection. The behavior mirrors the 'Enter' key in `spectr list` interactive mode (copy ID and exit).
 
 The change affects:
+
 - Interactive mode completion screen keyboard handlers
 - Screen footer help text to indicate the 'c' hotkey availability
 - Clipboard integration using the existing `internal/tui.CopyToClipboard` helper

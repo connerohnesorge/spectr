@@ -12,12 +12,14 @@ Anthropic's research on effective harnesses for long-running agents recommends s
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Provide a stable, machine-readable format for task tracking during implementation
 - Prevent accidental task list corruption by agents
 - Maintain human-readability during the proposal/review phase
 - Ensure backward compatibility with existing changes using `tasks.md`
 
 **Non-Goals:**
+
 - Forcing JSON format for the initial proposal phase (Markdown is better for human review)
 - Breaking existing tooling that reads `tasks.md`
 - Automatic migration of all existing changes
@@ -29,11 +31,13 @@ Anthropic's research on effective harnesses for long-running agents recommends s
 **What**: Use `tasks.md` during proposal creation/review, convert to `tasks.json` at acceptance time.
 
 **Why**:
+
 - Markdown is better for human review (GitHub diffs, PRs, comments)
 - JSON is better for agent manipulation during implementation
 - Clear transition point (acceptance) provides semantic meaning
 
 **Alternatives considered**:
+
 - JSON-only: Would hurt proposal readability and review experience
 - Both formats simultaneously: Creates drift risk, violates single source of truth
 - YAML: Slightly more readable than JSON but similar parsing complexity
@@ -43,11 +47,13 @@ Anthropic's research on effective harnesses for long-running agents recommends s
 **What**: The `accept` command removes `tasks.md` after successfully creating `tasks.json`.
 
 **Why**:
+
 - Prevents drift between two files
 - Clear signal to agents that JSON is the authoritative source
 - Archived changes retain `tasks.json` for historical record
 
 **Alternatives considered**:
+
 - Keep both: Creates confusion about which is authoritative
 - Rename to `tasks.md.bak`: Clutters directory, agents might still find it
 
@@ -56,6 +62,7 @@ Anthropic's research on effective harnesses for long-running agents recommends s
 **What**: All tooling checks for `tasks.json` first, falls back to `tasks.md`.
 
 **Why**:
+
 - Existing changes continue to work
 - Gradual migration path
 - No breaking changes for users who don't use `accept`
@@ -65,6 +72,7 @@ Anthropic's research on effective harnesses for long-running agents recommends s
 **What**: The `apply` slash command instructions require agents to run `spectr accept` first.
 
 **Why**:
+
 - Ensures agents work with stable JSON format
 - Validates change before implementation begins
 - Creates explicit approval gate
@@ -92,6 +100,7 @@ Anthropic's research on effective harnesses for long-running agents recommends s
 ```
 
 **Fields:**
+
 - `version`: Schema version for future compatibility
 - `tasks[]`: Array of task objects
 - `tasks[].id`: Original task ID (e.g., "1.1", "2.3")
@@ -100,6 +109,7 @@ Anthropic's research on effective harnesses for long-running agents recommends s
 - `tasks[].status`: One of `"pending"`, `"in_progress"`, `"completed"`
 
 **Status values:**
+
 - `pending`: Not started (default from `- [ ]`)
 - `in_progress`: Currently being worked on (agents can set this)
 - `completed`: Done (from `- [x]`)
@@ -109,12 +119,15 @@ Note: `in_progress` is a new status that JSON enables but Markdown couldn't easi
 ## Risks / Trade-offs
 
 ### Risk: Agent confusion with status values
+
 **Mitigation**: Clear documentation in AGENTS.md and slash command templates.
 
 ### Risk: Incomplete accept leaving orphan tasks.json
+
 **Mitigation**: Accept is atomic - either fully succeeds or rolls back.
 
 ### Trade-off: Slightly more complex implementation
+
 **Accepted**: The stability benefits outweigh the implementation cost.
 
 ## Migration Plan

@@ -3,6 +3,7 @@
 ## Context
 
 Spectr parses markdown files to extract structural elements:
+
 - H2 section headers (`## Requirements`, `## ADDED Requirements`)
 - H3 requirement headers (`### Requirement: Name`)
 - H4 scenario headers (`#### Scenario: Name`)
@@ -10,6 +11,7 @@ Spectr parses markdown files to extract structural elements:
 - Delta operations (ADDED/MODIFIED/REMOVED/RENAMED sections)
 
 Currently, regex patterns are defined locally in each file that needs them, leading to:
+
 - 10+ instances of requirement header pattern
 - 6+ instances of section header pattern
 - 4+ instances of scenario pattern
@@ -37,6 +39,7 @@ Currently, regex patterns are defined locally in each file that needs them, lead
 **What**: Create `internal/regex/` with files split by category.
 
 **Structure**:
+
 ```
 internal/regex/
 ├── doc.go           # Package documentation
@@ -51,6 +54,7 @@ internal/regex/
 ```
 
 **Why**:
+
 - Clear separation by semantic category
 - Easier to navigate and maintain
 - Test files co-located with source
@@ -61,6 +65,7 @@ internal/regex/
 **What**: Split patterns into separate files by category. Export both raw patterns and helper functions.
 
 **headers.go**:
+
 ```go
 package regex
 
@@ -98,6 +103,7 @@ func MatchH4Scenario(line string) (name string, ok bool) { ... }
 ```
 
 **tasks.go**:
+
 ```go
 package regex
 
@@ -120,6 +126,7 @@ func MatchNumberedSection(line string) (name string, ok bool) { ... }
 ```
 
 **renames.go**:
+
 ```go
 package regex
 
@@ -147,6 +154,7 @@ func MatchRenamedToAlt(line string) (name string, ok bool) { ... }
 ```
 
 **Why**:
+
 - Package-level `var` ensures single compilation
 - Exported patterns allow direct use for complex matching needs
 - Exported helpers provide clean API for common use cases
@@ -158,6 +166,7 @@ func MatchRenamedToAlt(line string) (name string, ok bool) { ... }
 **What**: Provide `sections.go` with helpers for extracting content between markdown headers.
 
 **sections.go**:
+
 ```go
 package regex
 
@@ -198,6 +207,7 @@ func FindRequirementsSection(content string) string {
 ```
 
 **Why**:
+
 - Common operation duplicated in 3+ files (validation, archive, parsers)
 - Consolidates section boundary detection logic
 - Specialized helpers reduce boilerplate for common cases
@@ -221,6 +231,7 @@ func MatchTaskCheckbox(line string) (state rune, ok bool)
 ```
 
 **Why**:
+
 - Idiomatic Go pattern - consistent with stdlib (e.g., map lookup)
 - Clear success/failure without nil checks
 - Callers use `if name, ok := regex.MatchH3Requirement(line); ok { ... }`
@@ -231,6 +242,7 @@ func MatchTaskCheckbox(line string) (state rune, ok bool)
 **What**: Migrate files one at a time, running tests after each.
 
 **Order**:
+
 1. Create `internal/regex/` package with split files (headers.go, tasks.go, renames.go, sections.go)
 2. Migrate `internal/parsers/parsers.go` (simplest, 3 patterns)
 3. Migrate `internal/parsers/requirement_parser.go` (2 patterns)
@@ -241,6 +253,7 @@ func MatchTaskCheckbox(line string) (state rune, ok bool)
 8. Remove any now-unused local patterns
 
 **Why**:
+
 - Incremental migration reduces risk
 - Tests validate each step
 - Order goes from simple to complex
@@ -255,6 +268,7 @@ func MatchTaskCheckbox(line string) (state rune, ok bool)
 4. **Git URL patterns** in `internal/git/platform.go` - Not markdown-related
 
 **Why**:
+
 - These are utilities, not markdown structure patterns
 - Consolidating would create unnecessary dependencies
 - Single-use patterns don't benefit from sharing

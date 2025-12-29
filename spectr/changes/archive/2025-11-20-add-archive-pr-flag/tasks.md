@@ -107,6 +107,7 @@
 ---
 
 **Completion Criteria**:
+
 - All tests pass
 - No linting errors
 - `spectr archive <change-id> --pr` successfully creates a PR for an archived change

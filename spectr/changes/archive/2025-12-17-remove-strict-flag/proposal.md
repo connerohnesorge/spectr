@@ -33,6 +33,7 @@ Remove the `--strict` flag from the `spectr validate` command and make strict va
 ## Backward Compatibility
 
 This is a **breaking change** for users who:
+
 1. Rely on lenient validation to pass with warnings
 2. Have CI/CD pipelines using `--strict` flag (will fail with "unknown flag" error)
 

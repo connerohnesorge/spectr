@@ -5,6 +5,7 @@
 Large change proposals (like `redesign-provider-architecture` with 60+ tasks) produce `tasks.jsonc` files that are too large for AI agents to read effectively in a single Read call. Additionally, there's currently no way to associate tasks with specific delta specs—all tasks live in a flat root file.
 
 This change introduces hierarchical `tasks.jsonc` files that:
+
 1. Allow delta specs (`spectr/changes/<id>/specs/<capability>/`) to have their own task files
 2. Enable root tasks to reference child tasks in delta spec files
 3. Provide a summary view in the root file so agents can drill down into specific capabilities

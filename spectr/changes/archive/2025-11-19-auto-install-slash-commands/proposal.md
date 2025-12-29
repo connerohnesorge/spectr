@@ -15,6 +15,7 @@ By automatically installing slash commands when their matching config-based tool
 - No UI changes - slash commands install silently as part of the tool configuration
 
 **Affected tools**:
+
 - `claude-code` → auto-installs `.claude/commands/spectr/{proposal,apply,archive}.md`
 - `cline` → auto-installs `.clinerules/spectr-{proposal,apply,archive}.md`
 - `cursor` → auto-installs `.cursor/commands/spectr-{proposal,apply,archive}.md`
@@ -23,18 +24,22 @@ By automatically installing slash commands when their matching config-based tool
 ## Impact
 
 **Affected specs**:
+
 - `cli-interface` - Tool selection and initialization workflow
 
 **Affected code**:
+
 - `internal/init/registry.go` - Tool registry and mappings
 - `internal/init/executor.go` - Configuration orchestration
 - `internal/init/configurator.go` - Potentially needs composite configurator pattern
 
 **Breaking changes**:
+
 - Users who previously selected only slash command tools (without config) will no longer see them in the wizard
 - Migration: They should now select the config-based version which installs both
 
 **User benefits**:
+
 - Simpler tool selection (fewer redundant entries)
 - Complete Spectr setup with one selection
 - Consistent with OpenSpec's tool handling approach

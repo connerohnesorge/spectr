@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/spf13/afero"
 
@@ -405,27 +404,25 @@ func sortInitializers(all []providers.Initializer) []providers.Initializer {
 }
 
 // initializerPriority returns the priority for initializer ordering (Task 8.7)
+// Uses explicit type assertions for concrete initializer types instead of string matching
 func initializerPriority(init providers.Initializer) int {
-	// Use type assertion to determine initializer type
-	// We need to check the concrete types from the providers package
-	typeName := fmt.Sprintf("%T", init)
-
-	switch {
-	// Priority 1: Directory initializers
-	case strings.Contains(typeName, "DirectoryInitializer") || strings.Contains(typeName, "HomeDirectoryInitializer"):
+	switch init.(type) {
+	// Priority 1: Directory initializers (foundation for other initializers)
+	case *providers.DirectoryInitializer, *providers.HomeDirectoryInitializer:
 		return 1
-	// Priority 2: Config file initializers
-	case strings.Contains(typeName, "ConfigFileInitializer"):
+	// Priority 2: Config file initializers (need directories first)
+	case *providers.ConfigFileInitializer:
 		return 2
-	// Priority 3: Slash command initializers
-	case strings.Contains(typeName, "SlashCommandsInitializer") ||
-		strings.Contains(typeName, "HomeSlashCommandsInitializer") ||
-		strings.Contains(typeName, "PrefixedSlashCommandsInitializer") ||
-		strings.Contains(typeName, "HomePrefixedSlashCommandsInitializer") ||
-		strings.Contains(typeName, "TOMLSlashCommandsInitializer"):
+	// Priority 3: Slash command initializers (highest-level setup)
+	case *providers.SlashCommandsInitializer,
+		*providers.HomeSlashCommandsInitializer,
+		*providers.PrefixedSlashCommandsInitializer,
+		*providers.HomePrefixedSlashCommandsInitializer,
+		*providers.TOMLSlashCommandsInitializer:
 		return 3
+	// Default: Unknown types go last to maintain stability
 	default:
-		return 99 // Unknown types go last
+		return 99
 	}
 }
 

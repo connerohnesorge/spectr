@@ -11,11 +11,11 @@ import (
 // slash commands (spectr-proposal.md, spectr-apply.md).
 type CodexProvider struct{}
 
-// Initializers returns the list of initializers for Codex CLI. //nolint:lll
+// Initializers returns the list of initializers for Codex CLI. //nolint:lll // Function signature defined by Provider interface
 func (*CodexProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
 		NewHomeDirectoryInitializer(".codex/prompts"),
 		NewConfigFileInitializer("AGENTS.md", tm.Agents()),

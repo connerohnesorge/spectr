@@ -11,11 +11,11 @@ import (
 // (no config file).
 type CursorProvider struct{}
 
-// Initializers returns the list of initializers for Cursor. //nolint:lll
+// Initializers returns the list of initializers for Cursor. //nolint:lll // Function signature defined by Provider interface
 func (*CursorProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".cursorrules/commands/spectr"),
 		NewSlashCommandsInitializer(

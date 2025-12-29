@@ -185,7 +185,7 @@ func (*InitExecutor) createDirectoryStructure(
 		}
 
 		if !exists {
-			if err := projectFs.MkdirAll(dir, 0755); err != nil {
+			if err := projectFs.MkdirAll(dir, 0o755); err != nil {
 				return fmt.Errorf(
 					"failed to create directory %s: %w",
 					dir,
@@ -293,8 +293,9 @@ func (e *InitExecutor) createAgentsMd(
 	}
 
 	// Render template
+	ctx := domain.DefaultTemplateContext()
 	content, err := e.tm.RenderAgents(
-		domain.DefaultTemplateContext(),
+		&ctx,
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -474,7 +475,7 @@ func (e *InitExecutor) createCIWorkflow(
 		".github",
 		"workflows",
 	)
-	if err := projectFs.MkdirAll(workflowDir, 0755); err != nil {
+	if err := projectFs.MkdirAll(workflowDir, 0o755); err != nil {
 		return fmt.Errorf(
 			"failed to create workflows directory: %w",
 			err,

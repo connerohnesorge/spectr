@@ -14,7 +14,7 @@ type QoderProvider struct{}
 func (*QoderProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".qoder/commands/spectr"),
 		NewConfigFileInitializer("QODER.md", tm.InstructionPointer()),

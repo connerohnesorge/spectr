@@ -42,7 +42,7 @@ func (d *DirectoryInitializer) Init(
 		}
 
 		// Create directory with parents if needed
-		if err := projectFs.MkdirAll(path, 0755); err != nil {
+		if err := projectFs.MkdirAll(path, 0o755); err != nil {
 			return InitResult{}, fmt.Errorf("failed to create directory %s: %w", path, err)
 		}
 
@@ -59,7 +59,10 @@ func (d *DirectoryInitializer) Init(
 }
 
 // IsSetup checks if all directories exist in the project filesystem.
-func (d *DirectoryInitializer) IsSetup(projectFs, _ afero.Fs, _ *Config) bool { //nolint:lll
+func (d *DirectoryInitializer) IsSetup(
+	projectFs, _ afero.Fs,
+	_ *Config,
+) bool { //nolint:lll // Function signature defined by Initializer interface
 	for _, path := range d.paths {
 		exists, err := afero.DirExists(projectFs, path)
 		if err != nil || !exists {
@@ -119,7 +122,7 @@ func (h *HomeDirectoryInitializer) Init(
 		}
 
 		// Create directory with parents if needed
-		if err := homeFs.MkdirAll(path, 0755); err != nil {
+		if err := homeFs.MkdirAll(path, 0o755); err != nil {
 			return InitResult{}, fmt.Errorf("failed to create directory %s: %w", path, err)
 		}
 
@@ -136,7 +139,10 @@ func (h *HomeDirectoryInitializer) Init(
 }
 
 // IsSetup checks if all directories exist in the home filesystem.
-func (h *HomeDirectoryInitializer) IsSetup(_, homeFs afero.Fs, _ *Config) bool { //nolint:lll
+func (h *HomeDirectoryInitializer) IsSetup(
+	_, homeFs afero.Fs,
+	_ *Config,
+) bool { //nolint:lll // Function signature defined by Initializer interface
 	for _, path := range h.paths {
 		exists, err := afero.DirExists(homeFs, path)
 		if err != nil || !exists {

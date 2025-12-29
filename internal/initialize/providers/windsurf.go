@@ -14,7 +14,7 @@ type WindsurfProvider struct{}
 func (*WindsurfProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".windsurf/commands/spectr"),
 		NewSlashCommandsInitializer(

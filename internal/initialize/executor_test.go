@@ -18,7 +18,7 @@ func TestExecutorIntegration_FullInitializationFlow(t *testing.T) {
 	homeFs := afero.NewMemMapFs()
 
 	// Create spectr directory structure
-	if err := projectFs.MkdirAll("spectr", 0755); err != nil {
+	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
 		t.Fatalf("Failed to create spectr directory: %v", err)
 	}
 
@@ -135,7 +135,7 @@ func TestExecutorIntegration_InitResultAccumulation(t *testing.T) {
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
-	if err := projectFs.MkdirAll("spectr", 0755); err != nil {
+	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
 		t.Fatalf("Failed to create spectr directory: %v", err)
 	}
 
@@ -227,7 +227,7 @@ func TestExecutorIntegration_MultipleProviders(t *testing.T) {
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
-	if err := projectFs.MkdirAll("spectr", 0755); err != nil {
+	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
 		t.Fatalf("Failed to create spectr directory: %v", err)
 	}
 
@@ -317,7 +317,7 @@ func TestExecutorIntegration_HomeFilesystem(t *testing.T) {
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
-	if err := projectFs.MkdirAll("spectr", 0755); err != nil {
+	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
 		t.Fatalf("Failed to create spectr directory: %v", err)
 	}
 
@@ -444,7 +444,7 @@ func TestExecutorIntegration_InitializerOrdering(t *testing.T) {
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
-	if err := projectFs.MkdirAll("spectr", 0755); err != nil {
+	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
 		t.Fatalf("Failed to create spectr directory: %v", err)
 	}
 

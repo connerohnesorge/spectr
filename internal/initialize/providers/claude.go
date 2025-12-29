@@ -14,7 +14,7 @@ type ClaudeProvider struct{}
 func (*ClaudeProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".claude/commands/spectr"),
 		NewConfigFileInitializer("CLAUDE.md", tm.InstructionPointer()),

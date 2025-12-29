@@ -88,7 +88,7 @@ func (tm *TemplateManager) RenderProject(
 // RenderAgents renders the AGENTS.md template with the given template context
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderAgents(
-	ctx domain.TemplateContext,
+	ctx *domain.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
@@ -110,7 +110,7 @@ func (tm *TemplateManager) RenderAgents(
 // This is a short pointer that directs AI assistants to read the AGENTS.md file
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderInstructionPointer(
-	ctx domain.TemplateContext,
+	ctx *domain.TemplateContext,
 ) (string, error) {
 	var buf bytes.Buffer
 	err := tm.templates.ExecuteTemplate(
@@ -134,7 +134,7 @@ func (tm *TemplateManager) RenderInstructionPointer(
 // The context provides path variables for dynamic directory names
 func (tm *TemplateManager) RenderSlashCommand(
 	commandType string,
-	ctx domain.TemplateContext,
+	ctx *domain.TemplateContext,
 ) (string, error) {
 	templateName := fmt.Sprintf(
 		"slash-%s.md.tmpl",

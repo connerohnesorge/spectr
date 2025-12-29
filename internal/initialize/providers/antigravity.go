@@ -11,11 +11,11 @@ import (
 // slash commands (spectr-proposal.md, spectr-apply.md).
 type AntigravityProvider struct{}
 
-// Initializers returns the list of initializers for Antigravity. //nolint:lll
+// Initializers returns the list of initializers for Antigravity.
 func (*AntigravityProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".agent/workflows"),
 		NewConfigFileInitializer("AGENTS.md", tm.Agents()),

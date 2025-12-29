@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/afero"
 )
 
+const testClaudeMd = "CLAUDE.md"
+
 func TestConfigFileInitializer_Init_NewFile(t *testing.T) {
 	// Setup
 	projectFs := afero.NewMemMapFs()
@@ -20,7 +22,7 @@ func TestConfigFileInitializer_Init_NewFile(t *testing.T) {
 	tmpl := createTestTemplate(t, "test content")
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	result, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -29,7 +31,7 @@ func TestConfigFileInitializer_Init_NewFile(t *testing.T) {
 	}
 
 	// Check result
-	if len(result.CreatedFiles) != 1 || result.CreatedFiles[0] != "CLAUDE.md" {
+	if len(result.CreatedFiles) != 1 || result.CreatedFiles[0] != testClaudeMd {
 		t.Errorf("CreatedFiles = %v, want [CLAUDE.md]", result.CreatedFiles)
 	}
 	if len(result.UpdatedFiles) != 0 {
@@ -56,13 +58,13 @@ func TestConfigFileInitializer_Init_UpdateBetweenMarkers(t *testing.T) {
 
 	// Create existing file with markers
 	existing := "Header content\n<!-- spectr:start -->\nold content\n<!-- spectr:end -->\nFooter content"
-	_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte(existing), 0644)
+	_ = afero.WriteFile(projectFs, testClaudeMd, []byte(existing), 0o644)
 
 	// Create template
 	tmpl := createTestTemplate(t, "new content")
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	result, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -71,7 +73,7 @@ func TestConfigFileInitializer_Init_UpdateBetweenMarkers(t *testing.T) {
 	}
 
 	// Check result
-	if len(result.UpdatedFiles) != 1 || result.UpdatedFiles[0] != "CLAUDE.md" {
+	if len(result.UpdatedFiles) != 1 || result.UpdatedFiles[0] != testClaudeMd {
 		t.Errorf("UpdatedFiles = %v, want [CLAUDE.md]", result.UpdatedFiles)
 	}
 	if len(result.CreatedFiles) != 0 {
@@ -121,13 +123,13 @@ func TestConfigFileInitializer_Init_CaseInsensitiveMarkers(t *testing.T) {
 			cfg := &Config{SpectrDir: "spectr"}
 
 			// Create existing file
-			_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte(tt.existing), 0644)
+			_ = afero.WriteFile(projectFs, testClaudeMd, []byte(tt.existing), 0o644)
 
 			// Create template
 			tmpl := createTestTemplate(t, "new")
 
 			// Create initializer
-			init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+			init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 			// Execute
 			_, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -136,7 +138,7 @@ func TestConfigFileInitializer_Init_CaseInsensitiveMarkers(t *testing.T) {
 			}
 
 			// Verify file content
-			content, err := afero.ReadFile(projectFs, "CLAUDE.md")
+			content, err := afero.ReadFile(projectFs, testClaudeMd)
 			if err != nil {
 				t.Fatalf("failed to read file: %v", err)
 			}
@@ -156,13 +158,13 @@ func TestConfigFileInitializer_Init_OrphanedStartWithTrailingEnd(t *testing.T) {
 
 	// Create existing file with orphaned start marker and trailing end marker
 	existing := "Header\n<!-- spectr:start -->\nold content\nmore content\n<!-- spectr:end -->"
-	_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte(existing), 0644)
+	_ = afero.WriteFile(projectFs, testClaudeMd, []byte(existing), 0o644)
 
 	// Create template
 	tmpl := createTestTemplate(t, "new content")
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	result, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -176,7 +178,7 @@ func TestConfigFileInitializer_Init_OrphanedStartWithTrailingEnd(t *testing.T) {
 	}
 
 	// Verify file content - should use the trailing end marker
-	content, err := afero.ReadFile(projectFs, "CLAUDE.md")
+	content, err := afero.ReadFile(projectFs, testClaudeMd)
 	if err != nil {
 		t.Fatalf("failed to read file: %v", err)
 	}
@@ -195,13 +197,13 @@ func TestConfigFileInitializer_Init_OrphanedStartWithNoEnd(t *testing.T) {
 
 	// Create existing file with orphaned start marker (no end marker)
 	existing := "Header\n<!-- spectr:start -->\nold content\nmore content"
-	_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte(existing), 0644)
+	_ = afero.WriteFile(projectFs, testClaudeMd, []byte(existing), 0o644)
 
 	// Create template
 	tmpl := createTestTemplate(t, "new content")
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	result, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -215,7 +217,7 @@ func TestConfigFileInitializer_Init_OrphanedStartWithNoEnd(t *testing.T) {
 	}
 
 	// Verify file content - should replace everything from start marker onward
-	content, err := afero.ReadFile(projectFs, "CLAUDE.md")
+	content, err := afero.ReadFile(projectFs, testClaudeMd)
 	if err != nil {
 		t.Fatalf("failed to read file: %v", err)
 	}
@@ -234,13 +236,13 @@ func TestConfigFileInitializer_Init_NoMarkers(t *testing.T) {
 
 	// Create existing file without markers
 	existing := "Existing content without markers"
-	_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte(existing), 0644)
+	_ = afero.WriteFile(projectFs, testClaudeMd, []byte(existing), 0o644)
 
 	// Create template
 	tmpl := createTestTemplate(t, "new content")
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	result, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -254,7 +256,7 @@ func TestConfigFileInitializer_Init_NoMarkers(t *testing.T) {
 	}
 
 	// Verify file content - should append block at end
-	content, err := afero.ReadFile(projectFs, "CLAUDE.md")
+	content, err := afero.ReadFile(projectFs, testClaudeMd)
 	if err != nil {
 		t.Fatalf("failed to read file: %v", err)
 	}
@@ -276,7 +278,7 @@ func TestConfigFileInitializer_Init_TemplateContextUsage(t *testing.T) {
 	tmpl := createTestTemplate(t, tmplText)
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	_, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -285,7 +287,7 @@ func TestConfigFileInitializer_Init_TemplateContextUsage(t *testing.T) {
 	}
 
 	// Verify file content - template should be rendered with correct context
-	content, err := afero.ReadFile(projectFs, "CLAUDE.md")
+	content, err := afero.ReadFile(projectFs, testClaudeMd)
 	if err != nil {
 		t.Fatalf("failed to read file: %v", err)
 	}
@@ -304,13 +306,13 @@ func TestConfigFileInitializer_Init_ErrorOrphanedEndMarker(t *testing.T) {
 
 	// Create existing file with orphaned end marker (no start)
 	existing := "Header\n<!-- spectr:end -->\nFooter"
-	_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte(existing), 0644)
+	_ = afero.WriteFile(projectFs, testClaudeMd, []byte(existing), 0o644)
 
 	// Create template
 	tmpl := createTestTemplate(t, "new content")
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	_, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -331,13 +333,13 @@ func TestConfigFileInitializer_Init_ErrorNestedStartMarkers(t *testing.T) {
 
 	// Create existing file with nested start markers
 	existing := "Header\n<!-- spectr:start -->\nContent\n<!-- spectr:start -->\nNested\n<!-- spectr:end -->"
-	_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte(existing), 0644)
+	_ = afero.WriteFile(projectFs, testClaudeMd, []byte(existing), 0o644)
 
 	// Create template
 	tmpl := createTestTemplate(t, "new content")
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	_, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -358,13 +360,13 @@ func TestConfigFileInitializer_Init_ErrorMultipleStartMarkers(t *testing.T) {
 
 	// Create existing file with multiple start markers without end
 	existing := "Header\n<!-- spectr:start -->\nContent\n<!-- spectr:start -->\nMore content"
-	_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte(existing), 0644)
+	_ = afero.WriteFile(projectFs, testClaudeMd, []byte(existing), 0o644)
 
 	// Create template
 	tmpl := createTestTemplate(t, "new content")
 
 	// Create initializer
-	init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+	init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 	// Execute
 	_, err := init.Init(context.Background(), projectFs, homeFs, cfg, nil)
@@ -403,14 +405,14 @@ func TestConfigFileInitializer_IsSetup(t *testing.T) {
 			cfg := &Config{SpectrDir: "spectr"}
 
 			if tt.fileExists {
-				_ = afero.WriteFile(projectFs, "CLAUDE.md", []byte("content"), 0644)
+				_ = afero.WriteFile(projectFs, testClaudeMd, []byte("content"), 0o644)
 			}
 
 			// Create template
 			tmpl := createTestTemplate(t, "content")
 
 			// Create initializer
-			init := NewConfigFileInitializer("CLAUDE.md", tmpl)
+			init := NewConfigFileInitializer(testClaudeMd, tmpl)
 
 			// Execute
 			got := init.IsSetup(projectFs, homeFs, cfg)

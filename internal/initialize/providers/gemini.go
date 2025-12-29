@@ -14,7 +14,7 @@ type GeminiProvider struct{}
 func (*GeminiProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
 		NewDirectoryInitializer(".gemini/commands/spectr"),
 		NewTOMLSlashCommandsInitializer(

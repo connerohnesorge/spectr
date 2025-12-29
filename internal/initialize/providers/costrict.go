@@ -14,7 +14,7 @@ type CostrictProvider struct{}
 func (*CostrictProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".costrict/commands/spectr"),
 		NewConfigFileInitializer("COSTRICT.md", tm.InstructionPointer()),

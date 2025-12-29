@@ -10,6 +10,11 @@ import (
 	"github.com/spf13/afero"
 )
 
+const (
+	testProposalContent = "proposal content"
+	testApplyContent    = "apply content"
+)
+
 func TestSlashCommandsInitializer_Init(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -44,11 +49,11 @@ func TestSlashCommandsInitializer_Init(t *testing.T) {
 			cfg := &Config{SpectrDir: "spectr"}
 
 			// Create directory
-			_ = projectFs.MkdirAll(tt.dir, 0755)
+			_ = projectFs.MkdirAll(tt.dir, 0o755)
 
 			// Create existing file if specified
 			if tt.existingFile != "" {
-				_ = afero.WriteFile(projectFs, tt.existingFile, []byte("old content"), 0644)
+				_ = afero.WriteFile(projectFs, tt.existingFile, []byte("old content"), 0o644)
 			}
 
 			// Create templates
@@ -79,7 +84,7 @@ func TestSlashCommandsInitializer_Init(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to read proposal.md: %v", err)
 			}
-			if string(proposalContent) != "proposal content" {
+			if string(proposalContent) != testProposalContent {
 				t.Errorf(
 					"proposal.md content = %q, want %q",
 					string(proposalContent),
@@ -91,7 +96,7 @@ func TestSlashCommandsInitializer_Init(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to read apply.md: %v", err)
 			}
-			if string(applyContent) != "apply content" {
+			if string(applyContent) != testApplyContent {
 				t.Errorf("apply.md content = %q, want %q", string(applyContent), "apply content")
 			}
 		})
@@ -136,9 +141,9 @@ func TestSlashCommandsInitializer_IsSetup(t *testing.T) {
 			cfg := &Config{SpectrDir: "spectr"}
 
 			// Create directory and files
-			_ = projectFs.MkdirAll(tt.dir, 0755)
+			_ = projectFs.MkdirAll(tt.dir, 0o755)
 			for _, file := range tt.existingFiles {
-				_ = afero.WriteFile(projectFs, file, []byte("content"), 0644)
+				_ = afero.WriteFile(projectFs, file, []byte("content"), 0o644)
 			}
 
 			// Create templates
@@ -201,12 +206,12 @@ func TestHomeSlashCommandsInitializer_Init(t *testing.T) {
 	cfg := &Config{SpectrDir: "spectr"}
 
 	dir := ".config/mytool/commands"
-	_ = homeFs.MkdirAll(dir, 0755)
+	_ = homeFs.MkdirAll(dir, 0o755)
 
 	// Create templates
 	commands := map[domain.SlashCommand]domain.TemplateRef{
-		domain.SlashProposal: createTestTemplate(t, "proposal content"),
-		domain.SlashApply:    createTestTemplate(t, "apply content"),
+		domain.SlashProposal: createTestTemplate(t, testProposalContent),
+		domain.SlashApply:    createTestTemplate(t, testApplyContent),
 	}
 
 	// Create initializer
@@ -264,13 +269,13 @@ func TestPrefixedSlashCommandsInitializer_Init(t *testing.T) {
 	cfg := &Config{SpectrDir: "spectr"}
 
 	dir := ".agent/workflows"
-	prefix := "spectr-"
-	_ = projectFs.MkdirAll(dir, 0755)
+	prefix := testSpectrPrefix
+	_ = projectFs.MkdirAll(dir, 0o755)
 
 	// Create templates
 	commands := map[domain.SlashCommand]domain.TemplateRef{
-		domain.SlashProposal: createTestTemplate(t, "proposal content"),
-		domain.SlashApply:    createTestTemplate(t, "apply content"),
+		domain.SlashProposal: createTestTemplate(t, testProposalContent),
+		domain.SlashApply:    createTestTemplate(t, testApplyContent),
 	}
 
 	// Create initializer
@@ -319,8 +324,8 @@ func TestPrefixedSlashCommandsInitializer_IsSetup(t *testing.T) {
 	cfg := &Config{SpectrDir: "spectr"}
 
 	dir := ".agent/workflows"
-	prefix := "spectr-"
-	_ = projectFs.MkdirAll(dir, 0755)
+	prefix := testSpectrPrefix
+	_ = projectFs.MkdirAll(dir, 0o755)
 
 	// Create templates
 	commands := map[domain.SlashCommand]domain.TemplateRef{
@@ -341,9 +346,9 @@ func TestPrefixedSlashCommandsInitializer_IsSetup(t *testing.T) {
 		projectFs,
 		filepath.Join(dir, "spectr-proposal.md"),
 		[]byte("content"),
-		0644,
+		0o644,
 	)
-	_ = afero.WriteFile(projectFs, filepath.Join(dir, "spectr-apply.md"), []byte("content"), 0644)
+	_ = afero.WriteFile(projectFs, filepath.Join(dir, "spectr-apply.md"), []byte("content"), 0o644)
 
 	// Should return true when files exist
 	if !init.IsSetup(projectFs, homeFs, cfg) {
@@ -375,13 +380,13 @@ func TestHomePrefixedSlashCommandsInitializer_Init(t *testing.T) {
 	cfg := &Config{SpectrDir: "spectr"}
 
 	dir := ".codex/prompts"
-	prefix := "spectr-"
-	_ = homeFs.MkdirAll(dir, 0755)
+	prefix := testSpectrPrefix
+	_ = homeFs.MkdirAll(dir, 0o755)
 
 	// Create templates
 	commands := map[domain.SlashCommand]domain.TemplateRef{
-		domain.SlashProposal: createTestTemplate(t, "proposal content"),
-		domain.SlashApply:    createTestTemplate(t, "apply content"),
+		domain.SlashProposal: createTestTemplate(t, testProposalContent),
+		domain.SlashApply:    createTestTemplate(t, testApplyContent),
 	}
 
 	// Create initializer
@@ -453,7 +458,7 @@ func TestTOMLSlashCommandsInitializer_Init(t *testing.T) {
 	cfg := &Config{SpectrDir: "spectr"}
 
 	dir := ".gemini/commands/spectr"
-	_ = projectFs.MkdirAll(dir, 0755)
+	_ = projectFs.MkdirAll(dir, 0o755)
 
 	// Create templates
 	commands := map[domain.SlashCommand]domain.TemplateRef{
@@ -507,7 +512,7 @@ func TestTOMLSlashCommandsInitializer_IsSetup(t *testing.T) {
 	cfg := &Config{SpectrDir: "spectr"}
 
 	dir := ".gemini/commands/spectr"
-	_ = projectFs.MkdirAll(dir, 0755)
+	_ = projectFs.MkdirAll(dir, 0o755)
 
 	// Create templates
 	commands := map[domain.SlashCommand]domain.TemplateRef{
@@ -524,8 +529,8 @@ func TestTOMLSlashCommandsInitializer_IsSetup(t *testing.T) {
 	}
 
 	// Create files with .toml extension
-	_ = afero.WriteFile(projectFs, filepath.Join(dir, "proposal.toml"), []byte("content"), 0644)
-	_ = afero.WriteFile(projectFs, filepath.Join(dir, "apply.toml"), []byte("content"), 0644)
+	_ = afero.WriteFile(projectFs, filepath.Join(dir, "proposal.toml"), []byte("content"), 0o644)
+	_ = afero.WriteFile(projectFs, filepath.Join(dir, "apply.toml"), []byte("content"), 0o644)
 
 	// Should return true when files exist
 	if !init.IsSetup(projectFs, homeFs, cfg) {
@@ -553,7 +558,7 @@ func TestSlashCommands_TemplateContextUsage(t *testing.T) {
 	cfg := &Config{SpectrDir: "myspectr"}
 
 	dir := ".claude/commands/spectr"
-	_ = projectFs.MkdirAll(dir, 0755)
+	_ = projectFs.MkdirAll(dir, 0o755)
 
 	// Create template that uses context variables
 	tmplText := "Specs: {{.SpecsDir}}"

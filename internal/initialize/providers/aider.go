@@ -14,7 +14,7 @@ type AiderProvider struct{}
 func (*AiderProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".aider/commands/spectr"),
 		NewSlashCommandsInitializer(

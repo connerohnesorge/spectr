@@ -14,7 +14,7 @@ type ContinueProvider struct{}
 func (*ContinueProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".continue/commands/spectr"),
 		NewSlashCommandsInitializer(

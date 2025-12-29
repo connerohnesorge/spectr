@@ -14,7 +14,7 @@ const (
 	extMD   = ".md"
 	extTOML = ".toml"
 	// fileMode is the permission for created slash command files.
-	fileMode = 0644
+	fileMode = 0o644
 )
 
 // SlashCommandsInitializer creates Markdown slash command files in the project filesystem. //nolint:lll
@@ -75,7 +75,7 @@ type HomeSlashCommandsInitializer struct {
 
 // NewHomeSlashCommandsInitializer creates an initializer for Markdown slash commands in home filesystem. //nolint:lll
 // Example: NewHomeSlashCommandsInitializer(".config/mytool/commands", map[domain.SlashCommand]domain.TemplateRef{...}) //nolint:lll
-func NewHomeSlashCommandsInitializer( //nolint:lll
+func NewHomeSlashCommandsInitializer( //nolint:lll // Function signature with template map parameter exceeds line limit
 	dir string,
 	commands map[domain.SlashCommand]domain.TemplateRef,
 ) Initializer {
@@ -119,11 +119,11 @@ type PrefixedSlashCommandsInitializer struct {
 
 // NewPrefixedSlashCommandsInitializer creates an initializer for prefixed Markdown slash commands in project filesystem.
 // Example: NewPrefixedSlashCommandsInitializer(".agent/workflows", "spectr-", map[domain.SlashCommand]domain.TemplateRef{...})
-func NewPrefixedSlashCommandsInitializer( //nolint:lll
+func NewPrefixedSlashCommandsInitializer( //nolint:lll // Function signature with template map parameter exceeds line limit
 	dir, prefix string,
 	commands map[domain.SlashCommand]domain.TemplateRef,
 ) Initializer {
-	return &PrefixedSlashCommandsInitializer{ //nolint:lll
+	return &PrefixedSlashCommandsInitializer{ //nolint:lll // Struct initialization with multiple fields exceeds line limit
 		dir:      dir,
 		prefix:   prefix,
 		commands: commands,
@@ -167,7 +167,7 @@ type HomePrefixedSlashCommandsInitializer struct {
 func NewHomePrefixedSlashCommandsInitializer(
 	dir, prefix string,
 	commands map[domain.SlashCommand]domain.TemplateRef,
-) Initializer { //nolint:lll
+) Initializer { //nolint:lll // Function signature with template map parameter exceeds line limit
 	return &HomePrefixedSlashCommandsInitializer{
 		dir:      dir,
 		prefix:   prefix,
@@ -203,7 +203,7 @@ func (h *HomePrefixedSlashCommandsInitializer) dedupeKey() string {
 		filepath.Clean(h.dir),
 		h.prefix,
 	)
-} //nolint:lll
+} //nolint:lll // Closing brace for multi-line return statement
 
 // TOMLSlashCommandsInitializer creates TOML slash command files in the project filesystem.
 // Used by Gemini provider for TOML format.
@@ -252,7 +252,10 @@ func (t *TOMLSlashCommandsInitializer) IsSetup(projectFs, _ afero.Fs, _ *Config)
 
 // dedupeKey returns a unique key for deduplication.
 func (t *TOMLSlashCommandsInitializer) dedupeKey() string {
-	return fmt.Sprintf("TOMLSlashCommandsInitializer:%s", filepath.Clean(t.dir)) //nolint:lll
+	return fmt.Sprintf(
+		"TOMLSlashCommandsInitializer:%s",
+		filepath.Clean(t.dir),
+	) //nolint:lll // Long type name causes line to exceed limit
 }
 
 // createSlashCommands is a helper that creates slash command files with the given extension.
@@ -267,7 +270,7 @@ func createSlashCommands(
 	ext string,
 ) (InitResult, error) {
 	// Derive template context from config
-	tmplCtx := domain.TemplateContext{
+	tmplCtx := &domain.TemplateContext{
 		BaseDir:     cfg.SpectrDir,
 		SpecsDir:    cfg.SpecsDir(),
 		ChangesDir:  cfg.ChangesDir(),
@@ -276,7 +279,7 @@ func createSlashCommands(
 	}
 
 	// Create parent directory if it doesn't exist
-	if err := fs.MkdirAll(dir, 0755); err != nil {
+	if err := fs.MkdirAll(dir, 0o755); err != nil {
 		return InitResult{}, fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 
@@ -288,12 +291,11 @@ func createSlashCommands(
 		content, err := template.Render(tmplCtx)
 		if err != nil {
 			return InitResult{}, fmt.Errorf(
-				"failed to render template for %s: %w", //nolint:lll
+				"failed to render template for %s: %w", //nolint:lll // Error message format string
 				cmd.String(),
 				err,
 			)
 		}
-		//nolint:lll
 		// Create file path: {dir}/{command}{ext}
 		filePath := filepath.Join(dir, cmd.String()+ext)
 
@@ -333,7 +335,7 @@ func createPrefixedSlashCommands(
 	ext string,
 ) (InitResult, error) {
 	// Derive template context from config
-	tmplCtx := domain.TemplateContext{
+	tmplCtx := &domain.TemplateContext{
 		BaseDir:     cfg.SpectrDir,
 		SpecsDir:    cfg.SpecsDir(),
 		ChangesDir:  cfg.ChangesDir(),
@@ -342,7 +344,7 @@ func createPrefixedSlashCommands(
 	}
 
 	// Create parent directory if it doesn't exist
-	if err := fs.MkdirAll(dir, 0755); err != nil {
+	if err := fs.MkdirAll(dir, 0o755); err != nil {
 		return InitResult{}, fmt.Errorf("failed to create directory %s: %w", dir, err)
 	}
 

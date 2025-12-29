@@ -44,7 +44,7 @@ func (c *ConfigFileInitializer) Init(
 	tm TemplateManager,
 ) (InitResult, error) {
 	// Derive template context from config
-	tmplCtx := domain.TemplateContext{
+	tmplCtx := &domain.TemplateContext{
 		BaseDir:     cfg.SpectrDir,
 		SpecsDir:    cfg.SpecsDir(),
 		ChangesDir:  cfg.ChangesDir(),
@@ -67,7 +67,7 @@ func (c *ConfigFileInitializer) Init(
 	if !exists {
 		// Create new file with markers
 		newContent := fmt.Sprintf("<!-- spectr:start -->\n%s\n<!-- spectr:end -->", content)
-		if err := afero.WriteFile(projectFs, c.path, []byte(newContent), 0644); err != nil {
+		if err := afero.WriteFile(projectFs, c.path, []byte(newContent), 0o644); err != nil {
 			return InitResult{}, fmt.Errorf("failed to create file %s: %w", c.path, err)
 		}
 
@@ -90,7 +90,7 @@ func (c *ConfigFileInitializer) Init(
 	}
 
 	// Write updated content
-	if err := afero.WriteFile(projectFs, c.path, []byte(updated), 0644); err != nil {
+	if err := afero.WriteFile(projectFs, c.path, []byte(updated), 0o644); err != nil {
 		return InitResult{}, fmt.Errorf("failed to write file %s: %w", c.path, err)
 	}
 
@@ -159,7 +159,7 @@ func handleNoStartMarker(
 
 	// No markers exist - append new block at end with lowercase markers
 	result := existing
-	if len(existing) > 0 && !strings.HasSuffix(existing, newline) {
+	if existing != "" && !strings.HasSuffix(existing, newline) {
 		result += newline
 	}
 

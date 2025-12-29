@@ -9,6 +9,14 @@ import (
 	"github.com/connerohnesorge/spectr/internal/domain"
 )
 
+const (
+	testClaudeCommandsDir = ".claude/commands/spectr"
+	testGeminiCommandsDir = ".gemini/commands/spectr"
+	testAgentWorkflowsDir = ".agent/workflows"
+	testSpectrPrefix      = "spectr-"
+	testCodexPromptsDir   = ".codex/prompts"
+)
+
 // mockTemplateManager implements TemplateManager for testing
 type mockTemplateManager struct{}
 
@@ -55,7 +63,7 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	// Check DirectoryInitializer paths
 	dirInit := inits[0].(*DirectoryInitializer) //nolint:revive // test code, type checked above
-	if len(dirInit.paths) != 1 || dirInit.paths[0] != ".claude/commands/spectr" {
+	if len(dirInit.paths) != 1 || dirInit.paths[0] != testClaudeCommandsDir {
 		t.Errorf(
 			"ClaudeProvider DirectoryInitializer paths = %v, want [\".claude/commands/spectr\"]",
 			dirInit.paths,
@@ -70,7 +78,7 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	// Check SlashCommandsInitializer dir
 	slashInit := inits[2].(*SlashCommandsInitializer) //nolint:revive // test code, type checked above
-	if slashInit.dir != ".claude/commands/spectr" {
+	if slashInit.dir != testClaudeCommandsDir {
 		t.Errorf(
 			"ClaudeProvider SlashCommandsInitializer dir = %s, want \".claude/commands/spectr\"",
 			slashInit.dir,
@@ -109,7 +117,7 @@ func TestGeminiProvider_Initializers(t *testing.T) {
 
 	// Check DirectoryInitializer paths
 	dirInit := inits[0].(*DirectoryInitializer)
-	if len(dirInit.paths) != 1 || dirInit.paths[0] != ".gemini/commands/spectr" {
+	if len(dirInit.paths) != 1 || dirInit.paths[0] != testGeminiCommandsDir {
 		t.Errorf(
 			"GeminiProvider DirectoryInitializer paths = %v, want [\".gemini/commands/spectr\"]",
 			dirInit.paths,
@@ -118,7 +126,7 @@ func TestGeminiProvider_Initializers(t *testing.T) {
 
 	// Check TOMLSlashCommandsInitializer dir
 	slashInit := inits[1].(*TOMLSlashCommandsInitializer)
-	if slashInit.dir != ".gemini/commands/spectr" {
+	if slashInit.dir != testGeminiCommandsDir {
 		t.Errorf(
 			"GeminiProvider TOMLSlashCommandsInitializer dir = %s, want \".gemini/commands/spectr\"",
 			slashInit.dir,
@@ -212,13 +220,13 @@ func TestAntigravityProvider_Initializers(t *testing.T) {
 
 	// Check PrefixedSlashCommandsInitializer
 	slashInit := inits[2].(*PrefixedSlashCommandsInitializer)
-	if slashInit.dir != ".agent/workflows" {
+	if slashInit.dir != testAgentWorkflowsDir {
 		t.Errorf(
 			"AntigravityProvider PrefixedSlashCommandsInitializer dir = %s, want \".agent/workflows\"",
 			slashInit.dir,
 		)
 	}
-	if slashInit.prefix != "spectr-" {
+	if slashInit.prefix != testSpectrPrefix {
 		t.Errorf(
 			"AntigravityProvider PrefixedSlashCommandsInitializer prefix = %s, want \"spectr-\"",
 			slashInit.prefix,
@@ -309,7 +317,7 @@ func TestCodexProvider_Initializers(t *testing.T) {
 
 	// Check HomeDirectoryInitializer paths
 	dirInit := inits[0].(*HomeDirectoryInitializer)
-	if len(dirInit.paths) != 1 || dirInit.paths[0] != ".codex/prompts" {
+	if len(dirInit.paths) != 1 || dirInit.paths[0] != testCodexPromptsDir {
 		t.Errorf(
 			"CodexProvider HomeDirectoryInitializer paths = %v, want [\".codex/prompts\"]",
 			dirInit.paths,
@@ -318,13 +326,13 @@ func TestCodexProvider_Initializers(t *testing.T) {
 
 	// Check HomePrefixedSlashCommandsInitializer
 	slashInit := inits[2].(*HomePrefixedSlashCommandsInitializer)
-	if slashInit.dir != ".codex/prompts" {
+	if slashInit.dir != testCodexPromptsDir {
 		t.Errorf(
 			"CodexProvider HomePrefixedSlashCommandsInitializer dir = %s, want \".codex/prompts\"",
 			slashInit.dir,
 		)
 	}
-	if slashInit.prefix != "spectr-" {
+	if slashInit.prefix != testSpectrPrefix {
 		t.Errorf(
 			"CodexProvider HomePrefixedSlashCommandsInitializer prefix = %s, want \"spectr-\"",
 			slashInit.prefix,

@@ -14,7 +14,7 @@ type QwenProvider struct{}
 func (*QwenProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".qwen/commands/spectr"),
 		NewConfigFileInitializer("QWEN.md", tm.InstructionPointer()),

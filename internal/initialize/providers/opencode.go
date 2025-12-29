@@ -14,7 +14,7 @@ type OpencodeProvider struct{}
 func (*OpencodeProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
 		NewDirectoryInitializer(".opencode/commands/spectr"),
 		NewSlashCommandsInitializer(

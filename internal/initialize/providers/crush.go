@@ -14,7 +14,7 @@ type CrushProvider struct{}
 func (*CrushProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
-) []Initializer { //nolint:lll
+) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
 		NewDirectoryInitializer(".crush/commands/spectr"),
 		NewConfigFileInitializer("CRUSH.md", tm.InstructionPointer()),

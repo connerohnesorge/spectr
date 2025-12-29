@@ -24,7 +24,7 @@ func TestTemplateRef_Render(t *testing.T) {
 		SpecsDir: "spectr/specs",
 	}
 
-	result, err := ref.Render(ctx)
+	result, err := ref.Render(&ctx)
 	if err != nil {
 		t.Fatalf("Render() error = %v", err)
 	}
@@ -50,7 +50,7 @@ func TestTemplateRef_Render_Error(t *testing.T) {
 
 	ctx := TemplateContext{}
 
-	_, err = ref.Render(ctx)
+	_, err = ref.Render(&ctx)
 	if err == nil {
 		t.Error("Render() expected error for invalid template field, got nil")
 	}

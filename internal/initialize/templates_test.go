@@ -146,8 +146,9 @@ func TestTemplateManager_RenderAgents(
 		)
 	}
 
+	ctx := domain.DefaultTemplateContext()
 	got, err := tm.RenderAgents(
-		domain.DefaultTemplateContext(),
+		&ctx,
 	)
 	if err != nil {
 		t.Fatalf("RenderAgents() error = %v", err)
@@ -200,8 +201,9 @@ func TestTemplateManager_RenderInstructionPointer(
 		)
 	}
 
+	ctx := domain.DefaultTemplateContext()
 	got, err := tm.RenderInstructionPointer(
-		domain.DefaultTemplateContext(),
+		&ctx,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -311,9 +313,10 @@ func TestTemplateManager_RenderSlashCommand(
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := domain.DefaultTemplateContext()
 			got, err := tm.RenderSlashCommand(
 				tt.commandType,
-				domain.DefaultTemplateContext(),
+				&ctx,
 			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf(
@@ -411,8 +414,9 @@ func TestTemplateManager_AllTemplatesCompile(
 	})
 
 	t.Run("agents template", func(t *testing.T) {
+		ctx := domain.DefaultTemplateContext()
 		_, err := tm.RenderAgents(
-			domain.DefaultTemplateContext(),
+			&ctx,
 		)
 		if err != nil {
 			t.Errorf(
@@ -425,8 +429,9 @@ func TestTemplateManager_AllTemplatesCompile(
 	t.Run(
 		"instruction pointer template",
 		func(t *testing.T) {
+			ctx := domain.DefaultTemplateContext()
 			_, err := tm.RenderInstructionPointer(
-				domain.DefaultTemplateContext(),
+				&ctx,
 			)
 			if err != nil {
 				t.Errorf(
@@ -440,9 +445,10 @@ func TestTemplateManager_AllTemplatesCompile(
 	t.Run("slash commands", func(t *testing.T) {
 		commands := []string{"proposal", "apply"}
 		for _, cmd := range commands {
+			ctx := domain.DefaultTemplateContext()
 			_, err := tm.RenderSlashCommand(
 				cmd,
-				domain.DefaultTemplateContext(),
+				&ctx,
 			)
 			if err != nil {
 				t.Errorf(
@@ -608,7 +614,7 @@ func TestTemplateManager_InstructionPointer(t *testing.T) {
 
 	// Verify Render() works
 	ctx := domain.DefaultTemplateContext()
-	rendered, err := ref.Render(ctx)
+	rendered, err := ref.Render(&ctx)
 	if err != nil {
 		t.Fatalf("InstructionPointer().Render() error = %v", err)
 	}
@@ -644,7 +650,7 @@ func TestTemplateManager_Agents(t *testing.T) {
 
 	// Verify Render() works
 	ctx := domain.DefaultTemplateContext()
-	rendered, err := ref.Render(ctx)
+	rendered, err := ref.Render(&ctx)
 	if err != nil {
 		t.Fatalf("Agents().Render() error = %v", err)
 	}
@@ -708,7 +714,7 @@ func TestTemplateManager_SlashCommand(t *testing.T) {
 
 			// Verify Render() works
 			ctx := domain.DefaultTemplateContext()
-			rendered, err := ref.Render(ctx)
+			rendered, err := ref.Render(&ctx)
 			if err != nil {
 				t.Fatalf("SlashCommand(%v).Render() error = %v", tt.cmd, err)
 			}
@@ -774,7 +780,7 @@ func TestTemplateManager_TOMLSlashCommand(t *testing.T) {
 
 			// Verify Render() works
 			ctx := domain.DefaultTemplateContext()
-			rendered, err := ref.Render(ctx)
+			rendered, err := ref.Render(&ctx)
 			if err != nil {
 				t.Fatalf("TOMLSlashCommand(%v).Render() error = %v", tt.cmd, err)
 			}

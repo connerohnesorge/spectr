@@ -59,7 +59,7 @@ func TestDirectoryInitializer_Init(t *testing.T) {
 
 			// Create existing directories
 			for _, dir := range tt.existingDirs {
-				if err := projectFs.MkdirAll(dir, 0755); err != nil {
+				if err := projectFs.MkdirAll(dir, 0o755); err != nil {
 					t.Fatalf("failed to setup existing directory: %v", err)
 				}
 			}
@@ -141,7 +141,7 @@ func TestDirectoryInitializer_IsSetup(t *testing.T) {
 
 			// Create existing directories
 			for _, dir := range tt.existingDirs {
-				if err := projectFs.MkdirAll(dir, 0755); err != nil {
+				if err := projectFs.MkdirAll(dir, 0o755); err != nil {
 					t.Fatalf("failed to setup existing directory: %v", err)
 				}
 			}
@@ -244,7 +244,7 @@ func TestHomeDirectoryInitializer_Init(t *testing.T) {
 
 			// Create existing directories in home filesystem
 			for _, dir := range tt.existingDirs {
-				if err := homeFs.MkdirAll(dir, 0755); err != nil {
+				if err := homeFs.MkdirAll(dir, 0o755); err != nil {
 					t.Fatalf("failed to setup existing directory: %v", err)
 				}
 			}
@@ -322,7 +322,7 @@ func TestHomeDirectoryInitializer_IsSetup(t *testing.T) {
 
 			// Create existing directories in home filesystem
 			for _, dir := range tt.existingDirs {
-				if err := homeFs.MkdirAll(dir, 0755); err != nil {
+				if err := homeFs.MkdirAll(dir, 0o755); err != nil {
 					t.Fatalf("failed to setup existing directory: %v", err)
 				}
 			}

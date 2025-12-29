@@ -3,10 +3,10 @@ package initialize
 // InitCmd represents the init command with all its flags
 type InitCmd struct {
 	Path           string   `arg:"" optional:"" help:"Project path"`
-	PathFlag       string   `                   help:"Alt project path"        name:"path"            short:"p"` //nolint:lll,revive
-	Tools          []string `                   help:"Tools list"              name:"tools"           short:"t"` //nolint:lll,revive
-	NonInteractive bool     `                   help:"Non-interactive"         name:"non-interactive"`           //nolint:lll,revive
-	CIWorkflow     bool     `                   help:"Create CI workflow file" name:"ci-workflow"`               //nolint:lll,revive
+	PathFlag       string   `                   help:"Alt project path"        name:"path"            short:"p"` //nolint:lll,revive // Kong struct tag with alignment
+	Tools          []string `                   help:"Tools list"              name:"tools"           short:"t"` //nolint:lll,revive // Kong struct tag with alignment
+	NonInteractive bool     `                   help:"Non-interactive"         name:"non-interactive"`           //nolint:lll,revive // Kong struct tag exceeds line length
+	CIWorkflow     bool     `                   help:"Create CI workflow file" name:"ci-workflow"`               //nolint:lll,revive // Kong struct tag exceeds line length
 }
 
 // ProjectConfig holds the overall project configuration during init

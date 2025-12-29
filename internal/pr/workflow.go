@@ -371,7 +371,7 @@ func commitAndPush(
 	}
 
 	commitMsg, err := RenderCommitMessage(
-		commitData,
+		&commitData,
 	)
 	if err != nil {
 		return fmt.Errorf(
@@ -412,7 +412,7 @@ func createPRAndFinalize(
 		Counts:       result.Counts,
 	}
 
-	prBody, err := RenderPRBody(prData)
+	prBody, err := RenderPRBody(&prData)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"render PR body: %w",
@@ -431,7 +431,7 @@ func createPRAndFinalize(
 
 	// Create PR
 	prURL, manualURL, err := createPR(
-		ctx.platformInfo,
+		&ctx.platformInfo,
 		ctx.branchName,
 		baseBranchName,
 		prTitle,

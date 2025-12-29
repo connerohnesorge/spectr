@@ -264,21 +264,23 @@ func (p *printer) printBlockquoteChild(
 		// List in blockquote
 		children := n.Children()
 		for i, child := range children {
-			if item, ok := child.(*NodeListItem); ok {
-				p.writeIndent()
-				p.writeString("> ")
-				if n.Ordered() {
-					p.writeString(itoa(i + 1))
-					p.writeString(". ")
-				} else {
-					p.writeString("- ")
-				}
-				itemChildren := item.Children()
-				for _, ic := range itemChildren {
-					p.printInline(ic)
-				}
-				p.writeByte('\n')
+			item, ok := child.(*NodeListItem)
+			if !ok {
+				continue
 			}
+			p.writeIndent()
+			p.writeString("> ")
+			if n.Ordered() {
+				p.writeString(itoa(i + 1))
+				p.writeString(". ")
+			} else {
+				p.writeString("- ")
+			}
+			itemChildren := item.Children()
+			for _, ic := range itemChildren {
+				p.printInline(ic)
+			}
+			p.writeByte('\n')
 		}
 	default:
 		// For other types, prefix each line with >

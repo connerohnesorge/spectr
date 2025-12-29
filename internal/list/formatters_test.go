@@ -8,6 +8,8 @@ import (
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
+const testAddFeature = "add-feature"
+
 func TestFormatChangesText(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -23,7 +25,7 @@ func TestFormatChangesText(t *testing.T) {
 			name: "Single change",
 			changes: []ChangeInfo{
 				{
-					ID:         "add-feature",
+					ID:         testAddFeature,
 					Title:      "Add Feature",
 					DeltaCount: 2,
 					TaskStatus: parsers.TaskStatus{
@@ -33,7 +35,7 @@ func TestFormatChangesText(t *testing.T) {
 				},
 			},
 			expected: []string{
-				"add-feature  3/5 tasks",
+				testAddFeature + "  3/5 tasks",
 			},
 		},
 		{
@@ -49,7 +51,7 @@ func TestFormatChangesText(t *testing.T) {
 					},
 				},
 				{
-					ID:         "add-feature",
+					ID:         testAddFeature,
 					Title:      "Add Feature",
 					DeltaCount: 2,
 					TaskStatus: parsers.TaskStatus{
@@ -68,7 +70,7 @@ func TestFormatChangesText(t *testing.T) {
 				},
 			},
 			expected: []string{
-				"add-feature  3/5 tasks",
+				testAddFeature + "  3/5 tasks",
 				"fix-bug      3/3 tasks",
 				"update-docs  1/2 tasks",
 			},
@@ -115,7 +117,7 @@ func TestFormatChangesLong(t *testing.T) {
 			},
 		},
 		{
-			ID:         "add-feature",
+			ID:         testAddFeature,
 			Title:      "Add Feature",
 			DeltaCount: 2,
 			TaskStatus: parsers.TaskStatus{
@@ -131,7 +133,7 @@ func TestFormatChangesLong(t *testing.T) {
 	// Should be sorted alphabetically
 	if !strings.Contains(
 		lines[0],
-		"add-feature",
+		testAddFeature,
 	) {
 		t.Error(
 			"First line should contain add-feature",
@@ -201,7 +203,7 @@ func TestFormatChangesJSON(t *testing.T) {
 	}
 
 	// Check sorting
-	if parsed[0].ID != "add-feature" {
+	if parsed[0].ID != testAddFeature {
 		t.Error(
 			"First item should be add-feature (sorted)",
 		)
@@ -441,7 +443,7 @@ func TestFormatAllText(t *testing.T) {
 					RequirementCount: 12,
 				}),
 				NewChangeItem(ChangeInfo{
-					ID:         "add-feature",
+					ID:         testAddFeature,
 					Title:      "Add Feature",
 					DeltaCount: 2,
 					TaskStatus: parsers.TaskStatus{
@@ -451,7 +453,7 @@ func TestFormatAllText(t *testing.T) {
 				}),
 			},
 			expected: []string{
-				"add-feature  [CHANGE]  3/5 tasks",
+				testAddFeature + "  [CHANGE]  3/5 tasks",
 				"api          [SPEC]    12 requirements",
 				"update-docs  [CHANGE]  1/2 tasks",
 			},
@@ -487,7 +489,7 @@ func TestFormatAllText(t *testing.T) {
 func TestFormatAllLong(t *testing.T) {
 	items := ItemList{
 		NewChangeItem(ChangeInfo{
-			ID:         "add-feature",
+			ID:         testAddFeature,
 			Title:      "Add Feature",
 			DeltaCount: 2,
 			TaskStatus: parsers.TaskStatus{

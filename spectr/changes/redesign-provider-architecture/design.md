@@ -24,7 +24,7 @@ The current implementation has each provider implement a 12-method interface, wi
 - Improve testability of initialization steps
 - Maintain support for all 15 current providers
 - Use `afero.Fs` rooted at project for cleaner path handling
-- Explicit change tracking via InitResult return values
+- Explicit change tracking via ExecutionResult return values
 - Break import cycles with a dedicated `internal/domain` package
 - Fail-fast registration with explicit error handling (no silent failures)
 
@@ -53,44 +53,26 @@ The current implementation has each provider implement a 12-method interface, wi
 package domain
 
 import (
-    "bytes"
     "html/template"
 )
 
 // TemplateRef is a type-safe reference to a parsed template.
-// It can be safely passed between packages without creating import cycles.
+// It serves as a lightweight typed handle that can be safely passed
+// between packages without creating import cycles.
+// Rendering is performed by TemplateManager, not by TemplateRef itself.
 type TemplateRef struct {
     Name     string              // template file name (e.g., "instruction-pointer.md.tmpl")
     Template *template.Template  // pre-parsed template
 }
 
-// Render executes the template with the given context.
-func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
-    var buf bytes.Buffer
-    if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
-        return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)
-    }
-    return buf.String(), nil
-}
-
 // TemplateContext holds path-related template variables for dynamic directory names.
+// Created via templateContextFromConfig(cfg) in the executor, not via defaults.
 type TemplateContext struct {
-    BaseDir     string // e.g., "spectr"
-    SpecsDir    string // e.g., "spectr/specs"
-    ChangesDir  string // e.g., "spectr/changes"
-    ProjectFile string // e.g., "spectr/project.md"
-    AgentsFile  string // e.g., "spectr/AGENTS.md"
-}
-
-// DefaultTemplateContext returns a TemplateContext with default values.
-func DefaultTemplateContext() TemplateContext {
-    return TemplateContext{
-        BaseDir:     "spectr",
-        SpecsDir:    "spectr/specs",
-        ChangesDir:  "spectr/changes",
-        ProjectFile: "spectr/project.md",
-        AgentsFile:  "spectr/AGENTS.md",
-    }
+    BaseDir     string // e.g., "spectr" (from cfg.SpectrDir)
+    SpecsDir    string // e.g., "spectr/specs" (from cfg.SpecsDir())
+    ChangesDir  string // e.g., "spectr/changes" (from cfg.ChangesDir())
+    ProjectFile string // e.g., "spectr/project.md" (from cfg.ProjectFile())
+    AgentsFile  string // e.g., "spectr/AGENTS.md" (from cfg.AgentsFile())
 }
 ```
 
@@ -179,17 +161,11 @@ type Provider interface {
     Initializers(ctx context.Context, tm *TemplateManager) []Initializer
 }
 
-// InitResult contains the files created or modified by an initializer.
-type InitResult struct {
-    CreatedFiles []string
-    UpdatedFiles []string
-}
-
 type Initializer interface {
     // Init creates or updates files. Returns result with file changes and error if initialization fails.
     // Must be idempotent (safe to run multiple times).
     // Receives both filesystems - initializer decides which to use based on its configuration.
-    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
+    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (ExecutionResult, error)
 
     // IsSetup returns true if this initializer's artifacts already exist.
     // Receives both filesystems - initializer checks the appropriate one.
@@ -293,7 +269,7 @@ func RegisterAllProviders() error {
     providers := []Registration{
         {ID: "claude-code", Name: "Claude Code", Priority: 1, Provider: &ClaudeProvider{}},
         {ID: "gemini", Name: "Gemini CLI", Priority: 2, Provider: &GeminiProvider{}},
-        {ID: "costrict", Name: "Costrict", Priority: 3, Provider: &CostrictProvider{}},
+        {ID: "costrict", Name: "CoStrict", Priority: 3, Provider: &CostrictProvider{}},
         {ID: "qoder", Name: "Qoder", Priority: 4, Provider: &QoderProvider{}},
         {ID: "qwen", Name: "Qwen Code", Priority: 5, Provider: &QwenProvider{}},
         {ID: "antigravity", Name: "Antigravity", Priority: 6, Provider: &AntigravityProvider{}},
@@ -555,31 +531,18 @@ type ExecutorContext struct {
 
 ### 5. File Change Detection
 
-**Decision**: Each initializer returns an `InitResult` containing the files it created/updated.
+**Decision**: Each initializer returns an `ExecutionResult` containing the files it created/updated. The executor merges results inline.
 
 ```go
-// ExecutionResult aggregates results from all initializers
-// Note: Error is returned separately from runInitializers(), not stored in this struct
+// ExecutionResult contains results from initialization
+// Note: Error is returned separately, not stored in this struct
 type ExecutionResult struct {
-    CreatedFiles []string // All files created across all initializers
-    UpdatedFiles []string // All files updated across all initializers
-}
-
-// aggregateResults combines multiple InitResult values into a single ExecutionResult
-func aggregateResults(results []InitResult) ExecutionResult {
-    var created, updated []string
-    for _, r := range results {
-        created = append(created, r.CreatedFiles...)
-        updated = append(updated, r.UpdatedFiles...)
-    }
-    return ExecutionResult{
-        CreatedFiles: created,
-        UpdatedFiles: updated,
-    }
+    CreatedFiles []string // All files created
+    UpdatedFiles []string // All files updated
 }
 
 // Fail-fast execution: stop on first error
-var allResults []InitResult
+var allCreated, allUpdated []string
 
 for _, init := range allInitializers {
     result, err := init.Init(ctx, projectFs, homeFs, cfg, tm)
@@ -587,16 +550,23 @@ for _, init := range allInitializers {
         // Fail fast: return immediately on first error
         // Files created before error remain on disk (no rollback)
         // Return partial results so user knows what was created
-        return aggregateResults(allResults), err
+        return ExecutionResult{
+            CreatedFiles: allCreated,
+            UpdatedFiles: allUpdated,
+        }, err
     }
-    allResults = append(allResults, result)
+    allCreated = append(allCreated, result.CreatedFiles...)
+    allUpdated = append(allUpdated, result.UpdatedFiles...)
 }
 
 // All succeeded
-return aggregateResults(allResults), nil
+return ExecutionResult{
+    CreatedFiles: allCreated,
+    UpdatedFiles: allUpdated,
+}, nil
 ```
 
-**Rationale**: Explicit change tracking; initializers know what they create; works in non-git projects; more testable.
+**Rationale**: Explicit change tracking; initializers know what they create; works in non-git projects; more testable; single result type simplifies the API.
 
 ## Example: Claude Code Provider
 
@@ -859,7 +829,7 @@ The only valid reason to keep deprecated code would be if external code depends 
 
 ```go
 type Initializer interface {
-    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (InitResult, error)
+    Init(ctx context.Context, projectFs, homeFs afero.Fs, cfg *Config, tm *TemplateManager) (ExecutionResult, error)
     IsSetup(projectFs, homeFs afero.Fs, cfg *Config) bool
 }
 ```
@@ -930,22 +900,16 @@ NewConfigFileInitializer("CLAUDE.md", "instruction-pointer")
 **Solution**: Define typed template accessors on TemplateManager:
 
 ```go
-// TemplateRef is a type-safe reference to a parsed template
+// TemplateRef is a type-safe reference to a parsed template.
+// It's a lightweight handle without rendering logic.
+// Rendering is performed by TemplateManager.
 type TemplateRef struct {
     Name     string              // template file name (e.g., "instruction-pointer.md.tmpl")
     Template *template.Template  // pre-parsed template
 }
 
-// Render executes the template with the given context
-func (tr TemplateRef) Render(ctx TemplateContext) (string, error) {
-    var buf bytes.Buffer
-    if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
-        return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)
-    }
-    return buf.String(), nil
-}
-
-// TemplateManager exposes type-safe accessors for each template
+// TemplateManager exposes type-safe accessors for each template.
+// Rendering is performed via tm.Render(templateRef.Name, ctx).
 type TemplateManager struct {
     templates *template.Template
 }
@@ -1072,7 +1036,7 @@ This ensures all template variables are derived from a single source of truth (C
 
 | Question | Decision |
 |----------|----------|
-| Change detection approach? | InitResult return value from each Initializer |
+| Change detection approach? | ExecutionResult return value from each Initializer |
 | Initializer ordering? | Implicit ordering by type (Directory → ConfigFile → SlashCommands) |
 | Partial failure handling? | Fail-fast: stop on first error, return partial results from successful initializers |
 | Template variable location? | Derived from SpectrDir via methods |

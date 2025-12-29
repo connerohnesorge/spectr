@@ -211,7 +211,7 @@ func hasMalformedScenarios(content string) bool {
 func containsPattern(
 	content, pattern string,
 ) bool {
-	return len(content) > 0 && len(pattern) > 0 &&
+	return content != "" && pattern != "" &&
 		strings.Contains(content, pattern)
 }
 

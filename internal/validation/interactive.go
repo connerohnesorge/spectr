@@ -175,7 +175,7 @@ func runItemPicker(
 
 	// Create picker with enter action for selection
 	selectedIdx := -1
-	picker := tui.NewTablePicker(tui.TableConfig{
+	picker := tui.NewTablePicker(&tui.TableConfig{
 		Columns:     columns,
 		Rows:        rows,
 		Height:      tableHeight,

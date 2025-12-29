@@ -388,7 +388,7 @@ func generateSpecSkeleton(
 func formatCapabilityName(kebab string) string {
 	words := strings.Split(kebab, "-")
 	for i, word := range words {
-		if len(word) > 0 {
+		if word != "" {
 			words[i] = strings.ToUpper(
 				word[:1],
 			) + word[1:]

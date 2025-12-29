@@ -10,7 +10,7 @@ import (
 )
 
 // dirPerm is the default permission for created directories.
-const dirPerm = 0755
+const dirPerm = 0o755
 
 // spectrDirName is the name of the spectr directory.
 const spectrDirName = "spectr"

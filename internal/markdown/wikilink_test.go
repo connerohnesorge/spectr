@@ -46,7 +46,7 @@ func setupTestProject(t *testing.T) string {
 	}
 
 	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf(
 				"failed to create dir %s: %v",
 				dir,
@@ -106,7 +106,7 @@ Names should be lowercase.
 	}
 
 	for path, content := range specFiles {
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 			t.Fatalf(
 				"failed to write %s: %v",
 				path,
@@ -145,7 +145,7 @@ Another change proposal.
 	}
 
 	for path, content := range proposalFiles {
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
 			t.Fatalf(
 				"failed to write %s: %v",
 				path,
@@ -814,13 +814,13 @@ func TestResolveWikilinkResolutionOrder(
 		"duplicate",
 	)
 
-	if err := os.MkdirAll(specDir, 0755); err != nil {
+	if err := os.MkdirAll(specDir, 0o755); err != nil {
 		t.Fatalf(
 			"failed to create spec dir: %v",
 			err,
 		)
 	}
-	if err := os.MkdirAll(changeDir, 0755); err != nil {
+	if err := os.MkdirAll(changeDir, 0o755); err != nil {
 		t.Fatalf(
 			"failed to create change dir: %v",
 			err,
@@ -828,10 +828,10 @@ func TestResolveWikilinkResolutionOrder(
 	}
 
 	// Create both files
-	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte("# Spec"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(specDir, "spec.md"), []byte("# Spec"), 0o644); err != nil {
 		t.Fatalf("failed to write spec: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte("# Proposal"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte("# Proposal"), 0o644); err != nil {
 		t.Fatalf(
 			"failed to write proposal: %v",
 			err,

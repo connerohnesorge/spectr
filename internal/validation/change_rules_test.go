@@ -40,13 +40,13 @@ func createChangeDir(
 	specsDir := filepath.Join(changeDir, "specs")
 
 	// Create necessary directories
-	if err := os.MkdirAll(specsDir, 0755); err != nil {
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create specs directory: %v",
 			err,
 		)
 	}
-	if err := os.MkdirAll(specsRoot, 0755); err != nil {
+	if err := os.MkdirAll(specsRoot, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create spectr/specs directory: %v",
 			err,
@@ -58,7 +58,7 @@ func createChangeDir(
 		fullPath := filepath.Join(specsDir, path)
 		dir := filepath.Dir(fullPath)
 
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatalf(
 				"Failed to create directory %s: %v",
 				dir,
@@ -66,7 +66,7 @@ func createChangeDir(
 			)
 		}
 
-		if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 			t.Fatalf(
 				"Failed to write file %s: %v",
 				fullPath,
@@ -93,7 +93,7 @@ func createBaseSpec(
 	)
 	dir := filepath.Dir(specPath)
 
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create directory %s: %v",
 			dir,
@@ -101,7 +101,7 @@ func createBaseSpec(
 		)
 	}
 
-	if err := os.WriteFile(specPath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(specPath, []byte(content), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write base spec %s: %v",
 			specPath,
@@ -900,7 +900,7 @@ func TestValidateChangeDeltaSpecs_MissingSpecsDirectory(
 		"test-change",
 	)
 
-	if err := os.MkdirAll(changeDir, 0755); err != nil {
+	if err := os.MkdirAll(changeDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create change directory: %v",
 			err,
@@ -948,7 +948,7 @@ func TestValidateChangeDeltaSpecs_NoSpecFiles(
 	)
 	specsDir := filepath.Join(changeDir, "specs")
 
-	if err := os.MkdirAll(specsDir, 0755); err != nil {
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create specs directory: %v",
 			err,
@@ -2041,7 +2041,7 @@ The system SHALL provide user authentication.
 		changeDir,
 		"tasks.md",
 	)
-	if err := os.WriteFile(tasksPath, []byte(tasksContent), 0644); err != nil {
+	if err := os.WriteFile(tasksPath, []byte(tasksContent), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write tasks.md: %v",
 			err,
@@ -2101,7 +2101,7 @@ The system SHALL provide user authentication.
 		changeDir,
 		"tasks.md",
 	)
-	if err := os.WriteFile(tasksPath, []byte(""), 0644); err != nil {
+	if err := os.WriteFile(tasksPath, []byte(""), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write tasks.md: %v",
 			err,
@@ -2185,7 +2185,7 @@ Some text without any task checkboxes.
 		changeDir,
 		"tasks.md",
 	)
-	if err := os.WriteFile(tasksPath, []byte(tasksContent), 0644); err != nil {
+	if err := os.WriteFile(tasksPath, []byte(tasksContent), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write tasks.md: %v",
 			err,
@@ -2325,7 +2325,7 @@ func TestValidateTasksFile_DirectFunction(
 				"tasks.md",
 			)
 			content := "- [ ] Task 1\n- [x] Task 2\n"
-			if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(tasksPath, []byte(content), 0o644); err != nil {
 				t.Fatalf(
 					"Failed to write tasks.md: %v",
 					err,
@@ -2358,7 +2358,7 @@ func TestValidateTasksFile_DirectFunction(
 				tmpDir,
 				"tasks.md",
 			)
-			if err := os.WriteFile(tasksPath, []byte(""), 0644); err != nil {
+			if err := os.WriteFile(tasksPath, []byte(""), 0o644); err != nil {
 				t.Fatalf(
 					"Failed to write tasks.md: %v",
 					err,
@@ -2391,7 +2391,7 @@ func TestValidateTasksFile_DirectFunction(
 				"tasks.md",
 			)
 			content := "# Tasks\n\n## Section 1\n\nSome text\n"
-			if err := os.WriteFile(tasksPath, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(tasksPath, []byte(content), 0o644); err != nil {
 				t.Fatalf(
 					"Failed to write tasks.md: %v",
 					err,

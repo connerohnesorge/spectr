@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+const testChangeIDRefactorTUI = "refactor-unified-interactive-tui"
+
 //nolint:revive // cognitive-complexity - comprehensive test coverage
 func TestGetActiveChanges(t *testing.T) {
 	// Create temporary test directory
@@ -325,7 +327,7 @@ func TestResolveChangeID_UniquePrefixMatch(
 	createChangeDir(
 		t,
 		changesDir,
-		"refactor-unified-interactive-tui",
+		testChangeIDRefactorTUI,
 		"# Test",
 	)
 	createChangeDir(
@@ -345,9 +347,10 @@ func TestResolveChangeID_UniquePrefixMatch(
 			err,
 		)
 	}
-	if result.ChangeID != "refactor-unified-interactive-tui" {
+	if result.ChangeID != testChangeIDRefactorTUI {
 		t.Errorf(
-			"Expected 'refactor-unified-interactive-tui', got '%s'",
+			"Expected '%s', got '%s'",
+			testChangeIDRefactorTUI,
 			result.ChangeID,
 		)
 	}
@@ -374,7 +377,7 @@ func TestResolveChangeID_UniqueSubstringMatch(
 	createChangeDir(
 		t,
 		changesDir,
-		"refactor-unified-interactive-tui",
+		testChangeIDRefactorTUI,
 		"# Test",
 	)
 	createChangeDir(
@@ -394,9 +397,10 @@ func TestResolveChangeID_UniqueSubstringMatch(
 			err,
 		)
 	}
-	if result.ChangeID != "refactor-unified-interactive-tui" {
+	if result.ChangeID != testChangeIDRefactorTUI {
 		t.Errorf(
-			"Expected 'refactor-unified-interactive-tui', got '%s'",
+			"Expected '%s', got '%s'",
+			testChangeIDRefactorTUI,
 			result.ChangeID,
 		)
 	}
@@ -545,7 +549,7 @@ func TestResolveChangeID_CaseInsensitive(
 	createChangeDir(
 		t,
 		changesDir,
-		"refactor-unified-interactive-tui",
+		testChangeIDRefactorTUI,
 		"# Test",
 	)
 
@@ -560,9 +564,10 @@ func TestResolveChangeID_CaseInsensitive(
 			err,
 		)
 	}
-	if result.ChangeID != "refactor-unified-interactive-tui" {
+	if result.ChangeID != testChangeIDRefactorTUI {
 		t.Errorf(
-			"Expected 'refactor-unified-interactive-tui', got '%s'",
+			"Expected '%s', got '%s'",
+			testChangeIDRefactorTUI,
 			result.ChangeID,
 		)
 	}
@@ -578,9 +583,10 @@ func TestResolveChangeID_CaseInsensitive(
 			err,
 		)
 	}
-	if result.ChangeID != "refactor-unified-interactive-tui" {
+	if result.ChangeID != testChangeIDRefactorTUI {
 		t.Errorf(
-			"Expected 'refactor-unified-interactive-tui', got '%s'",
+			"Expected '%s', got '%s'",
+			testChangeIDRefactorTUI,
 			result.ChangeID,
 		)
 	}

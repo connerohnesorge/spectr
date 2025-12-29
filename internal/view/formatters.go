@@ -100,21 +100,16 @@ func FormatDashboardText(
 ) string {
 	var sections []string
 
-	// Header: Dashboard title
-	sections = append(sections, dashboardTitle)
-	sections = append(sections, "")
+	// Header: Dashboard title and Section 1: Summary
 	sections = append(
 		sections,
+		dashboardTitle,
+		"",
 		doubleLineSeparator,
-	)
-	sections = append(sections, "")
-
-	// Section 1: Summary
-	sections = append(
-		sections,
+		"",
 		formatSummarySection(data.Summary),
+		"",
 	)
-	sections = append(sections, "")
 
 	// Section 2: Active Changes (only if there are active changes)
 	if len(data.ActiveChanges) > 0 {
@@ -123,8 +118,8 @@ func FormatDashboardText(
 			formatActiveChangesSection(
 				data.ActiveChanges,
 			),
+			"",
 		)
-		sections = append(sections, "")
 	}
 
 	// Section 3: Completed Changes (only if there are completed changes)
@@ -134,8 +129,8 @@ func FormatDashboardText(
 			formatCompletedChangesSection(
 				data.CompletedChanges,
 			),
+			"",
 		)
-		sections = append(sections, "")
 	}
 
 	// Section 4: Specifications (only if there are specs)
@@ -143,18 +138,15 @@ func FormatDashboardText(
 		sections = append(
 			sections,
 			formatSpecsSection(data.Specs),
+			"",
 		)
-		sections = append(sections, "")
 	}
 
 	// Footer: Double-line separator and hints
 	sections = append(
 		sections,
 		doubleLineSeparator,
-	)
-	sections = append(sections, "")
-	sections = append(
-		sections,
+		"",
 		footerStyle.Render(footerHint),
 	)
 
@@ -227,8 +219,8 @@ func formatActiveChangesSection(
 	lines = append(
 		lines,
 		headerStyle.Render(activeChangesHeader),
+		singleLineSeparator,
 	)
-	lines = append(lines, singleLineSeparator)
 
 	// Each active change: ◉ id [progress bar] percentage%
 	for _, change := range changes {
@@ -268,8 +260,8 @@ func formatCompletedChangesSection(
 		headerStyle.Render(
 			completedChangesHeader,
 		),
+		singleLineSeparator,
 	)
-	lines = append(lines, singleLineSeparator)
 
 	// Each completed change: ✓ id
 	for _, change := range changes {
@@ -295,8 +287,8 @@ func formatSpecsSection(specs []SpecInfo) string {
 	lines = append(
 		lines,
 		headerStyle.Render(specsHeader),
+		singleLineSeparator,
 	)
-	lines = append(lines, singleLineSeparator)
 
 	// Each spec: ▪ id                  X requirements
 	for _, spec := range specs {

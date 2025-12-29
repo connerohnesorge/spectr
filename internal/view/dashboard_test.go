@@ -206,7 +206,7 @@ func TestCollectData_EmptyProject(t *testing.T) {
 	// Create a temporary directory with only a spectr directory (no changes, no specs)
 	tempDir := t.TempDir()
 	spectrDir := filepath.Join(tempDir, "spectr")
-	if err := os.MkdirAll(spectrDir, 0755); err != nil {
+	if err := os.MkdirAll(spectrDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create spectr directory: %v",
 			err,
@@ -214,13 +214,13 @@ func TestCollectData_EmptyProject(t *testing.T) {
 	}
 
 	// Create empty subdirectories
-	if err := os.MkdirAll(filepath.Join(spectrDir, "changes"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(spectrDir, "changes"), 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create changes directory: %v",
 			err,
 		)
 	}
-	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create specs directory: %v",
 			err,
@@ -310,13 +310,13 @@ func TestCollectData_OnlyActiveChanges(
 		spectrDir,
 		"changes",
 	)
-	if err := os.MkdirAll(changesDir, 0755); err != nil {
+	if err := os.MkdirAll(changesDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create changes directory: %v",
 			err,
 		)
 	}
-	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create specs directory: %v",
 			err,
@@ -328,7 +328,7 @@ func TestCollectData_OnlyActiveChanges(
 		changesDir,
 		"test-change",
 	)
-	if err := os.MkdirAll(changeDir, 0755); err != nil {
+	if err := os.MkdirAll(changeDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create change directory: %v",
 			err,
@@ -337,7 +337,7 @@ func TestCollectData_OnlyActiveChanges(
 
 	// Write a proposal.md
 	proposalContent := "# Test Change\n\n## Why\nTest\n\n## What Changes\n- Test\n"
-	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write proposal.md: %v",
 			err,
@@ -346,7 +346,7 @@ func TestCollectData_OnlyActiveChanges(
 
 	// Write tasks.md with some tasks
 	tasksContent := "## 1. Implementation\n- [x] 1.1 Task one\n- [ ] 1.2 Task two\n- [ ] 1.3 Task three\n"
-	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write tasks.md: %v",
 			err,
@@ -433,13 +433,13 @@ func TestCollectData_OnlyCompletedChanges(
 		spectrDir,
 		"changes",
 	)
-	if err := os.MkdirAll(changesDir, 0755); err != nil {
+	if err := os.MkdirAll(changesDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create changes directory: %v",
 			err,
 		)
 	}
-	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create specs directory: %v",
 			err,
@@ -451,7 +451,7 @@ func TestCollectData_OnlyCompletedChanges(
 		changesDir,
 		"test-completed",
 	)
-	if err := os.MkdirAll(changeDir, 0755); err != nil {
+	if err := os.MkdirAll(changeDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create change directory: %v",
 			err,
@@ -460,7 +460,7 @@ func TestCollectData_OnlyCompletedChanges(
 
 	// Write a proposal.md
 	proposalContent := "# Test Completed\n\n## Why\nTest\n\n## What Changes\n- Test\n"
-	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write proposal.md: %v",
 			err,
@@ -469,7 +469,7 @@ func TestCollectData_OnlyCompletedChanges(
 
 	// Write tasks.md with all tasks completed
 	tasksContent := "## 1. Implementation\n- [x] 1.1 Task one\n- [x] 1.2 Task two\n- [x] 1.3 Task three\n"
-	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write tasks.md: %v",
 			err,
@@ -557,13 +557,13 @@ func TestCollectData_ChangeWithZeroTasks(
 		spectrDir,
 		"changes",
 	)
-	if err := os.MkdirAll(changesDir, 0755); err != nil {
+	if err := os.MkdirAll(changesDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create changes directory: %v",
 			err,
 		)
 	}
-	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(spectrDir, "specs"), 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create specs directory: %v",
 			err,
@@ -575,7 +575,7 @@ func TestCollectData_ChangeWithZeroTasks(
 		changesDir,
 		"test-no-tasks",
 	)
-	if err := os.MkdirAll(changeDir, 0755); err != nil {
+	if err := os.MkdirAll(changeDir, 0o755); err != nil {
 		t.Fatalf(
 			"Failed to create change directory: %v",
 			err,
@@ -584,7 +584,7 @@ func TestCollectData_ChangeWithZeroTasks(
 
 	// Write a proposal.md
 	proposalContent := "# Test No Tasks\n\n## Why\nTest\n\n## What Changes\n- Test\n"
-	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write proposal.md: %v",
 			err,
@@ -593,7 +593,7 @@ func TestCollectData_ChangeWithZeroTasks(
 
 	// Write tasks.md with no actual tasks (just a header)
 	tasksContent := "## 1. Implementation\n\n(No tasks yet)\n"
-	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(changeDir, "tasks.md"), []byte(tasksContent), 0o644); err != nil {
 		t.Fatalf(
 			"Failed to write tasks.md: %v",
 			err,

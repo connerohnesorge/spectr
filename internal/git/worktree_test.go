@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+const testOriginMain = "origin/main"
+
 // isGitAvailable checks if git command is available.
 func isGitAvailable() bool {
 	_, err := exec.LookPath("git")
@@ -156,7 +158,7 @@ func TestGetBaseBranch(t *testing.T) {
 		}
 
 		// Should return origin/main or origin/master
-		if branch != "origin/main" &&
+		if branch != testOriginMain &&
 			branch != "origin/master" {
 			t.Errorf(
 				"GetBaseBranch(\"\") = %v, want origin/main or origin/master",
@@ -604,7 +606,7 @@ func TestWorktreeConfig_Struct(t *testing.T) {
 	// Test that WorktreeConfig can be constructed properly
 	config := WorktreeConfig{
 		BranchName: "test-branch",
-		BaseBranch: "origin/main",
+		BaseBranch: testOriginMain,
 	}
 
 	if config.BranchName != "test-branch" {
@@ -613,7 +615,7 @@ func TestWorktreeConfig_Struct(t *testing.T) {
 			config.BranchName,
 		)
 	}
-	if config.BaseBranch != "origin/main" {
+	if config.BaseBranch != testOriginMain {
 		t.Errorf(
 			"WorktreeConfig.BaseBranch = %v, want origin/main",
 			config.BaseBranch,

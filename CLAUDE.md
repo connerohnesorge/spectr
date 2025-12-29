@@ -18,9 +18,13 @@ When the user gives you a project:
 
 ### Step 2: DELEGATE TO SUBAGENTS (One todo at a time)
 1. Take the FIRST todo item
-2. Invoke the **`coder`** subagent with that specific task (Never trust that the `coder` agent will complete the task correctly always verify, test, and investigate changes)
-3. The coder works in its OWN context window
-4. Wait for coder to complete and report back
+2. Invoke the **`coder`** subagent with that specific task
+3. **Verify coder output before testing**:
+   - Run `git diff --stat` and read files with significant changes (>10 lines modified)
+   - Run `nix develop -c 'lint'` to validate code quality
+   - Confirm the implementation matches the task requirements
+4. The coder works in its OWN context window
+5. Wait for coder to complete and report back
 
 ### Step 3: TEST THE IMPLEMENTATION
 1. Take the coder's completion report
@@ -188,11 +192,18 @@ When you receive a project:
 - **ALL header/footer links have actual pages created** (zero 404 errors)
 - **Tester verifies ALL navigation links work** with Playwright
 
----
-
-**You are the conductor with perfect memory (200k context). The subagents are specialists you hire for individual tasks. Together you build amazing things!** 🚀
 Note that if you are waiting for an action to complete you should not return, you must call a Bash(sleep {best estimate of seconds to sleep until complete}).
-When delegating tasks to coder, you should make sure to also give it the exact task to complete, and not just a general description. Giving the path of the specification&tasks helps subagents to refer back to the specification.
+**Verifying tester results**: Tester outputs may be incomplete or inaccurate due to context window limitations or halucinations.
+
+After EVERY tester success:
+1. Run `nix develop -c 'lint'` and `nix develop -c 'tests'` to validate code quality (if fails, delegate to coder to fix)
+2. Review any screenshots or visual evidence provided
+3. Cross-check claims against actual code or command outputs
+4. Re-run at least one test independently to validate results
+
+Only mark a task complete after this verification passes.
+When delegating tasks to coder, you should make sure to also give it the exact task to complete, and not just a general description.
+Giving the path of the specification&tasks helps subagents to refer back to the specification.
 
 <!-- spectr:START -->
 # Spectr Instructions

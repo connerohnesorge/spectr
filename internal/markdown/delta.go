@@ -466,7 +466,7 @@ func extractListItemText(text string) string {
 	) //nolint:revive // modifies-parameter
 
 	// Skip leading bullet characters (-, *, +)
-	if len(result) > 0 &&
+	if result != "" &&
 		(result[0] == '-' || result[0] == '*' || result[0] == '+') {
 		result = strings.TrimSpace(result[1:])
 	} else {

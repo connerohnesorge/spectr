@@ -13,6 +13,11 @@ import (
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
+const (
+	interactiveTestSpecID   = "test-spec"
+	interactiveTestChangeID = "test-change"
+)
+
 func TestRunInteractiveChanges_EmptyList(
 	t *testing.T,
 ) {
@@ -114,7 +119,7 @@ func TestRunInteractiveSpecs_ValidData(
 }
 
 func TestInteractiveModel_Init(t *testing.T) {
-	model := interactiveModel{}
+	model := &interactiveModel{}
 	cmd := model.Init()
 
 	if cmd != nil {
@@ -171,9 +176,9 @@ func TestInteractiveModel_HandleEdit(
 ) {
 	// Create a temporary test directory with a spec file
 	tmpDir := t.TempDir()
-	specID := "test-spec"
+	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
-	err := mkdirAll(specDir, 0755)
+	err := mkdirAll(specDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create test directory: %v",
@@ -185,7 +190,7 @@ func TestInteractiveModel_HandleEdit(
 	err = writeFile(
 		specPath,
 		[]byte("# Test Spec"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -210,7 +215,7 @@ func TestInteractiveModel_HandleEdit(
 		})
 		_ = unsetEnv("EDITOR")
 
-		model := interactiveModel{
+		model := &interactiveModel{
 			itemType:    "spec",
 			projectPath: tmpDir,
 			table: createMockTable([][]string{
@@ -219,16 +224,20 @@ func TestInteractiveModel_HandleEdit(
 		}
 
 		updatedModel, _ := model.handleEdit()
-		if updatedModel.err == nil {
+		m, ok := updatedModel.(*interactiveModel)
+		if !ok {
+			t.Fatal("Expected *interactiveModel type")
+		}
+		if m.err == nil {
 			t.Error(
 				"Expected error when EDITOR not set",
 			)
 		}
-		if updatedModel.err != nil &&
-			updatedModel.err.Error() != "EDITOR environment variable not set" {
+		if m.err != nil &&
+			m.err.Error() != "EDITOR environment variable not set" {
 			t.Errorf(
 				"Expected 'EDITOR environment variable not set' error, got: %v",
-				updatedModel.err,
+				m.err,
 			)
 		}
 	})
@@ -238,9 +247,9 @@ func TestInteractiveModel_HandleEdit(
 		"change mode opens proposal",
 		func(t *testing.T) {
 			// Create a change proposal file
-			changeID := "test-change"
+			changeID := interactiveTestChangeID
 			changeDir := tmpDir + "/spectr/changes/" + changeID
-			err := mkdirAll(changeDir, 0755)
+			err := mkdirAll(changeDir, 0o755)
 			if err != nil {
 				t.Fatalf(
 					"Failed to create change directory: %v",
@@ -251,7 +260,7 @@ func TestInteractiveModel_HandleEdit(
 			err = writeFile(
 				proposalPath,
 				[]byte("# Test Change"),
-				0644,
+				0o644,
 			)
 			if err != nil {
 				t.Fatalf(
@@ -299,7 +308,7 @@ func TestInteractiveModel_HandleEdit(
 				table.WithHeight(10),
 			)
 
-			model := interactiveModel{
+			model := &interactiveModel{
 				itemType:    "change",
 				projectPath: tmpDir,
 				table:       tbl,
@@ -311,10 +320,14 @@ func TestInteractiveModel_HandleEdit(
 					"Expected command to be returned when editing change",
 				)
 			}
-			if updatedModel.err != nil {
+			m, ok := updatedModel.(*interactiveModel)
+			if !ok {
+				t.Fatal("Expected *interactiveModel type")
+			}
+			if m.err != nil {
 				t.Errorf(
 					"Expected no error when editing change, got: %v",
-					updatedModel.err,
+					m.err,
 				)
 			}
 		},
@@ -329,7 +342,7 @@ func TestInteractiveModel_HandleEdit(
 				func() { _ = unsetEnv("EDITOR") },
 			)
 
-			model := interactiveModel{
+			model := &interactiveModel{
 				itemType:    "spec",
 				projectPath: tmpDir,
 				table: createMockTable([][]string{
@@ -342,7 +355,11 @@ func TestInteractiveModel_HandleEdit(
 			}
 
 			updatedModel, _ := model.handleEdit()
-			if updatedModel.err == nil {
+			m, ok := updatedModel.(*interactiveModel)
+			if !ok {
+				t.Fatal("Expected *interactiveModel type")
+			}
+			if m.err == nil {
 				t.Error(
 					"Expected error for nonexistent spec file",
 				)
@@ -464,7 +481,7 @@ func TestHandleToggleFilter(t *testing.T) {
 		}),
 	}
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "all",
 		allItems:    items,
 		filterType:  nil,
@@ -472,7 +489,7 @@ func TestHandleToggleFilter(t *testing.T) {
 	}
 
 	// Test toggle: all -> changes
-	model = model.handleToggleFilter()
+	model.handleToggleFilter()
 	if model.filterType == nil {
 		t.Error(
 			"Expected filterType to be set to ItemTypeChange",
@@ -486,7 +503,7 @@ func TestHandleToggleFilter(t *testing.T) {
 	}
 
 	// Test toggle: changes -> specs
-	model = model.handleToggleFilter()
+	model.handleToggleFilter()
 	if model.filterType == nil {
 		t.Error(
 			"Expected filterType to be set to ItemTypeSpec",
@@ -500,7 +517,7 @@ func TestHandleToggleFilter(t *testing.T) {
 	}
 
 	// Test toggle: specs -> all
-	model = model.handleToggleFilter()
+	model.handleToggleFilter()
 	if model.filterType != nil {
 		t.Errorf(
 			"Expected filterType to be nil (all), got %v",
@@ -513,9 +530,9 @@ func TestHandleToggleFilter(t *testing.T) {
 func TestEditorOpensOnEKey(t *testing.T) {
 	// Create a temporary test directory with a spec file
 	tmpDir := t.TempDir()
-	specID := "test-spec"
+	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
-	err := os.MkdirAll(specDir, 0755)
+	err := os.MkdirAll(specDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create test directory: %v",
@@ -527,7 +544,7 @@ func TestEditorOpensOnEKey(t *testing.T) {
 	err = os.WriteFile(
 		specPath,
 		[]byte("# Test Spec"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -557,7 +574,7 @@ func TestEditorOpensOnEKey(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	m := interactiveModel{
+	m := &interactiveModel{
 		table:       tbl,
 		itemType:    "spec",
 		projectPath: tmpDir,
@@ -614,9 +631,9 @@ func TestEditorOpensOnEKey(t *testing.T) {
 func TestEditorOpensForChangeItems(t *testing.T) {
 	// Create a temporary test directory with a change proposal file
 	tmpDir := t.TempDir()
-	changeID := "test-change"
+	changeID := interactiveTestChangeID
 	changeDir := tmpDir + "/spectr/changes/" + changeID
-	err := os.MkdirAll(changeDir, 0755)
+	err := os.MkdirAll(changeDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create test directory: %v",
@@ -628,7 +645,7 @@ func TestEditorOpensForChangeItems(t *testing.T) {
 	err = os.WriteFile(
 		proposalPath,
 		[]byte("# Test Change"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -659,7 +676,7 @@ func TestEditorOpensForChangeItems(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	m := interactiveModel{
+	m := &interactiveModel{
 		table:       tbl,
 		itemType:    "change",
 		projectPath: tmpDir,
@@ -718,9 +735,9 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create spec file
-	specID := "test-spec"
+	specID := interactiveTestSpecID
 	specDir := tmpDir + "/spectr/specs/" + specID
-	err := os.MkdirAll(specDir, 0755)
+	err := os.MkdirAll(specDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create spec directory: %v",
@@ -730,7 +747,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	err = os.WriteFile(
 		specDir+"/spec.md",
 		[]byte("# Test Spec"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -740,9 +757,9 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	}
 
 	// Create change file
-	changeID := "test-change"
+	changeID := interactiveTestChangeID
 	changeDir := tmpDir + "/spectr/changes/" + changeID
-	err = os.MkdirAll(changeDir, 0755)
+	err = os.MkdirAll(changeDir, 0o755)
 	if err != nil {
 		t.Fatalf(
 			"Failed to create change directory: %v",
@@ -752,7 +769,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	err = os.WriteFile(
 		changeDir+"/proposal.md",
 		[]byte("# Test Change"),
-		0644,
+		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -809,7 +826,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 		}),
 	}
 
-	m := interactiveModel{
+	m := &interactiveModel{
 		table:       tbl,
 		itemType:    "all",
 		projectPath: tmpDir,
@@ -926,7 +943,7 @@ func TestHandleArchive_ChangeMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "change",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -936,15 +953,19 @@ func TestHandleArchive_ChangeMode(t *testing.T) {
 	updatedModel, cmd := model.handleArchive()
 
 	// Should set archiveRequested and selectedID
-	if !updatedModel.archiveRequested {
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected *interactiveModel type")
+	}
+	if !m.archiveRequested {
 		t.Error(
 			"Expected archiveRequested to be true in change mode",
 		)
 	}
-	if updatedModel.selectedID != "test-change-1" {
+	if m.selectedID != "test-change-1" {
 		t.Errorf(
 			"Expected selectedID to be 'test-change-1', got '%s'",
-			updatedModel.selectedID,
+			m.selectedID,
 		)
 	}
 	// Should return tea.Quit
@@ -966,7 +987,7 @@ func TestHandleArchive_SpecMode(t *testing.T) {
 		},
 	}
 	rows := []table.Row{
-		{"test-spec", "Test Spec", "5"},
+		{interactiveTestSpecID, "Test Spec", "5"},
 	}
 	tbl := table.New(
 		table.WithColumns(columns),
@@ -975,7 +996,7 @@ func TestHandleArchive_SpecMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "spec",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -985,15 +1006,19 @@ func TestHandleArchive_SpecMode(t *testing.T) {
 	updatedModel, cmd := model.handleArchive()
 
 	// Should NOT set archiveRequested in spec mode
-	if updatedModel.archiveRequested {
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected *interactiveModel type")
+	}
+	if m.archiveRequested {
 		t.Error(
 			"Expected archiveRequested to be false in spec mode",
 		)
 	}
-	if updatedModel.selectedID != "" {
+	if m.selectedID != "" {
 		t.Errorf(
 			"Expected selectedID to be empty in spec mode, got '%s'",
-			updatedModel.selectedID,
+			m.selectedID,
 		)
 	}
 	// Should not return tea.Quit
@@ -1022,13 +1047,13 @@ func TestHandleArchive_UnifiedMode_Change(
 	}
 	rows := []table.Row{
 		{
-			"test-change",
+			interactiveTestChangeID,
 			"CHANGE",
 			"Test Change",
 			"Tasks: 3/5",
 		},
 		{
-			"test-spec",
+			interactiveTestSpecID,
 			"SPEC",
 			"Test Spec",
 			"Reqs: 5",
@@ -1041,7 +1066,7 @@ func TestHandleArchive_UnifiedMode_Change(
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "all",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1051,15 +1076,19 @@ func TestHandleArchive_UnifiedMode_Change(
 	updatedModel, cmd := model.handleArchive()
 
 	// Should set archiveRequested and selectedID for CHANGE
-	if !updatedModel.archiveRequested {
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected *interactiveModel type")
+	}
+	if !m.archiveRequested {
 		t.Error(
 			"Expected archiveRequested to be true for CHANGE in unified mode",
 		)
 	}
-	if updatedModel.selectedID != "test-change" {
+	if m.selectedID != interactiveTestChangeID {
 		t.Errorf(
 			"Expected selectedID to be 'test-change', got '%s'",
-			updatedModel.selectedID,
+			m.selectedID,
 		)
 	}
 	if cmd == nil {
@@ -1087,7 +1116,7 @@ func TestHandleArchive_UnifiedMode_Spec(
 	}
 	rows := []table.Row{
 		{
-			"test-spec",
+			interactiveTestSpecID,
 			"SPEC",
 			"Test Spec",
 			"Reqs: 5",
@@ -1100,7 +1129,7 @@ func TestHandleArchive_UnifiedMode_Spec(
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "all",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1110,15 +1139,19 @@ func TestHandleArchive_UnifiedMode_Spec(
 	updatedModel, cmd := model.handleArchive()
 
 	// Should NOT set archiveRequested for SPEC in unified mode
-	if updatedModel.archiveRequested {
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected *interactiveModel type")
+	}
+	if m.archiveRequested {
 		t.Error(
 			"Expected archiveRequested to be false for SPEC in unified mode",
 		)
 	}
-	if updatedModel.selectedID != "" {
+	if m.selectedID != "" {
 		t.Errorf(
 			"Expected selectedID to be empty for SPEC, got '%s'",
-			updatedModel.selectedID,
+			m.selectedID,
 		)
 	}
 	if cmd != nil {
@@ -1160,7 +1193,7 @@ func TestHandlePR_ChangeMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "change",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1170,15 +1203,19 @@ func TestHandlePR_ChangeMode(t *testing.T) {
 	updatedModel, cmd := model.handlePR()
 
 	// Should set prRequested and selectedID
-	if !updatedModel.prRequested {
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected *interactiveModel type")
+	}
+	if !m.prRequested {
 		t.Error(
 			"Expected prRequested to be true in change mode",
 		)
 	}
-	if updatedModel.selectedID != "test-change-1" {
+	if m.selectedID != "test-change-1" {
 		t.Errorf(
 			"Expected selectedID to be 'test-change-1', got '%s'",
-			updatedModel.selectedID,
+			m.selectedID,
 		)
 	}
 	// Should return tea.Quit
@@ -1200,7 +1237,7 @@ func TestHandlePR_SpecMode(t *testing.T) {
 		},
 	}
 	rows := []table.Row{
-		{"test-spec", "Test Spec", "5"},
+		{interactiveTestSpecID, "Test Spec", "5"},
 	}
 	tbl := table.New(
 		table.WithColumns(columns),
@@ -1209,7 +1246,7 @@ func TestHandlePR_SpecMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "spec",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1219,15 +1256,19 @@ func TestHandlePR_SpecMode(t *testing.T) {
 	updatedModel, cmd := model.handlePR()
 
 	// Should NOT set prRequested in spec mode
-	if updatedModel.prRequested {
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected *interactiveModel type")
+	}
+	if m.prRequested {
 		t.Error(
 			"Expected prRequested to be false in spec mode",
 		)
 	}
-	if updatedModel.selectedID != "" {
+	if m.selectedID != "" {
 		t.Errorf(
 			"Expected selectedID to be empty in spec mode, got '%s'",
-			updatedModel.selectedID,
+			m.selectedID,
 		)
 	}
 	// Should not return tea.Quit
@@ -1254,13 +1295,13 @@ func TestHandlePR_UnifiedMode(t *testing.T) {
 	}
 	rows := []table.Row{
 		{
-			"test-change",
+			interactiveTestChangeID,
 			"CHANGE",
 			"Test Change",
 			"Tasks: 3/5",
 		},
 		{
-			"test-spec",
+			interactiveTestSpecID,
 			"SPEC",
 			"Test Spec",
 			"Reqs: 5",
@@ -1273,7 +1314,7 @@ func TestHandlePR_UnifiedMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "all",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1283,7 +1324,11 @@ func TestHandlePR_UnifiedMode(t *testing.T) {
 	updatedModel, cmd := model.handlePR()
 
 	// Should NOT set prRequested in unified mode (PR only works in change mode)
-	if updatedModel.prRequested {
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected *interactiveModel type")
+	}
+	if m.prRequested {
 		t.Error(
 			"Expected prRequested to be false in unified mode",
 		)
@@ -1296,7 +1341,7 @@ func TestHandlePR_UnifiedMode(t *testing.T) {
 }
 
 func TestViewShowsPRMode(t *testing.T) {
-	model := interactiveModel{
+	model := &interactiveModel{
 		quitting:    true,
 		prRequested: true,
 		selectedID:  "test-change-id",
@@ -1352,7 +1397,7 @@ func TestSearchRowFiltering(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "change",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1430,7 +1475,7 @@ func TestSearchRowFiltering(t *testing.T) {
 			model.searchInput.SetValue(
 				tt.searchQuery,
 			)
-			model = model.applyFilter()
+			model.applyFilter()
 
 			filteredRows := model.table.Rows()
 			if len(
@@ -1491,7 +1536,7 @@ func TestSearchExitWithEscape(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "change",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1503,13 +1548,13 @@ func TestSearchExitWithEscape(t *testing.T) {
 	// Set a search query and then exit with Escape
 	model.searchQuery = "add"
 	model.searchInput.SetValue("add")
-	model = model.applyFilter()
+	model.applyFilter()
 
 	// Simulate pressing Escape
 	updatedModel, _ := model.Update(
 		tea.KeyMsg{Type: tea.KeyEsc},
 	)
-	m, ok := updatedModel.(interactiveModel)
+	m, ok := updatedModel.(*interactiveModel)
 	if !ok {
 		t.Fatal("Expected interactiveModel type")
 	}
@@ -1577,7 +1622,7 @@ func TestSearchUnifiedMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "all",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1589,7 +1634,7 @@ func TestSearchUnifiedMode(t *testing.T) {
 	// Search for "auth" - should find both auth-related items
 	model.searchQuery = "auth"
 	model.searchInput.SetValue("auth")
-	model = model.applyFilter()
+	model.applyFilter()
 
 	filteredRows := model.table.Rows()
 	if len(filteredRows) != 2 {
@@ -1642,7 +1687,7 @@ func TestSearchCaseInsensitive(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:    "spec",
 		projectPath: "/tmp/test",
 		table:       tbl,
@@ -1666,7 +1711,7 @@ func TestSearchCaseInsensitive(t *testing.T) {
 	for _, tt := range tests {
 		model.searchQuery = tt.query
 		model.searchInput.SetValue(tt.query)
-		model = model.applyFilter()
+		model.applyFilter()
 
 		filteredRows := model.table.Rows()
 		if len(
@@ -1708,7 +1753,7 @@ func TestHelpToggleDefaultView(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      "change",
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -1766,7 +1811,7 @@ func TestHelpToggleShowsHelp(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      "change",
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -1782,7 +1827,7 @@ func TestHelpToggleShowsHelp(t *testing.T) {
 			Runes: []rune{'?'},
 		},
 	)
-	m, ok := updatedModel.(interactiveModel)
+	m, ok := updatedModel.(*interactiveModel)
 	if !ok {
 		t.Fatal("Expected interactiveModel type")
 	}
@@ -1842,7 +1887,7 @@ func TestHelpToggleHidesHelp(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      "change",
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -1858,7 +1903,7 @@ func TestHelpToggleHidesHelp(t *testing.T) {
 			Runes: []rune{'?'},
 		},
 	)
-	m, ok := updatedModel.(interactiveModel)
+	m, ok := updatedModel.(*interactiveModel)
 	if !ok {
 		t.Fatal("Expected interactiveModel type")
 	}
@@ -1931,7 +1976,7 @@ func TestNavigationKeysAutoHideHelp(
 
 	for _, key := range navigationKeys {
 		t.Run(key.String(), func(t *testing.T) {
-			model := interactiveModel{
+			model := &interactiveModel{
 				itemType:      "change",
 				projectPath:   "/tmp/test",
 				table:         tbl,
@@ -1942,7 +1987,7 @@ func TestNavigationKeysAutoHideHelp(
 
 			// Press navigation key
 			updatedModel, _ := model.Update(key)
-			m, ok := updatedModel.(interactiveModel)
+			m, ok := updatedModel.(*interactiveModel)
 			if !ok {
 				t.Fatal(
 					"Expected interactiveModel type",
@@ -1980,7 +2025,7 @@ func TestHelpToggleInSpecMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      "spec",
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -1996,7 +2041,7 @@ func TestHelpToggleInSpecMode(t *testing.T) {
 			Runes: []rune{'?'},
 		},
 	)
-	m, ok := updatedModel.(interactiveModel)
+	m, ok := updatedModel.(*interactiveModel)
 	if !ok {
 		t.Fatal("Expected interactiveModel type")
 	}
@@ -2053,7 +2098,7 @@ func TestHelpToggleInUnifiedMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      "all",
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -2069,7 +2114,7 @@ func TestHelpToggleInUnifiedMode(t *testing.T) {
 			Runes: []rune{'?'},
 		},
 	)
-	m, ok := updatedModel.(interactiveModel)
+	m, ok := updatedModel.(*interactiveModel)
 	if !ok {
 		t.Fatal("Expected interactiveModel type")
 	}
@@ -3410,7 +3455,7 @@ func TestBuildUnifiedRows_ResponsiveColumns(
 ) {
 	items := ItemList{
 		NewChangeItem(ChangeInfo{
-			ID:         "test-change",
+			ID:         interactiveTestChangeID,
 			Title:      "Test Change",
 			DeltaCount: 2,
 			TaskStatus: parsers.TaskStatus{
@@ -3419,7 +3464,7 @@ func TestBuildUnifiedRows_ResponsiveColumns(
 			},
 		}),
 		NewSpecItem(SpecInfo{
-			ID:               "test-spec",
+			ID:               interactiveTestSpecID,
 			Title:            "Test Spec",
 			RequirementCount: 6,
 		}),
@@ -3483,7 +3528,7 @@ func TestViewShowsHiddenColumnsHint(
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      itemTypeChange,
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -3528,7 +3573,7 @@ func TestViewNoHiddenColumnsHint(t *testing.T) {
 		table.WithHeight(10),
 	)
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      itemTypeChange,
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -3566,7 +3611,7 @@ func TestWindowSizeMsg_TriggersRebuild(
 	}
 	rows := []table.Row{
 		{
-			"test-change",
+			interactiveTestChangeID,
 			"Test Change",
 			"2",
 			"3/5",
@@ -3581,7 +3626,7 @@ func TestWindowSizeMsg_TriggersRebuild(
 
 	changes := []ChangeInfo{
 		{
-			ID:         "test-change",
+			ID:         interactiveTestChangeID,
 			Title:      "Test Change",
 			DeltaCount: 2,
 			TaskStatus: parsers.TaskStatus{
@@ -3591,7 +3636,7 @@ func TestWindowSizeMsg_TriggersRebuild(
 		},
 	}
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      itemTypeChange,
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -3606,7 +3651,7 @@ func TestWindowSizeMsg_TriggersRebuild(
 	updatedModel, _ := model.Update(
 		tea.WindowSizeMsg{Width: 75, Height: 24},
 	)
-	m, ok := updatedModel.(interactiveModel)
+	m, ok := updatedModel.(*interactiveModel)
 	if !ok {
 		t.Fatal("Expected interactiveModel type")
 	}
@@ -3691,7 +3736,7 @@ func TestRebuildTablePreservesCursor(
 		},
 	}
 
-	model := interactiveModel{
+	model := &interactiveModel{
 		itemType:      itemTypeChange,
 		projectPath:   "/tmp/test",
 		table:         tbl,
@@ -3714,7 +3759,7 @@ func TestRebuildTablePreservesCursor(
 	updatedModel, _ := model.Update(
 		tea.WindowSizeMsg{Width: 75, Height: 24},
 	)
-	m, ok := updatedModel.(interactiveModel)
+	m, ok := updatedModel.(*interactiveModel)
 	if !ok {
 		t.Fatal("Expected interactiveModel type")
 	}
@@ -3840,7 +3885,7 @@ func TestTitleWidthMinimums(t *testing.T) {
 func TestInteractiveModel_View_StdoutMode(
 	t *testing.T,
 ) {
-	model := interactiveModel{
+	model := &interactiveModel{
 		quitting:   true,
 		stdoutMode: true,
 		selectedID: "test-change-id",
@@ -3863,7 +3908,7 @@ func TestInteractiveModel_View_StdoutMode(
 func TestInteractiveModel_View_StdoutMode_NoPrefix(
 	t *testing.T,
 ) {
-	model := interactiveModel{
+	model := &interactiveModel{
 		quitting:   true,
 		stdoutMode: true,
 		selectedID: "my-test-spec",
@@ -3909,26 +3954,26 @@ func TestInteractiveModel_View_StdoutMode_NoPrefix(
 func TestInteractiveModel_HandleEnter_StdoutMode(
 	t *testing.T,
 ) {
-	model := interactiveModel{
+	model := &interactiveModel{
 		stdoutMode: true,
 		table: createMockTable([][]string{
 			{"test-id", "Test Title", "2"},
 		}),
 	}
 
-	updatedModel := model.handleEnter()
+	model.handleEnter()
 
 	// Should have selected ID
-	if updatedModel.selectedID != "test-id" {
+	if model.selectedID != "test-id" {
 		t.Errorf(
 			"selectedID = %q, want %q",
-			updatedModel.selectedID,
+			model.selectedID,
 			"test-id",
 		)
 	}
 
 	// Should NOT have copied flag set (clipboard not used)
-	if updatedModel.copied {
+	if model.copied {
 		t.Error(
 			"Expected copied to be false in stdout mode",
 		)

@@ -14,8 +14,8 @@ import (
 
 const (
 	// File permissions
-	dirPerms  = 0755
-	filePerms = 0644
+	dirPerms  = 0o755
+	filePerms = 0o644
 )
 
 // ExpandPath expands a path that may contain ~ for home directory

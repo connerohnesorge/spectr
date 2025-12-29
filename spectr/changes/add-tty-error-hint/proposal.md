@@ -4,7 +4,7 @@
 
 When users run `spectr init` in environments without a TTY (CI pipelines, Docker containers, piped commands), they receive a cryptic error message:
 
-```
+```text
 spectr: error: wizard failed: could not open a new TTY: open /dev/tty: no such device or address
 ```
 

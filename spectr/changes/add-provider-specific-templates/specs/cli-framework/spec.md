@@ -32,7 +32,7 @@ The template system SHALL organize provider templates in dedicated directories.
 - **WHEN** the template system initializes
 - **THEN** it recognizes the structure:
 
-  ```
+  ```text
   templates/
   ├── spectr/           # Generic templates (fallback)
   │   ├── AGENTS.md.tmpl

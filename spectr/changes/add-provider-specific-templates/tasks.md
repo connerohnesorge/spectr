@@ -1,3 +1,4 @@
+# 1. Template Resolution Infrastructure
 ## 1. Template Resolution Infrastructure
 
 - [ ] 1.1 Update `TemplateRenderer` interface to accept provider ID parameter

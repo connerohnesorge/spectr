@@ -1,3 +1,4 @@
+# 1. Types and Schema
 ## 1. Types and Schema
 
 - [ ] 1.1 Update `internal/parsers/types.go` to add `Children` field to Task struct with JSON tag `children,omitempty`

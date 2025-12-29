@@ -1,3 +1,5 @@
+# Design: Add Hierarchical Tasks
+
 ## Context
 
 AI agents (Claude Code, Cursor, etc.) read `tasks.jsonc` files to understand and track implementation progress. The current flat structure works well for small changes but becomes problematic when:

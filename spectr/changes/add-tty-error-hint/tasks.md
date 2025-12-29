@@ -1,3 +1,4 @@
+# 1. Implementation
 ## 1. Implementation
 
 - [ ] 1.1 Create TTY error detection helper in `internal/specterrs/initialize.go`

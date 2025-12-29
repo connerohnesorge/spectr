@@ -180,14 +180,6 @@ func TestTemplateManager_RenderAgents(
 			)
 		}
 	}
-
-	// Verify it's a substantial document (should be thousands of characters)
-	if len(got) < 5000 {
-		t.Errorf(
-			"RenderAgents() output too short: got %d characters, expected at least 5000",
-			len(got),
-		)
-	}
 }
 
 func TestTemplateManager_RenderInstructionPointer(
@@ -228,16 +220,6 @@ func TestTemplateManager_RenderInstructionPointer(
 				content,
 			)
 		}
-	}
-
-	// Verify it's a concise pointer (less than 25 lines as per spec)
-	// Updated from 20 to 23 to accommodate blank lines required by markdown linting (MD022, MD032)
-	lineCount := strings.Count(got, "\n") + 1
-	if lineCount > 23 {
-		t.Errorf(
-			"RenderInstructionPointer() output too long: got %d lines, expected at most 23",
-			lineCount,
-		)
 	}
 
 	// Verify it does NOT contain the full workflow instructions

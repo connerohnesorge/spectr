@@ -4,7 +4,8 @@
 
 ### Requirement: Immutable Node Structure
 
-The system SHALL define immutable AST nodes that cannot be modified after creation, using builder functions for transformations.
+The system SHALL define immutable AST nodes that cannot be modified after
+creation, using builder functions for transformations.
 
 #### Scenario: Node fields are read-only
 
@@ -16,25 +17,29 @@ The system SHALL define immutable AST nodes that cannot be modified after creati
 #### Scenario: Node creation via constructor
 
 - **WHEN** creating a new node
-- **THEN** it SHALL be done via `NewNode(type NodeType, opts ...NodeOption)` or specific constructors
+- **THEN** it SHALL be done via `NewNode(type NodeType, opts ...NodeOption)` or
+  specific constructors
 - **AND** the constructor SHALL compute and store the content hash
 - **AND** the node SHALL be fully initialized before returning
 
 #### Scenario: Node transformation via builder
 
 - **WHEN** modifying a node (e.g., adding child)
-- **THEN** the caller SHALL use `node.With(opts ...NodeOption)` to create a modified copy
+- **THEN** the caller SHALL use `node.With(opts ...NodeOption)` to create a
+  modified copy
 - **AND** the original node SHALL remain unchanged
 - **AND** unchanged children MAY be shared (structural sharing)
 
 ### Requirement: Node Content Hashing
 
-The system SHALL compute and store a content hash for each node to enable identity tracking and caching across incremental parses.
+The system SHALL compute and store a content hash for each node to enable
+identity tracking and caching across incremental parses.
 
 #### Scenario: Hash computation
 
 - **WHEN** a node is created
-- **THEN** its hash SHALL be computed from: NodeType + children hashes + text content hash
+- **THEN** its hash SHALL be computed from: NodeType + children hashes + text
+  content hash
 - **AND** the hash SHALL be stored in `node.Hash` field
 - **AND** the hash type SHALL be `uint64` using a fast hash (e.g., xxhash, fnv)
 
@@ -53,7 +58,8 @@ The system SHALL compute and store a content hash for each node to enable identi
 
 ### Requirement: Node Byte Slice Source Preservation
 
-The system SHALL store the original source text as a byte slice view for round-trip capability.
+The system SHALL store the original source text as a byte slice view for
+round-trip capability.
 
 #### Scenario: Source slice storage
 
@@ -72,12 +78,14 @@ The system SHALL store the original source text as a byte slice view for round-t
 #### Scenario: Source lifetime
 
 - **WHEN** a node's `Source` slice is accessed
-- **THEN** it SHALL remain valid as long as the original source buffer is retained
+- **THEN** it SHALL remain valid as long as the original source buffer is
+  retained
 - **AND** the parser SHALL document this lifetime requirement
 
 ### Requirement: Node Type Hierarchy
 
-The system SHALL define a node type hierarchy representing markdown document structure.
+The system SHALL define a node type hierarchy representing markdown document
+structure.
 
 #### Scenario: Document node as root
 
@@ -113,12 +121,14 @@ The system SHALL define a node type hierarchy representing markdown document str
 #### Scenario: Flat children array for inline
 
 - **WHEN** a paragraph contains mixed content like `Hello **world**!`
-- **THEN** NodeParagraph.Children SHALL be: [NodeText("Hello "), NodeStrong([NodeText("world")]), NodeText("!")]
+- **THEN** NodeParagraph.Children SHALL be: [NodeText("Hello "),
+  NodeStrong([NodeText("world")]), NodeText("!")]
 - **AND** the array SHALL be flat at each level (no unnecessary nesting)
 
 ### Requirement: Node Position Information
 
-The system SHALL track byte offsets for each node, with line/column calculable on demand.
+The system SHALL track byte offsets for each node, with line/column calculable
+on demand.
 
 #### Scenario: Byte offset storage
 
@@ -184,13 +194,15 @@ The system SHALL provide a builder API for constructing and transforming nodes.
 
 - **WHEN** constructing a node programmatically
 - **THEN** `NewNodeBuilder(NodeType)` SHALL return a builder
-- **AND** builder SHALL have methods: `WithChildren()`, `WithSource()`, `WithStart()`, `WithEnd()`
+- **AND** builder SHALL have methods: `WithChildren()`, `WithSource()`,
+  `WithStart()`, `WithEnd()`
 - **AND** `Build()` SHALL return the immutable node
 
 #### Scenario: Builder for transformations
 
 - **WHEN** transforming an existing node
-- **THEN** `node.ToBuilder()` SHALL return a builder pre-populated with node data
+- **THEN** `node.ToBuilder()` SHALL return a builder pre-populated with node
+  data
 - **AND** modifications SHALL be made via builder methods
 - **AND** `Build()` SHALL return a new node, original unchanged
 
@@ -203,7 +215,8 @@ The system SHALL provide a builder API for constructing and transforming nodes.
 
 ### Requirement: Node Equality and Comparison
 
-The system SHALL support node equality comparison via content hash and structural comparison.
+The system SHALL support node equality comparison via content hash and
+structural comparison.
 
 #### Scenario: Hash-based equality
 
@@ -220,35 +233,43 @@ The system SHALL support node equality comparison via content hash and structura
 
 ### Requirement: Typed Node Structs
 
-The system SHALL implement separate typed structs for each node type, all implementing a common Node interface.
+The system SHALL implement separate typed structs for each node type, all
+implementing a common Node interface.
 
 #### Scenario: Node interface definition
 
 - **WHEN** the Node interface is defined
-- **THEN** it SHALL include common methods: `NodeType() NodeType`, `Span() (int, int)`, `Hash() uint64`, `Source() []byte`, `Children() []Node`
+- **THEN** it SHALL include common methods: `NodeType() NodeType`, `Span() (int,
+  int)`, `Hash() uint64`, `Source() []byte`, `Children() []Node`
 - **AND** all concrete node types SHALL implement this interface
 
 #### Scenario: Concrete node structs
 
 - **WHEN** node types are implemented
-- **THEN** each SHALL be a separate struct: `NodeDocument`, `NodeSection`, `NodeRequirement`, `NodeScenario`, `NodeParagraph`, `NodeList`, `NodeListItem`, `NodeCodeBlock`, `NodeBlockquote`, `NodeText`, `NodeStrong`, `NodeEmphasis`, `NodeStrikethrough`, `NodeCode`, `NodeLink`, `NodeWikilink`
+- **THEN** each SHALL be a separate struct: `NodeDocument`, `NodeSection`,
+  `NodeRequirement`, `NodeScenario`, `NodeParagraph`, `NodeList`,
+  `NodeListItem`, `NodeCodeBlock`, `NodeBlockquote`, `NodeText`, `NodeStrong`,
+  `NodeEmphasis`, `NodeStrikethrough`, `NodeCode`, `NodeLink`, `NodeWikilink`
 - **AND** type assertions SHALL be used to access type-specific data
 
 #### Scenario: Type-safe access via assertion
 
 - **WHEN** accessing type-specific data
-- **THEN** callers SHALL use type assertion: `if section, ok := node.(*NodeSection); ok { ... }`
+- **THEN** callers SHALL use type assertion: `if section, ok :=
+  node.(*NodeSection); ok { ... }`
 - **AND** this provides compile-time type safety for type-specific operations
 
 ### Requirement: Getter Methods for Type-Specific Data
 
-The system SHALL use private fields with getter methods for type-specific data to enforce immutability.
+The system SHALL use private fields with getter methods for type-specific data
+to enforce immutability.
 
 #### Scenario: Private fields with getters
 
 - **WHEN** type-specific data is accessed
 - **THEN** fields SHALL be private (lowercase): `level`, `title`, `url`, etc.
-- **AND** getter methods SHALL provide read access: `Level() int`, `Title() []byte`, etc.
+- **AND** getter methods SHALL provide read access: `Level() int`, `Title()
+  []byte`, etc.
 - **AND** no setter methods SHALL be provided
 
 #### Scenario: NodeSection getters
@@ -256,7 +277,8 @@ The system SHALL use private fields with getter methods for type-specific data t
 - **WHEN** accessing NodeSection data
 - **THEN** `section.Level()` SHALL return the header level (1-6)
 - **AND** `section.Title()` SHALL return the header text as []byte
-- **AND** `section.DeltaType()` SHALL return the delta type if present (ADDED, MODIFIED, etc.)
+- **AND** `section.DeltaType()` SHALL return the delta type if present (ADDED,
+  MODIFIED, etc.)
 
 #### Scenario: NodeRequirement getters
 
@@ -272,8 +294,10 @@ The system SHALL use private fields with getter methods for type-specific data t
 #### Scenario: NodeCodeBlock getters
 
 - **WHEN** accessing NodeCodeBlock data
-- **THEN** `block.Language()` SHALL return the language identifier as []byte (may be nil)
-- **AND** `block.Content()` SHALL return the code content as []byte (without fences)
+- **THEN** `block.Language()` SHALL return the language identifier as []byte
+  (may be nil)
+- **AND** `block.Content()` SHALL return the code content as []byte (without
+  fences)
 
 #### Scenario: NodeLink getters
 
@@ -285,18 +309,22 @@ The system SHALL use private fields with getter methods for type-specific data t
 
 - **WHEN** accessing NodeWikilink data
 - **THEN** `wikilink.Target()` SHALL return the link target as []byte
-- **AND** `wikilink.Display()` SHALL return optional display text as []byte (may be nil)
-- **AND** `wikilink.Anchor()` SHALL return optional anchor as []byte (may be nil)
+- **AND** `wikilink.Display()` SHALL return optional display text as []byte (may
+  be nil)
+- **AND** `wikilink.Anchor()` SHALL return optional anchor as []byte (may be
+  nil)
 
 #### Scenario: NodeListItem getters
 
 - **WHEN** accessing NodeListItem data
-- **THEN** `item.Checked()` SHALL return (bool, bool) for checkbox state and presence
+- **THEN** `item.Checked()` SHALL return (bool, bool) for checkbox state and
+  presence
 - **AND** `item.Keyword()` SHALL return optional WHEN/THEN/AND keyword as string
 
 ### Requirement: No Parent Pointers
 
-The system SHALL NOT store parent pointers in nodes to maintain simplicity and true immutability.
+The system SHALL NOT store parent pointers in nodes to maintain simplicity and
+true immutability.
 
 #### Scenario: Children-only references
 
@@ -310,7 +338,8 @@ The system SHALL NOT store parent pointers in nodes to maintain simplicity and t
 - **WHEN** traversing the AST with a visitor
 - **THEN** parent information SHALL be available via VisitorContext
 - **AND** the context SHALL maintain the path from root to current node
-- **AND** callers SHALL use `ctx.Parent()` to access the parent during visitation
+- **AND** callers SHALL use `ctx.Parent()` to access the parent during
+  visitation
 
 #### Scenario: Upward navigation without parent pointers
 

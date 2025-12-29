@@ -4,12 +4,16 @@
 
 ### Requirement: Interactive Archive Mode
 
-The archive command SHALL provide an interactive table interface when no change ID argument is provided or when the `-I` or `--interactive` flag is used, displaying available changes in a navigable table format identical to the list command's interactive mode.
+The archive command SHALL provide an interactive table interface when no change
+ID argument is provided or when the `-I` or `--interactive` flag is used,
+displaying available changes in a navigable table format identical to the list
+command's interactive mode.
 
 #### Scenario: User runs archive with no arguments
 
 - **WHEN** user runs `spectr archive` with no change ID argument
-- **THEN** an interactive table is displayed with columns: ID, Title, Deltas, Tasks
+- **THEN** an interactive table is displayed with columns: ID, Title, Deltas,
+  Tasks
 - **AND** the table supports arrow key navigation (↑/↓, j/k)
 - **AND** the first row is selected by default
 - **AND** the table uses the same visual styling as list -I
@@ -44,19 +48,21 @@ The archive command SHALL provide an interactive table interface when no change 
 
 #### Scenario: Archive with explicit change ID bypasses interactive mode
 
-- **WHEN** user runs `spectr archive <change-id>`
+- **WHEN** user runs `spectr archive \<change-id\>`
 - **THEN** interactive mode is NOT triggered
 - **AND** archive proceeds directly with the specified change ID
 - **AND** behavior is unchanged from current implementation
 
 ### Requirement: Archive Interactive Table Display
 
-The archive command's interactive table SHALL display the same information columns as the list command to help users make informed archiving decisions.
+The archive command's interactive table SHALL display the same information
+columns as the list command to help users make informed archiving decisions.
 
 #### Scenario: Table columns match list command
 
 - **WHEN** archive interactive mode is displayed
-- **THEN** columns are: ID (30 chars), Title (40 chars), Deltas (10 chars), Tasks (15 chars)
+- **THEN** columns are: ID (30 chars), Title (40 chars), Deltas (10 chars),
+  Tasks (15 chars)
 - **AND** column widths match the list -I command exactly
 - **AND** title text is truncated with ellipsis if longer than 38 characters
 - **AND** task status shows format "completed/total" (e.g., "5/10")
@@ -72,19 +78,22 @@ The archive command's interactive table SHALL display the same information colum
 
 ### Requirement: Archive Selection Without Clipboard
 
-The archive command's interactive mode SHALL NOT copy the selected change ID to the clipboard, unlike the list command, since the ID is immediately consumed by the archive workflow.
+The archive command's interactive mode SHALL NOT copy the selected change ID to
+the clipboard, unlike the list command, since the ID is immediately consumed by
+the archive workflow.
 
 #### Scenario: Enter key captures selection
 
 - **WHEN** user presses Enter on a selected change
 - **THEN** the change ID is captured internally
 - **AND** NO clipboard operation occurs
-- **AND** NO "Copied: <id>" message is displayed
+- **AND** NO "Copied: `<id>`" message is displayed
 - **AND** the archive workflow proceeds immediately with the selected ID
 
 #### Scenario: Workflow continuation
 
 - **WHEN** a change is selected in interactive mode
 - **THEN** the Archiver.Archive() method receives the selected change ID
-- **AND** validation, task checking, and spec updates proceed as if the ID was provided as an argument
+- **AND** validation, task checking, and spec updates proceed as if the ID was
+  provided as an argument
 - **AND** all confirmation prompts and flags (--yes, --skip-specs) work normally

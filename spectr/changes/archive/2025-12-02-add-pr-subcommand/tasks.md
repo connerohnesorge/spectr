@@ -55,11 +55,13 @@
 
 - [x] 3.1 Create `cmd/pr.go` with Kong command structure:
   - [x] Define PRCmd struct with Archive and Proposal subcommands
-  - [x] Define PRArchiveCmd with flags: --base, --draft, --force, --dry-run, --skip-specs
+  - [x] Define PRArchiveCmd with flags: --base, --draft, --force, --dry-run,
+    --skip-specs
   - [x] Define PRProposalCmd with flags: --base, --draft, --force, --dry-run
   - [x] Implement Run() methods that delegate to internal/pr
 - [x] 3.2 Update `cmd/root.go` to add PR command to CLI struct
-- [x] 3.3 Add shell completion support for change IDs in PR commands (via predictor:"changeID" tag)
+- [x] 3.3 Add shell completion support for change IDs in PR commands (via
+  predictor:"changeID" tag)
 - [x] 3.4 Create `cmd/pr_test.go`:
   - [x] Test command parsing
   - [x] Test flag validation
@@ -92,7 +94,8 @@
   - [x] Mock or stub platform CLI calls
   - [x] Helper to create test change proposals
 - [x] 5.2 Test `spectr pr archive` end-to-end:
-  - [x] Test with valid change, verify worktree isolation (ALL Shell Commands Should Only Run In The Worktree)
+  - [x] Test with valid change, verify worktree isolation (ALL Shell Commands
+    Should Only Run In The Worktree)
   - [x] Test archive workflow executed in worktree
   - [x] Test commit message content
   - [x] Test cleanup on success

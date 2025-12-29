@@ -4,10 +4,14 @@
 
 The init system currently has two separate tool types:
 
-1. **Config-based tools** (6 tools): Create single instruction files like `CLAUDE.md`
-2. **Slash command tools** (11 tools): Create 3 command files in tool-specific directories
+1. **Config-based tools** (6 tools): Create single instruction files like
+  `CLAUDE.md`
+2. **Slash command tools** (11 tools): Create 3 command files in tool-specific
+  directories
 
-This separation creates UX friction - users must understand the distinction and select both types to get complete Spectr integration. OpenSpec solved this by having each tool selection install everything relevant to that tool.
+This separation creates UX friction - users must understand the distinction and
+select both types to get complete Spectr integration. OpenSpec solved this by
+having each tool selection install everything relevant to that tool.
 
 ## Goals / Non-Goals
 
@@ -23,7 +27,8 @@ This separation creates UX friction - users must understand the distinction and 
 - Changing the configurator implementation details
 - Modifying template content or frontmatter
 - Adding new UI elements or wizard screens
-- Supporting partial installations (user always gets both config + slash commands)
+- Supporting partial installations (user always gets both config + slash
+  commands)
 
 ## Decisions
 
@@ -146,7 +151,8 @@ func getSlashToolMapping(configToolID string) (string, bool) {
 
 ### Risk 1: Breaking change for slash-only users
 
-**Risk**: Users who previously selected only slash command tools (not config) won't see them anymore
+**Risk**: Users who previously selected only slash command tools (not config)
+won't see them anymore
 
 **Mitigation**:
 
@@ -158,7 +164,8 @@ func getSlashToolMapping(configToolID string) (string, bool) {
 
 ### Risk 2: Tool count mismatch in wizard
 
-**Risk**: Wizard currently shows "17 AI tools" - this will become ~6 after cleanup
+**Risk**: Wizard currently shows "17 AI tools" - this will become ~6 after
+cleanup
 
 **Mitigation**:
 

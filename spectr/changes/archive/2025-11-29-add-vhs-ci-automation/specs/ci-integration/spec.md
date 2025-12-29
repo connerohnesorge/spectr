@@ -1,8 +1,12 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: VHS GIF Auto-Generation Workflow
 
-The system SHALL provide automated GIF generation through a GitHub Actions workflow that triggers when VHS tape files are modified and commits updated GIFs back to the repository.
+The system SHALL provide automated GIF generation through a GitHub Actions
+workflow that triggers when VHS tape files are modified and commits updated GIFs
+back to the repository.
 
 #### Scenario: GIF regeneration on tape file change
 
@@ -25,7 +29,8 @@ The system SHALL provide automated GIF generation through a GitHub Actions workf
 
 ### Requirement: VHS Action Version Pinning
 
-The system SHALL use a specific major version tag of the vhs-action (e.g., `@v2`) to ensure reproducible builds while still receiving compatible updates.
+The system SHALL use a specific major version tag of the vhs-action (e.g.,
+`@v2`) to ensure reproducible builds while still receiving compatible updates.
 
 #### Scenario: Version-pinned VHS action reference
 
@@ -36,18 +41,21 @@ The system SHALL use a specific major version tag of the vhs-action (e.g., `@v2`
 
 ### Requirement: Automated GIF Commit Attribution
 
-The system SHALL attribute auto-committed GIF changes to a dedicated bot identity to distinguish automated updates from developer contributions.
+The system SHALL attribute auto-committed GIF changes to a dedicated bot
+identity to distinguish automated updates from developer contributions.
 
 #### Scenario: Bot commits GIF updates
 
 - **WHEN** the VHS workflow generates new GIFs
-- **THEN** the commit author SHALL be identifiable as automated (e.g., `vhs-action` bot)
+- **THEN** the commit author SHALL be identifiable as automated (e.g.,
+  `vhs-action` bot)
 - **AND** the commit message SHALL indicate it is an automated GIF update
 - **AND** the commit SHALL only include `*.gif` files from `assets/gifs/`
 
 ### Requirement: Workflow Permissions Configuration
 
-The system SHALL configure the VHS workflow with minimal required permissions to commit changes back to the repository securely.
+The system SHALL configure the VHS workflow with minimal required permissions to
+commit changes back to the repository securely.
 
 #### Scenario: Workflow has write access
 
@@ -58,10 +66,12 @@ The system SHALL configure the VHS workflow with minimal required permissions to
 
 ### Requirement: Concurrency Management for VHS Workflow
 
-The system SHALL cancel in-progress VHS workflow runs when new tape file changes are pushed to conserve CI resources.
+The system SHALL cancel in-progress VHS workflow runs when new tape file changes
+are pushed to conserve CI resources.
 
 #### Scenario: Stale VHS run cancellation
 
-- **WHEN** a developer pushes new tape file changes while a VHS workflow is running
+- **WHEN** a developer pushes new tape file changes while a VHS workflow is
+  running
 - **THEN** the previous run is automatically cancelled
 - **AND** a new workflow run starts for the latest changes

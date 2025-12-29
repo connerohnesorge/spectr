@@ -2,7 +2,10 @@
 
 ## Why
 
-Currently, when a `tasks.md` file exists in a change directory but contains no task items (`- [ ]` or `- [x]`), validation passes silently. This allows proposals with empty or incomplete task files to be accepted, which undermines the purpose of requiring task tracking for changes.
+Currently, when a `tasks.md` file exists in a change directory but contains no
+task items (`- [ ]` or `- [x]`), validation passes silently. This allows
+proposals with empty or incomplete task files to be accepted, which undermines
+the purpose of requiring task tracking for changes.
 
 ## What Changes
 
@@ -13,4 +16,5 @@ Currently, when a `tasks.md` file exists in a change directory but contains no t
 ## Impact
 
 - Affected specs: `validation`
-- Affected code: `internal/validation/change_rules.go`, `internal/validation/change_rules_test.go`
+- Affected code: `internal/validation/change_rules.go`,
+  `internal/validation/change_rules_test.go`

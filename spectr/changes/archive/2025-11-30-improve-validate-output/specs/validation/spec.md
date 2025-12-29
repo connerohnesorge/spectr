@@ -1,13 +1,18 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Bulk Validation Human Output Formatting
 
-The validation system SHALL produce bulk validation human-readable output with improved spacing, relative paths, file grouping, and color-coded error levels for easier scanning.
+The validation system SHALL produce bulk validation human-readable output with
+improved spacing, relative paths, file grouping, and color-coded error levels
+for easier scanning.
 
 #### Scenario: Visual separation between failed items
 
 - **WHEN** bulk validation encounters multiple failed items in human output mode
-- **THEN** output SHALL include a blank line between each failed item's error listing
+- **THEN** output SHALL include a blank line between each failed item's error
+  listing
 - **AND** passed items SHALL be listed without blank lines between them
 - **AND** failed items SHALL be visually distinct from passed items
 
@@ -16,7 +21,8 @@ The validation system SHALL produce bulk validation human-readable output with i
 - **WHEN** validation issues include file paths in human output mode
 - **THEN** paths SHALL be displayed relative to the spectr/ directory
 - **AND** paths SHALL NOT include the project root or spectr/ prefix
-- **AND** example: `changes/foo/specs/bar/spec.md` instead of `/home/user/project/spectr/changes/foo/specs/bar/spec.md`
+- **AND** example: `changes/foo/specs/bar/spec.md` instead of
+  `/home/user/project/spectr/changes/foo/specs/bar/spec.md`
 
 #### Scenario: Grouping issues by file
 
@@ -36,7 +42,8 @@ The validation system SHALL produce bulk validation human-readable output with i
 #### Scenario: Enhanced summary line
 
 - **WHEN** bulk validation completes with failures
-- **THEN** summary SHALL show "X passed, Y failed (E errors, W warnings), Z total"
+- **THEN** summary SHALL show "X passed, Y failed (E errors, W warnings), Z
+  total"
 - **AND** summary SHALL only show error/warning breakdown if failures exist
 - **AND** example: "22 passed, 2 failed (5 errors, 1 warning), 24 total"
 

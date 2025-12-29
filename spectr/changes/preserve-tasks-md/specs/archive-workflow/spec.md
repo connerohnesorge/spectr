@@ -4,7 +4,9 @@
 
 ### Requirement: Auto-Accept on Archive
 
-The system SHALL automatically convert `tasks.md` to `tasks.jsonc` during archive if not already accepted, ensuring archived changes have stable task format.
+The system SHALL automatically convert `tasks.md` to `tasks.jsonc` during
+archive if not already accepted, ensuring archived changes have stable task
+format.
 
 #### Scenario: Archive triggers auto-accept
 
@@ -17,7 +19,8 @@ The system SHALL automatically convert `tasks.md` to `tasks.jsonc` during archiv
 
 - **WHEN** archiving a change that already has `tasks.jsonc`
 - **THEN** the system proceeds normally without conversion
-- **AND** the archived change contains both `tasks.jsonc` and `tasks.md` (if present)
+- **AND** the archived change contains both `tasks.jsonc` and `tasks.md` (if
+  present)
 
 #### Scenario: Auto-accept failure blocks archive
 
@@ -30,5 +33,6 @@ The system SHALL automatically convert `tasks.md` to `tasks.jsonc` during archiv
 
 - **WHEN** archiving a change that has both tasks.md and tasks.jsonc
 - **THEN** both files SHALL be moved to the archive directory
-- **AND** the archive SHALL contain the human-readable tasks.md for historical reference
+- **AND** the archive SHALL contain the human-readable tasks.md for historical
+  reference
 - **AND** the archive SHALL contain the machine-readable tasks.jsonc for tooling

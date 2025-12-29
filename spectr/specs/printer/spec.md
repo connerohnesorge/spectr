@@ -4,7 +4,8 @@
 
 ### Requirement: Normalized Printer
 
-The system SHALL provide a Printer that regenerates markdown source from AST nodes with consistent, minimal formatting.
+The system SHALL provide a Printer that regenerates markdown source from AST
+nodes with consistent, minimal formatting.
 
 #### Scenario: Print function signature
 
@@ -22,7 +23,8 @@ The system SHALL provide a Printer that regenerates markdown source from AST nod
 
 ### Requirement: Minimal Whitespace Formatting
 
-The system SHALL use minimal whitespace in printed output for compact representation.
+The system SHALL use minimal whitespace in printed output for compact
+representation.
 
 #### Scenario: Single space between inline elements
 
@@ -40,7 +42,8 @@ The system SHALL use minimal whitespace in printed output for compact representa
 
 - **WHEN** printing a document
 - **THEN** output SHALL NOT start with blank lines
-- **AND** output SHALL NOT end with multiple newlines (one trailing newline allowed)
+- **AND** output SHALL NOT end with multiple newlines (one trailing newline
+  allowed)
 
 ### Requirement: Header Printing
 

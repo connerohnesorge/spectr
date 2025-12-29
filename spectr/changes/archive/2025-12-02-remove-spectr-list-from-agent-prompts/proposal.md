@@ -2,18 +2,24 @@
 
 ## Why
 
-AI agents can directly read directories (`spectr/changes/`, `spectr/specs/`) using `ls`, file reads, or `rg` without needing the `spectr list` CLI command. Instructing agents to use `spectr list` is unnecessary and adds cognitive overhead when agents already have more flexible tools at their disposal.
+AI agents can directly read directories (`spectr/changes/`, `spectr/specs/`)
+using `ls`, file reads, or `rg` without needing the `spectr list` CLI command.
+Instructing agents to use `spectr list` is unnecessary and adds cognitive
+overhead when agents already have more flexible tools at their disposal.
 
 ## What Changes
 
-- Remove all references to `spectr list` and `spectr list --specs` from agent workflow prompts
+- Remove all references to `spectr list` and `spectr list --specs` from agent
+  workflow prompts
 - Replace with direct file/directory access instructions where context is needed
 - Update templates that generate these prompts for downstream projects
-- Keep `spectr list` references in user-facing documentation (README.md, docs/) since humans benefit from the formatted output
+- Keep `spectr list` references in user-facing documentation (README.md, docs/)
+  since humans benefit from the formatted output
 
 ## Impact
 
-- Affected specs: agent-instructions (new capability documenting agent prompt conventions)
+- Affected specs: agent-instructions (new capability documenting agent prompt
+  conventions)
 - Affected code:
   - `spectr/AGENTS.md`
   - `.agent/workflows/spectr-proposal.md`

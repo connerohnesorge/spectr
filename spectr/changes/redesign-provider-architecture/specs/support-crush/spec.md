@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Crush Provider Configuration
@@ -20,10 +21,14 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
-- **THEN** it SHALL return a `DirectoryInitializer` for `.crush/commands/spectr/`
-- **AND** it SHALL return a `ConfigFileInitializer` for `CRUSH.md` with TemplateRef from TemplateManager
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for
+  `.crush/commands/spectr/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `CRUSH.md` with
+  TemplateRef from TemplateManager
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash
+  commands
 
 #### Scenario: Provider metadata
 
@@ -33,18 +38,21 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Crush Instruction File
 
-The provider SHALL create and maintain a `CRUSH.md` instruction file in the project root.
+The provider SHALL create and maintain a `CRUSH.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Crush provider selected
 - **THEN** the ConfigFileInitializer creates `CRUSH.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!--
+  spectr:end -->` markers
 
 #### Scenario: Instruction file updates
 
 - **WHEN** `spectr init` runs in a project with Crush provider
-- **THEN** the ConfigFileInitializer updates content between markers in `CRUSH.md`
+- **THEN** the ConfigFileInitializer updates content between markers in
+  `CRUSH.md`
 - **AND** preserves any user content outside the markers
 
 ### Requirement: Crush Slash Commands

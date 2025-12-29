@@ -1,8 +1,12 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Stdout Output Mode for Interactive List
 
-The `spectr list` command SHALL support a `--stdout` flag that, when combined with interactive mode (`-I`), outputs the selected item ID to stdout instead of copying it to the system clipboard.
+The `spectr list` command SHALL support a `--stdout` flag that, when combined
+with interactive mode (`-I`), outputs the selected item ID to stdout instead of
+copying it to the system clipboard.
 
 #### Scenario: User runs list with --stdout and -I flags
 
@@ -36,7 +40,8 @@ The `spectr list` command SHALL support a `--stdout` flag that, when combined wi
 #### Scenario: Stdout flag requires interactive mode
 
 - **WHEN** user runs `spectr list --stdout` without `-I`
-- **THEN** an error is displayed: "cannot use --stdout without --interactive (-I)"
+- **THEN** an error is displayed: "cannot use --stdout without --interactive
+  (-I)"
 - **AND** the command exits with code 1
 
 #### Scenario: Stdout flag mutually exclusive with JSON

@@ -1,8 +1,12 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Task Completion Checking
 
-The system SHALL check task completion status and warn users before archiving. The system SHALL read from `tasks.json` when present, falling back to `tasks.md`.
+The system SHALL check task completion status and warn users before archiving.
+The system SHALL read from `tasks.json` when present, falling back to
+`tasks.md`.
 
 #### Scenario: Display task status from JSON
 
@@ -19,7 +23,8 @@ The system SHALL check task completion status and warn users before archiving. T
 #### Scenario: Warn on incomplete tasks
 
 - **WHEN** a change has incomplete tasks
-- **THEN** the system warns the user and requires confirmation to proceed (unless --yes flag is provided)
+- **THEN** the system warns the user and requires confirmation to proceed
+  (unless --yes flag is provided)
 
 #### Scenario: Proceed with incomplete tasks when confirmed
 
@@ -30,7 +35,8 @@ The system SHALL check task completion status and warn users before archiving. T
 
 ### Requirement: Auto-Accept on Archive
 
-The system SHALL automatically convert `tasks.md` to `tasks.json` during archive if not already accepted, ensuring archived changes have stable task format.
+The system SHALL automatically convert `tasks.md` to `tasks.json` during archive
+if not already accepted, ensuring archived changes have stable task format.
 
 #### Scenario: Archive triggers auto-accept
 

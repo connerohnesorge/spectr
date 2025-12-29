@@ -1,8 +1,12 @@
+# Implementation Tasks
+
 ## 1. Create internal/tui package foundation
 
 - [x] 1.1 Create `internal/tui/styles.go` with `ApplyTableStyles()` function
-- [x] 1.2 Create `internal/tui/helpers.go` with `TruncateString()` and `CopyToClipboard()` functions
-- [x] 1.3 Create `internal/tui/types.go` with shared types (`KeyAction`, `ActionResult`)
+- [x] 1.2 Create `internal/tui/helpers.go` with `TruncateString()` and
+  `CopyToClipboard()` functions
+- [x] 1.3 Create `internal/tui/types.go` with shared types (`KeyAction`,
+  `ActionResult`)
 - [x] 1.4 Write tests for helpers in `internal/tui/helpers_test.go`
 
 ## 2. Implement TablePicker component
@@ -43,9 +47,11 @@
 ## 6. Cleanup and verification
 
 - [x] 6.1 Remove orphaned helper functions from `internal/list/helpers.go`
-- [x] 6.2 Remove duplicate implementations from `internal/validation/interactive.go`
+- [x] 6.2 Remove duplicate implementations from
+  `internal/validation/interactive.go`
 - [x] 6.3 Run `go test ./...` and ensure all tests pass
 - [x] 6.4 Run `golangci-lint run` and fix any linting issues
-- [x] 6.5 Manually test `spectr list -I`, `spectr list --specs -I`, `spectr list --all -I`
+- [x] 6.5 Manually test `spectr list -I`, `spectr list --specs -I`, `spectr list
+  --all -I`
 - [x] 6.6 Manually test `spectr archive` interactive mode
 - [x] 6.7 Manually test `spectr validate` interactive mode

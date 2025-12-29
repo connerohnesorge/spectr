@@ -1,9 +1,12 @@
+# Implementation Tasks
+
 ## 1. Core Interface and Registry
 
 - [x] 1.1 Create `Provider` interface in `internal/init/providers/provider.go`
 - [x] 1.2 Create `Registry` struct with `Register()`, `Get()`, `All()` methods
 - [x] 1.3 Create `CommandFormat` type (Markdown, TOML)
-- [x] 1.4 Create `BaseProvider` struct with common logic for config file + slash commands
+- [x] 1.4 Create `BaseProvider` struct with common logic for config file + slash
+  commands
 - [x] 1.5 Add unit tests for registry and base provider
 
 ## 2. Migrate Existing Providers

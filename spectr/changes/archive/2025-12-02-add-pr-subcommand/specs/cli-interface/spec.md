@@ -1,36 +1,44 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: PR Command Structure
 
-The system SHALL provide a `spectr pr` command with `archive` and `proposal` subcommands for creating pull requests from Spectr changes using git worktree isolation.
+The system SHALL provide a `spectr pr` command with `archive` and `proposal`
+subcommands for creating pull requests from Spectr changes using git worktree
+isolation.
 
 #### Scenario: User runs spectr pr without subcommand
 
 - **WHEN** user runs `spectr pr` without a subcommand
-- **THEN** help text is displayed showing available subcommands (archive, proposal)
+- **THEN** help text is displayed showing available subcommands (archive,
+  proposal)
 - **AND** the command exits with code 0
 
 #### Scenario: User runs spectr pr archive
 
-- **WHEN** user runs `spectr pr archive <change-id>`
+- **WHEN** user runs `spectr pr archive \<change-id\>`
 - **THEN** the system executes the archive PR workflow
 - **AND** a PR is created with the archived change
 
 #### Scenario: User runs spectr pr proposal
 
-- **WHEN** user runs `spectr pr proposal <change-id>`
+- **WHEN** user runs `spectr pr proposal \<change-id\>`
 - **THEN** the system executes the proposal PR workflow
 - **AND** a PR is created with the change proposal copied (not archived)
 
 ### Requirement: PR Archive Subcommand
 
-The `spectr pr archive` subcommand SHALL create a pull request containing an archived Spectr change, executing the archive workflow in an isolated git worktree.
+The `spectr pr archive` subcommand SHALL create a pull request containing an
+archived Spectr change, executing the archive workflow in an isolated git
+worktree.
 
 #### Scenario: Archive PR workflow execution
 
-- **WHEN** user runs `spectr pr archive <change-id>`
-- **THEN** the system creates a temporary git worktree on branch `spectr/<change-id>`
-- **AND** executes `spectr archive <change-id> --yes` within the worktree
+- **WHEN** user runs `spectr pr archive \<change-id\>`
+- **THEN** the system creates a temporary git worktree on branch
+  `spectr/\<change-id\>`
+- **AND** executes `spectr archive \<change-id\> --yes` within the worktree
 - **AND** stages all changes in `spectr/` directory
 - **AND** commits with structured message including archive metadata
 - **AND** pushes the branch to origin
@@ -40,13 +48,13 @@ The `spectr pr archive` subcommand SHALL create a pull request containing an arc
 
 #### Scenario: Archive PR with skip-specs flag
 
-- **WHEN** user runs `spectr pr archive <change-id> --skip-specs`
+- **WHEN** user runs `spectr pr archive \<change-id\> --skip-specs`
 - **THEN** the `--skip-specs` flag is passed to the underlying archive command
 - **AND** spec merging is skipped during the archive operation
 
 #### Scenario: Archive PR preserves user working directory
 
-- **WHEN** user runs `spectr pr archive <change-id>`
+- **WHEN** user runs `spectr pr archive \<change-id\>`
 - **AND** user has uncommitted changes in their working directory
 - **THEN** the user's working directory is NOT modified
 - **AND** the archive operation executes only within the isolated worktree
@@ -54,12 +62,15 @@ The `spectr pr archive` subcommand SHALL create a pull request containing an arc
 
 ### Requirement: PR Proposal Subcommand
 
-The `spectr pr proposal` subcommand SHALL create a pull request containing a Spectr change proposal for review, copying the change to an isolated git worktree without archiving.
+The `spectr pr proposal` subcommand SHALL create a pull request containing a
+Spectr change proposal for review, copying the change to an isolated git
+worktree without archiving.
 
 #### Scenario: Proposal PR workflow execution
 
-- **WHEN** user runs `spectr pr proposal <change-id>`
-- **THEN** the system creates a temporary git worktree on branch `spectr/<change-id>`
+- **WHEN** user runs `spectr pr proposal \<change-id\>`
+- **THEN** the system creates a temporary git worktree on branch
+  `spectr/\<change-id\>`
 - **AND** copies the change directory from source to worktree
 - **AND** stages all changes in `spectr/` directory
 - **AND** commits with structured message for proposal review
@@ -70,26 +81,28 @@ The `spectr pr proposal` subcommand SHALL create a pull request containing a Spe
 
 #### Scenario: Proposal PR does not archive
 
-- **WHEN** user runs `spectr pr proposal <change-id>`
-- **THEN** the original change remains in `spectr/changes/<change-id>/`
+- **WHEN** user runs `spectr pr proposal \<change-id\>`
+- **THEN** the original change remains in `spectr/changes/\<change-id\>/`
 - **AND** the change is NOT moved to archive
 - **AND** spec merging does NOT occur
 
 #### Scenario: Proposal PR validates change first
 
-- **WHEN** user runs `spectr pr proposal <change-id>`
+- **WHEN** user runs `spectr pr proposal \<change-id\>`
 - **THEN** the system runs validation on the change
 - **AND** warnings are displayed if validation issues exist
 - **AND** the PR workflow continues (validation does not block)
 
 ### Requirement: PR Common Flags
 
-Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support common flags for controlling PR creation behavior.
+Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support
+common flags for controlling PR creation behavior.
 
 #### Scenario: Base branch flag
 
 - **WHEN** user provides `--base <branch>` flag
-- **THEN** the PR targets the specified branch instead of auto-detected main/master
+- **THEN** the PR targets the specified branch instead of auto-detected
+  main/master
 
 #### Scenario: Auto-detect base branch
 
@@ -112,15 +125,16 @@ Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support comm
 #### Scenario: Force flag for existing branch
 
 - **WHEN** user provides `--force` flag
-- **AND** branch `spectr/<change-id>` already exists on remote
+- **AND** branch `spectr/\<change-id\>` already exists on remote
 - **THEN** the existing branch is deleted and recreated
 - **AND** the PR workflow proceeds normally
 
 #### Scenario: Branch conflict without force
 
-- **WHEN** branch `spectr/<change-id>` already exists on remote
+- **WHEN** branch `spectr/\<change-id\>` already exists on remote
 - **AND** `--force` flag is NOT provided
-- **THEN** an error is displayed: "Branch 'spectr/<change-id>' already exists. Use --force to overwrite."
+- **THEN** an error is displayed: "Branch 'spectr/\<change-id\>' already exists.
+  Use --force to overwrite."
 - **AND** the command exits with code 1
 
 #### Scenario: Dry run flag
@@ -132,7 +146,8 @@ Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support comm
 
 ### Requirement: Git Platform Detection
 
-The system SHALL automatically detect the git hosting platform from the origin remote URL and use the appropriate CLI tool for PR creation.
+The system SHALL automatically detect the git hosting platform from the origin
+remote URL and use the appropriate CLI tool for PR creation.
 
 #### Scenario: Detect GitHub platform
 
@@ -171,17 +186,20 @@ The system SHALL automatically detect the git hosting platform from the origin r
 
 #### Scenario: HTTPS URL format support
 
-- **WHEN** origin remote uses HTTPS format (e.g., `https://github.com/org/repo.git`)
+- **WHEN** origin remote uses HTTPS format (e.g.,
+  `https://github.com/org/repo.git`)
 - **THEN** platform detection correctly identifies the host
 
 ### Requirement: Platform CLI Availability
 
-The system SHALL verify that the required platform CLI tool is installed and authenticated before attempting PR creation.
+The system SHALL verify that the required platform CLI tool is installed and
+authenticated before attempting PR creation.
 
 #### Scenario: CLI not installed
 
 - **WHEN** the required CLI tool (gh/glab/tea) is not installed
-- **THEN** an error is displayed: "<tool> CLI is required for <platform> PR creation. Install: <install-url>"
+- **THEN** an error is displayed: "`<tool>` CLI is required for `<platform>`
+  PR creation. Install: \<install-url\>"
 - **AND** the command exits with code 1
 
 #### Scenario: CLI not authenticated
@@ -192,7 +210,8 @@ The system SHALL verify that the required platform CLI tool is installed and aut
 
 ### Requirement: Git Worktree Isolation
 
-The PR commands SHALL use git worktrees to provide complete isolation from the user's working directory.
+The PR commands SHALL use git worktrees to provide complete isolation from the
+user's working directory.
 
 #### Scenario: Worktree created in temp directory
 
@@ -221,18 +240,20 @@ The PR commands SHALL use git worktrees to provide complete isolation from the u
 #### Scenario: Git version requirement
 
 - **WHEN** git version is less than 2.5
-- **THEN** an error is displayed: "Git >= 2.5 required for worktree support. Current version: <version>"
+- **THEN** an error is displayed: "Git >= 2.5 required for worktree support.
+  Current version: `<version>`"
 - **AND** the command exits with code 1
 
 ### Requirement: PR Commit Message Format
 
-The system SHALL generate structured commit messages that follow conventional commit format and include relevant metadata.
+The system SHALL generate structured commit messages that follow conventional
+commit format and include relevant metadata.
 
 #### Scenario: Archive commit message format
 
 - **WHEN** `spectr pr archive` commits changes
 - **THEN** the commit message includes:
-  - Title: `spectr(archive): <change-id>`
+  - Title: `spectr(archive): \<change-id\>`
   - Archive location path
   - Spec operation counts (added, modified, removed, renamed)
   - Attribution: "Generated by: spectr pr archive"
@@ -241,13 +262,14 @@ The system SHALL generate structured commit messages that follow conventional co
 
 - **WHEN** `spectr pr proposal` commits changes
 - **THEN** the commit message includes:
-  - Title: `spectr(proposal): <change-id>`
+  - Title: `spectr(proposal): \<change-id\>`
   - Proposal location path
   - Attribution: "Generated by: spectr pr proposal"
 
 ### Requirement: PR Body Content
 
-The system SHALL generate PR body content that helps reviewers understand the change.
+The system SHALL generate PR body content that helps reviewers understand the
+change.
 
 #### Scenario: Archive PR body content
 
@@ -273,7 +295,7 @@ The system SHALL use a consistent branch naming convention for PR branches.
 #### Scenario: Branch name format
 
 - **WHEN** PR workflow creates a branch
-- **THEN** the branch is named `spectr/<change-id>`
+- **THEN** the branch is named `spectr/\<change-id\>`
 
 #### Scenario: Branch name with special characters
 
@@ -282,7 +304,8 @@ The system SHALL use a consistent branch naming convention for PR branches.
 
 ### Requirement: PR Error Handling
 
-The system SHALL provide clear error messages and guidance when PR creation fails.
+The system SHALL provide clear error messages and guidance when PR creation
+fails.
 
 #### Scenario: Not in git repository
 
@@ -298,9 +321,9 @@ The system SHALL provide clear error messages and guidance when PR creation fail
 
 #### Scenario: Change does not exist
 
-- **WHEN** user runs `spectr pr <subcommand> <change-id>`
+- **WHEN** user runs `spectr pr <subcommand> \<change-id\>`
 - **AND** the change does not exist
-- **THEN** an error is displayed: "Change '<change-id>' not found"
+- **THEN** an error is displayed: "Change '\<change-id\>' not found"
 - **AND** the command exits with code 1
 
 #### Scenario: Push failure
@@ -319,7 +342,8 @@ The system SHALL provide clear error messages and guidance when PR creation fail
 
 ### Requirement: Partial Change ID Resolution for PR Commands
 
-The `spectr pr` subcommands SHALL support intelligent partial ID matching consistent with the archive command's resolution algorithm.
+The `spectr pr` subcommands SHALL support intelligent partial ID matching
+consistent with the archive command's resolution algorithm.
 
 #### Scenario: Exact ID match for PR commands
 

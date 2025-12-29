@@ -1,3 +1,5 @@
+# Implementation Tasks
+
 ## 1. GitHub Action Integration
 
 - [x] 1.1 Research available Spectr GitHub Actions

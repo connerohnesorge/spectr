@@ -2,7 +2,11 @@
 
 ## Why
 
-Spectr changes need to be validated automatically in CI/CD pipelines to catch validation errors before code is merged. Manual validation is error-prone and slows down development. A GitHub Action provides automated validation on every push and pull request, ensuring all Spectr changes meet quality standards before they reach the main branch.
+Spectr changes need to be validated automatically in CI/CD pipelines to catch
+validation errors before code is merged. Manual validation is error-prone and
+slows down development. A GitHub Action provides automated validation on every
+push and pull request, ensuring all Spectr changes meet quality standards before
+they reach the main branch.
 
 ## What Changes
 

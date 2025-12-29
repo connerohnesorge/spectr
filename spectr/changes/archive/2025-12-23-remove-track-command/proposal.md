@@ -2,11 +2,15 @@
 
 ## Summary
 
-Fully remove the `spectr track` subcommand from the CLI. This is a hard breaking change that removes the command entirely along with its supporting infrastructure.
+Fully remove the `spectr track` subcommand from the CLI. This is a hard breaking
+change that removes the command entirely along with its supporting
+infrastructure.
 
 ## Motivation
 
-The `spectr track` command provides automated git commits when task statuses change in `tasks.jsonc`. This feature is being removed to simplify the CLI and reduce maintenance burden.
+The `spectr track` command provides automated git commits when task statuses
+change in `tasks.jsonc`. This feature is being removed to simplify the CLI and
+reduce maintenance burden.
 
 ## Scope
 
@@ -29,7 +33,8 @@ The `spectr track` command provides automated git commits when task statuses cha
 
 ## Breaking Change
 
-This is an intentional breaking change. Users who depend on `spectr track` will need to implement their own automation if required.
+This is an intentional breaking change. Users who depend on `spectr track` will
+need to implement their own automation if required.
 
 ## Non-Goals
 

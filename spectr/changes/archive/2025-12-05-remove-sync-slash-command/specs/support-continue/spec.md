@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Continue Slash Commands
 
-The provider SHALL create slash commands in `.continue/commands/spectr/` directory.
+The provider SHALL create slash commands in `.continue/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 

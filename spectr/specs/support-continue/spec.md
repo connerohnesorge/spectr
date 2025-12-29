@@ -43,7 +43,8 @@ The Continue provider SHALL NOT create an instruction file.
 
 ### Requirement: Continue Slash Commands
 
-The provider SHALL create slash commands in `.continue/commands/spectr/` directory.
+The provider SHALL create slash commands in `.continue/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
@@ -70,14 +71,17 @@ The provider SHALL use standard frontmatter for all slash commands.
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** proposal command is created
-- **THEN** frontmatter SHALL include description: "Scaffold a new Spectr change and validate strictly."
+- **THEN** frontmatter SHALL include description: "Scaffold a new Spectr change
+  and validate strictly."
 
 #### Scenario: Sync command frontmatter
 
 - **WHEN** sync command is created
-- **THEN** frontmatter SHALL include description: "Detect spec drift from code and update specs interactively."
+- **THEN** frontmatter SHALL include description: "Detect spec drift from code
+  and update specs interactively."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** apply command is created
-- **THEN** frontmatter SHALL include description: "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** frontmatter SHALL include description: "Implement an approved Spectr
+  change and keep tasks in sync."

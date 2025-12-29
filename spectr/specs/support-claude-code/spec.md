@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Documents the Claude Code provider integration for Spectr, enabling Spectr to work seamlessly with Claude Code through instruction file management and slash command generation.
+Documents the Claude Code provider integration for Spectr, enabling Spectr to
+work seamlessly with Claude Code through instruction file management and slash
+command generation.
 
 ## Requirements
 
@@ -30,13 +32,15 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Claude Code Instruction File
 
-The provider SHALL create and maintain a `CLAUDE.md` instruction file in the project root.
+The provider SHALL create and maintain a `CLAUDE.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Claude Code provider selected
 - **THEN** the system creates `CLAUDE.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` markers
 
 #### Scenario: Instruction file updates
 
@@ -46,7 +50,8 @@ The provider SHALL create and maintain a `CLAUDE.md` instruction file in the pro
 
 ### Requirement: Claude Code Slash Commands
 
-The provider SHALL create slash commands in `.claude/commands/spectr/` directory.
+The provider SHALL create slash commands in `.claude/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
@@ -74,17 +79,20 @@ The provider SHALL use standard frontmatter templates for each command type.
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** generating the proposal command file
-- **THEN** the frontmatter description is "Scaffold a new Spectr change and validate strictly."
+- **THEN** the frontmatter description is "Scaffold a new Spectr change and
+  validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** generating the apply command file
-- **THEN** the frontmatter description is "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** the frontmatter description is "Implement an approved Spectr change
+  and keep tasks in sync."
 
 #### Scenario: Sync command frontmatter
 
 - **WHEN** generating the sync command file
-- **THEN** the frontmatter description is "Detect spec drift from code and update specs interactively."
+- **THEN** the frontmatter description is "Detect spec drift from code and
+  update specs interactively."
 
 ### Requirement: Command Path Construction
 

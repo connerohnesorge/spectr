@@ -1,18 +1,30 @@
+# Implementation Tasks
+
 ## 1. Create Example Projects
 
-- [x] 1.1 Create `examples/archive/` with a complete spectr project and a change ready to archive
-- [x] 1.2 Create `examples/validate/` with spectr project containing intentionally broken and fixed specs
-- [x] 1.3 Create `examples/workflow/` with a spectr project for end-to-end workflow demo
-- [x] 1.4 Create `examples/list/` with a spectr project containing multiple specs and changes
-- [x] 1.5 Create `examples/init/` as an empty directory (init demo creates fresh project)
+- [x] 1.1 Create `examples/archive/` with a complete spectr project and a change
+  ready to archive
+- [x] 1.2 Create `examples/validate/` with spectr project containing
+  intentionally broken and fixed specs
+- [x] 1.3 Create `examples/workflow/` with a spectr project for end-to-end
+  workflow demo
+- [x] 1.4 Create `examples/list/` with a spectr project containing multiple
+  specs and changes
+- [x] 1.5 Create `examples/init/` as an empty directory (init demo creates fresh
+  project)
 
 ## 2. Refactor VHS Tapes
 
-- [x] 2.1 Refactor `archive.tape` to use `examples/archive/` instead of inline heredocs
-- [x] 2.2 Refactor `validate.tape` to use `examples/validate/` instead of inline heredocs
-- [x] 2.3 Refactor `workflow.tape` to use `examples/workflow/` instead of inline heredocs
-- [x] 2.4 Refactor `list.tape` to use `examples/list/` instead of hardcoded paths
-- [x] 2.5 Review `init.tape` - may only need minor cleanup (init creates fresh projects)
+- [x] 2.1 Refactor `archive.tape` to use `examples/archive/` instead of inline
+  heredocs
+- [x] 2.2 Refactor `validate.tape` to use `examples/validate/` instead of inline
+  heredocs
+- [x] 2.3 Refactor `workflow.tape` to use `examples/workflow/` instead of inline
+  heredocs
+- [x] 2.4 Refactor `list.tape` to use `examples/list/` instead of hardcoded
+  paths
+- [x] 2.5 Review `init.tape` - may only need minor cleanup (init creates fresh
+  projects)
 
 ## 3. Create GIF Generation Script
 

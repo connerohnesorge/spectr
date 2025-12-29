@@ -2,13 +2,17 @@
 
 ## Context
 
-AI agents (Claude Code, Cursor, etc.) read `tasks.jsonc` files to understand and track implementation progress. The current flat structure works well for small changes but becomes problematic when:
+AI agents (Claude Code, Cursor, etc.) read `tasks.jsonc` files to understand
+and track implementation progress. The current flat structure works well for
+small changes but becomes problematic when:
 
 1. A change has 50+ tasks across multiple capabilities
 2. Agents have limited context windows (~4-8k tokens for Read operations)
 3. Tasks logically belong to specific delta specs but can't be co-located
 
-The `redesign-provider-architecture` change exemplifies this: 60+ tasks, 9 sections, 17 capability-specific delta specs—all tasks stuffed into one file.
+The `redesign-provider-architecture` change exemplifies this: 60+ tasks,
+9 sections, 17 capability-specific delta specs—all tasks stuffed into one
+file.
 
 ## Goals / Non-Goals
 
@@ -96,9 +100,12 @@ Delta spec `specs/support-aider/tasks.jsonc`:
 When running `spectr accept <change-id>`:
 
 1. Parse `tasks.md` into sections
-2. For each section, check if a matching delta spec exists: `specs/<section-kebab>/spec.md`
-3. If match found, split those tasks into `specs/<section-kebab>/tasks.jsonc`
-4. Root `tasks.jsonc` gets a reference task with `children` pointing to the split file
+2. For each section, check if a matching delta spec exists:
+  `specs/<section-kebab>/spec.md`
+3. If match found, split those tasks into
+   `specs/<section-kebab>/tasks.jsonc`
+4. Root `tasks.jsonc` gets a reference task with `children` pointing to the
+   split file
 5. Sections without matching delta specs remain in root as flat tasks
 
 **Matching rules:**
@@ -115,7 +122,8 @@ Hierarchical IDs follow dot notation:
 - Child task: `"5.1"`, `"5.2"`
 - Nested (if needed): `"5.1.1"`
 
-The parent task ID becomes the prefix for all children. This maintains compatibility with existing ID patterns while enabling hierarchy.
+The parent task ID becomes the prefix for all children. This maintains
+compatibility with existing ID patterns while enabling hierarchy.
 
 ### Decision 4: Resolution Order
 
@@ -125,7 +133,8 @@ When multiple sources exist:
 2. Then `includes` glob patterns are processed
 3. Duplicate detection by file path (same file = processed once)
 
-This allows explicit ordering control via `children` while defaulting to glob discovery.
+This allows explicit ordering control via `children` while defaulting to glob
+discovery.
 
 ### Decision 5: `spectr tasks` Command
 
@@ -153,7 +162,7 @@ spectr tasks <change-id> --json
 
 | Risk | Mitigation |
 |------|------------|
-| Agents confused by new format | Version field enables detection; agents can handle both |
+| Agents confused by new format | Version field enables detection |
 | Orphaned child files | Validation checks that referenced files exist |
 | Complex status aggregation | Summary computed lazily; cache in root on write |
 | Breaking existing workflows | Version 1 format remains fully supported |
@@ -169,8 +178,10 @@ Rollback: None needed—version 1 files continue to work unchanged.
 
 ## Open Questions
 
-1. Should child task files include the JSONC header comments, or keep them minimal?
-   - **Proposed**: Include abbreviated header (status values only, not full workflow)
+1. Should child task files include the JSONC header comments, or keep them
+  minimal?
+   - **Proposed**: Include abbreviated header (status values only, not full
+     workflow)
 
 2. Should summary be auto-updated when child files change?
    - **Proposed**: Compute on read (no caching complexity)

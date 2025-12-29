@@ -2,13 +2,18 @@
 
 ## Why
 
-The `spectr track` command currently commits all modified files except task files. This includes binary files (images, compiled artifacts, executables, etc.) which can bloat repository history and are often unintentional additions. Developers need explicit control over whether binary files are tracked and committed automatically.
+The `spectr track` command currently commits all modified files except task
+files. This includes binary files (images, compiled artifacts, executables,
+etc.) which can bloat repository history and are often unintentional additions.
+Developers need explicit control over whether binary files are tracked and
+committed automatically.
 
 ## What Changes
 
 - Add `--include-binaries` flag to `spectr track` command
 - By default, binary files are excluded from automatic commits
-- When `--include-binaries` flag is provided, binary files are included as before
+- When `--include-binaries` flag is provided, binary files are included as
+  before
 - Binary detection uses git's internal binary detection (`git diff --numstat`)
 - User-friendly warning messages when binary files are skipped
 

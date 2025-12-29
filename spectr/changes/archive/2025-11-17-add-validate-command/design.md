@@ -2,11 +2,16 @@
 
 ## Context
 
-The validate command needs to parse markdown files, extract structured information (sections, requirements, scenarios), apply validation rules, and report issues with helpful guidance. The OpenSpec reference implementation provides a proven architecture using TypeScript, which we'll adapt to Go's idioms and type system.
+The validate command needs to parse markdown files, extract structured
+information (sections, requirements, scenarios), apply validation rules, and
+report issues with helpful guidance. The OpenSpec reference implementation
+provides a proven architecture using TypeScript, which we'll adapt to Go's
+idioms and type system.
 
 ### Constraints
 
-- Must work with existing Spectr directory structure (`spectr/specs/`, `spectr/changes/`)
+- Must work with existing Spectr directory structure (`spectr/specs/`,
+  `spectr/changes/`)
 - Must integrate with Kong CLI framework
 - Must support both interactive and non-interactive modes
 - Must be performant for projects with many specs/changes
@@ -43,14 +48,16 @@ The validate command needs to parse markdown files, extract structured informati
 
 **Rationale**:
 
-- **Separation of concerns**: Discovery (finding items) vs validation (checking items)
+- **Separation of concerns**: Discovery (finding items) vs validation (checking
+  items)
 - **Testability**: Each package can be unit tested independently
-- **Reusability**: Discovery package can be used by future commands (show, list, archive)
+- **Reusability**: Discovery package can be used by future commands (show, list,
+  archive)
 - **Go idioms**: Flat, focused packages are more idiomatic than deep hierarchies
 
 **Structure**:
 
-```
+```text
 internal/
 ├── validation/
 │   ├── validator.go        # Main Validator interface and orchestration
@@ -61,23 +68,29 @@ internal/
 ├── discovery/
 │   └── discovery.go        # Find changes and specs in filesystem
 └── init/                   # Existing init package
-```
+```text
 
 **Alternatives considered**:
 
 - Single `internal/validate` package: Rejected due to mixing concerns
-- Nesting under `cmd/validate/`: Rejected because internal packages should be reusable
+- Nesting under `cmd/validate/`: Rejected because internal packages should be
+  reusable
 
 ### Decision 2: Markdown Parsing Library
 
-**Choice**: Use `github.com/gomarkdown/markdown` for parsing, with custom extraction
+**Choice**: Use `github.com/gomarkdown/markdown` for parsing, with custom
+extraction
 
 **Rationale**:
 
-- **Standard library first**: Go's `bufio.Scanner` can handle simple section extraction
-- **Goldmark alternative**: `github.com/yuin/goldmark` is more featureful but adds complexity
-- **Custom parsing**: Spec format is well-defined, so custom regex-based extraction is tractable
-- **Zero dependencies preference**: Start simple, add library only if needed during implementation
+- **Standard library first**: Go's `bufio.Scanner` can handle simple section
+  extraction
+- **Goldmark alternative**: `github.com/yuin/goldmark` is more featureful but
+  adds complexity
+- **Custom parsing**: Spec format is well-defined, so custom regex-based
+  extraction is tractable
+- **Zero dependencies preference**: Start simple, add library only if needed
+  during implementation
 
 **Implementation approach**:
 
@@ -121,7 +134,7 @@ type ValidationIssue struct {
     Path    string          // Section/requirement path
     Message string          // Human-readable message
 }
-```
+```text
 
 **Alternatives considered**:
 
@@ -154,7 +167,8 @@ type ValidationIssue struct {
 
 ### Decision 5: Error Reporting and Guidance
 
-**Choice**: Multi-level issues (ERROR/WARNING/INFO) with contextual remediation messages
+**Choice**: Multi-level issues (ERROR/WARNING/INFO) with contextual remediation
+messages
 
 **Rationale**:
 
@@ -172,15 +186,16 @@ type ValidationIssue struct {
 
 **Example**:
 
-```
-✗ [ERROR] auth/spec.md: Requirement "User Authentication" must include at least one scenario
+```text
+✗ [ERROR] auth/spec.md: Requirement "User Authentication" must include
+  at least one scenario
 Next steps:
   - Add scenario using #### Scenario: format
   - Example:
     #### Scenario: Login success
     - **WHEN** valid credentials provided
     - **THEN** JWT token returned
-```
+```text
 
 **Alternatives considered**:
 
@@ -286,7 +301,8 @@ If validation proves problematic:
 
 ### Question 1: Should we validate referenced specs during change validation?
 
-**Context**: When a change references a spec in `## MODIFIED Requirements`, should we verify that spec exists?
+**Context**: When a change references a spec in `## MODIFIED Requirements`,
+should we verify that spec exists?
 
 **Options**:
 
@@ -294,7 +310,8 @@ If validation proves problematic:
 - **B**: Warn if spec doesn't exist (helpful but adds complexity)
 - **C**: Error if spec doesn't exist (strict but may block valid workflows)
 
-**Recommendation**: Start with Option A (OpenSpec behavior), add Option B later if users request it.
+**Recommendation**: Start with Option A (OpenSpec behavior), add Option B later
+if users request it.
 
 ### Question 2: Should validation cache results?
 
@@ -306,11 +323,13 @@ If validation proves problematic:
 - **B**: In-memory cache for single command invocation (helps bulk validation)
 - **C**: Persistent cache based on file mtime (complex, high risk of stale data)
 
-**Recommendation**: Start with Option A, add Option B if profiling shows redundant work.
+**Recommendation**: Start with Option A, add Option B if profiling shows
+redundant work.
 
 ### Question 3: How to handle non-standard scenario formats?
 
-**Context**: Users might write scenarios in different formats (bullets, numbered lists, etc.)
+**Context**: Users might write scenarios in different formats (bullets, numbered
+lists, etc.)
 
 **Options**:
 
@@ -318,4 +337,5 @@ If validation proves problematic:
 - **B**: Accept alternatives with warnings (flexible but inconsistent)
 - **C**: Auto-detect and normalize (complex, risky)
 
-**Recommendation**: Option A (strict enforcement) matches OpenSpec and ensures consistency. Users adapt quickly to clear requirements.
+**Recommendation**: Option A (strict enforcement) matches OpenSpec and ensures
+consistency. Users adapt quickly to clear requirements.

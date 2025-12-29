@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Transform Action Type
 
-The system SHALL define an action type to signal transform intentions explicitly.
+The system SHALL define an action type to signal transform intentions
+explicitly.
 
 #### Scenario: TransformAction enumeration
 
@@ -20,35 +23,44 @@ The system SHALL define an action type to signal transform intentions explicitly
 
 ### Requirement: Transform Visitor Interface
 
-The system SHALL define a TransformVisitor interface for AST rewriting via visitor pattern.
+The system SHALL define a TransformVisitor interface for AST rewriting via
+visitor pattern.
 
 #### Scenario: Transform visitor signature
 
 - **WHEN** the TransformVisitor interface is defined
 - **THEN** it SHALL have a method for each node type
-- **AND** each method signature SHALL be `TransformX(*NodeX) (Node, TransformAction, error)`
-- **AND** the returned Node SHALL be the replacement (only used when action is Replace)
+- **AND** each method signature SHALL be `TransformX(*NodeX) (Node,
+  TransformAction, error)`
+- **AND** the returned Node SHALL be the replacement (only used when action is
+  Replace)
 
 #### Scenario: Transform visitor methods
 
 - **WHEN** implementing TransformVisitor
-- **THEN** there SHALL be: `TransformDocument`, `TransformSection`, `TransformRequirement`, `TransformScenario`, `TransformParagraph`, `TransformList`, `TransformListItem`, etc.
+- **THEN** there SHALL be: `TransformDocument`, `TransformSection`,
+  `TransformRequirement`, `TransformScenario`, `TransformParagraph`,
+  `TransformList`, `TransformListItem`, etc.
 - **AND** each receives typed node and returns (Node, action, error)
 
 #### Scenario: Base transform visitor
 
 - **WHEN** implementing a transform
-- **THEN** `BaseTransformVisitor` SHALL provide defaults that return (original, ActionKeep, nil)
-- **AND** implementers SHALL embed BaseTransformVisitor and override only needed methods
+- **THEN** `BaseTransformVisitor` SHALL provide defaults that return (original,
+  ActionKeep, nil)
+- **AND** implementers SHALL embed BaseTransformVisitor and override only needed
+  methods
 
 ### Requirement: Transform Function
 
-The system SHALL provide a Transform function that applies a TransformVisitor to an AST.
+The system SHALL provide a Transform function that applies a TransformVisitor to
+an AST.
 
 #### Scenario: Transform function signature
 
 - **WHEN** transforming an AST
-- **THEN** the signature SHALL be `Transform(root Node, visitor TransformVisitor) (Node, error)`
+- **THEN** the signature SHALL be `Transform(root Node, visitor
+  TransformVisitor) (Node, error)`
 - **AND** it SHALL return the transformed root node
 - **AND** original AST SHALL remain unchanged (immutability)
 
@@ -91,7 +103,8 @@ The system SHALL support composing multiple transforms.
 #### Scenario: Conditional transform
 
 - **WHEN** `When(pred func(Node) bool, t TransformVisitor)` is called
-- **THEN** it SHALL return a TransformVisitor that applies t only when pred returns true
+- **THEN** it SHALL return a TransformVisitor that applies t only when pred
+  returns true
 - **AND** nodes not matching pred SHALL pass through unchanged
 
 ### Requirement: Common Transform Utilities
@@ -107,7 +120,8 @@ The system SHALL provide utility transforms for common operations.
 #### Scenario: Filter transform
 
 - **WHEN** `Filter(pred func(Node) bool)` is called
-- **THEN** it SHALL return a TransformVisitor that deletes nodes where pred returns false
+- **THEN** it SHALL return a TransformVisitor that deletes nodes where pred
+  returns false
 - **AND** nodes matching pred SHALL be kept
 
 #### Scenario: Replace by type transform
@@ -147,13 +161,15 @@ The system SHALL validate transform results for consistency.
 
 - **WHEN** a transform replaces a node
 - **THEN** the replacement SHALL be type-compatible with the original's position
-- **AND** replacing NodeSection with NodeText in section position SHALL be an error
+- **AND** replacing NodeSection with NodeText in section position SHALL be an
+  error
 
 #### Scenario: Children consistency after transform
 
 - **WHEN** Transform completes
 - **THEN** all parent-child relationships SHALL be consistent
-- **AND** child Start/End offsets MAY be invalid (transforms may create synthetic nodes)
+- **AND** child Start/End offsets MAY be invalid (transforms may create
+  synthetic nodes)
 
 #### Scenario: Hash recomputation
 
@@ -174,7 +190,8 @@ The system SHALL provide helpers for common Spectr transformations.
 #### Scenario: Add scenario transform
 
 - **WHEN** `AddScenario(reqName string, scenario *NodeScenario)` is called
-- **THEN** it SHALL return a TransformVisitor that adds scenario to matching requirement
+- **THEN** it SHALL return a TransformVisitor that adds scenario to matching
+  requirement
 - **AND** scenario SHALL be appended to requirement's children
 
 #### Scenario: Remove requirement transform

@@ -1,15 +1,21 @@
+# Design Document
+
 ## Context
 
-Spectr currently uses a consolidated `internal/regex/` package with pre-compiled regex patterns for parsing markdown spec files. While this works, regex-based parsing has limitations:
+Spectr currently uses a consolidated `internal/regex/` package with pre-compiled
+regex patterns for parsing markdown spec files. While this works, regex-based
+parsing has limitations:
 
 - Error messages lack precise location (line + column)
 - Patterns are fragile when edge cases arise
 - Adding new markdown features requires new regex patterns
 - Testing regex patterns is cumbersome
 
-The user requested eliminating all regex from the codebase and implementing a proper handbuilt parser with line-based error reporting.
+The user requested eliminating all regex from the codebase and implementing a
+proper handbuilt parser with line-based error reporting.
 
-**Stakeholders**: Spectr users, AI agents parsing spec files, CI/CD pipelines validating specs.
+**Stakeholders**: Spectr users, AI agents parsing spec files, CI/CD pipelines
+validating specs.
 
 ## User Decisions (from requirements gathering)
 
@@ -19,56 +25,56 @@ The following decisions were made based on user input:
 
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
-| Markdown scope | **Full CommonMark subset** | Support headers, lists, code blocks, emphasis, links - not just minimal Spectr patterns |
-| Error handling | **Strict with errors** | Return line-based errors for malformed input; collect all errors rather than stopping at first |
-| Parser architecture | **Token-based lexer/parser** | Separate tokenization pass then parse tokens into AST; more complex but more flexible |
-| API approach | **Clean slate API** | New `internal/markdown/` package with improved API; requires updating all call sites |
+| Markdown scope | **Full CommonMark** | Support headers, lists, code, etc |
+| Error handling | **Strict w/ errors** | Return line errors; collect all |
+| Parser arch | **Token-based** | Separate tokenize/parse; flexible |
+| API approach | **Clean slate** | New `internal/markdown/`; update |
 
 ### Token and Lexer Decisions
 
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
-| Token granularity | **Fine-grained** | Each delimiter is separate token (e.g., `*`, `*`, text, `*`, `*` for bold). Maximum flexibility for error recovery. |
-| Lexer error handling | **Error tokens** | Emit `TokenError` with message, continue lexing. Allows collecting all errors in one pass. |
-| Lexer API | **Internal only** | Lexer is implementation detail. Only expose parser API. Simpler public interface. |
+| Token granularity | **Fine-grained** | Each delimiter separate; flexible |
+| Lexer errors | **Error tokens** | Emit `TokenError`; collect all |
+| Lexer API | **Internal only** | Lexer hidden; simpler |
 
 ### AST Decisions
 
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
-| AST mutability | **Immutable with builders** | Nodes are read-only after creation. Use builder/transform functions to create modified copies. Thread-safe, predictable. |
-| Position tracking | **Byte offset only** | Track only byte offsets. Line and column calculated on-demand from offset and source. Compact storage. |
-| Inline content model | **Flat children array** | Paragraph has Children: [TextNode, StrongNode, TextNode]. Simple, matches CommonMark AST. |
-| AST traversal | **Visitor pattern only** | Classic visitor pattern with Accept/Visit methods. Good for operations that vary by node type. |
-| Node identity | **Content hash** | Hash of node content determines identity. Nodes with same content share identity. Good for caching. |
-| Source preservation | **Store original text** | Each node stores its original source substring as byte slice view. Enables exact round-trip. |
-| String representation | **Byte slice views** | `[]byte` slices into original source. Zero-copy but requires source lifetime management. |
-| Node struct style | **Typed node structs** | Separate NodeSection, NodeRequirement, etc. implementing Node interface. Type-safe via assertions. |
-| Type-specific fields | **Getter methods** | Private fields with Level(), URL() getters. Enforces immutability with verbose but safe API. |
-| Parent pointers | **No parent pointers** | Nodes only reference children. Parent passed via visitor context. Simpler, truly immutable. |
+| AST mutability | **Immutable+builders** | Read-only; use transform funcs |
+| Position tracking | **Byte offset only** | Calc line/col on-demand; compact |
+| Inline content | **Flat children array** | Simple; matches CommonMark |
+| AST traversal | **Visitor pattern** | Accept/Visit methods; type-safe |
+| Node identity | **Content hash** | Same content = same identity |
+| Source preservation | **Store original** | Byte slice view; exact round-trip |
+| String repr | **Byte slice views** | Zero-copy; source lifetime mgmt |
+| Node struct style | **Typed structs** | NodeSection, etc.; type-safe |
+| Type-specific fields | **Getter methods** | Level(), URL(); immutable API |
+| Parent pointers | **No parent ptrs** | Children only; simpler |
 
 ### Parser Decisions
 
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
-| Incremental parsing | **Tree-sitter style** | Full incremental with tree diffing. Maximum performance but significant complexity. |
-| Edit granularity | **Full diff-based** | Accept old and new text, compute diff internally. Most flexible but slower for known edits. |
-| Parser API | **Stateless Parse func** | No Parser struct, just Parse(source) function. Each call independent. Most concurrent. |
-| Emphasis handling | **CommonMark strict** | Follow CommonMark spec exactly for delimiter matching. Handles edge cases like `*a _b* c_` correctly. |
+| Incremental | **Tree-sitter** | Full incremental; tree diffing |
+| Edit granularity | **Diff-based** | Compute diff; flexible |
+| Parser API | **Stateless** | Just Parse(source); concurrent |
+| Emphasis | **CommonMark** | Follow spec; correct edges |
 
 ### Additional Feature Decisions
 
 | Question | User's Choice | Implication |
 |----------|---------------|-------------|
-| AST printer | **Normalized printer** | Regenerate markdown with consistent, minimal formatting. Useful for auto-formatting. |
-| Position queries | **Interval tree index** | Build interval tree for O(log n) position queries. Extra memory but fast for repeated queries. |
-| Index building | **Lazy on first query** | Build interval tree on first PositionQuery call. No overhead if never queried. |
-| Transform API | **Visitor-based transforms** | TransformVisitor returns replacement nodes. Composable, functional style. |
-| Transform signals | **Return (node, action)** | Return node and action enum (Keep/Replace/Delete). Explicit intent, clear semantics. |
-| Query API | **Predicate-based Find** | Find(root, func(Node) bool) returns matching nodes. Flexible, Go-idiomatic. |
-| Object pooling | **Full pooling** | Pool both tokens and nodes. Maximum performance but complex lifetime management. |
-| Error location | **Offset only** | Error stores byte offset. Caller uses LineIndex to convert. Minimal data. |
-| Streaming | **No streaming** | Always build full AST. Spectr files are small, streaming unnecessary complexity. |
+| AST printer | **Normalized printer** | Regen with consistent format |
+| Position queries | **Interval tree** | O(log n); extra memory; fast |
+| Index building | **Lazy on first** | Build on first query; no overhead |
+| Transform API | **Visitor-based** | Return replacement nodes |
+| Transform signals | **(node, action)** | Keep/Replace/Delete; explicit |
+| Query API | **Predicate-based** | Find(root, pred); Go-idiomatic |
+| Object pooling | **Full pooling** | Pool tokens & nodes; max perf |
+| Error location | **Offset only** | Byte offset; convert w/ LineIndex |
+| Streaming | **No streaming** | Full AST; files small enough |
 
 ## Goals / Non-Goals
 
@@ -91,7 +97,7 @@ The following decisions were made based on user input:
 
 ## Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                     internal/markdown/                          │
 ├─────────────────────────────────────────────────────────────────┤
@@ -112,7 +118,7 @@ The following decisions were made based on user input:
 │  - ExtractRequirements(content) -> []Requirement               │
 │  - FindSection(content, name) -> *Section, bool                │
 └─────────────────────────────────────────────────────────────────┘
-```
+```text
 
 ## Decisions
 
@@ -133,7 +139,8 @@ The following decisions were made based on user input:
 
 ### Decision 2: Fine-Grained Token Types
 
-Token types are fine-grained with each delimiter as a separate token. See `specs/tokens/spec.md` for complete specification.
+Token types are fine-grained with each delimiter as a separate token. See
+`specs/tokens/spec.md` for complete specification.
 
 ```go
 type TokenType uint8
@@ -178,11 +185,12 @@ type Token struct {
     Source  []byte // Slice view into original source (zero-copy)
     Message string // Error message (only for TokenError)
 }
-```
+```text
 
 ### Decision 3: Immutable AST Node Types
 
-Nodes are immutable with content hashing for identity. See `specs/ast/spec.md` for complete specification.
+Nodes are immutable with content hashing for identity. See `specs/ast/spec.md`
+for complete specification.
 
 ```go
 type NodeType uint8
@@ -231,7 +239,7 @@ type Node struct {
 func (n *Node) Position(idx *LineIndex) Position {
     return idx.PositionAt(n.Start)
 }
-```
+```text
 
 ### Decision 4: Error Structure
 
@@ -250,7 +258,7 @@ func (e ParseError) Position(idx *LineIndex) Position {
 func (e ParseError) Error() string {
     return fmt.Sprintf("offset %d: %s", e.Offset, e.Message)
 }
-```
+```text
 
 ### Decision 5: Collected Errors with Recovery
 
@@ -268,11 +276,12 @@ func Parse(source []byte) ParseResult {
     // Collects errors, continues parsing where possible
     // On error, skips to next synchronization point
 }
-```
+```text
 
 ### Decision 6: Tree-Sitter Style Incremental Parsing
 
-**What**: Full incremental parsing with diff-based edit detection and subtree reuse.
+**What**: Full incremental parsing with diff-based edit detection and subtree
+reuse.
 **Why**: Maximum performance for editor integrations and repeated validation.
 
 See `specs/parser/spec.md` for complete specification.
@@ -293,7 +302,7 @@ type EditRegion struct {
     OldEndOffset   int  // Where old content ended
     NewEndOffset   int  // Where new content ends
 }
-```
+```text
 
 ### Decision 7: Visitor Pattern for AST Traversal
 
@@ -317,11 +326,11 @@ func Walk(node *Node, v Visitor) error
 
 // Sentinel to skip children without stopping
 var SkipChildren = errors.New("skip children")
-```
+```text
 
 ### Decision 8: Package Structure
 
-```
+```text
 internal/markdown/
 ├── doc.go              # Package documentation
 ├── token.go            # Token types and Token struct
@@ -359,7 +368,7 @@ internal/markdown/
 ├── wikilink_test.go
 ├── compat.go           # Compatibility helpers for migration
 └── compat_test.go
-```
+```text
 
 ### Decision 9: Migration Strategy
 
@@ -373,11 +382,12 @@ internal/markdown/
 
 ## Lexer State Machine
 
-The lexer operates primarily on a line-by-line basis for block elements, with inline tokenization for emphasis, code, and links.
+The lexer operates primarily on a line-by-line basis for block elements, with
+inline tokenization for emphasis, code, and links.
 
 ### Block-Level State Machine
 
-```
+```text
 ┌─────────┐     '#'      ┌──────────┐
 │  START  │ ──────────── │  HEADER  │ ─── count '#' chars ─── emit TokenH1..H6
 └─────────┘              └──────────┘
@@ -401,13 +411,13 @@ The lexer operates primarily on a line-by-line basis for block elements, with in
      │ other             ┌──────────┐
      └─────────────────- │ PARAGRAPH│ ─── inline tokenization
                          └──────────┘
-```
+```text
 
 ### Inline Tokenization
 
 For text within paragraphs, list items, and headers:
 
-```
+```text
 ┌──────────┐    '**' or '__'    ┌────────┐
 │  INLINE  │ ────────────────── │  BOLD  │
 └──────────┘                    └────────┘
@@ -427,13 +437,14 @@ For text within paragraphs, list items, and headers:
      │ '['               ┌──────────┐
      └─────────────────- │   LINK   │ ─┬─ followed by ](url) → inline link
                          └──────────┘  └─ followed by ][ref] → reference link
-```
+```text
 
 ### Link Definition Handling
 
 Reference-style links require a two-pass approach:
 
-1. **First pass**: Collect all link definitions `[ref]: url "optional title"` at block level
+1. **First pass**: Collect all link definitions `[ref]: url "optional title"` at
+  block level
 2. **Second pass**: Resolve `[text][ref]` references using collected definitions
 
 Link definitions:
@@ -453,7 +464,8 @@ Wikilinks provide a convenient way to link between specs and changes:
 - `[[spec-name]]` - link to spec, display text is spec name
 - `[[spec-name|Display Text]]` - link to spec with custom display text
 - `[[changes/my-change]]` - link to a change
-- `[[validation#Requirement: Spec File Validation]]` - link to specific requirement
+- `[[validation#Requirement: Spec File Validation]]` - link to specific
+  requirement
 
 **Resolution**:
 
@@ -475,17 +487,20 @@ type WikilinkToken struct {
     Line    int
     Column  int
 }
-```
+```text
 
 ### Emphasis Disambiguation Rules
 
 Following CommonMark spec section 6.2-6.4:
 
 1. **Delimiter run**: sequence of `*` or `_` not preceded/followed by same char
-2. **Left-flanking**: not followed by whitespace, and either not followed by punctuation OR preceded by whitespace/punctuation
-3. **Right-flanking**: not preceded by whitespace, and either not preceded by punctuation OR followed by whitespace/punctuation
+2. **Left-flanking**: not followed by whitespace, and either not followed by
+  punctuation OR preceded by whitespace/punctuation
+3. **Right-flanking**: not preceded by whitespace, and either not preceded by
+  punctuation OR followed by whitespace/punctuation
 4. **`*` can open/close emphasis** if left/right-flanking respectively
-5. **`_` intraword**: `_` cannot open/close if surrounded by alphanumerics (e.g., `foo_bar_baz` is not emphasis)
+5. **`_` intraword**: `_` cannot open/close if surrounded by alphanumerics
+  (e.g., `foo_bar_baz` is not emphasis)
 
 Implementation will track delimiter stack for proper matching.
 
@@ -497,7 +512,7 @@ The parser will recognize Spectr-specific patterns:
 
 ```markdown
 ### Requirement: Name Here
-```
+```text
 
 Parsed as `NodeRequirement` with `Content = "Name Here"`
 
@@ -505,7 +520,7 @@ Parsed as `NodeRequirement` with `Content = "Name Here"`
 
 ```markdown
 #### Scenario: Description Here
-```
+```text
 
 Parsed as `NodeScenario` with `Content = "Description Here"`
 
@@ -515,7 +530,7 @@ Parsed as `NodeScenario` with `Content = "Description Here"`
 - **WHEN** condition
 - **THEN** result
 - **AND** additional
-```
+```text
 
 Parsed as `NodeTaskItem` with special `Keyword` field.
 
@@ -526,28 +541,32 @@ Parsed as `NodeTaskItem` with special `Keyword` field.
 ## MODIFIED Requirements
 ## REMOVED Requirements
 ## RENAMED Requirements
-```
+```text
 
 Recognized as `NodeSection` with `DeltaType` field.
 
 ## Non-Markdown Regex (Retained)
 
-The following regex patterns in `internal/git/platform.go` are NOT markdown-related and will be retained or converted separately:
+The following regex patterns in `internal/git/platform.go` are NOT
+markdown-related and will be retained or converted separately:
 
 - SSH URL pattern: `^(?:[\w-]+@)?([^:]+):(.+)$`
 - HTTPS URL pattern: `^(?:https?|ssh|git)://(?:[\w-]+@)?([^/]+)/(.+)$`
 
-These could optionally be converted to string parsing functions for consistency, but are out of scope for the markdown parser change.
+These could optionally be converted to string parsing functions for consistency,
+but are out of scope for the markdown parser change.
 
 ## Risks / Trade-offs
 
 ### Risk: Performance Regression
 
-**Mitigation**: Benchmark lexer and parser against regex implementation. Token-based parsing is typically faster than regex for structured content.
+**Mitigation**: Benchmark lexer and parser against regex implementation.
+Token-based parsing is typically faster than regex for structured content.
 
 ### Risk: Edge Cases in Lexer
 
-**Mitigation**: Comprehensive test suite with edge cases from CommonMark spec test suite. Fuzzing tests.
+**Mitigation**: Comprehensive test suite with edge cases from CommonMark spec
+test suite. Fuzzing tests.
 
 ### Risk: Breaking Existing Functionality
 
@@ -608,19 +627,28 @@ If issues arise:
 ## Resolved Design Questions
 
 1. **Reference-style links?** `[text][ref]` with `[ref]: url`
-   - **Decision**: Yes - support reference-style links for flexibility. Parser will collect link definitions during first pass and resolve references during AST construction.
+   - **Decision**: Yes - support reference-style links for flexibility. Parser
+     will collect link definitions during first pass and resolve references
+     during AST construction.
 
 2. **Windows line endings (CRLF)?**
-   - **Decision**: Yes - lexer will normalize CRLF to LF during tokenization while preserving accurate line numbers
+   - **Decision**: Yes - lexer will normalize CRLF to LF during tokenization
+     while preserving accurate line numbers
 
 3. **Lexer visibility?**
-   - **Decision**: Internal only - expose only the parser API; lexer is implementation detail
+   - **Decision**: Internal only - expose only the parser API; lexer is
+     implementation detail
 
 4. **`internal/git/platform.go` regex?**
-   - **Decision**: Out of scope - those regex patterns are for URL parsing, not markdown. Address in separate change if desired.
+   - **Decision**: Out of scope - those regex patterns are for URL parsing, not
+     markdown. Address in separate change if desired.
 
 5. **Emphasis parsing edge cases?**
-   - **Decision**: Follow CommonMark rules for emphasis: delimiter runs, left/right flanking, intraword emphasis. Implementation will handle `*foo*bar*` correctly.
+   - **Decision**: Follow CommonMark rules for emphasis: delimiter runs,
+     left/right flanking, intraword emphasis. Implementation will handle
+     `*foo*bar*` correctly.
 
 6. **Error recovery strategy?**
-   - **Decision**: On error, skip to next recognizable structure (next header, next list item, etc.) and continue parsing. This maximizes useful output even from malformed input.
+   - **Decision**: On error, skip to next recognizable structure (next header,
+     next list item, etc.) and continue parsing. This maximizes useful output
+     even from malformed input.

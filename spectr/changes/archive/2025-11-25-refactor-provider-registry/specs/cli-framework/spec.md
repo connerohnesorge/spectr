@@ -1,30 +1,43 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Provider Interface
 
-The init system SHALL define a `Provider` interface that all AI CLI tool integrations implement, with one provider per tool handling both instruction files and slash commands.
+The init system SHALL define a `Provider` interface that all AI CLI tool
+integrations implement, with one provider per tool handling both instruction
+files and slash commands.
 
 #### Scenario: Provider interface methods
 
 - **WHEN** a new provider is created
-- **THEN** it SHALL implement `ID() string` returning a unique kebab-case identifier
+- **THEN** it SHALL implement `ID() string` returning a unique kebab-case
+  identifier
 - **AND** it SHALL implement `Name() string` returning the human-readable name
 - **AND** it SHALL implement `Priority() int` returning display order
-- **AND** it SHALL implement `ConfigFile() string` returning instruction file path or empty string
-- **AND** it SHALL implement `SlashDir() string` returning slash commands directory or empty string
-- **AND** it SHALL implement `CommandFormat() CommandFormat` returning Markdown or TOML
-- **AND** it SHALL implement `Configure(projectPath, spectrDir string) error` for configuration
-- **AND** it SHALL implement `IsConfigured(projectPath string) bool` for status checks
+- **AND** it SHALL implement `ConfigFile() string` returning instruction file
+  path or empty string
+- **AND** it SHALL implement `SlashDir() string` returning slash commands
+  directory or empty string
+- **AND** it SHALL implement `CommandFormat() CommandFormat` returning Markdown
+  or TOML
+- **AND** it SHALL implement `Configure(projectPath, spectrDir string) error`
+  for configuration
+- **AND** it SHALL implement `IsConfigured(projectPath string) bool` for status
+  checks
 
 #### Scenario: Single provider per tool
 
 - **WHEN** a tool has both an instruction file and slash commands
-- **THEN** one provider SHALL handle both (e.g., ClaudeProvider handles CLAUDE.md and .claude/commands/)
-- **AND** there SHALL NOT be separate config and slash providers for the same tool
+- **THEN** one provider SHALL handle both (e.g., ClaudeProvider handles
+  CLAUDE.md and .claude/commands/)
+- **AND** there SHALL NOT be separate config and slash providers for the same
+  tool
 
 ### Requirement: Provider Registry
 
-The init system SHALL provide a `Registry` that manages registration and lookup of providers using a registry pattern similar to `database/sql`.
+The init system SHALL provide a `Registry` that manages registration and lookup
+of providers using a registry pattern similar to `database/sql`.
 
 #### Scenario: Register provider
 
@@ -46,7 +59,8 @@ The init system SHALL provide a `Registry` that manages registration and lookup 
 
 ### Requirement: Per-Provider File Organization
 
-The init system SHALL organize provider implementations as separate Go files under `internal/init/providers/`, with one file per provider.
+The init system SHALL organize provider implementations as separate Go files
+under `internal/init/providers/`, with one file per provider.
 
 #### Scenario: Provider file structure
 
@@ -65,7 +79,8 @@ The init system SHALL organize provider implementations as separate Go files und
 
 ### Requirement: Init Function Registration
 
-The init system SHALL use Go's `init()` function pattern for automatic provider registration at startup.
+The init system SHALL use Go's `init()` function pattern for automatic provider
+registration at startup.
 
 #### Scenario: Auto-registration at startup
 
@@ -76,7 +91,8 @@ The init system SHALL use Go's `init()` function pattern for automatic provider 
 
 ### Requirement: Command Format Support
 
-The init system SHALL support multiple command file formats through the `CommandFormat` type.
+The init system SHALL support multiple command file formats through the
+`CommandFormat` type.
 
 #### Scenario: Markdown command format
 
@@ -95,12 +111,16 @@ The init system SHALL support multiple command file formats through the `Command
 
 ### Requirement: Struct-Based Command Definition
 
-The CLI framework SHALL use Go struct types with struct tags to declaratively define command structure, subcommands, flags, and arguments. Provider configuration SHALL be retrieved from the `Registry` interface rather than static global maps.
+The CLI framework SHALL use Go struct types with struct tags to declaratively
+define command structure, subcommands, flags, and arguments. Provider
+configuration SHALL be retrieved from the `Registry` interface rather than
+static global maps.
 
 #### Scenario: Root command definition
 
 - **WHEN** the CLI is initialized
-- **THEN** it SHALL use a root struct with subcommand fields tagged with `cmd` for command definitions
+- **THEN** it SHALL use a root struct with subcommand fields tagged with `cmd`
+  for command definitions
 - **AND** each subcommand SHALL be a nested struct type with appropriate tags
 
 #### Scenario: Subcommand registration

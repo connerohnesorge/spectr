@@ -4,7 +4,8 @@
 
 ### Requirement: Interactive List Mode
 
-The list command SHALL provide an interactive table interface when the `-I` or `--interactive` flag is used, displaying items in a navigable table format.
+The list command SHALL provide an interactive table interface when the `-I` or
+`--interactive` flag is used, displaying items in a navigable table format.
 
 #### Scenario: User launches interactive list for changes
 
@@ -34,7 +35,8 @@ The list command SHALL provide an interactive table interface when the `-I` or `
 
 ### Requirement: Clipboard Copy on Selection
 
-When a user presses Enter on a selected row in interactive mode, the item's ID SHALL be copied to the system clipboard.
+When a user presses Enter on a selected row in interactive mode, the item's ID
+SHALL be copied to the system clipboard.
 
 #### Scenario: Copy change ID to clipboard
 
@@ -77,7 +79,8 @@ Users SHALL be able to exit interactive mode using standard quit commands.
 
 ### Requirement: Table Visual Styling
 
-The interactive table SHALL use clear visual styling to distinguish headers, selected rows, and borders.
+The interactive table SHALL use clear visual styling to distinguish headers,
+selected rows, and borders.
 
 #### Scenario: Visual hierarchy in table
 

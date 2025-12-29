@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: CodeBuddy Slash Commands
 
-The provider SHALL create slash commands in `.codebuddy/commands/spectr/` directory.
+The provider SHALL create slash commands in `.codebuddy/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
@@ -26,9 +29,11 @@ The provider SHALL create slash commands in `.codebuddy/commands/spectr/` direct
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** the proposal command file is created
-- **THEN** it SHALL include frontmatter with description: "Scaffold a new Spectr change and validate strictly."
+- **THEN** it SHALL include frontmatter with description: "Scaffold a new Spectr
+  change and validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** the apply command file is created
-- **THEN** it SHALL include frontmatter with description: "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** it SHALL include frontmatter with description: "Implement an approved
+  Spectr change and keep tasks in sync."

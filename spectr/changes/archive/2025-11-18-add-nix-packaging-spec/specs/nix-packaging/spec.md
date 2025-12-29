@@ -4,7 +4,9 @@
 
 ### Requirement: CLI Binary Build via Nix
 
-The system SHALL build the spectr CLI binary using Nix flakes with a `packages.default` configuration that uses `buildGoModule` to compile the Go source code into an executable binary.
+The system SHALL build the spectr CLI binary using Nix flakes with a
+`packages.default` configuration that uses `buildGoModule` to compile the Go
+source code into an executable binary.
 
 #### Scenario: Build default package
 
@@ -18,7 +20,8 @@ The system SHALL build the spectr CLI binary using Nix flakes with a `packages.d
 
 ### Requirement: Vendor Hash Configuration
 
-The system SHALL specify a `vendorHash` in `packages.default` that ensures reproducible builds by pinning Go module dependencies to a known state.
+The system SHALL specify a `vendorHash` in `packages.default` that ensures
+reproducible builds by pinning Go module dependencies to a known state.
 
 #### Scenario: Reproducible builds
 
@@ -27,26 +30,33 @@ The system SHALL specify a `vendorHash` in `packages.default` that ensures repro
 
 ### Requirement: Package Metadata
 
-The system SHALL include package metadata (pname, version, description, homepage, license, maintainers) in the flake outputs for distribution and discoverability.
+The system SHALL include package metadata (pname, version, description,
+homepage, license, maintainers) in the flake outputs for distribution and
+discoverability.
 
 #### Scenario: Package metadata presence
 
 - **WHEN** the flake is evaluated
-- **THEN** pname="spectr", version follows semantic versioning, and license is Apache 2.0
+- **THEN** pname="spectr", version follows semantic versioning, and license is
+  Apache 2.0
 
 #### Scenario: Homepage and license information
 
 - **WHEN** the package is published to Nixpkgs or documentation systems
-- **THEN** homepage points to the authoritative repository and license is explicitly stated
+- **THEN** homepage points to the authoritative repository and license is
+  explicitly stated
 
 ### Requirement: Development Shell Integration
 
-The system SHALL provide a development shell via `devShells.default` that includes Go toolchain, linting, testing, and formatting tools required for spectr development.
+The system SHALL provide a development shell via `devShells.default` that
+includes Go toolchain, linting, testing, and formatting tools required for
+spectr development.
 
 #### Scenario: Enter development environment
 
 - **WHEN** developer runs `nix develop`
-- **THEN** all required build and development tools are available in PATH (Go, golangci-lint, gotestsum, etc.)
+- **THEN** all required build and development tools are available in PATH (Go,
+  golangci-lint, gotestsum, etc.)
 
 #### Scenario: Use live reload during development
 
@@ -55,7 +65,9 @@ The system SHALL provide a development shell via `devShells.default` that includ
 
 ### Requirement: Source Code Inclusion
 
-The system SHALL ensure the flake correctly specifies the project source (`src = self`) so that all Go source files, go.mod, and go.sum are included in the build context.
+The system SHALL ensure the flake correctly specifies the project source (`src =
+self`) so that all Go source files, go.mod, and go.sum are included in the build
+context.
 
 #### Scenario: All source files included
 
@@ -64,7 +76,8 @@ The system SHALL ensure the flake correctly specifies the project source (`src =
 
 ### Requirement: Output Structure
 
-The system SHALL produce a standard Nix package output with the binary executable in the expected location within the derivation.
+The system SHALL produce a standard Nix package output with the binary
+executable in the expected location within the derivation.
 
 #### Scenario: Binary in correct location
 
@@ -73,7 +86,9 @@ The system SHALL produce a standard Nix package output with the binary executabl
 
 ### Requirement: Cross-Platform Support
 
-The system SHALL support building on multiple platforms (x86_64-linux, aarch64-linux, x86_64-darwin, aarch64-darwin) through proper Nix flake configuration.
+The system SHALL support building on multiple platforms (x86_64-linux,
+aarch64-linux, x86_64-darwin, aarch64-darwin) through proper Nix flake
+configuration.
 
 #### Scenario: Build on supported platforms
 

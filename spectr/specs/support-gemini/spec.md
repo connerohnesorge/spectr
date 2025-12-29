@@ -23,7 +23,8 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: No Instruction File
 
-The Gemini provider SHALL NOT create an instruction file since Gemini CLI does not support project-level instruction files.
+The Gemini provider SHALL NOT create an instruction file since Gemini CLI does
+not support project-level instruction files.
 
 #### Scenario: Config file check
 
@@ -32,7 +33,8 @@ The Gemini provider SHALL NOT create an instruction file since Gemini CLI does n
 
 ### Requirement: Gemini Slash Commands
 
-The provider SHALL create slash commands in `.gemini/commands/spectr/` directory using TOML format.
+The provider SHALL create slash commands in `.gemini/commands/spectr/` directory
+using TOML format.
 
 #### Scenario: Command paths
 
@@ -49,7 +51,8 @@ The provider SHALL create slash commands in `.gemini/commands/spectr/` directory
 
 ### Requirement: Custom TOML Generation
 
-The Gemini provider SHALL override the base Configure method to generate TOML files instead of Markdown.
+The Gemini provider SHALL override the base Configure method to generate TOML
+files instead of Markdown.
 
 #### Scenario: TOML content structure
 

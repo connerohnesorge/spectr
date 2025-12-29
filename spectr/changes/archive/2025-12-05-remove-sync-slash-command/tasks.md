@@ -1,3 +1,5 @@
+# Implementation Tasks
+
 ## 1. Remove Slash Command File
 
 - [x] 1.1 Delete `.claude/commands/spectr/sync.md`
@@ -9,15 +11,20 @@
 ## 3. Update Templates
 
 - [x] 3.1 Delete `internal/initialize/templates/tools/slash-sync.md.tmpl`
-- [x] 3.2 Update `internal/initialize/templates/spectr/AGENTS.md.tmpl` - remove "Stage 3: Syncing Specs" section and sync-related references
+- [x] 3.2 Update `internal/initialize/templates/spectr/AGENTS.md.tmpl` - remove
+  "Stage 3: Syncing Specs" section and sync-related references
 
 ## 4. Update Provider Interface and Constants
 
-- [x] 4.1 Remove `GetSyncCommandPath()` from provider interface in `internal/initialize/providers/provider.go`
+- [x] 4.1 Remove `GetSyncCommandPath()` from provider interface in
+  `internal/initialize/providers/provider.go`
 - [x] 4.2 Remove `syncPath` field from `baseProvider` struct
-- [x] 4.3 Remove `FrontmatterSync` constant from `internal/initialize/providers/constants.go`
-- [x] 4.4 Update `StandardCommandPaths()` to return only proposal and apply paths
-- [x] 4.5 Update `PrefixedCommandPaths()` to return only proposal and apply paths
+- [x] 4.3 Remove `FrontmatterSync` constant from
+  `internal/initialize/providers/constants.go`
+- [x] 4.4 Update `StandardCommandPaths()` to return only proposal and apply
+  paths
+- [x] 4.5 Update `PrefixedCommandPaths()` to return only proposal and apply
+  paths
 - [x] 4.6 Update `CommandFrontmatter` map to remove sync entry
 
 ## 5. Update All Provider Implementations
@@ -40,12 +47,16 @@
 
 ## 6. Update Tests
 
-- [x] 6.1 Update `internal/initialize/providers/provider_test.go` - remove sync-related tests
-- [x] 6.2 Update `internal/initialize/templates_test.go` - remove sync command tests
-- [x] 6.3 Update `internal/initialize/wizard_test.go` - remove sync.md expectations
+- [x] 6.1 Update `internal/initialize/providers/provider_test.go` - remove
+  sync-related tests
+- [x] 6.2 Update `internal/initialize/templates_test.go` - remove sync command
+  tests
+- [x] 6.3 Update `internal/initialize/wizard_test.go` - remove sync.md
+  expectations
 
 ## 7. Validation
 
 - [x] 7.1 Run `go build ./...` to verify compilation
 - [x] 7.2 Run `go test ./...` to verify tests pass
-- [x] 7.3 Run `spectr validate remove-sync-slash-command --strict` to verify proposal
+- [x] 7.3 Run `spectr validate remove-sync-slash-command --strict` to verify
+  proposal

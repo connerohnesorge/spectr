@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Token Pool
 
-The system SHALL provide an object pool for Token instances to reduce allocation pressure during lexing.
+The system SHALL provide an object pool for Token instances to reduce allocation
+pressure during lexing.
 
 #### Scenario: Token pool structure
 
@@ -32,13 +35,15 @@ The system SHALL provide an object pool for Token instances to reduce allocation
 
 ### Requirement: Node Pool
 
-The system SHALL provide object pools for AST Node instances to reduce GC pressure.
+The system SHALL provide object pools for AST Node instances to reduce GC
+pressure.
 
 #### Scenario: Typed node pools
 
 - **WHEN** node pools are created
 - **THEN** there SHALL be a separate pool for each node type
-- **AND** `pool.GetSection()`, `pool.GetRequirement()`, etc. SHALL return typed nodes
+- **AND** `pool.GetSection()`, `pool.GetRequirement()`, etc. SHALL return typed
+  nodes
 
 #### Scenario: Node acquisition from pool
 
@@ -61,13 +66,15 @@ The system SHALL provide a pool for children slices to reduce slice allocation.
 #### Scenario: Children slice acquisition
 
 - **WHEN** `pool.GetChildren(capacity int)` is called
-- **THEN** it SHALL return a `[]*Node` slice with at least the requested capacity
+- **THEN** it SHALL return a `[]*Node` slice with at least the requested
+  capacity
 - **AND** slice length SHALL be 0 (capacity available)
 
 #### Scenario: Children slice sizing
 
 - **WHEN** pooling children slices
-- **THEN** pools SHALL be bucketed by size: small (<=4), medium (<=16), large (<=64)
+- **THEN** pools SHALL be bucketed by size: small (<=4), medium (<=16), large
+  (<=64)
 - **AND** requests larger than 64 SHALL allocate fresh slices (not pooled)
 
 #### Scenario: Children slice return

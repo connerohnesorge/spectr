@@ -1,8 +1,12 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Search Hotkey in Interactive Lists
 
-The interactive list modes SHALL provide a '/' hotkey that activates a text search mode, allowing users to filter the displayed list by typing a search query that matches against item IDs and titles.
+The interactive list modes SHALL provide a '/' hotkey that activates a text
+search mode, allowing users to filter the displayed list by typing a search
+query that matches against item IDs and titles.
 
 #### Scenario: User presses '/' to enter search mode
 
@@ -18,7 +22,8 @@ The interactive list modes SHALL provide a '/' hotkey that activates a text sear
 - **WHEN** search mode is active
 - **AND** user types characters into the search input
 - **THEN** the table rows are filtered in real-time
-- **AND** only rows where ID or title contains the search query (case-insensitive) are displayed
+- **AND** only rows where ID or title contains the search query
+  (case-insensitive) are displayed
 - **AND** the first matching row is automatically selected
 
 #### Scenario: Search with no matches shows empty table

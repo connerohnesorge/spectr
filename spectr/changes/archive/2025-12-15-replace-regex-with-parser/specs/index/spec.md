@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Position Index Structure
 
-The system SHALL provide a PositionIndex that enables O(log n) queries for finding nodes at a given source position.
+The system SHALL provide a PositionIndex that enables O(log n) queries for
+finding nodes at a given source position.
 
 #### Scenario: Index creation
 
@@ -22,7 +25,8 @@ The system SHALL provide a PositionIndex that enables O(log n) queries for findi
 - **WHEN** an index is built
 - **THEN** it SHALL use an interval tree data structure
 - **AND** each node's [Start, End) range SHALL be stored
-- **AND** the tree SHALL support overlapping intervals (parent contains children)
+- **AND** the tree SHALL support overlapping intervals (parent contains
+  children)
 
 ### Requirement: Position Query Operations
 
@@ -31,7 +35,8 @@ The system SHALL provide query methods for finding nodes at a source position.
 #### Scenario: Find node at offset
 
 - **WHEN** `index.NodeAt(offset int)` is called
-- **THEN** it SHALL return the innermost (most specific) node containing that offset
+- **THEN** it SHALL return the innermost (most specific) node containing that
+  offset
 - **AND** query time SHALL be O(log n)
 - **AND** offset outside document range SHALL return nil
 
@@ -56,8 +61,10 @@ The system SHALL implement an efficient interval tree for position indexing.
 #### Scenario: Interval tree structure
 
 - **WHEN** the interval tree is built
-- **THEN** it SHALL be a balanced binary search tree (e.g., augmented AVL or red-black)
-- **AND** each node SHALL store: interval [start, end), max endpoint in subtree, AST node reference
+- **THEN** it SHALL be a balanced binary search tree (e.g., augmented AVL or
+  red-black)
+- **AND** each node SHALL store: interval [start, end), max endpoint in subtree,
+  AST node reference
 
 #### Scenario: Interval tree invariants
 
@@ -69,7 +76,8 @@ The system SHALL implement an efficient interval tree for position indexing.
 #### Scenario: Query algorithm
 
 - **WHEN** querying for nodes at offset
-- **THEN** the algorithm SHALL traverse from root, pruning subtrees where max < offset
+- **THEN** the algorithm SHALL traverse from root, pruning subtrees where max <
+  offset
 - **AND** it SHALL check if each visited node's interval contains the offset
 - **AND** it SHALL collect all containing intervals
 

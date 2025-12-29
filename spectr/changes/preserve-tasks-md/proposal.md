@@ -2,13 +2,18 @@
 
 ## Problem
 
-Currently, the `spectr accept` command converts `tasks.md` → `tasks.jsonc` and then **deletes** the original `tasks.md` file. This creates several problems:
+Currently, the `spectr accept` command converts `tasks.md` → `tasks.jsonc` and
+then **deletes** the original `tasks.md` file. This creates several problems:
 
-1. **Information Loss**: Markdown formatting (backticks, bold, italic, links) in task descriptions is stripped during conversion
-2. **No Source of Truth**: Once tasks.md is deleted, there's no way to recover the original human-readable format
+1. **Information Loss**: Markdown formatting (backticks, bold, italic, links) in
+  task descriptions is stripped during conversion
+2. **No Source of Truth**: Once tasks.md is deleted, there's no way to recover
+  the original human-readable format
 3. **Comments Lost**: Any explanatory comments or notes in tasks.md disappear
-4. **Workflow Friction**: Users cannot easily revert from tasks.jsonc back to tasks.md if needed
-5. **Manual Editing Harder**: Editing tasks.jsonc is less ergonomic than editing markdown
+4. **Workflow Friction**: Users cannot easily revert from tasks.jsonc back to
+  tasks.md if needed
+5. **Manual Editing Harder**: Editing tasks.jsonc is less ergonomic than editing
+  markdown
 
 ### Current Behavior
 
@@ -79,9 +84,11 @@ spectr/changes/my-change/
 ### Benefits
 
 1. **No Information Loss**: Original markdown formatting preserved
-2. **Human-Readable Source**: tasks.md remains the canonical human-readable version
+2. **Human-Readable Source**: tasks.md remains the canonical human-readable
+  version
 3. **Easy Editing**: Users can edit tasks.md and re-run accept if needed
-4. **Backward Compatible**: Existing code already prefers tasks.jsonc when both exist
+4. **Backward Compatible**: Existing code already prefers tasks.jsonc when both
+  exist
 5. **No New Commands**: No need for `unaccept` subcommand
 
 ### Implementation Strategy
@@ -138,6 +145,8 @@ spectr/changes/my-change/
 
 ## Migration Path
 
-**Existing changes**: No action needed. Changes that already have tasks.jsonc (without tasks.md) continue to work.
+**Existing changes**: No action needed. Changes that already have tasks.jsonc
+(without tasks.md) continue to work.
 
-**New changes**: After this change, `spectr accept` will preserve tasks.md automatically.
+**New changes**: After this change, `spectr accept` will preserve tasks.md
+automatically.

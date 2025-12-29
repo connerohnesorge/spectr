@@ -44,7 +44,8 @@ The Windsurf provider SHALL NOT create an instruction file.
 
 ### Requirement: Windsurf Slash Commands
 
-The provider SHALL create slash commands in `.windsurf/commands/spectr/` directory.
+The provider SHALL create slash commands in `.windsurf/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
 
@@ -61,9 +62,11 @@ The provider SHALL create slash commands in `.windsurf/commands/spectr/` directo
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** the proposal command is created
-- **THEN** the frontmatter description SHALL be "Scaffold a new Spectr change and validate strictly."
+- **THEN** the frontmatter description SHALL be "Scaffold a new Spectr change
+  and validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** the apply command is created
-- **THEN** the frontmatter description SHALL be "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** the frontmatter description SHALL be "Implement an approved Spectr
+  change and keep tasks in sync."

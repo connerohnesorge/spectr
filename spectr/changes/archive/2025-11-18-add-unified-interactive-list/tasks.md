@@ -2,7 +2,8 @@
 
 ## 1. Type-Safe Data Structures
 
-- [x] 1.1 Create unified `Item` type that wraps either `ChangeInfo` or `SpecInfo`
+- [x] 1.1 Create unified `Item` type that wraps either `ChangeInfo` or
+  `SpecInfo`
 - [x] 1.2 Add `ItemType` enum (change, spec) for runtime type tracking
 - [x] 1.3 Define `ItemList` type for managing mixed change and spec collections
 
@@ -31,7 +32,8 @@
 
 - [x] 5.1 Add `--all` flag to ListCmd for unified mode
 - [x] 5.2 Update validation logic to exclude incompatible flag combinations
-- [x] 5.3 Route to new interactive mode when `--all` and `--interactive` are combined
+- [x] 5.3 Route to new interactive mode when `--all` and `--interactive` are
+  combined
 - [x] 5.4 Maintain backward compatibility with existing flags
 
 ## 6. Editor Integration

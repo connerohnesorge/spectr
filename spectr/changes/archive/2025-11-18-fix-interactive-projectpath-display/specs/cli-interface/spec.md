@@ -1,8 +1,12 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Interactive List Mode
 
-The list command SHALL provide an interactive table interface when the `-I` or `--interactive` flag is used, displaying items in a navigable table format with project path information.
+The list command SHALL provide an interactive table interface when the `-I` or
+`--interactive` flag is used, displaying items in a navigable table format with
+project path information.
 
 #### Scenario: User launches interactive list for changes
 
@@ -34,12 +38,16 @@ The list command SHALL provide an interactive table interface when the `-I` or `
 
 ### Requirement: Interactive Archive Mode
 
-The archive command SHALL provide an interactive table interface when no change ID argument is provided or when the `-I` or `--interactive` flag is used, displaying available changes in a navigable table format identical to the list command's interactive mode with project path information.
+The archive command SHALL provide an interactive table interface when no change
+ID argument is provided or when the `-I` or `--interactive` flag is used,
+displaying available changes in a navigable table format identical to the list
+command's interactive mode with project path information.
 
 #### Scenario: User runs archive with no arguments
 
 - **WHEN** user runs `spectr archive` with no change ID argument
-- **THEN** an interactive table is displayed with columns: ID, Title, Deltas, Tasks
+- **THEN** an interactive table is displayed with columns: ID, Title, Deltas,
+  Tasks
 - **AND** the table supports arrow key navigation (↑/↓, j/k)
 - **AND** the first row is selected by default
 - **AND** the table uses the same visual styling as list -I
@@ -85,7 +93,8 @@ The archive command SHALL provide an interactive table interface when no change 
 
 ### Requirement: Project Path Display in Interactive Mode
 
-The interactive table interfaces SHALL display the project root path to provide users with context about which project they are working with.
+The interactive table interfaces SHALL display the project root path to provide
+users with context about which project they are working with.
 
 #### Scenario: Project path shown in changes interactive mode
 
@@ -109,10 +118,12 @@ The interactive table interfaces SHALL display the project root path to provide 
 
 - **WHEN** `RunInteractiveChanges()` is invoked
 - **THEN** the `projectPath` parameter is passed from the calling command
-- **AND** the `projectPath` field on `interactiveModel` is set during initialization
+- **AND** the `projectPath` field on `interactiveModel` is set during
+  initialization
 
 #### Scenario: Project path properly initialized for archive
 
 - **WHEN** `RunInteractiveArchive()` is invoked
 - **THEN** the `projectPath` parameter is passed from the calling command
-- **AND** the `projectPath` field on `interactiveModel` is set during initialization
+- **AND** the `projectPath` field on `interactiveModel` is set during
+  initialization

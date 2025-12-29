@@ -1,8 +1,13 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Archive PR Automation Flag
 
-The system SHALL provide a `--pr` flag on the `spectr archive` command that automatically creates a pull request after successful archive completion, including branch creation, committing archived files and updated specs, pushing to remote, and invoking the appropriate platform PR CLI tool.
+The system SHALL provide a `--pr` flag on the `spectr archive` command that
+automatically creates a pull request after successful archive completion,
+including branch creation, committing archived files and updated specs, pushing
+to remote, and invoking the appropriate platform PR CLI tool.
 
 #### Scenario: Archive with PR flag creates branch and PR
 
@@ -34,7 +39,9 @@ The system SHALL provide a `--pr` flag on the `spectr archive` command that auto
 
 ### Requirement: Archive PR Branch Naming
 
-The system SHALL create archive PR branches with the naming convention `archive-<change-id>` to clearly indicate the branch purpose and maintain consistency with change proposal branch naming.
+The system SHALL create archive PR branches with the naming convention
+`archive-\<change-id\>` to clearly indicate the branch purpose and maintain
+consistency with change proposal branch naming.
 
 #### Scenario: Branch name follows convention
 
@@ -53,15 +60,20 @@ The system SHALL create archive PR branches with the naming convention `archive-
 
 ### Requirement: Archive PR Commit Strategy
 
-The system SHALL commit all archive-related changes atomically in a single commit, including the archived directory, removal of the original change directory, and all updated spec files.
+The system SHALL commit all archive-related changes atomically in a single
+commit, including the archived directory, removal of the original change
+directory, and all updated spec files.
 
 #### Scenario: Commit includes archived directory and updated specs
 
 - **WHEN** archiving a change with `--pr` flag
 - **AND** spec updates are not skipped
-- **THEN** the commit includes the new archived directory at `spectr/changes/archive/YYYY-MM-DD-<change-id>/`
+- **THEN** the commit includes the new archived directory at
+  `spectr/changes/archive/YYYY-MM-DD-\<change-id\>/`
 - **AND** the commit includes all updated files in `spectr/specs/`
-- **AND** the removal of the original `spectr/changes/<change-id>/` directory is detected by git
+- **AND** the removal of the original `spectr/changes/\<change-id\>/` directory
+  is
+  detected by git
 
 #### Scenario: Commit when specs are skipped
 
@@ -73,14 +85,17 @@ The system SHALL commit all archive-related changes atomically in a single commi
 #### Scenario: Commit message format includes operation summary
 
 - **WHEN** a commit is created for archive with PR
-- **THEN** the commit message starts with "Archive: <change-id>"
+- **THEN** the commit message starts with "Archive: \<change-id\>"
 - **AND** the body includes the archive location
-- **AND** the body includes spec operation counts (added/modified/removed/renamed)
-- **AND** the message ends with "Change-Id: <change-id>" trailer
+- **AND** the body includes spec operation counts
+  (added/modified/removed/renamed)
+- **AND** the message ends with "Change-Id: \<change-id\>" trailer
 
 ### Requirement: Archive PR Platform Detection
 
-The system SHALL detect the git hosting platform from the origin remote URL and invoke the appropriate PR creation CLI tool (gh for GitHub, glab for GitLab, tea for Gitea/Forgejo).
+The system SHALL detect the git hosting platform from the origin remote URL and
+invoke the appropriate PR creation CLI tool (gh for GitHub, glab for GitLab, tea
+for Gitea/Forgejo).
 
 #### Scenario: GitHub platform detection
 
@@ -91,7 +106,8 @@ The system SHALL detect the git hosting platform from the origin remote URL and 
 
 #### Scenario: GitLab platform detection
 
-- **WHEN** the origin remote URL contains `gitlab.com` or matches a GitLab instance
+- **WHEN** the origin remote URL contains `gitlab.com` or matches a GitLab
+  instance
 - **AND** user runs archive with `--pr` flag
 - **THEN** the `glab mr create` command is used to create the merge request
 - **AND** the MR is created on GitLab
@@ -114,7 +130,8 @@ The system SHALL detect the git hosting platform from the origin remote URL and 
 
 ### Requirement: Archive PR Title and Body
 
-The system SHALL generate a PR with a descriptive title and body that summarizes the archive operation, spec updates, and provides review guidance.
+The system SHALL generate a PR with a descriptive title and body that summarizes
+the archive operation, spec updates, and provides review guidance.
 
 #### Scenario: PR title follows convention
 
@@ -124,7 +141,7 @@ The system SHALL generate a PR with a descriptive title and body that summarizes
 #### Scenario: PR body includes archive summary
 
 - **WHEN** a PR is created after archive
-- **THEN** the PR body includes "Archived completed change: `<change-id>`"
+- **THEN** the PR body includes "Archived completed change: `\<change-id\>`"
 - **AND** the body includes the archive location path
 - **AND** the body includes spec operation counts
 - **AND** the body lists updated capabilities
@@ -140,13 +157,15 @@ The system SHALL generate a PR with a descriptive title and body that summarizes
 
 ### Requirement: Archive PR Error Handling
 
-The system SHALL handle git operation errors gracefully, providing clear error messages and leaving the archive in a valid state even when PR creation fails.
+The system SHALL handle git operation errors gracefully, providing clear error
+messages and leaving the archive in a valid state even when PR creation fails.
 
 #### Scenario: Not in git repository
 
 - **WHEN** user runs `spectr archive my-feature --pr`
 - **AND** the current directory is not in a git repository
-- **THEN** an error is displayed: "Not in a git repository. Initialize git with 'git init'."
+- **THEN** an error is displayed: "Not in a git repository. Initialize git with
+  'git init'."
 - **AND** the archive operation completes successfully
 - **AND** changes remain uncommitted
 - **AND** the command exits with error code 1
@@ -155,7 +174,8 @@ The system SHALL handle git operation errors gracefully, providing clear error m
 
 - **WHEN** user runs `spectr archive my-feature --pr`
 - **AND** the git repository has no `origin` remote
-- **THEN** an error is displayed: "No 'origin' remote configured. Run 'git remote add origin <url>' first."
+- **THEN** an error is displayed: "No 'origin' remote configured. Run 'git
+  remote add origin \<url\>' first."
 - **AND** the archive operation completes successfully
 - **AND** no branch is created
 - **AND** the command exits with error code 1
@@ -164,7 +184,8 @@ The system SHALL handle git operation errors gracefully, providing clear error m
 
 - **WHEN** user runs `spectr archive my-feature --pr` for a GitHub repository
 - **AND** the `gh` CLI tool is not installed
-- **THEN** an error is displayed: "gh not found. Install from <https://github.com/cli/cli>"
+- **THEN** an error is displayed: "gh not found. Install from
+  <https://github.com/cli/cli>"
 - **AND** the archive operation completes successfully
 - **AND** the branch is created and pushed
 - **AND** user can manually create PR using gh after installation
@@ -190,14 +211,16 @@ The system SHALL handle git operation errors gracefully, providing clear error m
 
 ### Requirement: Archive PR Success Reporting
 
-The system SHALL display the PR URL after successful PR creation to provide immediate feedback and enable quick access to the created pull request.
+The system SHALL display the PR URL after successful PR creation to provide
+immediate feedback and enable quick access to the created pull request.
 
 #### Scenario: PR created successfully
 
 - **WHEN** archive with `--pr` flag completes successfully
 - **AND** the PR is created
 - **THEN** a success message displays the PR URL
-- **AND** the message format is "PR created: <https://github.com/owner/repo/pull/123>" (or equivalent for GitLab/Gitea)
+- **AND** the message format is "PR created:
+  <https://github.com/owner/repo/pull/123>" (or equivalent for GitLab/Gitea)
 - **AND** the command exits with code 0
 
 #### Scenario: Display success after archive confirmation

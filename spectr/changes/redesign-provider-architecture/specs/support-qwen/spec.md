@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Qwen Provider Configuration
@@ -20,25 +21,31 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
 - **THEN** it SHALL return a `DirectoryInitializer` for `.qwen/commands/spectr/`
-- **AND** it SHALL return a `ConfigFileInitializer` for `QWEN.md` with TemplateRef from TemplateManager
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
+- **AND** it SHALL return a `ConfigFileInitializer` for `QWEN.md` with
+  TemplateRef from TemplateManager
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash
+  commands
 
 ### Requirement: Qwen Instruction File
 
-The provider SHALL create and maintain a `QWEN.md` instruction file in the project root.
+The provider SHALL create and maintain a `QWEN.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Qwen provider selected
 - **THEN** the ConfigFileInitializer creates `QWEN.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!--
+  spectr:end -->` markers
 
 #### Scenario: Instruction file updates
 
 - **WHEN** `spectr init` runs in a project with Qwen provider
-- **THEN** the ConfigFileInitializer updates content between markers in `QWEN.md`
+- **THEN** the ConfigFileInitializer updates content between markers in
+  `QWEN.md`
 - **AND** preserves any user content outside the markers
 
 ### Requirement: Qwen Slash Commands

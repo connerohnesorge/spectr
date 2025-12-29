@@ -4,13 +4,18 @@
 
 ### Requirement: VHS Tape Output Clarity
 
-VHS tape files SHALL NOT contain typed echo statements that display section headers or commentary. Demos SHALL let the spectr commands and their output speak for themselves. Comments within the tape file (lines starting with `#`) SHOULD be used to document sections for maintainers, but these are not displayed in the recording.
+VHS tape files SHALL NOT contain typed echo statements that display section
+headers or commentary. Demos SHALL let the spectr commands and their output
+speak for themselves. Comments within the tape file (lines starting with `#`)
+SHOULD be used to document sections for maintainers, but these are not displayed
+in the recording.
 
 #### Scenario: No typed echo section headers
 
 - **WHEN** a VHS tape file is reviewed
 - **THEN** it SHALL contain no `Type "echo ..."` commands for section headers
-- **AND** visual context SHALL be provided through VHS comments (starting with `#`) which are not recorded
+- **AND** visual context SHALL be provided through VHS comments (starting with
+  `#`) which are not recorded
 
 #### Scenario: No useless echo statements
 

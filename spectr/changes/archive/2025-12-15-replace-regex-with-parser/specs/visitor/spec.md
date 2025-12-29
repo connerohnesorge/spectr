@@ -1,13 +1,17 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Visitor Interface
 
-The system SHALL define a Visitor interface that enables type-safe traversal of AST nodes with double dispatch.
+The system SHALL define a Visitor interface that enables type-safe traversal of
+AST nodes with double dispatch.
 
 #### Scenario: Visitor interface definition
 
 - **WHEN** the Visitor interface is defined
-- **THEN** it SHALL have a method for each node type: `VisitDocument`, `VisitSection`, `VisitRequirement`, `VisitScenario`, etc.
+- **THEN** it SHALL have a method for each node type: `VisitDocument`,
+  `VisitSection`, `VisitRequirement`, `VisitScenario`, etc.
 - **AND** each method SHALL receive the specific node type as parameter
 - **AND** each method SHALL return `error` to allow early termination
 
@@ -22,7 +26,8 @@ The system SHALL define a Visitor interface that enables type-safe traversal of 
 
 - **WHEN** implementing a visitor
 - **THEN** a `BaseVisitor` struct SHALL be provided with no-op defaults
-- **AND** implementers SHALL embed `BaseVisitor` and override only needed methods
+- **AND** implementers SHALL embed `BaseVisitor` and override only needed
+  methods
 - **AND** `BaseVisitor` methods SHALL return nil (continue traversal)
 
 ### Requirement: Visitor Traversal Control
@@ -105,18 +110,21 @@ The system SHALL define Visit methods for each concrete node type.
 #### Scenario: Inline element visitor methods
 
 - **WHEN** visiting inline elements
-- **THEN** there SHALL be: `VisitText`, `VisitStrong`, `VisitEmphasis`, `VisitStrikethrough`, `VisitCode`, `VisitLink`, `VisitWikilink`
+- **THEN** there SHALL be: `VisitText`, `VisitStrong`, `VisitEmphasis`,
+  `VisitStrikethrough`, `VisitCode`, `VisitLink`, `VisitWikilink`
 - **AND** each SHALL receive its typed node
 
 #### Scenario: Block element visitor methods
 
 - **WHEN** visiting block elements
-- **THEN** there SHALL be: `VisitParagraph`, `VisitList`, `VisitListItem`, `VisitCodeBlock`, `VisitBlockquote`
+- **THEN** there SHALL be: `VisitParagraph`, `VisitList`, `VisitListItem`,
+  `VisitCodeBlock`, `VisitBlockquote`
 - **AND** each SHALL receive its typed node
 
 ### Requirement: Visitor Enter/Leave Pattern
 
-The system SHALL support an optional Enter/Leave pattern for visitors needing both pre and post visitation.
+The system SHALL support an optional Enter/Leave pattern for visitors needing
+both pre and post visitation.
 
 #### Scenario: EnterLeave visitor interface
 
@@ -177,7 +185,8 @@ The system SHALL document thread safety guarantees for visitors.
 
 - **WHEN** a visitor is used
 - **THEN** a single visitor instance SHALL NOT be used concurrently
-- **AND** each Walk call SHALL use its own visitor instance OR external synchronization
+- **AND** each Walk call SHALL use its own visitor instance OR external
+  synchronization
 
 #### Scenario: AST immutability enables concurrent reading
 
@@ -193,7 +202,8 @@ The system SHALL define clear error handling semantics for visitors.
 #### Scenario: SkipChildren sentinel
 
 - **WHEN** `SkipChildren` error is defined
-- **THEN** it SHALL be a package-level sentinel error: `var SkipChildren = errors.New("skip children")`
+- **THEN** it SHALL be a package-level sentinel error: `var SkipChildren =
+  errors.New("skip children")`
 - **AND** checking SHALL be via `errors.Is(err, SkipChildren)`
 
 #### Scenario: Error wrapping

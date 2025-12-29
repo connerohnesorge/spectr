@@ -4,7 +4,8 @@
 
 ### Requirement: Predicate-Based Find
 
-The system SHALL provide a Find function for locating nodes matching a predicate.
+The system SHALL provide a Find function for locating nodes matching a
+predicate.
 
 #### Scenario: Find function signature
 
@@ -28,12 +29,14 @@ The system SHALL provide a Find function for locating nodes matching a predicate
 
 ### Requirement: FindFirst Function
 
-The system SHALL provide a FindFirst function for locating the first matching node.
+The system SHALL provide a FindFirst function for locating the first matching
+node.
 
 #### Scenario: FindFirst function signature
 
 - **WHEN** finding first matching node
-- **THEN** the signature SHALL be `FindFirst(root Node, pred func(Node) bool) Node`
+- **THEN** the signature SHALL be `FindFirst(root Node, pred func(Node) bool)
+  Node`
 - **AND** it SHALL return the first node where pred returns true
 - **AND** it SHALL return nil if no match found
 
@@ -159,7 +162,8 @@ The system SHALL provide operations on query results.
 
 ### Requirement: Ancestor Queries
 
-The system SHALL provide queries for ancestor relationships using visitor context.
+The system SHALL provide queries for ancestor relationships using visitor
+context.
 
 #### Scenario: Ancestors function
 

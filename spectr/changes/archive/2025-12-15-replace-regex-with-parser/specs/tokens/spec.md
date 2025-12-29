@@ -1,15 +1,21 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Token Structure
 
-The system SHALL define a Token struct that represents a single lexical unit with byte-offset position and a view into the source text.
+The system SHALL define a Token struct that represents a single lexical unit
+with byte-offset position and a view into the source text.
 
 #### Scenario: Token contains byte offset position
 
 - **WHEN** a Token is created during lexing
-- **THEN** it SHALL contain a `Start` field with the byte offset from source start
-- **AND** it SHALL contain an `End` field with the byte offset of the token end (exclusive)
-- **AND** line and column SHALL be calculable on-demand from byte offset and source
+- **THEN** it SHALL contain a `Start` field with the byte offset from source
+  start
+- **AND** it SHALL contain an `End` field with the byte offset of the token end
+  (exclusive)
+- **AND** line and column SHALL be calculable on-demand from byte offset and
+  source
 
 #### Scenario: Token contains source view
 
@@ -26,28 +32,33 @@ The system SHALL define a Token struct that represents a single lexical unit wit
 
 ### Requirement: Fine-Grained Token Types
 
-The system SHALL define fine-grained token types where each delimiter character is a separate token for maximum error recovery flexibility.
+The system SHALL define fine-grained token types where each delimiter character
+is a separate token for maximum error recovery flexibility.
 
 #### Scenario: Emphasis delimiters as separate tokens
 
 - **WHEN** lexing `**bold**`
-- **THEN** the lexer SHALL emit: `TokenAsterisk`, `TokenAsterisk`, `TokenText("bold")`, `TokenAsterisk`, `TokenAsterisk`
+- **THEN** the lexer SHALL emit: `TokenAsterisk`, `TokenAsterisk`,
+  `TokenText("bold")`, `TokenAsterisk`, `TokenAsterisk`
 - **AND** each asterisk SHALL be a separate token with its own position
 
 #### Scenario: Underscore delimiters as separate tokens
 
 - **WHEN** lexing `__underline__`
-- **THEN** the lexer SHALL emit: `TokenUnderscore`, `TokenUnderscore`, `TokenText("underline")`, `TokenUnderscore`, `TokenUnderscore`
+- **THEN** the lexer SHALL emit: `TokenUnderscore`, `TokenUnderscore`,
+  `TokenText("underline")`, `TokenUnderscore`, `TokenUnderscore`
 
 #### Scenario: Tilde delimiters for strikethrough
 
 - **WHEN** lexing `~~struck~~`
-- **THEN** the lexer SHALL emit: `TokenTilde`, `TokenTilde`, `TokenText("struck")`, `TokenTilde`, `TokenTilde`
+- **THEN** the lexer SHALL emit: `TokenTilde`, `TokenTilde`,
+  `TokenText("struck")`, `TokenTilde`, `TokenTilde`
 
 #### Scenario: Backtick delimiters for code
 
 - **WHEN** lexing `` `code` ``
-- **THEN** the lexer SHALL emit: `TokenBacktick`, `TokenText("code")`, `TokenBacktick`
+- **THEN** the lexer SHALL emit: `TokenBacktick`, `TokenText("code")`,
+  `TokenBacktick`
 
 ### Requirement: Block-Level Token Types
 
@@ -56,84 +67,105 @@ The system SHALL define token types for block-level markdown elements.
 #### Scenario: Header hash tokens
 
 - **WHEN** lexing `## Header`
-- **THEN** the lexer SHALL emit: `TokenHash`, `TokenHash`, `TokenWhitespace`, `TokenText("Header")`
+- **THEN** the lexer SHALL emit: `TokenHash`, `TokenHash`, `TokenWhitespace`,
+  `TokenText("Header")`
 - **AND** each `#` SHALL be a separate `TokenHash`
 
 #### Scenario: List bullet tokens
 
 - **WHEN** lexing `- item`
-- **THEN** the lexer SHALL emit: `TokenDash`, `TokenWhitespace`, `TokenText("item")`
+- **THEN** the lexer SHALL emit: `TokenDash`, `TokenWhitespace`,
+  `TokenText("item")`
 
 #### Scenario: Ordered list tokens
 
 - **WHEN** lexing `1. item`
-- **THEN** the lexer SHALL emit: `TokenNumber("1")`, `TokenDot`, `TokenWhitespace`, `TokenText("item")`
+- **THEN** the lexer SHALL emit: `TokenNumber("1")`, `TokenDot`,
+  `TokenWhitespace`, `TokenText("item")`
 
 #### Scenario: Checkbox tokens
 
 - **WHEN** lexing `- [ ] task`
-- **THEN** the lexer SHALL emit: `TokenDash`, `TokenWhitespace`, `TokenBracketOpen`, `TokenWhitespace`, `TokenBracketClose`, `TokenWhitespace`, `TokenText("task")`
+- **THEN** the lexer SHALL emit: `TokenDash`, `TokenWhitespace`,
+  `TokenBracketOpen`, `TokenWhitespace`, `TokenBracketClose`, `TokenWhitespace`,
+  `TokenText("task")`
 
 #### Scenario: Checked checkbox tokens
 
 - **WHEN** lexing `- [x] done`
-- **THEN** the lexer SHALL emit: `TokenDash`, `TokenWhitespace`, `TokenBracketOpen`, `TokenX`, `TokenBracketClose`, `TokenWhitespace`, `TokenText("done")`
+- **THEN** the lexer SHALL emit: `TokenDash`, `TokenWhitespace`,
+  `TokenBracketOpen`, `TokenX`, `TokenBracketClose`, `TokenWhitespace`,
+  `TokenText("done")`
 
 #### Scenario: Blockquote tokens
 
 - **WHEN** lexing `> quoted`
-- **THEN** the lexer SHALL emit: `TokenGreaterThan`, `TokenWhitespace`, `TokenText("quoted")`
+- **THEN** the lexer SHALL emit: `TokenGreaterThan`, `TokenWhitespace`,
+  `TokenText("quoted")`
 
 #### Scenario: Code fence tokens
 
 - **WHEN** lexing a line starting with ``` or ~~~
-- **THEN** the lexer SHALL emit `TokenBacktick` or `TokenTilde` for each character
+- **THEN** the lexer SHALL emit `TokenBacktick` or `TokenTilde` for each
+  character
 - **AND** SHALL emit `TokenText` for the optional language identifier
 
 ### Requirement: Link and Wikilink Token Types
 
-The system SHALL define token types for links and wikilinks with their component parts.
+The system SHALL define token types for links and wikilinks with their component
+parts.
 
 #### Scenario: Inline link component tokens
 
 - **WHEN** lexing `[text](url)`
-- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenText("text")`, `TokenBracketClose`, `TokenParenOpen`, `TokenText("url")`, `TokenParenClose`
+- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenText("text")`,
+  `TokenBracketClose`, `TokenParenOpen`, `TokenText("url")`, `TokenParenClose`
 
 #### Scenario: Reference link component tokens
 
 - **WHEN** lexing `[text][ref]`
-- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenText("text")`, `TokenBracketClose`, `TokenBracketOpen`, `TokenText("ref")`, `TokenBracketClose`
+- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenText("text")`,
+  `TokenBracketClose`, `TokenBracketOpen`, `TokenText("ref")`,
+  `TokenBracketClose`
 
 #### Scenario: Wikilink tokens
 
 - **WHEN** lexing `[[target]]`
-- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenBracketOpen`, `TokenText("target")`, `TokenBracketClose`, `TokenBracketClose`
+- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenBracketOpen`,
+  `TokenText("target")`, `TokenBracketClose`, `TokenBracketClose`
 
 #### Scenario: Wikilink with display text
 
 - **WHEN** lexing `[[target|display]]`
-- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenBracketOpen`, `TokenText("target")`, `TokenPipe`, `TokenText("display")`, `TokenBracketClose`, `TokenBracketClose`
+- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenBracketOpen`,
+  `TokenText("target")`, `TokenPipe`, `TokenText("display")`,
+  `TokenBracketClose`, `TokenBracketClose`
 
 #### Scenario: Wikilink with anchor
 
 - **WHEN** lexing `[[target#anchor]]`
-- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenBracketOpen`, `TokenText("target")`, `TokenHash`, `TokenText("anchor")`, `TokenBracketClose`, `TokenBracketClose`
+- **THEN** the lexer SHALL emit: `TokenBracketOpen`, `TokenBracketOpen`,
+  `TokenText("target")`, `TokenHash`, `TokenText("anchor")`,
+  `TokenBracketClose`, `TokenBracketClose`
 
 ### Requirement: Whitespace and Structure Tokens
 
-The system SHALL define tokens for whitespace, newlines, and structural elements.
+The system SHALL define tokens for whitespace, newlines, and structural
+elements.
 
 #### Scenario: Whitespace token
 
 - **WHEN** lexing spaces or tabs
-- **THEN** the lexer SHALL emit `TokenWhitespace` containing all contiguous whitespace
+- **THEN** the lexer SHALL emit `TokenWhitespace` containing all contiguous
+  whitespace
 - **AND** the token SHALL preserve the original whitespace characters
 
 #### Scenario: Newline token
 
 - **WHEN** lexing a line ending
 - **THEN** the lexer SHALL emit `TokenNewline`
-- **AND** CRLF SHALL be normalized to a single `TokenNewline` but byte offsets SHALL reflect original positions
+- **AND** CRLF SHALL be normalized to a single `TokenNewline` but byte offsets
+  SHALL reflect original positions
 
 #### Scenario: End of file token
 
@@ -143,7 +175,8 @@ The system SHALL define tokens for whitespace, newlines, and structural elements
 
 ### Requirement: Error Token Type
 
-The system SHALL define an error token type for invalid input that allows continued lexing.
+The system SHALL define an error token type for invalid input that allows
+continued lexing.
 
 #### Scenario: Error token for invalid input
 
@@ -167,12 +200,14 @@ The system SHALL define a complete enumeration of all token types as a Go type.
 - **WHEN** token types are defined
 - **THEN** they SHALL be `const` values of type `TokenType`
 - **AND** `TokenType` SHALL be based on `uint8` for compact storage
-- **AND** token types SHALL be grouped by category with gaps for future additions
+- **AND** token types SHALL be grouped by category with gaps for future
+  additions
 
 #### Scenario: Token type is stringable
 
 - **WHEN** a `TokenType` is converted to string
-- **THEN** it SHALL return a human-readable name (e.g., "TokenHash", "TokenText")
+- **THEN** it SHALL return a human-readable name (e.g., "TokenHash",
+  "TokenText")
 - **AND** the String() method SHALL be auto-generated or maintained consistently
 
 #### Scenario: Complete token type list
@@ -180,8 +215,10 @@ The system SHALL define a complete enumeration of all token types as a Go type.
 - **WHEN** the token type enumeration is defined
 - **THEN** it SHALL include at minimum:
   - Structural: `TokenEOF`, `TokenNewline`, `TokenWhitespace`, `TokenError`
-  - Punctuation: `TokenHash`, `TokenAsterisk`, `TokenUnderscore`, `TokenTilde`, `TokenBacktick`
-  - Brackets: `TokenBracketOpen`, `TokenBracketClose`, `TokenParenOpen`, `TokenParenClose`
+  - Punctuation: `TokenHash`, `TokenAsterisk`, `TokenUnderscore`, `TokenTilde`,
+    `TokenBacktick`
+  - Brackets: `TokenBracketOpen`, `TokenBracketClose`, `TokenParenOpen`,
+    `TokenParenClose`
   - List: `TokenDash`, `TokenPlus`, `TokenNumber`, `TokenDot`, `TokenX`
   - Special: `TokenGreaterThan`, `TokenPipe`, `TokenColon`
   - Content: `TokenText`

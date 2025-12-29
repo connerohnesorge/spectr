@@ -2,7 +2,10 @@
 
 ## Why
 
-Demo GIFs in `assets/gifs/` can drift out of sync with CLI changes. Currently, developers must manually run VHS tape files to regenerate GIFs after updating commands. Automating this via GitHub Actions ensures documentation stays current with the codebase.
+Demo GIFs in `assets/gifs/` can drift out of sync with CLI changes. Currently,
+developers must manually run VHS tape files to regenerate GIFs after updating
+commands. Automating this via GitHub Actions ensures documentation stays current
+with the codebase.
 
 ## What Changes
 

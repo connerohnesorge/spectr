@@ -1,3 +1,5 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: OpenCode Provider Configuration
@@ -7,7 +9,8 @@ The provider SHALL be configured with these settings:
 - ID: `opencode`
 - Name: `OpenCode`
 - Priority: 16 (after Continue)
-- Config File: None (OpenCode uses JSON config, instruction injection not supported)
+- Config File: None (OpenCode uses JSON config, instruction injection not
+  supported)
 - Command Format: Markdown
 
 #### Scenario: Provider identification
@@ -24,7 +27,8 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: OpenCode Slash Commands
 
-The provider SHALL create slash commands in `.opencode/command/spectr/` directory.
+The provider SHALL create slash commands in `.opencode/command/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
@@ -52,12 +56,14 @@ The provider SHALL use standard frontmatter templates for each command type.
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** generating the proposal command file
-- **THEN** the frontmatter description is "Scaffold a new Spectr change and validate strictly."
+- **THEN** the frontmatter description is "Scaffold a new Spectr change and
+  validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** generating the apply command file
-- **THEN** the frontmatter description is "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** the frontmatter description is "Implement an approved Spectr change
+  and keep tasks in sync."
 
 ### Requirement: Command Path Construction
 
@@ -73,7 +79,8 @@ The provider SHALL construct command paths using the standard pattern.
 
 ### Requirement: No Instruction File
 
-The provider SHALL NOT create an instruction file since OpenCode uses JSON configuration.
+The provider SHALL NOT create an instruction file since OpenCode uses JSON
+configuration.
 
 #### Scenario: Config file check
 

@@ -4,7 +4,9 @@
 
 ### Requirement: Token-Based Lexer
 
-The system SHALL provide a token-based lexer in `internal/markdown/lexer.go` that converts markdown source text into a stream of tokens with line and column positions.
+The system SHALL provide a token-based lexer in `internal/markdown/lexer.go`
+that converts markdown source text into a stream of tokens with line and column
+positions.
 
 #### Scenario: Lexer produces tokens for headers
 
@@ -18,13 +20,15 @@ The system SHALL provide a token-based lexer in `internal/markdown/lexer.go` tha
 - **WHEN** the lexer processes `- [ ] Task description`
 - **THEN** it SHALL produce `TokenBullet`, `TokenCheckboxEmpty`, and text tokens
 - **AND** when processing `- [x] Completed task`
-- **THEN** it SHALL produce `TokenBullet`, `TokenCheckboxChecked`, and text tokens
+- **THEN** it SHALL produce `TokenBullet`, `TokenCheckboxChecked`, and text
+  tokens
 
 #### Scenario: Lexer handles fenced code blocks
 
 - **WHEN** the lexer encounters ``` or ~~~
 - **THEN** it SHALL produce `TokenCodeFence` tokens
-- **AND** content between fences SHALL be tokenized as `TokenText` without further parsing
+- **AND** content between fences SHALL be tokenized as `TokenText` without
+  further parsing
 - **AND** the language identifier after opening fence SHALL be captured
 
 #### Scenario: Lexer handles inline formatting
@@ -49,7 +53,9 @@ The system SHALL provide a token-based lexer in `internal/markdown/lexer.go` tha
 
 ### Requirement: AST Parser
 
-The system SHALL provide a parser in `internal/markdown/parser.go` that consumes tokens and produces an Abstract Syntax Tree (AST) with node types for document structure.
+The system SHALL provide a parser in `internal/markdown/parser.go` that consumes
+tokens and produces an Abstract Syntax Tree (AST) with node types for document
+structure.
 
 #### Scenario: Parser builds document structure
 
@@ -62,7 +68,8 @@ The system SHALL provide a parser in `internal/markdown/parser.go` that consumes
 
 - **WHEN** the parser encounters `### Requirement: Name`
 - **THEN** it SHALL create a `NodeRequirement` node with `Content = "Name"`
-- **AND** subsequent content until the next H2/H3 SHALL be children of the requirement
+- **AND** subsequent content until the next H2/H3 SHALL be children of the
+  requirement
 
 #### Scenario: Parser recognizes scenario headers
 
@@ -84,7 +91,8 @@ The system SHALL provide a parser in `internal/markdown/parser.go` that consumes
 
 ### Requirement: Parse Error Reporting
 
-The system SHALL provide structured parse errors with line numbers, column numbers, and contextual snippets.
+The system SHALL provide structured parse errors with line numbers, column
+numbers, and contextual snippets.
 
 #### Scenario: Error includes location
 
@@ -114,7 +122,8 @@ The system SHALL provide structured parse errors with line numbers, column numbe
 
 ### Requirement: Spec File Parsing API
 
-The system SHALL provide high-level API functions in `internal/markdown/api.go` for parsing Spectr spec files and extracting structured data.
+The system SHALL provide high-level API functions in `internal/markdown/api.go`
+for parsing Spectr spec files and extracting structured data.
 
 #### Scenario: Parse complete spec file
 
@@ -142,7 +151,8 @@ The system SHALL provide high-level API functions in `internal/markdown/api.go` 
 
 ### Requirement: Delta File Parsing API
 
-The system SHALL provide API functions for parsing delta spec files with ADDED, MODIFIED, REMOVED, and RENAMED sections.
+The system SHALL provide API functions for parsing delta spec files with ADDED,
+MODIFIED, REMOVED, and RENAMED sections.
 
 #### Scenario: Parse delta spec file
 
@@ -153,7 +163,8 @@ The system SHALL provide API functions for parsing delta spec files with ADDED, 
 #### Scenario: Extract delta section content
 
 - **WHEN** `FindDeltaSection(content, "ADDED")` is called
-- **THEN** it SHALL return the content between `## ADDED Requirements` and the next H2
+- **THEN** it SHALL return the content between `## ADDED Requirements` and the
+  next H2
 - **AND** it SHALL return empty string if section not found
 
 #### Scenario: Parse RENAMED entries
@@ -164,7 +175,8 @@ The system SHALL provide API functions for parsing delta spec files with ADDED, 
 
 ### Requirement: Wikilink Parsing
 
-The system SHALL support wikilink syntax for linking between specs and changes with optional display text and anchors.
+The system SHALL support wikilink syntax for linking between specs and changes
+with optional display text and anchors.
 
 #### Scenario: Parse simple wikilink
 
@@ -175,17 +187,21 @@ The system SHALL support wikilink syntax for linking between specs and changes w
 #### Scenario: Parse wikilink with display text
 
 - **WHEN** the lexer processes `[[validation|Validation Spec]]`
-- **THEN** it SHALL produce a `TokenWikilink` with `Target = "validation"` and `Display = "Validation Spec"`
+- **THEN** it SHALL produce a `TokenWikilink` with `Target = "validation"` and
+  `Display = "Validation Spec"`
 
 #### Scenario: Parse wikilink with anchor
 
-- **WHEN** the lexer processes `[[validation#Requirement: Spec File Validation]]`
-- **THEN** it SHALL produce a `TokenWikilink` with `Target = "validation"` and `Anchor = "Requirement: Spec File Validation"`
+- **WHEN** the lexer processes `[[validation#Requirement: Spec File
+  Validation]]`
+- **THEN** it SHALL produce a `TokenWikilink` with `Target = "validation"` and
+  `Anchor = "Requirement: Spec File Validation"`
 
 #### Scenario: Parse wikilink to change
 
 - **WHEN** the lexer processes `[[changes/replace-regex-with-parser]]`
-- **THEN** it SHALL produce a `TokenWikilink` with `Target = "changes/replace-regex-with-parser"`
+- **THEN** it SHALL produce a `TokenWikilink` with `Target =
+  "changes/replace-regex-with-parser"`
 
 #### Scenario: Wikilink resolution to spec
 
@@ -201,7 +217,8 @@ The system SHALL support wikilink syntax for linking between specs and changes w
 
 ### Requirement: Reference-Style Link Parsing
 
-The system SHALL support reference-style links with link definitions collected in a first pass and resolved during parsing.
+The system SHALL support reference-style links with link definitions collected
+in a first pass and resolved during parsing.
 
 #### Scenario: Parse link definition
 
@@ -210,7 +227,8 @@ The system SHALL support reference-style links with link definitions collected i
 
 #### Scenario: Resolve reference link
 
-- **WHEN** the parser encounters `[text][ref]` and a definition `[ref]: url` exists
+- **WHEN** the parser encounters `[text][ref]` and a definition `[ref]: url`
+  exists
 - **THEN** it SHALL create a `NodeLink` with the resolved URL
 - **AND** the display text SHALL be "text"
 
@@ -222,7 +240,8 @@ The system SHALL support reference-style links with link definitions collected i
 
 ### Requirement: Compatibility Helpers
 
-The system SHALL provide helper functions that maintain compatibility with common usage patterns from the old regex-based API.
+The system SHALL provide helper functions that maintain compatibility with
+common usage patterns from the old regex-based API.
 
 #### Scenario: Match H3 requirement header
 

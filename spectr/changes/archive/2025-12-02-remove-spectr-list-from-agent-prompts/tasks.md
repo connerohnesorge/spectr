@@ -1,6 +1,9 @@
+# Implementation Tasks
+
 ## 1. Update Agent Prompt Files
 
-- [x] 1.1 Update `spectr/AGENTS.md` to remove `spectr list` references and replace with directory reading instructions
+- [x] 1.1 Update `spectr/AGENTS.md` to remove `spectr list` references and
+  replace with directory reading instructions
 - [x] 1.2 Update `.agent/workflows/spectr-proposal.md`
 - [x] 1.3 Update `.agent/workflows/spectr-sync.md`
 - [x] 1.4 Update `.agent/workflows/spectr-apply.md`
@@ -27,5 +30,7 @@
 ## 5. Validation
 
 - [x] 5.1 Run `spectr validate remove-spectr-list-from-agent-prompts --strict`
-- [x] 5.2 Verify no remaining `spectr list` references in agent prompt files (grep check)
-- [x] 5.3 Confirm user-facing docs still have `spectr list` references (README.md, docs/)
+- [x] 5.2 Verify no remaining `spectr list` references in agent prompt files
+  (grep check)
+- [x] 5.3 Confirm user-facing docs still have `spectr list` references
+  (README.md, docs/)

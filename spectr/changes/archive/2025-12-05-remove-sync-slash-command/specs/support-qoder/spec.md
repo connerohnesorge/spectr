@@ -1,3 +1,5 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Qoder Slash Commands
@@ -26,9 +28,11 @@ The provider SHALL create slash commands in `.qoder/commands/spectr/` directory.
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** the proposal command file is created
-- **THEN** frontmatter description SHALL be "Scaffold a new Spectr change and validate strictly."
+- **THEN** frontmatter description SHALL be "Scaffold a new Spectr change and
+  validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** the apply command file is created
-- **THEN** frontmatter description SHALL be "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** frontmatter description SHALL be "Implement an approved Spectr change
+  and keep tasks in sync."

@@ -4,7 +4,8 @@
 
 ### Requirement: Validate Command Flags
 
-The validate command SHALL support flags for controlling validation behavior and output format. Validation always treats warnings as errors.
+The validate command SHALL support flags for controlling validation behavior and
+output format. Validation always treats warnings as errors.
 
 #### Scenario: Default validation behavior (always strict)
 

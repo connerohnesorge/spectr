@@ -1,18 +1,24 @@
-## ADDED Requirements
+# ADDED Requirements
+
+## Change Archive Directory Structure
 
 ### Requirement: Change Archive Directory Structure
 
-The system SHALL archive completed changes to `spectr/changes/archive/YYYY-MM-DD-<change-id>/` where YYYY-MM-DD is the current date in ISO 8601 format.
+The system SHALL archive completed changes to
+`spectr/changes/archive/YYYY-MM-DD-\<change-id\>/` where YYYY-MM-DD is the
+current date in ISO 8601 format.
 
 #### Scenario: Archive with date prefix
 
 - **WHEN** archiving a change on 2025-11-17
-- **THEN** the change is moved to `spectr/changes/archive/2025-11-17-<change-id>/`
+- **THEN** the change is moved to
+  `spectr/changes/archive/2025-11-17-\<change-id\>/`
 
 #### Scenario: Prevent duplicate archives
 
 - **WHEN** an archive with the same name already exists
-- **THEN** the system returns an error and does not overwrite the existing archive
+- **THEN** the system returns an error and does not overwrite the existing
+  archive
 
 ### Requirement: Pre-Archive Validation
 
@@ -21,27 +27,32 @@ The system SHALL validate changes before archiving to ensure spec consistency.
 #### Scenario: Validate proposal structure
 
 - **WHEN** validating a change for archive
-- **THEN** the system checks proposal.md structure and reports informational warnings
+- **THEN** the system checks proposal.md structure and reports informational
+  warnings
 
 #### Scenario: Validate delta specs strictly
 
 - **WHEN** validating delta specs
-- **THEN** the system checks for required delta operations, scenario formatting, and blocks archive on errors
+- **THEN** the system checks for required delta operations, scenario formatting,
+  and blocks archive on errors
 
 #### Scenario: Detect duplicate requirements within sections
 
 - **WHEN** a delta spec has duplicate requirement names in the same section
-- **THEN** the system returns a validation error with the duplicate requirement name
+- **THEN** the system returns a validation error with the duplicate requirement
+  name
 
 #### Scenario: Detect cross-section conflicts
 
-- **WHEN** a requirement appears in multiple delta sections (e.g., ADDED and MODIFIED)
+- **WHEN** a requirement appears in multiple delta sections (e.g., ADDED and
+  MODIFIED)
 - **THEN** the system returns a validation error indicating the conflict
 
 #### Scenario: Validate scenarios are properly formatted
 
 - **WHEN** a requirement lacks properly formatted scenarios
-- **THEN** the system returns an error requiring at least one `#### Scenario:` block per requirement
+- **THEN** the system returns an error requiring at least one `#### Scenario:`
+  block per requirement
 
 ### Requirement: Task Completion Checking
 
@@ -55,7 +66,8 @@ The system SHALL check task completion status and warn users before archiving.
 #### Scenario: Warn on incomplete tasks
 
 - **WHEN** a change has incomplete tasks
-- **THEN** the system warns the user and requires confirmation to proceed (unless --yes flag is provided)
+- **THEN** the system warns the user and requires confirmation to proceed
+  (unless --yes flag is provided)
 
 #### Scenario: Proceed with incomplete tasks when confirmed
 
@@ -64,26 +76,31 @@ The system SHALL check task completion status and warn users before archiving.
 
 ### Requirement: Delta Spec Discovery
 
-The system SHALL find all delta specifications in a change directory for processing.
+The system SHALL find all delta specifications in a change directory for
+processing.
 
 #### Scenario: Find delta specs in change
 
 - **WHEN** preparing to archive a change
-- **THEN** the system scans `spectr/changes/<id>/specs/*/spec.md` for delta specifications
+- **THEN** the system scans `spectr/changes/<id>/specs/*/spec.md` for delta
+  specifications
 
 #### Scenario: Identify corresponding main specs
 
 - **WHEN** delta specs are found
-- **THEN** the system maps them to `spectr/specs/*/spec.md` paths based on capability directory name
+- **THEN** the system maps them to `spectr/specs/*/spec.md` paths based on
+  capability directory name
 
 #### Scenario: Determine create vs update status
 
 - **WHEN** mapping delta specs to main specs
-- **THEN** the system checks if each main spec exists and marks it as "create" or "update"
+- **THEN** the system checks if each main spec exists and marks it as "create"
+  or "update"
 
 ### Requirement: Delta Operation Parsing
 
-The system SHALL parse delta operations from change spec files following a strict format.
+The system SHALL parse delta operations from change spec files following a
+strict format.
 
 #### Scenario: Parse ADDED requirements
 
@@ -102,7 +119,8 @@ The system SHALL parse delta operations from change spec files following a stric
 
 #### Scenario: Parse RENAMED requirements
 
-- **WHEN** a delta spec contains `## RENAMED Requirements` section with FROM/TO pairs
+- **WHEN** a delta spec contains `## RENAMED Requirements` section with FROM/TO
+  pairs
 - **THEN** the system extracts the old and new requirement names
 
 #### Scenario: Require at least one delta operation
@@ -112,12 +130,14 @@ The system SHALL parse delta operations from change spec files following a stric
 
 ### Requirement: Delta Operation Application Order
 
-The system SHALL apply delta operations in the order: RENAMED → REMOVED → MODIFIED → ADDED to ensure correct merging.
+The system SHALL apply delta operations in the order: RENAMED → REMOVED →
+MODIFIED → ADDED to ensure correct merging.
 
 #### Scenario: Apply RENAMED first
 
 - **WHEN** applying delta operations
-- **THEN** RENAMED operations are applied first to update requirement names before other operations
+- **THEN** RENAMED operations are applied first to update requirement names
+  before other operations
 
 #### Scenario: Apply REMOVED second
 
@@ -127,7 +147,8 @@ The system SHALL apply delta operations in the order: RENAMED → REMOVED → MO
 #### Scenario: Apply MODIFIED third
 
 - **WHEN** applying delta operations
-- **THEN** MODIFIED operations are applied after REMOVED to update existing requirements
+- **THEN** MODIFIED operations are applied after REMOVED to update existing
+  requirements
 
 #### Scenario: Apply ADDED last
 
@@ -136,7 +157,8 @@ The system SHALL apply delta operations in the order: RENAMED → REMOVED → MO
 
 ### Requirement: Requirement Name Normalization
 
-The system SHALL normalize requirement names by trimming whitespace and using case-insensitive matching to prevent duplicates.
+The system SHALL normalize requirement names by trimming whitespace and using
+case-insensitive matching to prevent duplicates.
 
 #### Scenario: Normalize whitespace
 
@@ -155,7 +177,8 @@ The system SHALL normalize requirement names by trimming whitespace and using ca
 
 ### Requirement: Spec Merging Algorithm
 
-The system SHALL merge delta operations into base specs while preserving requirement ordering.
+The system SHALL merge delta operations into base specs while preserving
+requirement ordering.
 
 #### Scenario: Preserve original requirement order
 
@@ -170,30 +193,37 @@ The system SHALL merge delta operations into base specs while preserving require
 #### Scenario: Rebuild requirements section
 
 - **WHEN** merging is complete
-- **THEN** the system reconstructs the spec with proper markdown structure and spacing
+- **THEN** the system reconstructs the spec with proper markdown structure and
+  spacing
 
 ### Requirement: New Spec Creation
 
-The system SHALL create new spec files when a delta spec has no corresponding main spec.
+The system SHALL create new spec files when a delta spec has no corresponding
+main spec.
 
 #### Scenario: Generate spec skeleton for new specs
 
 - **WHEN** creating a new spec file
-- **THEN** the system generates a skeleton with title, purpose placeholder, and requirements section
+- **THEN** the system generates a skeleton with title, purpose placeholder, and
+  requirements section
 
 #### Scenario: Restrict operations for new specs
 
 - **WHEN** creating a new spec
-- **THEN** only ADDED operations are allowed (MODIFIED/REMOVED/RENAMED return an error)
+- **THEN** only ADDED operations are allowed (MODIFIED/REMOVED/RENAMED return an
+  error)
 
 #### Scenario: Error on invalid operations for new specs
 
-- **WHEN** a delta spec for a new capability contains MODIFIED/REMOVED/RENAMED operations
-- **THEN** the system returns an error indicating only ADDED is allowed for new specs
+- **WHEN** a delta spec for a new capability contains MODIFIED/REMOVED/RENAMED
+  operations
+- **THEN** the system returns an error indicating only ADDED is allowed for new
+  specs
 
 ### Requirement: Post-Merge Validation
 
-The system SHALL validate rebuilt specs before writing them to ensure correctness.
+The system SHALL validate rebuilt specs before writing them to ensure
+correctness.
 
 #### Scenario: Validate rebuilt spec structure
 
@@ -208,16 +238,19 @@ The system SHALL validate rebuilt specs before writing them to ensure correctnes
 #### Scenario: Display validation errors
 
 - **WHEN** post-merge validation fails
-- **THEN** the system displays detailed validation errors with file paths and issue descriptions
+- **THEN** the system displays detailed validation errors with file paths and
+  issue descriptions
 
 ### Requirement: Atomic Spec Updates
 
-The system SHALL prepare all spec updates before writing to ensure all-or-nothing consistency.
+The system SHALL prepare all spec updates before writing to ensure
+all-or-nothing consistency.
 
 #### Scenario: Prepare all updates first
 
 - **WHEN** processing multiple delta specs
-- **THEN** the system builds and validates all updated specs before writing any files
+- **THEN** the system builds and validates all updated specs before writing any
+  files
 
 #### Scenario: Abort on first validation error
 
@@ -231,7 +264,8 @@ The system SHALL prepare all spec updates before writing to ensure all-or-nothin
 
 ### Requirement: Spec Update Display
 
-The system SHALL display spec update operations with clear formatting and counts.
+The system SHALL display spec update operations with clear formatting and
+counts.
 
 #### Scenario: Display specs to be updated
 
@@ -241,7 +275,8 @@ The system SHALL display spec update operations with clear formatting and counts
 #### Scenario: Display operation counts per spec
 
 - **WHEN** applying spec updates
-- **THEN** the system displays counts: "+ N added, ~ N modified, - N removed, → N renamed" per spec
+- **THEN** the system displays counts: "+ N added, ~ N modified, - N removed, →
+  N renamed" per spec
 
 #### Scenario: Display total operation counts
 
@@ -250,12 +285,14 @@ The system SHALL display spec update operations with clear formatting and counts
 
 ### Requirement: Spec Update Confirmation
 
-The system SHALL prompt for confirmation before applying spec updates unless --yes flag is provided.
+The system SHALL prompt for confirmation before applying spec updates unless
+--yes flag is provided.
 
 #### Scenario: Prompt for spec update confirmation
 
 - **WHEN** spec updates are ready to apply
-- **THEN** the system prompts "Proceed with spec updates?" and waits for user response
+- **THEN** the system prompts "Proceed with spec updates?" and waits for user
+  response
 
 #### Scenario: Skip prompt with yes flag
 
@@ -274,9 +311,11 @@ The system SHALL display clear success messages after archiving.
 #### Scenario: Display archive success
 
 - **WHEN** archive operation completes successfully
-- **THEN** the system displays "Change '<change-id>' archived as '<archive-name>'"
+- **THEN** the system displays "Change '\<change-id\>' archived as
+  '\<archive-name\>'"
 
 #### Scenario: Display spec update success
 
 - **WHEN** spec updates are applied
-- **THEN** the system displays "Specs updated successfully" after showing operation counts
+- **THEN** the system displays "Specs updated successfully" after showing
+  operation counts

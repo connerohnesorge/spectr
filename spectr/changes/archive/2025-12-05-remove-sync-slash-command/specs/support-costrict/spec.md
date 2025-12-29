@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: CoStrict Slash Commands
 
-The provider SHALL create slash commands in `.costrict/commands/spectr/` directory.
+The provider SHALL create slash commands in `.costrict/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
 

@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Kilocode Provider Configuration
@@ -20,10 +21,14 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
-- **THEN** it SHALL return a `DirectoryInitializer` for `.kilocode/commands/spectr/`
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
-- **AND** it SHALL NOT return a `ConfigFileInitializer` (Kilocode has no instruction file)
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for
+  `.kilocode/commands/spectr/`
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash
+  commands
+- **AND** it SHALL NOT return a `ConfigFileInitializer` (Kilocode has no
+  instruction file)
 
 #### Scenario: Provider priority
 
@@ -37,12 +42,14 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Kilocode Slash Commands
 
-The provider SHALL create slash commands in `.kilocode/commands/spectr/` directory.
+The provider SHALL create slash commands in `.kilocode/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
 - **WHEN** the provider returns initializers
-- **THEN** DirectoryInitializer SHALL create `.kilocode/commands/spectr/` subdirectory
+- **THEN** DirectoryInitializer SHALL create `.kilocode/commands/spectr/`
+  subdirectory
 
 #### Scenario: Command paths
 

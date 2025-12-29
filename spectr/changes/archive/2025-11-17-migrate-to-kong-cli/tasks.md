@@ -18,7 +18,8 @@
 
 - [x] 3.1 Convert init command flags to struct fields with Kong tags
 - [x] 3.2 Implement Run method for init command
-- [x] 3.3 Preserve existing init functionality (interactive/non-interactive modes)
+- [x] 3.3 Preserve existing init functionality (interactive/non-interactive
+  modes)
 - [x] 3.4 Ensure path handling and validation works identically
 
 ## 4. Update Main Entry Point

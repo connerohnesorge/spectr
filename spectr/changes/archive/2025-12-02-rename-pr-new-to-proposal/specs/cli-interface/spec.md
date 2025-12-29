@@ -4,14 +4,20 @@
 
 ### Requirement: PR Proposal Subcommand
 
-The `spectr pr proposal` subcommand SHALL create a pull request containing a Spectr change proposal for review, copying the change to an isolated git worktree without archiving. This command replaces the deprecated `spectr pr new` command.
+The `spectr pr proposal` subcommand SHALL create a pull request containing a
+Spectr change proposal for review, copying the change to an isolated git
+worktree without archiving. This command replaces the deprecated `spectr pr new`
+command.
 
-The renaming from `new` to `proposal` aligns CLI terminology with the `/spectr:proposal` slash command naming convention, creating consistent vocabulary across CLI and IDE integrations.
+The renaming from `new` to `proposal` aligns CLI terminology with the
+`/spectr:proposal` slash command naming convention, creating consistent
+vocabulary across CLI and IDE integrations.
 
 #### Scenario: Proposal PR workflow execution
 
 - **WHEN** user runs `spectr pr proposal <change-id>`
-- **THEN** the system creates a temporary git worktree on branch `spectr/<change-id>`
+- **THEN** the system creates a temporary git worktree on branch
+  `spectr/<change-id>`
 - **AND** copies the change directory from source to worktree
 - **AND** stages all changes in `spectr/` directory
 - **AND** commits with structured message for proposal review
@@ -37,7 +43,8 @@ The renaming from `new` to `proposal` aligns CLI terminology with the `/spectr:p
 #### Scenario: User runs spectr pr without subcommand
 
 - **WHEN** user runs `spectr pr` without a subcommand
-- **THEN** help text is displayed showing available subcommands (archive, proposal)
+- **THEN** help text is displayed showing available subcommands (archive,
+  proposal)
 - **AND** the command exits with code 0
 
 #### Scenario: Unique prefix match for PR proposal command

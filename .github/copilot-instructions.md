@@ -5,10 +5,13 @@ Instructions for AI coding assistants using Spectr for spec-driven development.
 
 ## TL;DR Quick Checklist
 
-- Search existing work: `spectr spec list --long`, `spectr list` (use `rg` only for full-text search)
+- Search existing work: `spectr spec list --long`, `spectr list` (use `rg` only
+  for full-text search)
 - Decide scope: new capability vs modify existing capability
-- Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`, `refactor-`)
-- Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta specs per affected capability
+- Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`, `remove-`,
+  `refactor-`)
+- Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta
+  specs per affected capability
 - Write deltas: use `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`; include at least one `#### Scenario:` per requirement
 - Validate: `spectr validate [change-id]` and fix issues
 - Request approval: Do not start implementation until proposal is approved
@@ -42,10 +45,13 @@ Skip proposal for:
 - Tests for existing behavior
 
 **Workflow**
-1. Review `spectr/project.md`, `spectr list`, and `spectr list --specs` to understand current context.
-2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`, optional `design.md`, and spec deltas under `spectr/changes/<id>/`.
+1. Review `spectr/project.md`, `spectr list`, and `spectr list --specs` to
+  understand current context.
+2. Choose a unique verb-led `change-id` and scaffold `proposal.md`, `tasks.md`,
+  optional `design.md`, and spec deltas under `spectr/changes/<id>/`.
 3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at least one `#### Scenario:` per requirement.
-4. Run `spectr validate <id>` and resolve any issues before sharing the proposal.
+4. Run `spectr validate <id>` and resolve any issues before sharing the
+  proposal.
 
 ### Stage 2: Implementing Changes
 Track these steps as TODOs and complete them one by one.
@@ -53,15 +59,19 @@ Track these steps as TODOs and complete them one by one.
 2. **Read design.md** (if exists) - Review technical decisions
 3. **Read tasks.md** - Get implementation checklist
 4. **Implement tasks sequentially** - Complete in order
-5. **Confirm completion** - Ensure every item in `tasks.md` is finished before updating statuses
-6. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
-7. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+5. **Confirm completion** - Ensure every item in `tasks.md` is finished before
+  updating statuses
+6. **Update checklist** - After all work is done, set every task to `- [x]` so
+  the list reflects reality
+7. **Approval gate** - Do not start implementation until the proposal is
+  reviewed and approved
 
 ### Stage 3: Archiving Changes
 After deployment, create separate PR to:
 - Move `changes/[name]/` → `changes/archive/YYYY-MM-DD-[name]/`
 - Update `specs/` if capabilities changed
-- Use `spectr archive <change-id> --skip-specs --yes` for tooling-only changes (always pass the change ID explicitly)
+- Use `spectr archive <change-id> --skip-specs --yes` for tooling-only changes
+  (always pass the change ID explicitly)
 - Run `spectr validate` to confirm the archived change passes checks
 
 ## Before Any Task
@@ -81,7 +91,8 @@ After deployment, create separate PR to:
 
 ### Search Guidance
 - Enumerate specs: `spectr spec list --long` (or `--json` for scripts)
-- Enumerate changes: `spectr list` (or `spectr change list --json` - deprecated but available)
+- Enumerate changes: `spectr list` (or `spectr change list --json` - deprecated
+  but available)
 - Read details directly:
   - Spec: Read `spectr/specs/<capability>/spec.md`
   - Change: Read `spectr/changes/<change-id>/proposal.md`
@@ -195,7 +206,8 @@ The system SHALL provide...
 **Reason**: [Why removing]
 **Migration**: [How to handle]
 ```
-If multiple capabilities are affected, create multiple delta files under `changes/[change-id]/specs/<capability>/spec.md`—one per capability.
+If multiple capabilities are affected, create multiple delta files under
+`changes/[change-id]/specs/<capability>/spec.md`—one per capability.
 
 4. **Create tasks.md:**
 ```markdown
@@ -208,7 +220,8 @@ If multiple capabilities are affected, create multiple delta files under `change
 
 5. **Create design.md when needed:**
 Create `design.md` if any of the following apply; otherwise omit it:
-- Cross-cutting change (multiple services/modules) or a new architectural pattern
+- Cross-cutting change (multiple services/modules) or a new architectural
+  pattern
 - New external dependency or significant data model changes
 - Security, performance, or migration complexity
 - Ambiguity that benefits from technical decisions before coding
@@ -257,7 +270,8 @@ Minimal `design.md` skeleton:
 Every requirement MUST have at least one scenario.
 
 ### Requirement Wording
-- Use SHALL/MUST for normative requirements (avoid should/may unless intentionally non-normative)
+- Use SHALL/MUST for normative requirements (avoid should/may unless
+  intentionally non-normative)
 
 ### Delta Operations
 
@@ -269,17 +283,30 @@ Every requirement MUST have at least one scenario.
 Headers matched with `trim(header)` - whitespace ignored.
 
 #### When to use ADDED vs MODIFIED
-- ADDED: Introduces a new capability or sub-capability that can stand alone as a requirement. Prefer ADDED when the change is orthogonal (e.g., adding "Slash Command Configuration") rather than altering the semantics of an existing requirement.
-- MODIFIED: Changes the behavior, scope, or acceptance criteria of an existing requirement. Always paste the full, updated requirement content (header + all scenarios). The archiver will replace the entire requirement with what you provide here; partial deltas will drop previous details.
-- RENAMED: Use when only the name changes. If you also change behavior, use RENAMED (name) plus MODIFIED (content) referencing the new name.
+- ADDED: Introduces a new capability or sub-capability that can stand alone as a
+  requirement. Prefer ADDED when the change is orthogonal (e.g., adding "Slash
+  Command Configuration") rather than altering the semantics of an existing
+  requirement.
+- MODIFIED: Changes the behavior, scope, or acceptance criteria of an existing
+  requirement. Always paste the full, updated requirement content (header + all
+  scenarios). The archiver will replace the entire requirement with what you
+  provide here; partial deltas will drop previous details.
+- RENAMED: Use when only the name changes. If you also change behavior, use
+  RENAMED (name) plus MODIFIED (content) referencing the new name.
 
-Common pitfall: Using MODIFIED to add a new concern without including the previous text. This causes loss of detail at archive time. If you aren't explicitly changing the existing requirement, add a new requirement under ADDED instead.
+Common pitfall: Using MODIFIED to add a new concern without including the
+previous text. This causes loss of detail at archive time. If you aren't
+explicitly changing the existing requirement, add a new requirement under ADDED
+instead.
 
 Authoring a MODIFIED requirement correctly:
 1) Locate the existing requirement in `spectr/specs/<capability>/spec.md`.
-2) Copy the entire requirement block (from `### Requirement: ...` through its scenarios).
-3) Paste it under `## MODIFIED Requirements` and edit to reflect the new behavior.
-4) Ensure the header text matches exactly (whitespace-insensitive) and keep at least one `#### Scenario:`.
+2) Copy the entire requirement block (from `### Requirement: ...` through its
+scenarios).
+3) Paste it under `## MODIFIED Requirements` and edit to reflect the new
+behavior.
+4) Ensure the header text matches exactly (whitespace-insensitive) and keep at
+least one `#### Scenario:`.
 
 Example for RENAMED:
 ```markdown
@@ -302,7 +329,8 @@ Example for RENAMED:
 
 **Silent scenario parsing failures**
 - Exact format required: `#### Scenario: Name`
-- Debug by reading the delta spec file directly: `spectr/changes/<change-id>/specs/<capability>/spec.md`
+- Debug by reading the delta spec file directly:
+  `spectr/changes/<change-id>/specs/<capability>/spec.md`
 
 ### Validation Tips
 
@@ -312,7 +340,8 @@ spectr validate [change]
 ```
 
 **For AI agents debugging:**
-- Read delta specs directly: `spectr/changes/<change-id>/specs/<capability>/spec.md`
+- Read delta specs directly:
+  `spectr/changes/<change-id>/specs/<capability>/spec.md`
 - Check spec content by reading: `spectr/specs/<capability>/spec.md`
 
 ## Happy Path Script

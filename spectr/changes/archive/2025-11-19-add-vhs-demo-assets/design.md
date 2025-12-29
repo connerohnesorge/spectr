@@ -2,7 +2,11 @@
 
 ## Context
 
-Spectr's documentation currently lacks visual demonstrations of the CLI in action. Users must mentally simulate command execution from text examples, which creates friction during onboarding. VHS (<https://github.com/charmbracelet/vhs>) provides a solution: scriptable terminal recordings that can be version-controlled, automated, and regenerated as the CLI evolves.
+Spectr's documentation currently lacks visual demonstrations of the CLI in
+action. Users must mentally simulate command execution from text examples, which
+creates friction during onboarding. VHS (<https://github.com/charmbracelet/vhs>)
+provides a solution: scriptable terminal recordings that can be
+version-controlled, automated, and regenerated as the CLI evolves.
 
 **Background:**
 
@@ -38,7 +42,7 @@ Spectr's documentation currently lacks visual demonstrations of the CLI in actio
 
 ### Directory Structure
 
-```
+```text
 assets/
 ├── logo.png              # Existing
 ├── vhs/                  # NEW: VHS tape source files
@@ -53,13 +57,14 @@ assets/
     ├── validate.gif
     ├── archive.gif
     └── workflow.gif
-```
+```text
 
 **Rationale:**
 
 - Keep source (`.tape`) separate from generated (`.gif`) for clarity
 - All assets in `assets/` directory maintains consistency
-- Both tapes and GIFs committed to repo (tapes for source, GIFs for users without VHS)
+- Both tapes and GIFs committed to repo (tapes for source, GIFs for users
+  without VHS)
 
 ### Demo Coverage
 
@@ -89,7 +94,7 @@ Set Height 600
 Set Padding 10
 Set Theme "Catppuccin Mocha"  # Dark theme, good readability
 Set TypingSpeed 50ms
-```
+```text
 
 **Rationale:**
 
@@ -106,21 +111,24 @@ Set TypingSpeed 50ms
 .PHONY: gifs
 gifs:
  @echo "Generating GIFs from VHS tapes..."
- @command -v vhs >/dev/null 2>&1 || { echo "VHS not installed. See: https://github.com/charmbracelet/vhs"; exit 1; }
+ @command -v vhs >/dev/null 2>&1 || \
+   { echo "VHS not installed. See: github.com/charmbracelet/vhs"; exit 1; }
  @for tape in assets/vhs/*.tape; do \
   vhs $$tape; \
  done
  @mv assets/vhs/*.gif assets/gifs/
  @echo "✓ GIFs generated in assets/gifs/"
-```
+```text
 
 **Alternatives Considered:**
 
-- **Shell script**: More portable than Makefile, but Makefile is more conventional for Go projects
+- **Shell script**: More portable than Makefile, but Makefile is more
+  conventional for Go projects
 - **Go task runner**: Overkill for simple file generation
 - **Manual execution**: Error-prone and doesn't scale
 
-**Decision:** Use Makefile target for simplicity and consistency with Go ecosystem conventions.
+**Decision:** Use Makefile target for simplicity and consistency with Go
+ecosystem conventions.
 
 ### README Integration
 
@@ -138,7 +146,7 @@ gifs:
   <source media="(prefers-color-scheme: light)" srcset="assets/gifs/init.gif">
   <img width="800" alt="Spectr init demo" src="assets/gifs/init.gif">
 </picture>
-```
+```text
 
 **Rationale:**
 
@@ -163,7 +171,7 @@ import { Image } from 'astro:assets';
 import workflowGif from '../../../assets/gifs/workflow.gif';
 
 <Image src={workflowGif} alt="Spectr workflow demo" width={800} />
-```
+```text
 
 **Rationale:**
 

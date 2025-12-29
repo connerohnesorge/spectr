@@ -2,14 +2,20 @@
 
 ## Context
 
-The `internal/init` package manages Spectr initialization, creating directory structures, templates, and configuring AI tool integrations. Currently handles 7 AI tools with both config-file and slash-command integration methods. The package has grown to ~2,000 lines with significant duplication as new tools were added incrementally without revisiting the architecture.
+The `internal/init` package manages Spectr initialization, creating directory
+structures, templates, and configuring AI tool integrations. Currently handles 7
+AI tools with both config-file and slash-command integration methods. The
+package has grown to ~2,000 lines with significant duplication as new tools were
+added incrementally without revisiting the architecture.
 
 ### Current Pain Points
 
-- Adding a new AI tool requires touching 5+ files and writing ~100 lines of boilerplate
+- Adding a new AI tool requires touching 5+ files and writing ~100 lines of
+  boilerplate
 - No compile-time safety for tool IDs (all strings, prone to typos)
 - Three different switch statements must stay in sync manually
-- Template rendering inconsistent (some use TemplateManager, some use fmt.Sprintf)
+- Template rendering inconsistent (some use TemplateManager, some use
+  fmt.Sprintf)
 - Constants duplicated across files with inconsistent naming
 
 ## Goals / Non-Goals
@@ -17,7 +23,8 @@ The `internal/init` package manages Spectr initialization, creating directory st
 ### Goals
 
 - Reduce code duplication by 60%+ (from ~1,400 to ~550 lines in affected files)
-- Make adding new tools declarative (data-driven) instead of imperative (code-driven)
+- Make adding new tools declarative (data-driven) instead of imperative
+  (code-driven)
 - Improve type safety with tool ID constants
 - Consolidate all tool configuration into single registry
 - Extract reusable utilities (marker file updates, template rendering)
@@ -61,11 +68,12 @@ type ToolConfig struct {
 type GenericConfigurator struct {
     config ToolConfig
 }
-```
+```text
 
 **Alternatives Considered**:
 
-- Keep individual structs, extract common logic: Still requires maintaining all structs
+- Keep individual structs, extract common logic: Still requires maintaining all
+  structs
 - Interface-based plugin system: Over-engineered for fixed set of 7 tools
 - Code generation: Adds build complexity without runtime benefits
 
@@ -86,7 +94,7 @@ const (
     ToolCostrict       ToolID = "costrict-"
     // ... etc
 )
-```
+```text
 
 **Alternatives Considered**:
 
@@ -96,7 +104,8 @@ const (
 
 ### Decision 3: Unified Template Rendering
 
-**Choice**: All templates go through TemplateManager, remove inline fmt.Sprintf templates
+**Choice**: All templates go through TemplateManager, remove inline fmt.Sprintf
+templates
 
 **Why**: Consistency and easier to test/maintain
 
@@ -111,7 +120,8 @@ const (
 **Alternatives Considered**:
 
 - Keep mixed approach: Inconsistent, harder to maintain
-- Move all to fmt.Sprintf: Loses template file benefits (syntax highlighting, reuse)
+- Move all to fmt.Sprintf: Loses template file benefits (syntax highlighting,
+  reuse)
 
 ### Decision 4: Extract Marker Update Utility
 
@@ -138,7 +148,7 @@ const (
 
 ### Before
 
-```
+```text
 internal/init/
 ├── configurator.go     (875 lines - configurators + marker logic)
 ├── registry.go         (146 lines - registry + mapping)
@@ -148,11 +158,11 @@ internal/init/
 ├── models.go           (78 lines)
 ├── constants.go        (16 lines - incomplete)
 ├── wizard.go           (564 lines)
-```
+```text
 
 ### After
 
-```
+```text
 internal/init/
 ├── tool_definitions.go (250 lines - all tool configs)
 ├── configurator.go     (120 lines - single generic configurator)
@@ -164,7 +174,7 @@ internal/init/
 ├── models.go           (90 lines - add ToolConfig struct)
 ├── constants.go        (50 lines - all constants, including ToolIDs)
 ├── wizard.go           (564 lines - unchanged)
-```
+```text
 
 ## Migration Strategy
 
@@ -201,11 +211,13 @@ internal/init/
 
 ### Risk: Breaking Backward Compatibility
 
-**Mitigation**: All tests pass unchanged; public API (executor.Execute) unchanged
+**Mitigation**: All tests pass unchanged; public API (executor.Execute)
+unchanged
 
 ### Risk: Introducing Bugs During Refactor
 
-**Mitigation**: Phased approach; run tests after each file change; preserve exact behavior
+**Mitigation**: Phased approach; run tests after each file change; preserve
+exact behavior
 
 ### Trade-off: More Indirection
 
@@ -228,4 +240,5 @@ internal/init/
    **Decision**: No - internal package only, no public API
 
 3. ~~Move templates to separate templates/ subpackage?~~
-   **Decision**: No - current embed pattern works well, no benefit to separate package
+   **Decision**: No - current embed pattern works well, no benefit to separate
+   package

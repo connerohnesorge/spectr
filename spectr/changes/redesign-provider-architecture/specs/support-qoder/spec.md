@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Qoder Provider Configuration
@@ -20,10 +21,14 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
-- **THEN** it SHALL return a `DirectoryInitializer` for `.qoder/commands/spectr/`
-- **AND** it SHALL return a `ConfigFileInitializer` for `QODER.md` with TemplateRef from TemplateManager
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for
+  `.qoder/commands/spectr/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `QODER.md` with
+  TemplateRef from TemplateManager
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash
+  commands
 
 #### Scenario: Provider metadata
 
@@ -34,18 +39,21 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Qoder Instruction File
 
-The provider SHALL create and maintain a `QODER.md` instruction file in the project root.
+The provider SHALL create and maintain a `QODER.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Qoder provider selected
 - **THEN** the ConfigFileInitializer creates `QODER.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!--
+  spectr:end -->` markers
 
 #### Scenario: Instruction file update
 
 - **WHEN** `spectr init` runs
-- **THEN** the ConfigFileInitializer updates the Spectr instructions block in `QODER.md`
+- **THEN** the ConfigFileInitializer updates the Spectr instructions block in
+  `QODER.md`
 - **AND** preserves existing content outside the markers
 
 ### Requirement: Qoder Slash Commands

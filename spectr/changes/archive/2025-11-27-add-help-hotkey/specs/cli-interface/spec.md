@@ -1,8 +1,12 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Help Toggle Hotkey
 
-The interactive TUI modes SHALL hide hotkey hints by default and reveal them only when the user presses `?`, reducing visual clutter while maintaining discoverability.
+The interactive TUI modes SHALL hide hotkey hints by default and reveal them
+only when the user presses `?`, reducing visual clutter while maintaining
+discoverability.
 
 #### Scenario: Default view shows minimal footer
 
@@ -34,27 +38,36 @@ The interactive TUI modes SHALL hide hotkey hints by default and reveal them onl
 #### Scenario: Help content matches mode
 
 - **WHEN** help is displayed in changes mode
-- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
+- **THEN** the help shows:
+  `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
 - **WHEN** help is displayed in specs mode
-- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit`
+- **THEN** the help shows:
+  `↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit`
 - **WHEN** help is displayed in unified mode
-- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter | q: quit`
+- **THEN** the help shows:
+  `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter |
+  q: quit`
 
 ## MODIFIED Requirements
 
 ### Requirement: Interactive List Mode
 
-The interactive list mode in `spectr list` is extended to support unified display of changes and specifications alongside existing separate modes.
+The interactive list mode in `spectr list` is extended to support unified
+display of changes and specifications alongside existing separate modes.
 
 #### Previous behavior
 
-The system displays either changes OR specs in interactive mode based on the `--specs` flag. Columns and behavior are specific to each item type.
+The system displays either changes OR specs in interactive mode based on the
+`--specs` flag. Columns and behavior are specific to each item type.
 
 #### New behavior
 
-- When `--all` is provided with `--interactive`, both changes and specs are shown together with unified columns
-- When neither `--all` nor `--specs` are provided, changes-only mode is default (backward compatible)
-- When `--specs` is provided without `--all`, specs-only mode is used (backward compatible)
+- When `--all` is provided with `--interactive`, both changes and specs are
+  shown together with unified columns
+- When neither `--all` nor `--specs` are provided, changes-only mode is default
+  (backward compatible)
+- When `--specs` is provided without `--all`, specs-only mode is used (backward
+  compatible)
 - Each item type is clearly labeled in the Type column (CHANGE or SPEC)
 - Type-aware actions apply based on selected item (edit only for specs)
 
@@ -89,14 +102,16 @@ The system displays either changes OR specs in interactive mode based on the `--
 
 #### Scenario: Help text uses minimal footer by default
 
-- **WHEN** interactive mode is displayed in any mode (changes, specs, or unified)
+- **WHEN** interactive mode is displayed in any mode (changes, specs, or
+  unified)
 - **THEN** the footer shows: item count, project path, and `?: help`
 - **AND** the full hotkey reference is hidden until `?` is pressed
 
 #### Scenario: Help text format for changes mode
 
 - **WHEN** user presses `?` in changes mode (`spectr list -I`)
-- **THEN** the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
+- **THEN** the help shows:
+  `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
 - **AND** pressing `?` again or navigating hides the help
 
 #### Scenario: Help text format for specs mode

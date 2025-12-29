@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Cline Provider Configuration
@@ -20,35 +21,44 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
-- **THEN** it SHALL return a `DirectoryInitializer` for `.clinerules/commands/spectr/`
-- **AND** it SHALL return a `ConfigFileInitializer` for `CLINE.md` with TemplateRef from TemplateManager
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for
+  `.clinerules/commands/spectr/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `CLINE.md` with
+  TemplateRef from TemplateManager
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash
+  commands
 
 ### Requirement: Cline Instruction File
 
-The provider SHALL create and maintain a `CLINE.md` instruction file in the project root.
+The provider SHALL create and maintain a `CLINE.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Cline provider selected
 - **THEN** the ConfigFileInitializer creates `CLINE.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!-- spectr:end -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!--
+  spectr:end -->` markers
 
 #### Scenario: Instruction file updates
 
 - **WHEN** `spectr init` runs in a project with Cline provider
-- **THEN** the ConfigFileInitializer updates content between markers in `CLINE.md`
+- **THEN** the ConfigFileInitializer updates content between markers in
+  `CLINE.md`
 - **AND** preserves any user content outside the markers
 
 ### Requirement: Cline Slash Commands
 
-The provider SHALL create slash commands in `.clinerules/commands/spectr/` directory.
+The provider SHALL create slash commands in `.clinerules/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
 - **WHEN** the provider returns initializers
-- **THEN** DirectoryInitializer SHALL create `.clinerules/commands/spectr/` directory
+- **THEN** DirectoryInitializer SHALL create `.clinerules/commands/spectr/`
+  directory
 
 #### Scenario: Command paths
 

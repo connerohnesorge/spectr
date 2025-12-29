@@ -23,17 +23,20 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: CoStrict Instruction File
 
-The provider SHALL create and maintain a `COSTRICT.md` instruction file in the project root.
+The provider SHALL create and maintain a `COSTRICT.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with CoStrict provider selected
 - **THEN** the system creates `COSTRICT.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` markers
 
 ### Requirement: CoStrict Slash Commands
 
-The provider SHALL create slash commands in `.costrict/commands/spectr/` directory.
+The provider SHALL create slash commands in `.costrict/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
 

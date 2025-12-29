@@ -2,7 +2,12 @@
 
 ## Context
 
-The Spectr documentation site currently uses Astro Starlight as its documentation framework with two existing plugins: starlight-site-graph and starlight-llms-txt. The site lacks visual iconography for navigation and content organization. The starlight-plugin-icons plugin can add this functionality, but it requires a significant architectural addition: UnoCSS as a build-time CSS framework.
+The Spectr documentation site currently uses Astro Starlight as its
+documentation framework with two existing plugins: starlight-site-graph and
+starlight-llms-txt. The site lacks visual iconography for navigation and content
+organization. The starlight-plugin-icons plugin can add this functionality, but
+it requires a significant architectural addition: UnoCSS as a build-time CSS
+framework.
 
 ### Current State
 
@@ -39,13 +44,17 @@ The Spectr documentation site currently uses Astro Starlight as its documentatio
 
 ### Decision 1: Use UnoCSS for Icon Processing
 
-**Rationale**: The starlight-plugin-icons plugin requires UnoCSS to render icons from Iconify at build time. This is a hard dependency, not optional.
+**Rationale**: The starlight-plugin-icons plugin requires UnoCSS to render icons
+from Iconify at build time. This is a hard dependency, not optional.
 
 **Alternatives Considered**:
 
-1. **Use Starlight's built-in icon support**: Limited to specific icon sets and requires manual SVG imports. Does not support Iconify's vast library.
-2. **Use a different icon plugin**: No other Starlight plugins provide comparable icon coverage with sidebar, code block, and component integration.
-3. **Manual icon implementation**: Would require significant custom development and maintenance.
+1. **Use Starlight's built-in icon support**: Limited to specific icon sets and
+  requires manual SVG imports. Does not support Iconify's vast library.
+2. **Use a different icon plugin**: No other Starlight plugins provide
+  comparable icon coverage with sidebar, code block, and component integration.
+3. **Manual icon implementation**: Would require significant custom development
+  and maintenance.
 
 **Trade-offs**:
 
@@ -53,14 +62,19 @@ The Spectr documentation site currently uses Astro Starlight as its documentatio
 - ✅ **Pro**: Build-time processing ensures optimal runtime performance
 - ✅ **Pro**: Official Starlight plugin with good documentation
 - ❌ **Con**: Adds UnoCSS as a new build dependency (~450KB of dev dependencies)
-- ❌ **Con**: Introduces another CSS processing layer (though scoped to icons only)
+- ❌ **Con**: Introduces another CSS processing layer (though scoped to icons
+  only)
 - ❌ **Con**: Slight increase in build complexity
 
-**Decision**: Accept UnoCSS as a dependency. The benefits of comprehensive icon support outweigh the cost of an additional build tool, especially since it's scoped to icon processing only.
+**Decision**: Accept UnoCSS as a dependency. The benefits of comprehensive icon
+support outweigh the cost of an additional build tool, especially since it's
+scoped to icon processing only.
 
 ### Decision 2: Use Wrapper Pattern for Starlight Integration
 
-**Rationale**: The plugin uses a wrapper pattern where `Icons()` wraps the entire `starlight()` configuration, rather than being added to the `plugins` array. This is the plugin's required integration method.
+**Rationale**: The plugin uses a wrapper pattern where `Icons()` wraps the
+entire `starlight()` configuration, rather than being added to the `plugins`
+array. This is the plugin's required integration method.
 
 **Configuration Pattern**:
 
@@ -78,12 +92,14 @@ Icons({
     plugins: [somePlugin()]
   }
 })
-```
+```text
 
 **Why This Pattern**:
 
-- The plugin needs to intercept and enhance sidebar configuration with icon support
-- Wrapper pattern allows the plugin to process the entire Starlight config before initialization
+- The plugin needs to intercept and enhance sidebar configuration with icon
+  support
+- Wrapper pattern allows the plugin to process the entire Starlight config
+  before initialization
 - Required for automatic icon extraction from sidebar entries
 
 **Trade-offs**:
@@ -91,19 +107,24 @@ Icons({
 - ✅ **Pro**: Enables automatic icon extraction from config
 - ✅ **Pro**: Seamless sidebar icon integration
 - ✅ **Pro**: Maintains compatibility with existing plugins in the plugins array
-- ❌ **Con**: Non-standard integration pattern compared to other Starlight plugins
+- ❌ **Con**: Non-standard integration pattern compared to other Starlight
+  plugins
 - ❌ **Con**: Requires refactoring existing config structure
 
-**Decision**: Use the wrapper pattern as required by the plugin. The integration benefits justify the configuration restructuring.
+**Decision**: Use the wrapper pattern as required by the plugin. The integration
+benefits justify the configuration restructuring.
 
 ### Decision 3: Use Phosphor Icons as Initial Collection
 
-**Rationale**: Icon collections are installed separately as `@iconify-json/*` packages. We need to choose an initial collection for the implementation.
+**Rationale**: Icon collections are installed separately as `@iconify-json/*`
+packages. We need to choose an initial collection for the implementation.
 
 **Options Evaluated**:
 
-1. **Material Design Icons** (`@iconify-json/mdi`): ~7,000 icons, comprehensive but large
-2. **Phosphor Icons** (`@iconify-json/ph`): ~6,000 icons, modern design system, duotone variants
+1. **Material Design Icons** (`@iconify-json/mdi`): ~7,000 icons, comprehensive
+  but large
+2. **Phosphor Icons** (`@iconify-json/ph`): ~6,000 icons, modern design system,
+  duotone variants
 3. **Heroicons** (`@iconify-json/heroicons`): ~300 icons, minimal but limited
 4. **Lucide** (`@iconify-json/lucide`): ~1,000 icons, popular in React ecosystem
 
@@ -112,7 +133,8 @@ Icons({
 **Reasoning**:
 
 - Modern, well-designed icon system with consistent visual language
-- Includes duotone variants for visual richness (e.g., `i-ph:rocket-launch-duotone`)
+- Includes duotone variants for visual richness (e.g.,
+  `i-ph:rocket-launch-duotone`)
 - Large enough library (~6,000 icons) for most documentation needs
 - Used in the plugin's own documentation, so well-supported
 - Additional collections can be installed on-demand later
@@ -127,7 +149,8 @@ Icons({
 
 ### Decision 4: Enable Automatic Safelist Extraction
 
-**Rationale**: The plugin offers two approaches for UnoCSS to discover icon classes:
+**Rationale**: The plugin offers two approaches for UnoCSS to discover icon
+classes:
 
 1. Manual UnoCSS content configuration to scan `astro.config.mjs`
 2. Automatic safelist extraction with `extractSafelist: true`
@@ -152,7 +175,8 @@ Icons({
 
 ### Decision 5: Minimal Initial Configuration
 
-**Rationale**: The plugin supports extensive customization (custom icon scaling, transformations, styling), but we'll start with minimal configuration.
+**Rationale**: The plugin supports extensive customization (custom icon scaling,
+transformations, styling), but we'll start with minimal configuration.
 
 **Initial Configuration**:
 
@@ -164,7 +188,7 @@ Icons({
     // existing starlight config
   }
 })
-```
+```text
 
 **Not Configuring Initially**:
 
@@ -194,19 +218,20 @@ Icons({
 
 **Before**:
 
-```
+```text
 Astro build → Starlight processing → Static site output
-```
+```text
 
 **After**:
 
-```
-Astro build → UnoCSS processing → Starlight processing (wrapped by Icons) → Static site output
+```text
+Astro build → UnoCSS processing → Starlight processing (wrapped by Icons)
+→ Static site output
 ```
 
 ### Dependency Graph
 
-```
+```text
 docs/
 ├── astro (framework)
 ├── @astrojs/starlight (docs theme)
@@ -215,7 +240,7 @@ docs/
 ├── starlight-plugin-icons (icon integration) ← NEW
 ├── starlight-site-graph (existing plugin)
 └── starlight-llms-txt (existing plugin)
-```
+```text
 
 ### File Structure Changes
 
@@ -240,13 +265,15 @@ docs/
 
 ### Risk 1: UnoCSS Conflicts with Starlight Styling
 
-**Risk**: UnoCSS and Starlight's built-in styling might conflict or create specificity issues.
+**Risk**: UnoCSS and Starlight's built-in styling might conflict or create
+specificity issues.
 
 **Likelihood**: Low - UnoCSS is scoped to icon classes only
 
 **Mitigation**:
 
-- Plugin uses `presetStarlightIcons()` which is designed for Starlight compatibility
+- Plugin uses `presetStarlightIcons()` which is designed for Starlight
+  compatibility
 - UnoCSS only processes icon classes (i-* pattern), not general utility classes
 - Thorough testing during implementation to catch any style conflicts
 
@@ -270,7 +297,8 @@ docs/
 
 ### Risk 3: Plugin Compatibility Issues
 
-**Risk**: The wrapper pattern might cause issues with existing or future Starlight plugins.
+**Risk**: The wrapper pattern might cause issues with existing or future
+Starlight plugins.
 
 **Likelihood**: Low - Existing plugins remain in plugins array
 
@@ -280,13 +308,16 @@ docs/
 - Existing plugins (site-graph, llms-txt) remain in their current location
 - Test all existing functionality after integration
 
-**Rollback**: Can revert to standard Starlight integration if compatibility issues arise
+**Rollback**: Can revert to standard Starlight integration if compatibility
+issues arise
 
-**Impact if occurs**: Loss of existing plugin functionality, need to choose between plugins
+**Impact if occurs**: Loss of existing plugin functionality, need to choose
+between plugins
 
 ### Risk 4: Icon Cache Directory Commits
 
-**Risk**: `.starlight-icons` cache directory could be accidentally committed to git.
+**Risk**: `.starlight-icons` cache directory could be accidentally committed to
+git.
 
 **Likelihood**: Medium without proper .gitignore
 
@@ -295,11 +326,13 @@ docs/
 - Add `.starlight-icons` to `.gitignore` as part of implementation
 - Document this requirement in tasks.md
 
-**Impact if occurs**: Repository bloat, unnecessary cache files in version control
+**Impact if occurs**: Repository bloat, unnecessary cache files in version
+control
 
 ## Migration Plan
 
-This is a new feature addition, not a migration, but there are integration steps:
+This is a new feature addition, not a migration, but there are integration
+steps:
 
 ### Phase 1: Dependency Installation
 
@@ -344,7 +377,8 @@ Time to rollback: ~5 minutes
 
 **Status**: Deferred
 
-**Context**: Icons in sidebar are optional per entry. We could add them during initial implementation or incrementally.
+**Context**: Icons in sidebar are optional per entry. We could add them during
+initial implementation or incrementally.
 
 **Options**:
 
@@ -365,9 +399,11 @@ Time to rollback: ~5 minutes
 
 **Status**: Deferred
 
-**Context**: We're starting with Phosphor icons. We might need Material Design Icons for code block language icons.
+**Context**: We're starting with Phosphor icons. We might need Material Design
+Icons for code block language icons.
 
-**Research Needed**: Verify whether Material Design Icons are needed for automatic code block icons, or if the plugin includes them internally.
+**Research Needed**: Verify whether Material Design Icons are needed for
+automatic code block icons, or if the plugin includes them internally.
 
 **Decision Point**: During testing phase when verifying code block icons
 
@@ -386,17 +422,21 @@ Time to rollback: ~5 minutes
   --spi-sidebar-icon-size: 1.25rem;
   --spi-sidebar-icon-gap: 0.25rem;
 }
-```
+```text
 
-**Decision**: Use defaults initially, customize only if user feedback indicates issues
+**Decision**: Use defaults initially, customize only if user feedback indicates
+issues
 
 **Review point**: After initial deployment to staging/production
 
 ## References
 
-- [starlight-plugin-icons Documentation](https://docs.rettend.me/starlight-plugin-icons)
-- [starlight-plugin-icons GitHub](https://github.com/Rettend/starlight-plugin-icons)
+- [starlight-plugin-icons
+  Documentation](https://docs.rettend.me/starlight-plugin-icons)
+- [starlight-plugin-icons
+  GitHub](https://github.com/Rettend/starlight-plugin-icons)
 - [UnoCSS Astro Integration](https://unocss.dev/integrations/astro)
 - [Iconify Icon Collections](https://icones.js.org/)
 - [Phosphor Icons](https://phosphoricons.com/)
-- [Starlight Configuration Reference](https://starlight.astro.build/reference/configuration/)
+- [Starlight Configuration
+  Reference](https://starlight.astro.build/reference/configuration/)

@@ -1,9 +1,13 @@
+# Implementation Tasks
+
 ## 1. Implementation
 
-- [x] 1.1 Create `internal/version/version.go` with version, commit, and date variables
+- [x] 1.1 Create `internal/version/version.go` with version, commit, and date
+  variables
 - [x] 1.2 Create `cmd/version.go` with VersionCmd struct and Run method
 - [x] 1.3 Add VersionCmd field to CLI struct in `cmd/root.go`
-- [x] 1.4 Update `.goreleaser.yaml` to inject ldflags for version, commit, and date
+- [x] 1.4 Update `.goreleaser.yaml` to inject ldflags for version, commit, and
+  date
 - [x] 1.5 Update `flake.nix` to inject ldflags for version in buildGoModule
 
 ## 2. Testing

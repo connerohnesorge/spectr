@@ -4,7 +4,8 @@
 
 ### Requirement: Lexer Structure
 
-The system SHALL provide a Lexer struct that tokenizes markdown source text into a stream of fine-grained tokens with zero-copy byte slice views.
+The system SHALL provide a Lexer struct that tokenizes markdown source text into
+a stream of fine-grained tokens with zero-copy byte slice views.
 
 #### Scenario: Lexer initialization
 
@@ -22,7 +23,8 @@ The system SHALL provide a Lexer struct that tokenizes markdown source text into
 
 ### Requirement: Lexer Position Tracking
 
-The system SHALL track position as byte offset only, with line/column calculable on demand.
+The system SHALL track position as byte offset only, with line/column calculable
+on demand.
 
 #### Scenario: Byte offset tracking
 
@@ -46,7 +48,8 @@ The system SHALL track position as byte offset only, with line/column calculable
 
 ### Requirement: Lexer Token Emission
 
-The system SHALL emit tokens one at a time via a Next() method that returns the next token.
+The system SHALL emit tokens one at a time via a Next() method that returns the
+next token.
 
 #### Scenario: Next token retrieval
 
@@ -58,7 +61,8 @@ The system SHALL emit tokens one at a time via a Next() method that returns the 
 #### Scenario: EOF handling
 
 - **WHEN** `Next()` is called at end of source
-- **THEN** it SHALL return `Token{Type: TokenEOF, Start: len(source), End: len(source)}`
+- **THEN** it SHALL return `Token{Type: TokenEOF, Start: len(source), End:
+  len(source)}`
 - **AND** subsequent calls SHALL continue returning `TokenEOF`
 
 #### Scenario: Peek without consuming
@@ -70,7 +74,8 @@ The system SHALL emit tokens one at a time via a Next() method that returns the 
 
 ### Requirement: Lexer CRLF Normalization
 
-The system SHALL normalize CRLF line endings while preserving accurate byte offsets.
+The system SHALL normalize CRLF line endings while preserving accurate byte
+offsets.
 
 #### Scenario: CRLF to LF normalization
 
@@ -93,7 +98,8 @@ The system SHALL normalize CRLF line endings while preserving accurate byte offs
 
 ### Requirement: Lexer Error Recovery
 
-The system SHALL emit error tokens for invalid input and continue lexing to collect all errors.
+The system SHALL emit error tokens for invalid input and continue lexing to
+collect all errors.
 
 #### Scenario: Error token emission
 
@@ -105,8 +111,10 @@ The system SHALL emit error tokens for invalid input and continue lexing to coll
 #### Scenario: Recovery after error
 
 - **WHEN** an error token is emitted
-- **THEN** the lexer SHALL attempt to resynchronize at the next recognizable boundary
-- **AND** boundaries SHALL include: newline, whitespace after newline, known delimiter
+- **THEN** the lexer SHALL attempt to resynchronize at the next recognizable
+  boundary
+- **AND** boundaries SHALL include: newline, whitespace after newline, known
+  delimiter
 - **AND** subsequent valid tokens SHALL have correct positions
 
 #### Scenario: Invalid UTF-8 handling
@@ -130,7 +138,8 @@ The system SHALL use a state machine to handle context-dependent tokenization.
 #### Scenario: Code fence content preservation
 
 - **WHEN** in `StateFencedCode` state
-- **THEN** delimiter characters (`*`, `_`, `[`, etc.) SHALL be emitted as `TokenText`
+- **THEN** delimiter characters (`*`, `_`, `[`, etc.) SHALL be emitted as
+  `TokenText`
 - **AND** no special tokenization SHALL occur within fenced code
 
 #### Scenario: Inline code state
@@ -144,7 +153,8 @@ The system SHALL use a state machine to handle context-dependent tokenization.
 
 - **WHEN** the lexer is inside `(...)` following `]`
 - **THEN** it SHALL enter `StateLinkURL`
-- **AND** special characters SHALL be treated as `TokenText` (URLs can contain `*`, `_`, etc.)
+- **AND** special characters SHALL be treated as `TokenText` (URLs can contain
+  `*`, `_`, etc.)
 
 ### Requirement: Lexer Unicode Handling
 

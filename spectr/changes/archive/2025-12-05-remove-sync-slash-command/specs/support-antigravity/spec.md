@@ -1,3 +1,5 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Antigravity Slash Commands
@@ -7,7 +9,8 @@ The provider SHALL create slash commands in `.agent/workflows/` directory.
 #### Scenario: Command directory structure
 
 - **WHEN** the provider configures slash commands
-- **THEN** it uses `.agent/workflows/` as base directory (not `.agent/commands/`)
+- **THEN** it uses `.agent/workflows/` as base directory (not
+  `.agent/commands/`)
 - **AND** all Spectr commands reside in `.agent/workflows/` subdirectory
 
 #### Scenario: Command file paths

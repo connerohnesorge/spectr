@@ -2,7 +2,10 @@
 
 ## Context
 
-The archive command completes the Spectr change lifecycle by moving deployed changes to a dated archive and applying their delta specifications to the main spec files. This is a critical workflow step that ensures specs stay synchronized with implemented changes.
+The archive command completes the Spectr change lifecycle by moving deployed
+changes to a dated archive and applying their delta specifications to the main
+spec files. This is a critical workflow step that ensures specs stay
+synchronized with implemented changes.
 
 ### Constraints
 
@@ -40,23 +43,28 @@ The archive command completes the Spectr change lifecycle by moving deployed cha
 
 ### Decision 1: Delta Operation Ordering
 
-**Choice**: Apply delta operations in strict order: RENAMED → REMOVED → MODIFIED → ADDED
+**Choice**: Apply delta operations in strict order: RENAMED → REMOVED →
+MODIFIED → ADDED
 
 **Rationale**:
 
-- RENAMED must come first to update requirement names before other operations reference them
+- RENAMED must come first to update requirement names before other operations
+  reference them
 - REMOVED must come before MODIFIED/ADDED to prevent conflicts
-- MODIFIED must come before ADDED to ensure existing requirements are updated first
+- MODIFIED must come before ADDED to ensure existing requirements are updated
+  first
 - This order matches OpenSpec's implementation and is proven to work
 
 **Alternatives considered**:
 
-- Topological sort based on dependencies: Too complex, operation order is deterministic
+- Topological sort based on dependencies: Too complex, operation order is
+  deterministic
 - User-specified order: Error-prone, strict order is safer
 
 ### Decision 2: Requirement Name Normalization
 
-**Choice**: Normalize requirement names by trimming whitespace and using case-insensitive matching
+**Choice**: Normalize requirement names by trimming whitespace and using
+case-insensitive matching
 
 **Rationale**:
 
@@ -89,12 +97,14 @@ func normalizeRequirementName(name string) string {
 
 **Alternatives considered**:
 
-- Single post-merge validation: Misses opportunities to fail fast with better error messages
+- Single post-merge validation: Misses opportunities to fail fast with better
+  error messages
 - No validation: Unacceptable risk of corrupting main specs
 
 ### Decision 4: Atomic Spec Updates
 
-**Choice**: Prepare all spec updates first (validation pass), then write all at once
+**Choice**: Prepare all spec updates first (validation pass), then write all at
+once
 
 **Rationale**:
 
@@ -104,7 +114,7 @@ func normalizeRequirementName(name string) string {
 
 **Implementation flow**:
 
-```
+```text
 1. Find all delta specs
 2. For each delta spec:
    a. Load base spec (or create skeleton)
@@ -118,7 +128,8 @@ func normalizeRequirementName(name string) string {
 
 ### Decision 5: New Spec Creation
 
-**Choice**: When archiving creates a new spec (no existing spec.md), only ADDED operations are allowed
+**Choice**: When archiving creates a new spec (no existing spec.md), only ADDED
+operations are allowed
 
 **Rationale**:
 
@@ -128,8 +139,9 @@ func normalizeRequirementName(name string) string {
 
 **Error message**:
 
-```
-<spec-name>: target spec does not exist; only ADDED requirements are allowed for new specs.
+```text
+<spec-name>: target spec does not exist; only ADDED requirements are allowed
+for new specs.
 ```
 
 ### Decision 6: Flag Design
@@ -265,7 +277,7 @@ If critical bug found:
 
 ### Package Structure
 
-```
+```text
 cmd/
   archive.go          # CLI command implementation
 
@@ -323,18 +335,23 @@ type SpecUpdate struct {
 1. **Unit tests**: Each parser, each delta operation, each validation rule
 2. **Integration tests**: Full archive workflow with realistic delta specs
 3. **Edge cases**: Empty specs, new specs, large specs, all delta types combined
-4. **Error cases**: Duplicates, conflicts, missing requirements, invalid scenarios
+4. **Error cases**: Duplicates, conflicts, missing requirements, invalid
+  scenarios
 
 ## Open Questions
 
-1. **Q**: Should we add a `--dry-run` flag to preview spec updates without applying?
-   - **A**: Defer to future enhancement. Current validation is sufficient for v1.
+1. **Q**: Should we add a `--dry-run` flag to preview spec updates without
+  applying?
+   - **A**: Defer to future enhancement. Current validation is sufficient for
+     v1.
 
 2. **Q**: Should validation be strict by default (block on warnings)?
    - **A**: Yes, match OpenSpec behavior. Use `--no-validate` as escape hatch.
 
 3. **Q**: Should we support archiving multiple changes at once?
-   - **A**: No, keep it simple. Archive one change at a time to reduce complexity.
+   - **A**: No, keep it simple. Archive one change at a time to reduce
+     complexity.
 
 4. **Q**: Should we create a git commit automatically after archiving?
-   - **A**: No, git operations are user responsibility. Archive command focuses on spec management only.
+   - **A**: No, git operations are user responsibility. Archive command focuses
+     on spec management only.

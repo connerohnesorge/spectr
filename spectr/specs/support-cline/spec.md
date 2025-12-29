@@ -23,17 +23,20 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Cline Instruction File
 
-The provider SHALL create and maintain a `CLINE.md` instruction file in the project root.
+The provider SHALL create and maintain a `CLINE.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Cline provider selected
 - **THEN** the system creates `CLINE.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` markers
 
 ### Requirement: Cline Slash Commands
 
-The provider SHALL create slash commands in `.clinerules/commands/spectr/` directory.
+The provider SHALL create slash commands in `.clinerules/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
 

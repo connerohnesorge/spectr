@@ -1,12 +1,16 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Spec File Validation
 
-The validation system SHALL validate spec files for structural correctness and adherence to Spectr conventions.
+The validation system SHALL validate spec files for structural correctness and
+adherence to Spectr conventions.
 
 #### Scenario: Valid spec with all required sections
 
-- **WHEN** a spec file contains a Requirements section with properly formatted requirements and scenarios
+- **WHEN** a spec file contains a Requirements section with properly formatted
+  requirements and scenarios
 - **THEN** validation SHALL pass with no errors
 - **AND** the validation report SHALL indicate valid=true
 
@@ -31,25 +35,30 @@ The validation system SHALL validate spec files for structural correctness and a
 
 #### Scenario: Incorrect scenario format
 
-- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or bold text)
+- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or
+  bold text)
 - **THEN** validation SHALL report an ERROR
 - **AND** the message SHALL show the correct "#### Scenario:" header format
-- **AND** detection SHALL use `markdown.MatchScenarioHeader` from the markdown parser package
+- **AND** detection SHALL use `markdown.MatchScenarioHeader` from the markdown
+  parser package
 
 #### Scenario: Parsing uses markdown parser package
 
 - **WHEN** the validation system parses spec or delta files
 - **THEN** it SHALL use functions from `internal/markdown/` package
-- **AND** it SHALL NOT import `internal/regex/` package or define local regex patterns
+- **AND** it SHALL NOT import `internal/regex/` package or define local regex
+  patterns
 - **AND** behavior SHALL be identical to previous implementation
 
 ### Requirement: Change Delta Validation
 
-The validation system SHALL validate change delta specs for structural correctness and delta operation validity.
+The validation system SHALL validate change delta specs for structural
+correctness and delta operation validity.
 
 #### Scenario: Valid change with deltas
 
-- **WHEN** a change directory contains specs with proper ADDED/MODIFIED/REMOVED/RENAMED sections
+- **WHEN** a change directory contains specs with proper
+  ADDED/MODIFIED/REMOVED/RENAMED sections
 - **THEN** validation SHALL pass with no errors
 - **AND** each delta requirement SHALL be counted toward the total
 
@@ -62,7 +71,8 @@ The validation system SHALL validate change delta specs for structural correctne
 
 #### Scenario: Delta sections present but empty
 
-- **WHEN** delta sections exist (## ADDED Requirements) but contain no requirement entries
+- **WHEN** delta sections exist (## ADDED Requirements) but contain no
+  requirement entries
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL indicate which sections are empty
 - **AND** guidance SHALL explain requirement block format
@@ -77,11 +87,13 @@ The validation system SHALL validate change delta specs for structural correctne
 
 - **WHEN** a MODIFIED requirement lacks a "#### Scenario:" block
 - **THEN** validation SHALL fail with an ERROR
-- **AND** the message SHALL require at least one scenario for MODIFIED requirements
+- **AND** the message SHALL require at least one scenario for MODIFIED
+  requirements
 
 #### Scenario: Duplicate requirement in same section
 
-- **WHEN** two requirements with the same normalized name appear in the same delta section
+- **WHEN** two requirements with the same normalized name appear in the same
+  delta section
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL identify the duplicate requirement name
 
@@ -94,7 +106,8 @@ The validation system SHALL validate change delta specs for structural correctne
 #### Scenario: RENAMED requirement validation
 
 - **WHEN** a RENAMED section contains well-formed "FROM: X TO: Y" pairs
-- **THEN** validation SHALL accept the renames using `markdown.MatchRenamedFrom` and `markdown.MatchRenamedTo` functions
+- **THEN** validation SHALL accept the renames using `markdown.MatchRenamedFrom`
+  and `markdown.MatchRenamedTo` functions
 - **AND** SHALL check for duplicate FROM or TO entries
 - **AND** SHALL error if MODIFIED references the old name instead of new name
 
@@ -105,13 +118,15 @@ The validation system SHALL validate change delta specs for structural correctne
 - **AND** delta type detection SHALL use `markdown.MatchDeltaSection`
 - **AND** requirement extraction SHALL use `markdown.MatchRequirementHeader`
 - **AND** scenario extraction SHALL use `markdown.MatchScenarioHeader`
-- **AND** section content extraction SHALL use `markdown.FindSection` or `markdown.FindDeltaSection`
+- **AND** section content extraction SHALL use `markdown.FindSection` or
+  `markdown.FindDeltaSection`
 
 ## ADDED Requirements
 
 ### Requirement: Wikilink Validation
 
-The validation system SHALL validate wikilinks in spec files to ensure all targets exist and are resolvable.
+The validation system SHALL validate wikilinks in spec files to ensure all
+targets exist and are resolvable.
 
 #### Scenario: Valid wikilink to spec
 

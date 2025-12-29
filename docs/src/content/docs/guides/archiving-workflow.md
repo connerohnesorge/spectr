@@ -1,9 +1,12 @@
 ---
 title: Archiving Workflow
-description: Learn how to archive completed changes and update specifications after deployment.
+description: Learn how to archive completed changes and update specifications
+after deployment.
 ---
 
-The archiving workflow is the final step in Spectr's change management process. After your implementation is deployed, you archive the change and update the master specifications.
+The archiving workflow is the final step in Spectr's change management process.
+After your implementation is deployed, you archive the change and update the
+master specifications.
 
 ## When to Archive
 
@@ -28,7 +31,7 @@ cat spectr/changes/<change-id>/tasks.md
 # - [x] 1.1 Task completed
 # - [x] 1.2 Task completed
 # - [x] 2.1 Task completed
-```
+```text
 
 ### 2. Archive the Change
 
@@ -40,13 +43,13 @@ spectr archive <change-id>
 
 # Non-interactive mode
 spectr archive <change-id> --yes
-```
+```text
 
 For tooling-only changes (no spec updates needed):
 
 ```bash
 spectr archive <change-id> --skip-specs --yes
-```
+```text
 
 ### 3. What Gets Archived
 
@@ -54,7 +57,8 @@ The archiver automatically:
 
 1. **Moves** `changes/<change-id>/` to `changes/archive/YYYY-MM-DD-<change-id>/`
 2. **Merges** spec deltas into `specs/` (the source of truth)
-3. **Updates** requirement content, adds new requirements, removes deprecated ones
+3. **Updates** requirement content, adds new requirements, removes deprecated
+  ones
 4. **Validates** all changes
 
 ## Archive Workflow Steps
@@ -69,15 +73,16 @@ spectr view <change-id> --json
 
 # Validate the change passes strict checks
 spectr validate <change-id>
-```
+```text
 
 ### Step 2: Run Archive
 
 ```bash
 spectr archive add-two-factor-auth --yes
-```
+```text
 
 This:
+
 - Moves the change directory to archive
 - Processes all spec deltas
 - Merges into `specs/` (master specs)
@@ -93,7 +98,7 @@ cat spectr/specs/auth/spec.md
 
 # Validate all specs pass
 spectr validate
-```
+```text
 
 ### Step 4: Commit Changes
 
@@ -107,7 +112,7 @@ git commit -m "Archive: add-two-factor-auth
 - Update auth spec with 2FA requirements
 - Update notifications spec with OTP delivery
 "
-```
+```text
 
 ## Understanding Spec Merging
 
@@ -127,7 +132,7 @@ The system SHALL support OTP-based 2FA.
 ### Requirement: Two-Factor Authentication
 The system SHALL support OTP-based 2FA.
 ...
-```
+```text
 
 ### MODIFIED Requirements
 
@@ -140,7 +145,7 @@ Users SHALL provide credentials and OTP.
 
 # Result
 # The entire requirement is replaced with the modified version
-```
+```text
 
 ### REMOVED Requirements
 
@@ -153,13 +158,13 @@ Users SHALL provide credentials and OTP.
 
 # Result
 # The requirement is removed from specs/
-```
+```text
 
 ## Example: Complete Archiving
 
 ### Before Archiving
 
-```
+```text
 spectr/
 ├── changes/
 │   └── add-2fa/
@@ -171,17 +176,17 @@ spectr/
 └── specs/
     ├── auth/spec.md       # Current auth requirements
     └── notifications/spec.md
-```
+```text
 
 ### Archive Command
 
 ```bash
 spectr archive add-2fa --yes
-```
+```text
 
 ### After Archiving
 
-```
+```text
 spectr/
 ├── changes/
 │   └── archive/
@@ -194,7 +199,7 @@ spectr/
 └── specs/
     ├── auth/spec.md       # Now includes 2FA requirements
     └── notifications/spec.md  # Now includes OTP notifications
-```
+```text
 
 ## Troubleshooting Archive Issues
 
@@ -209,7 +214,7 @@ spectr/
 spectr view auth --json | jq '.requirements[].title'
 
 # Verify your modified requirement name matches
-```
+```text
 
 ### Issue: Validation fails after archive
 
@@ -225,7 +230,7 @@ spectr validate
 cat spectr/specs/auth/spec.md
 
 # Fix manually if needed
-```
+```text
 
 ### Issue: Archive didn't move directory
 
@@ -239,7 +244,7 @@ ls spectr/changes/archive/2025-01-15-add-2fa/
 
 # Should not exist
 ls spectr/changes/add-2fa/  # Should fail
-```
+```text
 
 ## Special Cases
 
@@ -249,7 +254,7 @@ For changes that don't affect specs (e.g., CI/CD, infrastructure):
 
 ```bash
 spectr archive <change-id> --skip-specs --yes
-```
+```text
 
 This archives the change without attempting to merge specs.
 
@@ -257,13 +262,13 @@ This archives the change without attempting to merge specs.
 
 If your change modified multiple specs, the archiver handles all of them:
 
-```
+```text
 spectr/changes/add-webhook-auth/
 └── specs/
     ├── auth/spec.md           # Auth changes
     ├── api-design/spec.md     # API changes
     └── webhooks/spec.md       # Webhook changes
-```
+```text
 
 All three are merged into their respective `specs/` files automatically.
 
@@ -303,7 +308,8 @@ After archiving:
 
 ### Master Spec as Truth
 
-After archiving, the `specs/` directory is the source of truth. Older specs are replaced with merged updates from the change.
+After archiving, the `specs/` directory is the source of truth. Older specs are
+replaced with merged updates from the change.
 
 ## Further Reading
 

@@ -60,14 +60,17 @@ The provider SHALL use standard frontmatter templates for all slash commands.
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** proposal.md is created
-- **THEN** it SHALL contain frontmatter with description: "Scaffold a new Spectr change and validate strictly."
+- **THEN** it SHALL contain frontmatter with description: "Scaffold a new Spectr
+  change and validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** apply.md is created
-- **THEN** it SHALL contain frontmatter with description: "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** it SHALL contain frontmatter with description: "Implement an approved
+  Spectr change and keep tasks in sync."
 
 #### Scenario: Sync command frontmatter
 
 - **WHEN** sync.md is created
-- **THEN** it SHALL contain frontmatter with description: "Detect spec drift from code and update specs interactively."
+- **THEN** it SHALL contain frontmatter with description: "Detect spec drift
+  from code and update specs interactively."

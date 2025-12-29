@@ -4,7 +4,8 @@
 
 ### Requirement: Validate Command Structure
 
-The CLI SHALL provide a validate command for checking spec and change document correctness.
+The CLI SHALL provide a validate command for checking spec and change document
+correctness.
 
 #### Scenario: Validate command registration
 
@@ -25,7 +26,8 @@ The CLI SHALL provide a validate command for checking spec and change document c
 - **WHEN** user invokes `spectr validate --all`
 - **THEN** the command SHALL validate all changes and specs
 - **AND** SHALL print summary of results
-- **AND** SHALL display full issue details for each failed item including level, path, and message
+- **AND** SHALL display full issue details for each failed item including level,
+  path, and message
 - **AND** SHALL exit with code 1 if any item fails validation
 
 #### Scenario: Interactive validation invocation

@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Aider Provider Configuration
@@ -20,10 +21,14 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
-- **THEN** it SHALL return a `DirectoryInitializer` for `.aider/commands/spectr/`
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
-- **AND** it SHALL NOT return a `ConfigFileInitializer` (Aider has no instruction file)
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for
+  `.aider/commands/spectr/`
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash
+  commands
+- **AND** it SHALL NOT return a `ConfigFileInitializer` (Aider has no
+  instruction file)
 
 ### Requirement: Aider Slash Commands
 

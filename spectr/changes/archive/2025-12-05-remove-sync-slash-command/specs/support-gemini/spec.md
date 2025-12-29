@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Gemini Slash Commands
 
-The provider SHALL create slash commands in `.gemini/commands/spectr/` directory using TOML format.
+The provider SHALL create slash commands in `.gemini/commands/spectr/` directory
+using TOML format.
 
 #### Scenario: Command paths
 

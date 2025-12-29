@@ -2,16 +2,21 @@
 
 ## Context
 
-Spectr currently uses Cobra for CLI command handling, which requires manual command registration, flag binding, and extensive boilerplate code. As the CLI grows, this pattern becomes harder to maintain and extend. Kong offers a declarative alternative that reduces boilerplate and improves type safety.
+Spectr currently uses Cobra for CLI command handling, which requires manual
+command registration, flag binding, and extensive boilerplate code. As the CLI
+grows, this pattern becomes harder to maintain and extend. Kong offers a
+declarative alternative that reduces boilerplate and improves type safety.
 
 ## Goals / Non-Goals
 
 ### Goals
 
-- Migrate from Cobra to Kong with zero breaking changes to user-facing CLI syntax
+- Migrate from Cobra to Kong with zero breaking changes to user-facing CLI
+  syntax
 - Reduce boilerplate code in command definitions
 - Improve type safety and maintainability of CLI code
-- Maintain all existing functionality (interactive/non-interactive init, flag handling)
+- Maintain all existing functionality (interactive/non-interactive init, flag
+  handling)
 - Make future command additions simpler and more consistent
 
 ### Non-Goals
@@ -25,7 +30,8 @@ Spectr currently uses Cobra for CLI command handling, which requires manual comm
 
 ### Decision: Struct-Based Command Definition
 
-Instead of Cobra's builder pattern with `cobra.Command` structs and `AddCommand` calls, we'll use Kong's struct tags to define the CLI structure declaratively.
+Instead of Cobra's builder pattern with `cobra.Command` structs and `AddCommand`
+calls, we'll use Kong's struct tags to define the CLI structure declaratively.
 
 **Before (Cobra):**
 
@@ -51,9 +57,9 @@ type CLI struct {
 
 type InitCmd struct {
     Path           string   `arg:"" optional:"" help:"Project path"`
-    PathFlag       string   `name:"path" short:"p" help:"Project path (alternative to positional)"`
+    PathFlag       string   `name:"path" short:"p" help:"Project path (alt)"`
     Tools          []string `name:"tools" short:"t" help:"Tools to configure"`
-    NonInteractive bool     `name:"non-interactive" help:"Run in non-interactive mode"`
+    NonInteractive bool     `name:"non-interactive" help:"Non-interactive mode"`
 }
 
 func (c *InitCmd) Run() error {
@@ -61,22 +67,27 @@ func (c *InitCmd) Run() error {
 }
 ```
 
-**Rationale:** This approach reduces boilerplate, makes command structure more readable, and enables better IDE support for refactoring.
+**Rationale:** This approach reduces boilerplate, makes command structure more
+readable, and enables better IDE support for refactoring.
 
 ### Decision: Preserve Existing Flag Names and Behavior
 
-All flag names, short flags, and argument positions will remain identical to maintain backward compatibility.
+All flag names, short flags, and argument positions will remain identical to
+maintain backward compatibility.
 
 **Alternatives Considered:**
 
 - Restructure flags for better consistency → Rejected to avoid breaking changes
-- Mix Kong and Cobra temporarily → Rejected due to complexity and dependency bloat
+- Mix Kong and Cobra temporarily → Rejected due to complexity and dependency
+  bloat
 
 ### Decision: Single-Phase Migration
 
 Migrate all commands in one change rather than incrementally.
 
-**Rationale:** With only one command (`init`), incremental migration adds unnecessary complexity. A single-phase migration is cleaner and easier to review.
+**Rationale:** With only one command (`init`), incremental migration adds
+unnecessary complexity. A single-phase migration is cleaner and easier to
+review.
 
 ## Technical Approach
 
@@ -113,7 +124,8 @@ func main() {
 
 ### Method Dispatch
 
-Kong will automatically call `Run()` method on the selected command struct, eliminating the need for manual RunE function wiring.
+Kong will automatically call `Run()` method on the selected command struct,
+eliminating the need for manual RunE function wiring.
 
 ## Risks / Trade-offs
 
@@ -121,19 +133,22 @@ Kong will automatically call `Run()` method on the selected command struct, elim
 
 Kong and Cobra may parse flags slightly differently.
 
-**Mitigation:** Comprehensive testing of all flag combinations and edge cases before deployment.
+**Mitigation:** Comprehensive testing of all flag combinations and edge cases
+before deployment.
 
 ### Risk: Help Text Formatting Changes
 
 Kong's help output format differs from Cobra's.
 
-**Mitigation:** This is cosmetic and unlikely to impact users. Can be customized if needed using Kong's template options.
+**Mitigation:** This is cosmetic and unlikely to impact users. Can be customized
+if needed using Kong's template options.
 
 ### Trade-off: Community Size
 
 Cobra has a larger community than Kong.
 
-**Mitigation:** Kong is well-maintained, stable, and simpler to understand. Less community support is offset by reduced need for support due to simplicity.
+**Mitigation:** Kong is well-maintained, stable, and simpler to understand. Less
+community support is offset by reduced need for support due to simplicity.
 
 ## Migration Plan
 

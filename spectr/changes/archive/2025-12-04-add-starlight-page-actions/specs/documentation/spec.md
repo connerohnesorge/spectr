@@ -4,7 +4,9 @@
 
 ### Requirement: Page Action Buttons for Documentation
 
-The system SHALL provide page action buttons on documentation pages enabling users to quickly copy markdown content and open pages in AI chat services through the starlight-page-actions plugin.
+The system SHALL provide page action buttons on documentation pages enabling
+users to quickly copy markdown content and open pages in AI chat services
+through the starlight-page-actions plugin.
 
 #### Scenario: User copies markdown content
 
@@ -15,12 +17,16 @@ The system SHALL provide page action buttons on documentation pages enabling use
 #### Scenario: User opens page in AI chat service
 
 - **WHEN** a user clicks the "Open" dropdown button
-- **THEN** they SHALL see options to open the page in default AI chat services (ChatGPT, Claude, Gemini, etc.)
+- **THEN** they SHALL see options to open the page in default AI chat services
+  (ChatGPT, Claude, Gemini, etc.)
 - **AND** selecting an option SHALL open the documentation in the chosen service
 
 ### Requirement: Starlight Page Actions Plugin Configuration
 
-The system SHALL configure the starlight-page-actions plugin in the Astro configuration with llms.txt generation disabled to avoid conflicts with existing starlight-llms-txt plugin while enabling page action functionality with default AI service list.
+The system SHALL configure the starlight-page-actions plugin in the Astro
+configuration with llms.txt generation disabled to avoid conflicts with existing
+starlight-llms-txt plugin while enabling page action functionality with default
+AI service list.
 
 #### Scenario: Plugin is installed
 
@@ -31,16 +37,20 @@ The system SHALL configure the starlight-page-actions plugin in the Astro config
 #### Scenario: Plugin is configured with options
 
 - **WHEN** Starlight is initialized
-- **THEN** starlightPageActions() SHALL be included in the plugins array with a configuration object
-- **AND** the configuration SHALL set `llmstxt: false` to disable llms.txt generation
+- **THEN** starlightPageActions() SHALL be included in the plugins array with a
+  configuration object
+- **AND** the configuration SHALL set `llmstxt: false` to disable llms.txt
+  generation
 - **AND** the plugin SHALL use default AI services for the Open dropdown
 
 #### Scenario: No conflict with existing llms.txt plugin
 
-- **WHEN** the documentation site is built with both starlight-page-actions and starlight-llms-txt plugins
+- **WHEN** the documentation site is built with both starlight-page-actions and
+  starlight-llms-txt plugins
 - **THEN** the build SHALL complete without conflicts
 - **AND** llms.txt SHALL be generated only by the starlight-llms-txt plugin
-- **AND** page action buttons SHALL render correctly without interfering with llms.txt generation
+- **AND** page action buttons SHALL render correctly without interfering with
+  llms.txt generation
 
 #### Scenario: Plugin renders page actions
 

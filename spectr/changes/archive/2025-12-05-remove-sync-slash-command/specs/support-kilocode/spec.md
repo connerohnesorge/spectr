@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Kilocode Slash Commands
 
-The provider SHALL create slash commands in `.kilocode/commands/spectr/` directory.
+The provider SHALL create slash commands in `.kilocode/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
@@ -24,9 +27,11 @@ The provider SHALL create slash commands in `.kilocode/commands/spectr/` directo
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** proposal command is created
-- **THEN** frontmatter contains description "Scaffold a new Spectr change and validate strictly."
+- **THEN** frontmatter contains description "Scaffold a new Spectr change and
+  validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** apply command is created
-- **THEN** frontmatter contains description "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** frontmatter contains description "Implement an approved Spectr change
+  and keep tasks in sync."

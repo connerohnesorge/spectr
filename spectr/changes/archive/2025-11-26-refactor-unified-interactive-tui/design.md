@@ -1,12 +1,20 @@
+# Design Document
+
 ## Context
 
-The Spectr CLI uses Bubbletea (charmbracelet/bubbletea) for interactive TUI components. Currently, there are two main interactive implementations:
+The Spectr CLI uses Bubbletea (charmbracelet/bubbletea) for interactive TUI
+components. Currently, there are two main interactive implementations:
 
-1. **List Interactive** (`internal/list/interactive.go`): Provides interactive selection for changes, specs, and unified views. Features include clipboard copy, editor opening, archive triggering, and type filtering.
+1. **List Interactive** (`internal/list/interactive.go`): Provides interactive
+  selection for changes, specs, and unified views. Features include clipboard
+  copy, editor opening, archive triggering, and type filtering.
 
-2. **Validation Interactive** (`internal/validation/interactive.go`): Provides a menu-driven validation workflow with options to validate all items, specific types, or pick individual items.
+2. **Validation Interactive** (`internal/validation/interactive.go`): Provides a
+  menu-driven validation workflow with options to validate all items, specific
+  types, or pick individual items.
 
-Both share similar patterns but are completely independent, leading to ~1100 lines of partially duplicated code.
+Both share similar patterns but are completely independent, leading to ~1100
+lines of partially duplicated code.
 
 ## Goals / Non-Goals
 
@@ -31,16 +39,17 @@ Both share similar patterns but are completely independent, leading to ~1100 lin
 
 The new package will contain:
 
-```
+```text
 internal/tui/
 ├── styles.go      # Shared lipgloss styles, applyTableStyles
 ├── helpers.go     # truncateString, copyToClipboard
 ├── table.go       # TablePicker component for item selection
 ├── menu.go        # MenuPicker component for option selection
 └── types.go       # Shared types and interfaces
-```
+```text
 
-**Rationale:** This structure separates concerns and allows each consumer (list, validation) to compose only what they need.
+**Rationale:** This structure separates concerns and allows each consumer (list,
+validation) to compose only what they need.
 
 ### Decision: TablePicker as primary building block
 
@@ -55,8 +64,10 @@ The `TablePicker` will be a configurable table-based selector that supports:
 
 **Alternatives considered:**
 
-- Embedding bubbletea models directly - rejected as it still requires duplication of Update logic
-- Using interfaces for shared behavior - rejected as too abstract for the concrete use cases
+- Embedding bubbletea models directly - rejected as it still requires
+  duplication of Update logic
+- Using interfaces for shared behavior - rejected as too abstract for the
+  concrete use cases
 
 ### Decision: Keep domain logic in consuming packages
 
@@ -68,7 +79,8 @@ The `list` and `validation` packages will remain responsible for:
 
 The `tui` package only provides UI primitives.
 
-**Rationale:** Keeps the TUI package focused and prevents coupling to business logic.
+**Rationale:** Keeps the TUI package focused and prevents coupling to business
+logic.
 
 ### Decision: Action registration pattern
 
@@ -81,23 +93,27 @@ picker := tui.NewTablePicker(columns, rows).
     WithAction("a", "archive", archiveHandler).
     WithStandardNav().
     WithStandardQuit()
-```
+```text
 
-**Rationale:** Allows each consumer to compose exactly the actions they need without inheritance or conditionals.
+**Rationale:** Allows each consumer to compose exactly the actions they need
+without inheritance or conditionals.
 
 ## Risks / Trade-offs
 
 **Risk:** Over-abstraction
 
-- **Mitigation:** Start with only clearly shared code. If something is used in only one place, keep it there.
+- **Mitigation:** Start with only clearly shared code. If something is used in
+  only one place, keep it there.
 
 **Risk:** Breaking existing behavior
 
-- **Mitigation:** Write comprehensive tests before refactoring. Run `go test ./...` after each change.
+- **Mitigation:** Write comprehensive tests before refactoring. Run `go test
+  ./...` after each change.
 
 **Risk:** Increased complexity for simple changes
 
-- **Mitigation:** Keep the API simple. If adding a feature requires touching `internal/tui`, that's fine - it should be easy.
+- **Mitigation:** Keep the API simple. If adding a feature requires touching
+  `internal/tui`, that's fine - it should be easy.
 
 ## Migration Plan
 
@@ -114,5 +130,7 @@ Each step can be tested independently. Rollback is safe at any point.
 
 ## Open Questions
 
-- Should `copyToClipboard` move to tui package or stay in list? (Currently leaning: move to tui as it's a UI concern)
-- Should the tui package expose its own test helpers for consumers? (Currently leaning: yes, teatest patterns are complex)
+- Should `copyToClipboard` move to tui package or stay in list? (Currently
+  leaning: move to tui as it's a UI concern)
+- Should the tui package expose its own test helpers for consumers? (Currently
+  leaning: yes, teatest patterns are complex)

@@ -4,7 +4,8 @@
 
 ### Requirement: Validate Command Structure
 
-The CLI SHALL provide a validate command for checking spec and change document correctness.
+The CLI SHALL provide a validate command for checking spec and change document
+correctness.
 
 #### Scenario: Validate command registration
 
@@ -35,7 +36,8 @@ The CLI SHALL provide a validate command for checking spec and change document c
 
 ### Requirement: Validate Command Flags
 
-The validate command SHALL support flags for controlling validation behavior and output format.
+The validate command SHALL support flags for controlling validation behavior and
+output format.
 
 #### Scenario: Strict mode flag
 
@@ -97,14 +99,17 @@ The validate command SHALL provide comprehensive help documentation.
 
 ### Requirement: Positional Argument Support for Item Name
 
-The validate command SHALL accept an optional positional argument for the item to validate.
+The validate command SHALL accept an optional positional argument for the item
+to validate.
 
 #### Scenario: Optional item name argument
 
 - **WHEN** validate command is defined
 - **THEN** it SHALL have an ItemName field tagged with `arg:"" optional:""`
-- **AND** the field type SHALL be pointer to string or string with zero value check
-- **AND** omitting the argument SHALL be valid (triggers interactive or bulk mode)
+- **AND** the field type SHALL be pointer to string or string with zero value
+  check
+- **AND** omitting the argument SHALL be valid (triggers interactive or bulk
+  mode)
 
 #### Scenario: Item name provided
 

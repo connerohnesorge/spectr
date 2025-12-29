@@ -2,7 +2,10 @@
 
 ## Why
 
-The current `tasks.json` format lacks context for agents working with Spectr. Adding comprehensive header comments explains task status values, valid transitions, and the expected workflow, enabling agents to correctly update tasks without consulting external documentation.
+The current `tasks.json` format lacks context for agents working with Spectr.
+Adding comprehensive header comments explains task status values, valid
+transitions, and the expected workflow, enabling agents to correctly update
+tasks without consulting external documentation.
 
 ## What Changes
 
@@ -12,7 +15,8 @@ The current `tasks.json` format lacks context for agents working with Spectr. Ad
   - Status transitions: `pending` → `in_progress` → `completed`
   - Workflow instructions for when/how agents should update task status
 - The parser strips JSONC comments before unmarshalling
-- Legacy `tasks.json` files are silently ignored (hard break, no backward compatibility)
+- Legacy `tasks.json` files are silently ignored (hard break, no backward
+  compatibility)
 
 ## Impact
 
@@ -26,4 +30,6 @@ The current `tasks.json` format lacks context for agents working with Spectr. Ad
 
 ## Breaking Change
 
-This is a **hard break** from `tasks.json`. Existing `tasks.json` files will be silently ignored. Projects must re-run `spectr accept` to generate the new `tasks.jsonc` format.
+This is a **hard break** from `tasks.json`. Existing `tasks.json` files will be
+silently ignored. Projects must re-run `spectr accept` to generate the new
+`tasks.jsonc` format.

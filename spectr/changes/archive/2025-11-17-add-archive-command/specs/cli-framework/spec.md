@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Archive Command
 
-The CLI SHALL provide an `archive` command that moves completed changes to a dated archive directory and applies delta specifications to main specs.
+The CLI SHALL provide an `archive` command that moves completed changes to a
+dated archive directory and applies delta specifications to main specs.
 
 #### Scenario: Archive with change ID
 
@@ -12,7 +15,8 @@ The CLI SHALL provide an `archive` command that moves completed changes to a dat
 #### Scenario: Interactive archive selection
 
 - **WHEN** user runs `spectr archive` without specifying a change ID
-- **THEN** the system displays a list of active changes and prompts for selection
+- **THEN** the system displays a list of active changes and prompts for
+  selection
 
 #### Scenario: Non-interactive archiving with yes flag
 
@@ -27,7 +31,8 @@ The CLI SHALL provide an `archive` command that moves completed changes to a dat
 #### Scenario: Skip validation with confirmation
 
 - **WHEN** user runs `spectr archive <change-id> --no-validate`
-- **THEN** the system warns about skipping validation and requires confirmation unless --yes flag is also provided
+- **THEN** the system warns about skipping validation and requires confirmation
+  unless --yes flag is also provided
 
 ### Requirement: Archive Command Flags
 
@@ -46,4 +51,5 @@ The archive command SHALL support flags for controlling behavior.
 #### Scenario: No validate flag skips validation
 
 - **WHEN** user provides the `--no-validate` flag
-- **THEN** the system skips validation but requires confirmation unless --yes is also provided
+- **THEN** the system skips validation but requires confirmation unless --yes is
+  also provided

@@ -1,16 +1,23 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: PR Remove Subcommand
 
-The `spectr pr rm` subcommand SHALL create a pull request that removes a change directory from the repository, using the same git worktree isolation as other PR subcommands.
+The `spectr pr rm` subcommand SHALL create a pull request that removes a change
+directory from the repository, using the same git worktree isolation as other PR
+subcommands.
 
 The command supports aliases `r` and `remove` for convenience.
 
 #### Scenario: User runs spectr pr rm with change ID
 
-- **WHEN** user runs `spectr pr rm <change-id>`
-- **THEN** the system creates a temporary git worktree on branch `spectr/remove/<change-id>`
-- **AND** removes the change directory from `spectr/changes/<change-id>` in the worktree
+- **WHEN** user runs `spectr pr rm \<change-id\>`
+- **THEN** the system creates a temporary git worktree on branch
+  `spectr/remove/\<change-id\>`
+- **AND** removes the change directory from `spectr/changes/\<change-id\>` in
+  the
+  worktree
 - **AND** stages the deletion
 - **AND** commits with a structured message indicating removal
 - **AND** pushes the branch to origin
@@ -27,52 +34,56 @@ The command supports aliases `r` and `remove` for convenience.
 
 #### Scenario: User runs spectr pr r shorthand
 
-- **WHEN** user runs `spectr pr r <change-id>`
-- **THEN** the system executes the remove PR workflow identically to `spectr pr rm`
+- **WHEN** user runs `spectr pr r \<change-id\>`
+- **THEN** the system executes the remove PR workflow identically to `spectr pr
+  rm`
 - **AND** all flags work with the alias
 
 #### Scenario: Remove PR with draft flag
 
-- **WHEN** user runs `spectr pr rm <change-id> --draft`
+- **WHEN** user runs `spectr pr rm \<change-id\> --draft`
 - **THEN** the PR is created as a draft PR on platforms that support it
 
 #### Scenario: Remove PR with force flag
 
-- **WHEN** user runs `spectr pr rm <change-id> --force`
-- **AND** branch `spectr/remove/<change-id>` already exists on remote
+- **WHEN** user runs `spectr pr rm \<change-id\> --force`
+- **AND** branch `spectr/remove/\<change-id\>` already exists on remote
 - **THEN** the existing branch is deleted and recreated
 - **AND** the PR workflow proceeds normally
 
 #### Scenario: Remove branch conflict without force
 
-- **WHEN** user runs `spectr pr rm <change-id>`
-- **AND** branch `spectr/remove/<change-id>` already exists on remote
+- **WHEN** user runs `spectr pr rm \<change-id\>`
+- **AND** branch `spectr/remove/\<change-id\>` already exists on remote
 - **AND** `--force` flag is NOT provided
-- **THEN** an error is displayed: "branch 'spectr/remove/<change-id>' already exists on remote; use --force to delete"
+- **THEN** an error is displayed: "branch 'spectr/remove/\<change-id\>' already
+  exists on remote; use --force to delete"
 - **AND** the command exits with code 1
 
 #### Scenario: Remove PR with dry-run flag
 
-- **WHEN** user runs `spectr pr rm <change-id> --dry-run`
+- **WHEN** user runs `spectr pr rm \<change-id\> --dry-run`
 - **THEN** the system displays what would be done without executing
 - **AND** no git operations are performed
 - **AND** no PR is created
 
 #### Scenario: Remove PR with base branch flag
 
-- **WHEN** user runs `spectr pr rm <change-id> --base develop`
-- **THEN** the PR targets the `develop` branch instead of auto-detected main/master
+- **WHEN** user runs `spectr pr rm \<change-id\> --base develop`
+- **THEN** the PR targets the `develop` branch instead of auto-detected
+  main/master
 
 #### Scenario: Change does not exist
 
-- **WHEN** user runs `spectr pr rm <change-id>`
+- **WHEN** user runs `spectr pr rm \<change-id\>`
 - **AND** the change does not exist in `spectr/changes/`
-- **THEN** an error is displayed: "change '<change-id>' not found in spectr/changes/"
+- **THEN** an error is displayed: "change '\<change-id\>' not found in
+  spectr/changes/"
 - **AND** the command exits with code 1
 
 #### Scenario: Remove preserves user working directory
 
-- **WHEN** user runs `spectr pr rm <change-id>`
+- **WHEN** user runs `spectr pr rm \<change-id\>`
 - **AND** user has uncommitted changes in their working directory
 - **THEN** the user's working directory is NOT modified
 - **AND** the remove operation executes only within the isolated worktree
@@ -87,36 +98,40 @@ The command supports aliases `r` and `remove` for convenience.
 
 ### Requirement: Remove PR Branch Naming
 
-The `spectr pr rm` command SHALL use the branch naming pattern `spectr/remove/<change-id>` to clearly indicate the PR's purpose.
+The `spectr pr rm` command SHALL use the branch naming pattern
+`spectr/remove/\<change-id\>` to clearly indicate the PR's purpose.
 
 #### Scenario: Remove branch name format
 
-- **WHEN** user runs `spectr pr rm <change-id>`
-- **THEN** the branch is named `spectr/remove/<change-id>`
+- **WHEN** user runs `spectr pr rm \<change-id\>`
+- **THEN** the branch is named `spectr/remove/\<change-id\>`
 
 #### Scenario: Remove branch distinguishable from archive and proposal
 
 - **WHEN** a developer views the branch list
-- **THEN** they can distinguish remove PRs from archive and proposal PRs by the branch prefix
+- **THEN** they can distinguish remove PRs from archive and proposal PRs by the
+  branch prefix
 - **AND** `spectr/remove/*` indicates a change removal PR
 - **AND** `spectr/archive/*` indicates a completed change being archived
 - **AND** `spectr/proposal/*` indicates a change proposal for review
 
 ### Requirement: Remove PR Commit Message Format
 
-The `spectr pr rm` command SHALL generate a structured commit message that clearly indicates the removal.
+The `spectr pr rm` command SHALL generate a structured commit message that
+clearly indicates the removal.
 
 #### Scenario: Remove commit message content
 
 - **WHEN** `spectr pr rm` commits changes
 - **THEN** the commit message includes:
-  - Title: `spectr(remove): <change-id>`
-  - Removed path: `spectr/changes/<change-id>`
+  - Title: `spectr(remove): \<change-id\>`
+  - Removed path: `spectr/changes/\<change-id\>`
   - Attribution: "Generated by: spectr pr rm"
 
 ### Requirement: Remove PR Body Content
 
-The `spectr pr rm` command SHALL generate PR body content that explains the removal.
+The `spectr pr rm` command SHALL generate PR body content that explains the
+removal.
 
 #### Scenario: Remove PR body content
 

@@ -10,8 +10,10 @@
 ## 2. Create VHS Tape Files
 
 - [ ] 2.1 Create `assets/vhs/init.tape` demonstrating project initialization
-- [ ] 2.2 Create `assets/vhs/list.tape` showing list commands with specs and changes
-- [ ] 2.3 Create `assets/vhs/validate.tape` showing validation with errors and fixes
+- [ ] 2.2 Create `assets/vhs/list.tape` showing list commands with specs and
+  changes
+- [ ] 2.3 Create `assets/vhs/validate.tape` showing validation with errors and
+  fixes
 - [ ] 2.4 Create `assets/vhs/archive.tape` demonstrating the archive workflow
 - [ ] 2.5 Create `assets/vhs/workflow.tape` showing complete end-to-end workflow
 - [ ] 2.6 Test all tape files to ensure they execute correctly
@@ -29,7 +31,8 @@
 - [ ] 4.2 Add demo GIFs to README.md Command Reference sections
 - [ ] 4.3 Add demo GIFs to docs site getting-started pages
 - [ ] 4.4 Add demo GIFs to docs site command reference pages
-- [ ] 4.5 Update CONTRIBUTING.md or create docs/development.md explaining how to regenerate GIFs
+- [ ] 4.5 Update CONTRIBUTING.md or create docs/development.md explaining how to
+  regenerate GIFs
 
 ## 5. Testing and Validation
 

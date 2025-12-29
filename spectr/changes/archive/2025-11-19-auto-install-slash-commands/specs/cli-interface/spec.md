@@ -1,12 +1,19 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Automatic Slash Command Installation
 
-When a config-based AI tool is selected during initialization, the system SHALL automatically install the corresponding slash command files for that tool without requiring separate user selection.
+When a config-based AI tool is selected during initialization, the system SHALL
+automatically install the corresponding slash command files for that tool
+without requiring separate user selection.
 
-Config-based tools include those that create instruction files (e.g., `claude-code` creates `CLAUDE.md`). Slash command files are the workflow command files (e.g., `.claude/commands/spectr/proposal.md`).
+Config-based tools include those that create instruction files (e.g.,
+`claude-code` creates `CLAUDE.md`). Slash command files are the workflow command
+files (e.g., `.claude/commands/spectr/proposal.md`).
 
-This automatic installation provides users with complete Spectr integration in a single selection, eliminating the need for redundant tool entries in the wizard.
+This automatic installation provides users with complete Spectr integration in a
+single selection, eliminating the need for redundant tool entries in the wizard.
 
 #### Scenario: Claude Code auto-installs slash commands
 
@@ -21,8 +28,10 @@ This automatic installation provides users with complete Spectr integration in a
 #### Scenario: Multiple tools with slash commands selected
 
 - **WHEN** user selects both `claude-code` and `cursor` in the init wizard
-- **THEN** the system creates `CLAUDE.md` and both config + slash commands for Claude
-- **AND** the system creates `.cursor/commands/spectr-proposal.md` and slash commands for Cursor
+- **THEN** the system creates `CLAUDE.md` and both config + slash commands for
+  Claude
+- **AND** the system creates `.cursor/commands/spectr-proposal.md` and slash
+  commands for Cursor
 - **AND** all files from both tools are created and tracked separately
 - **AND** the completion screen lists all created files grouped by tool
 
@@ -30,10 +39,12 @@ This automatic installation provides users with complete Spectr integration in a
 
 - **WHEN** user runs init and selects `claude-code`
 - **AND** `.claude/commands/spectr/proposal.md` already exists
-- **THEN** the existing file's content between `<!-- spectr:START -->` and `<!-- spectr:END -->` is updated
+- **THEN** the existing file's content between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` is updated
 - **AND** the file's YAML frontmatter is preserved
 - **AND** no error occurs
-- **AND** the file is marked as "updated" rather than "created" in execution result
+- **AND** the file is marked as "updated" rather than "created" in execution
+  result
 
 #### Scenario: Config-based tool without slash mapping
 
@@ -54,21 +65,27 @@ This automatic installation provides users with complete Spectr integration in a
 
 ### Requirement: Flat Tool List in Initialization Wizard
 
-The initialization wizard SHALL present all AI tool options in a single unified flat list without visual grouping by tool type. Slash-only tool entries SHALL be removed from the registry as their functionality is now provided via automatic installation when the corresponding config-based tool is selected.
+The initialization wizard SHALL present all AI tool options in a single unified
+flat list without visual grouping by tool type. Slash-only tool entries SHALL be
+removed from the registry as their functionality is now provided via automatic
+installation when the corresponding config-based tool is selected.
 
 #### Scenario: Display only config-based tools in wizard
 
 - **WHEN** user runs `spectr init` and reaches the tool selection screen
-- **THEN** only config-based AI tools are displayed (e.g., `claude-code`, `cline`, `cursor`)
+- **THEN** only config-based AI tools are displayed (e.g., `claude-code`,
+  `cline`, `cursor`)
 - **AND** slash-only tool entries (e.g., `claude`, `kilocode`) are not shown
 - **AND** tools are sorted by priority
-- **AND** no section headers (e.g., "Config-Based Tools", "Slash Command Tools") are shown
+- **AND** no section headers (e.g., "Config-Based Tools", "Slash Command Tools")
+  are shown
 - **AND** each tool appears as a single checkbox item with its name
 
 #### Scenario: Keyboard navigation across displayed tools
 
 - **WHEN** user navigates with arrow keys (↑/↓)
-- **THEN** the cursor moves through all displayed config-based tools sequentially
+- **THEN** the cursor moves through all displayed config-based tools
+  sequentially
 - **AND** navigation is continuous without group boundaries
 - **AND** the first tool is selected by default on screen load
 

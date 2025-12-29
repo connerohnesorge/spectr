@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Continue Provider Configuration
@@ -20,10 +21,14 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
-- **THEN** it SHALL return a `DirectoryInitializer` for `.continue/commands/spectr/`
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
-- **AND** it SHALL NOT return a `ConfigFileInitializer` (Continue has no instruction file)
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for
+  `.continue/commands/spectr/`
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash
+  commands
+- **AND** it SHALL NOT return a `ConfigFileInitializer` (Continue has no
+  instruction file)
 
 #### Scenario: Provider metadata
 
@@ -33,12 +38,14 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Continue Slash Commands
 
-The provider SHALL create slash commands in `.continue/commands/spectr/` directory.
+The provider SHALL create slash commands in `.continue/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
 - **WHEN** the provider returns initializers
-- **THEN** DirectoryInitializer SHALL create `.continue/commands/spectr/` directory
+- **THEN** DirectoryInitializer SHALL create `.continue/commands/spectr/`
+  directory
 
 #### Scenario: Command paths
 

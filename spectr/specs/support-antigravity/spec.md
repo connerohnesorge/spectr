@@ -30,18 +30,21 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Antigravity Instruction File
 
-The provider SHALL create and maintain an `AGENTS.md` instruction file in the project root.
+The provider SHALL create and maintain an `AGENTS.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Antigravity provider selected
 - **THEN** the system creates `AGENTS.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` markers
 
 #### Scenario: Instruction file updates
 
 - **WHEN** `spectr init` runs for Antigravity provider
-- **THEN** the system updates content between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **THEN** the system updates content between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` markers
 - **AND** preserves content outside the markers
 
 ### Requirement: Antigravity Slash Commands
@@ -51,7 +54,8 @@ The provider SHALL create slash commands in `.agent/workflows/` directory.
 #### Scenario: Command directory structure
 
 - **WHEN** the provider configures slash commands
-- **THEN** it uses `.agent/workflows/` as base directory (not `.agent/commands/`)
+- **THEN** it uses `.agent/workflows/` as base directory (not
+  `.agent/commands/`)
 - **AND** all Spectr commands reside in `.agent/workflows/` subdirectory
 
 #### Scenario: Command file paths

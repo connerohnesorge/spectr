@@ -2,16 +2,20 @@
 
 ## 1. Dependencies and Setup
 
-- [x] 1.1 Add clipboard library to go.mod (`atotto/clipboard` or use existing `termenv` for OSC 52)
-- [x] 1.2 Verify `github.com/charmbracelet/bubbles/table` is available (already in go.mod)
+- [x] 1.1 Add clipboard library to go.mod (`atotto/clipboard` or use existing
+  `termenv` for OSC 52)
+- [x] 1.2 Verify `github.com/charmbracelet/bubbles/table` is available (already
+  in go.mod)
 - [x] 1.3 Run `go mod tidy` to ensure all dependencies are resolved
 
 ## 2. Add Interactive Flag to List Command
 
-- [x] 2.1 Add `Interactive bool` field to `ListCmd` struct in `cmd/list.go` with appropriate tags
+- [x] 2.1 Add `Interactive bool` field to `ListCmd` struct in `cmd/list.go` with
+  appropriate tags
 - [x] 2.2 Update flag documentation/help text for `-I`/`--interactive` flag
 - [x] 2.3 Add conditional logic in `Run()` to check for interactive mode
-- [x] 2.4 Ensure interactive flag is mutually validated with JSON flag (cannot use both)
+- [x] 2.4 Ensure interactive flag is mutually validated with JSON flag (cannot
+  use both)
 
 ## 3. Create Interactive Table Model
 
@@ -27,7 +31,8 @@
 
 ## 4. Implement Table Data Conversion
 
-- [x] 4.1 Create function `buildChangesTable(changes []ChangeInfo) table.Model` in `interactive.go`
+- [x] 4.1 Create function `buildChangesTable(changes []ChangeInfo) table.Model`
+  in `interactive.go`
 - [x] 4.2 Define columns: ID, Title, Deltas, Tasks (format: "completed/total")
 - [x] 4.3 Convert `[]ChangeInfo` to `[]table.Row` format
 - [x] 4.4 Create function `buildSpecsTable(specs []SpecInfo) table.Model`
@@ -47,10 +52,13 @@
 ## 6. Wire Up Interactive Mode in List Command
 
 - [x] 6.1 In `listChanges()`, check if `Interactive` flag is set
-- [x] 6.2 If interactive, call `runInteractiveChanges(changes)` instead of formatting
+- [x] 6.2 If interactive, call `runInteractiveChanges(changes)` instead of
+  formatting
 - [x] 6.3 In `listSpecs()`, check if `Interactive` flag is set
-- [x] 6.4 If interactive, call `runInteractiveSpecs(specs)` instead of formatting
-- [x] 6.5 Handle empty list case (show message and exit without starting bubbletea)
+- [x] 6.4 If interactive, call `runInteractiveSpecs(specs)` instead of
+  formatting
+- [x] 6.5 Handle empty list case (show message and exit without starting
+  bubbletea)
 
 ## 7. Create Integration Functions
 

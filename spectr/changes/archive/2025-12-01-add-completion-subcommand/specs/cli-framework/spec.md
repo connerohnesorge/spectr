@@ -1,13 +1,17 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Completion Command Structure
 
-The CLI SHALL provide a `completion` subcommand that outputs shell completion scripts for supported shells using the kong-completion library.
+The CLI SHALL provide a `completion` subcommand that outputs shell completion
+scripts for supported shells using the kong-completion library.
 
 #### Scenario: Completion command registration
 
 - **WHEN** the CLI is initialized
-- **THEN** it SHALL include a Completion field using `kongcompletion.Completion` type
+- **THEN** it SHALL include a Completion field using `kongcompletion.Completion`
+  type
 - **AND** the command SHALL be accessible via `spectr completion`
 - **AND** help text SHALL describe shell completion functionality
 
@@ -31,7 +35,8 @@ The CLI SHALL provide a `completion` subcommand that outputs shell completion sc
 
 ### Requirement: Custom Predictors for Dynamic Arguments
 
-The completion system SHALL provide context-aware suggestions for arguments that accept dynamic values like change IDs or spec IDs.
+The completion system SHALL provide context-aware suggestions for arguments that
+accept dynamic values like change IDs or spec IDs.
 
 #### Scenario: Change ID completion
 
@@ -53,7 +58,8 @@ The completion system SHALL provide context-aware suggestions for arguments that
 
 ### Requirement: Kong-Completion Integration Pattern
 
-The CLI initialization SHALL follow the kong-completion pattern where Kong is initialized, completions are registered, and then arguments are parsed.
+The CLI initialization SHALL follow the kong-completion pattern where Kong is
+initialized, completions are registered, and then arguments are parsed.
 
 #### Scenario: Initialization order
 

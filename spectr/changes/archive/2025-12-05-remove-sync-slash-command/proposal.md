@@ -4,9 +4,11 @@
 
 The `/spectr:sync` slash command is being removed because:
 
-1. The sync workflow (detecting spec drift from code) is conceptually complex and was never fully implemented
+1. The sync workflow (detecting spec drift from code) is conceptually complex
+  and was never fully implemented
 2. The agent-based approach adds overhead without clear user adoption
-3. Users who need to sync specs with code can do so manually or through simpler mechanisms
+3. Users who need to sync specs with code can do so manually or through simpler
+  mechanisms
 
 ## What Changes
 

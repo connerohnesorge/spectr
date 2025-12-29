@@ -2,7 +2,10 @@
 
 ## Why
 
-The `assets/` directory at the repository root contains media files (logo, GIFs, VHS tapes) that are primarily used by documentation. Moving them into `docs/src/assets/` consolidates documentation-related files and aligns asset location with the docs site structure.
+The `assets/` directory at the repository root contains media files (logo, GIFs,
+VHS tapes) that are primarily used by documentation. Moving them into
+`docs/src/assets/` consolidates documentation-related files and aligns asset
+location with the docs site structure.
 
 ## What Changes
 
@@ -20,4 +23,5 @@ The `assets/` directory at the repository root contains media files (logo, GIFs,
   - `assets/vhs/*.tape` (6 tape files - output paths)
   - `flake.nix` (generate-gif script)
   - `docs/src/content/docs/index.mdx` (hero image path)
-- Affected archive: Historical references in `spectr/changes/archive/` remain unchanged (historical accuracy)
+- Affected archive: Historical references in `spectr/changes/archive/` remain
+  unchanged (historical accuracy)

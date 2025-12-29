@@ -2,7 +2,11 @@
 
 ## Why
 
-The `spectr init` command currently creates a README.md file automatically when one doesn't exist. This behavior is overly opinionated - most projects either already have a README or have specific preferences about their README content and structure. Auto-generating a README can be annoying for users who want control over their project documentation.
+The `spectr init` command currently creates a README.md file automatically when
+one doesn't exist. This behavior is overly opinionated - most projects either
+already have a README or have specific preferences about their README content
+and structure. Auto-generating a README can be annoying for users who want
+control over their project documentation.
 
 ## What Changes
 

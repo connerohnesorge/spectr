@@ -2,18 +2,25 @@
 
 ## Purpose
 
-This specification defines the CLI framework structure using Kong for declarative command definitions with struct tags, supporting subcommands (archive, list, validate, view), flags, positional arguments, automatic method dispatch, and built-in help generation.
-Additionally This specification defines interactive CLI features including navigable table interfaces for list and archive commands, cross-platform clipboard operations, initialization wizard flows, and visual styling for enhanced user experience.
+This specification defines the CLI framework structure using Kong for
+declarative command definitions with struct tags, supporting subcommands
+(archive, list, validate, view), flags, positional arguments, automatic method
+dispatch, and built-in help generation.
+Additionally This specification defines interactive CLI features including
+navigable table interfaces for list and archive commands, cross-platform
+clipboard operations, initialization wizard flows, and visual styling for
+enhanced user experience.
 
 ## Requirements
 
 ### Requirement: Archive Command
 
-The CLI SHALL provide an `archive` command that moves completed changes to a dated archive directory and applies delta specifications to main specs.
+The CLI SHALL provide an `archive` command that moves completed changes to a
+dated archive directory and applies delta specifications to main specs.
 
 #### Scenario: Archive with change ID
 
-- WHEN user runs `spectr archive <change-id>`
+- WHEN user runs `spectr archive \<change-id\>`
 - THEN the system archives the specified change without prompting
 
 #### Scenario: Interactive archive selection
@@ -23,22 +30,24 @@ The CLI SHALL provide an `archive` command that moves completed changes to a dat
 
 #### Scenario: Non-interactive archiving with yes flag
 
-- WHEN user runs `spectr archive <change-id> --yes`
+- WHEN user runs `spectr archive \<change-id\> --yes`
 - THEN the system archives without any confirmation prompts
 
 #### Scenario: Skip spec updates for tooling changes
 
-- WHEN user runs `spectr archive <change-id> --skip-specs`
+- WHEN user runs `spectr archive \<change-id\> --skip-specs`
 - THEN the system archives the change without updating main specs
 
 #### Scenario: Skip validation with confirmation
 
-- WHEN user runs `spectr archive <change-id> --no-validate`
-- THEN the system warns about skipping validation and requires confirmation unless --yes flag is also provided
+- WHEN user runs `spectr archive \<change-id\> --no-validate`
+- THEN the system warns about skipping validation and requires confirmation
+  unless --yes flag is also provided
 
 ### Requirement: Positional Argument Support
 
-The CLI framework SHALL support positional arguments using struct fields tagged with `arg`.
+The CLI framework SHALL support positional arguments using struct fields tagged
+with `arg`.
 
 #### Scenario: Optional positional argument
 
@@ -54,7 +63,8 @@ The CLI framework SHALL support positional arguments using struct fields tagged 
 
 ### Requirement: Built-in Help Generation
 
-The CLI framework SHALL automatically generate help text from struct tags and types.
+The CLI framework SHALL automatically generate help text from struct tags and
+types.
 
 #### Scenario: Root help display
 
@@ -72,7 +82,8 @@ The CLI framework SHALL automatically generate help text from struct tags and ty
 
 ### Requirement: Error Handling and Exit Codes
 
-The CLI framework SHALL provide appropriate error messages and exit codes for parsing and execution failures.
+The CLI framework SHALL provide appropriate error messages and exit codes for
+parsing and execution failures.
 
 #### Scenario: Parse error handling
 
@@ -89,12 +100,14 @@ The CLI framework SHALL provide appropriate error messages and exit codes for pa
 
 ### Requirement: Backward-Compatible CLI Interface
 
-The CLI framework SHALL maintain the same command syntax and flag names as the previous implementation.
+The CLI framework SHALL maintain the same command syntax and flag names as the
+previous implementation.
 
 #### Scenario: Init command compatibility
 
 - WHEN users invoke `spectr init` with existing flag combinations
-- THEN the behavior SHALL be identical to the previous Cobra-based implementation
+- THEN the behavior SHALL be identical to the previous Cobra-based
+  implementation
 - AND all flag names SHALL remain unchanged
 - AND short flag aliases SHALL remain unchanged
 - AND positional argument handling SHALL remain unchanged
@@ -107,7 +120,8 @@ The CLI framework SHALL maintain the same command syntax and flag names as the p
 
 ### Requirement: List Command for Changes
 
-The system SHALL provide a `list` command that enumerates all active changes in the project, displaying their IDs by default.
+The system SHALL provide a `list` command that enumerates all active changes in
+the project, displaying their IDs by default.
 
 #### Scenario: List changes with IDs only
 
@@ -118,13 +132,15 @@ The system SHALL provide a `list` command that enumerates all active changes in 
 #### Scenario: List changes with details
 
 - WHEN user runs `spectr list --long`
-- THEN the system displays each change with format: `{id}: {title} [deltas {count}] [tasks {completed}/{total}]`
+- THEN the system displays each change with format: `{id}: {title} [deltas
+  {count}] [tasks {completed}/{total}]`
 - AND sorts output alphabetically by ID
 
 #### Scenario: List changes as JSON
 
 - WHEN user runs `spectr list --json`
-- THEN the system outputs a JSON array of objects with fields: `id`, `title`, `deltaCount`, `taskStatus` (with `total` and `completed`)
+- THEN the system outputs a JSON array of objects with fields: `id`, `title`,
+  `deltaCount`, `taskStatus` (with `total` and `completed`)
 - AND sorts the array by ID
 
 #### Scenario: No changes found
@@ -134,7 +150,8 @@ The system SHALL provide a `list` command that enumerates all active changes in 
 
 ### Requirement: List Command for Specs
 
-The system SHALL support a `--specs` flag that switches the list command to enumerate specifications instead of changes.
+The system SHALL support a `--specs` flag that switches the list command to
+enumerate specifications instead of changes.
 
 #### Scenario: List specs with IDs only
 
@@ -145,13 +162,15 @@ The system SHALL support a `--specs` flag that switches the list command to enum
 #### Scenario: List specs with details
 
 - WHEN user runs `spectr list --specs --long`
-- THEN the system displays each spec with format: `{id}: {title} [requirements {count}]`
+- THEN the system displays each spec with format: `{id}: {title} [requirements
+  {count}]`
 - AND sorts output alphabetically by ID
 
 #### Scenario: List specs as JSON
 
 - WHEN user runs `spectr list --specs --json`
-- THEN the system outputs a JSON array of objects with fields: `id`, `title`, `requirementCount`
+- THEN the system outputs a JSON array of objects with fields: `id`, `title`,
+  `requirementCount`
 - AND sorts the array by ID
 
 #### Scenario: No specs found
@@ -161,18 +180,22 @@ The system SHALL support a `--specs` flag that switches the list command to enum
 
 ### Requirement: Change Discovery
 
-The system SHALL discover active changes by scanning the `spectr/changes/` directory and identifying subdirectories that contain a `proposal.md` file, excluding the `archive/` directory.
+The system SHALL discover active changes by scanning the `spectr/changes/`
+directory and identifying subdirectories that contain a `proposal.md` file,
+excluding the `archive/` directory.
 
 #### Scenario: Find active changes
 
 - WHEN the system scans for changes
-- THEN it includes all subdirectories of `spectr/changes/` that contain `proposal.md`
+- THEN it includes all subdirectories of `spectr/changes/` that contain
+  `proposal.md`
 - AND excludes the `spectr/changes/archive/` directory and its contents
 - AND excludes hidden directories (starting with `.`)
 
 ### Requirement: Spec Discovery
 
-The system SHALL discover specs by scanning the `spectr/specs/` directory and identifying subdirectories that contain a `spec.md` file.
+The system SHALL discover specs by scanning the `spectr/specs/` directory and
+identifying subdirectories that contain a `spec.md` file.
 
 #### Scenario: Find specs
 
@@ -182,11 +205,14 @@ The system SHALL discover specs by scanning the `spectr/specs/` directory and id
 
 ### Requirement: Title Extraction
 
-The system SHALL extract titles from proposal and spec markdown files by finding the first level-1 heading and removing the "Change:" or "Spec:" prefix if present.
+The system SHALL extract titles from proposal and spec markdown files by finding
+the first level-1 heading and removing the "Change:" or "Spec:" prefix if
+present.
 
 #### Scenario: Extract title from proposal
 
-- WHEN the system reads a `proposal.md` file with heading `# Change: Add Feature`
+- WHEN the system reads a `proposal.md` file with heading `# Change: Add
+  Feature`
 - THEN it extracts the title as "Add Feature"
 
 #### Scenario: Extract title from spec
@@ -201,7 +227,8 @@ The system SHALL extract titles from proposal and spec markdown files by finding
 
 ### Requirement: Task Counting
 
-The system SHALL count tasks from `tasks.jsonc` or `tasks.md` files. Legacy `tasks.json` files are silently ignored (breaking change).
+The system SHALL count tasks from `tasks.jsonc` or `tasks.md` files. Legacy
+`tasks.json` files are silently ignored (breaking change).
 
 #### Scenario: Count tasks from JSONC
 
@@ -213,14 +240,16 @@ The system SHALL count tasks from `tasks.jsonc` or `tasks.md` files. Legacy `tas
 
 #### Scenario: Count tasks from Markdown
 
-- WHEN the system counts tasks and `tasks.jsonc` does not exist but `tasks.md` exists
+- WHEN the system counts tasks and `tasks.jsonc` does not exist but `tasks.md`
+  exists
 - THEN it identifies lines matching `- [ ]` or `- [x]` (case-insensitive)
 - AND counts completed tasks by `[x]` markers
 - AND reports `taskStatus` with total and completed counts
 
 #### Scenario: Ignore legacy tasks.json
 
-- WHEN the system counts tasks and only `tasks.json` exists (no `tasks.jsonc` or `tasks.md`)
+- WHEN the system counts tasks and only `tasks.json` exists (no `tasks.jsonc` or
+  `tasks.md`)
 - THEN it reports `taskStatus` as `{ total: 0, completed: 0 }`
 - AND does NOT read the legacy `tasks.json` file
 
@@ -238,7 +267,8 @@ The system SHALL count tasks from `tasks.jsonc` or `tasks.md` files. Legacy `tas
 
 ### Requirement: Validate Command
 
-The CLI SHALL provide a validate command for checking spec and change document correctness.
+The CLI SHALL provide a validate command for checking spec and change document
+correctness.
 
 #### Scenario: Validate command registration
 
@@ -249,7 +279,7 @@ The CLI SHALL provide a validate command for checking spec and change document c
 
 #### Scenario: Direct item validation invocation
 
-- WHEN user invokes `spectr validate <item-name>`
+- WHEN user invokes `spectr validate \<item-name\>`
 - THEN the command SHALL validate the named item (change or spec)
 - AND SHALL print validation results to stdout
 - AND SHALL exit with code 0 for valid, 1 for invalid
@@ -259,7 +289,8 @@ The CLI SHALL provide a validate command for checking spec and change document c
 - WHEN user invokes `spectr validate --all`
 - THEN the command SHALL validate all changes and specs
 - AND SHALL print summary of results
-- AND SHALL display full issue details for each failed item including level, path, and message
+- AND SHALL display full issue details for each failed item including level,
+  path, and message
 - AND SHALL exit with code 1 if any item fails validation
 
 #### Scenario: Interactive validation invocation
@@ -270,7 +301,7 @@ The CLI SHALL provide a validate command for checking spec and change document c
 
 #### Scenario: Default validation behavior (always strict)
 
-- WHEN user runs `spectr validate <item>` without any strict flag
+- WHEN user runs `spectr validate \<item\>` without any strict flag
 - THEN validation SHALL treat warnings as errors
 - AND exit code SHALL be 1 if warnings or errors exist
 - AND validation report SHALL show valid=false for any issues
@@ -322,7 +353,8 @@ The validate command SHALL provide comprehensive help documentation.
 
 ### Requirement: Positional Argument Support for Item Name
 
-The validate command SHALL accept an optional positional argument for the item to validate.
+The validate command SHALL accept an optional positional argument for the item
+to validate.
 
 #### Scenario: Optional item name argument
 
@@ -340,7 +372,9 @@ The validate command SHALL accept an optional positional argument for the item t
 
 ### Requirement: View Command
 
-The CLI SHALL provide a `view` command that displays a comprehensive project dashboard with summary metrics, active changes, completed changes, and specifications.
+The CLI SHALL provide a `view` command that displays a comprehensive project
+dashboard with summary metrics, active changes, completed changes, and
+specifications.
 
 #### Scenario: View command registration
 
@@ -369,18 +403,24 @@ The CLI SHALL provide a `view` command that displays a comprehensive project das
 #### Scenario: JSON structure
 
 - WHEN user provides `--json` flag
-- THEN output SHALL be a JSON object with top-level fields: `summary`, `activeChanges`, `completedChanges`, `specs`
-- AND `summary` SHALL contain: `totalSpecs`, `totalRequirements`, `activeChanges`, `completedChanges`, `totalTasks`, `completedTasks`
-- AND `activeChanges` SHALL be an array of objects with: `id`, `title`, `progress` (object with `total`, `completed`, `percentage`)
+- THEN output SHALL be a JSON object with top-level fields: `summary`,
+  `activeChanges`, `completedChanges`, `specs`
+- AND `summary` SHALL contain: `totalSpecs`, `totalRequirements`,
+  `activeChanges`, `completedChanges`, `totalTasks`, `completedTasks`
+- AND `activeChanges` SHALL be an array of objects with: `id`, `title`,
+  `progress` (object with `total`, `completed`, `percentage`)
 - AND `completedChanges` SHALL be an array of objects with: `id`, `title`
-- AND `specs` SHALL be an array of objects with: `id`, `title`, `requirementCount`
+- AND `specs` SHALL be an array of objects with: `id`, `title`,
+  `requirementCount`
 
 #### Scenario: JSON arrays sorted consistently
 
 - WHEN outputting JSON
-- THEN `activeChanges` array SHALL be sorted by percentage ascending, then ID alphabetically
+- THEN `activeChanges` array SHALL be sorted by percentage ascending, then ID
+  alphabetically
 - AND `completedChanges` array SHALL be sorted by ID alphabetically
-- AND `specs` array SHALL be sorted by requirementCount descending, then ID alphabetically
+- AND `specs` array SHALL be sorted by requirementCount descending, then ID
+  alphabetically
 
 #### Scenario: JSON with no items
 
@@ -390,7 +430,8 @@ The CLI SHALL provide a `view` command that displays a comprehensive project das
 
 ### Requirement: Dashboard Summary Metrics
 
-The view command SHALL display summary metrics aggregating key project statistics in a dedicated section at the top of the dashboard.
+The view command SHALL display summary metrics aggregating key project
+statistics in a dedicated section at the top of the dashboard.
 
 #### Scenario: Display summary with all metrics
 
@@ -414,12 +455,14 @@ The view command SHALL display summary metrics aggregating key project statistic
 - WHEN aggregating task progress
 - THEN the system SHALL sum all tasks from all active changes
 - AND SHALL count completed tasks (marked `[x]`)
-- AND SHALL calculate overall percentage as `(completedTasks / totalTasks) * 100`
+- AND SHALL calculate overall percentage as `(completedTasks / totalTasks) *
+  100`
 - AND SHALL handle division by zero (display 0% if no tasks)
 
 ### Requirement: Active Changes Display
 
-The view command SHALL display active changes with visual progress bars showing task completion status.
+The view command SHALL display active changes with visual progress bars showing
+task completion status.
 
 #### Scenario: List active changes with progress
 
@@ -428,7 +471,8 @@ The view command SHALL display active changes with visual progress bars showing 
 - AND SHALL show a progress bar rendered with block characters
 - AND SHALL show completion percentage after the progress bar
 - AND SHALL use yellow circle indicator (◉) before each change
-- AND SHALL sort changes by completion percentage ascending, then by ID alphabetically
+- AND SHALL sort changes by completion percentage ascending, then by ID
+  alphabetically
 
 #### Scenario: Render progress bar
 
@@ -454,7 +498,8 @@ The view command SHALL display active changes with visual progress bars showing 
 
 ### Requirement: Completed Changes Display
 
-The view command SHALL display changes that have all tasks completed or no tasks defined.
+The view command SHALL display changes that have all tasks completed or no tasks
+defined.
 
 #### Scenario: List completed changes
 
@@ -478,7 +523,8 @@ The view command SHALL display changes that have all tasks completed or no tasks
 
 ### Requirement: Specifications Display
 
-The view command SHALL display all specifications sorted by requirement count to highlight complexity.
+The view command SHALL display all specifications sorted by requirement count to
+highlight complexity.
 
 #### Scenario: List specifications with requirement counts
 
@@ -486,7 +532,8 @@ The view command SHALL display all specifications sorted by requirement count to
 - THEN each spec SHALL show its ID padded to 30 characters
 - AND SHALL show requirement count with format `{count} requirement(s)`
 - AND SHALL use blue square indicator (▪) before each spec
-- AND SHALL sort specs by requirement count descending, then by ID alphabetically
+- AND SHALL sort specs by requirement count descending, then by ID
+  alphabetically
 
 #### Scenario: Pluralize requirement label
 
@@ -502,7 +549,8 @@ The view command SHALL display all specifications sorted by requirement count to
 
 ### Requirement: Dashboard Visual Formatting
 
-The view command SHALL use colored output, Unicode box-drawing characters, and consistent styling for visual clarity.
+The view command SHALL use colored output, Unicode box-drawing characters, and
+consistent styling for visual clarity.
 
 #### Scenario: Render dashboard header
 
@@ -535,7 +583,8 @@ The view command SHALL use colored output, Unicode box-drawing characters, and c
 
 ### Requirement: Sorting Strategy
 
-The view command SHALL sort dashboard items to surface the most relevant information first.
+The view command SHALL sort dashboard items to surface the most relevant
+information first.
 
 #### Scenario: Sort active changes by priority
 
@@ -559,7 +608,7 @@ The view command SHALL sort dashboard items to surface the most relevant informa
 
 The view command SHALL provide comprehensive help documentation.
 
-#### Scenario: Command help display
+#### Scenario: View command help display
 
 - WHEN user invokes `spectr view --help`
 - THEN help text SHALL describe dashboard purpose
@@ -568,7 +617,9 @@ The view command SHALL provide comprehensive help documentation.
 
 ### Requirement: Provider Interface
 
-The init system SHALL define a `Provider` interface that all AI CLI tool integrations implement, with one provider per tool handling both instruction files and slash commands.
+The init system SHALL define a `Provider` interface that all AI CLI tool
+integrations implement, with one provider per tool handling both instruction
+files and slash commands.
 
 #### Scenario: Provider interface methods
 
@@ -576,17 +627,24 @@ The init system SHALL define a `Provider` interface that all AI CLI tool integra
 - THEN it SHALL implement `ID() string` returning a unique kebab-case identifier
 - AND it SHALL implement `Name() string` returning the human-readable name
 - AND it SHALL implement `Priority() int` returning display order
-- AND it SHALL implement `ConfigFile() string` returning instruction file path or empty string
-- AND it SHALL implement `GetProposalCommandPath() string` returning relative path for proposal command or empty string
-- AND it SHALL implement `GetApplyCommandPath() string` returning relative path for apply command or empty string
-- AND it SHALL implement `CommandFormat() CommandFormat` returning Markdown or TOML
-- AND it SHALL implement `Configure(projectPath, spectrDir string) error` for configuration
-- AND it SHALL implement `IsConfigured(projectPath string) bool` for status checks
+- AND it SHALL implement `ConfigFile() string` returning instruction file path
+  or empty string
+- AND it SHALL implement `GetProposalCommandPath() string` returning relative
+  path for proposal command or empty string
+- AND it SHALL implement `GetApplyCommandPath() string` returning relative path
+  for apply command or empty string
+- AND it SHALL implement `CommandFormat() CommandFormat` returning Markdown or
+  TOML
+- AND it SHALL implement `Configure(projectPath, spectrDir string) error` for
+  configuration
+- AND it SHALL implement `IsConfigured(projectPath string) bool` for status
+  checks
 
 #### Scenario: Single provider per tool
 
 - WHEN a tool has both an instruction file and slash commands
-- THEN one provider SHALL handle both (e.g., ClaudeProvider handles CLAUDE.md and .claude/commands/)
+- THEN one provider SHALL handle both (e.g., ClaudeProvider handles CLAUDE.md
+  and .claude/commands/)
 - AND there SHALL NOT be separate config and slash providers for the same tool
 
 #### Scenario: Flexible command paths
@@ -600,12 +658,15 @@ The init system SHALL define a `Provider` interface that all AI CLI tool integra
 #### Scenario: HasSlashCommands detection
 
 - WHEN code calls `HasSlashCommands()` on a provider
-- THEN it SHALL return true if ANY command path method returns a non-empty string
-- AND it SHALL return false only if ALL command path methods return empty strings
+- THEN it SHALL return true if ANY command path method returns a non-empty
+  string
+- AND it SHALL return false only if ALL command path methods return empty
+  strings
 
 ### Requirement: Command Format Support
 
-The init system SHALL support multiple command file formats through the `CommandFormat` type.
+The init system SHALL support multiple command file formats through the
+`CommandFormat` type.
 
 #### Scenario: Markdown command format
 
@@ -622,7 +683,8 @@ The init system SHALL support multiple command file formats through the `Command
 
 ### Requirement: Version Command Structure
 
-The CLI SHALL provide a `version` command that displays version information including version number, git commit hash, and build date.
+The CLI SHALL provide a `version` command that displays version information
+including version number, git commit hash, and build date.
 
 #### Scenario: Version command registration
 
@@ -634,7 +696,8 @@ The CLI SHALL provide a `version` command that displays version information incl
 #### Scenario: Version command invocation
 
 - WHEN user runs `spectr version` without flags
-- THEN the system displays version in format: `spectr version {version} (commit: {commit}, built: {date})`
+- THEN the system displays version in format: `spectr version {version} (commit:
+  {commit}, built: {date})`
 - AND version SHALL be the semantic version (e.g., `0.1.0` or `dev`)
 - AND commit SHALL be the git commit hash (short or full) or `unknown`
 - AND date SHALL be the build date in ISO 8601 format or `unknown`
@@ -654,7 +717,8 @@ The CLI SHALL provide a `version` command that displays version information incl
 
 ### Requirement: Version Variable Injection
 
-The version information SHALL be injectable at build time via Go ldflags, supporting both goreleaser releases and nix flake builds.
+The version information SHALL be injectable at build time via Go ldflags,
+supporting both goreleaser releases and nix flake builds.
 
 #### Scenario: Goreleaser version injection
 
@@ -678,12 +742,14 @@ The version information SHALL be injectable at build time via Go ldflags, suppor
 
 ### Requirement: Completion Command Structure
 
-The CLI SHALL provide a `completion` subcommand that outputs shell completion scripts for supported shells using the kong-completion library.
+The CLI SHALL provide a `completion` subcommand that outputs shell completion
+scripts for supported shells using the kong-completion library.
 
 #### Scenario: Completion command registration
 
 - WHEN the CLI is initialized
-- THEN it SHALL include a Completion field using `kongcompletion.Completion` type
+- THEN it SHALL include a Completion field using `kongcompletion.Completion`
+  type
 - AND the command SHALL be accessible via `spectr completion`
 - AND help text SHALL describe shell completion functionality
 
@@ -707,7 +773,8 @@ The CLI SHALL provide a `completion` subcommand that outputs shell completion sc
 
 ### Requirement: Custom Predictors for Dynamic Arguments
 
-The completion system SHALL provide context-aware suggestions for arguments that accept dynamic values like change IDs or spec IDs.
+The completion system SHALL provide context-aware suggestions for arguments that
+accept dynamic values like change IDs or spec IDs.
 
 #### Scenario: Change ID completion
 
@@ -729,7 +796,9 @@ The completion system SHALL provide context-aware suggestions for arguments that
 
 ### Requirement: Accept Command Structure
 
-The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.jsonc` format with header comments for stable agent manipulation during implementation.
+The CLI SHALL provide an `accept` command that converts `tasks.md` to
+`tasks.jsonc` format with header comments for stable agent manipulation during
+implementation.
 
 #### Scenario: Accept command registration
 
@@ -740,41 +809,43 @@ The CLI SHALL provide an `accept` command that converts `tasks.md` to `tasks.jso
 
 #### Scenario: Accept with change ID
 
-- WHEN user runs `spectr accept <change-id>`
-- THEN the system validates the change exists in `spectr/changes/<change-id>/`
+- WHEN user runs `spectr accept \<change-id\>`
+- THEN the system validates the change exists in `spectr/changes/\<change-id\>/`
 - AND the system parses `tasks.md` into structured format
 - AND the system writes `tasks.jsonc` with proper schema and header comments
 - AND the system removes `tasks.md` to prevent drift
 
 #### Scenario: Accept with validation
 
-- WHEN user runs `spectr accept <change-id>`
+- WHEN user runs `spectr accept \<change-id\>`
 - THEN the system validates the change before conversion
 - AND if validation fails, the system aborts
 - AND the system displays validation errors
 
 #### Scenario: Accept dry-run mode
 
-- WHEN user runs `spectr accept <change-id> --dry-run`
+- WHEN user runs `spectr accept \<change-id\> --dry-run`
 - THEN the system displays what would be converted
 - AND the system does NOT write tasks.jsonc
 - AND the system does NOT remove tasks.md
 
 #### Scenario: Accept already accepted change
 
-- WHEN user runs `spectr accept <change-id>` on a change that already has tasks.jsonc
+- WHEN user runs `spectr accept \<change-id\>` on a change that already has
+  tasks.jsonc
 - THEN the system displays a message indicating change is already accepted
 - AND the system exits with code 0 (success, idempotent)
 
 #### Scenario: Accept change without tasks.md
 
-- WHEN user runs `spectr accept <change-id>` on a change without tasks.md
+- WHEN user runs `spectr accept \<change-id\>` on a change without tasks.md
 - THEN the system displays an error indicating no tasks.md found
 - AND the system exits with code 1
 
 ### Requirement: Tasks JSON Schema
 
-The accept command SHALL generate `tasks.jsonc` files conforming to a versioned schema with structured task objects and header comments.
+The accept command SHALL generate `tasks.jsonc` files conforming to a versioned
+schema with structured task objects and header comments.
 
 #### Scenario: JSONC file structure
 
@@ -789,19 +860,26 @@ The accept command SHALL generate `tasks.jsonc` files conforming to a versioned 
 - WHEN the accept command creates tasks.jsonc
 - THEN the header SHALL use `//` line comment syntax
 - AND the header SHALL indicate the file is machine-generated by `spectr accept`
-- AND the header SHALL document the three valid status values: "pending", "in_progress", "completed"
-- AND the header SHALL document valid status transitions: pending → in_progress → completed
-- AND the header SHALL explain that agents should mark a task "in_progress" when starting work
-- AND the header SHALL explain that agents should mark a task "completed" only after verification
-- AND the header SHALL note that skipping directly from "pending" to "completed" is allowed for trivial tasks
+- AND the header SHALL document the three valid status values: "pending",
+  "in_progress", "completed"
+- AND the header SHALL document valid status transitions: pending → in_progress
+  → completed
+- AND the header SHALL explain that agents should mark a task "in_progress" when
+  starting work
+- AND the header SHALL explain that agents should mark a task "completed" only
+  after verification
+- AND the header SHALL note that skipping directly from "pending" to "completed"
+  is allowed for trivial tasks
 
 #### Scenario: Task object structure
 
 - WHEN a task is serialized to JSONC
 - THEN it SHALL have `id` field containing the task identifier (e.g., "1.1")
-- AND it SHALL have `section` field containing the section header (e.g., "Implementation")
+- AND it SHALL have `section` field containing the section header (e.g.,
+  "Implementation")
 - AND it SHALL have `description` field containing the full task text
-- AND it SHALL have `status` field with value "pending", "in_progress", or "completed"
+- AND it SHALL have `status` field with value "pending", "in_progress", or
+  "completed"
 
 #### Scenario: Status value mapping from Markdown
 
@@ -827,13 +905,15 @@ The accept command SHALL support flags for controlling behavior.
 
 ### Requirement: List Command Alias
 
-The `spectr list` command SHALL support `ls` as a shorthand alias, allowing users to invoke `spectr ls` as equivalent to `spectr list`.
+The `spectr list` command SHALL support `ls` as a shorthand alias, allowing
+users to invoke `spectr ls` as equivalent to `spectr list`.
 
 #### Scenario: User runs spectr ls shorthand
 
 - WHEN user runs `spectr ls`
 - THEN the system displays the list of changes identically to `spectr list`
-- AND all flags (`--specs`, `--all`, `--long`, `--json`, `--interactive`) work with the alias
+- AND all flags (`--specs`, `--all`, `--long`, `--json`, `--interactive`) work
+  with the alias
 
 #### Scenario: User runs spectr ls with flags
 
@@ -849,7 +929,9 @@ The `spectr list` command SHALL support `ls` as a shorthand alias, allowing user
 
 ### Requirement: Item Name Path Normalization
 
-Commands accepting item names (validate, archive, accept) SHALL normalize path arguments to extract the item ID and infer the item type from the path structure.
+Commands accepting item names (validate, archive, accept) SHALL normalize path
+arguments to extract the item ID and infer the item type from the path
+structure.
 
 #### Scenario: Path with spectr/changes prefix
 
@@ -859,7 +941,8 @@ Commands accepting item names (validate, archive, accept) SHALL normalize path a
 
 #### Scenario: Path with spectr/changes prefix and trailing content
 
-- WHEN user runs a command with argument `spectr/changes/my-change/specs/foo/spec.md`
+- WHEN user runs a command with argument
+  `spectr/changes/my-change/specs/foo/spec.md`
 - THEN the system SHALL extract `my-change` as the item ID
 - AND SHALL infer the item type as "change"
 
@@ -883,19 +966,22 @@ Commands accepting item names (validate, archive, accept) SHALL normalize path a
 
 #### Scenario: Absolute path normalization
 
-- WHEN user runs a command with argument `/home/user/project/spectr/changes/my-change`
+- WHEN user runs a command with argument
+  `/home/user/project/spectr/changes/my-change`
 - THEN the system SHALL extract `my-change` as the item ID
 - AND SHALL infer the item type as "change"
 
 #### Scenario: Inferred type precedence
 
-- WHEN user provides a path argument that contains `spectr/changes/` or `spectr/specs/`
+- WHEN user provides a path argument that contains `spectr/changes/` or
+  `spectr/specs/`
 - THEN the inferred type from path SHALL be used for validation
 - AND SHALL NOT trigger "exists as both change and spec" ambiguity errors
 
 ### Requirement: Interactive List Mode
 
-The interactive list mode in `spectr list` is extended to support unified display of changes and specifications alongside existing separate modes.
+The interactive list mode in `spectr list` is extended to support unified
+display of changes and specifications alongside existing separate modes.
 
 #### Scenario: Default behavior unchanged
 
@@ -935,7 +1021,8 @@ The interactive list mode in `spectr list` is extended to support unified displa
 #### Scenario: Help text format for changes mode
 
 - WHEN user presses `?` in changes mode (`spectr list -I`)
-- THEN the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
+- THEN the help shows:
+  `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
 - AND pressing `?` again or navigating hides the help
 
 #### Scenario: Help text format for specs mode
@@ -946,7 +1033,8 @@ The interactive list mode in `spectr list` is extended to support unified displa
 
 ### Requirement: Clipboard Copy on Selection
 
-When a user presses Enter on a selected row in interactive mode, the item's ID SHALL be copied to the system clipboard.
+When a user presses Enter on a selected row in interactive mode, the item's ID
+SHALL be copied to the system clipboard.
 
 #### Scenario: Copy change ID to clipboard
 
@@ -989,7 +1077,8 @@ Users SHALL be able to exit interactive mode using standard quit commands.
 
 ### Requirement: Table Visual Styling
 
-The interactive table SHALL use clear visual styling to distinguish headers, selected rows, and borders, provided by the shared `internal/tui` package.
+The interactive table SHALL use clear visual styling to distinguish headers,
+selected rows, and borders, provided by the shared `internal/tui` package.
 
 #### Scenario: Visual hierarchy in table
 
@@ -1002,10 +1091,12 @@ The interactive table SHALL use clear visual styling to distinguish headers, sel
 
 #### Scenario: Consistent styling across commands
 
-- WHEN user uses `spectr list -I`, `spectr archive`, or `spectr validate` interactive modes
+- WHEN user uses `spectr list -I`, `spectr archive`, or `spectr validate`
+  interactive modes
 - THEN all tables SHALL use identical styling
 - AND colors, borders, and highlights SHALL match exactly
-- AND the shared `tui.ApplyTableStyles()` function SHALL be the single source of truth
+- AND the shared `tui.ApplyTableStyles()` function SHALL be the single source of
+  truth
 
 ### Requirement: Cross-Platform Clipboard Support
 
@@ -1035,7 +1126,9 @@ Clipboard operations SHALL work across Linux, macOS, and Windows platforms.
 
 ### Requirement: Initialization Next Steps Message
 
-The `spectr init` command SHALL display a formatted "Next steps" message after successful initialization that provides users with clear, actionable guidance for getting started with Spectr.
+The `spectr init` command SHALL display a formatted "Next steps" message after
+successful initialization that provides users with clear, actionable guidance
+for getting started with Spectr.
 
 The message SHALL include:
 
@@ -1044,7 +1137,9 @@ The message SHALL include:
 3. References to key Spectr files and documentation
 4. Placeholder text that users can customize (e.g., "[YOUR FEATURE HERE]")
 
-The init command SHALL NOT automatically create project files outside the `spectr/` directory (such as README.md). Users maintain full control over their project's root-level documentation.
+The init command SHALL NOT automatically create project files outside the
+`spectr/` directory (such as README.md). Users maintain full control over their
+project's root-level documentation.
 
 #### Scenario: Interactive mode initialization succeeds
 
@@ -1073,28 +1168,36 @@ The init command SHALL NOT automatically create project files outside the `spect
 - WHEN the next steps message is displayed
 - THEN step 1 SHALL guide users to populate spectr/project.md
 - AND step 2 SHALL guide users to create their first change proposal
-- AND step 3 SHALL guide users to learn the Spectr workflow from spectr/AGENTS.md
+- AND step 3 SHALL guide users to learn the Spectr workflow from
+  spectr/AGENTS.md
 - AND each step SHALL include a complete, copy-paste ready prompt in quotes
-- AND the message SHALL include a visual separator using dashes or similar characters
+- AND the message SHALL include a visual separator using dashes or similar
+  characters
 
 #### Scenario: Init does not create README
 
 - WHEN a user runs `spectr init` on a project without a README.md
 - THEN the init command SHALL NOT create a README.md file
 - AND only files within the `spectr/` directory SHALL be created
-- AND tool-specific files (e.g., CLAUDE.md, .cursor/) SHALL be created as configured
+- AND tool-specific files (e.g., CLAUDE.md, .cursor/) SHALL be created as
+  configured
 
 ### Requirement: Flat Tool List in Initialization Wizard
 
-The initialization wizard SHALL present all AI tool options in a single unified flat list without visual grouping by tool type. Slash-only tool entries SHALL be removed from the registry as their functionality is now provided via automatic installation when the corresponding config-based tool is selected.
+The initialization wizard SHALL present all AI tool options in a single unified
+flat list without visual grouping by tool type. Slash-only tool entries SHALL be
+removed from the registry as their functionality is now provided via automatic
+installation when the corresponding config-based tool is selected.
 
 #### Scenario: Display only config-based tools in wizard
 
 - WHEN user runs `spectr init` and reaches the tool selection screen
-- THEN only config-based AI tools are displayed (e.g., `claude-code`, `cline`, `cursor`)
+- THEN only config-based AI tools are displayed (e.g., `claude-code`, `cline`,
+  `cursor`)
 - AND slash-only tool entries (e.g., `claude`, `kilocode`) are not shown
 - AND tools are sorted by priority
-- AND no section headers (e.g., "Config-Based Tools", "Slash Command Tools") are shown
+- AND no section headers (e.g., "Config-Based Tools", "Slash Command Tools") are
+  shown
 - AND each tool appears as a single checkbox item with its name
 
 #### Scenario: Keyboard navigation across displayed tools
@@ -1135,7 +1238,10 @@ The initialization wizard SHALL present all AI tool options in a single unified 
 
 ### Requirement: Interactive Archive Mode
 
-The archive command SHALL provide an interactive table interface when no change ID argument is provided or when the `-I` or `--interactive` flag is used, displaying available changes in a navigable table format identical to the list command's interactive mode with project path information.
+The archive command SHALL provide an interactive table interface when no change
+ID argument is provided or when the `-I` or `--interactive` flag is used,
+displaying available changes in a navigable table format identical to the list
+command's interactive mode with project path information.
 
 #### Scenario: User runs archive with no arguments
 
@@ -1177,19 +1283,21 @@ The archive command SHALL provide an interactive table interface when no change 
 
 #### Scenario: Archive with explicit change ID bypasses interactive mode
 
-- WHEN user runs `spectr archive <change-id>`
+- WHEN user runs `spectr archive \<change-id\>`
 - THEN interactive mode is NOT triggered
 - AND archive proceeds directly with the specified change ID
 - AND behavior is unchanged from current implementation
 
 ### Requirement: Archive Interactive Table Display
 
-The archive command's interactive table SHALL display the same information columns as the list command to help users make informed archiving decisions.
+The archive command's interactive table SHALL display the same information
+columns as the list command to help users make informed archiving decisions.
 
 #### Scenario: Table columns match list command
 
 - WHEN archive interactive mode is displayed
-- THEN columns are: ID (30 chars), Title (40 chars), Deltas (10 chars), Tasks (15 chars)
+- THEN columns are: ID (30 chars), Title (40 chars), Deltas (10 chars), Tasks
+  (15 chars)
 - AND column widths match the list -I command exactly
 - AND title text is truncated with ellipsis if longer than 38 characters
 - AND task status shows format "completed/total" (e.g., "5/10")
@@ -1205,39 +1313,47 @@ The archive command's interactive table SHALL display the same information colum
 
 ### Requirement: Archive Selection Without Clipboard
 
-The archive command's interactive mode SHALL NOT copy the selected change ID to the clipboard, unlike the list command, since the ID is immediately consumed by the archive workflow.
+The archive command's interactive mode SHALL NOT copy the selected change ID to
+the clipboard, unlike the list command, since the ID is immediately consumed by
+the archive workflow.
 
 #### Scenario: Enter key captures selection
 
 - WHEN user presses Enter on a selected change
 - THEN the change ID is captured internally
 - AND NO clipboard operation occurs
-- AND NO "Copied: <id>" message is displayed
+- AND NO "Copied: `<id>`" message is displayed
 - AND the archive workflow proceeds immediately with the selected ID
 
 #### Scenario: Workflow continuation
 
 - WHEN a change is selected in interactive mode
 - THEN the Archiver.Archive() method receives the selected change ID
-- AND validation, task checking, and spec updates proceed as if the ID was provided as an argument
+- AND validation, task checking, and spec updates proceed as if the ID was
+  provided as an argument
 - AND all confirmation prompts and flags (--yes, --skip-specs) work normally
 
 ### Requirement: Validation Output Format
 
-The validate command SHALL display validation issues in a consistent, detailed format for both single-item and bulk validation modes.
+The validate command SHALL display validation issues in a consistent, detailed
+format for both single-item and bulk validation modes.
 
 #### Scenario: Single item validation with issues
 
-- WHEN user runs `spectr validate <item>` and validation finds issues
-- THEN output SHALL display "✗ <item> has N issue(s):"
-- AND each issue SHALL be displayed on a separate line with format "  [LEVEL] PATH: MESSAGE"
+- WHEN user runs `spectr validate \<item\>` and validation finds issues
+- THEN output SHALL display "✗ \<item\> has N issue(s):"
+- AND each issue SHALL be displayed on a separate line with format " [LEVEL]
+  PATH: MESSAGE"
 - AND the command SHALL exit with code 1
 
 #### Scenario: Bulk validation with issues
 
-- WHEN user runs `spectr validate --all` and validation finds issues in multiple items
-- THEN output SHALL display "✗ <item> (<type>): N issue(s)" for each failed item
-- AND immediately following each failed item, all issue details SHALL be displayed
+- WHEN user runs `spectr validate --all` and validation finds issues in multiple
+  items
+- THEN output SHALL display "✗ \<item\> (\<type\>): N issue(s)" for each failed
+  item
+- AND immediately following each failed item, all issue details SHALL be
+  displayed
 - AND each issue SHALL use the format "  [LEVEL] PATH: MESSAGE"
 - AND a summary line SHALL display "N passed, M failed, T total"
 - AND the command SHALL exit with code 1
@@ -1245,7 +1361,7 @@ The validate command SHALL display validation issues in a consistent, detailed f
 #### Scenario: Bulk validation all passing
 
 - WHEN user runs `spectr validate --all` and all items are valid
-- THEN output SHALL display "✓ <item> (<type>)" for each item
+- THEN output SHALL display "✓ \<item\> (\<type\>)" for each item
 - AND a summary line SHALL display "N passed, 0 failed, N total"
 - AND the command SHALL exit with code 0
 
@@ -1258,13 +1374,15 @@ The validate command SHALL display validation issues in a consistent, detailed f
 
 ### Requirement: Editor Hotkey in Interactive Specs List
 
-The interactive specs list mode SHALL provide an 'e' hotkey that opens the selected spec file in the user's configured editor.
+The interactive specs list mode SHALL provide an 'e' hotkey that opens the
+selected spec file in the user's configured editor.
 
 #### Scenario: User presses 'e' to edit a spec
 
 - WHEN user is in interactive specs mode (`spectr list --specs -I`)
 - AND user presses the 'e' key on a selected spec
-- THEN the file `spectr/specs/<spec-id>/spec.md` is opened in the editor specified by $EDITOR environment variable
+- THEN the file `spectr/specs/\<spec-id\>/spec.md` is opened in the editor
+  specified by $EDITOR environment variable
 - AND the TUI waits for the editor to close
 - AND the TUI remains active after the editor closes
 - AND the same row remains selected
@@ -1289,15 +1407,16 @@ The interactive specs list mode SHALL provide an 'e' hotkey that opens the selec
 #### Scenario: Spec file does not exist
 
 - WHEN user presses 'e' to edit a spec
-- AND the spec file at `spectr/specs/<spec-id>/spec.md` does not exist
-- THEN display an error message "Spec file not found: <path>"
+- AND the spec file at `spectr/specs/\<spec-id\>/spec.md` does not exist
+- THEN display an error message "Spec file not found: \<path\>"
 - AND the TUI remains in interactive mode
 - AND the user can continue navigating or quit
 
 #### Scenario: Editor launch fails
 
 - WHEN user presses 'e' to edit a spec
-- AND the editor process fails to launch (e.g., editor binary not found, permission error)
+- AND the editor process fails to launch (e.g., editor binary not found,
+  permission error)
 - THEN display an error message with the underlying error details
 - AND the TUI remains in interactive mode
 - AND the user can retry or quit
@@ -1306,11 +1425,13 @@ The interactive specs list mode SHALL provide an 'e' hotkey that opens the selec
 
 - WHEN interactive specs mode is displayed
 - THEN the help text includes "e: edit spec" or similar guidance
-- AND the help text shows all available keys including navigation, enter, e, and quit keys
+- AND the help text shows all available keys including navigation, enter, e, and
+  quit keys
 
 ### Requirement: Editor Hotkey Scope
 
-The 'e' hotkey for opening files in $EDITOR SHALL only be available in specs list mode, not in changes list mode.
+The 'e' hotkey for opening files in $EDITOR SHALL only be available in specs
+list mode, not in changes list mode.
 
 #### Scenario: Editor hotkey not available for changes
 
@@ -1322,7 +1443,8 @@ The 'e' hotkey for opening files in $EDITOR SHALL only be available in specs lis
 
 ### Requirement: Project Path Display in Interactive Mode
 
-The interactive table interfaces SHALL display the project root path to provide users with context about which project they are working with.
+The interactive table interfaces SHALL display the project root path to provide
+users with context about which project they are working with.
 
 #### Scenario: Project path shown in changes interactive mode
 
@@ -1356,11 +1478,14 @@ The interactive table interfaces SHALL display the project root path to provide 
 
 ### Requirement: Unified Item List Display
 
-The system SHALL display changes and specifications together in a single interactive table when invoked with appropriate flags, allowing users to browse both item types simultaneously with clear visual differentiation.
+The system SHALL display changes and specifications together in a single
+interactive table when invoked with appropriate flags, allowing users to browse
+both item types simultaneously with clear visual differentiation.
 
 #### Scenario: User opens unified interactive list
 
-- WHEN the user runs `spectr list --interactive --all` from a directory with both changes and specs
+- WHEN the user runs `spectr list --interactive --all` from a directory with
+  both changes and specs
 - THEN a table appears showing both changes and specs rows
 - AND each row indicates its type (change or spec)
 - AND the table maintains correct ordering and alignment
@@ -1381,7 +1506,8 @@ The system SHALL display changes and specifications together in a single interac
 
 ### Requirement: Type-Aware Item Selection
 
-The system SHALL track whether a selected item is a change or spec and provide type-appropriate actions (e.g., edit only works for specs).
+The system SHALL track whether a selected item is a change or spec and provide
+type-appropriate actions (e.g., edit only works for specs).
 
 #### Scenario: Selecting a spec in unified mode
 
@@ -1405,7 +1531,8 @@ The system SHALL track whether a selected item is a change or spec and provide t
 
 ### Requirement: Backward-Compatible Separate Modes
 
-The system SHALL maintain existing interactive modes for changes-only and specs-only when `--all` flag is not provided.
+The system SHALL maintain existing interactive modes for changes-only and
+specs-only when `--all` flag is not provided.
 
 #### Scenario: Changes-only mode still works
 
@@ -1423,7 +1550,8 @@ The system SHALL maintain existing interactive modes for changes-only and specs-
 
 ### Requirement: Enhanced List Command Flags
 
-The system SHALL support new flag combinations to control listing behavior while maintaining validation for mutually exclusive options.
+The system SHALL support new flag combinations to control listing behavior while
+maintaining validation for mutually exclusive options.
 
 #### Scenario: Flag validation for unified mode
 
@@ -1445,13 +1573,22 @@ The system SHALL support new flag combinations to control listing behavior while
 
 ### Requirement: Automatic Slash Command Installation
 
-When a config-based AI tool is selected during initialization, the system SHALL automatically install the corresponding slash command files for that tool without requiring separate user selection.
+When a config-based AI tool is selected during initialization, the system SHALL
+automatically install the corresponding slash command files for that tool
+without requiring separate user selection.
 
-Config-based tools include those that create instruction files (e.g., `claude-code` creates `CLAUDE.md`). Slash command files are the workflow command files (e.g., `.claude/commands/spectr/proposal.md`).
+Config-based tools include those that create instruction files (e.g.,
+`claude-code` creates `CLAUDE.md`). Slash command files are the workflow command
+files (e.g., `.claude/commands/spectr/proposal.md`).
 
-The `ToolDefinition` model SHALL NOT include a `ConfigPath` field, as actual file paths are determined by individual configurators. The registry maintains tool metadata (ID, Name, Type, Priority) but delegates file path resolution to configurator implementations. Tool IDs SHALL use a type-safe constant approach to prevent typos and enable compile-time validation.
+The `ToolDefinition` model SHALL NOT include a `ConfigPath` field, as actual
+file paths are determined by individual configurators. The registry maintains
+tool metadata (ID, Name, Type, Priority) but delegates file path resolution to
+configurator implementations. Tool IDs SHALL use a type-safe constant approach
+to prevent typos and enable compile-time validation.
 
-This automatic installation provides users with complete Spectr integration in a single selection, eliminating the need for redundant tool entries in the wizard.
+This automatic installation provides users with complete Spectr integration in a
+single selection, eliminating the need for redundant tool entries in the wizard.
 
 #### Scenario: Claude Code auto-installs slash commands
 
@@ -1465,8 +1602,10 @@ This automatic installation provides users with complete Spectr integration in a
 #### Scenario: Multiple tools with slash commands selected
 
 - WHEN user selects both `claude-code` and `cursor` in the init wizard
-- THEN the system creates `CLAUDE.md` and both config + slash commands for Claude
-- AND the system creates `.cursor/commands/spectr/proposal.md` and slash commands for Cursor
+- THEN the system creates `CLAUDE.md` and both config + slash commands for
+  Claude
+- AND the system creates `.cursor/commands/spectr/proposal.md` and slash
+  commands for Cursor
 - AND all files from both tools are created and tracked separately
 - AND the completion screen lists all created files grouped by tool
 
@@ -1474,14 +1613,17 @@ This automatic installation provides users with complete Spectr integration in a
 
 - WHEN user run init and selects `claude-code`
 - AND `.claude/commands/spectr/proposal.md` already exists
-- THEN the existing file's content between `<!-- spectr:START -->` and `<!-- spectr:END -->` is updated
+- THEN the existing file's content between `\<!-- spectr:START --\>` and `\<!--
+  spectr:END --\>` is updated
 - AND the file's YAML frontmatter is preserved
 - AND no error occurs
 - AND the file is marked as "updated" rather than "created" in execution result
 
 ### Requirement: Archive Hotkey in Interactive Changes Mode
 
-The interactive changes list mode SHALL provide an 'a' hotkey that archives the currently selected change, invoking the same workflow as `spectr archive <change-id>`.
+The interactive changes list mode SHALL provide an 'a' hotkey that archives the
+currently selected change, invoking the same workflow as `spectr archive
+\<change-id\>`.
 
 #### Scenario: User presses 'a' to archive a change
 
@@ -1489,7 +1631,8 @@ The interactive changes list mode SHALL provide an 'a' hotkey that archives the 
 - AND user presses the 'a' key on a selected change
 - THEN the interactive mode exits
 - AND the archive workflow begins for the selected change ID
-- AND validation, task checking, and spec updates proceed as if the ID was provided as an argument
+- AND validation, task checking, and spec updates proceed as if the ID was
+  provided as an argument
 - AND all confirmation prompts and flags work normally
 
 #### Scenario: Archive hotkey not available in specs mode
@@ -1522,11 +1665,14 @@ The interactive changes list mode SHALL provide an 'a' hotkey that archives the 
 
 ### Requirement: Shared TUI Component Library
 
-The CLI SHALL use a shared `internal/tui` package for interactive TUI components, providing consistent styling, behavior, and composable building blocks across all interactive modes.
+The CLI SHALL use a shared `internal/tui` package for interactive TUI
+components, providing consistent styling, behavior, and composable building
+blocks across all interactive modes.
 
 #### Scenario: TablePicker used for item selection
 
-- WHEN any command needs an interactive table-based selection (list, archive, validation item picker)
+- WHEN any command needs an interactive table-based selection (list, archive,
+  validation item picker)
 - THEN the command SHALL use the `TablePicker` component from `internal/tui`
 - AND the table SHALL use consistent styling from `tui.ApplyTableStyles()`
 - AND navigation keys (↑/↓, j/k) SHALL work identically across all usages
@@ -1563,13 +1709,16 @@ The CLI SHALL use a shared `internal/tui` package for interactive TUI components
 #### Scenario: Domain logic remains in consuming packages
 
 - WHEN the tui package is used by list or validation
-- THEN domain-specific logic (archive workflow, validation execution) SHALL remain in consuming packages
+- THEN domain-specific logic (archive workflow, validation execution) SHALL
+  remain in consuming packages
 - AND the tui package SHALL only provide UI primitives
 - AND business logic SHALL not be coupled to the tui package
 
 ### Requirement: Search Hotkey in Interactive Lists
 
-The interactive list modes SHALL provide a '/' hotkey that activates a text search mode, allowing users to filter the displayed list by typing a search query that matches against item IDs and titles.
+The interactive list modes SHALL provide a '/' hotkey that activates a text
+search mode, allowing users to filter the displayed list by typing a search
+query that matches against item IDs and titles.
 
 #### Scenario: User presses '/' to enter search mode
 
@@ -1585,7 +1734,8 @@ The interactive list modes SHALL provide a '/' hotkey that activates a text sear
 - WHEN search mode is active
 - AND user types characters into the search input
 - THEN the table rows are filtered in real-time
-- AND only rows where ID or title contains the search query (case-insensitive) are displayed
+- AND only rows where ID or title contains the search query (case-insensitive)
+  are displayed
 - AND the first matching row is automatically selected
 
 #### Scenario: Search with no matches shows empty table
@@ -1640,7 +1790,9 @@ The interactive list modes SHALL provide a '/' hotkey that activates a text sear
 
 ### Requirement: Help Toggle Hotkey
 
-The interactive TUI modes SHALL hide hotkey hints by default and reveal them only when the user presses `?`, reducing visual clutter while maintaining discoverability.
+The interactive TUI modes SHALL hide hotkey hints by default and reveal them
+only when the user presses `?`, reducing visual clutter while maintaining
+discoverability.
 
 #### Scenario: Default view shows minimal footer
 
@@ -1672,15 +1824,22 @@ The interactive TUI modes SHALL hide hotkey hints by default and reveal them onl
 #### Scenario: Help content matches mode
 
 - WHEN help is displayed in changes mode
-- THEN the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
+- THEN the help shows:
+  `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
 - WHEN help is displayed in specs mode
-- THEN the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit`
+- THEN the help shows:
+  `↑/↓/j/k: navigate | Enter: copy ID | e: edit | q: quit`
 - WHEN help is displayed in unified mode
-- THEN the help shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter | q: quit`
+- THEN the help shows:
+  `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | t: filter |
+  q: quit`
 
 ### Requirement: Partial Change ID Resolution for Archive Command
 
-The `spectr archive` command SHALL support intelligent partial ID matching when a non-exact change ID is provided as an argument. The resolution algorithm SHALL prioritize prefix matches over substring matches and require a unique match to proceed.
+The `spectr archive` command SHALL support intelligent partial ID matching when
+a non-exact change ID is provided as an argument. The resolution algorithm SHALL
+prioritize prefix matches over substring matches and require a unique match to
+proceed.
 
 #### Scenario: Exact ID match takes precedence
 
@@ -1692,23 +1851,28 @@ The `spectr archive` command SHALL support intelligent partial ID matching when 
 #### Scenario: Unique prefix match resolves successfully
 
 - WHEN user runs `spectr archive refactor`
-- AND only one change ID starts with `refactor` (e.g., `refactor-unified-interactive-tui`)
-- THEN a message is displayed: "Resolved 'refactor' -> 'refactor-unified-interactive-tui'"
+- AND only one change ID starts with `refactor` (e.g.,
+  `refactor-unified-interactive-tui`)
+- THEN a message is displayed: "Resolved 'refactor' ->
+  'refactor-unified-interactive-tui'"
 - AND the archive proceeds with the resolved ID
 
 #### Scenario: Unique substring match resolves successfully
 
 - WHEN user runs `spectr archive unified`
 - AND no change ID starts with `unified`
-- AND only one change ID contains `unified` (e.g., `refactor-unified-interactive-tui`)
-- THEN a message is displayed: "Resolved 'unified' -> 'refactor-unified-interactive-tui'"
+- AND only one change ID contains `unified` (e.g.,
+  `refactor-unified-interactive-tui`)
+- THEN a message is displayed: "Resolved 'unified' ->
+  'refactor-unified-interactive-tui'"
 - AND the archive proceeds with the resolved ID
 
 #### Scenario: Multiple prefix matches cause error
 
 - WHEN user runs `spectr archive add`
 - AND multiple change IDs start with `add` (e.g., `add-feature`, `add-hotkey`)
-- THEN an error is displayed: "Ambiguous ID 'add' matches multiple changes: add-feature, add-hotkey"
+- THEN an error is displayed: "Ambiguous ID 'add' matches multiple changes:
+  add-feature, add-hotkey"
 - AND the command exits with error code 1
 - AND no archive operation is performed
 
@@ -1716,8 +1880,10 @@ The `spectr archive` command SHALL support intelligent partial ID matching when 
 
 - WHEN user runs `spectr archive search`
 - AND no change ID starts with `search`
-- AND multiple change IDs contain `search` (e.g., `add-search-hotkey`, `update-search-ui`)
-- THEN an error is displayed: "Ambiguous ID 'search' matches multiple changes: add-search-hotkey, update-search-ui"
+- AND multiple change IDs contain `search` (e.g., `add-search-hotkey`,
+  `update-search-ui`)
+- THEN an error is displayed: "Ambiguous ID 'search' matches multiple changes:
+  add-search-hotkey, update-search-ui"
 - AND the command exits with error code 1
 - AND no archive operation is performed
 
@@ -1746,19 +1912,24 @@ The `spectr archive` command SHALL support intelligent partial ID matching when 
 
 ### Requirement: Configured Provider Detection in Init Wizard
 
-The initialization wizard SHALL detect which AI tool providers are already configured for the project and display this status in the tool selection screen. Already-configured providers SHALL be visually distinguished and pre-selected by default.
+The initialization wizard SHALL detect which AI tool providers are already
+configured for the project and display this status in the tool selection screen.
+Already-configured providers SHALL be visually distinguished and pre-selected by
+default.
 
 #### Scenario: Display configured indicator for already-configured providers
 
 - WHEN user runs `spectr init` on a project with `CLAUDE.md` already present
 - AND user reaches the tool selection screen
-- THEN the Claude Code entry displays a "configured" indicator (e.g., dimmed text or badge)
+- THEN the Claude Code entry displays a "configured" indicator (e.g., dimmed
+  text or badge)
 - AND the indicator is visually distinct from the selection checkbox
 - AND other unconfigured providers do NOT show the configured indicator
 
 #### Scenario: Pre-select already-configured providers
 
-- WHEN user runs `spectr init` on a project with some providers already configured
+- WHEN user runs `spectr init` on a project with some providers already
+  configured
 - AND user reaches the tool selection screen
 - THEN already-configured providers have their checkboxes pre-selected
 - AND users can deselect them if they don't want to update the configuration
@@ -1767,8 +1938,10 @@ The initialization wizard SHALL detect which AI tool providers are already confi
 #### Scenario: Help text explains configured indicator
 
 - WHEN user is on the tool selection screen
-- THEN the help text or screen description explains what the "configured" indicator means
-- AND the explanation clarifies that selecting a configured provider will update its files
+- THEN the help text or screen description explains what the "configured"
+  indicator means
+- AND the explanation clarifies that selecting a configured provider will update
+  its files
 
 #### Scenario: No configured providers
 
@@ -1780,7 +1953,8 @@ The initialization wizard SHALL detect which AI tool providers are already confi
 
 #### Scenario: All providers configured
 
-- WHEN user runs `spectr init` on a project with all available providers configured
+- WHEN user runs `spectr init` on a project with all available providers
+  configured
 - AND user reaches the tool selection screen
 - THEN all providers show the configured indicator
 - AND all providers are pre-selected
@@ -1790,47 +1964,60 @@ The initialization wizard SHALL detect which AI tool providers are already confi
 
 - WHEN the wizard initializes
 - THEN it calls `IsConfigured(projectPath)` on each provider
-- AND the result is cached for the wizard session (not re-checked on each render)
+- AND the result is cached for the wizard session (not re-checked on each
+  render)
 - AND providers with global paths (like Codex) are correctly detected
 
 ### Requirement: Instruction File Pointer Template
 
-The system SHALL use a short pointer template when injecting Spectr instructions into root-level instruction files (e.g., `CLAUDE.md`, `AGENTS.md` at project root), directing AI assistants to read `spectr/AGENTS.md` for full instructions rather than duplicating the entire content.
+The system SHALL use a short pointer template when injecting Spectr instructions
+into root-level instruction files (e.g., `CLAUDE.md`, `AGENTS.md` at project
+root), directing AI assistants to read `spectr/AGENTS.md` for full instructions
+rather than duplicating the entire content.
 
 #### Scenario: Init creates instruction file with pointer
 
 - WHEN user runs `spectr init` and selects an AI tool (e.g., Claude Code)
-- THEN the root-level instruction file (e.g., `CLAUDE.md`) contains a short pointer between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
-- AND the pointer directs AI assistants to read `spectr/AGENTS.md` when handling proposals, specs, or changes
+- THEN the root-level instruction file (e.g., `CLAUDE.md`) contains a short
+  pointer between `\<!-- spectr:START --\>` and `\<!-- spectr:END --\>` markers
+- AND the pointer directs AI assistants to read `spectr/AGENTS.md` when handling
+  proposals, specs, or changes
 - AND the full instructions remain only in `spectr/AGENTS.md`
 
 #### Scenario: Update refreshes instruction file with pointer
 
 - WHEN user runs `spectr init` on an already-initialized project
-- THEN the root-level instruction files are updated with the short pointer content
+- THEN the root-level instruction files are updated with the short pointer
+  content
 - AND the `spectr/AGENTS.md` file retains the full instructions
 
 #### Scenario: Pointer content is concise
 
 - WHEN the instruction pointer template is rendered
 - THEN the output is less than 20 lines
-- AND the output explains when to read `spectr/AGENTS.md` (proposals, specs, changes, planning)
+- AND the output explains when to read `spectr/AGENTS.md` (proposals, specs,
+  changes, planning)
 - AND the output does NOT duplicate the full workflow instructions
 
 ### Requirement: PR Archive Subcommand Alias
 
-The `spectr pr archive` subcommand SHALL support `a` as a shorthand alias, allowing users to invoke `spectr pr a <id>` as equivalent to `spectr pr archive <id>`.
+The `spectr pr archive` subcommand SHALL support `a` as a shorthand alias,
+allowing users to invoke `spectr pr a <id>` as equivalent to `spectr pr archive
+<id>`.
 
 #### Scenario: User runs spectr pr a shorthand
 
-- WHEN user runs `spectr pr a <change-id>`
-- THEN the system executes the archive PR workflow identically to `spectr pr archive`
-- AND all flags (`--base`, `--draft`, `--force`, `--dry-run`, `--skip-specs`) work with the alias
+- WHEN user runs `spectr pr a \<change-id\>`
+- THEN the system executes the archive PR workflow identically to `spectr pr
+  archive`
+- AND all flags (`--base`, `--draft`, `--force`, `--dry-run`, `--skip-specs`)
+  work with the alias
 
 #### Scenario: User runs spectr pr a with flags
 
 - WHEN user runs `spectr pr a my-change --draft --force`
-- THEN the command behaves identically to `spectr pr archive my-change --draft --force`
+- THEN the command behaves identically to `spectr pr archive my-change --draft
+  --force`
 - AND a draft PR is created after deleting any existing branch
 
 #### Scenario: Help text shows archive alias
@@ -1841,17 +2028,19 @@ The `spectr pr archive` subcommand SHALL support `a` as a shorthand alias, allow
 
 ### Requirement: PR Branch Naming Convention
 
-The system SHALL use a mode-specific branch naming convention for PR branches that distinguishes between archive and proposal branches based on the subcommand used.
+The system SHALL use a mode-specific branch naming convention for PR branches
+that distinguishes between archive and proposal branches based on the subcommand
+used.
 
 #### Scenario: Archive branch name format
 
-- WHEN user runs `spectr pr archive <change-id>`
-- THEN the branch is named `spectr/archive/<change-id>`
+- WHEN user runs `spectr pr archive \<change-id\>`
+- THEN the branch is named `spectr/archive/\<change-id\>`
 
 #### Scenario: Proposal branch name format
 
-- WHEN user runs `spectr pr new <change-id>`
-- THEN the branch is named `spectr/proposal/<change-id>`
+- WHEN user runs `spectr pr new \<change-id\>`
+- THEN the branch is named `spectr/proposal/\<change-id\>`
 
 #### Scenario: Branch name with special characters
 
@@ -1867,37 +2056,41 @@ The system SHALL use a mode-specific branch naming convention for PR branches th
 
 #### Scenario: Force flag for existing archive branch
 
-- WHEN user runs `spectr pr archive <change-id> --force`
-- AND branch `spectr/archive/<change-id>` already exists on remote
+- WHEN user runs `spectr pr archive \<change-id\> --force`
+- AND branch `spectr/archive/\<change-id\>` already exists on remote
 - THEN the existing branch is deleted and recreated
 - AND the PR workflow proceeds normally
 
 #### Scenario: Force flag for existing proposal branch
 
-- WHEN user runs `spectr pr new <change-id> --force`
-- AND branch `spectr/proposal/<change-id>` already exists on remote
+- WHEN user runs `spectr pr new \<change-id\> --force`
+- AND branch `spectr/proposal/\<change-id\>` already exists on remote
 - THEN the existing branch is deleted and recreated
 - AND the PR workflow proceeds normally
 
 #### Scenario: Archive branch conflict without force
 
-- WHEN user runs `spectr pr archive <change-id>`
-- AND branch `spectr/archive/<change-id>` already exists on remote
+- WHEN user runs `spectr pr archive \<change-id\>`
+- AND branch `spectr/archive/\<change-id\>` already exists on remote
 - AND `--force` flag is NOT provided
-- THEN an error is displayed: "branch 'spectr/archive/<change-id>' already exists on remote; use --force to delete"
+- THEN an error is displayed: "branch 'spectr/archive/\<change-id\>' already
+  exists on remote; use --force to delete"
 - AND the command exits with code 1
 
 #### Scenario: Proposal branch conflict without force
 
-- WHEN user runs `spectr pr new <change-id>`
-- AND branch `spectr/proposal/<change-id>` already exists on remote
+- WHEN user runs `spectr pr new \<change-id\>`
+- AND branch `spectr/proposal/\<change-id\>` already exists on remote
 - AND `--force` flag is NOT provided
-- THEN an error is displayed: "branch 'spectr/proposal/<change-id>' already exists on remote; use --force to delete"
+- THEN an error is displayed: "branch 'spectr/proposal/\<change-id\>' already
+  exists on remote; use --force to delete"
 - AND the command exits with code 1
 
 ### Requirement: PR Command Structure
 
-The system SHALL provide a `spectr pr` command with `archive` and `proposal` subcommands for creating pull requests from Spectr changes using git worktree isolation.
+The system SHALL provide a `spectr pr` command with `archive` and `proposal`
+subcommands for creating pull requests from Spectr changes using git worktree
+isolation.
 
 #### Scenario: User runs spectr pr without subcommand
 
@@ -1907,25 +2100,28 @@ The system SHALL provide a `spectr pr` command with `archive` and `proposal` sub
 
 #### Scenario: User runs spectr pr archive
 
-- WHEN user runs `spectr pr archive <change-id>`
+- WHEN user runs `spectr pr archive \<change-id\>`
 - THEN the system executes the archive PR workflow
 - AND a PR is created with the archived change
 
 #### Scenario: User runs spectr pr proposal
 
-- WHEN user runs `spectr pr proposal <change-id>`
+- WHEN user runs `spectr pr proposal \<change-id\>`
 - THEN the system executes the proposal PR workflow
 - AND a PR is created with the change proposal copied (not archived)
 
 ### Requirement: PR Archive Subcommand
 
-The `spectr pr archive` subcommand SHALL create a pull request containing an archived Spectr change, executing the archive workflow in an isolated git worktree.
+The `spectr pr archive` subcommand SHALL create a pull request containing an
+archived Spectr change, executing the archive workflow in an isolated git
+worktree.
 
 #### Scenario: Archive PR workflow execution
 
-- WHEN user runs `spectr pr archive <change-id>`
-- THEN the system creates a temporary git worktree on branch `spectr/<change-id>`
-- AND executes `spectr archive <change-id> --yes` within the worktree
+- WHEN user runs `spectr pr archive \<change-id\>`
+- THEN the system creates a temporary git worktree on branch
+  `spectr/\<change-id\>`
+- AND executes `spectr archive \<change-id\> --yes` within the worktree
 - AND stages all changes in `spectr/` directory
 - AND commits with structured message including archive metadata
 - AND pushes the branch to origin
@@ -1935,13 +2131,13 @@ The `spectr pr archive` subcommand SHALL create a pull request containing an arc
 
 #### Scenario: Archive PR with skip-specs flag
 
-- WHEN user runs `spectr pr archive <change-id> --skip-specs`
+- WHEN user runs `spectr pr archive \<change-id\> --skip-specs`
 - THEN the `--skip-specs` flag is passed to the underlying archive command
 - AND spec merging is skipped during the archive operation
 
 #### Scenario: Archive PR preserves user working directory
 
-- WHEN user runs `spectr pr archive <change-id>`
+- WHEN user runs `spectr pr archive \<change-id\>`
 - AND user has uncommitted changes in their working directory
 - THEN the user's working directory is NOT modified
 - AND the archive operation executes only within the isolated worktree
@@ -1949,14 +2145,20 @@ The `spectr pr archive` subcommand SHALL create a pull request containing an arc
 
 ### Requirement: PR Proposal Subcommand
 
-The `spectr pr proposal` subcommand SHALL create a pull request containing a Spectr change proposal for review, copying the change to an isolated git worktree without archiving. This command replaces the deprecated `spectr pr new` command.
+The `spectr pr proposal` subcommand SHALL create a pull request containing a
+Spectr change proposal for review, copying the change to an isolated git
+worktree without archiving. This command replaces the deprecated `spectr pr new`
+command.
 
-The renaming from `new` to `proposal` aligns CLI terminology with the `/spectr:proposal` slash command naming convention, creating consistent vocabulary across CLI and IDE integrations.
+The renaming from `new` to `proposal` aligns CLI terminology with the
+`/spectr:proposal` slash command naming convention, creating consistent
+vocabulary across CLI and IDE integrations.
 
 #### Scenario: Proposal PR workflow execution
 
-- WHEN user runs `spectr pr proposal <change-id>`
-- THEN the system creates a temporary git worktree on branch `spectr/<change-id>`
+- WHEN user runs `spectr pr proposal \<change-id\>`
+- THEN the system creates a temporary git worktree on branch
+  `spectr/\<change-id\>`
 - AND copies the change directory from source to worktree
 - AND stages all changes in `spectr/` directory
 - AND commits with structured message for proposal review
@@ -1967,19 +2169,19 @@ The renaming from `new` to `proposal` aligns CLI terminology with the `/spectr:p
 
 #### Scenario: Proposal PR does not archive
 
-- WHEN user runs `spectr pr proposal <change-id>`
-- THEN the original change remains in `spectr/changes/<change-id>/`
+- WHEN user runs `spectr pr proposal \<change-id\>`
+- THEN the original change remains in `spectr/changes/\<change-id\>/`
 - AND the change is NOT moved to archive
 - AND spec merging does NOT occur
 
 #### Scenario: Proposal PR validates change first
 
-- WHEN user runs `spectr pr proposal <change-id>`
+- WHEN user runs `spectr pr proposal \<change-id\>`
 - THEN the system runs validation on the change
 - AND warnings are displayed if validation issues exist
 - AND the PR workflow continues (validation does not block)
 
-#### Scenario: User runs spectr pr without subcommand
+#### Scenario: PR command without subcommand shows help
 
 - WHEN user runs `spectr pr` without a subcommand
 - THEN help text is displayed showing available subcommands (archive, proposal)
@@ -1994,7 +2196,8 @@ The renaming from `new` to `proposal` aligns CLI terminology with the `/spectr:p
 
 ### Requirement: PR Common Flags
 
-Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support common flags for controlling PR creation behavior.
+Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support
+common flags for controlling PR creation behavior.
 
 #### Scenario: Base branch flag
 
@@ -2022,15 +2225,16 @@ Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support comm
 #### Scenario: Force flag for existing branch
 
 - WHEN user provides `--force` flag
-- AND branch `spectr/<change-id>` already exists on remote
+- AND branch `spectr/\<change-id\>` already exists on remote
 - THEN the existing branch is deleted and recreated
 - AND the PR workflow proceeds normally
 
 #### Scenario: Branch conflict without force
 
-- WHEN branch `spectr/<change-id>` already exists on remote
+- WHEN branch `spectr/\<change-id\>` already exists on remote
 - AND `--force` flag is NOT provided
-- THEN an error is displayed: "Branch 'spectr/<change-id>' already exists. Use --force to overwrite."
+- THEN an error is displayed: "Branch 'spectr/\<change-id\>' already exists. Use
+  --force to overwrite."
 - AND the command exits with code 1
 
 #### Scenario: Dry run flag
@@ -2042,7 +2246,8 @@ Both `spectr pr archive` and `spectr pr proposal` subcommands SHALL support comm
 
 ### Requirement: Git Platform Detection
 
-The system SHALL automatically detect the git hosting platform from the origin remote URL and use the appropriate CLI tool for PR creation.
+The system SHALL automatically detect the git hosting platform from the origin
+remote URL and use the appropriate CLI tool for PR creation.
 
 #### Scenario: Detect GitHub platform
 
@@ -2086,12 +2291,14 @@ The system SHALL automatically detect the git hosting platform from the origin r
 
 ### Requirement: Platform CLI Availability
 
-The system SHALL verify that the required platform CLI tool is installed and authenticated before attempting PR creation.
+The system SHALL verify that the required platform CLI tool is installed and
+authenticated before attempting PR creation.
 
 #### Scenario: CLI not installed
 
 - WHEN the required CLI tool (gh/glab/tea) is not installed
-- THEN an error is displayed: "<tool> CLI is required for <platform> PR creation. Install: <install-url>"
+- THEN an error is displayed: "`<tool>` CLI is required for `<platform>` PR
+  creation. Install: \<install-url\>"
 - AND the command exits with code 1
 
 #### Scenario: CLI not authenticated
@@ -2102,7 +2309,8 @@ The system SHALL verify that the required platform CLI tool is installed and aut
 
 ### Requirement: Git Worktree Isolation
 
-The PR commands SHALL use git worktrees to provide complete isolation from the user's working directory.
+The PR commands SHALL use git worktrees to provide complete isolation from the
+user's working directory.
 
 #### Scenario: Worktree created in temp directory
 
@@ -2131,18 +2339,20 @@ The PR commands SHALL use git worktrees to provide complete isolation from the u
 #### Scenario: Git version requirement
 
 - WHEN git version is less than 2.5
-- THEN an error is displayed: "Git >= 2.5 required for worktree support. Current version: <version>"
+- THEN an error is displayed: "Git >= 2.5 required for worktree support.
+  Current version: `<version>`"
 - AND the command exits with code 1
 
 ### Requirement: PR Commit Message Format
 
-The system SHALL generate structured commit messages that follow conventional commit format and include relevant metadata.
+The system SHALL generate structured commit messages that follow conventional
+commit format and include relevant metadata.
 
 #### Scenario: Archive commit message format
 
 - WHEN `spectr pr archive` commits changes
 - THEN the commit message includes:
-  - Title: `spectr(archive): <change-id>`
+  - Title: `spectr(archive): \<change-id\>`
   - Archive location path
   - Spec operation counts (added, modified, removed, renamed)
   - Attribution: "Generated by: spectr pr archive"
@@ -2151,13 +2361,14 @@ The system SHALL generate structured commit messages that follow conventional co
 
 - WHEN `spectr pr proposal` commits changes
 - THEN the commit message includes:
-  - Title: `spectr(proposal): <change-id>`
+  - Title: `spectr(proposal): \<change-id\>`
   - Proposal location path
   - Attribution: "Generated by: spectr pr proposal"
 
 ### Requirement: PR Body Content
 
-The system SHALL generate PR body content that helps reviewers understand the change.
+The system SHALL generate PR body content that helps reviewers understand the
+change.
 
 #### Scenario: Archive PR body content
 
@@ -2183,16 +2394,17 @@ The system SHALL use a consistent branch naming convention for PR branches.
 #### Scenario: Branch name format
 
 - WHEN PR workflow creates a branch
-- THEN the branch is named `spectr/<change-id>`
+- THEN the branch is named `spectr/\<change-id\>`
 
-#### Scenario: Branch name with special characters
+#### Scenario: Valid git branch names for PR workflow
 
 - WHEN change ID contains only valid kebab-case characters
 - THEN the branch name is valid for git
 
 ### Requirement: PR Error Handling
 
-The system SHALL provide clear error messages and guidance when PR creation fails.
+The system SHALL provide clear error messages and guidance when PR creation
+fails.
 
 #### Scenario: Not in git repository
 
@@ -2208,9 +2420,9 @@ The system SHALL provide clear error messages and guidance when PR creation fail
 
 #### Scenario: Change does not exist
 
-- WHEN user runs `spectr pr <subcommand> <change-id>`
+- WHEN user runs `spectr pr <subcommand> \<change-id\>`
 - AND the change does not exist
-- THEN an error is displayed: "Change '<change-id>' not found"
+- THEN an error is displayed: "Change '\<change-id\>' not found"
 - AND the command exits with code 1
 
 #### Scenario: Push failure
@@ -2229,7 +2441,8 @@ The system SHALL provide clear error messages and guidance when PR creation fail
 
 ### Requirement: Partial Change ID Resolution for PR Commands
 
-The `spectr pr` subcommands SHALL support intelligent partial ID matching consistent with the archive command's resolution algorithm.
+The `spectr pr` subcommands SHALL support intelligent partial ID matching
+consistent with the archive command's resolution algorithm.
 
 #### Scenario: Exact ID match for PR commands
 
@@ -2246,20 +2459,24 @@ The `spectr pr` subcommands SHALL support intelligent partial ID matching consis
 
 ### Requirement: PR Proposal Interactive Selection Filters Unmerged Changes
 
-The `spectr pr proposal` command's interactive selection mode SHALL only display changes that do not already exist on the target branch (main/master), ensuring users only see changes that genuinely need proposal PRs.
+The `spectr pr proposal` command's interactive selection mode SHALL only display
+changes that do not already exist on the target branch (main/master), ensuring
+users only see changes that genuinely need proposal PRs.
 
 #### Scenario: Interactive list excludes changes on main
 
 - WHEN user runs `spectr pr proposal` without a change ID argument
 - AND some changes in `spectr/changes/` already exist on `origin/main`
-- THEN only changes NOT present on `origin/main` are displayed in the interactive list
+- THEN only changes NOT present on `origin/main` are displayed in the
+  interactive list
 - AND changes that exist on main are filtered out before display
 
 #### Scenario: All changes already on main
 
 - WHEN user runs `spectr pr proposal` without a change ID argument
 - AND all active changes already exist on `origin/main`
-- THEN a message is displayed: "No unmerged proposals found. All changes already exist on main."
+- THEN a message is displayed: "No unmerged proposals found. All changes already
+  exist on main."
 - AND the command exits gracefully without entering interactive mode
 
 #### Scenario: No changes exist at all
@@ -2271,7 +2488,7 @@ The `spectr pr proposal` command's interactive selection mode SHALL only display
 
 #### Scenario: Explicit change ID bypasses filter
 
-- WHEN user runs `spectr pr proposal <change-id>` with an explicit argument
+- WHEN user runs `spectr pr proposal \<change-id\>` with an explicit argument
 - THEN the filter is NOT applied
 - AND the command proceeds with the specified change ID
 - AND existing behavior is preserved for direct invocation
@@ -2286,7 +2503,8 @@ The `spectr pr proposal` command's interactive selection mode SHALL only display
 #### Scenario: Detection uses git ls-tree
 
 - WHEN the system checks if a change exists on main
-- THEN it uses `git ls-tree` to check if `spectr/changes/<change-id>` path exists on `origin/main`
+- THEN it uses `git ls-tree` to check if `spectr/changes/\<change-id\>` path
+  exists on `origin/main`
 - AND the check is performed before displaying the interactive list
 - AND fetch is performed first to ensure refs are current
 
@@ -2298,66 +2516,85 @@ The `spectr pr proposal` command's interactive selection mode SHALL only display
 
 ### Requirement: Template Path Variables
 
-The template rendering system SHALL support dynamic path variables for all directory and file references, allowing template content to be decoupled from specific path names while maintaining backward-compatible defaults.
+The template rendering system SHALL support dynamic path variables for all
+directory and file references, allowing template content to be decoupled from
+specific path names while maintaining backward-compatible defaults.
 
-The `TemplateContext` struct SHALL provide the following fields with default values:
+The `TemplateContext` struct SHALL provide the following fields with default
+values:
 
 - `BaseDir`: The root Spectr directory name (default: `spectr`)
 - `SpecsDir`: The specifications directory path (default: `spectr/specs`)
 - `ChangesDir`: The changes directory path (default: `spectr/changes`)
-- `ProjectFile`: The project configuration file path (default: `spectr/project.md`)
+- `ProjectFile`: The project configuration file path (default:
+  `spectr/project.md`)
 - `AgentsFile`: The agents instruction file path (default: `spectr/AGENTS.md`)
 
 #### Scenario: Templates use path variables instead of hardcoded strings
 
 - WHEN a template file contains path references
-- THEN the path SHALL be expressed using Go template syntax (e.g., `{{ .BaseDir }}`, `{{ .SpecsDir }}`)
-- AND hardcoded `spectr/` strings SHALL NOT appear in template files for path references
+- THEN the path SHALL be expressed using Go template syntax (e.g., `{{ .BaseDir
+  }}`, `{{ .SpecsDir }}`)
+- AND hardcoded `spectr/` strings SHALL NOT appear in template files for path
+  references
 - AND the rendered output SHALL contain the actual path values from the context
 
 #### Scenario: Default context produces backward-compatible output
 
 - WHEN `DefaultTemplateContext()` is used for rendering
 - THEN the rendered output SHALL be identical to the previous hardcoded output
-- AND all path references SHALL resolve to `spectr/`, `spectr/specs/`, `spectr/changes/`, etc.
+- AND all path references SHALL resolve to `spectr/`, `spectr/specs/`,
+  `spectr/changes/`, etc.
 
 #### Scenario: Template manager methods accept context parameter
 
-- WHEN `RenderAgents()`, `RenderInstructionPointer()`, or `RenderSlashCommand()` is called
+- WHEN `RenderAgents()`, `RenderInstructionPointer()`, or `RenderSlashCommand()`
+  is called
 - THEN the method SHALL accept a `TemplateContext` parameter
 - AND the context values SHALL be available within the template
 
 #### Scenario: All template files use consistent variable names
 
 - WHEN any template file references a Spectr path
-- THEN it SHALL use the standardized variable names (`BaseDir`, `SpecsDir`, `ChangesDir`, `ProjectFile`, `AgentsFile`)
+- THEN it SHALL use the standardized variable names (`BaseDir`, `SpecsDir`,
+  `ChangesDir`, `ProjectFile`, `AgentsFile`)
 - AND variable names SHALL be consistent across all template files
 
 ### Requirement: Copy Populate Context Prompt in Init Next Steps
 
-The Next Steps completion screen in the interactive initialization wizard SHALL provide a hotkey to copy the "populate project context" prompt (step 1) to the system clipboard.
+The Next Steps completion screen in the interactive initialization wizard SHALL
+provide a hotkey to copy the "populate project context" prompt (step 1) to the
+system clipboard.
 
 #### Scenario: Copy prompt with 'c' hotkey
 
-- WHEN the user is on the Next Steps completion screen after successful initialization
+- WHEN the user is on the Next Steps completion screen after successful
+  initialization
 - AND the user presses the 'c' key
-- THEN the raw prompt text (without surrounding quotes) "Review spectr/project.md and help me fill in our project's tech stack, conventions, and description. Ask me questions to understand the codebase." is copied to the clipboard
+- THEN the raw prompt text (without surrounding quotes) "Review
+  spectr/project.md and help me fill in our project's tech stack, conventions,
+  and description. Ask me questions to understand the codebase." is copied to
+  the clipboard
 - AND the wizard exits immediately and returns to the shell
-- AND no success message is displayed (silent exit, consistent with list mode Enter behavior)
+- AND no success message is displayed (silent exit, consistent with list mode
+  Enter behavior)
 
 #### Scenario: Clipboard copy failure handling
 
 - WHEN the user presses 'c' to copy the prompt
 - AND the clipboard operation fails
-- THEN an error message is displayed (e.g., "Failed to copy to clipboard: [error]")
+- THEN an error message is displayed (e.g., "Failed to copy to clipboard:
+  [error]")
 - AND the wizard does NOT exit
 - AND the user can retry the copy operation or press 'q' to quit manually
 
 #### Scenario: Help text shows copy hotkey
 
-- WHEN the Next Steps completion screen is displayed after successful initialization
+- WHEN the Next Steps completion screen is displayed after
+  successful initialization
 - THEN the footer help text SHALL include the 'c' hotkey
-- AND the help text format is: "c: copy step 1 | q: quit" or "c: copy prompt | q: quit"
+- AND the help text format is:
+  "c: copy step 1 | q: quit" or "c: copy prompt | q: quit"
 - AND the hotkey is clearly described
 
 #### Scenario: Copy hotkey only on success screen
@@ -2369,14 +2606,17 @@ The Next Steps completion screen in the interactive initialization wizard SHALL 
 
 #### Scenario: Clipboard uses OSC 52 fallback
 
-- WHEN the user presses 'c' in an SSH/remote session without native clipboard access
+- WHEN the user presses 'c' in an SSH/remote session without native clipboard
+  access
 - THEN the copy operation uses OSC 52 escape sequences as fallback
 - AND the operation is considered successful (OSC 52 does not report errors)
 - AND the success message is displayed
 
 ### Requirement: PR Hotkey in Interactive Changes List Mode
 
-The interactive changes list mode SHALL provide a `P` (Shift+P) hotkey that exits the TUI and enters the `spectr pr` workflow for the selected change, allowing users to create pull requests without manually copying the change ID.
+The interactive changes list mode SHALL provide a `P` (Shift+P) hotkey that
+exits the TUI and enters the `spectr pr` workflow for the selected change,
+allowing users to create pull requests without manually copying the change ID.
 
 #### Scenario: User presses Shift+P to enter PR mode
 
@@ -2416,7 +2656,8 @@ The interactive changes list mode SHALL provide a `P` (Shift+P) hotkey that exit
 
 ### Requirement: VHS Demo for PR Hotkey
 
-The system SHALL provide a VHS tape demonstrating the Shift+P hotkey utility in the interactive list TUI.
+The system SHALL provide a VHS tape demonstrating the Shift+P hotkey utility in
+the interactive list TUI.
 
 #### Scenario: Developer finds PR hotkey demo
 
@@ -2432,15 +2673,21 @@ The system SHALL provide a VHS tape demonstrating the Shift+P hotkey utility in 
 
 ### Requirement: PR Proposal Local Change Cleanup Confirmation
 
-After a successful `spectr pr proposal` command that creates a pull request, the system SHALL prompt the user with a Bubbletea TUI confirmation menu asking whether to remove the local change proposal directory from `spectr/changes/`.
+After a successful `spectr pr proposal` command that creates a pull request, the
+system SHALL prompt the user with a Bubbletea TUI confirmation menu asking
+whether to remove the local change proposal directory from `spectr/changes/`.
 
-This prompt helps users maintain a clean working directory by offering an opportunity to remove proposals that have been submitted for review, while defaulting to "No" for safety. The menu uses arrow key navigation and styled rendering consistent with other spectr interactive modes.
+This prompt helps users maintain a clean working directory by offering an
+opportunity to remove proposals that have been submitted for review, while
+defaulting to "No" for safety. The menu uses arrow key navigation and styled
+rendering consistent with other spectr interactive modes.
 
 #### Scenario: Successful PR proposal triggers cleanup prompt
 
-- WHEN user runs `spectr pr proposal <change-id>` and PR creation succeeds
+- WHEN user runs `spectr pr proposal \<change-id\>` and PR creation succeeds
 - AND the PR URL is displayed to the user
-- THEN the system displays a Bubbletea TUI menu: "Remove local change proposal from spectr/changes/?"
+- THEN the system displays a Bubbletea TUI menu: "Remove local change proposal
+  from spectr/changes/?"
 - AND the menu shows two options: "No, keep it" and "Yes, remove it"
 - AND the default selection is "No, keep it" (cursor starts on this option)
 - AND the menu supports arrow key navigation (↑/↓) and Enter to confirm
@@ -2449,15 +2696,15 @@ This prompt helps users maintain a clean working directory by offering an opport
 
 - WHEN the cleanup TUI menu is displayed
 - AND user navigates to "Yes, remove it" and presses Enter
-- THEN the system removes the directory `spectr/changes/<change-id>/`
-- AND displays confirmation: "Removed local change: <change-id>"
+- THEN the system removes the directory `spectr/changes/\<change-id\>/`
+- AND displays confirmation: "Removed local change: \<change-id\>"
 
 #### Scenario: User declines cleanup via TUI
 
 - WHEN the cleanup TUI menu is displayed
 - AND user presses Enter on the default "No, keep it" option
 - THEN the system keeps the local change directory
-- AND displays: "Local change kept: spectr/changes/<change-id>/"
+- AND displays: "Local change kept: spectr/changes/\<change-id\>/"
 
 #### Scenario: User cancels cleanup menu
 
@@ -2468,7 +2715,7 @@ This prompt helps users maintain a clean working directory by offering an opport
 
 #### Scenario: Non-interactive mode skips prompt
 
-- WHEN user runs `spectr pr proposal <change-id> --yes`
+- WHEN user runs `spectr pr proposal \<change-id\> --yes`
 - AND PR creation succeeds
 - THEN the cleanup prompt is NOT displayed
 - AND the local change directory is kept (safe default)
@@ -2476,15 +2723,16 @@ This prompt helps users maintain a clean working directory by offering an opport
 
 #### Scenario: Cleanup for archive mode
 
-- WHEN user runs `spectr pr archive <change-id>`
+- WHEN user runs `spectr pr archive \<change-id\>`
 - AND PR creation succeeds
-- THEN the system displays: "Cleaning up local change directory: spectr/changes/<change-id>/"
+- THEN the system displays: "Cleaning up local change directory:
+  spectr/changes/\<change-id\>/"
 - AND the local change directory is removed
 - AND the change is archived in the worktree (pulled when PR merges)
 
 #### Scenario: PR creation fails
 
-- WHEN user runs `spectr pr proposal <change-id>`
+- WHEN user runs `spectr pr proposal \<change-id\>`
 - AND PR creation fails at any step
 - THEN the cleanup prompt is NOT displayed
 - AND the local change directory remains intact
@@ -2493,23 +2741,31 @@ This prompt helps users maintain a clean working directory by offering an opport
 
 - WHEN the user confirms cleanup
 - AND removal of the change directory fails (e.g., permission error)
-- THEN display a warning: "Warning: Failed to remove change directory: <error>"
+- THEN display a warning: "Warning: Failed to remove change directory:
+  `<error>`"
 - AND the command still exits successfully (non-fatal error)
 
 ### Requirement: CI Workflow Setup Option in Init Wizard Review Step
 
-The initialization wizard's Review step SHALL include an optional checkbox to create a GitHub Actions workflow file (`.github/workflows/spectr-ci.yml`) for automated Spectr validation during CI/CD. This option is presented alongside the tool selection summary, keeping the wizard flow quick without adding a separate step.
+The initialization wizard's Review step SHALL include an optional checkbox to
+create a GitHub Actions workflow file (`.github/workflows/spectr-ci.yml`) for
+automated Spectr validation during CI/CD. This option is presented alongside the
+tool selection summary, keeping the wizard flow quick without adding a separate
+step.
 
 #### Scenario: CI option displayed in Review step
 
 - WHEN user completes tool selection and proceeds to the Review step
-- THEN a "Spectr CI Validation" checkbox option is displayed after the tool summary
+- THEN a "Spectr CI Validation" checkbox option is displayed after the tool
+  summary
 - AND the option appears before the creation plan section
-- AND a description explains: "Validate specs automatically on push and pull requests"
+- AND a description explains: "Validate specs automatically on push and pull
+  requests"
 
 #### Scenario: CI option detects existing workflow
 
-- WHEN user runs `spectr init` on a project that already has `.github/workflows/spectr-ci.yml`
+- WHEN user runs `spectr init` on a project that already has
+  `.github/workflows/spectr-ci.yml`
 - AND user reaches the Review step
 - THEN the "Spectr CI Validation" option shows a "(configured)" indicator
 - AND the option is pre-selected by default
@@ -2517,7 +2773,8 @@ The initialization wizard's Review step SHALL include an optional checkbox to cr
 
 #### Scenario: CI option not pre-selected on fresh projects
 
-- WHEN user runs `spectr init` on a project without `.github/workflows/spectr-ci.yml`
+- WHEN user runs `spectr init` on a project without
+  `.github/workflows/spectr-ci.yml`
 - AND user reaches the Review step
 - THEN the "Spectr CI Validation" option is NOT pre-selected by default
 - AND the user must explicitly select it to enable CI workflow creation
@@ -2535,7 +2792,8 @@ The initialization wizard's Review step SHALL include an optional checkbox to cr
 - WHEN user selects the "Spectr CI Validation" option in Review
 - AND user presses Enter to proceed with initialization
 - THEN the system creates `.github/workflows/` directory if it doesn't exist
-- AND the system creates `.github/workflows/spectr-ci.yml` with the Spectr validation workflow
+- AND the system creates `.github/workflows/spectr-ci.yml` with the Spectr
+  validation workflow
 - AND the workflow file is tracked in the execution result as created or updated
 
 #### Scenario: CI workflow not created when unselected
@@ -2570,7 +2828,8 @@ The initialization wizard's Review step SHALL include an optional checkbox to cr
 #### Scenario: Completion screen shows CI workflow file
 
 - WHEN the CI workflow file is successfully created
-- THEN the completion screen lists `.github/workflows/spectr-ci.yml` in created or updated files
+- THEN the completion screen lists `.github/workflows/spectr-ci.yml` in created
+  or updated files
 - AND the file path is displayed with the appropriate icon
 
 #### Scenario: Non-interactive mode supports CI workflow flag
@@ -2588,19 +2847,24 @@ The initialization wizard's Review step SHALL include an optional checkbox to cr
 #### Scenario: Review step help text includes Space for toggle
 
 - WHEN user is on the Review step
-- THEN the help text shows: "Space: Toggle CI  Enter: Initialize  Backspace: Back  q: Quit"
+- THEN the help text shows: "Space: Toggle CI Enter: Initialize Backspace: Back
+  q: Quit"
 
 ### Requirement: PR Remove Subcommand
 
-The `spectr pr rm` subcommand SHALL create a pull request that removes a change directory from the repository, using the same git worktree isolation as other PR subcommands.
+The `spectr pr rm` subcommand SHALL create a pull request that removes a change
+directory from the repository, using the same git worktree isolation as other PR
+subcommands.
 
 The command supports aliases `r` and `remove` for convenience.
 
 #### Scenario: User runs spectr pr rm with change ID
 
-- WHEN user runs `spectr pr rm <change-id>`
-- THEN the system creates a temporary git worktree on branch `spectr/remove/<change-id>`
-- AND removes the change directory from `spectr/changes/<change-id>` in the worktree
+- WHEN user runs `spectr pr rm \<change-id\>`
+- THEN the system creates a temporary git worktree on branch
+  `spectr/remove/\<change-id\>`
+- AND removes the change directory from `spectr/changes/\<change-id\>` in the
+  worktree
 - AND stages the deletion
 - AND commits with a structured message indicating removal
 - AND pushes the branch to origin
@@ -2618,33 +2882,35 @@ The command supports aliases `r` and `remove` for convenience.
 
 #### Scenario: User runs spectr pr r shorthand
 
-- WHEN user runs `spectr pr r <change-id>`
+- WHEN user runs `spectr pr r \<change-id\>`
 - THEN the system executes the remove PR workflow identically to `spectr pr rm`
 - AND all flags work with the alias
 
 #### Scenario: Remove PR with draft flag
 
-- WHEN user runs `spectr pr rm <change-id> --draft`
+- WHEN user runs `spectr pr rm \<change-id\> --draft`
 - THEN the PR is created as a draft PR on platforms that support it
 
 #### Scenario: Remove PR with force flag
 
-- WHEN user runs `spectr pr rm <change-id> --force`
-- AND branch `spectr/remove/<change-id>` already exists on remote
+- WHEN user runs `spectr pr rm \<change-id\> --force`
+- AND branch `spectr/remove/\<change-id\>` already exists on remote
 - THEN the existing branch is deleted and recreated
 - AND the PR workflow proceeds normally
 
 #### Scenario: Remove branch conflict without force
 
-- WHEN user runs `spectr pr rm <change-id>`
-- AND branch `spectr/remove/<change-id>` already exists on remote
+- WHEN user runs `spectr pr rm \<change-id\>`
+- AND branch `spectr/remove/\<change-id\>` already exists on remote
 - AND `--force` flag is NOT provided
-- THEN an error is displayed: "branch 'spectr/remove/<change-id>' already exists on remote; use --force to delete"
+- THEN an error is displayed: "branch 'spectr/remove/\<change-id\>' already
+  exists
+  on remote; use --force to delete"
 - AND the command exits with code 1
 
 #### Scenario: Remove PR with dry-run flag
 
-- WHEN user runs `spectr pr rm <change-id> --dry-run`
+- WHEN user runs `spectr pr rm \<change-id\> --dry-run`
 - THEN the system displays what would be done without executing
 - AND no git operations are performed
 - AND no PR is created
@@ -2652,22 +2918,25 @@ The command supports aliases `r` and `remove` for convenience.
 
 #### Scenario: Remove PR with base branch flag
 
-- WHEN user runs `spectr pr rm <change-id> --base develop`
+- WHEN user runs `spectr pr rm \<change-id\> --base develop`
 - THEN the PR targets the `develop` branch instead of auto-detected main/master
 
-#### Scenario: Change does not exist
+#### Scenario: Remove PR for non-existent change
 
-- WHEN user runs `spectr pr rm <change-id>`
+- WHEN user runs `spectr pr rm \<change-id\>`
 - AND the change does not exist in `spectr/changes/`
-- THEN an error is displayed: "change '<change-id>' not found in spectr/changes/"
+- THEN an error is displayed: "change '\<change-id\>' not found in
+  spectr/changes/"
 - AND the command exits with code 1
 
 #### Scenario: Remove cleans up local change directory
 
-- WHEN user runs `spectr pr rm <change-id>`
+- WHEN user runs `spectr pr rm \<change-id\>`
 - AND PR creation succeeds
-- THEN the system displays: "Cleaning up local change directory: spectr/changes/<change-id>/"
-- AND the local change directory is removed including all files (tracked and untracked)
+- THEN the system displays: "Cleaning up local change directory:
+  spectr/changes/\<change-id\>/"
+- AND the local change directory is removed including all files (tracked and
+  untracked)
 
 #### Scenario: Partial ID resolution for remove command
 
@@ -2678,36 +2947,40 @@ The command supports aliases `r` and `remove` for convenience.
 
 ### Requirement: Remove PR Branch Naming
 
-The `spectr pr rm` command SHALL use the branch naming pattern `spectr/remove/<change-id>` to clearly indicate the PR's purpose.
+The `spectr pr rm` command SHALL use the branch naming pattern
+`spectr/remove/\<change-id\>` to clearly indicate the PR's purpose.
 
 #### Scenario: Remove branch name format
 
-- WHEN user runs `spectr pr rm <change-id>`
-- THEN the branch is named `spectr/remove/<change-id>`
+- WHEN user runs `spectr pr rm \<change-id\>`
+- THEN the branch is named `spectr/remove/\<change-id\>`
 
 #### Scenario: Remove branch distinguishable from archive and proposal
 
 - WHEN a developer views the branch list
-- THEN they can distinguish remove PRs from archive and proposal PRs by the branch prefix
+- THEN they can distinguish remove PRs from archive and proposal PRs by the
+  branch prefix
 - AND `spectr/remove/*` indicates a change removal PR
 - AND `spectr/archive/*` indicates a completed change being archived
 - AND `spectr/proposal/*` indicates a change proposal for review
 
 ### Requirement: Remove PR Commit Message Format
 
-The `spectr pr rm` command SHALL generate a structured commit message that clearly indicates the removal.
+The `spectr pr rm` command SHALL generate a structured commit message that
+clearly indicates the removal.
 
 #### Scenario: Remove commit message content
 
 - WHEN `spectr pr rm` commits changes
 - THEN the commit message includes:
-  - Title: `spectr(remove): <change-id>`
-  - Removed path: `spectr/changes/<change-id>`
+  - Title: `spectr(remove): \<change-id\>`
+  - Removed path: `spectr/changes/\<change-id\>`
   - Attribution: "Generated by: spectr pr rm"
 
 ### Requirement: Remove PR Body Content
 
-The `spectr pr rm` command SHALL generate PR body content that explains the removal.
+The `spectr pr rm` command SHALL generate PR body content that explains the
+removal.
 
 #### Scenario: Remove PR body content
 
@@ -2719,7 +2992,9 @@ The `spectr pr rm` command SHALL generate PR body content that explains the remo
 
 ### Requirement: Responsive Table Column Layout
 
-The interactive TUI table views SHALL detect terminal width and dynamically adjust column visibility and widths to ensure readable display across different screen sizes.
+The interactive TUI table views SHALL detect terminal width and dynamically
+adjust column visibility and widths to ensure readable display across different
+screen sizes.
 
 #### Scenario: Full width terminal displays all columns
 
@@ -2754,7 +3029,8 @@ The interactive TUI table views SHALL detect terminal width and dynamically adju
 
 ### Requirement: Dynamic Terminal Resize Handling
 
-The interactive TUI SHALL respond to terminal resize events by recalculating and rebuilding the table layout without losing user state.
+The interactive TUI SHALL respond to terminal resize events by recalculating and
+rebuilding the table layout without losing user state.
 
 #### Scenario: Terminal resized wider during session
 
@@ -2781,7 +3057,8 @@ The interactive TUI SHALL respond to terminal resize events by recalculating and
 
 ### Requirement: Column Priority System
 
-Each table view SHALL define column priorities to determine which columns are shown at each width breakpoint.
+Each table view SHALL define column priorities to determine which columns are
+shown at each width breakpoint.
 
 #### Scenario: Changes view column priorities
 
@@ -2796,7 +3073,8 @@ Each table view SHALL define column priorities to determine which columns are sh
 - WHEN calculating responsive columns for specs view
 - THEN ID has highest priority (always shown)
 - AND Title has second priority (always shown, width adjustable)
-- AND Requirements has lowest priority (width reduced or hidden below 70 columns)
+- AND Requirements has lowest priority (width reduced or hidden below 70
+  columns)
 
 #### Scenario: Unified view column priorities
 
@@ -2808,9 +3086,11 @@ Each table view SHALL define column priorities to determine which columns are sh
 
 ### Requirement: Provider Search in Init Wizard
 
-The initialization wizard's tool selection step SHALL provide a `/` hotkey that activates a text search mode, allowing users to filter the displayed provider list by typing a search query that matches against provider names.
+The initialization wizard's tool selection step SHALL provide a `/` hotkey that
+activates a text search mode, allowing users to filter the displayed provider
+list by typing a search query that matches against provider names.
 
-#### Scenario: User presses '/' to enter search mode
+#### Scenario: Enter search mode with '/' key
 
 - WHEN user is on the tool selection step of the init wizard (`StepSelect`)
 - AND user presses the '/' key
@@ -2824,8 +3104,10 @@ The initialization wizard's tool selection step SHALL provide a `/` hotkey that 
 - WHEN search mode is active
 - AND user types characters into the search input
 - THEN the provider list is filtered in real-time
-- AND only providers whose name contains the search query (case-insensitive) are displayed
-- AND the cursor moves to the first matching provider if current selection is filtered out
+- AND only providers whose name contains the search query (case-insensitive) are
+  displayed
+- AND the cursor moves to the first matching provider if current selection is
+  filtered out
 
 #### Scenario: Search with no matches shows empty list
 
@@ -2834,7 +3116,7 @@ The initialization wizard's tool selection step SHALL provide a `/` hotkey that 
 - THEN the provider list displays no items
 - AND a message indicates no matches found (e.g., "No providers match 'xyz'")
 
-#### Scenario: User presses Escape to exit search mode
+#### Scenario: Exit search mode with Escape key
 
 - WHEN search mode is active
 - AND user presses the Escape key
@@ -2851,21 +3133,23 @@ The initialization wizard's tool selection step SHALL provide a `/` hotkey that 
 - THEN the selection state of filtered-out providers is preserved
 - AND when search is cleared, previously selected providers remain selected
 
-#### Scenario: Navigation works while searching
+#### Scenario: Navigation with arrow keys during search
 
 - WHEN search mode is active
 - AND filtered results are displayed
 - THEN arrow key navigation (up/down, j/k) moves through filtered rows
 - AND space key toggles selection on the currently highlighted filtered provider
-- AND Enter key proceeds to the Review step with all selections (including filtered-out ones)
+- AND Enter key proceeds to the Review step with all selections (including
+  filtered-out ones)
 
-#### Scenario: Help text shows search hotkey
+#### Scenario: Help displays search hotkey information
 
 - WHEN the tool selection step is displayed and search mode is NOT active
 - THEN the help text includes '/: search' in the controls line
-- AND the search hotkey is shown alongside existing controls (navigate, toggle, all, none, enter, quit)
+- AND the search hotkey is shown alongside existing controls (navigate, toggle,
+  all, none, enter, quit)
 
-#### Scenario: Search mode visual indicator
+#### Scenario: Visual feedback for active search mode
 
 - WHEN search mode is active
 - THEN the search input field is visually distinct (styled text input)
@@ -2882,7 +3166,9 @@ The initialization wizard's tool selection step SHALL provide a `/` hotkey that 
 
 ### Requirement: Stdout Output Mode for Interactive List
 
-The `spectr list` command SHALL support a `--stdout` flag that, when combined with interactive mode (`-I`), outputs the selected item ID to stdout instead of copying it to the system clipboard.
+The `spectr list` command SHALL support a `--stdout` flag that, when combined
+with interactive mode (`-I`), outputs the selected item ID to stdout instead of
+copying it to the system clipboard.
 
 #### Scenario: User runs list with --stdout and -I flags
 
@@ -2948,7 +3234,8 @@ The `spectr list` command SHALL support a `--stdout` flag that, when combined wi
 
 ### Requirement: JSONC Comment Parsing
 
-The system SHALL support reading JSONC files by stripping comments before JSON parsing.
+The system SHALL support reading JSONC files by stripping comments before JSON
+parsing.
 
 #### Scenario: Strip line comments
 

@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Claude Code Slash Commands
 
-The provider SHALL create slash commands in `.claude/commands/spectr/` directory.
+The provider SHALL create slash commands in `.claude/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 

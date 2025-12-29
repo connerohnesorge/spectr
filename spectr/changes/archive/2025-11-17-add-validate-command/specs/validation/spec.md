@@ -4,11 +4,13 @@
 
 ### Requirement: Spec File Validation
 
-The validation system SHALL validate spec files for structural correctness and adherence to Spectr conventions.
+The validation system SHALL validate spec files for structural correctness and
+adherence to Spectr conventions.
 
 #### Scenario: Valid spec with all required sections
 
-- **WHEN** a spec file contains Purpose and Requirements sections with properly formatted requirements and scenarios
+- **WHEN** a spec file contains Purpose and Requirements sections with properly
+  formatted requirements and scenarios
 - **THEN** validation SHALL pass with no errors
 - **AND** the validation report SHALL indicate valid=true
 
@@ -17,7 +19,8 @@ The validation system SHALL validate spec files for structural correctness and a
 - **WHEN** a spec file lacks a "## Purpose" section
 - **THEN** validation SHALL fail with an ERROR level issue
 - **AND** the error message SHALL indicate which section is missing
-- **AND** the error message SHALL include remediation guidance showing correct format
+- **AND** the error message SHALL include remediation guidance showing correct
+  format
 
 #### Scenario: Missing Requirements section
 
@@ -40,17 +43,20 @@ The validation system SHALL validate spec files for structural correctness and a
 
 #### Scenario: Incorrect scenario format
 
-- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or bold text)
+- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or
+  bold text)
 - **THEN** validation SHALL report an ERROR
 - **AND** the message SHALL show the correct "#### Scenario:" header format
 
 ### Requirement: Change Delta Validation
 
-The validation system SHALL validate change delta specs for structural correctness and delta operation validity.
+The validation system SHALL validate change delta specs for structural
+correctness and delta operation validity.
 
 #### Scenario: Valid change with deltas
 
-- **WHEN** a change directory contains specs with proper ADDED/MODIFIED/REMOVED/RENAMED sections
+- **WHEN** a change directory contains specs with proper
+  ADDED/MODIFIED/REMOVED/RENAMED sections
 - **THEN** validation SHALL pass with no errors
 - **AND** each delta requirement SHALL be counted toward the total
 
@@ -63,7 +69,8 @@ The validation system SHALL validate change delta specs for structural correctne
 
 #### Scenario: Delta sections present but empty
 
-- **WHEN** delta sections exist (## ADDED Requirements) but contain no requirement entries
+- **WHEN** delta sections exist (## ADDED Requirements) but contain no
+  requirement entries
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL indicate which sections are empty
 - **AND** guidance SHALL explain requirement block format
@@ -78,11 +85,13 @@ The validation system SHALL validate change delta specs for structural correctne
 
 - **WHEN** a MODIFIED requirement lacks a "#### Scenario:" block
 - **THEN** validation SHALL fail with an ERROR
-- **AND** the message SHALL require at least one scenario for MODIFIED requirements
+- **AND** the message SHALL require at least one scenario for MODIFIED
+  requirements
 
 #### Scenario: Duplicate requirement in same section
 
-- **WHEN** two requirements with the same normalized name appear in the same delta section
+- **WHEN** two requirements with the same normalized name appear in the same
+  delta section
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL identify the duplicate requirement name
 
@@ -101,7 +110,8 @@ The validation system SHALL validate change delta specs for structural correctne
 
 ### Requirement: Validation Report Structure
 
-The validation system SHALL produce structured validation reports containing issue details and summary statistics.
+The validation system SHALL produce structured validation reports containing
+issue details and summary statistics.
 
 #### Scenario: Report with errors and warnings
 
@@ -127,7 +137,8 @@ The validation system SHALL produce structured validation reports containing iss
 
 ### Requirement: Bulk Validation with Concurrency
 
-The validation system SHALL support validating multiple items in parallel for performance.
+The validation system SHALL support validating multiple items in parallel for
+performance.
 
 #### Scenario: Parallel validation of multiple items
 
@@ -145,14 +156,16 @@ The validation system SHALL support validating multiple items in parallel for pe
 
 #### Scenario: Error handling in parallel validation
 
-- **WHEN** validation of one item fails with an error (not validation issue, but runtime error)
+- **WHEN** validation of one item fails with an error (not validation issue, but
+  runtime error)
 - **THEN** the error SHALL be captured in the results for that item
 - **AND** validation of other items SHALL continue
 - **AND** the final exit code SHALL indicate failure
 
 ### Requirement: Item Discovery
 
-The validation system SHALL discover specs and changes within the project directory structure.
+The validation system SHALL discover specs and changes within the project
+directory structure.
 
 #### Scenario: Discover active changes
 
@@ -174,25 +187,30 @@ The validation system SHALL discover specs and changes within the project direct
 
 ### Requirement: Interactive Validation Mode
 
-The validation system SHALL support interactive selection when invoked without arguments in a TTY.
+The validation system SHALL support interactive selection when invoked without
+arguments in a TTY.
 
 #### Scenario: Interactive mode prompt
 
-- **WHEN** validate command is invoked without arguments in an interactive terminal
-- **THEN** it SHALL prompt user with options: All, All changes, All specs, Pick specific item
+- **WHEN** validate command is invoked without arguments in an interactive
+  terminal
+- **THEN** it SHALL prompt user with options: All, All changes, All specs, Pick
+  specific item
 - **AND** user SHALL be able to select option using arrow keys
 - **AND** selected option SHALL be executed
 
 #### Scenario: Non-interactive environment detection
 
-- **WHEN** validate command is invoked without arguments in non-interactive environment (CI/CD)
+- **WHEN** validate command is invoked without arguments in non-interactive
+  environment (CI/CD)
 - **THEN** it SHALL print usage hints for non-interactive invocation
 - **AND** SHALL exit with code 1
 - **AND** SHALL NOT hang waiting for input
 
 ### Requirement: Helpful Error Messages
 
-The validation system SHALL provide actionable error messages with remediation guidance.
+The validation system SHALL provide actionable error messages with remediation
+guidance.
 
 #### Scenario: Error with remediation steps
 
@@ -217,7 +235,8 @@ The validation system SHALL provide actionable error messages with remediation g
 
 ### Requirement: Exit Code Conventions
 
-The validation system SHALL use exit codes to indicate success or failure for scripting and CI/CD.
+The validation system SHALL use exit codes to indicate success or failure for
+scripting and CI/CD.
 
 #### Scenario: Successful validation
 

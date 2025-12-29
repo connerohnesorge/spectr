@@ -1,8 +1,12 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: PR Hotkey in Interactive Changes List Mode
 
-The interactive changes list mode SHALL provide a `P` (Shift+P) hotkey that exits the TUI and enters the `spectr pr` workflow for the selected change, allowing users to create pull requests without manually copying the change ID.
+The interactive changes list mode SHALL provide a `P` (Shift+P) hotkey that
+exits the TUI and enters the `spectr pr` workflow for the selected change,
+allowing users to create pull requests without manually copying the change ID.
 
 #### Scenario: User presses Shift+P to enter PR mode
 
@@ -42,7 +46,8 @@ The interactive changes list mode SHALL provide a `P` (Shift+P) hotkey that exit
 
 ### Requirement: VHS Demo for PR Hotkey
 
-The system SHALL provide a VHS tape demonstrating the Shift+P hotkey utility in the interactive list TUI.
+The system SHALL provide a VHS tape demonstrating the Shift+P hotkey utility in
+the interactive list TUI.
 
 #### Scenario: Developer finds PR hotkey demo
 

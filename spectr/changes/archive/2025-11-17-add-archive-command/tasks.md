@@ -1,3 +1,5 @@
+# Implementation Tasks
+
 ## 1. Requirement Parsing Infrastructure
 
 - [x] 1.1 Create `internal/parsers/requirement_parser.go`
@@ -99,7 +101,8 @@
   - For each delta spec, build updated spec via merger
   - Validate rebuilt spec before writing
   - Write updated spec to main specs directory
-  - Display operation counts per spec (+ added, ~ modified, - removed, → renamed)
+  - Display operation counts per spec (+ added, ~ modified, - removed, →
+    renamed)
   - Display totals across all specs
 - [x] 4.7 Implement archive operation
   - Create archive directory: `spectr/changes/archive/`

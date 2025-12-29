@@ -1,10 +1,13 @@
+# Implementation Tasks
+
 ## 1. Update Provider Interface and BaseProvider
 
 - [x] 1.1 Add `GetProposalCommandPath() string` to Provider interface
 - [x] 1.2 Add `GetArchiveCommandPath() string` to Provider interface
 - [x] 1.3 Add `GetApplyCommandPath() string` to Provider interface
 - [x] 1.4 Remove `SlashDir() string` from Provider interface
-- [x] 1.5 Replace `slashDir` field with `proposalPath`, `archivePath`, `applyPath` in BaseProvider
+- [x] 1.5 Replace `slashDir` field with `proposalPath`, `archivePath`,
+  `applyPath` in BaseProvider
 - [x] 1.6 Implement the three new methods on BaseProvider
 - [x] 1.7 Update `HasSlashCommands()` to check any path is non-empty
 - [x] 1.8 Add `StandardCommandPaths(dir, ext string)` helper function
@@ -13,7 +16,8 @@
 
 - [x] 2.1 Update `Configure()` to use new path methods
 - [x] 2.2 Update `configureSlashCommands()` to iterate over path methods
-- [x] 2.3 Update `configureSlashCommand()` to accept full path instead of building it
+- [x] 2.3 Update `configureSlashCommand()` to accept full path instead of
+  building it
 - [x] 2.4 Remove `getSlashCommandPath()` private method
 - [x] 2.5 Update `IsConfigured()` to use new path methods
 - [x] 2.6 Update `GetFilePaths()` to use new path methods
@@ -37,10 +41,14 @@
 ## 4. Simplify GeminiProvider
 
 - [x] 4.1 Update GeminiProvider to use TOML paths directly via new fields
-- [x] 4.2 Remove overridden `Configure()` method (use BaseProvider) - KEPT: needed for TOML-specific logic
-- [x] 4.3 Remove `configureSlashCommands()` private method - KEPT: needed for TOML-specific logic
-- [x] 4.4 Remove `configureTOMLCommand()` private method - KEPT: needed for TOML-specific logic
-- [x] 4.5 Remove `getTOMLCommandPath()` private method - SIMPLIFIED: uses path fields directly
+- [x] 4.2 Remove overridden `Configure()` method (use BaseProvider) - KEPT:
+  needed for TOML-specific logic
+- [x] 4.3 Remove `configureSlashCommands()` private method - KEPT: needed for
+  TOML-specific logic
+- [x] 4.4 Remove `configureTOMLCommand()` private method - KEPT: needed for
+  TOML-specific logic
+- [x] 4.5 Remove `getTOMLCommandPath()` private method - SIMPLIFIED: uses path
+  fields directly
 - [x] 4.6 Remove overridden `IsConfigured()` method - DONE
 - [x] 4.7 Remove overridden `GetFilePaths()` method - DONE
 - [x] 4.8 Keep `generateTOMLContent()` for TOML-specific content generation

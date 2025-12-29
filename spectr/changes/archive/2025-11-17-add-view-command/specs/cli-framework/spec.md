@@ -4,7 +4,9 @@
 
 ### Requirement: View Command Structure
 
-The CLI SHALL provide a `view` command that displays a comprehensive project dashboard with summary metrics, active changes, completed changes, and specifications.
+The CLI SHALL provide a `view` command that displays a comprehensive project
+dashboard with summary metrics, active changes, completed changes, and
+specifications.
 
 #### Scenario: View command registration
 
@@ -32,7 +34,8 @@ The CLI SHALL provide a `view` command that displays a comprehensive project das
 
 ### Requirement: Dashboard Summary Metrics
 
-The view command SHALL display summary metrics aggregating key project statistics in a dedicated section at the top of the dashboard.
+The view command SHALL display summary metrics aggregating key project
+statistics in a dedicated section at the top of the dashboard.
 
 #### Scenario: Display summary with all metrics
 
@@ -56,12 +59,14 @@ The view command SHALL display summary metrics aggregating key project statistic
 - **WHEN** aggregating task progress
 - **THEN** the system SHALL sum all tasks from all active changes
 - **AND** SHALL count completed tasks (marked `[x]`)
-- **AND** SHALL calculate overall percentage as `(completedTasks / totalTasks) * 100`
+- **AND** SHALL calculate overall percentage as `(completedTasks / totalTasks) *
+  100`
 - **AND** SHALL handle division by zero (display 0% if no tasks)
 
 ### Requirement: Active Changes Display
 
-The view command SHALL display active changes with visual progress bars showing task completion status.
+The view command SHALL display active changes with visual progress bars showing
+task completion status.
 
 #### Scenario: List active changes with progress
 
@@ -70,7 +75,8 @@ The view command SHALL display active changes with visual progress bars showing 
 - **AND** SHALL show a progress bar rendered with block characters
 - **AND** SHALL show completion percentage after the progress bar
 - **AND** SHALL use yellow circle indicator (◉) before each change
-- **AND** SHALL sort changes by completion percentage ascending, then by ID alphabetically
+- **AND** SHALL sort changes by completion percentage ascending, then by ID
+  alphabetically
 
 #### Scenario: Render progress bar
 
@@ -96,7 +102,8 @@ The view command SHALL display active changes with visual progress bars showing 
 
 ### Requirement: Completed Changes Display
 
-The view command SHALL display changes that have all tasks completed or no tasks defined.
+The view command SHALL display changes that have all tasks completed or no tasks
+defined.
 
 #### Scenario: List completed changes
 
@@ -120,7 +127,8 @@ The view command SHALL display changes that have all tasks completed or no tasks
 
 ### Requirement: Specifications Display
 
-The view command SHALL display all specifications sorted by requirement count to highlight complexity.
+The view command SHALL display all specifications sorted by requirement count to
+highlight complexity.
 
 #### Scenario: List specifications with requirement counts
 
@@ -128,7 +136,8 @@ The view command SHALL display all specifications sorted by requirement count to
 - **THEN** each spec SHALL show its ID padded to 30 characters
 - **AND** SHALL show requirement count with format `{count} requirement(s)`
 - **AND** SHALL use blue square indicator (▪) before each spec
-- **AND** SHALL sort specs by requirement count descending, then by ID alphabetically
+- **AND** SHALL sort specs by requirement count descending, then by ID
+  alphabetically
 
 #### Scenario: Pluralize requirement label
 
@@ -144,7 +153,8 @@ The view command SHALL display all specifications sorted by requirement count to
 
 ### Requirement: Dashboard Visual Formatting
 
-The view command SHALL use colored output, Unicode box-drawing characters, and consistent styling for visual clarity.
+The view command SHALL use colored output, Unicode box-drawing characters, and
+consistent styling for visual clarity.
 
 #### Scenario: Render dashboard header
 
@@ -177,23 +187,30 @@ The view command SHALL use colored output, Unicode box-drawing characters, and c
 
 ### Requirement: JSON Output Format
 
-The view command SHALL support `--json` flag to output dashboard data as structured JSON for programmatic consumption.
+The view command SHALL support `--json` flag to output dashboard data as
+structured JSON for programmatic consumption.
 
 #### Scenario: JSON structure
 
 - **WHEN** user provides `--json` flag
-- **THEN** output SHALL be a JSON object with top-level fields: `summary`, `activeChanges`, `completedChanges`, `specs`
-- **AND** `summary` SHALL contain: `totalSpecs`, `totalRequirements`, `activeChanges`, `completedChanges`, `totalTasks`, `completedTasks`
-- **AND** `activeChanges` SHALL be an array of objects with: `id`, `title`, `progress` (object with `total`, `completed`, `percentage`)
+- **THEN** output SHALL be a JSON object with top-level fields: `summary`,
+  `activeChanges`, `completedChanges`, `specs`
+- **AND** `summary` SHALL contain: `totalSpecs`, `totalRequirements`,
+  `activeChanges`, `completedChanges`, `totalTasks`, `completedTasks`
+- **AND** `activeChanges` SHALL be an array of objects with: `id`, `title`,
+  `progress` (object with `total`, `completed`, `percentage`)
 - **AND** `completedChanges` SHALL be an array of objects with: `id`, `title`
-- **AND** `specs` SHALL be an array of objects with: `id`, `title`, `requirementCount`
+- **AND** `specs` SHALL be an array of objects with: `id`, `title`,
+  `requirementCount`
 
 #### Scenario: JSON arrays sorted consistently
 
 - **WHEN** outputting JSON
-- **THEN** `activeChanges` array SHALL be sorted by percentage ascending, then ID alphabetically
+- **THEN** `activeChanges` array SHALL be sorted by percentage ascending, then
+  ID alphabetically
 - **AND** `completedChanges` array SHALL be sorted by ID alphabetically
-- **AND** `specs` array SHALL be sorted by requirementCount descending, then ID alphabetically
+- **AND** `specs` array SHALL be sorted by requirementCount descending, then ID
+  alphabetically
 
 #### Scenario: JSON with no items
 
@@ -203,7 +220,8 @@ The view command SHALL support `--json` flag to output dashboard data as structu
 
 ### Requirement: Sorting Strategy
 
-The view command SHALL sort dashboard items to surface the most relevant information first.
+The view command SHALL sort dashboard items to surface the most relevant
+information first.
 
 #### Scenario: Sort active changes by priority
 
@@ -225,7 +243,8 @@ The view command SHALL sort dashboard items to surface the most relevant informa
 
 ### Requirement: Data Reuse from Discovery and Parsers
 
-The view command SHALL reuse existing discovery and parsing infrastructure to avoid code duplication.
+The view command SHALL reuse existing discovery and parsing infrastructure to
+avoid code duplication.
 
 #### Scenario: Discover changes and specs
 
@@ -238,7 +257,8 @@ The view command SHALL reuse existing discovery and parsing infrastructure to av
 
 - **WHEN** extracting metadata from markdown files
 - **THEN** use `internal/parsers` package to parse proposal.md for titles
-- **AND** use `internal/parsers` package to parse spec.md for titles and requirement counts
+- **AND** use `internal/parsers` package to parse spec.md for titles and
+  requirement counts
 - **AND** use `internal/parsers` package to parse tasks.md for task counts
 
 ### Requirement: View Command Help Text

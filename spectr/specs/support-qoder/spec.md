@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Documents the Qoder provider integration for Spectr. Qoder is an AI coding assistant that uses `QODER.md` for configuration and `.qoder/commands/` for slash commands.
+Documents the Qoder provider integration for Spectr. Qoder is an AI coding
+assistant that uses `QODER.md` for configuration and `.qoder/commands/` for
+slash commands.
 
 ## Requirements
 
@@ -31,13 +33,15 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Qoder Instruction File
 
-The provider SHALL create and maintain a `QODER.md` instruction file in the project root.
+The provider SHALL create and maintain a `QODER.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Qoder provider selected
 - **THEN** the system creates `QODER.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` markers
 
 #### Scenario: Instruction file update
 
@@ -71,9 +75,11 @@ The provider SHALL create slash commands in `.qoder/commands/spectr/` directory.
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** the proposal command file is created
-- **THEN** frontmatter description SHALL be "Scaffold a new Spectr change and validate strictly."
+- **THEN** frontmatter description SHALL be "Scaffold a new Spectr change and
+  validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** the apply command file is created
-- **THEN** frontmatter description SHALL be "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** frontmatter description SHALL be "Implement an approved Spectr change
+  and keep tasks in sync."

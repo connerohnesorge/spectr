@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: GitHub Action Workflow Integration
 
-The system SHALL provide automated Spectr validation through a GitHub Action workflow job that executes on push and pull request events across all branches.
+The system SHALL provide automated Spectr validation through a GitHub Action
+workflow job that executes on push and pull request events across all branches.
 
 #### Scenario: Validation on push event
 
@@ -18,7 +21,8 @@ The system SHALL provide automated Spectr validation through a GitHub Action wor
 
 ### Requirement: Full Git History Access
 
-The system SHALL configure the GitHub Action to checkout the repository with full git history to enable change detection and validation across commits.
+The system SHALL configure the GitHub Action to checkout the repository with
+full git history to enable change detection and validation across commits.
 
 #### Scenario: Full history checkout
 
@@ -29,18 +33,23 @@ The system SHALL configure the GitHub Action to checkout the repository with ful
 
 ### Requirement: Fast Failure Pipeline Position
 
-The system SHALL position the spectr-validate job as the first job in the CI pipeline to provide rapid feedback on specification violations before running longer-running tests.
+The system SHALL position the spectr-validate job as the first job in the CI
+pipeline to provide rapid feedback on specification violations before running
+longer-running tests.
 
 #### Scenario: Job ordering for fast failure
 
 - **WHEN** a CI pipeline is triggered
-- **THEN** the `spectr-validate` job executes before lint, test, and format-check jobs
+- **THEN** the `spectr-validate` job executes before lint, test, and
+  format-check jobs
 - **AND** developers receive validation feedback within seconds
 - **AND** subsequent jobs do not run if spectr validation fails
 
 ### Requirement: Concurrency Management
 
-The system SHALL cancel in-progress validation runs when new commits are pushed to the same branch to conserve CI resources and provide feedback on the latest changes.
+The system SHALL cancel in-progress validation runs when new commits are pushed
+to the same branch to conserve CI resources and provide feedback on the latest
+changes.
 
 #### Scenario: Stale run cancellation
 
@@ -51,7 +60,9 @@ The system SHALL cancel in-progress validation runs when new commits are pushed 
 
 ### Requirement: Multi-Branch Support
 
-The system SHALL execute spectr validation on all branches, not just main or specific feature branches, to ensure consistent quality across the development workflow.
+The system SHALL execute spectr validation on all branches, not just main or
+specific feature branches, to ensure consistent quality across the development
+workflow.
 
 #### Scenario: Validation on feature branch
 
@@ -67,7 +78,9 @@ The system SHALL execute spectr validation on all branches, not just main or spe
 
 ### Requirement: Action Version Pinning
 
-The system SHALL use a specific version tag of the spectr-action (not `latest` or branch references) to ensure reproducible builds and prevent unexpected behavior from action updates.
+The system SHALL use a specific version tag of the spectr-action (not `latest`
+or branch references) to ensure reproducible builds and prevent unexpected
+behavior from action updates.
 
 #### Scenario: Version-pinned action reference
 

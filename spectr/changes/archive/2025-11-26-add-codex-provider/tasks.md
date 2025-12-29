@@ -2,9 +2,12 @@
 
 ## 1. Extend Path Resolution in BaseProvider
 
-- [x] 1.1 Add `expandPath(path string) string` helper function in `providers/helpers.go`
-- [x] 1.2 Add `isGlobalPath(path string) bool` helper to detect `~/` or `/` prefixed paths
-- [x] 1.3 Modify `BaseProvider.configureSlashCommands()` to use expanded paths for global providers
+- [x] 1.1 Add `expandPath(path string) string` helper function in
+  `providers/helpers.go`
+- [x] 1.2 Add `isGlobalPath(path string) bool` helper to detect `~/` or `/`
+  prefixed paths
+- [x] 1.3 Modify `BaseProvider.configureSlashCommands()` to use expanded paths
+  for global providers
 - [x] 1.4 Modify `BaseProvider.IsConfigured()` to handle global paths correctly
 - [x] 1.5 Add unit tests for `expandPath()` and `isGlobalPath()` helpers
 
@@ -18,7 +21,8 @@
 
 ## 3. Add Specification
 
-- [ ] 3.1 Create `spectr/specs/support-codex/spec.md` after implementation verified
+- [ ] 3.1 Create `spectr/specs/support-codex/spec.md` after implementation
+  verified
 - [ ] 3.2 Archive this change
 
 ## 4. Testing

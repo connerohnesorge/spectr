@@ -23,13 +23,15 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Qwen Instruction File
 
-The provider SHALL create and maintain a `QWEN.md` instruction file in the project root.
+The provider SHALL create and maintain a `QWEN.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Qwen provider selected
 - **THEN** the system creates `QWEN.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` markers
 
 ### Requirement: Qwen Slash Commands
 

@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Cursor Slash Commands
 
-The provider SHALL create slash commands in `.cursorrules/commands/spectr/` directory.
+The provider SHALL create slash commands in `.cursorrules/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
 

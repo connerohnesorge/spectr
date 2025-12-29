@@ -1,22 +1,28 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Centralized Error Package
 
-The system SHALL provide a centralized `internal/specterrs` package containing all custom error types used throughout the codebase.
+The system SHALL provide a centralized `internal/specterrs` package containing
+all custom error types used throughout the codebase.
 
 #### Scenario: Import error types from specterrs
 
 - **WHEN** a package needs to return a domain-specific error
-- **THEN** it SHALL import from `internal/specterrs` and use the appropriate typed error
+- **THEN** it SHALL import from `internal/specterrs` and use the appropriate
+  typed error
 
 #### Scenario: Error message preservation
 
 - **WHEN** migrating from inline `errors.New()` to custom types
-- **THEN** the error messages SHALL remain identical to preserve backward compatibility
+- **THEN** the error messages SHALL remain identical to preserve backward
+  compatibility
 
 ### Requirement: Domain-Based Error Organization
 
-The system SHALL organize error types into domain-specific files within the specterrs package.
+The system SHALL organize error types into domain-specific files within the
+specterrs package.
 
 #### Scenario: Git errors in git.go
 
@@ -25,7 +31,8 @@ The system SHALL organize error types into domain-specific files within the spec
 
 #### Scenario: Archive errors in archive.go
 
-- **WHEN** defining archive workflow errors (cancellation, conflicts, validation)
+- **WHEN** defining archive workflow errors (cancellation, conflicts,
+  validation)
 - **THEN** they SHALL be defined in `internal/specterrs/archive.go`
 
 #### Scenario: Validation errors in validation.go
@@ -35,33 +42,40 @@ The system SHALL organize error types into domain-specific files within the spec
 
 ### Requirement: Custom Error Types with Structured Fields
 
-The system SHALL use custom struct types for all errors, with optional fields for contextual information.
+The system SHALL use custom struct types for all errors, with optional fields
+for contextual information.
 
 #### Scenario: Error with context fields
 
-- **WHEN** an error benefits from additional context (e.g., file path, operation name)
+- **WHEN** an error benefits from additional context (e.g., file path, operation
+  name)
 - **THEN** the error type SHALL include struct fields for that context
 
 #### Scenario: Error interface implementation
 
 - **WHEN** defining a custom error type
-- **THEN** it SHALL implement the `error` interface via an `Error() string` method with a pointer receiver
+- **THEN** it SHALL implement the `error` interface via an `Error() string`
+  method with a pointer receiver
 
 #### Scenario: Error wrapping support
 
 - **WHEN** an error type wraps an underlying error
-- **THEN** it SHALL implement `Unwrap() error` to support `errors.Is()` and `errors.As()`
+- **THEN** it SHALL implement `Unwrap() error` to support `errors.Is()` and
+  `errors.As()`
 
 ### Requirement: No Sentinel Errors
 
-The system SHALL NOT define sentinel error variables (e.g., `var ErrFoo = errors.New(...)`).
+The system SHALL NOT define sentinel error variables (e.g., `var ErrFoo =
+errors.New(...)`).
 
 #### Scenario: Existing sentinels removed
 
 - **WHEN** the migration is complete
-- **THEN** the existing `ErrUserCancelled` sentinel SHALL be removed and replaced with `UserCancelledError` type
+- **THEN** the existing `ErrUserCancelled` sentinel SHALL be removed and
+  replaced with `UserCancelledError` type
 
 #### Scenario: Error checking with types
 
 - **WHEN** code needs to check for a specific error condition
-- **THEN** it SHALL use `errors.As()` with a pointer to the error type instead of `errors.Is()` with a sentinel
+- **THEN** it SHALL use `errors.As()` with a pointer to the error type instead
+  of `errors.Is()` with a sentinel

@@ -2,7 +2,13 @@
 
 ## Purpose
 
-Spectr is a CLI tool for validatable spec-driven development, inspired by OpenSpec and Kiro. It helps teams manage specifications and changes through a structured workflow: creating change proposals with delta specs, validating them against strict rules, implementing the changes, and archiving them after deployment. The tool enforces clear separation between current truth (specs/) and proposed changes (changes/), ensuring all modifications are intentional, documented, and validated.
+Spectr is a CLI tool for validatable spec-driven development, inspired by
+OpenSpec and Kiro. It helps teams manage specifications and changes through a
+structured workflow: creating change proposals with delta specs, validating them
+against strict rules, implementing the changes, and archiving them after
+deployment. The tool enforces clear separation between current truth (specs/)
+and proposed changes (changes/), ensuring all modifications are intentional,
+documented, and validated.
 
 ## Tech Stack
 
@@ -10,7 +16,8 @@ Spectr is a CLI tool for validatable spec-driven development, inspired by OpenSp
 - **CLI Framework**: Kong (github.com/alecthomas/kong v1.13.0)
 - **TUI Framework**: Bubbletea (github.com/charmbracelet/bubbletea v1.3.10)
 - **Styling**: Lipgloss (github.com/charmbracelet/lipgloss v1.1.0)
-- **Linting**: golangci-lint with comprehensive linters (asasalint, exhaustive, bidichk, gocritic, staticcheck, revive, etc.)
+- **Linting**: golangci-lint with comprehensive linters (asasalint, exhaustive,
+  bidichk, gocritic, staticcheck, revive, etc.)
 - **Build/Release**: GoReleaser
 - **Package Manager**: Nix (with flakes and direnv)
 
@@ -23,13 +30,16 @@ Spectr is a CLI tool for validatable spec-driven development, inspired by OpenSp
 - **Naming**:
   - Packages: lowercase, single-word (e.g., `validation`, `parsers`, `archive`)
   - Interfaces: Descriptive nouns (e.g., `Validator`, `Parser`)
-  - Change IDs: kebab-case with verb-led prefixes (`add-`, `update-`, `remove-`, `refactor-`)
+  - Change IDs: kebab-case with verb-led prefixes (`add-`, `update-`, `remove-`,
+    `refactor-`)
 - **Comments**: Exported types and functions must have doc comments
-- **Error Handling**: Explicit error returns with context using `fmt.Errorf` wrapping
+- **Error Handling**: Explicit error returns with context using `fmt.Errorf`
+  wrapping
 
 ### Architecture Patterns
 
-- **Clean Architecture**: Clear separation between cmd/, internal/, and domain logic
+- **Clean Architecture**: Clear separation between cmd/, internal/, and domain
+  logic
 - **Packages**:
   - `cmd/`: CLI command definitions and handlers (thin layer)
   - `internal/init/`: Initialization wizard and setup logic
@@ -61,7 +71,8 @@ Spectr is a CLI tool for validatable spec-driven development, inspired by OpenSp
 - **Main Branch**: `main`
 - **Feature Development**: Work in branches, merge to main
 - **Commit Style**: Descriptive commits with context
-- **Status**: Track changes via git status (currently has staged and untracked files)
+- **Status**: Track changes via git status (currently has staged and untracked
+  files)
 - **Release**: Automated via GitHub Actions and GoReleaser
 - **Hooks**: Pre-commit validation recommended
 
@@ -91,7 +102,8 @@ Spectr implements a three-stage workflow:
 
 - **Specs**: Current truth - what IS built (`spectr/specs/`)
 - **Changes**: Proposals - what SHOULD change (`spectr/changes/`)
-- **Capabilities**: Single focused feature areas (e.g., `cli-framework`, `validation`)
+- **Capabilities**: Single focused feature areas (e.g., `cli-framework`,
+  `validation`)
 - **Deltas**: Proposed changes to specs (ADDED/MODIFIED/REMOVED/RENAMED)
 - **Requirements**: SHALL/MUST statements with scenarios
 - **Scenarios**: WHEN/THEN test cases for requirements
@@ -122,7 +134,8 @@ Spectr implements a three-stage workflow:
 
 ## External Dependencies
 
-- **None** - Spectr is a self-contained CLI tool with no external API dependencies
+- **None** - Spectr is a self-contained CLI tool with no external API
+  dependencies
 - All dependencies are Go libraries managed via `go.mod`
 - Nix flake manages development environment setup
 - GoReleaser handles binary distribution

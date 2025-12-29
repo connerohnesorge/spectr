@@ -1,18 +1,25 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Interactive List Mode
 
-The interactive list mode in `spectr list` is extended to support unified display of changes and specifications alongside existing separate modes.
+The interactive list mode in `spectr list` is extended to support unified
+display of changes and specifications alongside existing separate modes.
 
 #### Previous behavior
 
-The system displays either changes OR specs in interactive mode based on the `--specs` flag. Columns and behavior are specific to each item type.
+The system displays either changes OR specs in interactive mode based on the
+`--specs` flag. Columns and behavior are specific to each item type.
 
 #### New behavior
 
-- When `--all` is provided with `--interactive`, both changes and specs are shown together with unified columns
-- When neither `--all` nor `--specs` are provided, changes-only mode is default (backward compatible)
-- When `--specs` is provided without `--all`, specs-only mode is used (backward compatible)
+- When `--all` is provided with `--interactive`, both changes and specs are
+  shown together with unified columns
+- When neither `--all` nor `--specs` are provided, changes-only mode is default
+  (backward compatible)
+- When `--specs` is provided without `--all`, specs-only mode is used (backward
+  compatible)
 - Each item type is clearly labeled in the Type column (CHANGE or SPEC)
 - Type-aware actions apply based on selected item (edit only for specs)
 
@@ -47,17 +54,20 @@ The system displays either changes OR specs in interactive mode based on the `--
 
 #### Scenario: Help text uses condensed two-line format
 
-- **WHEN** interactive mode is displayed in any mode (changes, specs, or unified)
+- **WHEN** interactive mode is displayed in any mode (changes, specs, or
+  unified)
 - **THEN** the help text is formatted across two lines
 - **AND** line 1 shows controls: navigation, actions, and item count
 - **AND** line 2 shows project path
-- **AND** navigation hint uses condensed format `↑/↓/j/k` instead of `↑/↓ or j/k`
-- **AND** edit action uses short label `e: edit` instead of `e: edit proposal` or `e: edit spec`
+- **AND** navigation hint uses condensed format `↑/↓/j/k` instead of `↑/↓ or
+  j/k`
+- **AND** edit action uses short label `e: edit` instead of `e: edit proposal`
+  or `e: edit spec`
 
 #### Scenario: Help text format for changes mode
 
 - **WHEN** user runs `spectr list -I` (changes mode)
-- **THEN** line 1 shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | a: archive | q: quit`
+- **THEN** line 1 shows: `↑/↓/j/k: nav | Enter: copy | e: edit | a: arch | q: quit`
 - **AND** line 2 shows: `project: <path>`
 
 #### Scenario: Help text format for specs mode
@@ -70,7 +80,7 @@ The system displays either changes OR specs in interactive mode based on the `--
 #### Scenario: Help text format for unified mode
 
 - **WHEN** user runs `spectr list --all -I` (unified mode)
-- **THEN** line 1 shows: `↑/↓/j/k: navigate | Enter: copy ID | e: edit | t: toggle filter (<filter>) | q: quit`
+- **THEN** line 1 shows: `↑/↓/j/k: nav | Enter: copy | e: edit | t: toggle | q: quit`
 - **AND** line 2 shows: `project: <path>`
 - **AND** archive hotkey is NOT shown in unified mode for simplicity
 
@@ -78,7 +88,9 @@ The system displays either changes OR specs in interactive mode based on the `--
 
 ### Requirement: Archive Hotkey in Interactive Changes Mode
 
-The interactive changes list mode SHALL provide an 'a' hotkey that archives the currently selected change, invoking the same workflow as `spectr archive <change-id>`.
+The interactive changes list mode SHALL provide an 'a' hotkey that archives the
+currently selected change, invoking the same workflow as `spectr archive
+<change-id>`.
 
 #### Scenario: User presses 'a' to archive a change
 
@@ -86,7 +98,8 @@ The interactive changes list mode SHALL provide an 'a' hotkey that archives the 
 - **AND** user presses the 'a' key on a selected change
 - **THEN** the interactive mode exits
 - **AND** the archive workflow begins for the selected change ID
-- **AND** validation, task checking, and spec updates proceed as if the ID was provided as an argument
+- **AND** validation, task checking, and spec updates proceed as if the ID was
+  provided as an argument
 - **AND** all confirmation prompts and flags work normally
 
 #### Scenario: Archive hotkey not available in specs mode

@@ -4,11 +4,14 @@
 
 ### Requirement: Unified Item List Display
 
-The system SHALL display changes and specifications together in a single interactive table when invoked with appropriate flags, allowing users to browse both item types simultaneously with clear visual differentiation.
+The system SHALL display changes and specifications together in a single
+interactive table when invoked with appropriate flags, allowing users to browse
+both item types simultaneously with clear visual differentiation.
 
 #### Scenario: User opens unified interactive list
 
-- **WHEN** the user runs `spectr list --interactive --all` from a directory with both changes and specs
+- **WHEN** the user runs `spectr list --interactive --all` from a directory with
+  both changes and specs
 - **THEN** a table appears showing both changes and specs rows
 - **AND** each row indicates its type (change or spec)
 - **AND** the table maintains correct ordering and alignment
@@ -16,7 +19,8 @@ The system SHALL display changes and specifications together in a single interac
 #### Scenario: Unified list shows correct columns
 
 - **WHEN** the unified interactive mode is active
-- **THEN** the table displays: Type, ID, Title, and Type-Specific Details columns
+- **THEN** the table displays: Type, ID, Title, and Type-Specific Details
+  columns
 - **AND** "Type-Specific Details" shows "Deltas/Tasks" for changes
 - **AND** "Type-Specific Details" shows "Requirements" for specs
 
@@ -29,7 +33,8 @@ The system SHALL display changes and specifications together in a single interac
 
 ### Requirement: Type-Aware Item Selection
 
-The system SHALL track whether a selected item is a change or spec and provide type-appropriate actions (e.g., edit only works for specs).
+The system SHALL track whether a selected item is a change or spec and provide
+type-appropriate actions (e.g., edit only works for specs).
 
 #### Scenario: Selecting a spec in unified mode
 
@@ -53,7 +58,8 @@ The system SHALL track whether a selected item is a change or spec and provide t
 
 ### Requirement: Backward-Compatible Separate Modes
 
-The system SHALL maintain existing interactive modes for changes-only and specs-only when `--all` flag is not provided.
+The system SHALL maintain existing interactive modes for changes-only and
+specs-only when `--all` flag is not provided.
 
 #### Scenario: Changes-only mode still works
 
@@ -71,7 +77,8 @@ The system SHALL maintain existing interactive modes for changes-only and specs-
 
 ### Requirement: Enhanced List Command Flags
 
-The system SHALL support new flag combinations to control listing behavior while maintaining validation for mutually exclusive options.
+The system SHALL support new flag combinations to control listing behavior while
+maintaining validation for mutually exclusive options.
 
 #### Scenario: Flag validation for unified mode
 
@@ -95,17 +102,22 @@ The system SHALL support new flag combinations to control listing behavior while
 
 ### Requirement: Interactive List Mode
 
-The interactive list mode in `spectr list` is extended to support unified display of changes and specifications alongside existing separate modes.
+The interactive list mode in `spectr list` is extended to support unified
+display of changes and specifications alongside existing separate modes.
 
 #### Previous behavior
 
-The system displays either changes OR specs in interactive mode based on the `--specs` flag. Columns and behavior are specific to each item type.
+The system displays either changes OR specs in interactive mode based on the
+`--specs` flag. Columns and behavior are specific to each item type.
 
 #### New behavior
 
-- When `--all` is provided with `--interactive`, both changes and specs are shown together with unified columns
-- When neither `--all` nor `--specs` are provided, changes-only mode is default (backward compatible)
-- When `--specs` is provided without `--all`, specs-only mode is used (backward compatible)
+- When `--all` is provided with `--interactive`, both changes and specs are
+  shown together with unified columns
+- When neither `--all` nor `--specs` are provided, changes-only mode is default
+  (backward compatible)
+- When `--specs` is provided without `--all`, specs-only mode is used (backward
+  compatible)
 - Each item type is clearly labeled in the Type column (CHANGE or SPEC)
 - Type-aware actions apply based on selected item (edit only for specs)
 

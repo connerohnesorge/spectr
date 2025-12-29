@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Track Command Binary Filtering
 
-The track command SHALL support binary file filtering to prevent unintentional commits of binary files.
+The track command SHALL support binary file filtering to prevent unintentional
+commits of binary files.
 
 #### Scenario: Include-binaries flag enables binary file commits
 
@@ -26,7 +29,9 @@ The track command SHALL support binary file filtering to prevent unintentional c
 
 #### Scenario: Only binary files modified
 
-- **WHEN** a task status changes and only binary files were modified (with no --include-binaries flag)
-- **THEN** the system displays a warning: "No files to commit for task <task-id> (binary files excluded)"
+- **WHEN** a task status changes and only binary files were modified (with no
+  --include-binaries flag)
+- **THEN** the system displays a warning: "No files to commit for task
+  \<task-id\> (binary files excluded)"
 - **AND** lists the skipped binary files
 - **AND** continues watching for more task changes

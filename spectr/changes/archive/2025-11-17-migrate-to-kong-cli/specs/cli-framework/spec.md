@@ -4,12 +4,14 @@
 
 ### Requirement: Struct-Based Command Definition
 
-The CLI framework SHALL use Go struct types with struct tags to declaratively define command structure, subcommands, flags, and arguments.
+The CLI framework SHALL use Go struct types with struct tags to declaratively
+define command structure, subcommands, flags, and arguments.
 
 #### Scenario: Root command definition
 
 - **WHEN** the CLI is initialized
-- **THEN** it SHALL use a root struct with subcommand fields tagged with `cmd` for command definitions
+- **THEN** it SHALL use a root struct with subcommand fields tagged with `cmd`
+  for command definitions
 - **AND** each subcommand SHALL be a nested struct type with appropriate tags
 
 #### Scenario: Subcommand registration
@@ -21,12 +23,14 @@ The CLI framework SHALL use Go struct types with struct tags to declaratively de
 
 ### Requirement: Declarative Flag Definition
 
-The CLI framework SHALL define flags using struct fields with Kong struct tags instead of imperative flag registration.
+The CLI framework SHALL define flags using struct fields with Kong struct tags
+instead of imperative flag registration.
 
 #### Scenario: String flag definition
 
 - **WHEN** a command requires a string flag
-- **THEN** it SHALL be defined as a struct field with `name` tag for the flag name
+- **THEN** it SHALL be defined as a struct field with `name` tag for the flag
+  name
 - **AND** it MAY include `short` tag for single-character shorthand
 - **AND** it SHALL include `help` tag describing the flag purpose
 - **AND** it MAY include `default` tag for default values
@@ -45,13 +49,15 @@ The CLI framework SHALL define flags using struct fields with Kong struct tags i
 
 ### Requirement: Positional Argument Support
 
-The CLI framework SHALL support positional arguments using struct fields tagged with `arg`.
+The CLI framework SHALL support positional arguments using struct fields tagged
+with `arg`.
 
 #### Scenario: Optional positional argument
 
 - **WHEN** a command accepts an optional positional argument
 - **THEN** it SHALL be defined with `arg` and `optional` tags
-- **AND** the field SHALL be a pointer type or have a zero value for "not provided"
+- **AND** the field SHALL be a pointer type or have a zero value for "not
+  provided"
 
 #### Scenario: Required positional argument
 
@@ -61,7 +67,8 @@ The CLI framework SHALL support positional arguments using struct fields tagged 
 
 ### Requirement: Automatic Method Dispatch
 
-The CLI framework SHALL automatically invoke the appropriate command's Run method after parsing.
+The CLI framework SHALL automatically invoke the appropriate command's Run
+method after parsing.
 
 #### Scenario: Command execution
 
@@ -72,7 +79,8 @@ The CLI framework SHALL automatically invoke the appropriate command's Run metho
 
 ### Requirement: Built-in Help Generation
 
-The CLI framework SHALL automatically generate help text from struct tags and types.
+The CLI framework SHALL automatically generate help text from struct tags and
+types.
 
 #### Scenario: Root help display
 
@@ -90,7 +98,8 @@ The CLI framework SHALL automatically generate help text from struct tags and ty
 
 ### Requirement: Error Handling and Exit Codes
 
-The CLI framework SHALL provide appropriate error messages and exit codes for parsing and execution failures.
+The CLI framework SHALL provide appropriate error messages and exit codes for
+parsing and execution failures.
 
 #### Scenario: Parse error handling
 
@@ -107,12 +116,14 @@ The CLI framework SHALL provide appropriate error messages and exit codes for pa
 
 ### Requirement: Backward-Compatible CLI Interface
 
-The CLI framework SHALL maintain the same command syntax and flag names as the previous implementation.
+The CLI framework SHALL maintain the same command syntax and flag names as the
+previous implementation.
 
 #### Scenario: Init command compatibility
 
 - **WHEN** users invoke `spectr init` with existing flag combinations
-- **THEN** the behavior SHALL be identical to the previous Cobra-based implementation
+- **THEN** the behavior SHALL be identical to the previous Cobra-based
+  implementation
 - **AND** all flag names SHALL remain unchanged
 - **AND** short flag aliases SHALL remain unchanged
 - **AND** positional argument handling SHALL remain unchanged

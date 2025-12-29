@@ -1,8 +1,13 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Partial Change ID Resolution for Archive Command
 
-The `spectr archive` command SHALL support intelligent partial ID matching when a non-exact change ID is provided as an argument. The resolution algorithm SHALL prioritize prefix matches over substring matches and require a unique match to proceed.
+The `spectr archive` command SHALL support intelligent partial ID matching when
+a non-exact change ID is provided as an argument. The resolution algorithm SHALL
+prioritize prefix matches over substring matches and require a unique match to
+proceed.
 
 #### Scenario: Exact ID match takes precedence
 
@@ -14,23 +19,29 @@ The `spectr archive` command SHALL support intelligent partial ID matching when 
 #### Scenario: Unique prefix match resolves successfully
 
 - **WHEN** user runs `spectr archive refactor`
-- **AND** only one change ID starts with `refactor` (e.g., `refactor-unified-interactive-tui`)
-- **THEN** a message is displayed: "Resolved 'refactor' -> 'refactor-unified-interactive-tui'"
+- **AND** only one change ID starts with `refactor` (e.g.,
+  `refactor-unified-interactive-tui`)
+- **THEN** a message is displayed: "Resolved 'refactor' ->
+  'refactor-unified-interactive-tui'"
 - **AND** the archive proceeds with the resolved ID
 
 #### Scenario: Unique substring match resolves successfully
 
 - **WHEN** user runs `spectr archive unified`
 - **AND** no change ID starts with `unified`
-- **AND** only one change ID contains `unified` (e.g., `refactor-unified-interactive-tui`)
-- **THEN** a message is displayed: "Resolved 'unified' -> 'refactor-unified-interactive-tui'"
+- **AND** only one change ID contains `unified` (e.g.,
+  `refactor-unified-interactive-tui`)
+- **THEN** a message is displayed: "Resolved 'unified' ->
+  'refactor-unified-interactive-tui'"
 - **AND** the archive proceeds with the resolved ID
 
 #### Scenario: Multiple prefix matches cause error
 
 - **WHEN** user runs `spectr archive add`
-- **AND** multiple change IDs start with `add` (e.g., `add-feature`, `add-hotkey`)
-- **THEN** an error is displayed: "Ambiguous ID 'add' matches multiple changes: add-feature, add-hotkey"
+- **AND** multiple change IDs start with `add` (e.g., `add-feature`,
+  `add-hotkey`)
+- **THEN** an error is displayed: "Ambiguous ID 'add' matches multiple changes:
+  add-feature, add-hotkey"
 - **AND** the command exits with error code 1
 - **AND** no archive operation is performed
 
@@ -38,8 +49,10 @@ The `spectr archive` command SHALL support intelligent partial ID matching when 
 
 - **WHEN** user runs `spectr archive search`
 - **AND** no change ID starts with `search`
-- **AND** multiple change IDs contain `search` (e.g., `add-search-hotkey`, `update-search-ui`)
-- **THEN** an error is displayed: "Ambiguous ID 'search' matches multiple changes: add-search-hotkey, update-search-ui"
+- **AND** multiple change IDs contain `search` (e.g., `add-search-hotkey`,
+  `update-search-ui`)
+- **THEN** an error is displayed: "Ambiguous ID 'search' matches multiple
+  changes: add-search-hotkey, update-search-ui"
 - **AND** the command exits with error code 1
 - **AND** no archive operation is performed
 

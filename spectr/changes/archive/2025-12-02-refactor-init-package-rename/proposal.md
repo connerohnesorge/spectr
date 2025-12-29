@@ -2,11 +2,14 @@
 
 ## Summary
 
-Rename the `internal/init` package to `internal/initialize` to avoid Go reserved keyword conflict and simplify import aliasing in consumers.
+Rename the `internal/init` package to `internal/initialize` to avoid Go reserved
+keyword conflict and simplify import aliasing in consumers.
 
 ## Motivation
 
-The current package path `github.com/connerohnesorge/spectr/internal/init` conflicts with Go's reserved `init` keyword, requiring awkward import aliases like `initpkg` in consuming code:
+The current package path `github.com/connerohnesorge/spectr/internal/init`
+conflicts with Go's reserved `init` keyword, requiring awkward import aliases
+like `initpkg` in consuming code:
 
 ```go
 initpkg "github.com/connerohnesorge/spectr/internal/init"
@@ -21,7 +24,8 @@ Renaming to `initialize` allows clean imports:
 ## Scope
 
 - Rename directory: `internal/init` -> `internal/initialize`
-- Update package declaration in all files from `package init` to `package initialize`
+- Update package declaration in all files from `package init` to `package
+  initialize`
 - Update import paths in all consumers
 - Simplify import aliases where they become unnecessary
 
@@ -43,7 +47,8 @@ Files importing the package:
 ## Risk Assessment
 
 - **Low risk**: Pure refactoring with no behavioral changes
-- **Automated verification**: `go build ./...` and `go test ./...` will catch any missed updates
+- **Automated verification**: `go build ./...` and `go test ./...` will catch
+  any missed updates
 - All changes are mechanical find-and-replace operations
 
 ## Success Criteria

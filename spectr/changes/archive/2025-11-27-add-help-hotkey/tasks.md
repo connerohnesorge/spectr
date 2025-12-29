@@ -1,16 +1,25 @@
+# Implementation Tasks
+
 ## 1. Core Implementation
 
-- [x] 1.1 Add `showHelp` boolean field to `TablePicker` struct in `internal/tui/table.go`
-- [x] 1.2 Add `?` key handler in `TablePicker.Update()` to toggle `showHelp` state
-- [x] 1.3 Create `generateMinimalFooter()` method that shows only item count, project path, and `?: help` hint
-- [x] 1.4 Modify `generateHelpText()` to be the full help text (existing implementation)
-- [x] 1.5 Update `View()` to show minimal footer by default, full help when `showHelp` is true
+- [x] 1.1 Add `showHelp` boolean field to `TablePicker` struct in
+  `internal/tui/table.go`
+- [x] 1.2 Add `?` key handler in `TablePicker.Update()` to toggle `showHelp`
+  state
+- [x] 1.3 Create `generateMinimalFooter()` method that shows only item count,
+  project path, and `?: help` hint
+- [x] 1.4 Modify `generateHelpText()` to be the full help text (existing
+  implementation)
+- [x] 1.5 Update `View()` to show minimal footer by default, full help when
+  `showHelp` is true
 - [x] 1.6 Auto-hide help on navigation keys (↑/↓/j/k) to return to minimal view
 
 ## 2. Interactive Model Updates
 
-- [x] 2.1 Add `showHelp` field to `interactiveModel` in `internal/list/interactive.go`
-- [x] 2.2 Add `?` key handler in `interactiveModel.Update()` to toggle help display
+- [x] 2.1 Add `showHelp` field to `interactiveModel` in
+  `internal/list/interactive.go`
+- [x] 2.2 Add `?` key handler in `interactiveModel.Update()` to toggle help
+  display
 - [x] 2.3 Update `View()` to conditionally show minimal or full help text
 - [x] 2.4 Update `rebuildUnifiedTable()` to preserve help toggle state
 - [x] 2.5 Auto-hide help on navigation keys to avoid cluttering view
@@ -18,7 +27,8 @@
 ## 3. Testing
 
 - [x] 3.1 Add test for `?` key toggling help visibility in TablePicker
-- [x] 3.2 Add test for minimal footer content (item count, project path, `?: help`)
+- [x] 3.2 Add test for minimal footer content (item count, project path, `?:
+  help`)
 - [x] 3.3 Add test for full help content when help is shown
 - [x] 3.4 Add test for auto-hide on navigation keys
 - [x] 3.5 Add test for help toggle in interactiveModel

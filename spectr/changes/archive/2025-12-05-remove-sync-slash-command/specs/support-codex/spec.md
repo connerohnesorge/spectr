@@ -1,14 +1,18 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Codex Global Slash Commands
 
-The provider SHALL create slash commands in the global `~/.codex/prompts/` directory.
+The provider SHALL create slash commands in the global `~/.codex/prompts/`
+directory.
 
 #### Scenario: Global command directory structure
 
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `~/.codex/prompts/spectr/` directory
-- **AND** the directory is created in user's home directory, not project directory
+- **AND** the directory is created in user's home directory, not project
+  directory
 
 #### Scenario: Command paths
 
@@ -36,16 +40,19 @@ The provider SHALL use Markdown format with YAML frontmatter for slash commands.
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** generating the proposal command file
-- **THEN** the frontmatter description is "Scaffold a new Spectr change and validate strictly."
+- **THEN** the frontmatter description is "Scaffold a new Spectr change and
+  validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** generating the apply command file
-- **THEN** the frontmatter description is "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** the frontmatter description is "Implement an approved Spectr change
+  and keep tasks in sync."
 
 ### Requirement: Codex Command Invocation
 
-Users SHALL invoke Spectr commands in Codex using the `/spectr-<command>` pattern.
+Users SHALL invoke Spectr commands in Codex using the `/spectr-<command>`
+pattern.
 
 #### Scenario: Invoking proposal command
 

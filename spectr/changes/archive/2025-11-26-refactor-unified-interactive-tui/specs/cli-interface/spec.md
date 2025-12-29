@@ -1,12 +1,17 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Shared TUI Component Library
 
-The CLI SHALL use a shared `internal/tui` package for interactive TUI components, providing consistent styling, behavior, and composable building blocks across all interactive modes.
+The CLI SHALL use a shared `internal/tui` package for interactive TUI
+components, providing consistent styling, behavior, and composable building
+blocks across all interactive modes.
 
 #### Scenario: TablePicker used for item selection
 
-- **WHEN** any command needs an interactive table-based selection (list, archive, validation item picker)
+- **WHEN** any command needs an interactive table-based selection (list,
+  archive, validation item picker)
 - **THEN** the command SHALL use the `TablePicker` component from `internal/tui`
 - **AND** the table SHALL use consistent styling from `tui.ApplyTableStyles()`
 - **AND** navigation keys (↑/↓, j/k) SHALL work identically across all usages
@@ -14,7 +19,8 @@ The CLI SHALL use a shared `internal/tui` package for interactive TUI components
 
 #### Scenario: MenuPicker used for option selection
 
-- **WHEN** any command needs an interactive menu selection (validation mode menu)
+- **WHEN** any command needs an interactive menu selection (validation mode
+  menu)
 - **THEN** the command SHALL use the `MenuPicker` component from `internal/tui`
 - **AND** the menu SHALL use consistent styling
 - **AND** navigation and selection behavior SHALL match the TablePicker patterns
@@ -43,7 +49,8 @@ The CLI SHALL use a shared `internal/tui` package for interactive TUI components
 #### Scenario: Domain logic remains in consuming packages
 
 - **WHEN** the tui package is used by list or validation
-- **THEN** domain-specific logic (archive workflow, validation execution) SHALL remain in consuming packages
+- **THEN** domain-specific logic (archive workflow, validation execution) SHALL
+  remain in consuming packages
 - **AND** the tui package SHALL only provide UI primitives
 - **AND** business logic SHALL not be coupled to the tui package
 
@@ -51,7 +58,8 @@ The CLI SHALL use a shared `internal/tui` package for interactive TUI components
 
 ### Requirement: Table Visual Styling
 
-The interactive table SHALL use clear visual styling to distinguish headers, selected rows, and borders, provided by the shared `internal/tui` package.
+The interactive table SHALL use clear visual styling to distinguish headers,
+selected rows, and borders, provided by the shared `internal/tui` package.
 
 #### Scenario: Visual hierarchy in table
 
@@ -64,21 +72,26 @@ The interactive table SHALL use clear visual styling to distinguish headers, sel
 
 #### Scenario: Consistent styling across commands
 
-- **WHEN** user uses `spectr list -I`, `spectr archive`, or `spectr validate` interactive modes
+- **WHEN** user uses `spectr list -I`, `spectr archive`, or `spectr validate`
+  interactive modes
 - **THEN** all tables SHALL use identical styling
 - **AND** colors, borders, and highlights SHALL match exactly
-- **AND** the shared `tui.ApplyTableStyles()` function SHALL be the single source of truth
-
-## MODIFIED Requirements
+- **AND** the shared `tui.ApplyTableStyles()` function SHALL be the single
+  source of truth
 
 ### Requirement: Interactive Archive Mode
 
-The archive command SHALL provide an interactive table interface when no change ID argument is provided, displaying available changes in a navigable table format identical to the list command's interactive mode with project path information. The `-I`/`--interactive` flag has been removed as TUI is now the default behavior when no change ID is provided.
+The archive command SHALL provide an interactive table interface when no change
+ID argument is provided, displaying available changes in a navigable table
+format identical to the list command's interactive mode with project path
+information. The `-I`/`--interactive` flag has been removed as TUI is now the
+default behavior when no change ID is provided.
 
 #### Scenario: User runs archive with no arguments
 
 - **WHEN** user runs `spectr archive` with no change ID argument
-- **THEN** an interactive table is displayed with columns: ID, Title, Deltas, Tasks
+- **THEN** an interactive table is displayed with columns: ID, Title, Deltas,
+  Tasks
 - **AND** the table supports arrow key navigation (↑/↓, j/k)
 - **AND** the first row is selected by default
 - **AND** the table uses the same visual styling as list -I

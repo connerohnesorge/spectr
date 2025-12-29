@@ -2,17 +2,21 @@
 
 ## Purpose
 
-The validation system ensures that spec files and change proposals conform to Spectr conventions, providing structural correctness checks, helpful error messages, and bulk validation capabilities for CI/CD integration.
+The validation system ensures that spec files and change proposals conform to
+Spectr conventions, providing structural correctness checks, helpful error
+messages, and bulk validation capabilities for CI/CD integration.
 
 ## Requirements
 
 ### Requirement: Spec File Validation
 
-The validation system SHALL validate spec files for structural correctness and adherence to Spectr conventions.
+The validation system SHALL validate spec files for structural correctness and
+adherence to Spectr conventions.
 
 #### Scenario: Valid spec with all required sections
 
-- **WHEN** a spec file contains a Requirements section with properly formatted requirements and scenarios
+- **WHEN** a spec file contains a Requirements section with properly formatted
+  requirements and scenarios
 - **THEN** validation SHALL pass with no errors
 - **AND** the validation report SHALL indicate valid=true
 
@@ -37,25 +41,30 @@ The validation system SHALL validate spec files for structural correctness and a
 
 #### Scenario: Incorrect scenario format
 
-- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or bold text)
+- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or
+  bold text)
 - **THEN** validation SHALL report an ERROR
 - **AND** the message SHALL show the correct "#### Scenario:" header format
-- **AND** detection SHALL use `markdown.MatchScenarioHeader` from the markdown parser package
+- **AND** detection SHALL use `markdown.MatchScenarioHeader` from the markdown
+  parser package
 
 #### Scenario: Parsing uses markdown parser package
 
 - **WHEN** the validation system parses spec or delta files
 - **THEN** it SHALL use functions from `internal/markdown/` package
-- **AND** it SHALL NOT import `internal/regex/` package or define local regex patterns
+- **AND** it SHALL NOT import `internal/regex/` package or define local regex
+  patterns
 - **AND** behavior SHALL be identical to previous implementation
 
 ### Requirement: Change Delta Validation
 
-The validation system SHALL validate change delta specs for structural correctness and delta operation validity.
+The validation system SHALL validate change delta specs for structural
+correctness and delta operation validity.
 
 #### Scenario: Valid change with deltas
 
-- **WHEN** a change directory contains specs with proper ADDED/MODIFIED/REMOVED/RENAMED sections
+- **WHEN** a change directory contains specs with proper
+  ADDED/MODIFIED/REMOVED/RENAMED sections
 - **THEN** validation SHALL pass with no errors
 - **AND** each delta requirement SHALL be counted toward the total
 
@@ -68,7 +77,8 @@ The validation system SHALL validate change delta specs for structural correctne
 
 #### Scenario: Delta sections present but empty
 
-- **WHEN** delta sections exist (## ADDED Requirements) but contain no requirement entries
+- **WHEN** delta sections exist (## ADDED Requirements) but contain no
+  requirement entries
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL indicate which sections are empty
 - **AND** guidance SHALL explain requirement block format
@@ -83,24 +93,28 @@ The validation system SHALL validate change delta specs for structural correctne
 
 - **WHEN** a MODIFIED requirement lacks a "#### Scenario:" block
 - **THEN** validation SHALL fail with an ERROR
-- **AND** the message SHALL require at least one scenario for MODIFIED requirements
+- **AND** the message SHALL require at least one scenario for MODIFIED
+  requirements
 
 #### Scenario: Duplicate requirement in same section within file
 
-- **WHEN** two requirements with the same normalized name appear in the same delta section of the same file
+- **WHEN** two requirements with the same normalized name appear in the same
+  delta section of the same file
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL identify the duplicate requirement name
 
 #### Scenario: Cross-section conflicts within file
 
-- **WHEN** a requirement appears in both ADDED and MODIFIED sections of the same file
+- **WHEN** a requirement appears in both ADDED and MODIFIED sections of the same
+  file
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL indicate the conflicting requirement and sections
 
 #### Scenario: RENAMED requirement validation
 
 - **WHEN** a RENAMED section contains well-formed "FROM: X TO: Y" pairs
-- **THEN** validation SHALL accept the renames using `markdown.MatchRenamedFrom` and `markdown.MatchRenamedTo` functions
+- **THEN** validation SHALL accept the renames using `markdown.MatchRenamedFrom`
+  and `markdown.MatchRenamedTo` functions
 - **AND** SHALL check for duplicate FROM or TO entries
 - **AND** SHALL error if MODIFIED references the old name instead of new name
 
@@ -111,17 +125,20 @@ The validation system SHALL validate change delta specs for structural correctne
 - **AND** delta type detection SHALL use `markdown.MatchDeltaSection`
 - **AND** requirement extraction SHALL use `markdown.MatchRequirementHeader`
 - **AND** scenario extraction SHALL use `markdown.MatchScenarioHeader`
-- **AND** section content extraction SHALL use `markdown.FindSection` or `markdown.FindDeltaSection`
+- **AND** section content extraction SHALL use `markdown.FindSection` or
+  `markdown.FindDeltaSection`
 
 #### Scenario: Cross-capability same-named requirements allowed
 
-- **WHEN** multiple delta specs in different capability directories contain requirements with the same name
+- **WHEN** multiple delta specs in different capability directories contain
+  requirements with the same name
 - **THEN** validation SHALL NOT report duplicate errors
 - **AND** uniqueness SHALL be scoped to (capability, requirement_name) tuples
 
 ### Requirement: Validation Report Structure
 
-The validation system SHALL produce structured validation reports containing issue details and summary statistics, always treating warnings as errors.
+The validation system SHALL produce structured validation reports containing
+issue details and summary statistics, always treating warnings as errors.
 
 #### Scenario: Report always strict
 
@@ -135,7 +152,8 @@ The validation system SHALL produce structured validation reports containing iss
 
 - WHEN validation encounters both ERROR and WARNING level issues
 - THEN the report SHALL list all issues with level, path, and message
-- AND the summary SHALL count errors (including promoted warnings), warnings (always 0), and info separately
+- AND the summary SHALL count errors (including promoted warnings), warnings
+  (always 0), and info separately
 - AND valid SHALL be false if any errors exist
 
 #### Scenario: JSON output format
@@ -148,7 +166,8 @@ The validation system SHALL produce structured validation reports containing iss
 
 ### Requirement: Bulk Validation with Concurrency
 
-The validation system SHALL support validating multiple items in parallel for performance.
+The validation system SHALL support validating multiple items in parallel for
+performance.
 
 #### Scenario: Parallel validation of multiple items
 
@@ -166,14 +185,16 @@ The validation system SHALL support validating multiple items in parallel for pe
 
 #### Scenario: Error handling in parallel validation
 
-- **WHEN** validation of one item fails with an error (not validation issue, but runtime error)
+- **WHEN** validation of one item fails with an error (not validation issue, but
+  runtime error)
 - **THEN** the error SHALL be captured in the results for that item
 - **AND** validation of other items SHALL continue
 - **AND** the final exit code SHALL indicate failure
 
 ### Requirement: Item Discovery
 
-The validation system SHALL discover specs and changes within the project directory structure.
+The validation system SHALL discover specs and changes within the project
+directory structure.
 
 #### Scenario: Discover active changes
 
@@ -195,12 +216,16 @@ The validation system SHALL discover specs and changes within the project direct
 
 ### Requirement: Interactive Validation Mode
 
-The validation system SHALL support interactive selection when invoked without arguments in a TTY, using a bubbletea-based TUI with menu-driven navigation and item picker.
+The validation system SHALL support interactive selection when invoked without
+arguments in a TTY, using a bubbletea-based TUI with menu-driven navigation and
+item picker.
 
 #### Scenario: Interactive mode main menu
 
-- **WHEN** validate command is invoked without arguments in an interactive terminal
-- **THEN** it SHALL display a menu with options: "Validate All", "Validate All Changes", "Validate All Specs", "Pick Specific Item", "Quit"
+- **WHEN** validate command is invoked without arguments in an interactive
+  terminal
+- **THEN** it SHALL display a menu with options: "Validate All", "Validate All
+  Changes", "Validate All Specs", "Pick Specific Item", "Quit"
 - **AND** user SHALL be able to navigate options using arrow keys or j/k
 - **AND** user SHALL select an option by pressing Enter
 - **AND** selected option SHALL be executed immediately
@@ -216,7 +241,8 @@ The validation system SHALL support interactive selection when invoked without a
 
 #### Scenario: Non-interactive environment detection
 
-- **WHEN** validate command is invoked without arguments in non-interactive environment (CI/CD)
+- **WHEN** validate command is invoked without arguments in non-interactive
+  environment (CI/CD)
 - **THEN** it SHALL print usage hints for non-interactive invocation
 - **AND** SHALL exit with code 1
 - **AND** SHALL NOT hang waiting for input
@@ -228,19 +254,22 @@ The validation system SHALL support interactive selection when invoked without a
 - **AND** results SHALL be displayed in human-readable format (not JSON)
 - **AND** user SHALL see success/failure summary
 - **AND** for failures, detailed issues SHALL be shown
-- **AND** user SHALL be returned to main menu after viewing results (or exit on quit)
+- **AND** user SHALL be returned to main menu after viewing results (or exit on
+  quit)
 
 #### Scenario: Consistent styling with other TUIs
 
 - **WHEN** interactive validation TUI is displayed
-- **THEN** it SHALL use lipgloss styling consistent with internal/list/interactive.go
+- **THEN** it SHALL use lipgloss styling consistent with
+  internal/list/interactive.go
 - **AND** it SHALL use the same color scheme and formatting patterns
 - **AND** help text SHALL be displayed showing available key bindings
 - **AND** selected items SHALL be highlighted with cursor style
 
 ### Requirement: Helpful Error Messages
 
-The validation system SHALL provide actionable error messages with remediation guidance.
+The validation system SHALL provide actionable error messages with remediation
+guidance.
 
 #### Scenario: Error with remediation steps
 
@@ -265,7 +294,8 @@ The validation system SHALL provide actionable error messages with remediation g
 
 ### Requirement: Exit Code Conventions
 
-The validation system SHALL use exit codes to indicate success or failure for scripting and CI/CD.
+The validation system SHALL use exit codes to indicate success or failure for
+scripting and CI/CD.
 
 #### Scenario: Successful validation
 
@@ -285,7 +315,9 @@ The validation system SHALL use exit codes to indicate success or failure for sc
 
 ### Requirement: Helper Functions in Internal Package
 
-The validation system SHALL organize helper functions in internal/validation/ package following clean architecture patterns, with cmd/ serving as a thin command layer.
+The validation system SHALL organize helper functions in internal/validation/
+package following clean architecture patterns, with cmd/ serving as a thin
+command layer.
 
 #### Scenario: Helper functions accessible to internal packages
 
@@ -297,16 +329,19 @@ The validation system SHALL organize helper functions in internal/validation/ pa
 
 #### Scenario: Type determination logic reusable
 
-- **WHEN** any validation component needs to determine if an item is a change or spec
+- **WHEN** any validation component needs to determine if an item is a change or
+  spec
 - **THEN** it SHALL use DetermineItemType() from internal/validation/helpers.go
-- **AND** the function SHALL return itemTypeInfo with isChange, isSpec, and itemType fields
+- **AND** the function SHALL return itemTypeInfo with isChange, isSpec, and
+  itemType fields
 - **AND** it SHALL handle ambiguous cases (item exists as both change and spec)
 - **AND** it SHALL respect explicit --type flag when provided
 
 #### Scenario: Validation item collection reusable
 
 - **WHEN** bulk validation needs to collect items to validate
-- **THEN** it SHALL use GetAllItems(), GetChangeItems(), or GetSpecItems() from internal/validation/items.go
+- **THEN** it SHALL use GetAllItems(), GetChangeItems(), or GetSpecItems() from
+  internal/validation/items.go
 - **AND** functions SHALL return []ValidationItem with name, itemType, and path
 - **AND** functions SHALL handle missing directories gracefully
 - **AND** functions SHALL leverage internal/discovery for ID enumeration
@@ -315,20 +350,24 @@ The validation system SHALL organize helper functions in internal/validation/ pa
 
 - **WHEN** validation results need to be displayed
 - **THEN** formatting functions SHALL be in internal/validation/formatters.go
-- **AND** FormatJSONReport() and FormatHumanReport() SHALL handle single item results
-- **AND** FormatBulkJSONResults() and FormatBulkHumanResults() SHALL handle multiple items
+- **AND** FormatJSONReport() and FormatHumanReport() SHALL handle single item
+  results
+- **AND** FormatBulkJSONResults() and FormatBulkHumanResults() SHALL handle
+  multiple items
 - **AND** formatters SHALL accept report data and return formatted strings
 - **AND** formatters SHALL not directly write to stdout (return strings instead)
 
 ### Requirement: Interactive TUI Architecture
 
-The validation interactive mode SHALL follow the bubbletea model-update-view pattern used in other project TUIs, ensuring consistency and maintainability.
+The validation interactive mode SHALL follow the bubbletea model-update-view
+pattern used in other project TUIs, ensuring consistency and maintainability.
 
 #### Scenario: Bubbletea model structure
 
 - **WHEN** interactive validation TUI is initialized
 - **THEN** it SHALL define a model struct implementing tea.Model interface
-- **AND** model SHALL contain state for current screen, selected option, validation results
+- **AND** model SHALL contain state for current screen, selected option,
+  validation results
 - **AND** model SHALL have Init() method returning initial commands
 - **AND** model SHALL have Update(msg tea.Msg) method handling events
 - **AND** model SHALL have View() string method rendering current state
@@ -345,7 +384,8 @@ The validation interactive mode SHALL follow the bubbletea model-update-view pat
 #### Scenario: Integration with cmd layer
 
 - **WHEN** cmd/validate.go needs to launch interactive mode
-- **THEN** it SHALL call RunInteractiveValidation() from internal/validation/interactive.go
+- **THEN** it SHALL call RunInteractiveValidation() from
+  internal/validation/interactive.go
 - **AND** function SHALL accept projectPath, validator, and JSON flag
 - **AND** function SHALL return error on failure
 - **AND** function SHALL handle TTY detection internally
@@ -353,12 +393,15 @@ The validation interactive mode SHALL follow the bubbletea model-update-view pat
 
 ### Requirement: Bulk Validation Human Output Formatting
 
-The validation system SHALL produce bulk validation human-readable output with improved spacing, relative paths, file grouping, and color-coded error levels for easier scanning.
+The validation system SHALL produce bulk validation human-readable output with
+improved spacing, relative paths, file grouping, and color-coded error levels
+for easier scanning.
 
 #### Scenario: Visual separation between failed items
 
 - **WHEN** bulk validation encounters multiple failed items in human output mode
-- **THEN** output SHALL include a blank line between each failed item's error listing
+- **THEN** output SHALL include a blank line between each failed item's error
+  listing
 - **AND** passed items SHALL be listed without blank lines between them
 - **AND** failed items SHALL be visually distinct from passed items
 
@@ -367,7 +410,8 @@ The validation system SHALL produce bulk validation human-readable output with i
 - **WHEN** validation issues include file paths in human output mode
 - **THEN** paths SHALL be displayed relative to the spectr/ directory
 - **AND** paths SHALL NOT include the project root or spectr/ prefix
-- **AND** example: `changes/foo/specs/bar/spec.md` instead of `/home/user/project/spectr/changes/foo/specs/bar/spec.md`
+- **AND** example: `changes/foo/specs/bar/spec.md` instead of
+  `/home/user/project/spectr/changes/foo/specs/bar/spec.md`
 
 #### Scenario: Grouping issues by file
 
@@ -387,7 +431,8 @@ The validation system SHALL produce bulk validation human-readable output with i
 #### Scenario: Enhanced summary line
 
 - **WHEN** bulk validation completes with failures
-- **THEN** summary SHALL show "X passed, Y failed (E errors, W warnings), Z total"
+- **THEN** summary SHALL show "X passed, Y failed (E errors, W warnings), Z
+  total"
 - **AND** summary SHALL only show error/warning breakdown if failures exist
 - **AND** example: "22 passed, 2 failed (5 errors, 1 warning), 24 total"
 
@@ -400,7 +445,9 @@ The validation system SHALL produce bulk validation human-readable output with i
 
 ### Requirement: Markdown Parsing Package
 
-The system SHALL provide a dedicated `internal/markdown/` package that provides AST-based markdown parsing with a token-based lexer and parser for Spectr-specific patterns.
+The system SHALL provide a dedicated `internal/markdown/` package that provides
+AST-based markdown parsing with a token-based lexer and parser for
+Spectr-specific patterns.
 
 #### Scenario: Two-phase parsing architecture
 
@@ -412,23 +459,32 @@ The system SHALL provide a dedicated `internal/markdown/` package that provides 
 #### Scenario: Spectr-specific node types
 
 - **WHEN** the markdown package parses Spectr documents
-- **THEN** it SHALL recognize NodeRequirement nodes for `### Requirement: Name` headers
-- **AND** it SHALL recognize NodeScenario nodes for `#### Scenario: Name` headers
-- **AND** it SHALL recognize NodeSection nodes for standard markdown headers with Level and Title
-- **AND** it SHALL recognize NodeListItem nodes with Checked state for task checkboxes
+- **THEN** it SHALL recognize NodeRequirement nodes for `### Requirement: Name`
+  headers
+- **AND** it SHALL recognize NodeScenario nodes for `#### Scenario: Name`
+  headers
+- **AND** it SHALL recognize NodeSection nodes for standard markdown headers
+  with Level and Title
+- **AND** it SHALL recognize NodeListItem nodes with Checked state for task
+  checkboxes
 
 #### Scenario: Query functions for AST traversal
 
 - **WHEN** code needs to find elements in the AST
-- **THEN** it SHALL have access to `markdown.Find(root, predicate)` for finding all matching nodes
-- **AND** it SHALL have access to `markdown.FindFirst(root, predicate)` for finding the first match
-- **AND** it SHALL have access to predicate combinators like `IsType`, `HasName`, `And`, `Or`
+- **THEN** it SHALL have access to `markdown.Find(root, predicate)` for finding
+  all matching nodes
+- **AND** it SHALL have access to `markdown.FindFirst(root, predicate)` for
+  finding the first match
+- **AND** it SHALL have access to predicate combinators like `IsType`,
+  `HasName`, `And`, `Or`
 
 #### Scenario: Visitor pattern for AST processing
 
 - **WHEN** code needs to process AST nodes
-- **THEN** it SHALL have access to `markdown.Walk(root, visitor)` for traversing the tree
-- **AND** visitors SHALL implement type-specific methods like `VisitRequirement`, `VisitScenario`
+- **THEN** it SHALL have access to `markdown.Walk(root, visitor)` for traversing
+  the tree
+- **AND** visitors SHALL implement type-specific methods like
+  `VisitRequirement`, `VisitScenario`
 - **AND** a BaseVisitor struct SHALL provide default implementations
 
 #### Scenario: Position information
@@ -436,7 +492,8 @@ The system SHALL provide a dedicated `internal/markdown/` package that provides 
 - **WHEN** nodes are created from parsing
 - **THEN** they SHALL track byte offsets via `Span() (start, end int)`
 - **AND** a LineIndex utility SHALL convert byte offsets to line/column numbers
-- **AND** position information SHALL support error reporting with location context
+- **AND** position information SHALL support error reporting with location
+  context
 
 #### Scenario: Immutable AST nodes
 
@@ -447,28 +504,35 @@ The system SHALL provide a dedicated `internal/markdown/` package that provides 
 
 ### Requirement: Cross-Capability Requirement Name Independence
 
-The validation system SHALL treat requirement names as scoped to their capability, allowing the same requirement name to exist in different capability specs.
+The validation system SHALL treat requirement names as scoped to their
+capability, allowing the same requirement name to exist in different capability
+specs.
 
 #### Scenario: Same name in different capability deltas
 
-- **WHEN** a change modifies requirements with the same name in different capability specs
+- **WHEN** a change modifies requirements with the same name in different
+  capability specs
 - **THEN** validation SHALL pass without duplicate name errors
 - **AND** each requirement SHALL be matched to its own capability's base spec
-- **AND** example: `support-aider::No Instruction File` is distinct from `support-cursor::No Instruction File`
+- **AND** example: `support-aider::No Instruction File` is distinct from
+  `support-cursor::No Instruction File`
 
 #### Scenario: Same name REMOVED in multiple capabilities
 
 - **WHEN** a change removes a requirement named "X" from capability A
 - **AND** removes a requirement named "X" from capability B
-- **THEN** validation SHALL NOT report "Requirement 'X' is REMOVED in multiple files"
+- **THEN** validation SHALL NOT report "Requirement 'X' is REMOVED in multiple
+  files"
 - **AND** each removal SHALL be validated against its respective capability spec
 
 #### Scenario: Same name MODIFIED in multiple capabilities
 
 - **WHEN** a change modifies a requirement named "X" in capability A
 - **AND** modifies a requirement named "X" in capability B
-- **THEN** validation SHALL NOT report "Requirement 'X' is MODIFIED in multiple files"
-- **AND** each modification SHALL be validated against its respective capability spec
+- **THEN** validation SHALL NOT report "Requirement 'X' is MODIFIED in multiple
+  files"
+- **AND** each modification SHALL be validated against its respective capability
+  spec
 
 #### Scenario: Same name ADDED in multiple capabilities
 
@@ -479,11 +543,13 @@ The validation system SHALL treat requirement names as scoped to their capabilit
 
 ### Requirement: Tasks File Validation
 
-The validation system SHALL validate that tasks.md files contain at least one task item when present in a change directory.
+The validation system SHALL validate that tasks.md files contain at least one
+task item when present in a change directory.
 
 #### Scenario: tasks.md with valid tasks
 
-- **WHEN** a change directory contains a tasks.md file with task items (`- [ ]` or `- [x]`)
+- **WHEN** a change directory contains a tasks.md file with task items (`- [ ]`
+  or `- [x]`)
 - **THEN** validation SHALL pass without task-related errors
 
 #### Scenario: tasks.md exists but is empty
@@ -495,9 +561,11 @@ The validation system SHALL validate that tasks.md files contain at least one ta
 
 #### Scenario: tasks.md with only section headers
 
-- **WHEN** a change directory contains a tasks.md file with only section headers and no task items
+- **WHEN** a change directory contains a tasks.md file with only section headers
+  and no task items
 - **THEN** validation SHALL fail with an ERROR level issue
-- **AND** the error message SHALL indicate the expected task format (`- [ ]` or `- [x]`)
+- **AND** the error message SHALL indicate the expected task format (`- [ ]` or
+  `- [x]`)
 
 #### Scenario: tasks.md does not exist
 

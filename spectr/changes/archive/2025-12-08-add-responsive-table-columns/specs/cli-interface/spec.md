@@ -1,16 +1,22 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Responsive Table Column Layout
 
-The interactive TUI table views SHALL detect terminal width and dynamically adjust column visibility and widths to ensure readable display across different screen sizes.
+The interactive TUI table views SHALL detect terminal width and dynamically
+adjust column visibility and widths to ensure readable display across different
+screen sizes.
 
 #### Scenario: Full width terminal displays all columns
 
 - **WHEN** user runs `spectr list -I` on a terminal with 110+ columns
 - **THEN** all columns are displayed at their default widths
-- **AND** for changes view: ID (30), Title (40), Deltas (10), Tasks (15) are shown
+- **AND** for changes view: ID (30), Title (40), Deltas (10), Tasks (15) are
+  shown
 - **AND** for specs view: ID (35), Title (45), Requirements (15) are shown
-- **AND** for unified view: ID (30), Type (8), Title (40), Details (20) are shown
+- **AND** for unified view: ID (30), Type (8), Title (40), Details (20) are
+  shown
 
 #### Scenario: Medium width terminal narrows Title column
 
@@ -37,7 +43,8 @@ The interactive TUI table views SHALL detect terminal width and dynamically adju
 
 ### Requirement: Dynamic Terminal Resize Handling
 
-The interactive TUI SHALL respond to terminal resize events by recalculating and rebuilding the table layout without losing user state.
+The interactive TUI SHALL respond to terminal resize events by recalculating and
+rebuilding the table layout without losing user state.
 
 #### Scenario: Terminal resized wider during session
 
@@ -64,7 +71,8 @@ The interactive TUI SHALL respond to terminal resize events by recalculating and
 
 ### Requirement: Column Priority System
 
-Each table view SHALL define column priorities to determine which columns are shown at each width breakpoint.
+Each table view SHALL define column priorities to determine which columns are
+shown at each width breakpoint.
 
 #### Scenario: Changes view column priorities
 
@@ -79,7 +87,8 @@ Each table view SHALL define column priorities to determine which columns are sh
 - **WHEN** calculating responsive columns for specs view
 - **THEN** ID has highest priority (always shown)
 - **AND** Title has second priority (always shown, width adjustable)
-- **AND** Requirements has lowest priority (width reduced or hidden below 70 columns)
+- **AND** Requirements has lowest priority (width reduced or hidden below 70
+  columns)
 
 #### Scenario: Unified view column priorities
 

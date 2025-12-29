@@ -2,7 +2,10 @@
 
 ## Why
 
-The current interactive TUI help text is verbose and cramped on a single line, making it harder to read. Additionally, users frequently need to archive changes after reviewing them in the list, requiring them to exit and run a separate command.
+The current interactive TUI help text is verbose and cramped on a single line,
+making it harder to read. Additionally, users frequently need to archive changes
+after reviewing them in the list, requiring them to exit and run a separate
+command.
 
 ## What Changes
 

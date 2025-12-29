@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Cline Slash Commands
 
-The provider SHALL create slash commands in `.clinerules/commands/spectr/` directory.
+The provider SHALL create slash commands in `.clinerules/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
 

@@ -2,12 +2,14 @@
 
 ## 1. Foundation: Create New Abstractions
 
-- [x] 1.1 Create `internal/init/tool_definitions.go` with all tool configurations
+- [x] 1.1 Create `internal/init/tool_definitions.go` with all tool
+  configurations
   - [x] Define `ToolID` type as string-based const
   - [x] Define all tool ID constants (ToolClaudeCode, ToolCline, etc.)
   - [x] Define `ToolConfig` struct with all configuration fields
   - [x] Populate `toolConfigs` map with all 7 config-based tools
-  - [x] Populate `slashToolConfigs` map with all slash command tool configurations
+  - [x] Populate `slashToolConfigs` map with all slash command tool
+    configurations
   - [x] Define helper functions for looking up tool configs
 
 - [x] 1.2 Update `internal/init/models.go` with new types
@@ -86,8 +88,10 @@
 - [x] 5.2 Update tests to not use removed methods
   - [x] Delete `TestTemplateManager_RenderSpec` test
   - [x] Delete `TestTemplateManager_RenderProposal` test
-  - [x] Remove RenderSpec/RenderProposal calls from `TestTemplateManager_AllTemplatesCompile`
-  - [x] Remove RenderSpec/RenderProposal calls from `TestTemplateManager_VariableSubstitution`
+  - [x] Remove RenderSpec/RenderProposal calls from
+    `TestTemplateManager_AllTemplatesCompile`
+  - [x] Remove RenderSpec/RenderProposal calls from
+    `TestTemplateManager_VariableSubstitution`
 
 ## 6. Update Tests
 
@@ -109,13 +113,16 @@
 
 - [x] 6.4 Verify all existing tests pass
   - [x] Run `go test ./internal/init/...`
-  - [x] Fix slash command path mismatches in tests (tests expect old paths like `.claude/commands/spectr/proposal.md` but actual is `.claude/commands/spectr-proposal.md`)
+  - [x] Fix slash command path mismatches in tests (tests expect old paths like
+    `.claude/commands/spectr/proposal.md` but actual is
+    `.claude/commands/spectr-proposal.md`)
   - [x] Ensure 100% of tests pass (all 87 tests passing successfully)
 
 ## 7. Cleanup
 
 - [ ] 7.1 Remove old code
-  - [ ] Remove individual configurator struct implementations from configurator.go
+  - [ ] Remove individual configurator struct implementations from
+    configurator.go
   - [ ] Remove duplicate constants from filesystem.go
   - [ ] Remove unused helper functions
 
@@ -126,7 +133,8 @@
 
 - [x] 7.3 Run linters and formatters
   - [x] Run `gofmt -w internal/init/`
-  - [ ] Run `golangci-lint run internal/init/` (optional - can be done in PR review)
+  - [ ] Run `golangci-lint run internal/init/` (optional - can be done in PR
+    review)
   - [x] Code is properly formatted and builds successfully
 
 ## 8. Validation
@@ -143,6 +151,9 @@
 
 - [x] 8.3 Code metrics
   - [x] Verify code reduction: configurator.go 875→327 lines (63% reduction)
-  - [x] Verify code reduction: executor.go 509→413 lines (19% reduction, less than target but still significant)
-  - [x] Created new utilities: tool_definitions.go (422 lines), marker_utils.go (170 lines)
-  - [x] Overall: Eliminated ~1,171 lines while adding ~592 lines of structured, maintainable code
+  - [x] Verify code reduction: executor.go 509→413 lines (19% reduction, less
+    than target but still significant)
+  - [x] Created new utilities: tool_definitions.go (422 lines), marker_utils.go
+    (170 lines)
+  - [x] Overall: Eliminated ~1,171 lines while adding ~592 lines of structured,
+    maintainable code

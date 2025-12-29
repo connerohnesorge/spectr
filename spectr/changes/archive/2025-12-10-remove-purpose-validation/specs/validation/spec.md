@@ -1,12 +1,16 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Spec File Validation
 
-The validation system SHALL validate spec files for structural correctness and adherence to Spectr conventions.
+The validation system SHALL validate spec files for structural correctness and
+adherence to Spectr conventions.
 
 #### Scenario: Valid spec with all required sections
 
-- **WHEN** a spec file contains a Requirements section with properly formatted requirements and scenarios
+- **WHEN** a spec file contains a Requirements section with properly formatted
+  requirements and scenarios
 - **THEN** validation SHALL pass with no errors
 - **AND** the validation report SHALL indicate valid=true
 
@@ -31,6 +35,7 @@ The validation system SHALL validate spec files for structural correctness and a
 
 #### Scenario: Incorrect scenario format
 
-- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or bold text)
+- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or
+  bold text)
 - **THEN** validation SHALL report an ERROR
 - **AND** the message SHALL show the correct "#### Scenario:" header format

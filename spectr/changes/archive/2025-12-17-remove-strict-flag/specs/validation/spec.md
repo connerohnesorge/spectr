@@ -4,7 +4,8 @@
 
 ### Requirement: Validation Report Structure
 
-The validation system SHALL produce structured validation reports containing issue details and summary statistics, always treating warnings as errors.
+The validation system SHALL produce structured validation reports containing
+issue details and summary statistics, always treating warnings as errors.
 
 #### Scenario: Report always strict
 
@@ -18,7 +19,8 @@ The validation system SHALL produce structured validation reports containing iss
 
 - WHEN validation encounters both ERROR and WARNING level issues
 - THEN the report SHALL list all issues with level, path, and message
-- AND the summary SHALL count errors (including promoted warnings), warnings (always 0), and info separately
+- AND the summary SHALL count errors (including promoted warnings), warnings
+  (always 0), and info separately
 - AND valid SHALL be false if any errors exist
 
 #### Scenario: JSON output format

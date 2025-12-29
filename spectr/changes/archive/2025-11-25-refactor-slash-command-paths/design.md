@@ -1,8 +1,15 @@
+# Design Document
+
 ## Context
 
-The Provider interface currently uses `SlashDir()` to return a single directory path for slash commands. The BaseProvider then constructs file paths using a hardcoded pattern: `{slashDir}/spectr-{cmd}.md`. This creates coupling between the interface contract and file naming conventions.
+The Provider interface currently uses `SlashDir()` to return a single directory
+path for slash commands. The BaseProvider then constructs file paths using a
+hardcoded pattern: `{slashDir}/spectr-{cmd}.md`. This creates coupling between
+the interface contract and file naming conventions.
 
-Gemini CLI requires TOML files instead of markdown, forcing it to override 5+ methods just to change file extensions. Future providers may need even more flexibility (different directories per command, custom naming schemes, etc.).
+Gemini CLI requires TOML files instead of markdown, forcing it to override 5+
+methods just to change file extensions. Future providers may need even more
+flexibility (different directories per command, custom naming schemes, etc.).
 
 ## Goals / Non-Goals
 
@@ -62,7 +69,8 @@ type BaseProvider struct {
 ```
 
 **Alternative considered: Keep slashDir + add filename overrides**
-Rejected because it adds complexity without solving the core problem (Gemini would still need directory + extension overrides).
+Rejected because it adds complexity without solving the core problem (Gemini
+would still need directory + extension overrides).
 
 ### Decision: HasSlashCommands checks any path
 
@@ -80,15 +88,16 @@ This allows providers to support only some commands if needed.
 
 | Risk | Mitigation |
 |------|------------|
-| Breaking change to interface | All providers are internal; update in single PR |
-| More boilerplate per provider | Add helper function to generate standard paths |
-| Forgotten path updates | Tests verify all registered providers have valid paths |
+| Breaking change to interface | All providers are internal; update in one PR |
+| More boilerplate per provider | Add helper for standard paths |
+| Forgotten path updates | Tests verify all providers have valid paths |
 
 ## Migration Plan
 
 1. Update Provider interface (add 3 methods, remove SlashDir)
 2. Update BaseProvider (replace slashDir with 3 path fields)
-3. Add helper: `StandardCommandPaths(dir, ext string) (proposal, archive, apply string)`
+3. Add helper: `StandardCommandPaths(dir, ext string) (proposal, archive, apply
+  string)`
 4. Update each provider to use helper or custom paths
 5. Simplify GeminiProvider (remove method overrides, use TOML paths directly)
 6. Update tests to verify new methods

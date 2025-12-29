@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Windsurf Provider Configuration
@@ -20,10 +21,14 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
-- **THEN** it SHALL return a `DirectoryInitializer` for `.windsurf/commands/spectr/`
-- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash commands
-- **AND** it SHALL NOT return a `ConfigFileInitializer` (Windsurf has no instruction file)
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for
+  `.windsurf/commands/spectr/`
+- **AND** it SHALL return a `SlashCommandsInitializer` for Markdown format slash
+  commands
+- **AND** it SHALL NOT return a `ConfigFileInitializer` (Windsurf has no
+  instruction file)
 
 #### Scenario: Provider priority ordering
 
@@ -34,12 +39,14 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Windsurf Slash Commands
 
-The provider SHALL create slash commands in `.windsurf/commands/spectr/` directory.
+The provider SHALL create slash commands in `.windsurf/commands/spectr/`
+directory.
 
 #### Scenario: Command directory structure
 
 - **WHEN** the provider returns initializers
-- **THEN** DirectoryInitializer SHALL create `.windsurf/commands/spectr/` directory
+- **THEN** DirectoryInitializer SHALL create `.windsurf/commands/spectr/`
+  directory
 
 #### Scenario: Command paths
 

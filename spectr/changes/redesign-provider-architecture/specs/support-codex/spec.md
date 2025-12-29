@@ -1,4 +1,5 @@
-# MODIFIED Requirements
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Codex Provider Configuration
@@ -20,10 +21,14 @@ The provider SHALL be configured with these settings:
 
 #### Scenario: Provider returns initializers with home paths
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm *TemplateManager)` method is called
-- **THEN** it SHALL return a `HomeDirectoryInitializer` for `.codex/prompts/` (relative to home directory)
-- **AND** it SHALL return a `ConfigFileInitializer` for `AGENTS.md` with TemplateRef from TemplateManager using `tm.Agents()`
-- **AND** it SHALL return a `HomePrefixedSlashCommandsInitializer` with prefix `spectr-` for home slash commands in `.codex/prompts/`
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `HomeDirectoryInitializer` for `.codex/prompts/`
+  (relative to home directory)
+- **AND** it SHALL return a `ConfigFileInitializer` for `AGENTS.md` with
+  TemplateRef from TemplateManager using `tm.Agents()`
+- **AND** it SHALL return a `HomePrefixedSlashCommandsInitializer` with prefix
+  `spectr-` for home slash commands in `.codex/prompts/`
 
 #### Scenario: Provider metadata
 
@@ -39,20 +44,24 @@ The provider SHALL be configured with these settings:
 #### Scenario: Create new instruction file
 
 - **WHEN** `AGENTS.md` does not exist
-- **THEN** the ConfigFileInitializer SHALL create it with instruction content between markers
-- **AND** the markers SHALL be `<!-- spectr:start -->` and `<!-- spectr:end -->` (lowercase)
+- **THEN** the ConfigFileInitializer SHALL create it with instruction content
+  between markers
+- **AND** the markers SHALL be `<!-- spectr:start -->` and `<!-- spectr:end -->`
+  (lowercase)
 
 #### Scenario: Update existing instruction file
 
 - **WHEN** `AGENTS.md` exists with spectr markers
 - **THEN** the ConfigFileInitializer SHALL replace content between markers
 - **AND** it SHALL preserve content outside markers
-- **AND** the marker search SHALL be case-insensitive (matches both uppercase and lowercase)
+- **AND** the marker search SHALL be case-insensitive (matches both uppercase
+  and lowercase)
 - **AND** when writing, the system SHALL always use lowercase markers
 
 ### Requirement: Codex Global Slash Commands
 
-The provider SHALL create slash commands in the home `~/.codex/prompts/` directory.
+The provider SHALL create slash commands in the home `~/.codex/prompts/`
+directory.
 
 #### Scenario: Home command directory structure
 
@@ -63,14 +72,17 @@ The provider SHALL create slash commands in the home `~/.codex/prompts/` directo
 #### Scenario: Command paths with prefix
 
 - **WHEN** the `HomePrefixedSlashCommandsInitializer` executes
-- **THEN** it SHALL create `.codex/prompts/spectr-proposal.md` in the home filesystem
-- **AND** it SHALL create `.codex/prompts/spectr-apply.md` in the home filesystem
+- **THEN** it SHALL create `.codex/prompts/spectr-proposal.md` in the home
+  filesystem
+- **AND** it SHALL create `.codex/prompts/spectr-apply.md` in the home
+  filesystem
 
 #### Scenario: Home path handling
 
 - **WHEN** Home* initializers execute
 - **THEN** the executor provides both projectFs and homeFs filesystems
-- **AND** the Home* initializers use homeFs automatically (no configuration flag needed)
+- **AND** the Home* initializers use homeFs automatically (no configuration flag
+  needed)
 - **AND** paths work correctly regardless of current project directory
 
 ### Requirement: Codex Command Format

@@ -2,14 +2,19 @@
 
 ## Context
 
-The `spectr list` command currently outputs changes and specs as plain text, long-format text, or JSON. Users frequently need to reference IDs for subsequent commands, requiring manual copy-paste or retyping. An interactive table interface would improve the user experience by allowing visual browsing and one-key clipboard copying.
+The `spectr list` command currently outputs changes and specs as plain text,
+long-format text, or JSON. Users frequently need to reference IDs for subsequent
+commands, requiring manual copy-paste or retyping. An interactive table
+interface would improve the user experience by allowing visual browsing and
+one-key clipboard copying.
 
 **Constraints:**
 
 - Must maintain backward compatibility with existing output formats
 - Should work across platforms (Linux, macOS, Windows)
 - Must work in SSH sessions and remote terminals
-- Should use existing dependencies where possible (bubbletea, lipgloss already present)
+- Should use existing dependencies where possible (bubbletea, lipgloss already
+  present)
 
 **Stakeholders:**
 
@@ -67,7 +72,8 @@ The `spectr list` command currently outputs changes and specs as plain text, lon
 **Rationale:**
 
 - Desktop environments (X11, Wayland, macOS, Windows) need native clipboard APIs
-- SSH sessions without X11 forwarding benefit from OSC 52 terminal escape sequences
+- SSH sessions without X11 forwarding benefit from OSC 52 terminal escape
+  sequences
 - `atotto/clipboard` is lightweight, cross-platform, and widely used
 - `termenv` (already a transitive dependency) supports OSC 52
 - Graceful degradation: try native first, fall back to OSC 52, then error
@@ -177,7 +183,8 @@ func copyToClipboard(text string) error {
 - Document supported terminals and clipboard behavior
 - Allow command to exit successfully even if clipboard fails (non-fatal error)
 
-**Trade-off:** Accept that some edge-case terminals may not support clipboard, but still provide value through interactive selection and visual display
+**Trade-off:** Accept that some edge-case terminals may not support clipboard,
+but still provide value through interactive selection and visual display
 
 ### Risk 2: Terminal Size Constraints
 
@@ -190,11 +197,13 @@ func copyToClipboard(text string) error {
 - Set minimum reasonable terminal size requirement (e.g., 80 columns)
 - Test with narrow terminals (60-80 cols) during implementation
 
-**Trade-off:** Prioritize common terminal sizes (80+ cols) over edge cases (40 cols)
+**Trade-off:** Prioritize common terminal sizes (80+ cols) over edge cases (40
+cols)
 
 ### Risk 3: Dependency on External Clipboard Library
 
-**Risk:** `atotto/clipboard` adds external dependency and potential platform-specific bugs
+**Risk:** `atotto/clipboard` adds external dependency and potential
+platform-specific bugs
 
 **Mitigation:**
 
@@ -211,11 +220,13 @@ func copyToClipboard(text string) error {
 
 **Mitigation:**
 
-- Interactive mode requires TTY, will fail gracefully in non-interactive contexts
+- Interactive mode requires TTY, will fail gracefully in non-interactive
+  contexts
 - Document that `-I` is for human users, not scripts
 - Scripts should continue using `--json` or default text output
 
-**Trade-off:** Interactive mode is explicitly for human interaction; automation unaffected
+**Trade-off:** Interactive mode is explicitly for human interaction; automation
+unaffected
 
 ## Migration Plan
 
@@ -248,7 +259,8 @@ func copyToClipboard(text string) error {
 
 2. **Should table height be configurable?**
    - Allow `--height N` or use full terminal height
-   - Decision: Use full terminal height minus header/footer space (standard bubbletea behavior)
+   - Decision: Use full terminal height minus header/footer space (standard
+     bubbletea behavior)
 
 3. **Should we support mouse clicks in addition to keyboard?**
    - Bubbletea supports mouse events

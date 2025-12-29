@@ -32,7 +32,8 @@ The Cursor provider SHALL NOT create an instruction file.
 
 ### Requirement: Cursor Slash Commands
 
-The provider SHALL create slash commands in `.cursorrules/commands/spectr/` directory.
+The provider SHALL create slash commands in `.cursorrules/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
 

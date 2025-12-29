@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Tabnine Slash Commands
 
-The provider SHALL create slash commands in `.tabnine/commands/spectr/` directory.
+The provider SHALL create slash commands in `.tabnine/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
 

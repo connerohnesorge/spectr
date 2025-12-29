@@ -26,13 +26,15 @@ The provider SHALL be configured with these settings:
 
 ### Requirement: Crush Instruction File
 
-The provider SHALL create and maintain a `CRUSH.md` instruction file in the project root.
+The provider SHALL create and maintain a `CRUSH.md` instruction file in the
+project root.
 
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Crush provider selected
 - **THEN** the system creates `CRUSH.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!-- spectr:END -->` markers
+- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!--
+  spectr:END -->` markers
 
 #### Scenario: Instruction file updates
 
@@ -70,12 +72,14 @@ The provider SHALL use standard frontmatter templates for each command type.
 #### Scenario: Proposal command frontmatter
 
 - **WHEN** generating the proposal command file
-- **THEN** the frontmatter description is "Scaffold a new Spectr change and validate strictly."
+- **THEN** the frontmatter description is "Scaffold a new Spectr change and
+  validate strictly."
 
 #### Scenario: Apply command frontmatter
 
 - **WHEN** generating the apply command file
-- **THEN** the frontmatter description is "Implement an approved Spectr change and keep tasks in sync."
+- **THEN** the frontmatter description is "Implement an approved Spectr change
+  and keep tasks in sync."
 
 ### Requirement: Command Path Construction
 

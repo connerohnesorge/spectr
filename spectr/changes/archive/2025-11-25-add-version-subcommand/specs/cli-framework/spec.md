@@ -1,8 +1,11 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Version Command Structure
 
-The CLI SHALL provide a `version` command that displays version information including version number, git commit hash, and build date.
+The CLI SHALL provide a `version` command that displays version information
+including version number, git commit hash, and build date.
 
 #### Scenario: Version command registration
 
@@ -14,7 +17,8 @@ The CLI SHALL provide a `version` command that displays version information incl
 #### Scenario: Version command invocation
 
 - **WHEN** user runs `spectr version` without flags
-- **THEN** the system displays version in format: `spectr version {version} (commit: {commit}, built: {date})`
+- **THEN** the system displays version in format: `spectr version {version}
+  (commit: {commit}, built: {date})`
 - **AND** version SHALL be the semantic version (e.g., `0.1.0` or `dev`)
 - **AND** commit SHALL be the git commit hash (short or full) or `unknown`
 - **AND** date SHALL be the build date in ISO 8601 format or `unknown`
@@ -34,7 +38,8 @@ The CLI SHALL provide a `version` command that displays version information incl
 
 ### Requirement: Version Variable Injection
 
-The version information SHALL be injectable at build time via Go ldflags, supporting both goreleaser releases and nix flake builds.
+The version information SHALL be injectable at build time via Go ldflags,
+supporting both goreleaser releases and nix flake builds.
 
 #### Scenario: Goreleaser version injection
 
@@ -46,7 +51,8 @@ The version information SHALL be injectable at build time via Go ldflags, suppor
 #### Scenario: Nix flake version injection
 
 - **WHEN** nix builds the binary via flake.nix
-- **THEN** version SHALL be set from the flake package version attribute via ldflags
+- **THEN** version SHALL be set from the flake package version attribute via
+  ldflags
 - **AND** commit and date MAY be `unknown` if not available in nix build context
 
 #### Scenario: Development build defaults
@@ -58,11 +64,13 @@ The version information SHALL be injectable at build time via Go ldflags, suppor
 
 ### Requirement: Version Package Location
 
-The version variables SHALL be defined in a dedicated `internal/version` package for clean separation and easy ldflags targeting.
+The version variables SHALL be defined in a dedicated `internal/version` package
+for clean separation and easy ldflags targeting.
 
 #### Scenario: Package structure
 
 - **WHEN** the version package is imported
 - **THEN** it SHALL expose `Version`, `Commit`, and `Date` string variables
 - **AND** variables SHALL have default values for development builds
-- **AND** the ldflags path SHALL be `github.com/connerohnesorge/spectr/internal/version`
+- **AND** the ldflags path SHALL be
+  `github.com/connerohnesorge/spectr/internal/version`

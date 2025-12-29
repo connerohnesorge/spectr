@@ -2,15 +2,22 @@
 
 ## Why
 
-Error definitions are scattered across 10+ files with only 1 sentinel error (`ErrUserCancelled`) and 1 error constant (`errEmptyPath`). The remaining ~35 `errors.New()` calls use inline strings, making errors hard to find, test, and maintain consistently.
+Error definitions are scattered across 10+ files with only 1 sentinel error
+(`ErrUserCancelled`) and 1 error constant (`errEmptyPath`). The remaining ~35
+`errors.New()` calls use inline strings, making errors hard to find, test, and
+maintain consistently.
 
 ## What Changes
 
-- **ADDED**: New `internal/specterrs/` package with domain-organized custom error types
-- **ADDED**: 21 custom error types across 8 domain files (git, archive, validation, initialize, list, environment, pr, doc)
+- **ADDED**: New `internal/specterrs/` package with domain-organized custom
+  error types
+- **ADDED**: 21 custom error types across 8 domain files (git, archive,
+  validation, initialize, list, environment, pr, doc)
 - **MODIFIED**: All ~35 `errors.New()` usages migrated to custom types
-- **REMOVED**: Sentinel error `ErrUserCancelled` from `internal/archive/types.go`
-- **REMOVED**: Error constant `errEmptyPath` from `internal/initialize/filesystem.go`
+- **REMOVED**: Sentinel error `ErrUserCancelled` from
+  `internal/archive/types.go`
+- **REMOVED**: Error constant `errEmptyPath` from
+  `internal/initialize/filesystem.go`
 
 ## Impact
 

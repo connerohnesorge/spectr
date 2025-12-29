@@ -1,7 +1,11 @@
+# Implementation Tasks
+
 ## 1. Remove PR Flag from Archive Command
 
-- [x] 1.1 Remove `PR bool` field from `ArchiveCmd` struct in `internal/archive/cmd.go`
-- [x] 1.2 Remove PR workflow logic from `Archive()` function in `internal/archive/archiver.go` (lines 130-147)
+- [x] 1.1 Remove `PR bool` field from `ArchiveCmd` struct in
+  `internal/archive/cmd.go`
+- [x] 1.2 Remove PR workflow logic from `Archive()` function in
+  `internal/archive/archiver.go` (lines 130-147)
 - [x] 1.3 Remove `PRContext` struct and `createPR` function call
 
 ## 2. Delete PR-Related Archive Files

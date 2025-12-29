@@ -1,12 +1,15 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Track Command
 
-The CLI SHALL provide a `track` command that watches task status changes and automatically commits related changes.
+The CLI SHALL provide a `track` command that watches task status changes and
+automatically commits related changes.
 
 #### Scenario: Track with change ID
 
-- **WHEN** user runs `spectr track <change-id>`
+- **WHEN** user runs `spectr track \<change-id\>`
 - **THEN** the system watches tasks.json for the specified change
 - **AND** displays current task status (X/Y completed)
 - **AND** runs until all tasks are complete or interrupted
@@ -22,7 +25,8 @@ The CLI SHALL provide a `track` command that watches task status changes and aut
 - **WHEN** a task status changes to "completed" in tasks.json
 - **THEN** the system detects modified files via git status
 - **AND** stages all modified files except tasks.json, tasks.jsonc, tasks.md
-- **AND** creates a commit with message format: `spectr(<change-id>): complete task <task-id>`
+- **AND** creates a commit with message format: `spectr(\<change-id\>): complete
+  task \<task-id\>`
 - **AND** includes footer: `[Automated by spectr track]`
 
 #### Scenario: Auto-commit on task start
@@ -30,13 +34,16 @@ The CLI SHALL provide a `track` command that watches task status changes and aut
 - **WHEN** a task status changes to "in_progress" in tasks.json
 - **THEN** the system detects modified files via git status
 - **AND** stages all modified files except tasks.json, tasks.jsonc, tasks.md
-- **AND** creates a commit with message format: `spectr(<change-id>): start task <task-id>`
+- **AND** creates a commit with message format: `spectr(\<change-id\>): start
+  task \<task-id\>`
 - **AND** includes footer: `[Automated by spectr track]`
 
 #### Scenario: No files to commit warning
 
-- **WHEN** a task status changes but no files have been modified (excluding task files)
-- **THEN** the system prints a warning: "No files to commit for task <task-id>"
+- **WHEN** a task status changes but no files have been modified (excluding task
+  files)
+- **THEN** the system prints a warning: "No files to commit for task
+  \<task-id\>"
 - **AND** continues watching for more task changes
 
 #### Scenario: Git commit failure stops tracking
@@ -54,7 +61,8 @@ The CLI SHALL provide a `track` command that watches task status changes and aut
 
 #### Scenario: All tasks already complete
 
-- **WHEN** user runs `spectr track <change-id>` and all tasks are already completed
+- **WHEN** user runs `spectr track \<change-id\>` and all tasks are already
+  completed
 - **THEN** the system displays a message indicating all tasks are complete
 - **AND** exits without starting the watch loop
 

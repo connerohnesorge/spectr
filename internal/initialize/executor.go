@@ -448,12 +448,28 @@ func dedupeInitializers(all []providers.Initializer) []providers.Initializer {
 }
 
 // aggregateResults combines multiple InitResult values into a single ExecutionResult (Task 8.9)
+// File paths are deduplicated to ensure each path appears only once in the result
 func aggregateResults(results []providers.InitResult) providers.ExecutionResult {
-	var created, updated []string
+	createdSet := make(map[string]bool)
+	updatedSet := make(map[string]bool)
 
 	for _, r := range results {
-		created = append(created, r.CreatedFiles...)
-		updated = append(updated, r.UpdatedFiles...)
+		for _, f := range r.CreatedFiles {
+			createdSet[f] = true
+		}
+		for _, f := range r.UpdatedFiles {
+			updatedSet[f] = true
+		}
+	}
+
+	// Convert maps back to slices (order preserved by Go 1.12+ for range)
+	created := make([]string, 0, len(createdSet))
+	updated := make([]string, 0, len(updatedSet))
+	for f := range createdSet {
+		created = append(created, f)
+	}
+	for f := range updatedSet {
+		updated = append(updated, f)
 	}
 
 	return providers.ExecutionResult{

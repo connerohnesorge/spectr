@@ -516,3 +516,96 @@ func TestExecutorIntegration_InitializerOrdering(t *testing.T) {
 		t.Error("SlashCommands initializer should create or update files")
 	}
 }
+
+// TestAggregateResultsDeduplication tests that aggregateResults deduplicates file paths
+func TestAggregateResultsDeduplication(t *testing.T) {
+	tests := []struct {
+		name     string
+		results  []providers.InitResult
+		wantLen  int
+		wantFile string
+	}{
+		{
+			name: "deduplicates created files",
+			results: []providers.InitResult{
+				{
+					CreatedFiles: []string{"file1.txt", "file2.txt"},
+					UpdatedFiles: make([]string, 0),
+				},
+				{
+					CreatedFiles: []string{"file1.txt", "file3.txt"},
+					UpdatedFiles: make([]string, 0),
+				},
+			},
+			wantLen:  3, // file1.txt, file2.txt, file3.txt (file1.txt appears once)
+			wantFile: "file1.txt",
+		},
+		{
+			name: "deduplicates updated files",
+			results: []providers.InitResult{
+				{
+					CreatedFiles: make([]string, 0),
+					UpdatedFiles: []string{"config.yml", "settings.json"},
+				},
+				{
+					CreatedFiles: make([]string, 0),
+					UpdatedFiles: []string{"config.yml"},
+				},
+			},
+			wantLen:  2, // config.yml, settings.json (config.yml appears once)
+			wantFile: "config.yml",
+		},
+		{
+			name: "deduplicates across multiple initializers",
+			results: []providers.InitResult{
+				{
+					CreatedFiles: []string{"dir/file.txt"},
+					UpdatedFiles: []string{},
+				},
+				{
+					CreatedFiles: []string{"other.txt"},
+					UpdatedFiles: []string{},
+				},
+				{
+					CreatedFiles: []string{"dir/file.txt"},
+					UpdatedFiles: []string{},
+				},
+			},
+			wantLen:  2, // dir/file.txt, other.txt
+			wantFile: "dir/file.txt",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := aggregateResults(tt.results)
+
+			totalFiles := len(result.CreatedFiles) + len(result.UpdatedFiles)
+			if totalFiles != tt.wantLen {
+				t.Errorf("aggregateResults returned %d files, want %d", totalFiles, tt.wantLen)
+			}
+
+			// Check that the expected file is present
+			found := false
+			for _, f := range result.CreatedFiles {
+				if f == tt.wantFile {
+					found = true
+
+					break
+				}
+			}
+			if !found {
+				for _, f := range result.UpdatedFiles {
+					if f == tt.wantFile {
+						found = true
+
+						break
+					}
+				}
+			}
+			if !found {
+				t.Errorf("Expected file %q not found in aggregated results", tt.wantFile)
+			}
+		})
+	}
+}

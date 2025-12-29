@@ -560,15 +560,15 @@ func TestAggregateResultsDeduplication(t *testing.T) {
 			results: []providers.InitResult{
 				{
 					CreatedFiles: []string{"dir/file.txt"},
-					UpdatedFiles: []string{},
+					UpdatedFiles: make([]string, 0),
 				},
 				{
 					CreatedFiles: []string{"other.txt"},
-					UpdatedFiles: []string{},
+					UpdatedFiles: make([]string, 0),
 				},
 				{
 					CreatedFiles: []string{"dir/file.txt"},
-					UpdatedFiles: []string{},
+					UpdatedFiles: make([]string, 0),
 				},
 			},
 			wantLen:  2, // dir/file.txt, other.txt

@@ -6,7 +6,9 @@ package initialize
 //nolint:revive // file-length-limit, comments-density - UI code is cohesive
 
 import (
+	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -15,6 +17,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 	"github.com/connerohnesorge/spectr/internal/tui"
+	"github.com/spf13/afero"
 )
 
 const (
@@ -43,14 +46,14 @@ type WizardModel struct {
 	executing            bool
 	executionResult      *ExecutionResult
 	err                  error
-	allProviders         []providers.Provider // sorted providers for display
-	ciWorkflowEnabled    bool                 // whether user wants CI workflow created
-	ciWorkflowConfigured bool                 // whether .github/workflows/spectr-ci.yml already exists
+	allProviders         []providers.Registration // sorted providers for display
+	ciWorkflowEnabled    bool                     // whether user wants CI workflow created
+	ciWorkflowConfigured bool                     // whether .github/workflows/spectr-ci.yml already exists
 	// Search mode state
-	searchMode        bool                 // whether search mode is active
-	searchQuery       string               // current search query
-	searchInput       textinput.Model      // text input for search
-	filteredProviders []providers.Provider // providers matching search query
+	searchMode        bool                     // whether search mode is active
+	searchQuery       string                   // current search query
+	searchInput       textinput.Model          // text input for search
+	filteredProviders []providers.Registration // providers matching search query
 }
 
 // ExecutionResult holds the result of initialization
@@ -110,21 +113,56 @@ func NewWizardModel(
 		)
 	}
 
-	allProviders := providers.All()
+	// Get all registered providers sorted by priority
+	allProviders := providers.RegisteredProviders()
 
 	configuredProviders := make(map[string]bool)
 	selectedProviders := make(map[string]bool)
 
-	for _, provider := range allProviders {
-		isConfigured := provider.IsConfigured(
-			projectPath,
-		)
+	// Create filesystems for IsSetup checks
+	projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+	homeDir, err := os.UserHomeDir()
+	var homeFs afero.Fs
+	if err == nil {
+		homeFs = afero.NewBasePathFs(afero.NewOsFs(), homeDir)
+	} else {
+		// If we can't get home dir, use a no-op filesystem
+		homeFs = afero.NewMemMapFs()
+	}
 
-		configuredProviders[provider.ID()] = isConfigured
+	// Create a basic config for IsSetup checks
+	cfg := &providers.Config{
+		SpectrDir: "spectr", // default spectr directory
+	}
+
+	// Create a template manager for initializer checks
+	tm, err := NewTemplateManager()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create template manager: %w", err)
+	}
+
+	// For each provider, check if any of its initializers are already setup
+	for _, reg := range allProviders {
+		// Get initializers for this provider
+		initializers := reg.Provider.Initializers(context.Background(), tm)
+
+		// Check if ALL initializers are already setup
+		// (all must be setup for the provider to be considered configured)
+		allSetup := len(initializers) > 0 // need at least one initializer
+		for _, init := range initializers {
+			if !init.IsSetup(projectFs, homeFs, cfg) {
+				allSetup = false
+
+				break
+			}
+		}
+
+		isConfigured := allSetup
+		configuredProviders[reg.ID] = isConfigured
 
 		// Pre-select already-configured providers
 		if isConfigured {
-			selectedProviders[provider.ID()] = true
+			selectedProviders[reg.ID] = true
 		}
 	}
 
@@ -255,18 +293,18 @@ func (m *WizardModel) handleSelectKeys(
 	case " ":
 		// Toggle selection on filtered list
 		if m.cursor < len(m.filteredProviders) {
-			provider := m.filteredProviders[m.cursor]
-			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+			reg := m.filteredProviders[m.cursor]
+			m.selectedProviders[reg.ID] = !m.selectedProviders[reg.ID]
 		}
-	case keyEnter:
+	case "enter":
 		// Confirm and move to review
 		m.step = StepReview
 
 		return m, nil
 	case "a":
 		// Select all (from full list, not just filtered)
-		for _, provider := range m.allProviders {
-			m.selectedProviders[provider.ID()] = true
+		for _, reg := range m.allProviders {
+			m.selectedProviders[reg.ID] = true
 		}
 	case "n":
 		// Deselect all
@@ -324,8 +362,8 @@ func (m *WizardModel) handleSearchModeInput(
 	case tea.KeySpace:
 		// Toggle selection on filtered list while in search mode
 		if m.cursor < len(m.filteredProviders) {
-			provider := m.filteredProviders[m.cursor]
-			m.selectedProviders[provider.ID()] = !m.selectedProviders[provider.ID()]
+			reg := m.filteredProviders[m.cursor]
+			m.selectedProviders[reg.ID] = !m.selectedProviders[reg.ID]
 		}
 
 		return m, nil
@@ -348,10 +386,10 @@ func (m *WizardModel) applyProviderFilter() {
 	if query == "" {
 		m.filteredProviders = m.allProviders
 	} else {
-		m.filteredProviders = make([]providers.Provider, 0)
-		for _, provider := range m.allProviders {
-			if strings.Contains(strings.ToLower(provider.Name()), query) {
-				m.filteredProviders = append(m.filteredProviders, provider)
+		m.filteredProviders = make([]providers.Registration, 0)
+		for _, reg := range m.allProviders {
+			if strings.Contains(strings.ToLower(reg.Name), query) {
+				m.filteredProviders = append(m.filteredProviders, reg)
 			}
 		}
 	}
@@ -546,12 +584,12 @@ func (m *WizardModel) renderSelect() string {
 }
 
 func (m *WizardModel) renderProviderGroup(
-	providersList []providers.Provider,
+	providersList []providers.Registration,
 	offset int,
 ) string {
 	var b strings.Builder
 
-	for i, provider := range providersList {
+	for i, reg := range providersList {
 		actualIndex := offset + i
 		cursor := " "
 		if m.cursor == actualIndex {
@@ -559,7 +597,7 @@ func (m *WizardModel) renderProviderGroup(
 		}
 
 		checkbox := "[ ]"
-		if m.selectedProviders[provider.ID()] {
+		if m.selectedProviders[reg.ID] {
 			checkbox = selectedStyle.Render("[✓]")
 		}
 
@@ -568,12 +606,12 @@ func (m *WizardModel) renderProviderGroup(
 			"  %s %s %s",
 			cursor,
 			checkbox,
-			provider.Name(),
+			reg.Name,
 		)
 
 		// Add configured indicator if provider is already configured
 		configuredIndicator := ""
-		if m.configuredProviders[provider.ID()] {
+		if m.configuredProviders[reg.ID] {
 			configuredIndicator = subtleStyle.Render(
 				" (configured)",
 			)
@@ -585,7 +623,7 @@ func (m *WizardModel) renderProviderGroup(
 				cursorStyle.Render(line),
 			)
 			b.WriteString(configuredIndicator)
-		case m.selectedProviders[provider.ID()]:
+		case m.selectedProviders[reg.ID]:
 			b.WriteString(
 				selectedStyle.Render(line),
 			)
@@ -683,12 +721,12 @@ func (m *WizardModel) renderSelectedProviders(
 		count,
 	)
 
-	for _, provider := range m.allProviders {
-		if !m.selectedProviders[provider.ID()] {
+	for _, reg := range m.allProviders {
+		if !m.selectedProviders[reg.ID] {
 			continue
 		}
 		b.WriteString(successStyle.Render("  ✓ "))
-		b.WriteString(provider.Name())
+		b.WriteString(reg.Name)
 		b.WriteString("\n")
 	}
 	b.WriteString("\n")

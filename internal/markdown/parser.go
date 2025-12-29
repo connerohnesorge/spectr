@@ -1659,20 +1659,183 @@ func (ip *inlineParser) applyUnderscoreRestriction(
 }
 
 // processDelimiters processes the delimiter stack and creates emphasis nodes.
-func (*inlineParser) processDelimiters( //nolint:revive // unused-receiver: future implementation
+// Implements the CommonMark emphasis processing algorithm (section 6.4):
+// https://spec.commonmark.org/0.30/#emphasis-and-strong-emphasis
+func (ip *inlineParser) processDelimiters(
 	nodes []Node,
 ) []Node {
-	// This is a simplified version of CommonMark's process_emphasis algorithm.
-	// In a full implementation, this would properly handle the delimiter stack
-	// with bottom-to-top matching.
+	// Process emphasis according to CommonMark spec section 6.4
+	// We iterate through the delimiter stack, processing emphasis in multiple passes.
+	// Each pass tries to match delimiters and create emphasis/strong nodes.
 
-	// For now, return nodes as-is since we don't have a full implementation
-	// of the delimiter stack processing. The delimiters were accumulated but
-	// proper matching would require more complex logic.
+	result := nodes
+	for {
+		newResult, found := ip.processEmphasisPass(result)
+		if !found {
+			break
+		}
+		result = newResult
+	}
 
-	// TODO: Implement full CommonMark emphasis processing algorithm
+	return result
+}
 
-	return nodes
+// processEmphasisPass makes a single pass through the delimiter stack,
+// processing emphasis and strong emphasis. Returns the updated node list and
+// a boolean indicating if any emphasis was processed.
+func (ip *inlineParser) processEmphasisPass(
+	nodes []Node,
+) ([]Node, bool) {
+	if len(ip.delimiters) == 0 {
+		return nodes, false
+	}
+
+	// Process delimiters from left to right
+	for i := range len(ip.delimiters) {
+		opener := &ip.delimiters[i]
+
+		// Skip inactive delimiters and those that can't open
+		if !opener.active || !opener.canOpen {
+			continue
+		}
+
+		// Look for matching closer to the right
+		for j := i + 1; j < len(ip.delimiters); j++ {
+			closer := &ip.delimiters[j]
+
+			// Skip inactive closers and those that can't close
+			if !closer.active || !closer.canClose {
+				continue
+			}
+
+			// Must be same type (asterisk or underscore)
+			if opener.delimType != closer.delimType {
+				continue
+			}
+
+			// Found a potential match
+			// Try to match strong emphasis first (use 2 delimiters)
+			if opener.count >= 2 && closer.count >= 2 {
+				result, success := ip.createEmphasisNode(
+					nodes,
+					i,
+					j,
+					2,
+					NodeTypeStrong,
+				)
+				if success {
+					return result, true
+				}
+			}
+
+			// Try regular emphasis (use 1 delimiter)
+			if opener.count >= 1 && closer.count >= 1 {
+				result, success := ip.createEmphasisNode(
+					nodes,
+					i,
+					j,
+					1,
+					NodeTypeEmphasis,
+				)
+				if success {
+					return result, true
+				}
+			}
+		}
+	}
+
+	return nodes, false
+}
+
+// createEmphasisNode attempts to create an emphasis node by matching delimiters.
+// Returns the updated node list and true if successful.
+func (ip *inlineParser) createEmphasisNode(
+	nodes []Node,
+	openerIdx, closerIdx int,
+	delimCount int,
+	nodeType NodeType,
+) ([]Node, bool) {
+	if openerIdx >= len(ip.delimiters) || closerIdx >= len(ip.delimiters) {
+		return nodes, false
+	}
+
+	opener := &ip.delimiters[openerIdx]
+	closer := &ip.delimiters[closerIdx]
+
+	// Reduce delimiter counts
+	opener.count -= delimCount
+	closer.count -= delimCount
+
+	// Mark as inactive if no more delimiters
+	if opener.count == 0 {
+		opener.active = false
+	}
+	if closer.count == 0 {
+		closer.active = false
+	}
+
+	// Find the index of the first node in the emphasis range
+	var startIdx int
+	var endIdx int
+
+	// Find start index: first node at or after opener position
+	startIdx = len(nodes)
+	for k := range nodes {
+		start, _ := nodes[k].Span()
+		if start >= opener.token.Start {
+			startIdx = k
+
+			break
+		}
+	}
+
+	// Find end index: last node at or before closer position
+	endIdx = -1
+	for k := len(nodes) - 1; k >= 0; k-- {
+		_, end := nodes[k].Span()
+		if end <= closer.token.End {
+			endIdx = k
+
+			break
+		}
+	}
+
+	if startIdx > endIdx || startIdx >= len(nodes) {
+		return nodes, false
+	}
+
+	// Extract children (nodes between opener and closer, inclusive)
+	var children []Node
+	if startIdx <= endIdx {
+		children = nodes[startIdx : endIdx+1]
+	}
+
+	// Create emphasis node
+	node := NewNodeBuilder(nodeType).
+		WithStart(opener.token.Start).
+		WithEnd(closer.token.End).
+		WithSource(ip.source[opener.token.Start:closer.token.End]).
+		WithChildren(children).
+		Build()
+
+	if node == nil {
+		return nodes, false
+	}
+
+	// Build new node list with emphasis node replacing the matched range
+	newNodes := make([]Node, 0, len(nodes))
+	newNodes = append(newNodes, nodes[:startIdx]...)
+	newNodes = append(newNodes, node)
+	if endIdx+1 < len(nodes) {
+		newNodes = append(newNodes, nodes[endIdx+1:]...)
+	}
+
+	// Mark all delimiters between opener and closer as inactive
+	for k := openerIdx + 1; k < closerIdx; k++ {
+		ip.delimiters[k].active = false
+	}
+
+	return newNodes, true
 }
 
 // parseStrikethrough parses ~~strikethrough~~ content.

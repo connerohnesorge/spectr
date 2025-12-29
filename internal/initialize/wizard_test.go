@@ -8,18 +8,22 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
-
 	"github.com/connerohnesorge/spectr/internal/initialize/providers"
 )
 
 const (
-	testProviderClaude      = "claude"
-	testProviderNonexistent = "nonexistentprovider123"
+	testSearchClaude      = "claude"
+	testSearchNonexistent = "nonexistentprovider123"
 )
 
-// TestMain registers all providers before running tests.
+// TestMain runs before all tests and ensures providers are registered
 func TestMain(m *testing.M) {
-	providers.RegisterAll()
+	// Register all providers for tests
+	if err := providers.RegisterAllProviders(); err != nil {
+		panic("Failed to register providers: " + err.Error())
+	}
+
+	// Run tests - return value handled automatically as of Go 1.15
 	m.Run()
 }
 
@@ -125,7 +129,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty intro output",
 			)
 		}
-		if !contains(output, "Spectr") {
+		if !strings.Contains(output, "Spectr") {
 			t.Error(
 				"Expected intro to contain 'Spectr'",
 			)
@@ -140,7 +144,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty select output",
 			)
 		}
-		if !contains(
+		if !strings.Contains(
 			output,
 			"Select AI Tools to Configure",
 		) {
@@ -159,7 +163,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty review output",
 			)
 		}
-		if !contains(
+		if !strings.Contains(
 			output,
 			"Review Your Selections",
 		) {
@@ -177,7 +181,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty execute output",
 			)
 		}
-		if !contains(output, "Initializing") {
+		if !strings.Contains(output, "Initializing") {
 			t.Error(
 				"Expected execute screen to contain 'Initializing'",
 			)
@@ -199,7 +203,7 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty complete output",
 			)
 		}
-		if !contains(output, "Successfully") {
+		if !strings.Contains(output, "Successfully") {
 			t.Error(
 				"Expected complete screen to contain 'Successfully'",
 			)
@@ -510,22 +514,6 @@ func TestRenderSelectShowsConfiguredIndicator(
 	}
 }
 
-// Helper function to check if a string contains a substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) &&
-		(s == substr || len(s) > len(substr) && findSubstring(s, substr))
-}
-
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-
-	return false
-}
-
 func TestHandleCompleteKeysCopyOnError(
 	t *testing.T,
 ) {
@@ -828,7 +816,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	}
 
 	// Test filtering with "claude" - should match Claude Code
-	wizard.searchQuery = testProviderClaude
+	wizard.searchQuery = testSearchClaude
 	wizard.applyProviderFilter()
 
 	if len(wizard.filteredProviders) == 0 {
@@ -840,12 +828,12 @@ func TestProviderFilteringLogic(t *testing.T) {
 	// Verify all results contain "claude" (case-insensitive)
 	for _, provider := range wizard.filteredProviders {
 		if !strings.Contains(
-			strings.ToLower(provider.Name()),
-			testProviderClaude,
+			strings.ToLower(provider.Name),
+			"claude",
 		) {
 			t.Errorf(
 				"Provider %s should not match 'claude'",
-				provider.Name(),
+				provider.Name,
 			)
 		}
 	}
@@ -865,7 +853,7 @@ func TestProviderFilteringLogic(t *testing.T) {
 	}
 
 	// Test filtering with non-matching query
-	wizard.searchQuery = testProviderNonexistent
+	wizard.searchQuery = testSearchNonexistent
 	wizard.applyProviderFilter()
 
 	if len(wizard.filteredProviders) != 0 {
@@ -889,7 +877,7 @@ func TestCursorAdjustmentOnFilter(t *testing.T) {
 	wizard.cursor = len(wizard.allProviders) - 1
 
 	// Apply a filter that reduces the list significantly
-	wizard.searchQuery = testProviderClaude
+	wizard.searchQuery = testSearchClaude
 	wizard.applyProviderFilter()
 
 	// Cursor should be adjusted to be within bounds
@@ -904,7 +892,7 @@ func TestCursorAdjustmentOnFilter(t *testing.T) {
 	}
 
 	// Test with no matches - cursor should be 0
-	wizard.searchQuery = testProviderNonexistent
+	wizard.searchQuery = testSearchNonexistent
 	wizard.applyProviderFilter()
 
 	if wizard.cursor != 0 {
@@ -929,7 +917,7 @@ func TestSelectionPreservedDuringFiltering(
 
 	// Select all providers
 	for _, provider := range wizard.allProviders {
-		wizard.selectedProviders[provider.ID()] = true
+		wizard.selectedProviders[provider.ID] = true
 	}
 
 	originalSelectionCount := len(
@@ -937,7 +925,7 @@ func TestSelectionPreservedDuringFiltering(
 	)
 
 	// Apply a filter that shows only some providers
-	wizard.searchQuery = testProviderClaude
+	wizard.searchQuery = testSearchClaude
 	wizard.applyProviderFilter()
 
 	// Verify selection count is preserved (filtering shouldn't affect selections)
@@ -1016,8 +1004,8 @@ func TestSearchModeExitWithEscape(t *testing.T) {
 
 	wizard.step = StepSelect
 	wizard.searchMode = true
-	wizard.searchQuery = testProviderClaude
-	wizard.searchInput.SetValue(testProviderClaude)
+	wizard.searchQuery = testSearchClaude
+	wizard.searchInput.SetValue("claude")
 	wizard.applyProviderFilter()
 
 	// Simulate pressing Escape key
@@ -1131,7 +1119,7 @@ func TestRenderSelectShowsNoMatchMessage(
 
 	wizard.step = StepSelect
 	wizard.searchMode = true
-	wizard.searchQuery = testProviderNonexistent
+	wizard.searchQuery = testSearchNonexistent
 	wizard.applyProviderFilter()
 
 	output := wizard.renderSelect()
@@ -1163,7 +1151,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 
 	// Ensure first provider is not selected
 	if len(wizard.filteredProviders) > 0 {
-		wizard.selectedProviders[wizard.filteredProviders[0].ID()] = false
+		wizard.selectedProviders[wizard.filteredProviders[0].ID] = false
 	}
 
 	// Simulate pressing space key while in search mode
@@ -1181,7 +1169,7 @@ func TestSpaceToggleInSearchMode(t *testing.T) {
 		return
 	}
 
-	providerID := updatedWizard.filteredProviders[0].ID()
+	providerID := updatedWizard.filteredProviders[0].ID
 	if !updatedWizard.selectedProviders[providerID] {
 		t.Errorf(
 			"Expected provider %s to be selected after space press",

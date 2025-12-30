@@ -136,55 +136,55 @@
       "id": "6.1",
       "section": "Edge Cases",
       "description": "Test behavior when tasks.md already exists from previous accept",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "6.2",
       "section": "Edge Cases",
       "description": "Document behavior when user manually deletes tasks.jsonc after accept",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "6.3",
       "section": "Edge Cases",
       "description": "Consider adding `--sync-from-md` flag to re-generate tasks.jsonc from",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "7.1",
       "section": "Template and Documentation Updates",
       "description": "Update `internal/domain/templates/slash-proposal.md.tmpl` Step 6 to",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "7.2",
       "section": "Template and Documentation Updates",
       "description": "Update `internal/domain/templates/slash-proposal.toml.tmpl` with same",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "7.3",
       "section": "Template and Documentation Updates",
       "description": "Update `internal/domain/templates/slash-apply.md.tmpl` to add reminder",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "7.4",
       "section": "Template and Documentation Updates",
       "description": "Update `internal/domain/templates/slash-apply.toml.tmpl` with same",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "7.5",
       "section": "Template and Documentation Updates",
       "description": "Update `cmd/accept_writer.go` tasksJSONHeader constant to reference",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "7.6",
       "section": "Template and Documentation Updates",
       "description": "Add \"Task File Management Workflow\" section to `spectr/AGENTS.md` with",
-      "status": "pending"
+      "status": "completed"
     }
   ]
 }

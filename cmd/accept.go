@@ -29,6 +29,10 @@ const filePerm = 0o644
 // produces a machine-readable tasks.jsonc file with structured task data.
 // Both files are preserved after conversion: tasks.md remains as the
 // human-readable source, while tasks.jsonc becomes the runtime source of truth.
+// If tasks.jsonc is deleted, all commands automatically fall back to tasks.md.
+//
+// Note: A --sync-from-md flag is not needed because running accept again
+// is idempotent and already handles re-generating tasks.jsonc from tasks.md.
 type AcceptCmd struct {
 	// ChangeID is the optional change identifier to process
 	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Convert tasks.md to tasks.jsonc (preserves tasks.md)"` //nolint:lll,revive // Kong struct tag exceeds line length

@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
+	"os"
 	"reflect"
+	"syscall"
 	"testing"
 )
 
@@ -94,5 +98,101 @@ func TestInitCmdHasRunMethod(t *testing.T) {
 			"Run method should return error, got %s",
 			runType.Out(0).Name(),
 		)
+	}
+}
+
+func TestIsTTYError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name: "wrapped ENXIO from bubbletea (real error format)",
+			err: fmt.Errorf("could not open a new TTY: %w",
+				&os.PathError{
+					Op:   "open",
+					Path: "/dev/tty",
+					Err:  syscall.ENXIO,
+				}),
+			expected: true,
+		},
+		{
+			name:     "direct ENXIO syscall error",
+			err:      syscall.ENXIO,
+			expected: true,
+		},
+		{
+			name:     "direct ENOTTY syscall error",
+			err:      syscall.ENOTTY,
+			expected: true,
+		},
+		{
+			name: "PathError with /dev/tty path",
+			err: &os.PathError{
+				Op:   "open",
+				Path: "/dev/tty",
+				Err:  syscall.EACCES,
+			},
+			expected: true,
+		},
+		{
+			name: "PathError with Windows CONIN$ path",
+			err: &os.PathError{
+				Op:   "open",
+				Path: "CONIN$",
+				Err:  syscall.EACCES,
+			},
+			expected: true,
+		},
+		{
+			name: "deeply wrapped ENXIO error",
+			err: fmt.Errorf("wizard failed: %w",
+				fmt.Errorf("could not open a new TTY: %w",
+					&os.PathError{
+						Op:   "open",
+						Path: "/dev/tty",
+						Err:  syscall.ENXIO,
+					})),
+			expected: true,
+		},
+		{
+			name: "PathError with non-TTY path",
+			err: &os.PathError{
+				Op:   "open",
+				Path: "/etc/passwd",
+				Err:  syscall.EACCES,
+			},
+			expected: false,
+		},
+		{
+			name:     "regular error without TTY reference",
+			err:      errors.New("some other error"),
+			expected: false,
+		},
+		{
+			name:     "string error mentioning tty (should NOT match)",
+			err:      errors.New("pretty formatted output"),
+			expected: false,
+		},
+		{
+			name:     "nil error",
+			err:      nil,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isTTYError(tt.err)
+			if result != tt.expected {
+				t.Errorf(
+					"isTTYError(%v) = %v, want %v",
+					tt.err,
+					result,
+					tt.expected,
+				)
+			}
+		})
 	}
 }

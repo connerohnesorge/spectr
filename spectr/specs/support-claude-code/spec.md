@@ -18,17 +18,31 @@ The provider SHALL be configured with these settings:
 - Config File: `CLAUDE.md`
 - Command Format: Markdown
 
-#### Scenario: Provider identification
+#### Scenario: Provider registration
 
-- **WHEN** the registry queries for Claude Code provider
-- **THEN** it SHALL return provider with ID `claude-code`
-- **AND** the provider priority is 1
+- **WHEN** the Claude Code provider is registered
+- **THEN** it SHALL use the new Registration struct with metadata
+- **AND** registration SHALL include ID `claude-code`, Name `Claude Code`,
+  Priority 1
+- **AND** the Provider implementation SHALL return initializers
+
+#### Scenario: Provider returns initializers
+
+- **WHEN** the provider's `Initializers(ctx context.Context, tm
+  *TemplateManager)` method is called
+- **THEN** it SHALL return a `DirectoryInitializer` for
+  `.claude/commands/spectr/`
+- **AND** it SHALL return a `ConfigFileInitializer` for `CLAUDE.md` with
+  TemplateRef from TemplateManager
+- **AND** it SHALL return a `SlashCommandsInitializer` for slash commands in
+  Markdown format
 
 #### Scenario: Provider metadata
 
-- **WHEN** displaying provider options to users
-- **THEN** the provider name is "Claude Code"
-- **AND** it appears first in the list due to priority 1
+- **WHEN** the provider is registered
+- **THEN** the provider name SHALL be "Claude Code"
+- **AND** the provider priority SHALL be 1 (highest priority)
+- **AND** the provider ID SHALL be "claude-code"
 
 ### Requirement: Claude Code Instruction File
 
@@ -38,14 +52,15 @@ project root.
 #### Scenario: Instruction file creation
 
 - **WHEN** `spectr init` runs with Claude Code provider selected
-- **THEN** the system creates `CLAUDE.md` in project root
-- **AND** inserts Spectr instructions between `<!-- spectr:START -->` and `<!--
-  spectr:END -->` markers
+- **THEN** the ConfigFileInitializer creates `CLAUDE.md` in project root
+- **AND** inserts Spectr instructions between `<!-- spectr:start -->` and `<!--
+  spectr:end -->` markers
 
 #### Scenario: Instruction file updates
 
 - **WHEN** `spectr init` runs in a project with Claude Code provider
-- **THEN** the system updates content between markers in `CLAUDE.md`
+- **THEN** the ConfigFileInitializer updates content between markers in
+  `CLAUDE.md`
 - **AND** preserves any user content outside the markers
 
 ### Requirement: Claude Code Slash Commands
@@ -55,22 +70,23 @@ directory.
 
 #### Scenario: Command directory structure
 
-- **WHEN** the provider configures slash commands
-- **THEN** it creates `.claude/commands/spectr/` directory
+- **WHEN** the provider returns initializers
+- **THEN** DirectoryInitializer SHALL create `.claude/commands/spectr/`
+  directory
 - **AND** all Spectr commands are placed in this subdirectory
 
 #### Scenario: Command paths
 
-- **WHEN** the provider generates slash command files
-- **THEN** it creates `.claude/commands/spectr/proposal.md`
-- **AND** it creates `.claude/commands/spectr/apply.md`
+- **WHEN** the SlashCommandsInitializer executes
+- **THEN** it SHALL create `.claude/commands/spectr/proposal.md`
+- **AND** it SHALL create `.claude/commands/spectr/apply.md`
 
 #### Scenario: Command format
 
 - **WHEN** slash command files are created
-- **THEN** they use Markdown format with `.md` extension
-- **AND** each file includes YAML frontmatter
-- **AND** frontmatter includes `description` field
+- **THEN** they SHALL use Markdown format with `.md` extension
+- **AND** each file SHALL include YAML frontmatter
+- **AND** frontmatter SHALL include `description` field
 
 ### Requirement: Standard Frontmatter
 

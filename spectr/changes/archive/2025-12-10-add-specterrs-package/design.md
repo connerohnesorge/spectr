@@ -1,6 +1,10 @@
+# Design Document
+
 ## Context
 
-Spectr currently has 35+ inline error strings scattered across 10+ files. Only 2 errors are defined as constants/variables. This makes errors:
+Spectr currently has 35+ inline error strings scattered across 10+ files. Only 2
+errors are defined as constants/variables. This makes errors:
+
 - Hard to find and audit
 - Difficult to ensure consistency
 - Impossible to reuse across packages
@@ -9,12 +13,14 @@ Spectr currently has 35+ inline error strings scattered across 10+ files. Only 2
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Centralize all error definitions in one package
 - Provide custom types with structured fields for programmatic access
 - Support standard error wrapping (`Unwrap()`)
 - Maintain backward-compatible error messages
 
 **Non-Goals:**
+
 - Creating a complex error hierarchy
 - Adding error codes or internationalization
 - Changing error message wording (preserve existing messages)
@@ -23,27 +29,33 @@ Spectr currently has 35+ inline error strings scattered across 10+ files. Only 2
 
 ### Decision: Custom Types Only (No Sentinels)
 
-**Rationale:** Custom types provide structured fields for rich context and enable type-based error checking with `errors.As()`. The user explicitly requested this approach.
+**Rationale:** Custom types provide structured fields for rich context and
+enable type-based error checking with `errors.As()`. The user explicitly
+requested this approach.
 
 **Alternatives considered:**
+
 - Sentinel errors: Simpler but no structured context
 - Mixed approach: More complex to maintain
 
 ### Decision: Domain-Based File Organization
 
-**Rationale:** Groups related errors logically, scales well, and matches the existing `internal/` package structure.
+**Rationale:** Groups related errors logically, scales well, and matches the
+existing `internal/` package structure.
 
 **Alternatives considered:**
+
 - Single file: Would become unwieldy with 20+ types
 - Flat with prefixes: Less clear organization
 
 ### Decision: Pointer Receivers for Error() Method
 
-All error types use pointer receivers (`*ErrorType`) for consistency and to enable optional fields.
+All error types use pointer receivers (`*ErrorType`) for consistency and to
+enable optional fields.
 
 ## Package Structure
 
-```
+```text
 internal/specterrs/
 ├── doc.go           # Package documentation
 ├── git.go           # Git errors (5 types)
@@ -53,7 +65,7 @@ internal/specterrs/
 ├── list.go          # List/flag errors (1 type)
 ├── environment.go   # Environment errors (1 type)
 └── pr.go            # PR workflow errors (2 types)
-```
+```text
 
 ## Error Type Pattern
 
@@ -73,7 +85,7 @@ func (e *TypeNameError) Error() string {
 func (e *TypeNameError) Unwrap() error {
     return e.Err
 }
-```
+```text
 
 ## Error Type Definitions
 
@@ -82,56 +94,56 @@ func (e *TypeNameError) Unwrap() error {
 | Type | Fields | Message |
 |------|--------|---------|
 | `EmptyRemoteURLError` | - | "empty remote URL" |
-| `BranchNameRequiredError` | - | "branch name is required" |
-| `BaseBranchRequiredError` | - | "base branch is required" |
-| `NotInGitRepositoryError` | `Path string` | "not in a git repository" |
-| `BaseBranchNotFoundError` | `BranchName string` | "could not determine base branch..." |
+| `BranchNameRequiredError` | - | "branch name required" |
+| `BaseBranchRequiredError` | - | "base branch required" |
+| `NotInGitRepositoryError` | `Path` | "not in a git repository" |
+| `BaseBranchNotFoundError` | `BranchName` | "could not determine base" |
 
 ### Archive Errors (`archive.go`)
 
 | Type | Fields | Message |
 |------|--------|---------|
-| `UserCancelledError` | `Operation string` | "user cancelled selection" |
-| `ArchiveCancelledError` | `Reason string` | "archive cancelled" |
-| `ValidationRequiredError` | `Operation string` | "validation errors must be fixed before {operation}" |
-| `DeltaConflictError` | `Section1, Section2, RequirementName string` | "requirement appears in both {s1} and {s2} sections" |
-| `DuplicateRequirementError` | `RequirementName, SectionName string` | "duplicate requirement {name} in {section} section" |
-| `IncompleteTasksError` | `Total, Completed int` | "archive cancelled due to incomplete tasks" |
+| `UserCancelledError` | `Operation` | "user cancelled" |
+| `ArchiveCancelledError` | `Reason` | "archive cancelled" |
+| `ValidationRequiredError` | `Operation` | "validation errors must be fixed" |
+| `DeltaConflictError` | `Sec1, Sec2, Name` | "req in both sections" |
+| `DuplicateRequirementError` | `Name, Section` | "duplicate req" |
+| `IncompleteTasksError` | `Total, Completed` | "tasks incomplete" |
 
 ### Validation Errors (`validation.go`)
 
 | Type | Fields | Message |
 |------|--------|---------|
-| `ValidationFailedError` | `ItemCount, ErrorCount, WarningCount int` | "validation failed" |
-| `MultiValidationFailedError` | `ItemCount int` | "validation failed for one or more items" |
-| `DeltaSpecParseError` | `SpecPath string, Line int, Err error` | "failed to parse delta spec..." |
+| `ValidationFailedError` | `Items, Errors, Warns` | "validation failed" |
+| `MultiValidationFailedError` | `ItemCount` | "validation failed" |
+| `DeltaSpecParseError` | `Path, Line, Err` | "parse failed" |
 
 ### Initialize Errors (`initialize.go`)
 
 | Type | Fields | Message |
 |------|--------|---------|
-| `EmptyPathError` | `Operation string` | "path cannot be empty" |
-| `WizardModelCastError` | `ActualType string` | "failed to cast final model to WizardModel" |
-| `InitializationCompletedWithErrorsError` | `ErrorCount int, Errors []error` | "initialization completed with errors" |
+| `EmptyPathError` | `Operation` | "path cannot be empty" |
+| `WizardModelCastError` | `ActualType` | "failed to cast" |
+| `InitCompletedWithErrorsError` | `Count, Errors` | "init with errors" |
 
 ### List Errors (`list.go`)
 
 | Type | Fields | Message |
 |------|--------|---------|
-| `IncompatibleFlagsError` | `Flag1, Flag2 string` | "cannot use {flag1} with {flag2}" |
+| `IncompatibleFlagsError` | `Flag1, Flag2` | "incompatible flags" |
 
 ### Environment Errors (`environment.go`)
 
 | Type | Fields | Message |
 |------|--------|---------|
-| `EditorNotSetError` | `Operation string` | "EDITOR environment variable not set" |
+| `EditorNotSetError` | `Operation` | "EDITOR not set" |
 
 ### PR Errors (`pr.go`)
 
 | Type | Fields | Message |
 |------|--------|---------|
-| `UnknownPlatformError` | `Platform, RepoURL string` | "unknown platform; please create PR manually" |
-| `PRPrerequisiteError` | `Check, Details string, Err error` | "PR prerequisite failed ({check}): {details}" |
+| `UnknownPlatformError` | `Platform, RepoURL` | "unknown platform" |
+| `PRPrerequisiteError` | `Check, Details, Err` | "prerequisite failed" |
 
 ## Migration Plan
 

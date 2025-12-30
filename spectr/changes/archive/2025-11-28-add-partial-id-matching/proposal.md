@@ -2,7 +2,11 @@
 
 ## Why
 
-Users currently must type the exact full change ID when running `spectr archive <id>`. Change IDs like `refactor-unified-interactive-tui` are long and error-prone to type. Partial matching would let users type `refactor` or `unified` and have the system resolve to the correct change, improving UX without sacrificing precision.
+Users currently must type the exact full change ID when running `spectr archive
+<id>`. Change IDs like `refactor-unified-interactive-tui` are long and
+error-prone to type. Partial matching would let users type `refactor` or
+`unified` and have the system resolve to the correct change, improving UX
+without sacrificing precision.
 
 ## What Changes
 
@@ -17,4 +21,5 @@ Users currently must type the exact full change ID when running `spectr archive 
 
 - Affected specs: `cli-interface` (archive command behavior)
 - Affected code: `internal/archive/archiver.go`, `internal/discovery/changes.go`
-- Affected docs: `assets/vhs/partial-match.tape` (new), `assets/gifs/partial-match.gif` (generated)
+- Affected docs: `assets/vhs/partial-match.tape` (new),
+  `assets/gifs/partial-match.gif` (generated)

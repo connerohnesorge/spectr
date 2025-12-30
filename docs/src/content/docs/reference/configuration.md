@@ -7,17 +7,20 @@ This page documents how to configure Spectr projects.
 
 ## Project Configuration
 
-Spectr projects are configured using `spectr/project.md`, which defines conventions and guidelines for your project.
+Spectr projects are configured using `spectr/project.md`, which defines
+conventions and guidelines for your project.
 
 ### Default Configuration
 
-When you initialize a Spectr project with `spectr init`, it creates a default `spectr/project.md`:
+When you initialize a Spectr project with `spectr init`, it creates a default
+`spectr/project.md`:
 
 ```bash
 spectr init /path/to/project
-```
+```text
 
 This creates:
+
 - `spectr/project.md` - Project conventions
 - `spectr/AGENTS.md` - AI assistant instructions
 - `spectr/specs/` - Master specifications directory
@@ -70,16 +73,18 @@ Description of requirement.
 #### Scenario: Success case
 - **WHEN** user performs action
 - **THEN** expected result
-```
+```text
 
 ### Change Deltas
+
 Deltas use section headers to indicate changes:
 
 - `## ADDED Requirements` - New capabilities
 - `## MODIFIED Requirements` - Changed behavior
 - `## REMOVED Requirements` - Deprecated features
 - `## RENAMED Requirements` - Name changes
-```
+
+```text
 
 ## Customizing Your Project
 
@@ -93,7 +98,7 @@ Edit `project.md` to define change ID requirements:
 - Must start with: add-, update-, remove-, refactor-
 - Length: 20-50 characters
 - Pattern: [verb]-[noun-phrase]
-```
+```text
 
 ### Capability Naming Rules
 
@@ -102,7 +107,7 @@ Edit `project.md` to define change ID requirements:
 - Format: kebab-case
 - Prefix: [domain]-[feature]
 - Examples: auth-mfa, api-pagination, webhooks-retry
-```
+```text
 
 ### Validation Rules
 
@@ -112,13 +117,13 @@ Edit `project.md` to define change ID requirements:
 - Every scenario must use #### Scenario: format
 - Change must affect at least 1 spec
 - Spec deltas must use operation headers
-```
+```text
 
 ## Directory Structure
 
 After initialization, your project looks like:
 
-```
+```text
 your-project/
 ├── CLAUDE.md
 ├── spectr/
@@ -140,7 +145,7 @@ your-project/
 │       └── archive/            # Completed changes
 │           └── 2025-01-15-add-two-factor-auth/
 └── ...rest of project...
-```
+```text
 
 ## Best Practices
 
@@ -178,7 +183,7 @@ export DEBUG=spectr:*
 
 # Set output format
 export SPECTR_FORMAT=json
-```
+```text
 
 ## Integration with Workflows
 
@@ -189,7 +194,7 @@ Validate changes in CI/CD:
 ```bash
 # In your CI/CD pipeline
 spectr validate --no-interactive
-```
+```text
 
 ### Git Hooks
 
@@ -199,7 +204,7 @@ Validate before commit:
 #!/bin/bash
 # .git/hooks/pre-commit
 spectr validate || exit 1
-```
+```text
 
 ### GitHub Actions
 
@@ -219,7 +224,7 @@ jobs:
         run: go install github.com/connerohnesorge/spectr@latest
       - name: Validate
         run: spectr validate --no-interactive
-```
+```text
 
 ## Troubleshooting Configuration
 
@@ -230,7 +235,7 @@ Ensure `project.md` follows Markdown conventions:
 ```bash
 # Check syntax
 spectr validate
-```
+```text
 
 ### Capability not found
 
@@ -259,9 +264,10 @@ For monorepos or multiple Spectr instances:
 spectr init ./services/auth
 spectr init ./services/payments
 spectr init ./services/webhooks
-```
+```text
 
 Each has independent:
+
 - `project.md` - Own conventions
 - `specs/` - Own capabilities
 - `changes/` - Own proposals
@@ -276,7 +282,7 @@ Extend validation in `project.md`:
 - Requirements must reference related issues
 - Change proposals require team approval
 - All tasks must include effort estimates
-```
+```text
 
 ## Configuration Examples
 
@@ -292,7 +298,7 @@ Extend validation in `project.md`:
 
 ## Change Naming
 Format: `add-`, `update-`, `remove-` prefix with kebab-case name
-```
+```text
 
 ### Comprehensive Project
 
@@ -325,7 +331,7 @@ Format: `add-`, `update-`, `remove-` prefix with kebab-case name
 - Changes: Require technical review
 - Specs: Require architecture team sign-off
 - Archives: Require deployment confirmation
-```
+```text
 
 ## Further Reading
 

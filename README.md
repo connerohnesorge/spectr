@@ -1,15 +1,19 @@
 # spectr
 
-<img src="https://github.com/connerohnesorge/spectr/blob/main/docs/src/assets/logo.png" alt="Logo" width="95">
+\<img
+src="https://github.com/connerohnesorge/spectr/blob/main/docs/src/assets/logo.png"
+alt="Logo" width="95"\>
 
 **Validatable spec-driven development (inspired by openspec and kiro)**
 
-Tired of your specs disappearing like a ghost? `spectr archive` is your friend - it merges your change deltas into spec files so nothing gets lost.
+Tired of your specs disappearing like a ghost? `spectr archive` is your friend -
+it merges your change deltas into spec files so nothing gets lost.
 
 Built with Go
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Version](https://img.shields.io/badge/Go-1.25%2B-00ADD8?logo=go)](https://go.dev/)
+[![Go
+Version](https://img.shields.io/badge/Go-1.25%2B-00ADD8?logo=go)](https://go.dev/)
 
 ---
 
@@ -59,28 +63,37 @@ Built with Go
 
 ## Overview
 
-**Spectr** is a CLI tool for validatable spec-driven development. It helps teams manage specifications and changes through a structured three-stage workflow:
+**Spectr** is a CLI tool for validatable spec-driven development. It helps teams
+manage specifications and changes through a structured three-stage workflow:
 
-1. **Creating Changes**: Write proposals with delta specs showing what SHOULD change
+1. **Creating Changes**: Write proposals with delta specs showing what SHOULD
+  change
 2. **Implementing Changes**: Follow the implementation checklist in `tasks.md`
 3. **Archiving Changes**: Merge deltas into specs, preserving history
 
-Spectr enforces a clear separation between current truth (`spectr/specs/` - what IS built) and proposed changes (`spectr/changes/` - what SHOULD change), ensuring all modifications are intentional, documented, and validated.
+Spectr enforces a clear separation between current truth (`spectr/specs/` - what
+IS built) and proposed changes (`spectr/changes/` - what SHOULD change),
+ensuring all modifications are intentional, documented, and validated.
 
 ## Key Features
 
-- **Structured Workflow**: Propose, validate, implement, and archive changes systematically
+- **Structured Workflow**: Propose, validate, implement, and archive changes
+  systematically
 - **Delta Specifications**: Track proposed changes separately from current specs
-- **Strict Validation**: Enforce requirements format, scenarios, and spec consistency
+- **Strict Validation**: Enforce requirements format, scenarios, and spec
+  consistency
 - **Interactive TUI**: Beautiful terminal UI for wizards and selection flows
-- **Archive Merging**: Automatically merge change deltas into spec files with `spectr archive`
-- **Clean Architecture**: Well-organized codebase with clear separation of concerns
+- **Archive Merging**: Automatically merge change deltas into spec files with
+  `spectr archive`
+- **Clean Architecture**: Well-organized codebase with clear separation of
+  concerns
 - **Comprehensive Testing**: Table-driven tests with high coverage
 - **Nix Integration**: First-class Nix flake support for reproducible builds
 
 ## Supported AI Tools
 
-Spectr integrates with popular AI coding assistants to provide spec-driven development workflows:
+Spectr integrates with popular AI coding assistants to provide spec-driven
+development workflows:
 
 | Tool | Website |
 |------|---------|
@@ -107,7 +120,8 @@ Run `spectr init` to configure Spectr for your preferred AI tools.
 
 ### Using GitHub Releases
 
-Download pre-built binaries from the [GitHub Releases](https://github.com/connerohnesorge/spectr/releases) page.
+Download pre-built binaries from the [GitHub
+Releases](https://github.com/connerohnesorge/spectr/releases) page.
 
 #### Linux
 
@@ -121,7 +135,7 @@ sudo mv spectr /usr/local/bin/
 curl -LO https://github.com/connerohnesorge/spectr/releases/latest/download/spectr_Linux_arm64.tar.gz
 tar -xzf spectr_Linux_arm64.tar.gz
 sudo mv spectr /usr/local/bin/
-```
+```text
 
 #### macOS
 
@@ -135,17 +149,19 @@ sudo mv spectr /usr/local/bin/
 curl -LO https://github.com/connerohnesorge/spectr/releases/latest/download/spectr_Darwin_arm64.tar.gz
 tar -xzf spectr_Darwin_arm64.tar.gz
 sudo mv spectr /usr/local/bin/
-```
+```text
 
 #### Windows
 
-Download the `.zip` file from the [releases page](https://github.com/connerohnesorge/spectr/releases) and extract it. Then add the directory containing `spectr.exe` to your PATH.
+Download the `.zip` file from the [releases
+page](https://github.com/connerohnesorge/spectr/releases) and extract it. Then
+add the directory containing `spectr.exe` to your PATH.
 
 ```powershell
 # Example: Download and extract using PowerShell
 # Download spectr_Windows_x86_64.zip from the releases page
 # Extract and add to PATH
-```
+```text
 
 #### Available Platforms
 
@@ -173,7 +189,7 @@ nix profile install github:connerohnesorge/spectr
 {
   inputs.spectr.url = "github:connerohnesorge/spectr";
 }
-```
+```text
 
 ### Building from Source
 
@@ -192,7 +208,7 @@ nix build
 
 # Install to your PATH
 mv spectr /usr/local/bin/  # or any directory in your PATH
-```
+```text
 
 ### Requirements
 
@@ -204,7 +220,9 @@ mv spectr /usr/local/bin/  # or any directory in your PATH
 
 ## CI Integration
 
-Spectr can be integrated into your GitHub Actions workflows using [spectr-action](https://github.com/connerohnesorge/spectr-action) to automatically validate specifications and changes on every push or pull request.
+Spectr can be integrated into your GitHub Actions workflows using
+[spectr-action](https://github.com/connerohnesorge/spectr-action) to
+automatically validate specifications and changes on every push or pull request.
 
 ### GitHub Actions Example
 
@@ -231,15 +249,17 @@ jobs:
 
       - name: Validate with Spectr
         uses: connerohnesorge/spectr-action@v1
-```
+```text
 
 This workflow will:
+
 - Run on every push and pull request
 - Check out your repository with full git history
 - Validate all specifications and active changes
 - Fail the build if validation errors are found
 
-For additional options, see the [spectr-action documentation](https://github.com/connerohnesorge/spectr-action).
+For additional options, see the [spectr-action
+documentation](https://github.com/connerohnesorge/spectr-action).
 
 ---
 
@@ -258,11 +278,11 @@ spectr init /path/to/project
 
 # Non-interactive mode with defaults
 spectr init --non-interactive
-```
+```text
 
 This creates the following structure:
 
-```
+```text
 your-project/
 └── spectr/
     ├── project.md        # Project conventions and context
@@ -272,7 +292,7 @@ your-project/
     │       └── design.md # Technical patterns (optional)
     └── changes/          # Proposed changes
         └── archive/      # Completed changes
-```
+```text
 
 ### Create Your First Change
 
@@ -287,7 +307,7 @@ spectr list --specs      # See existing capabilities
 mkdir -p spectr/changes/add-hello-world/specs/greeting
 
 # 3. Write a proposal
-cat > spectr/changes/add-hello-world/proposal.md << 'EOF'
+cat > spectr/changes/add-hello-world/proposal.md \<< 'EOF'
 # Change: Add Hello World Greeting
 
 ## Why
@@ -302,7 +322,7 @@ We need a simple greeting capability to welcome users.
 EOF
 
 # 4. Create delta spec
-cat > spectr/changes/add-hello-world/specs/greeting/spec.md << 'EOF'
+cat \> spectr/changes/add-hello-world/specs/greeting/spec.md \<< 'EOF'
 ## ADDED Requirements
 
 ### Requirement: Hello World Greeting
@@ -314,7 +334,7 @@ The system SHALL provide a greeting function that returns "Hello, World!".
 EOF
 
 # 5. Create tasks checklist
-cat > spectr/changes/add-hello-world/tasks.md << 'EOF'
+cat \> spectr/changes/add-hello-world/tasks.md \<< 'EOF'
 ## 1. Implementation
 - [ ] 1.1 Create greeting.go file
 - [ ] 1.2 Implement HelloWorld() function
@@ -327,13 +347,13 @@ spectr validate add-hello-world
 
 # 7. After implementation, archive it
 spectr archive add-hello-world
-```
+```text
 
 ### File Structure
 
 Understanding the directory structure is crucial:
 
-```
+```text
 spectr/
 ├── project.md              # Project-wide conventions
 ├── specs/                  # CURRENT TRUTH - what IS built
@@ -350,13 +370,15 @@ spectr/
 │   │           └── spec.md # ADDED/MODIFIED/REMOVED requirements
 │   └── archive/            # Completed changes (history)
 │       └── YYYY-MM-DD-[change-id]/
-```
+```text
 
 **Key Concepts:**
+
 - **spectr/specs/**: The source of truth for what's currently built
 - **spectr/changes/**: Proposed modifications, kept separate until approved
 - **spectr/changes/archive/**: Historical record of all changes with timestamps
-- **Delta Specs**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED Requirements` headers
+- **Delta Specs**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED
+  Requirements` headers
 
 ---
 
@@ -369,16 +391,20 @@ spectr/
 Initialize Spectr in a project directory.
 
 **Usage:**
+
 ```bash
 spectr init [PATH] [FLAGS]
-```
+```text
 
 **Flags:**
-- `--tools <tools>`: Comma-separated list of tools to include (e.g., `git,github`)
+
+- `--tools <tools\>`: Comma-separated list of tools to include (e.g.,
+  `git,github`)
 - `--non-interactive`: Skip interactive wizard, use defaults
-- `--path <path>`: Project directory (default: current directory)
+- `--path \<path\>`: Project directory (default: current directory)
 
 **Examples:**
+
 ```bash
 # Interactive initialization (recommended)
 spectr init
@@ -388,16 +414,17 @@ spectr init /path/to/project --tools git
 
 # Non-interactive with defaults
 spectr init --non-interactive
-```
+```text
 
 **Output:**
-```
+
+```text
 ✓ Created spectr/ directory
 ✓ Created specs/ directory
 ✓ Created changes/ directory
 ✓ Created project.md
 ✓ Spectr initialized successfully!
-```
+```text
 
 ### spectr list
 
@@ -406,17 +433,20 @@ spectr init --non-interactive
 List active changes or specifications.
 
 **Usage:**
+
 ```bash
 spectr list [FLAGS]
-```
+```text
 
 **Flags:**
+
 - `--specs`: List specifications instead of changes
 - `--json`: Output in JSON format
 - `--long`: Show detailed information
 - `--no-interactive`: Disable interactive selection
 
 **Examples:**
+
 ```bash
 # List all active changes
 spectr list
@@ -429,16 +459,17 @@ spectr list --json --long
 
 # List specs with full details
 spectr list --specs --long
-```
+```text
 
 **Example Output:**
-```
+
+```text
 Active Changes:
   add-two-factor-auth    Add 2FA authentication support
   refactor-validation    Improve validation error messages
 
-Run 'spectr view <change>' for details
-```
+Run 'spectr view \<change\>' for details
+```text
 
 ### spectr validate
 
@@ -447,16 +478,19 @@ Run 'spectr view <change>' for details
 Validate changes or specifications against rules.
 
 **Usage:**
+
 ```bash
 spectr validate [ITEM] [FLAGS]
-```
+```text
 
 **Flags:**
-- `--type <change|spec>`: Disambiguate when name conflicts exist
+
+- `--type \<change|spec\>`: Disambiguate when name conflicts exist
 - `--json`: Output validation results as JSON
 - `--no-interactive`: Skip interactive mode
 
 **Examples:**
+
 ```bash
 # Validate a specific change
 spectr validate add-two-factor-auth
@@ -469,9 +503,10 @@ spectr validate auth --type spec
 
 # Get JSON validation results
 spectr validate add-2fa --json
-```
+```text
 
 **Validation Rules:**
+
 - Every requirement MUST have at least one scenario
 - Scenarios MUST use `#### Scenario:` format (4 hashtags)
 - Purpose sections MUST be at least 50 characters
@@ -479,7 +514,8 @@ spectr validate add-2fa --json
 - Change directories MUST contain at least one delta spec
 
 **Example Output:**
-```
+
+```text
 Validating change: add-two-factor-auth
 
 ✓ Proposal file exists
@@ -487,37 +523,43 @@ Validating change: add-two-factor-auth
 ✓ All requirements have scenarios
 ✓ Scenario formatting correct
 ✓ All validations passed!
-```
+```text
 
 ### spectr accept
 
-Accept a change proposal and convert tasks.md to tasks.jsonc format for stable machine-readable task tracking.
+Accept a change proposal and convert tasks.md to tasks.jsonc format for stable
+machine-readable task tracking.
 
 **Usage:**
+
 ```bash
-spectr accept <CHANGE-ID> [FLAGS]
-```
+spectr accept \<CHANGE-ID\> [FLAGS]
+```text
 
 **Flags:**
+
 - `--dry-run`: Preview conversion without writing files
 - `--no-interactive`: Disable interactive prompts
 
 **What It Does:**
+
 1. Validates the change before accepting
 2. Parses `tasks.md` and extracts task sections, IDs, descriptions, and status
 3. Writes `tasks.jsonc` with structured task data
 4. Removes `tasks.md` to prevent drift (JSON becomes single source of truth)
 
 **Example:**
+
 ```bash
 # Accept a change (with validation)
 spectr accept add-two-factor-auth
 
 # Preview conversion without making changes
 spectr accept add-two-factor-auth --dry-run
-```
+```text
 
 **tasks.jsonc Format:**
+
 ```json
 {
   "version": 1,
@@ -530,15 +572,18 @@ spectr accept add-two-factor-auth --dry-run
     }
   ]
 }
-```
+```text
 
 **Status Values:**
+
 - `pending`: Task not started
 - `in_progress`: Task being worked on
 - `completed`: Task finished
 
 **Why JSON?**
-Based on Anthropic's research on effective harnesses for long-running agents, JSON task lists are more stable for AI agents:
+Based on Anthropic's research on effective harnesses for long-running agents,
+JSON task lists are more stable for AI agents:
+
 - Structural validation catches corruption immediately
 - Atomic field updates prevent accidental overwrites
 - Machine-readable format eliminates parsing errors
@@ -550,18 +595,21 @@ Based on Anthropic's research on effective harnesses for long-running agents, JS
 Archive a completed change, merging deltas into specs.
 
 **Usage:**
+
 ```bash
-spectr archive <CHANGE-ID> [FLAGS]
-```
+spectr archive \<CHANGE-ID\> [FLAGS]
+```text
 
 **Flags:**
+
 - `--skip-specs`: Archive without updating specs (for tooling-only changes)
 - `--yes` / `-y`: Skip confirmation prompts (non-interactive)
 - `--no-interactive`: Disable interactive mode
 
 **Partial ID Matching:**
 
-You don't need to type the full change ID. Spectr supports intelligent partial matching:
+You don't need to type the full change ID. Spectr supports intelligent partial
+matching:
 
 ```bash
 # Instead of typing the full ID:
@@ -578,16 +626,19 @@ spectr archive unified
 # Case-insensitive:
 spectr archive REFACTOR
 # Output: Resolved 'REFACTOR' -> 'refactor-unified-interactive-tui'
-```
+```text
 
 The matching algorithm:
+
 1. **Exact match**: Used directly (no resolution message)
 2. **Prefix match**: Finds IDs starting with your input (case-insensitive)
-3. **Substring match**: Finds IDs containing your input (fallback if no prefix match)
+3. **Substring match**: Finds IDs containing your input (fallback if no prefix
+  match)
 
 If multiple changes match, you'll get an error listing the ambiguous matches.
 
 **Examples:**
+
 ```bash
 # Archive with interactive confirmation
 spectr archive add-two-factor-auth
@@ -600,16 +651,18 @@ spectr archive add-feature --yes
 
 # Use partial ID for long change names
 spectr archive refactor --yes
-```
+```text
 
 **What It Does:**
+
 1. Validates the change before archiving
 2. Merges delta specs into `specs/` (unless `--skip-specs`)
 3. Moves `changes/[name]` → `changes/archive/YYYY-MM-DD-[name]`
 4. Preserves complete history in archive
 
 **Example Output:**
-```
+
+```text
 Archiving change: add-two-factor-auth
 
 ✓ Validation passed
@@ -618,23 +671,26 @@ Archiving change: add-two-factor-auth
   - Modified 1 requirement
 ✓ Moving to archive/2025-11-18-add-two-factor-auth/
 ✓ Archive complete!
-```
+```text
 
 ### spectr view
 
 Display detailed information about a change or spec.
 
 **Usage:**
+
 ```bash
 spectr view [ITEM] [FLAGS]
-```
+```text
 
 **Flags:**
-- `--type <change|spec>`: Specify item type
+
+- `--type \<change|spec\>`: Specify item type
 - `--json`: Output in JSON format
 - `--deltas-only`: Show only delta specifications (changes only)
 
 **Examples:**
+
 ```bash
 # View a change interactively
 spectr view
@@ -647,10 +703,11 @@ spectr view auth --type spec
 
 # Debug delta parsing
 spectr view add-2fa --json --deltas-only
-```
+```text
 
 **Example Output:**
-```
+
+```text
 Change: add-two-factor-auth
 Status: Active
 
@@ -667,7 +724,7 @@ Delta Summary:
   auth:
     - ADDED: 2 requirements
     - MODIFIED: 1 requirement
-```
+```text
 
 ---
 
@@ -675,9 +732,10 @@ Delta Summary:
 
 ### Architecture Overview
 
-Spectr follows **Clean Architecture** principles with clear separation of concerns:
+Spectr follows **Clean Architecture** principles with clear separation of
+concerns:
 
-```
+```text
 spectr/
 ├── cmd/                    # CLI command definitions (thin layer)
 │   ├── root.go            # Kong CLI framework setup
@@ -696,9 +754,10 @@ spectr/
 │   └── view/             # Display and formatting
 ├── main.go               # Application entry point
 └── testdata/             # Test fixtures and integration tests
-```
+```text
 
 **Design Principles:**
+
 - **Thin CLI Layer**: Commands delegate to internal packages
 - **No Circular Dependencies**: Strict dependency flow from cmd → internal
 - **Single Responsibility**: Each package has one focused purpose
@@ -736,7 +795,7 @@ nix develop
 # - golangci-lint: Comprehensive linting
 # - gotestsum: Enhanced test output
 # - delve: Debugger
-```
+```text
 
 #### Without Nix
 
@@ -756,7 +815,7 @@ go build -o spectr
 
 # Run
 ./spectr --help
-```
+```text
 
 ### Testing Strategy
 
@@ -780,15 +839,17 @@ go test ./internal/validation/...
 
 # Run with verbose output
 go test -v ./internal/parsers/...
-```
+```text
 
 **Test Organization:**
+
 - **Unit Tests**: Co-located with source files (`*_test.go`)
 - **Table-Driven**: Subtests with `t.Run()` for different scenarios
 - **Integration Tests**: Located in `testdata/integration/`
 - **Test Fixtures**: Stored in `testdata/` directory
 
 **Example Test Structure:**
+
 ```go
 func TestValidator_ValidateSpec(t *testing.T) {
     tests := []struct {
@@ -810,27 +871,30 @@ func TestValidator_ValidateSpec(t *testing.T) {
         })
     }
 }
-```
+```text
 
 ---
 
 ## Contributing
 
-We welcome contributions! Please follow these guidelines to ensure smooth collaboration.
+We welcome contributions! Please follow these guidelines to ensure smooth
+collaboration.
 
 ### Contribution Workflow
 
 1. **Fork the Repository**
+
    ```bash
    # Click "Fork" on GitHub, then clone your fork
    git clone https://github.com/YOUR-USERNAME/spectr.git
    cd spectr
-   ```
+```text
 
 2. **Create a Feature Branch**
+
    ```bash
    git checkout -b add-new-feature
-   ```
+```text
 
 3. **Make Changes**
    - Follow code style guidelines
@@ -838,22 +902,25 @@ We welcome contributions! Please follow these guidelines to ensure smooth collab
    - Update documentation as needed
 
 4. **Run Tests and Linting**
+
    ```bash
    go test ./...
    golangci-lint run
-   ```
+```text
 
 5. **Commit Your Changes**
+
    ```bash
    git add .
    git commit -m "Add new validation rule for scenarios"
-   ```
+```text
 
 6. **Push and Create Pull Request**
+
    ```bash
    git push origin add-new-feature
    # Create PR on GitHub
-   ```
+```text
 
 ### Code Style Guidelines
 
@@ -862,11 +929,14 @@ We welcome contributions! Please follow these guidelines to ensure smooth collab
 - **Naming Conventions**:
   - Packages: lowercase, single-word (e.g., `validation`, `parsers`)
   - Interfaces: Descriptive nouns (e.g., `Validator`, `Parser`)
-  - Exported functions: Clear, verb-led names (e.g., `ValidateSpec`, `ParseRequirement`)
+  - Exported functions: Clear, verb-led names (e.g., `ValidateSpec`,
+    `ParseRequirement`)
 - **Comments**: All exported types and functions MUST have doc comments
-- **Error Handling**: Use explicit error returns with context via `fmt.Errorf` wrapping
+- **Error Handling**: Use explicit error returns with context via `fmt.Errorf`
+  wrapping
 
 **Example:**
+
 ```go
 // ValidateSpec checks if a specification meets all validation rules.
 // It returns an error if any rule is violated.
@@ -876,21 +946,22 @@ func ValidateSpec(spec *Spec) error {
     }
     // validation logic...
 }
-```
+```text
 
 ### Commit Conventions
 
 Use clear, descriptive commit messages:
 
-```
-<type>: <short summary>
+```html
+\<type\>: <short summary>
 
 <optional body>
 
 <optional footer>
-```
+```text
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `refactor`: Code refactoring
@@ -899,7 +970,8 @@ Use clear, descriptive commit messages:
 - `chore`: Maintenance tasks
 
 **Examples:**
-```
+
+```text
 feat: add validation improvements
 
 Implement enhanced validation rules for specifications
@@ -911,7 +983,7 @@ Scenarios with extra whitespace were not being recognized.
 Updated regex to trim whitespace before matching.
 
 docs: update README with archive examples
-```
+```text
 
 ### Testing Requirements
 
@@ -923,6 +995,7 @@ All contributions MUST include appropriate tests:
 - **Test Coverage**: Aim for high coverage (current: >80%)
 
 **Running Tests Before PR:**
+
 ```bash
 # Run all tests
 go test ./...
@@ -936,7 +1009,7 @@ golangci-lint run
 
 # Format code
 go fmt ./...
-```
+```text
 
 ---
 
@@ -947,7 +1020,9 @@ go fmt ./...
 Spectr implements a **three-stage workflow** for managing changes:
 
 #### Stage 1: Creating Changes
+
 Create a proposal when you need to:
+
 - Add features or functionality
 - Make breaking changes (API, schema)
 - Change architecture or patterns
@@ -955,25 +1030,30 @@ Create a proposal when you need to:
 - Update security patterns
 
 **Skip proposals for:**
+
 - Bug fixes (restore intended behavior)
 - Typos, formatting, comments
 - Dependency updates (non-breaking)
 - Tests for existing behavior
 
 #### Stage 2: Implementing Changes
+
 1. Read `proposal.md` - Understand what's being built
 2. Read `design.md` (if exists) - Review technical decisions
 3. Read `tasks.md` - Get implementation checklist
 4. Run `spectr accept <id>` - Convert to stable JSON format
 5. Implement tasks sequentially
-6. Update task status in `tasks.jsonc` with values: `pending`, `in_progress`, `completed`
+6. Update task status in `tasks.jsonc` with values: `pending`, `in_progress`,
+  `completed`
 7. **Approval gate**: Do not implement until proposal is approved
 
 #### Stage 3: Archiving Changes
+
 After deployment:
-1. Run `spectr validate <change>` to ensure quality
-2. Run `spectr archive <change>` to merge deltas into specs
-3. Changes move to `archive/YYYY-MM-DD-<change>/`
+
+1. Run `spectr validate \<change\>` to ensure quality
+2. Run `spectr archive \<change\>` to merge deltas into specs
+3. Changes move to `archive/YYYY-MM-DD-\<change\>/`
 4. Specs in `specs/` are updated with merged requirements
 
 ### Delta Specifications
@@ -1001,9 +1081,10 @@ The system SHALL provide new functionality.
 ## RENAMED Requirements
 - FROM: `### Requirement: Old Name`
 - TO: `### Requirement: New Name`
-```
+```text
 
 **Key Rules:**
+
 - **ADDED**: New capabilities that stand alone
 - **MODIFIED**: Changes to existing requirements (include FULL updated content)
 - **REMOVED**: Deprecated features (provide reason and migration path)
@@ -1023,16 +1104,18 @@ Spectr enforces strict validation rules to maintain quality:
 | Scenario Structure | Scenarios SHOULD have WHEN/THEN bullets | Warning |
 | Header Matching | Operation headers use trim() - whitespace ignored | Info |
 
-**Note:** Validation is always strict - all validation issues are treated as errors to ensure specification quality.
+**Note:** Validation is always strict - all validation issues are treated as
+errors to ensure specification quality.
 
 **Debugging Validation:**
+
 ```bash
 # See detailed validation output
-spectr validate <change> --json | jq '.errors'
+spectr validate \<change\> --json | jq '.errors'
 
 # Check delta parsing
-spectr view <change> --json --deltas-only
-```
+spectr view \<change\> --json --deltas-only
+```text
 
 ### Archiving Workflow
 
@@ -1062,6 +1145,7 @@ The `spectr archive` command performs an atomic operation:
    - Reports summary
 
 **Example Archive:**
+
 ```bash
 $ spectr archive add-two-factor-auth
 
@@ -1072,7 +1156,7 @@ Archiving change: add-two-factor-auth
   - specs/notifications/spec.md: +1 ADDED
 ✓ Moved to archive/2025-11-18-add-two-factor-auth/
 ✓ Archive complete!
-```
+```text
 
 ---
 
@@ -1085,15 +1169,17 @@ Archiving change: add-two-factor-auth
 **Problem**: Validation fails because no delta specs found.
 
 **Solution:**
-1. Ensure `changes/<name>/specs/` directory exists
+
+1. Ensure `changes/\<name\>/specs/` directory exists
 2. Create at least one `.md` file with delta operations
-3. Verify files have `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED Requirements` headers
+3. Verify files have `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED
+  Requirements` headers
 
 ```bash
 # Check delta structure
 ls -la changes/my-change/specs/
 cat changes/my-change/specs/*/spec.md | grep "^## "
-```
+```text
 
 #### "Requirement must have at least one scenario"
 
@@ -1109,9 +1195,10 @@ The system SHALL do something.
 #### Scenario: Success case
 - **WHEN** user does X
 - **THEN** system does Y
-```
+```text
 
 **Common Mistakes:**
+
 - Using `###` (3 hashtags) instead of `####` (4 hashtags)
 - Using bold `**Scenario:**` instead of header `####`
 - Using bullets `- Scenario:` instead of header
@@ -1121,15 +1208,17 @@ The system SHALL do something.
 **Problem**: Validation fails with errors.
 
 **Solution:**
+
 1. Review error messages carefully
 2. Fix underlying issues (often scenario structure or purpose length)
-3. Use `spectr validate <change> --json` to get detailed error information
+3. Use `spectr validate \<change\> --json` to get detailed error information
 
 #### Archive Merge Conflicts
 
 **Problem**: Multiple changes modify the same requirement.
 
 **Solution:**
+
 1. Archive changes sequentially, not in parallel
 2. Resolve conflicts manually in `specs/` after first archive
 3. Validate the second change after first is archived
@@ -1139,13 +1228,15 @@ The system SHALL do something.
 
 #### Do I need approval before implementing changes?
 
-**Yes**. The approval gate is intentional. Changes should be reviewed and approved before implementation begins. This prevents wasted effort on changes that may be rejected or need significant revision.
+**Yes**. The approval gate is intentional. Changes should be reviewed and
+approved before implementation begins. This prevents wasted effort on changes
+that may be rejected or need significant revision.
 
 #### How do I handle multiple capabilities in one change?
 
 Create multiple delta specs, one per capability:
 
-```
+```text
 spectr/changes/add-2fa-notifications/
 ├── proposal.md
 ├── tasks.md
@@ -1154,20 +1245,23 @@ spectr/changes/add-2fa-notifications/
     │   └── spec.md       # Auth-related deltas
     └── notifications/
         └── spec.md       # Notification-related deltas
-```
+```text
 
 #### What's the difference between design.md in specs/ vs changes/?
 
 - **specs/[capability]/design.md**: Current technical patterns for a capability
 - **changes/[name]/design.md**: Design decisions for a proposed change
 
-The change's `design.md` explains new architectural decisions. After archiving, relevant design details may be added to capability design docs.
+The change's `design.md` explains new architectural decisions. After archiving,
+relevant design details may be added to capability design docs.
 
 #### Can I modify specs directly without a change?
 
-**For minor fixes only**: typos, formatting, clarifications that don't change meaning.
+**For minor fixes only**: typos, formatting, clarifications that don't change
+meaning.
 
 **For everything else**: Create a change proposal. This ensures:
+
 - Changes are reviewed and approved
 - History is preserved in archive
 - Validation catches errors before merging
@@ -1178,25 +1272,26 @@ Use JSON output to see parsed structure:
 
 ```bash
 # Check what was parsed
-spectr view <change> --json --deltas-only | jq '.deltas[].requirements[].scenarios'
+spectr view \<change\> --json --deltas-only | jq '.deltas[].requirements[].scenarios'
 
 # Verify scenario count
-spectr validate <change> --json | jq '.errors[] | select(.rule == "RequirementScenarios")'
-```
+spectr validate \<change\> --json | jq '.errors[] | select(.rule == "RequirementScenarios")'
+```text
 
 #### What happens to archive/ directory over time?
 
 Archives accumulate but remain organized by date:
 
-```
+```text
 spectr/changes/archive/
 ├── 2025-11-15-add-auth/
 ├── 2025-11-16-fix-validation/
 ├── 2025-11-18-add-notifications/
 └── ...
-```
+```text
 
 Periodically, you may:
+
 - Compress old archives
 - Move ancient archives to separate storage
 - Keep 6-12 months in active repository
@@ -1205,15 +1300,20 @@ Periodically, you may:
 
 ## Links & Resources
 
-- **GitHub Repository**: [github.com/connerohnesorge/spectr](https://github.com/connerohnesorge/spectr)
-- **GitHub Action for CI/CD**: [connerohnesorge/spectr-action](https://github.com/connerohnesorge/spectr-action)
-- **Specification Documentation**: See `spectr/specs/` for detailed capability specs
+- **GitHub Repository**:
+  [github.com/connerohnesorge/spectr](https://github.com/connerohnesorge/spectr)
+- **GitHub Action for CI/CD**:
+  [connerohnesorge/spectr-action](https://github.com/connerohnesorge/spectr-action)
+- **Specification Documentation**: See `spectr/specs/` for detailed capability
+  specs
   - [CLI Interface](spectr/specs/cli-interface/spec.md)
   - [Validation Rules](spectr/specs/validation/spec.md)
   - [Archive Workflow](spectr/specs/archive-workflow/spec.md)
   - [CLI Framework](spectr/specs/cli-framework/spec.md)
-- **AI Agents Documentation**: See [spectr/AGENTS.md](spectr/AGENTS.md) for AI assistant instructions
+- **AI Agents Documentation**: See [spectr/AGENTS.md](spectr/AGENTS.md) for AI
+  assistant instructions
 - **Project Conventions**: See [spectr/project.md](spectr/project.md)
-- **Issue Tracker**: [GitHub Issues](https://github.com/connerohnesorge/spectr/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/connerohnesorge/spectr/discussions)
-
+- **Issue Tracker**: [GitHub
+  Issues](https://github.com/connerohnesorge/spectr/issues)
+- **Discussions**: [GitHub
+  Discussions](https://github.com/connerohnesorge/spectr/discussions)

@@ -2,7 +2,8 @@
 
 ## 1. Create Helper Function
 
-- [x] 1.1 Create a `formatNextStepsMessage()` helper function in `internal/init/executor.go`
+- [x] 1.1 Create a `formatNextStepsMessage()` helper function in
+  `internal/init/executor.go`
 - [x] 1.2 Function should return a formatted string with the next steps message
 - [x] 1.3 Include visual separators (dashes) for readability
 - [x] 1.4 Include three numbered steps with copy-paste ready prompts
@@ -16,7 +17,8 @@
 
 ## 3. Update Interactive Mode
 
-- [x] 3.1 Modify `renderComplete()` in `internal/init/wizard.go` (around line 394)
+- [x] 3.1 Modify `renderComplete()` in `internal/init/wizard.go` (around line
+  394)
 - [x] 3.2 Add next steps message to the success output
 - [x] 3.3 Integrate with existing lipgloss styles for visual consistency
 - [x] 3.4 Position after created/updated files list, before the quit instruction

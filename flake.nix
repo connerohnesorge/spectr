@@ -47,9 +47,10 @@
           exec = rooted ''
             cd "$REPO_ROOT"
             golangci-lint run
+            markdownlint ./spectr/
             cd -
           '';
-          description = "Run golangci-lint";
+          description = "Run golangci-lint and markdownlint";
         };
         tests = {
           exec = rooted ''
@@ -145,6 +146,9 @@
 
             # For docs site
             biome
+
+            # Markdown linting
+            markdownlint-cli
           ]
           ++ builtins.attrValues scriptPackages;
       };

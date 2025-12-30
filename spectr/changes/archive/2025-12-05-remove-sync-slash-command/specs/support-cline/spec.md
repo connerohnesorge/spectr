@@ -1,14 +1,20 @@
+# Delta Specification
+
 ## MODIFIED Requirements
 
 ### Requirement: Cline Slash Commands
-The provider SHALL create slash commands in `.clinerules/commands/spectr/` directory.
+
+The provider SHALL create slash commands in `.clinerules/commands/spectr/`
+directory.
 
 #### Scenario: Command paths
+
 - **WHEN** the provider configures slash commands
 - **THEN** it creates `.clinerules/commands/spectr/proposal.md`
 - **AND** it creates `.clinerules/commands/spectr/apply.md`
 
 #### Scenario: Command format
+
 - **WHEN** slash command files are created
 - **THEN** they use Markdown format with YAML frontmatter
 - **AND** frontmatter includes `description` field

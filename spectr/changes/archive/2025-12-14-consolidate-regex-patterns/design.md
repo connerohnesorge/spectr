@@ -3,13 +3,16 @@
 ## Context
 
 Spectr parses markdown files to extract structural elements:
+
 - H2 section headers (`## Requirements`, `## ADDED Requirements`)
 - H3 requirement headers (`### Requirement: Name`)
 - H4 scenario headers (`#### Scenario: Name`)
 - Task checkboxes (`- [ ]`, `- [x]`)
 - Delta operations (ADDED/MODIFIED/REMOVED/RENAMED sections)
 
-Currently, regex patterns are defined locally in each file that needs them, leading to:
+Currently, regex patterns are defined locally in each file that needs them,
+leading to:
+
 - 10+ instances of requirement header pattern
 - 6+ instances of section header pattern
 - 4+ instances of scenario pattern
@@ -37,7 +40,8 @@ Currently, regex patterns are defined locally in each file that needs them, lead
 **What**: Create `internal/regex/` with files split by category.
 
 **Structure**:
-```
+
+```text
 internal/regex/
 ├── doc.go           # Package documentation
 ├── headers.go       # H2, H3, H4 header patterns and matchers
@@ -48,9 +52,10 @@ internal/regex/
 ├── renames_test.go
 ├── sections.go      # Section content extraction helpers
 └── sections_test.go
-```
+```text
 
 **Why**:
+
 - Clear separation by semantic category
 - Easier to navigate and maintain
 - Test files co-located with source
@@ -58,9 +63,11 @@ internal/regex/
 
 ### Decision 2: Pattern Organization
 
-**What**: Split patterns into separate files by category. Export both raw patterns and helper functions.
+**What**: Split patterns into separate files by category. Export both raw
+patterns and helper functions.
 
 **headers.go**:
+
 ```go
 package regex
 
@@ -95,9 +102,10 @@ func MatchH2SectionHeader(line string) (name string, ok bool) { ... }
 func MatchH2DeltaSection(line string) (deltaType string, ok bool) { ... }
 func MatchH3Requirement(line string) (name string, ok bool) { ... }
 func MatchH4Scenario(line string) (name string, ok bool) { ... }
-```
+```text
 
 **tasks.go**:
+
 ```go
 package regex
 
@@ -117,9 +125,10 @@ var (
 func MatchTaskCheckbox(line string) (state rune, ok bool) { ... }
 func MatchNumberedTask(line string) (checkbox, id, desc string, ok bool) { ... }
 func MatchNumberedSection(line string) (name string, ok bool) { ... }
-```
+```text
 
 **renames.go**:
+
 ```go
 package regex
 
@@ -127,26 +136,33 @@ import "regexp"
 
 // Both backtick and non-backtick variants exported separately
 var (
-    // RenamedFrom matches "- FROM: `### Requirement: Name`" (with backticks)
-    RenamedFrom = regexp.MustCompile(`^-\s*FROM:\s*` + "`" + `###\s+Requirement:\s*(.+?)` + "`" + `\s*$`)
+    // RenamedFrom matches "- FROM: `### Requirement: Name`" (backticks)
+    RenamedFrom = regexp.MustCompile(`^-\s*FROM:\s*` + "`" +
+        `###\s+Requirement:\s*(.+?)` + "`" + `\s*$`)
 
-    // RenamedTo matches "- TO: `### Requirement: Name`" (with backticks)
-    RenamedTo = regexp.MustCompile(`^-\s*TO:\s*` + "`" + `###\s+Requirement:\s*(.+?)` + "`" + `\s*$`)
+    // RenamedTo matches "- TO: `### Requirement: Name`" (backticks)
+    RenamedTo = regexp.MustCompile(`^-\s*TO:\s*` + "`" +
+        `###\s+Requirement:\s*(.+?)` + "`" + `\s*$`)
 
-    // RenamedFromAlt matches "- FROM: ### Requirement: Name" (without backticks)
-    RenamedFromAlt = regexp.MustCompile(`^\s*-\s*FROM:\s*###\s*Requirement:\s*(.+)$`)
+    // RenamedFromAlt matches "- FROM: ### Requirement: Name" (no backticks)
+    RenamedFromAlt = regexp.MustCompile(
+        `^\s*-\s*FROM:\s*###\s*Requirement:\s*(.+)$`)
 
-    // RenamedToAlt matches "- TO: ### Requirement: Name" (without backticks)
-    RenamedToAlt = regexp.MustCompile(`^\s*-\s*TO:\s*###\s*Requirement:\s*(.+)$`)
+    // RenamedToAlt matches "- TO: ### Requirement: Name" (no backticks)
+    RenamedToAlt = regexp.MustCompile(
+        `^\s*-\s*TO:\s*###\s*Requirement:\s*(.+)$`)
 )
 
-func MatchRenamedFrom(line string) (name string, ok bool) { ... }      // tries backtick version
-func MatchRenamedFromAlt(line string) (name string, ok bool) { ... }   // tries non-backtick version
+// tries backtick version
+func MatchRenamedFrom(line string) (name string, ok bool) { ... }
+// tries non-backtick version
+func MatchRenamedFromAlt(line string) (name string, ok bool) { ... }
 func MatchRenamedTo(line string) (name string, ok bool) { ... }
 func MatchRenamedToAlt(line string) (name string, ok bool) { ... }
-```
+```text
 
 **Why**:
+
 - Package-level `var` ensures single compilation
 - Exported patterns allow direct use for complex matching needs
 - Exported helpers provide clean API for common use cases
@@ -155,9 +171,11 @@ func MatchRenamedToAlt(line string) (name string, ok bool) { ... }
 
 ### Decision 3: Section Content Extraction
 
-**What**: Provide `sections.go` with helpers for extracting content between markdown headers.
+**What**: Provide `sections.go` with helpers for extracting content between
+markdown headers.
 
 **sections.go**:
+
 ```go
 package regex
 
@@ -166,11 +184,12 @@ import (
     "regexp"
 )
 
-// FindSectionContent extracts content between a specific H2 section and the next H2.
-// The sectionHeader parameter is the exact text after "## " (e.g., "Requirements").
-// Returns empty string if section not found.
+// FindSectionContent extracts content between a specific H2 section
+// and the next H2. The sectionHeader parameter is the exact text after
+// "## " (e.g., "Requirements"). Returns empty string if section not found.
 func FindSectionContent(content, sectionHeader string) string {
-    pattern := regexp.MustCompile(fmt.Sprintf(`(?m)^##\s+%s\s*$`, regexp.QuoteMeta(sectionHeader)))
+    pattern := regexp.MustCompile(
+        fmt.Sprintf(`(?m)^##\s+%s\s*$`, regexp.QuoteMeta(sectionHeader)))
     matches := pattern.FindStringIndex(content)
     if matches == nil {
         return ""
@@ -185,8 +204,8 @@ func FindSectionContent(content, sectionHeader string) string {
     return content[sectionStart:]
 }
 
-// FindDeltaSectionContent extracts content from a delta section (ADDED, MODIFIED, etc.).
-// Convenience wrapper around FindSectionContent for delta specs.
+// FindDeltaSectionContent extracts content from a delta section
+// (ADDED, MODIFIED, etc.). Wrapper around FindSectionContent for delta.
 func FindDeltaSectionContent(content, deltaType string) string {
     return FindSectionContent(content, deltaType+" Requirements")
 }
@@ -195,9 +214,10 @@ func FindDeltaSectionContent(content, deltaType string) string {
 func FindRequirementsSection(content string) string {
     return FindSectionContent(content, "Requirements")
 }
-```
+```text
 
 **Why**:
+
 - Common operation duplicated in 3+ files (validation, archive, parsers)
 - Consolidates section boundary detection logic
 - Specialized helpers reduce boilerplate for common cases
@@ -218,9 +238,10 @@ func MatchNumberedTask(line string) (checkbox, id, desc string, ok bool)
 
 // Special case: rune for checkbox state
 func MatchTaskCheckbox(line string) (state rune, ok bool)
-```
+```text
 
 **Why**:
+
 - Idiomatic Go pattern - consistent with stdlib (e.g., map lookup)
 - Clear success/failure without nil checks
 - Callers use `if name, ok := regex.MatchH3Requirement(line); ok { ... }`
@@ -231,7 +252,9 @@ func MatchTaskCheckbox(line string) (state rune, ok bool)
 **What**: Migrate files one at a time, running tests after each.
 
 **Order**:
-1. Create `internal/regex/` package with split files (headers.go, tasks.go, renames.go, sections.go)
+
+1. Create `internal/regex/` package with split files (headers.go, tasks.go,
+  renames.go, sections.go)
 2. Migrate `internal/parsers/parsers.go` (simplest, 3 patterns)
 3. Migrate `internal/parsers/requirement_parser.go` (2 patterns)
 4. Migrate `internal/parsers/delta_parser.go` (most complex, 10 patterns)
@@ -241,6 +264,7 @@ func MatchTaskCheckbox(line string) (state rune, ok bool)
 8. Remove any now-unused local patterns
 
 **Why**:
+
 - Incremental migration reduces risk
 - Tests validate each step
 - Order goes from simple to complex
@@ -251,10 +275,12 @@ func MatchTaskCheckbox(line string) (state rune, ok bool)
 
 1. **`\s+`** (whitespace normalization) - Too generic, used everywhere
 2. **`\n{3,}`** (newline collapsing) - Single use, utility purpose
-3. **`(?i)\b(shall|must)\b`** (normative language) - Validation-specific, not structural parsing
+3. **`(?i)\b(shall|must)\b`** (normative language) - Validation-specific, not
+  structural parsing
 4. **Git URL patterns** in `internal/git/platform.go` - Not markdown-related
 
 **Why**:
+
 - These are utilities, not markdown structure patterns
 - Consolidating would create unnecessary dependencies
 - Single-use patterns don't benefit from sharing
@@ -263,9 +289,9 @@ func MatchTaskCheckbox(line string) (state rune, ok bool)
 
 | Risk | Impact | Mitigation |
 |------|--------|------------|
-| Hidden behavioral differences | Medium - subtle bugs | Comprehensive test coverage; diff existing vs new output |
-| Import cycles | Low | `internal/regex/` has no internal dependencies |
-| Over-abstraction | Low | Keep simple; only patterns, not scanning logic |
+| Hidden behavioral diffs | Medium - bugs | Test coverage; diff outputs |
+| Import cycles | Low | No internal dependencies |
+| Over-abstraction | Low | Keep simple; patterns only |
 
 ## Migration Plan
 

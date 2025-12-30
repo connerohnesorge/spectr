@@ -3,102 +3,132 @@
 ## ADDED Requirements
 
 ### Requirement: Spec File Validation
-The validation system SHALL validate spec files for structural correctness and adherence to Spectr conventions.
+
+The validation system SHALL validate spec files for structural correctness and
+adherence to Spectr conventions.
 
 #### Scenario: Valid spec with all required sections
-- **WHEN** a spec file contains Purpose and Requirements sections with properly formatted requirements and scenarios
+
+- **WHEN** a spec file contains Purpose and Requirements sections with properly
+  formatted requirements and scenarios
 - **THEN** validation SHALL pass with no errors
 - **AND** the validation report SHALL indicate valid=true
 
 #### Scenario: Missing Purpose section
+
 - **WHEN** a spec file lacks a "## Purpose" section
 - **THEN** validation SHALL fail with an ERROR level issue
 - **AND** the error message SHALL indicate which section is missing
-- **AND** the error message SHALL include remediation guidance showing correct format
+- **AND** the error message SHALL include remediation guidance showing correct
+  format
 
 #### Scenario: Missing Requirements section
+
 - **WHEN** a spec file lacks a "## Requirements" section
 - **THEN** validation SHALL fail with an ERROR level issue
 - **AND** the error message SHALL provide example of correct structure
 
 #### Scenario: Requirement without scenarios
+
 - **WHEN** a requirement exists without any "#### Scenario:" subsections
 - **THEN** validation SHALL report a WARNING level issue
 - **AND** in strict mode validation SHALL fail (valid=false)
 - **AND** the warning SHALL include example scenario format
 
 #### Scenario: Requirement missing SHALL or MUST
+
 - **WHEN** a requirement text does not contain "SHALL" or "MUST" keywords
 - **THEN** validation SHALL report a WARNING level issue
 - **AND** the message SHALL suggest using normative language
 
 #### Scenario: Incorrect scenario format
-- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or bold text)
+
+- **WHEN** scenarios use formats other than "#### Scenario:" (e.g., bullets or
+  bold text)
 - **THEN** validation SHALL report an ERROR
 - **AND** the message SHALL show the correct "#### Scenario:" header format
 
 ### Requirement: Change Delta Validation
-The validation system SHALL validate change delta specs for structural correctness and delta operation validity.
+
+The validation system SHALL validate change delta specs for structural
+correctness and delta operation validity.
 
 #### Scenario: Valid change with deltas
-- **WHEN** a change directory contains specs with proper ADDED/MODIFIED/REMOVED/RENAMED sections
+
+- **WHEN** a change directory contains specs with proper
+  ADDED/MODIFIED/REMOVED/RENAMED sections
 - **THEN** validation SHALL pass with no errors
 - **AND** each delta requirement SHALL be counted toward the total
 
 #### Scenario: Change with no deltas
+
 - **WHEN** a change directory has no specs/ subdirectory or no delta sections
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL explain that at least one delta is required
 - **AND** remediation guidance SHALL explain the delta header format
 
 #### Scenario: Delta sections present but empty
-- **WHEN** delta sections exist (## ADDED Requirements) but contain no requirement entries
+
+- **WHEN** delta sections exist (## ADDED Requirements) but contain no
+  requirement entries
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL indicate which sections are empty
 - **AND** guidance SHALL explain requirement block format
 
 #### Scenario: ADDED requirement without scenario
+
 - **WHEN** an ADDED requirement lacks a "#### Scenario:" block
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL indicate which requirement is missing scenarios
 
 #### Scenario: MODIFIED requirement without scenario
+
 - **WHEN** a MODIFIED requirement lacks a "#### Scenario:" block
 - **THEN** validation SHALL fail with an ERROR
-- **AND** the message SHALL require at least one scenario for MODIFIED requirements
+- **AND** the message SHALL require at least one scenario for MODIFIED
+  requirements
 
 #### Scenario: Duplicate requirement in same section
-- **WHEN** two requirements with the same normalized name appear in the same delta section
+
+- **WHEN** two requirements with the same normalized name appear in the same
+  delta section
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL identify the duplicate requirement name
 
 #### Scenario: Cross-section conflicts
+
 - **WHEN** a requirement appears in both ADDED and MODIFIED sections
 - **THEN** validation SHALL fail with an ERROR
 - **AND** the message SHALL indicate the conflicting requirement and sections
 
 #### Scenario: RENAMED requirement validation
+
 - **WHEN** a RENAMED section contains well-formed "FROM: X TO: Y" pairs
 - **THEN** validation SHALL accept the renames
 - **AND** SHALL check for duplicate FROM or TO entries
 - **AND** SHALL error if MODIFIED references the old name instead of new name
 
 ### Requirement: Validation Report Structure
-The validation system SHALL produce structured validation reports containing issue details and summary statistics.
+
+The validation system SHALL produce structured validation reports containing
+issue details and summary statistics.
 
 #### Scenario: Report with errors and warnings
+
 - **WHEN** validation encounters both ERROR and WARNING level issues
 - **THEN** the report SHALL list all issues with level, path, and message
 - **AND** the summary SHALL count errors, warnings, and info separately
 - **AND** valid SHALL be false if any errors exist
 
 #### Scenario: Report in strict mode
+
 - **WHEN** validation runs in strict mode
 - **THEN** the report SHALL treat warnings as failures
 - **AND** valid SHALL be false if errors OR warnings exist
 - **AND** exit code SHALL be non-zero for warnings in strict mode
 
 #### Scenario: JSON output format
+
 - **WHEN** validation is invoked with --json flag
 - **THEN** the output SHALL be valid JSON
 - **AND** SHALL include items array with per-item results
@@ -106,92 +136,120 @@ The validation system SHALL produce structured validation reports containing iss
 - **AND** SHALL include version field for format compatibility
 
 ### Requirement: Bulk Validation with Concurrency
-The validation system SHALL support validating multiple items in parallel for performance.
+
+The validation system SHALL support validating multiple items in parallel for
+performance.
 
 #### Scenario: Parallel validation of multiple items
+
 - **WHEN** bulk validation is invoked with multiple specs and changes
 - **THEN** validation SHALL process items concurrently using a worker pool
 - **AND** concurrency SHALL be configurable via flag or environment variable
 - **AND** default concurrency SHALL be 6 workers
 
 #### Scenario: Validation queue management
+
 - **WHEN** the number of items exceeds worker pool size
 - **THEN** items SHALL be queued and processed as workers become available
 - **AND** progress indicators SHALL update as items complete (if not JSON mode)
 - **AND** results SHALL be collected and sorted by item ID
 
 #### Scenario: Error handling in parallel validation
-- **WHEN** validation of one item fails with an error (not validation issue, but runtime error)
+
+- **WHEN** validation of one item fails with an error (not validation issue, but
+  runtime error)
 - **THEN** the error SHALL be captured in the results for that item
 - **AND** validation of other items SHALL continue
 - **AND** the final exit code SHALL indicate failure
 
 ### Requirement: Item Discovery
-The validation system SHALL discover specs and changes within the project directory structure.
+
+The validation system SHALL discover specs and changes within the project
+directory structure.
 
 #### Scenario: Discover active changes
+
 - **WHEN** the system scans the spectr/changes/ directory
 - **THEN** it SHALL return all subdirectories except "archive"
 - **AND** each subdirectory name SHALL be a change ID
 
 #### Scenario: Discover specs
+
 - **WHEN** the system scans the spectr/specs/ directory
 - **THEN** it SHALL return all subdirectories containing a spec.md file
 - **AND** each subdirectory name SHALL be a spec ID
 
 #### Scenario: Handle missing directories
+
 - **WHEN** spectr/changes/ or spectr/specs/ does not exist
 - **THEN** discovery SHALL return empty list for that category
 - **AND** SHALL NOT error on missing directories
 
 ### Requirement: Interactive Validation Mode
-The validation system SHALL support interactive selection when invoked without arguments in a TTY.
+
+The validation system SHALL support interactive selection when invoked without
+arguments in a TTY.
 
 #### Scenario: Interactive mode prompt
-- **WHEN** validate command is invoked without arguments in an interactive terminal
-- **THEN** it SHALL prompt user with options: All, All changes, All specs, Pick specific item
+
+- **WHEN** validate command is invoked without arguments in an interactive
+  terminal
+- **THEN** it SHALL prompt user with options: All, All changes, All specs, Pick
+  specific item
 - **AND** user SHALL be able to select option using arrow keys
 - **AND** selected option SHALL be executed
 
 #### Scenario: Non-interactive environment detection
-- **WHEN** validate command is invoked without arguments in non-interactive environment (CI/CD)
+
+- **WHEN** validate command is invoked without arguments in non-interactive
+  environment (CI/CD)
 - **THEN** it SHALL print usage hints for non-interactive invocation
 - **AND** SHALL exit with code 1
 - **AND** SHALL NOT hang waiting for input
 
 ### Requirement: Helpful Error Messages
-The validation system SHALL provide actionable error messages with remediation guidance.
+
+The validation system SHALL provide actionable error messages with remediation
+guidance.
 
 #### Scenario: Error with remediation steps
+
 - **WHEN** validation fails due to missing required content
 - **THEN** the error message SHALL explain what is wrong
 - **AND** SHALL provide "Next steps" section with concrete actions
 - **AND** SHALL include format examples when applicable
 
 #### Scenario: Ambiguous item name
+
 - **WHEN** user provides an item name that matches both a change and a spec
 - **THEN** validation SHALL report the ambiguity
 - **AND** SHALL suggest using --type flag to disambiguate
 - **AND** SHALL show available type options (change, spec)
 
 #### Scenario: Item not found with suggestions
+
 - **WHEN** user provides an item name that does not exist
 - **THEN** validation SHALL report item not found
 - **AND** SHALL provide nearest match suggestions based on string similarity
 - **AND** SHALL limit suggestions to 5 most similar items
 
 ### Requirement: Exit Code Conventions
-The validation system SHALL use exit codes to indicate success or failure for scripting and CI/CD.
+
+The validation system SHALL use exit codes to indicate success or failure for
+scripting and CI/CD.
 
 #### Scenario: Successful validation
+
 - **WHEN** all validated items pass without errors (or warnings in strict mode)
 - **THEN** the command SHALL exit with code 0
 
 #### Scenario: Validation failures
+
 - **WHEN** any validated item has errors (or warnings in strict mode)
 - **THEN** the command SHALL exit with code 1
 
 #### Scenario: Runtime errors
+
 - **WHEN** the command encounters runtime errors (file not found, parse errors)
 - **THEN** the command SHALL exit with code 1
 - **AND** SHALL print error details to stderr

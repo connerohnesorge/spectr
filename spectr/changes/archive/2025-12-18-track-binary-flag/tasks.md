@@ -1,10 +1,15 @@
+# Implementation Tasks
+
 ## 1. Implementation
 
 - [ ] 1.1 Add `IncludeBinaries` flag to `TrackCmd` struct in `cmd/track.go`
-- [ ] 1.2 Add `IncludeBinaries` field to `track.Config` struct in `internal/track/tracker.go`
+- [ ] 1.2 Add `IncludeBinaries` field to `track.Config` struct in
+  `internal/track/tracker.go`
 - [ ] 1.3 Pass flag through from TrackCmd.Run to Config in `cmd/track.go`
-- [ ] 1.4 Add binary detection function to `internal/track/committer.go` using git diff --numstat
-- [ ] 1.5 Update `filterTaskFiles` function to also filter binary files when flag is false
+- [ ] 1.4 Add binary detection function to `internal/track/committer.go` using
+  git diff --numstat
+- [ ] 1.5 Update `filterTaskFiles` function to also filter binary files when
+  flag is false
 - [ ] 1.6 Add warning message when binary files are skipped
 - [ ] 1.7 Update `Committer` struct to accept IncludeBinaries setting
 - [ ] 1.8 Pass IncludeBinaries from Config to Committer in tracker.go

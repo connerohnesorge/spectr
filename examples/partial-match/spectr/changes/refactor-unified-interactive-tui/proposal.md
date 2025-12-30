@@ -2,7 +2,8 @@
 
 ## Why
 
-Consolidating TUI components for better maintainability and consistent user experience.
+Consolidating TUI components for better maintainability and consistent user
+experience.
 
 ## What Changes
 

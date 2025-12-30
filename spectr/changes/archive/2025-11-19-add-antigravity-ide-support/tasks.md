@@ -1,7 +1,9 @@
 # Implementation Tasks: Add Antigravity IDE Support
 
 ## 1. Update Tool Registry
-- [x] 1.1 Add Antigravity tool definition to `NewRegistry()` in `internal/init/registry.go`
+
+- [x] 1.1 Add Antigravity tool definition to `NewRegistry()` in
+  `internal/init/registry.go`
   - Priority: 7 (after Qwen)
   - ID: `antigravity`
   - Name: `Antigravity`
@@ -13,8 +15,11 @@
   - Value: `antigravity-slash` (following pattern of other tools)
 
 ## 2. Implement AntigravityConfigurator
-- [x] 2.1 Create `AntigravityConfigurator` struct in `internal/init/configurator.go`
-  - Follow exact pattern of existing 6 configurators (ClaudeCodeConfigurator, ClineConfigurator, etc.)
+
+- [x] 2.1 Create `AntigravityConfigurator` struct in
+  `internal/init/configurator.go`
+  - Follow exact pattern of existing 6 configurators (ClaudeCodeConfigurator,
+    ClineConfigurator, etc.)
 - [x] 2.2 Implement `Configure()` method
   - Renders AGENTS.md template using `NewTemplateManager()`
   - Updates `AGENTS.md` file using `UpdateFileWithMarkers()`
@@ -26,21 +31,28 @@
   - Returns `"Antigravity"`
 
 ## 3. Register Configurator
+
 - [x] 3.1 Add Antigravity configurator to wizard/executor
-  - No changes needed to `internal/init/wizard.go` (auto-populated from registry)
-  - No changes needed to `internal/init/executor.go` (existing dispatch logic handles new configurator)
+  - No changes needed to `internal/init/wizard.go` (auto-populated from
+    registry)
+  - No changes needed to `internal/init/executor.go` (existing dispatch logic
+    handles new configurator)
 
 ## 4. Testing
-- [x] 4.1 Add test for Antigravity tool registration in `internal/init/registry_test.go`
+
+- [x] 4.1 Add test for Antigravity tool registration in
+  `internal/init/registry_test.go`
   - Verify tool is found with `GetTool("antigravity")`
   - Verify mapping exists in `configToSlashMapping`
-- [x] 4.2 Add test for AntigravityConfigurator in `internal/init/configurator_test.go`
+- [x] 4.2 Add test for AntigravityConfigurator in
+  `internal/init/configurator_test.go`
   - Test `Configure()` creates `AGENTS.md` with markers
   - Test `IsConfigured()` returns true when file exists
   - Test `GetName()` returns correct name
   - Test file update behavior when markers already exist
 
 ## 5. Validation
+
 - [x] 5.1 Run `spectr validate add-antigravity-ide-support --strict`
   - All validation rules pass
   - No missing requirements or scenarios
@@ -52,6 +64,7 @@
   - Verify slash commands are auto-installed in `.agent/workflows/spectr-*`
 
 ## Notes
+
 - Antigravity becomes the 7th config-based tool in the registry
 - All tests must pass before archiving
 - Follow existing code patterns for consistency

@@ -2,21 +2,30 @@
 
 ## Why
 
-Users need a streamlined way to create pull requests for Spectr changes without polluting their working directory. The current workflow requires manual steps: checkout new branch, archive/copy change, stage, commit, push, create PR. This is error-prone and tedious.
+Users need a streamlined way to create pull requests for Spectr changes without
+polluting their working directory. The current workflow requires manual steps:
+checkout new branch, archive/copy change, stage, commit, push, create PR. This
+is error-prone and tedious.
 
 A dedicated `spectr pr` subcommand with `archive` and `new` variants provides:
-- Complete isolation via git worktrees - user's working directory is never modified
+
+- Complete isolation via git worktrees - user's working directory is never
+  modified
 - Automatic platform detection (GitHub, GitLab, Gitea, Forgejo, Bitbucket)
 - Structured commit messages and PR bodies with change metadata
 - Single command to go from completed change to PR under review
 
-This is distinct from a `--pr` flag on archive because it provides a dedicated namespace for PR operations with multiple subcommands (`archive` for completed changes, `proposal` for in-progress changes).
+This is distinct from a `--pr` flag on archive because it provides a dedicated
+namespace for PR operations with multiple subcommands (`archive` for completed
+changes, `proposal` for in-progress changes).
 
 ## What Changes
 
 - **NEW**: Add `spectr pr` top-level command with two subcommands:
-  - `spectr pr archive <change-id>` - Archive a change and create PR (MUST ALSO SUPPORT partial ids similar to `archive`)
-  - `spectr pr proposal <change-id>` - Copy change to PR branch without archiving
+  - `spectr pr archive <change-id>` - Archive a change and create PR (MUST ALSO
+    SUPPORT partial ids similar to `archive`)
+  - `spectr pr proposal <change-id>` - Copy change to PR branch without
+    archiving
 
 - **NEW**: Both subcommands share common PR workflow:
   1. Detect git hosting platform from `origin` remote URL

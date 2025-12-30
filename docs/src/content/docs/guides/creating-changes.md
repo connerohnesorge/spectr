@@ -1,9 +1,12 @@
 ---
 title: Creating Changes
-description: Learn how to create and propose changes in Spectr with change proposals and spec deltas.
+description: Learn how to create and propose changes in Spectr with change
+proposals and spec deltas.
 ---
 
-Creating a change proposal is the first step in the Spectr workflow. This guide walks you through proposing a new feature, breaking change, or architectural update.
+Creating a change proposal is the first step in the Spectr workflow. This guide
+walks you through proposing a new feature, breaking change, or architectural
+update.
 
 ## When to Create a Change
 
@@ -15,7 +18,7 @@ Create a change proposal when you need to:
 - **Optimize performance** - Changes that affect how the system behaves
 - **Update security patterns** - New security measures or requirements
 
-### Skip the proposal for:
+### Skip the proposal for
 
 - Bug fixes that restore intended behavior
 - Typos, formatting, or comment changes
@@ -41,9 +44,10 @@ Create the directory structure under `spectr/changes/<change-id>/`:
 
 ```bash
 mkdir -p spectr/changes/add-two-factor-auth/specs/auth
-```
+```text
 
 This creates:
+
 - `proposal.md` - Why and what
 - `tasks.md` - Implementation checklist
 - `design.md` (optional) - Technical decisions
@@ -68,7 +72,7 @@ Users require additional security beyond passwords. Two-factor authentication re
 ## Impact
 - Affected specs: `auth`, `notifications`, `user-settings`
 - Affected code: `services/auth`, `api/auth`, `components/LoginFlow`
-```
+```text
 
 ### 4. Create Implementation Checklist
 
@@ -92,7 +96,7 @@ Create `tasks.md` with implementation steps:
 - [ ] 3.2 Write integration tests
 - [ ] 3.3 Create migration script
 - [ ] 3.4 Update documentation
-```
+```text
 
 ### 5. Write Spec Deltas
 
@@ -124,15 +128,16 @@ Users SHALL provide credentials and a second factor to authenticate.
 - **THEN** the system verifies credentials
 - **AND** requests an OTP
 - **AND** validates the OTP before granting access
-```
+```text
 
-**Important**: Every requirement must have at least one scenario using the format:
+**Important**: Every requirement must have at least one scenario using the
+format:
 
 ```markdown
 #### Scenario: Descriptive scenario name
 - **WHEN** condition
 - **THEN** result
-```
+```text
 
 ### 6. Optional: Create Design Document
 
@@ -161,7 +166,7 @@ OTP delivery requires integration with notification service.
 ## Risks
 - Network delays in OTP delivery
 - **Mitigation**: Increased timeout window, retry mechanism
-```
+```text
 
 ### 7. Validate Your Change
 
@@ -169,9 +174,10 @@ Before requesting approval, validate your change:
 
 ```bash
 spectr validate <change-id>
-```
+```text
 
 This checks:
+
 - All scenarios properly formatted (#### Scenario:)
 - Every requirement has at least one scenario
 - Spec deltas follow conventions
@@ -183,7 +189,7 @@ Fix any issues and validate again.
 
 For changes affecting multiple capabilities, create separate spec files:
 
-```
+```text
 spectr/changes/add-2fa/
 ├── proposal.md
 ├── tasks.md
@@ -191,7 +197,7 @@ spectr/changes/add-2fa/
 │   ├── auth/spec.md          # Auth requirements
 │   ├── notifications/spec.md # Notification requirements
 │   └── user-settings/spec.md # Settings requirements
-```
+```text
 
 ## Common Patterns
 
@@ -205,7 +211,7 @@ spectr/changes/add-2fa/
 #### Scenario: Success case
 - **WHEN** user performs action
 - **THEN** expected result
-```
+```text
 
 ### Behavior Change
 
@@ -217,7 +223,7 @@ spectr/changes/add-2fa/
 #### Scenario: Updated behavior
 - **WHEN** condition
 - **THEN** new expected result
-```
+```text
 
 ### Removing Functionality
 
@@ -226,7 +232,7 @@ spectr/changes/add-2fa/
 ### Requirement: Deprecated Feature
 **Reason**: No longer needed, replaced by XYZ
 **Migration**: Users should use ABC instead
-```
+```text
 
 ## Next Steps
 

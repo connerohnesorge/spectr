@@ -8,6 +8,7 @@ Spectr implements a **three-stage workflow** for managing changes:
 ## Stage 1: Creating Changes
 
 Create a proposal when you need to:
+
 - Add features or functionality
 - Make breaking changes (API, schema)
 - Change architecture or patterns
@@ -15,6 +16,7 @@ Create a proposal when you need to:
 - Update security patterns
 
 **Skip proposals for:**
+
 - Bug fixes (restore intended behavior)
 - Typos, formatting, comments
 - Dependency updates (non-breaking)
@@ -32,6 +34,7 @@ Create a proposal when you need to:
 ## Stage 3: Archiving Changes
 
 After deployment:
+
 1. Run `spectr validate <change>` to ensure quality
 2. Run `spectr archive <change>` to merge deltas into specs
 3. Changes move to `archive/YYYY-MM-DD-<change>/`

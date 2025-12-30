@@ -16,11 +16,11 @@ spectr init /path/to/project
 
 # Non-interactive mode with defaults
 spectr init --non-interactive
-```
+```text
 
 This creates the following structure:
 
-```
+```text
 your-project/
 └── spectr/
     ├── project.md        # Project conventions and context
@@ -30,7 +30,7 @@ your-project/
     │       └── design.md # Technical patterns (optional)
     └── changes/          # Proposed changes
         └── archive/      # Completed changes
-```
+```text
 
 ## Create Your First Change
 
@@ -85,13 +85,13 @@ spectr validate add-hello-world
 
 # 7. After implementation, archive it
 spectr archive add-hello-world
-```
+```text
 
 ## File Structure
 
 Understanding the directory structure is crucial:
 
-```
+```text
 spectr/
 ├── project.md              # Project-wide conventions
 ├── specs/                  # CURRENT TRUTH - what IS built
@@ -108,10 +108,12 @@ spectr/
 │   │           └── spec.md # ADDED/MODIFIED/REMOVED requirements
 │   └── archive/            # Completed changes (history)
 │       └── YYYY-MM-DD-[change-id]/
-```
+```text
 
 **Key Concepts:**
+
 - **specs/**: The source of truth for what's currently built
 - **changes/**: Proposed modifications, kept separate until approved
 - **archive/**: Historical record of all changes with timestamps
-- **Delta Specs**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED Requirements` headers
+- **Delta Specs**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, or `## RENAMED
+  Requirements` headers

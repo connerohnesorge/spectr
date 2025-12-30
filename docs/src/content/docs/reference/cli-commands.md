@@ -13,16 +13,17 @@ List all active changes and specifications:
 
 ```bash
 spectr list
-```
+```text
 
 List specifications with detailed information:
 
 ```bash
 spectr list --specs
 spectr spec list --long
-```
+```text
 
 **Options:**
+
 - `--specs` - Show specifications instead of changes
 - `--long` - Show detailed information
 - `--json` - Machine-readable JSON output
@@ -34,9 +35,10 @@ Display details about a specific change or spec:
 ```bash
 spectr view <change-id>
 spectr view <spec-id> --type spec
-```
+```text
 
 **Examples:**
+
 ```bash
 # View change details
 spectr view add-two-factor-auth
@@ -46,22 +48,25 @@ spectr view auth --type spec
 
 # JSON output with delta details
 spectr view add-two-factor-auth --json --deltas-only
-```
+```text
 
 **Options:**
+
 - `--type change|spec` - Specify what to view (required if ambiguous)
 - `--json` - Machine-readable JSON output
 - `--deltas-only` - Show only spec deltas
 
 ### Validate Changes and Specs
 
-Validate a change or specification. Validation is always comprehensive (strict mode).
+Validate a change or specification. Validation is always comprehensive (strict
+mode).
 
 ```bash
 spectr validate <change-id>
-```
+```text
 
 **Examples:**
+
 ```bash
 # Validate single change
 spectr validate add-two-factor-auth
@@ -71,9 +76,10 @@ spectr validate
 
 # Validate all specs
 spectr validate --specs
-```
+```text
 
 **Options:**
+
 - `--specs` - Validate specs instead of changes
 - `--no-interactive` - Disable prompts
 
@@ -83,9 +89,10 @@ Move a completed change to archive and merge specs:
 
 ```bash
 spectr archive <change-id> --yes
-```
+```text
 
 **Examples:**
+
 ```bash
 # Interactive archiving
 spectr archive add-two-factor-auth
@@ -95,9 +102,10 @@ spectr archive add-two-factor-auth --yes
 
 # Archive without updating specs
 spectr archive add-two-factor-auth --skip-specs --yes
-```
+```text
 
 **Options:**
+
 - `--yes`, `-y` - Skip confirmation prompts
 - `--skip-specs` - Archive without merging specs
 - `--no-interactive` - Disable all prompts
@@ -110,16 +118,17 @@ Initialize a new Spectr project:
 
 ```bash
 spectr init [path]
-```
+```text
 
 **Examples:**
+
 ```bash
 # Initialize in current directory
 spectr init
 
 # Initialize in specific directory
 spectr init ./docs
-```
+```text
 
 This also updates the instruction markdown files in the project.
 
@@ -129,7 +138,7 @@ Most commands support these global options:
 
 ```bash
 spectr [command] [options]
-```
+```text
 
 - `--help` - Show command help
 - `--version` - Show Spectr version
@@ -149,7 +158,7 @@ spectr validate
 
 # Interactive archiving
 spectr archive
-```
+```text
 
 ## Output Formats
 
@@ -159,16 +168,17 @@ Human-readable text format:
 
 ```bash
 spectr list
-```
+```text
 
 Output:
-```
+
+```text
 Active Changes:
 ├─ add-two-factor-auth (created 2025-01-15)
 │  ├─ status: pending
 │  └─ affected: auth, notifications
 └─ update-api-versioning (created 2025-01-10)
-```
+```text
 
 ### JSON Output
 
@@ -176,9 +186,10 @@ Machine-readable JSON format:
 
 ```bash
 spectr list --json
-```
+```text
 
 Output:
+
 ```json
 {
   "changes": [
@@ -190,7 +201,7 @@ Output:
     }
   ]
 }
-```
+```text
 
 ## Common Workflows
 
@@ -209,7 +220,7 @@ spectr validate add-feature
 
 # 5. Validate again
 spectr validate add-feature
-```
+```text
 
 ### Implement and Archive
 
@@ -229,7 +240,7 @@ spectr archive add-feature --yes
 
 # 6. Verify specs were updated
 spectr validate
-```
+```text
 
 ### Explore Project State
 
@@ -248,7 +259,7 @@ spectr view auth --type spec
 
 # 5. Validate everything
 spectr validate
-```
+```text
 
 ## Troubleshooting
 
@@ -261,7 +272,7 @@ If you get "command not found", ensure Spectr is installed:
 which spectr
 
 # Install if needed (see Installation guide)
-```
+```text
 
 ### Ambiguous item
 
@@ -273,7 +284,7 @@ spectr view auth
 
 # Solution: Specify type
 spectr view auth --type spec
-```
+```text
 
 ### Permission denied
 
@@ -285,7 +296,7 @@ ls -la spectr/
 
 # Ensure you have write permission
 chmod -R u+w spectr/
-```
+```text
 
 ## Tips and Tricks
 
@@ -299,7 +310,7 @@ spectr list --json | jq '.changes[].id'
 
 # Get specific change details
 spectr view add-feature --json | jq '.proposal'
-```
+```text
 
 ### Quick Validation Loop
 
@@ -312,7 +323,7 @@ while true; do
   spectr validate add-feature
   sleep 2
 done
-```
+```text
 
 ### List Specs by Capability
 
@@ -322,7 +333,7 @@ spectr spec list --long
 
 # Find specs matching a pattern
 spectr spec list --json | jq '.specs[] | select(.id | contains("auth"))'
-```
+```text
 
 ## Further Reading
 

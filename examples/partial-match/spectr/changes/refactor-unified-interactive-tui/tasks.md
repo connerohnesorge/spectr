@@ -1,3 +1,5 @@
+# Implementation Tasks
+
 ## Tasks
 
 - [x] Consolidate TUI components

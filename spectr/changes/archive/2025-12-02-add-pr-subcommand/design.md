@@ -2,7 +2,10 @@
 
 ## Context
 
-Spectr manages change proposals through a structured workflow: create proposal, implement, archive. After archiving (or when sharing work-in-progress), users typically want to create a PR for team review. The current workflow requires multiple manual git commands:
+Spectr manages change proposals through a structured workflow: create proposal,
+implement, archive. After archiving (or when sharing work-in-progress), users
+typically want to create a PR for team review. The current workflow requires
+multiple manual git commands:
 
 ```bash
 git checkout -b archive-<change-id>
@@ -11,18 +14,23 @@ git add spectr/
 git commit -m "..."
 git push -u origin archive-<change-id>
 gh pr create ...
-```
+```text
 
-This is tedious and error-prone. Worse, it pollutes the user's working directory if they have uncommitted changes.
+This is tedious and error-prone. Worse, it pollutes the user's working directory
+if they have uncommitted changes.
 
-This design introduces a new `spectr pr` command namespace with two subcommands that use **git worktrees** for complete isolation.
+This design introduces a new `spectr pr` command namespace with two subcommands
+that use **git worktrees** for complete isolation.
 
 ## Goals
 
-- **Primary**: Provide complete isolation using git worktrees - never modify user's main working directory
+- **Primary**: Provide complete isolation using git worktrees - never modify
+  user's main working directory
 - **Primary**: Support both "archive and PR" and "copy and PR" workflows
-- **Primary**: Automate the branch → operation → commit → push → PR workflow atomically
-- **Secondary**: Support multiple git hosting platforms (GitHub, GitLab, Gitea, Forgejo, Bitbucket)
+- **Primary**: Automate the branch → operation → commit → push → PR workflow
+  atomically
+- **Secondary**: Support multiple git hosting platforms (GitHub, GitLab, Gitea,
+  Forgejo, Bitbucket)
 - **Secondary**: Clean up worktrees automatically, even on failure
 
 ## Non-Goals
@@ -36,18 +44,19 @@ This design introduces a new `spectr pr` command namespace with two subcommands 
 
 ### Option 1: Flat Subcommands (Recommended)
 
-```
+```text
 spectr pr archive <change-id> [flags]
 spectr pr new <change-id> [flags]
-```
+```text
 
-**Rationale**: Clear, verb-led subcommands. Matches existing CLI patterns in Spectr.
+**Rationale**: Clear, verb-led subcommands. Matches existing CLI patterns in
+Spectr.
 
 ### Option 2: Single Command with Mode Flag
 
-```
+```text
 spectr pr <change-id> --mode=archive|new
-```
+```text
 
 **Rejected**: Less discoverable, requires flag for common operation.
 
@@ -55,9 +64,11 @@ spectr pr <change-id> --mode=archive|new
 
 ### 1. Worktree-Based Isolation
 
-**Decision**: Use `git worktree` to create an isolated environment for all PR operations.
+**Decision**: Use `git worktree` to create an isolated environment for all PR
+operations.
 
 **Workflow (archive)**:
+
 ```bash
 # 1. Create worktree on new branch
 git worktree add /tmp/spectr-pr-<uuid> -b spectr/<change-id> origin/main
@@ -77,9 +88,10 @@ gh pr create ...
 # 5. Cleanup worktree
 cd -
 git worktree remove /tmp/spectr-pr-<uuid>
-```
+```text
 
 **Workflow (new)**:
+
 ```bash
 # 1. Create worktree on new branch
 git worktree add /tmp/spectr-pr-<uuid> -b spectr/<change-id> origin/main
@@ -98,9 +110,10 @@ gh pr create ...
 # 5. Cleanup worktree
 cd -
 git worktree remove /tmp/spectr-pr-<uuid>
-```
+```text
 
 **Rationale**:
+
 - User's working directory is completely untouched
 - No risk of including uncommitted changes
 - Branch is based on `origin/main`, not local state
@@ -108,15 +121,18 @@ git worktree remove /tmp/spectr-pr-<uuid>
 - Worktrees are lightweight and fast (shared objects)
 
 **Requirements**:
+
 - Git >= 2.5 (worktree support)
 - Clean base branch on remote (typically `main` or `master`)
 
 ### 2. Git Hosting Platform Detection
 
-**Decision**: Detect platform from `origin` remote URL and select appropriate CLI tool.
+**Decision**: Detect platform from `origin` remote URL and select appropriate
+CLI tool.
 
 **Detection Algorithm**:
-```
+
+```text
 URL Pattern                    → Platform    → CLI Tool
 ─────────────────────────────────────────────────────────
 github.com                     → GitHub      → gh
@@ -124,9 +140,10 @@ gitlab.com OR has "gitlab"     → GitLab      → glab
 gitea OR forgejo               → Gitea       → tea
 bitbucket.org OR bitbucket     → Bitbucket   → (manual URL)
 ssh://git@<custom>:...         → Unknown     → Error with guidance
-```
+```text
 
 **Implementation**:
+
 ```go
 type Platform string
 
@@ -145,9 +162,10 @@ type PlatformInfo struct {
 }
 
 func DetectPlatform(remoteURL string) (PlatformInfo, error)
-```
+```text
 
 **Rationale**:
+
 - Single source of truth for platform detection
 - Extensible for future platforms
 - Clear error messages for unsupported platforms
@@ -157,15 +175,18 @@ func DetectPlatform(remoteURL string) (PlatformInfo, error)
 **Decision**: Create branch with name `spectr/<change-id>`.
 
 **Examples**:
+
 - `spectr/add-user-auth`
 - `spectr/refactor-init-package-rename`
 
 **Rationale**:
+
 - Clearly indicates branch purpose with `spectr/` prefix
 - Follows Spectr's kebab-case convention
 - Grouped under `spectr/` namespace to avoid conflicts
 
 **Conflict Handling**:
+
 - If branch exists remotely: Error with message to delete or use `--force`
 - Add `--force` flag to delete existing branch and recreate
 
@@ -176,25 +197,30 @@ func DetectPlatform(remoteURL string) (PlatformInfo, error)
 **Pattern**: `{os.TempDir()}/spectr-pr-<uuid>/`
 
 **Examples**:
+
 - `/tmp/spectr-pr-a1b2c3d4/` (Linux/macOS)
 - `C:\Users\...\AppData\Local\Temp\spectr-pr-a1b2c3d4\` (Windows)
 
 **Rationale**:
+
 - Temp directory is cleaned up by OS eventually
 - UUID prevents conflicts between concurrent operations
 - Predictable pattern aids debugging
 
 ### 5. Base Branch Selection
 
-**Decision**: Base the PR branch on `origin/main` (or `origin/master` as fallback), with optional `--base` flag.
+**Decision**: Base the PR branch on `origin/main` (or `origin/master` as
+fallback), with optional `--base` flag.
 
 **Detection Order**:
+
 1. If `--base <branch>` provided → Use specified branch
 2. Check if `origin/main` exists → Use `origin/main`
 3. Check if `origin/master` exists → Use `origin/master`
 4. Error: "Could not determine base branch"
 
 **Rationale**:
+
 - PRs should be based on the current remote truth, not local state
 - `main` is the modern default; `master` is legacy fallback
 - `--base` allows targeting feature branches
@@ -204,25 +230,30 @@ func DetectPlatform(remoteURL string) (PlatformInfo, error)
 **Decision**: Execute appropriate change operation within the worktree.
 
 **Archive Mode**:
+
 ```bash
 cd /tmp/spectr-pr-<uuid>
 spectr archive <change-id> --yes
-```
+```text
 
 **New Mode**:
+
 ```bash
 cd /tmp/spectr-pr-<uuid>
 mkdir -p spectr/changes
 cp -r <original>/spectr/changes/<change-id> spectr/changes/
-```
+```text
 
 **Rationale**:
+
 - Archive mode: Full archive workflow including spec merging
 - New mode: Just copy the change proposal for review without archiving
 - Both operate in isolated worktree
 
 **Self-Invocation Pattern**:
-For archive mode, the `spectr pr archive` command invokes `spectr archive` as a subprocess. This ensures:
+For archive mode, the `spectr pr archive` command invokes `spectr archive` as a
+subprocess. This ensures:
+
 - Same binary version is used
 - All archive logic is reused
 - No code duplication
@@ -234,6 +265,7 @@ For archive mode, the `spectr pr archive` command invokes `spectr archive` as a 
 **Command**: `git add spectr/`
 
 **Rationale**:
+
 - Captures all change-related modifications
 - For archive: includes archived directory and updated specs
 - For new: includes just the copied change
@@ -245,7 +277,8 @@ For archive mode, the `spectr pr archive` command invokes `spectr archive` as a 
 **Decision**: Use structured commit message with operation metadata.
 
 **Archive Template**:
-```
+
+```text
 spectr(archive): <change-id>
 
 Archived to: spectr/changes/archive/YYYY-MM-DD-<change-id>/
@@ -257,18 +290,20 @@ Spec operations applied:
 → {renamed} renamed
 
 Generated by: spectr pr archive
-```
+```text
 
 **New Template**:
-```
+
+```text
 spectr(proposal): <change-id>
 
 Proposal for review: spectr/changes/<change-id>/
 
 Generated by: spectr pr new
-```
+```text
 
 **Rationale**:
+
 - Conventional commit style with `spectr()` scope
 - Clear summary of what operation was performed
 - Operation counts (for archive) help reviewers understand scope
@@ -279,10 +314,12 @@ Generated by: spectr pr new
 **Decision**: Generate PR with structured title and Markdown body.
 
 **PR Title**:
+
 - Archive: `spectr(archive): <change-id>`
 - New: `spectr(proposal): <change-id>`
 
 **PR Body Template (Archive)**:
+
 ```markdown
 ## Summary
 
@@ -310,9 +347,10 @@ Archived completed change: `<change-id>`
 
 ---
 *Generated by `spectr pr archive`*
-```
+```text
 
 **PR Body Template (New)**:
+
 ```markdown
 ## Summary
 
@@ -334,49 +372,54 @@ Proposal for review: `<change-id>`
 
 ---
 *Generated by `spectr pr new`*
-```
+```text
 
 ### 10. Platform-Specific PR Creation
 
 **Decision**: Use platform CLI tools with consistent arguments.
 
 **GitHub (`gh`)**:
+
 ```bash
 gh pr create \
   --title "<title>" \
   --body-file /tmp/pr-body.md \
   --base main
-```
+```text
 
 **GitLab (`glab`)**:
+
 ```bash
 glab mr create \
   --title "<title>" \
   --description "$(cat /tmp/pr-body.md)" \
   --target-branch main
-```
+```text
 
 **Gitea (`tea`)**:
+
 ```bash
 tea pr create \
   --title "<title>" \
   --description "$(cat /tmp/pr-body.md)" \
   --base main
-```
+```text
 
 **Bitbucket**:
 No official CLI; output manual URL:
-```
+
+```text
 PR creation not automated for Bitbucket.
 Create manually at: https://bitbucket.org/<org>/<repo>/pull-requests/new?source=spectr/<change-id>&dest=main
-```
+```text
 
 ### 11. Error Handling Strategy
 
 **Decision**: Fail fast with descriptive errors; always cleanup worktree.
 
 **Error Hierarchy**:
-```
+
+```text
 Level 1: Pre-flight checks (before any git ops)
 ├── Not in git repository
 ├── No origin remote
@@ -392,34 +435,40 @@ Level 2: Worktree operations
 
 Level 3: PR creation
 └── PR CLI invocation failed
-```
+```text
 
 **Cleanup Guarantee**:
+
 ```go
 defer func() {
     if worktreePath != "" {
         cleanupWorktree(worktreePath)
     }
 }()
-```
+```text
 
 **Error Messages**:
+
 - Include what failed and why
 - Suggest remediation steps
-- Include state information (e.g., "Branch was created and pushed, but PR creation failed")
+- Include state information (e.g., "Branch was created and pushed, but PR
+  creation failed")
 
 ### 12. Flag Design
 
 **Common Flags**:
+
 - `--base <branch>` - Target branch for PR (default: auto-detect main/master)
 - `--draft` - Create as draft PR
 - `--force` - Delete existing remote branch if present
 - `--dry-run` - Show what would be done without executing
 
 **Archive-Specific Flags**:
+
 - `--skip-specs` - Pass through to `spectr archive` to skip spec merging
 
 **Rationale**:
+
 - `--draft` is commonly needed for WIP PRs
 - `--force` handles branch conflicts
 - `--dry-run` aids debugging and validation
@@ -427,7 +476,7 @@ defer func() {
 
 ## Package Structure
 
-```
+```text
 internal/
 ├── git/                   # NEW: Git operations package
 │   ├── platform.go        # Platform detection
@@ -447,7 +496,7 @@ internal/
 cmd/
 ├── root.go                # Add PR command
 └── pr.go                  # NEW: PR command with subcommands
-```
+```text
 
 ## Alternatives Considered
 
@@ -456,6 +505,7 @@ cmd/
 **Considered**: Add `--pr` flag to existing archive command.
 
 **Trade-offs**:
+
 - Pro: Single command for archive+PR
 - Con: No support for "new" (non-archive) PR workflow
 - Con: Overloads archive command with git concerns
@@ -468,34 +518,38 @@ cmd/
 **Considered**: `spectr pr <change-id>` with `--archive` flag.
 
 **Trade-offs**:
+
 - Pro: Simpler command structure
 - Con: "new" becomes the default, archive requires flag
 - Con: Less discoverable via help
 
-**Decision**: Rejected. Subcommands are more explicit and match existing patterns.
+**Decision**: Rejected. Subcommands are more explicit and match existing
+patterns.
 
 ### Alternative 3: Stash-Based Isolation
 
 **Considered**: Stash user changes, operate, restore.
 
 **Trade-offs**:
+
 - Pro: Simpler than worktrees
 - Con: Risk of conflicts on unstash
 - Con: Modifies user's working directory (even temporarily)
 - Con: Slower than worktrees
 
-**Decision**: Rejected. Worktrees provide true isolation without touching user's state.
+**Decision**: Rejected. Worktrees provide true isolation without touching user's
+state.
 
 ## Risks & Mitigations
 
 | Risk | Impact | Mitigation |
 |------|--------|-----------|
-| Git < 2.5 doesn't support worktrees | Command fails | Check git version on startup; provide clear error |
-| Concurrent `spectr pr` operations | Branch name conflict | UUID in worktree path; branch name from change-id |
-| Worktree cleanup fails | Temp directory pollution | Log warning; user can manually clean |
-| Network failure during push | Orphaned local branch | Provide recovery instructions |
-| PR CLI authentication | PR creation fails | Check CLI auth status; provide login instructions |
-| User runs from worktree | Worktree inception | Detect and error: "Cannot run spectr pr from within a worktree" |
+| Git < 2.5 no worktrees | Command fails | Check git version; error clearly |
+| Concurrent `spectr pr` | Branch conflict | UUID in path; branch from ID |
+| Worktree cleanup fails | Temp pollution | Log warning; manual cleanup docs |
+| Network failure on push | Orphaned branch | Provide recovery instructions |
+| PR CLI auth missing | PR create fails | Check auth; provide login steps |
+| User in worktree | Inception | Detect and error with message |
 
 ## Open Questions
 

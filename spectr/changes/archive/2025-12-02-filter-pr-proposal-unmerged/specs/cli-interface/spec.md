@@ -1,21 +1,27 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: PR Proposal Interactive Selection Filters Unmerged Changes
 
-The `spectr pr proposal` command's interactive selection mode SHALL only display changes that do not already exist on the target branch (main/master), ensuring users only see changes that genuinely need proposal PRs.
+The `spectr pr proposal` command's interactive selection mode SHALL only display
+changes that do not already exist on the target branch (main/master), ensuring
+users only see changes that genuinely need proposal PRs.
 
 #### Scenario: Interactive list excludes changes on main
 
 - **WHEN** user runs `spectr pr proposal` without a change ID argument
 - **AND** some changes in `spectr/changes/` already exist on `origin/main`
-- **THEN** only changes NOT present on `origin/main` are displayed in the interactive list
+- **THEN** only changes NOT present on `origin/main` are displayed in the
+  interactive list
 - **AND** changes that exist on main are filtered out before display
 
 #### Scenario: All changes already on main
 
 - **WHEN** user runs `spectr pr proposal` without a change ID argument
 - **AND** all active changes already exist on `origin/main`
-- **THEN** a message is displayed: "No unmerged proposals found. All changes already exist on main."
+- **THEN** a message is displayed: "No unmerged proposals found. All changes
+  already exist on main."
 - **AND** the command exits gracefully without entering interactive mode
 
 #### Scenario: No changes exist at all
@@ -42,7 +48,8 @@ The `spectr pr proposal` command's interactive selection mode SHALL only display
 #### Scenario: Detection uses git ls-tree
 
 - **WHEN** the system checks if a change exists on main
-- **THEN** it uses `git ls-tree` to check if `spectr/changes/<change-id>` path exists on `origin/main`
+- **THEN** it uses `git ls-tree` to check if `spectr/changes/<change-id>` path
+  exists on `origin/main`
 - **AND** the check is performed before displaying the interactive list
 - **AND** fetch is performed first to ensure refs are current
 

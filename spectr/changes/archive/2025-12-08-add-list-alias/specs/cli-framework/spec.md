@@ -1,14 +1,18 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: List Command Alias
 
-The `spectr list` command SHALL support `ls` as a shorthand alias, allowing users to invoke `spectr ls` as equivalent to `spectr list`.
+The `spectr list` command SHALL support `ls` as a shorthand alias, allowing
+users to invoke `spectr ls` as equivalent to `spectr list`.
 
 #### Scenario: User runs spectr ls shorthand
 
 - **WHEN** user runs `spectr ls`
 - **THEN** the system displays the list of changes identically to `spectr list`
-- **AND** all flags (`--specs`, `--all`, `--long`, `--json`, `--interactive`) work with the alias
+- **AND** all flags (`--specs`, `--all`, `--long`, `--json`, `--interactive`)
+  work with the alias
 
 #### Scenario: User runs spectr ls with flags
 

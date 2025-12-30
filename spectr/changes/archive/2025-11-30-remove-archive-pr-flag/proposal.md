@@ -2,7 +2,11 @@
 
 ## Why
 
-The `--pr` flag on `spectr archive` adds significant complexity (worktree management, platform detection, multi-CLI tool support) for a feature that duplicates functionality readily available through standard git workflows and AI assistants. Users can achieve the same result with `git add && git commit && gh pr create` which is more transparent and controllable.
+The `--pr` flag on `spectr archive` adds significant complexity (worktree
+management, platform detection, multi-CLI tool support) for a feature that
+duplicates functionality readily available through standard git workflows and AI
+assistants. Users can achieve the same result with `git add && git commit && gh
+pr create` which is more transparent and controllable.
 
 ## What Changes
 
@@ -15,7 +19,8 @@ The `--pr` flag on `spectr archive` adds significant complexity (worktree manage
   - `platform.go` - git hosting platform detection
   - `platform_test.go` - platform detection tests
   - `operations.go` - worktree and branch utilities
-- **REMOVED** `github.com/google/uuid` dependency (only used for branch name generation)
+- **REMOVED** `github.com/google/uuid` dependency (only used for branch name
+  generation)
 - **REMOVED** PR-related requirements from `archive-workflow` spec
 - **REMOVED** PR flag requirement from `cli-interface` spec
 

@@ -5,7 +5,8 @@ description: How to install Spectr
 
 ## Using GitHub Releases
 
-The easiest way to install Spectr is to download a pre-built binary from [GitHub Releases](https://github.com/connerohnesorge/spectr/releases):
+The easiest way to install Spectr is to download a pre-built binary from [GitHub
+Releases](https://github.com/connerohnesorge/spectr/releases):
 
 ```bash
 # Download the latest release for your platform
@@ -30,6 +31,7 @@ sudo mv spectr /usr/local/bin/
 ### Available Platforms
 
 Pre-built binaries are available for:
+
 - **Linux**: x86_64 (amd64), arm64
 - **macOS**: x86_64 (Intel), arm64 (Apple Silicon)
 - **Windows**: x86_64 (amd64), arm64
@@ -53,7 +55,8 @@ nix profile install github:connerohnesorge/spectr
 
 ### NixOS Configuration Example
 
-Here is a complete example showing how to add spectr to your NixOS system configuration:
+Here is a complete example showing how to add spectr to your NixOS system
+configuration:
 
 ```nix
 {
@@ -108,7 +111,9 @@ sudo nixos-rebuild switch --flake .#my-hostname
 
 ### Development Shell Example
 
-To include spectr in a project's development shell, add it to your `devShells.default` configuration. This is useful when you want spectr available in your project's development environment:
+To include spectr in a project's development shell, add it to your
+`devShells.default` configuration. This is useful when you want spectr available
+in your project's development environment:
 
 ```nix
 {

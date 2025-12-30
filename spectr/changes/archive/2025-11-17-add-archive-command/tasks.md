@@ -1,4 +1,7 @@
+# Implementation Tasks
+
 ## 1. Requirement Parsing Infrastructure
+
 - [x] 1.1 Create `internal/parsers/requirement_parser.go`
   - Parse `### Requirement: <name>` headers
   - Extract requirement name and full block content
@@ -17,6 +20,7 @@
   - Test scenario parsing
 
 ## 2. Spec Merging Logic
+
 - [x] 2.1 Create `internal/archive/spec_merger.go`
   - Implement requirement name normalization
   - Build requirement name-to-block map from base spec
@@ -43,6 +47,7 @@
   - Test requirement ordering preservation
 
 ## 3. Validation Layer
+
 - [x] 3.1 Create `internal/archive/validator.go`
   - Validate proposal.md structure (informational only)
   - Validate delta spec files have at least one operation
@@ -67,6 +72,7 @@
   - Test pre/post merge validation
 
 ## 4. Archive Command Implementation
+
 - [x] 4.1 Create `cmd/archive.go`
   - Define ArchiveCmd struct with flags (Yes, SkipSpecs, NoValidate)
   - Implement Run() method
@@ -95,7 +101,8 @@
   - For each delta spec, build updated spec via merger
   - Validate rebuilt spec before writing
   - Write updated spec to main specs directory
-  - Display operation counts per spec (+ added, ~ modified, - removed, → renamed)
+  - Display operation counts per spec (+ added, ~ modified, - removed, →
+    renamed)
   - Display totals across all specs
 - [x] 4.7 Implement archive operation
   - Create archive directory: `spectr/changes/archive/`
@@ -112,6 +119,7 @@
   - Test --yes, --skip-specs, --no-validate flags
 
 ## 5. Integration and Documentation
+
 - [x] 5.1 Update go.mod if new dependencies needed
   - Add any required libraries (e.g., for colored output, prompts)
 - [x] 5.2 Run tests and ensure all pass
@@ -127,6 +135,7 @@
   - Mark all items as completed after verification
 
 ## 6. Final Validation
+
 - [x] 6.1 Run `spectr validate add-archive-command --strict`
   - Ensure no validation errors
   - Fix any issues found

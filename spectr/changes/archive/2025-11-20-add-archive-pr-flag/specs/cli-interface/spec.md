@@ -1,15 +1,21 @@
+# Delta Specification
+
 ## ADDED Requirements
 
 ### Requirement: Archive Command PR Flag
 
-The `spectr archive` command SHALL accept a `--pr` flag that triggers automated pull request creation after successful archive completion, integrating git branch creation, commit, push, and platform-specific PR CLI invocation into the archive workflow.
+The `spectr archive` command SHALL accept a `--pr` flag that triggers automated
+pull request creation after successful archive completion, integrating git
+branch creation, commit, push, and platform-specific PR CLI invocation into the
+archive workflow.
 
 #### Scenario: User archives with PR flag
 
 - **WHEN** user runs `spectr archive my-feature --pr`
 - **AND** the change exists and archive operation succeeds
 - **AND** git repository is configured with origin remote
-- **THEN** the archive workflow completes (validation, spec merging, directory move)
+- **THEN** the archive workflow completes (validation, spec merging, directory
+  move)
 - **AND** a git branch `archive-my-feature` is created
 - **AND** archived files and updated specs are committed
 - **AND** the branch is pushed to origin
@@ -61,5 +67,7 @@ The `spectr archive` command SHALL accept a `--pr` flag that triggers automated 
 
 - **WHEN** user runs `spectr archive --help`
 - **THEN** the `--pr` flag is listed in the available flags
-- **AND** the description explains: "Create pull request after successful archive"
-- **AND** the help text notes the dependency on git and PR CLI tools (gh/glab/tea)
+- **AND** the description explains: "Create pull request after successful
+  archive"
+- **AND** the help text notes the dependency on git and PR CLI tools
+  (gh/glab/tea)

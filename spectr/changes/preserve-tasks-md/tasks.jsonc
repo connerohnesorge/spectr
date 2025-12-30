@@ -130,7 +130,7 @@
       "id": "5.4",
       "section": "Testing",
       "description": "Manual integration test: accept a real change and verify both files",
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "6.1",

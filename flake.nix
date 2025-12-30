@@ -6,9 +6,10 @@
     flake-utils.url = "github:numtide/flake-utils";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
+    flake-fmt.url = "github:Mic92/flake-fmt";
   };
 
-  outputs = {
+  outputs = inputs @ {
     self,
     nixpkgs,
     flake-utils,
@@ -149,6 +150,7 @@
 
             # Markdown linting
             markdownlint-cli
+            inputs.flake-fmt.packages.${system}.default
           ]
           ++ builtins.attrValues scriptPackages;
       };

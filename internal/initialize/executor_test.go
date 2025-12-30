@@ -49,8 +49,8 @@ func TestExecutorIntegration_FullInitializationFlow(t *testing.T) {
 	// Get initializers from Claude provider
 	inits := claudeReg.Provider.Initializers(ctx, tm)
 
-	if len(inits) != 3 {
-		t.Fatalf("Claude provider returned %d initializers, want 3", len(inits))
+	if len(inits) != 5 {
+		t.Fatalf("Claude provider returned %d initializers, want 5", len(inits))
 	}
 
 	// Execute each initializer and collect results
@@ -470,9 +470,9 @@ func TestExecutorIntegration_InitializerOrdering(t *testing.T) {
 
 	inits := claudeReg.Provider.Initializers(ctx, tm)
 
-	// Verify initializer order: Directory, ConfigFile, SlashCommands
-	if len(inits) < 3 {
-		t.Fatalf("Expected at least 3 initializers, got %d", len(inits))
+	// Verify initializer order: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills
+	if len(inits) < 5 {
+		t.Fatalf("Expected at least 5 initializers, got %d", len(inits))
 	}
 
 	// Check type order
@@ -480,12 +480,20 @@ func TestExecutorIntegration_InitializerOrdering(t *testing.T) {
 		t.Errorf("First initializer should be DirectoryInitializer, got %T", inits[0])
 	}
 
-	if _, ok := inits[1].(*providers.ConfigFileInitializer); !ok {
-		t.Errorf("Second initializer should be ConfigFileInitializer, got %T", inits[1])
+	if _, ok := inits[1].(*providers.DirectoryInitializer); !ok {
+		t.Errorf("Second initializer should be DirectoryInitializer, got %T", inits[1])
 	}
 
-	if _, ok := inits[2].(*providers.SlashCommandsInitializer); !ok {
-		t.Errorf("Third initializer should be SlashCommandsInitializer, got %T", inits[2])
+	if _, ok := inits[2].(*providers.ConfigFileInitializer); !ok {
+		t.Errorf("Third initializer should be ConfigFileInitializer, got %T", inits[2])
+	}
+
+	if _, ok := inits[3].(*providers.SlashCommandsInitializer); !ok {
+		t.Errorf("Fourth initializer should be SlashCommandsInitializer, got %T", inits[3])
+	}
+
+	if _, ok := inits[4].(*providers.AgentSkillsInitializer); !ok {
+		t.Errorf("Fifth initializer should be AgentSkillsInitializer, got %T", inits[4])
 	}
 
 	// Execute in order and verify each step

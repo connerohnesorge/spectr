@@ -4,7 +4,6 @@ import starlight from '@astrojs/starlight';
 import starlightSiteGraph from 'starlight-site-graph';
 import starlightLlmsTxt from 'starlight-llms-txt';
 import starlightChangelogs from 'starlight-changelogs';
-import starWarp from '@inox-tools/star-warp';
 import starlightPageActions from 'starlight-page-actions';
 
 // https://astro.build/config
@@ -56,7 +55,6 @@ export default defineConfig({
 				starlightSiteGraph(),
 				starlightLlmsTxt(),
 				starlightChangelogs(),
-				starWarp({ openSearch: { enabled: true } }),
 				starlightPageActions({
 					llmstxt: false, // Disable to avoid conflict with starlight-llms-txt
 				}),

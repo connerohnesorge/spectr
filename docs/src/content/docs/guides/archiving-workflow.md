@@ -1,7 +1,6 @@
 ---
 title: Archiving Workflow
-description: Learn how to archive completed changes and update specifications
-after deployment.
+description: "Learn how to archive completed changes and update specifications after deployment."
 ---
 
 The archiving workflow is the final step in Spectr's change management process.

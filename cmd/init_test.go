@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
@@ -94,5 +95,55 @@ func TestInitCmdHasRunMethod(t *testing.T) {
 			"Run method should return error, got %s",
 			runType.Out(0).Name(),
 		)
+	}
+}
+
+func TestIsTTYError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name: "error with /dev/tty path",
+			err: errors.New(
+				"could not open a new TTY: open /dev/tty: no such device or address",
+			),
+			expected: true,
+		},
+		{
+			name:     "error with uppercase TTY",
+			err:      errors.New("TTY not available"),
+			expected: true,
+		},
+		{
+			name:     "error with lowercase tty",
+			err:      errors.New("failed to access tty"),
+			expected: true,
+		},
+		{
+			name:     "regular error without TTY reference",
+			err:      errors.New("some other error"),
+			expected: false,
+		},
+		{
+			name:     "nil error",
+			err:      nil,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isTTYError(tt.err)
+			if result != tt.expected {
+				t.Errorf(
+					"isTTYError(%v) = %v, want %v",
+					tt.err,
+					result,
+					tt.expected,
+				)
+			}
+		})
 	}
 }

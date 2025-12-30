@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/connerohnesorge/spectr/internal/initialize"
@@ -70,6 +71,19 @@ func (c *InitCmd) Run() error {
 	return runInteractiveInit(c)
 }
 
+// isTTYError checks if an error is related to TTY unavailability.
+// TTY errors occur when the Bubbletea TUI framework cannot access /dev/tty,
+// typically in CI environments, Docker containers, or piped commands.
+func isTTYError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errMsg := strings.ToLower(err.Error())
+
+	return strings.Contains(errMsg, "/dev/tty") ||
+		strings.Contains(errMsg, "tty")
+}
+
 func runInteractiveInit(c *InitCmd) error {
 	model, err := initialize.NewWizardModel(
 		&c.InitCmd,
@@ -87,6 +101,14 @@ func runInteractiveInit(c *InitCmd) error {
 	)
 	finalModel, err := p.Run()
 	if err != nil {
+		// Check if this is a TTY-related error
+		if isTTYError(err) {
+			return fmt.Errorf(
+				"wizard failed: %w\n\nHint: It looks like this command is running without a TTY (terminal).\nTry using non-interactive mode instead:\n  spectr init --non-interactive --tools <tool1,tool2>",
+				err,
+			)
+		}
+
 		return fmt.Errorf(
 			"wizard failed: %w",
 			err,

@@ -76,55 +76,55 @@
       "id": "3.1",
       "section": "Add Validation",
       "description": "Add optional validation in `spectr validate` to check if tasks.md and",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "3.2",
       "section": "Add Validation",
       "description": "Show informational warning (not error) if files exist but have",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "4.1",
       "section": "Verify Backward Compatibility",
       "description": "Verify `internal/discovery/changes.go` correctly prefers tasks.jsonc",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "4.2",
       "section": "Verify Backward Compatibility",
       "description": "Test that `spectr list` works correctly with both files present",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "4.3",
       "section": "Verify Backward Compatibility",
       "description": "Test that `spectr view` works correctly with both files present",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "4.4",
       "section": "Verify Backward Compatibility",
       "description": "Test that `spectr archive` works correctly with both files present",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "5.1",
       "section": "Testing",
       "description": "Update `cmd/accept_test.go` to verify tasks.md is NOT deleted",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "5.2",
       "section": "Testing",
       "description": "Add test case for accept with both tasks.md and tasks.jsonc present",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "5.3",
       "section": "Testing",
       "description": "Run full test suite: `go test ./...`",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "5.4",

@@ -116,6 +116,38 @@ jobs:
       - name: Build with Nix
         run: nix build .#
 
+  docs-build:
+    name: Docs Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            docs/node_modules
+            docs/.astro
+          key: bun-docs-${{ hashFiles('docs/bun.lock') }}
+          restore-keys: |
+            bun-docs-
+
+      - name: Install dependencies
+        working-directory: docs
+        run: bun install --frozen-lockfile
+
+      - name: Build documentation site
+        working-directory: docs
+        run: bun run build
+
   fix-nix-hashes:
     name: Fix Nix Hashes
     runs-on: ubuntu-latest

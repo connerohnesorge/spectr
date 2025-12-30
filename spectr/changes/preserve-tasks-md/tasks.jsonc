@@ -124,13 +124,13 @@
       "id": "5.3",
       "section": "Testing",
       "description": "Run full test suite: `go test ./...`",
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "5.4",
       "section": "Testing",
       "description": "Manual integration test: accept a real change and verify both files",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "6.1",

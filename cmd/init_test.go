@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"reflect"
+	"syscall"
 	"testing"
 )
 
@@ -105,25 +108,71 @@ func TestIsTTYError(t *testing.T) {
 		expected bool
 	}{
 		{
-			name: "error with /dev/tty path",
-			err: errors.New(
-				"could not open a new TTY: open /dev/tty: no such device or address",
-			),
+			name: "wrapped ENXIO from bubbletea (real error format)",
+			err: fmt.Errorf("could not open a new TTY: %w",
+				&os.PathError{
+					Op:   "open",
+					Path: "/dev/tty",
+					Err:  syscall.ENXIO,
+				}),
 			expected: true,
 		},
 		{
-			name:     "error with uppercase TTY",
-			err:      errors.New("TTY not available"),
+			name:     "direct ENXIO syscall error",
+			err:      syscall.ENXIO,
 			expected: true,
 		},
 		{
-			name:     "error with lowercase tty",
-			err:      errors.New("failed to access tty"),
+			name:     "direct ENOTTY syscall error",
+			err:      syscall.ENOTTY,
 			expected: true,
+		},
+		{
+			name: "PathError with /dev/tty path",
+			err: &os.PathError{
+				Op:   "open",
+				Path: "/dev/tty",
+				Err:  syscall.EACCES,
+			},
+			expected: true,
+		},
+		{
+			name: "PathError with Windows CONIN$ path",
+			err: &os.PathError{
+				Op:   "open",
+				Path: "CONIN$",
+				Err:  syscall.EACCES,
+			},
+			expected: true,
+		},
+		{
+			name: "deeply wrapped ENXIO error",
+			err: fmt.Errorf("wizard failed: %w",
+				fmt.Errorf("could not open a new TTY: %w",
+					&os.PathError{
+						Op:   "open",
+						Path: "/dev/tty",
+						Err:  syscall.ENXIO,
+					})),
+			expected: true,
+		},
+		{
+			name: "PathError with non-TTY path",
+			err: &os.PathError{
+				Op:   "open",
+				Path: "/etc/passwd",
+				Err:  syscall.EACCES,
+			},
+			expected: false,
 		},
 		{
 			name:     "regular error without TTY reference",
 			err:      errors.New("some other error"),
+			expected: false,
+		},
+		{
+			name:     "string error mentioning tty (should NOT match)",
+			err:      errors.New("pretty formatted output"),
 			expected: false,
 		},
 		{

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"io/fs"
 	"text/template"
 
 	"github.com/connerohnesorge/spectr/internal/domain"
@@ -11,6 +12,9 @@ import (
 
 //go:embed templates/**/*.tmpl
 var templateFS embed.FS
+
+//go:embed templates/skills
+var skillFS embed.FS
 
 // TemplateManager manages embedded templates for initialization
 type TemplateManager struct {
@@ -218,4 +222,21 @@ func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.Temp
 		Name:     names[cmd],
 		Template: tm.templates,
 	}
+}
+
+// SkillFS returns an fs.FS rooted at the skill directory for the given skill name.
+// Returns an error if the skill does not exist.
+// The filesystem contains all files under templates/skills/<skillName>/ with paths
+// relative to the skill root (e.g., SKILL.md, scripts/accept.sh).
+//
+//nolint:revive // receiver not used but required by TemplateManager interface
+func (*TemplateManager) SkillFS(skillName string) (fs.FS, error) {
+	// Create a sub-filesystem rooted at templates/skills/<skillName>
+	skillPath := fmt.Sprintf("templates/skills/%s", skillName)
+	subFS, err := fs.Sub(skillFS, skillPath)
+	if err != nil {
+		return nil, fmt.Errorf("skill %s not found: %w", skillName, err)
+	}
+
+	return subFS, nil
 }

@@ -44,6 +44,7 @@ package providers
 
 import (
 	"context"
+	"io/fs"
 
 	"github.com/connerohnesorge/spectr/internal/domain"
 )
@@ -64,6 +65,12 @@ type TemplateManager interface {
 
 	// TOMLSlashCommand returns the template for a TOML slash command
 	TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef
+
+	// SkillFS returns an fs.FS rooted at the skill directory for the given
+	// skill name. Returns an error if the skill does not exist.
+	// The filesystem contains all files under templates/skills/<skillName>/
+	// with paths relative to the skill root (e.g., SKILL.md, scripts/accept.sh).
+	SkillFS(skillName string) (fs.FS, error)
 }
 
 // Provider represents an AI CLI tool (Claude Code, Gemini, Cline, etc.).

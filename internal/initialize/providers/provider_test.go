@@ -4,6 +4,7 @@ package providers
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"testing"
 
 	"github.com/connerohnesorge/spectr/internal/domain"
@@ -36,6 +37,10 @@ func (*mockTemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.Tem
 	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.toml.tmpl", cmd.String())}
 }
 
+func (*mockTemplateManager) SkillFS(skillName string) (fs.FS, error) {
+	return nil, fmt.Errorf("skill %s not found", skillName)
+}
+
 // Test each provider returns expected initializers
 
 func TestClaudeProvider_Initializers(t *testing.T) {
@@ -45,20 +50,26 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	inits := p.Initializers(ctx, tm)
 
-	// Claude should return 3 initializers: Directory, ConfigFile, SlashCommands
-	if len(inits) != 3 {
-		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 3", len(inits))
+	// Claude should return 5 initializers: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills
+	if len(inits) != 5 {
+		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 5", len(inits))
 	}
 
 	// Check types
 	if _, ok := inits[0].(*DirectoryInitializer); !ok {
 		t.Errorf("ClaudeProvider.Initializers()[0] is %T, want *DirectoryInitializer", inits[0])
 	}
-	if _, ok := inits[1].(*ConfigFileInitializer); !ok {
-		t.Errorf("ClaudeProvider.Initializers()[1] is %T, want *ConfigFileInitializer", inits[1])
+	if _, ok := inits[1].(*DirectoryInitializer); !ok {
+		t.Errorf("ClaudeProvider.Initializers()[1] is %T, want *DirectoryInitializer", inits[1])
 	}
-	if _, ok := inits[2].(*SlashCommandsInitializer); !ok {
-		t.Errorf("ClaudeProvider.Initializers()[2] is %T, want *SlashCommandsInitializer", inits[2])
+	if _, ok := inits[2].(*ConfigFileInitializer); !ok {
+		t.Errorf("ClaudeProvider.Initializers()[2] is %T, want *ConfigFileInitializer", inits[2])
+	}
+	if _, ok := inits[3].(*SlashCommandsInitializer); !ok {
+		t.Errorf("ClaudeProvider.Initializers()[3] is %T, want *SlashCommandsInitializer", inits[3])
+	}
+	if _, ok := inits[4].(*AgentSkillsInitializer); !ok {
+		t.Errorf("ClaudeProvider.Initializers()[4] is %T, want *AgentSkillsInitializer", inits[4])
 	}
 
 	// Check DirectoryInitializer paths
@@ -70,14 +81,23 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 		)
 	}
 
+	// Check second DirectoryInitializer for skills
+	skillsDirInit := inits[1].(*DirectoryInitializer) //nolint:revive // test code, type checked above
+	if len(skillsDirInit.paths) != 1 || skillsDirInit.paths[0] != ".claude/skills" {
+		t.Errorf(
+			"ClaudeProvider DirectoryInitializer[1] paths = %v, want [\".claude/skills\"]",
+			skillsDirInit.paths,
+		)
+	}
+
 	// Check ConfigFileInitializer path
-	cfgInit := inits[1].(*ConfigFileInitializer) //nolint:revive // test code, type checked above
+	cfgInit := inits[2].(*ConfigFileInitializer) //nolint:revive // test code, type checked above
 	if cfgInit.path != "CLAUDE.md" {
 		t.Errorf("ClaudeProvider ConfigFileInitializer path = %s, want \"CLAUDE.md\"", cfgInit.path)
 	}
 
 	// Check SlashCommandsInitializer dir
-	slashInit := inits[2].(*SlashCommandsInitializer) //nolint:revive // test code, type checked above
+	slashInit := inits[3].(*SlashCommandsInitializer) //nolint:revive // test code, type checked above
 	if slashInit.dir != testClaudeCommandsDir {
 		t.Errorf(
 			"ClaudeProvider SlashCommandsInitializer dir = %s, want \".claude/commands/spectr\"",
@@ -88,6 +108,21 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 		t.Errorf(
 			"ClaudeProvider SlashCommandsInitializer has %d commands, want 2",
 			len(slashInit.commands),
+		)
+	}
+
+	// Check AgentSkillsInitializer
+	skillInit := inits[4].(*AgentSkillsInitializer) //nolint:revive // test code, type checked above
+	if skillInit.skillName != "spectr-accept-wo-spectr-bin" {
+		t.Errorf(
+			"ClaudeProvider AgentSkillsInitializer skillName = %s, want \"spectr-accept-wo-spectr-bin\"",
+			skillInit.skillName,
+		)
+	}
+	if skillInit.targetDir != ".claude/skills/spectr-accept-wo-spectr-bin" {
+		t.Errorf(
+			"ClaudeProvider AgentSkillsInitializer targetDir = %s, want \".claude/skills/spectr-accept-wo-spectr-bin\"",
+			skillInit.targetDir,
 		)
 	}
 }
@@ -441,7 +476,7 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 		usesPrefix    bool
 		usesHomeFs    bool
 	}{
-		{"claude-code", &ClaudeProvider{}, 3, true, false, false, false},
+		{"claude-code", &ClaudeProvider{}, 5, true, false, false, false},
 		{"gemini", &GeminiProvider{}, 2, false, true, false, false},
 		{"costrict", &CostrictProvider{}, 3, true, false, false, false},
 		{"qoder", &QoderProvider{}, 3, true, false, false, false},

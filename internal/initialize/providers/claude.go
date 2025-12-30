@@ -17,6 +17,7 @@ func (*ClaudeProvider) Initializers(
 ) []Initializer {
 	return []Initializer{
 		NewDirectoryInitializer(".claude/commands/spectr"),
+		NewDirectoryInitializer(".claude/skills"),
 		NewConfigFileInitializer("CLAUDE.md", tm.InstructionPointer()),
 		NewSlashCommandsInitializer(
 			".claude/commands/spectr",
@@ -24,6 +25,11 @@ func (*ClaudeProvider) Initializers(
 				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
 				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
 			},
+		),
+		NewAgentSkillsInitializer(
+			"spectr-accept-wo-spectr-bin",
+			".claude/skills/spectr-accept-wo-spectr-bin",
+			tm,
 		),
 	}
 }

@@ -303,6 +303,46 @@ func TestNewWizardModelWithConfiguredProviders(
 		)
 	}
 
+	// Create .claude/skills/ directory
+	skillsDir := filepath.Join(
+		tempDir,
+		".claude",
+		"skills",
+	)
+	err = os.MkdirAll(skillsDir, 0o755)
+	if err != nil {
+		t.Fatalf(
+			"Failed to create skills directory: %v",
+			err,
+		)
+	}
+
+	// Create the skill directory with SKILL.md
+	skillTargetDir := filepath.Join(
+		skillsDir,
+		"spectr-accept-wo-spectr-bin",
+	)
+	err = os.MkdirAll(skillTargetDir, 0o755)
+	if err != nil {
+		t.Fatalf(
+			"Failed to create skill target directory: %v",
+			err,
+		)
+	}
+
+	skillMdPath := filepath.Join(skillTargetDir, "SKILL.md")
+	err = os.WriteFile(
+		skillMdPath,
+		[]byte("# Skill\n"),
+		0o644,
+	)
+	if err != nil {
+		t.Fatalf(
+			"Failed to create SKILL.md: %v",
+			err,
+		)
+	}
+
 	// Create the two slash command files (in the spectr/ subdirectory)
 	for _, cmdFile := range []string{
 		"proposal.md",

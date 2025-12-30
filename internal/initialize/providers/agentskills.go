@@ -150,7 +150,7 @@ func (a *AgentSkillsInitializer) Init(
 			)
 		}
 
-		// Get source file permissions
+		// Get source file permissions to detect executables
 		sourceInfo, statErr := d.Info()
 		if statErr != nil {
 			return fmt.Errorf(
@@ -160,12 +160,25 @@ func (a *AgentSkillsInitializer) Init(
 			)
 		}
 
-		// Write target file with preserved permissions
+		// Determine target file mode: use 0755 for executables, 0644 for regular files
+		// Don't preserve readonly permissions from embed.FS
+		targetMode := fs.FileMode(0o644)
+
+		// Check if source has executable bit OR if it's a .sh file
+		// (embed.FS doesn't preserve executable bits from git, so we check extension)
+		isExecutable := sourceInfo.Mode()&0o111 != 0
+		isShellScript := filepath.Ext(path) == ".sh"
+
+		if isExecutable || isShellScript {
+			targetMode = 0o755
+		}
+
+		// Write target file with normal write permissions
 		writeErr := afero.WriteFile(
 			projectFs,
 			targetPath,
 			sourceData,
-			sourceInfo.Mode(),
+			targetMode,
 		)
 		if writeErr != nil {
 			return fmt.Errorf(

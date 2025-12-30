@@ -1,5 +1,4 @@
-# Spectr command for Gemini CLI
-description = "Scaffold a new Spectr change and validate strictly."
+description = "Create a Spectr change proposal"
 prompt = """
 # Guardrails
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
@@ -19,7 +18,6 @@ prompt = """
 # Reference
 - Read delta specs directly at `spectr/changes/<id>/specs/<capability>/spec.md` when validation fails.
 - Read existing specs at `spectr/specs/<capability>/spec.md` to understand current state.
-- Search existing requirements with `rg -n \"Requirement:|Scenario:\" spectr/specs` before writing new ones.
+- Search existing requirements with `rg -n "Requirement:|Scenario:" spectr/specs` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so proposals align with current implementation realities.
-
 """

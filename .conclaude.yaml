@@ -8,7 +8,7 @@
 # Stop hook - runs when Claude is about to stop
 stop:
   commands:
-    - run: "nix fmt"
+    - run: "nix develop -c flake-fmt"
       showStdout: false
       showStderr: false
       message: "Nix formatting failed - please fix formatting errors before continuing"

@@ -512,7 +512,8 @@ func TestAgentSkillsInitializer_dedupeKey(t *testing.T) {
 }
 
 // TestAgentSkillsInitializer_PreservesExecutablePermissions tests that
-// executable scripts maintain their executable permissions after copying.
+// executable scripts get 0755 permissions and regular files get 0644 permissions.
+// This ensures files are writable (not readonly) after copying from embed.FS.
 func TestAgentSkillsInitializer_PreservesExecutablePermissions(t *testing.T) {
 	// Setup: Create a skill with various file permissions
 	skillFS := fstest.MapFS{
@@ -554,7 +555,7 @@ func TestAgentSkillsInitializer_PreservesExecutablePermissions(t *testing.T) {
 	}{
 		{".claude/skills/test-skill/SKILL.md", 0o644},
 		{".claude/skills/test-skill/scripts/executable.sh", 0o755},
-		{".claude/skills/test-skill/scripts/readonly.sh", 0o444},
+		{".claude/skills/test-skill/scripts/readonly.sh", 0o755}, // All .sh files are executable
 		{".claude/skills/test-skill/config/settings.json", 0o644},
 	}
 

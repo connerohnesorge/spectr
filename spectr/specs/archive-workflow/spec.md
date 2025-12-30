@@ -348,7 +348,7 @@ format.
 - **WHEN** archiving a change that has `tasks.md` but no `tasks.jsonc`
 - **THEN** the system displays a warning that auto-acceptance will occur
 - **AND** the system converts `tasks.md` to `tasks.jsonc` before archiving
-- **AND** the system removes `tasks.md` after successful conversion
+- **AND** the system preserves `tasks.md` after successful conversion
 
 #### Scenario: Archive with existing tasks.jsonc
 

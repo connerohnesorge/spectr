@@ -69,6 +69,11 @@ Track these steps as TODOs and complete them one by one.
 3. **Read tasks.md** - Get implementation checklist
 4. **Run `spectr accept <id>`** - Convert `tasks.md` to `tasks.jsonc` for
    stable task tracking
+   - **Note**: Both `tasks.md` and `tasks.jsonc` coexist after accept
+   - `tasks.md` is preserved as the human-readable source (retains formatting,
+     links, comments)
+   - `tasks.jsonc` becomes the runtime source of truth (used by all commands)
+   - During implementation, always update task statuses in `tasks.jsonc`
 5. **Approval gate** - Do not start implementation until the proposal is
    reviewed and approved
 6. **For each task in `tasks.jsonc`:**

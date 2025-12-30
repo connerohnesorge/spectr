@@ -813,7 +813,7 @@ implementation.
 - THEN the system validates the change exists in `spectr/changes/\<change-id\>/`
 - AND the system parses `tasks.md` into structured format
 - AND the system writes `tasks.jsonc` with proper schema and header comments
-- AND the system removes `tasks.md` to prevent drift
+- AND the system preserves `tasks.md` (both files coexist)
 
 #### Scenario: Accept with validation
 
@@ -827,7 +827,7 @@ implementation.
 - WHEN user runs `spectr accept \<change-id\> --dry-run`
 - THEN the system displays what would be converted
 - AND the system does NOT write tasks.jsonc
-- AND the system does NOT remove tasks.md
+- AND the system displays that tasks.md would be preserved
 
 #### Scenario: Accept already accepted change
 

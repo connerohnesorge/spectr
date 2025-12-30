@@ -546,7 +546,8 @@ spectr accept \<CHANGE-ID\> [FLAGS]
 1. Validates the change before accepting
 2. Parses `tasks.md` and extracts task sections, IDs, descriptions, and status
 3. Writes `tasks.jsonc` with structured task data
-4. Removes `tasks.md` to prevent drift (JSON becomes single source of truth)
+4. Preserves `tasks.md` as human-readable source (JSONC becomes runtime source
+   of truth)
 
 **Example:**
 

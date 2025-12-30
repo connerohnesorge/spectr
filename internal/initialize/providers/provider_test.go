@@ -50,9 +50,9 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	inits := p.Initializers(ctx, tm)
 
-	// Claude should return 5 initializers: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills
-	if len(inits) != 5 {
-		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 5", len(inits))
+	// Claude should return 6 initializers: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills (accept), AgentSkills (validate)
+	if len(inits) != 6 {
+		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 6", len(inits))
 	}
 
 	// Check types
@@ -476,7 +476,7 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 		usesPrefix    bool
 		usesHomeFs    bool
 	}{
-		{"claude-code", &ClaudeProvider{}, 5, true, false, false, false},
+		{"claude-code", &ClaudeProvider{}, 6, true, false, false, false},
 		{"gemini", &GeminiProvider{}, 2, false, true, false, false},
 		{"costrict", &CostrictProvider{}, 3, true, false, false, false},
 		{"qoder", &QoderProvider{}, 3, true, false, false, false},

@@ -1,7 +1,6 @@
 ---
 title: Creating Changes
-description: Learn how to create and propose changes in Spectr with change
-proposals and spec deltas.
+description: Learn how to create and propose changes in Spectr with change proposals and spec deltas.
 ---
 
 Creating a change proposal is the first step in the Spectr workflow. This guide

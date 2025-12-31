@@ -173,7 +173,7 @@ accepting changes without the spectr binary.
 The provider SHALL install the `spectr-validate-wo-spectr-bin` skill for
 validating specifications and change proposals without the spectr binary.
 
-#### Scenario: Skill installation path
+#### Scenario: Validate skill installation path
 
 - **WHEN** the provider returns initializers
 - **THEN** it SHALL include an `AgentSkillsInitializer` for
@@ -181,14 +181,14 @@ validating specifications and change proposals without the spectr binary.
 - **AND** the skill SHALL be installed at
   `.claude/skills/spectr-validate-wo-spectr-bin/`
 
-#### Scenario: Skill structure
+#### Scenario: Validate skill structure
 
 - **WHEN** the skill is installed
 - **THEN** it SHALL create `SKILL.md` with valid AgentSkills frontmatter
 - **AND** it SHALL create `scripts/validate.sh` for specification validation
 - **AND** `scripts/validate.sh` SHALL be executable (0755 permissions)
 
-#### Scenario: SKILL.md content
+#### Scenario: Validate SKILL.md content
 
 - **WHEN** the `SKILL.md` file is created
 - **THEN** the frontmatter `name` SHALL be `spectr-validate-wo-spectr-bin`

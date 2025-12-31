@@ -168,7 +168,7 @@ func pushBranch(
 		"push",
 		"-u",
 		"origin",
-		branchName,
+		fmt.Sprintf("HEAD:%s", branchName),
 	)
 	cmd.Dir = worktreePath
 

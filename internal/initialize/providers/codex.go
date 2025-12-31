@@ -18,6 +18,7 @@ func (*CodexProvider) Initializers(
 ) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
 		NewHomeDirectoryInitializer(".codex/prompts"),
+		NewDirectoryInitializer(".codex/skills"),
 		NewConfigFileInitializer("AGENTS.md", tm.Agents()),
 		NewHomePrefixedSlashCommandsInitializer(
 			".codex/prompts",
@@ -26,6 +27,16 @@ func (*CodexProvider) Initializers(
 				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
 				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
 			},
+		),
+		NewAgentSkillsInitializer(
+			"spectr-accept-wo-spectr-bin",
+			".codex/skills/spectr-accept-wo-spectr-bin",
+			tm,
+		),
+		NewAgentSkillsInitializer(
+			"spectr-validate-wo-spectr-bin",
+			".codex/skills/spectr-validate-wo-spectr-bin",
+			tm,
 		),
 	}
 }

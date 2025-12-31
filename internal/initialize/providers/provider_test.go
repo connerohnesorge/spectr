@@ -50,9 +50,9 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	inits := p.Initializers(ctx, tm)
 
-	// Claude should return 5 initializers: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills
-	if len(inits) != 5 {
-		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 5", len(inits))
+	// Claude should return 6 initializers: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills (accept), AgentSkills (validate)
+	if len(inits) != 6 {
+		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 6", len(inits))
 	}
 
 	// Check types
@@ -331,23 +331,32 @@ func TestCodexProvider_Initializers(t *testing.T) {
 
 	inits := p.Initializers(ctx, tm)
 
-	// Codex should return 3 initializers: HomeDirectory, ConfigFile, HomePrefixedSlashCommands
-	if len(inits) != 3 {
-		t.Fatalf("CodexProvider.Initializers() returned %d initializers, want 3", len(inits))
+	// Codex should return 6 initializers: HomeDirectory, Directory, ConfigFile, HomePrefixedSlashCommands, 2x AgentSkills
+	if len(inits) != 6 {
+		t.Fatalf("CodexProvider.Initializers() returned %d initializers, want 6", len(inits))
 	}
 
 	// Check types
 	if _, ok := inits[0].(*HomeDirectoryInitializer); !ok {
 		t.Errorf("CodexProvider.Initializers()[0] is %T, want *HomeDirectoryInitializer", inits[0])
 	}
-	if _, ok := inits[1].(*ConfigFileInitializer); !ok {
-		t.Errorf("CodexProvider.Initializers()[1] is %T, want *ConfigFileInitializer", inits[1])
+	if _, ok := inits[1].(*DirectoryInitializer); !ok {
+		t.Errorf("CodexProvider.Initializers()[1] is %T, want *DirectoryInitializer", inits[1])
 	}
-	if _, ok := inits[2].(*HomePrefixedSlashCommandsInitializer); !ok {
+	if _, ok := inits[2].(*ConfigFileInitializer); !ok {
+		t.Errorf("CodexProvider.Initializers()[2] is %T, want *ConfigFileInitializer", inits[2])
+	}
+	if _, ok := inits[3].(*HomePrefixedSlashCommandsInitializer); !ok {
 		t.Errorf(
-			"CodexProvider.Initializers()[2] is %T, want *HomePrefixedSlashCommandsInitializer",
-			inits[2],
+			"CodexProvider.Initializers()[3] is %T, want *HomePrefixedSlashCommandsInitializer",
+			inits[3],
 		)
+	}
+	if _, ok := inits[4].(*AgentSkillsInitializer); !ok {
+		t.Errorf("CodexProvider.Initializers()[4] is %T, want *AgentSkillsInitializer", inits[4])
+	}
+	if _, ok := inits[5].(*AgentSkillsInitializer); !ok {
+		t.Errorf("CodexProvider.Initializers()[5] is %T, want *AgentSkillsInitializer", inits[5])
 	}
 
 	// Check HomeDirectoryInitializer paths
@@ -359,8 +368,17 @@ func TestCodexProvider_Initializers(t *testing.T) {
 		)
 	}
 
+	// Check DirectoryInitializer paths
+	skillsDirInit := inits[1].(*DirectoryInitializer)
+	if len(skillsDirInit.paths) != 1 || skillsDirInit.paths[0] != ".codex/skills" {
+		t.Errorf(
+			"CodexProvider DirectoryInitializer paths = %v, want [\".codex/skills\"]",
+			skillsDirInit.paths,
+		)
+	}
+
 	// Check HomePrefixedSlashCommandsInitializer
-	slashInit := inits[2].(*HomePrefixedSlashCommandsInitializer)
+	slashInit := inits[3].(*HomePrefixedSlashCommandsInitializer)
 	if slashInit.dir != testCodexPromptsDir {
 		t.Errorf(
 			"CodexProvider HomePrefixedSlashCommandsInitializer dir = %s, want \".codex/prompts\"",
@@ -374,8 +392,37 @@ func TestCodexProvider_Initializers(t *testing.T) {
 		)
 	}
 
+	// Check AgentSkillsInitializer instances
+	acceptSkill := inits[4].(*AgentSkillsInitializer)
+	if acceptSkill.skillName != "spectr-accept-wo-spectr-bin" {
+		t.Errorf(
+			"CodexProvider AgentSkillsInitializer[4] skillName = %s, want \"spectr-accept-wo-spectr-bin\"",
+			acceptSkill.skillName,
+		)
+	}
+	if acceptSkill.targetDir != ".codex/skills/spectr-accept-wo-spectr-bin" {
+		t.Errorf(
+			"CodexProvider AgentSkillsInitializer[4] targetDir = %s, want \".codex/skills/spectr-accept-wo-spectr-bin\"",
+			acceptSkill.targetDir,
+		)
+	}
+
+	validateSkill := inits[5].(*AgentSkillsInitializer)
+	if validateSkill.skillName != "spectr-validate-wo-spectr-bin" {
+		t.Errorf(
+			"CodexProvider AgentSkillsInitializer[5] skillName = %s, want \"spectr-validate-wo-spectr-bin\"",
+			validateSkill.skillName,
+		)
+	}
+	if validateSkill.targetDir != ".codex/skills/spectr-validate-wo-spectr-bin" {
+		t.Errorf(
+			"CodexProvider AgentSkillsInitializer[5] targetDir = %s, want \".codex/skills/spectr-validate-wo-spectr-bin\"",
+			validateSkill.targetDir,
+		)
+	}
+
 	// Check ConfigFileInitializer uses AGENTS.md
-	cfgInit := inits[1].(*ConfigFileInitializer)
+	cfgInit := inits[2].(*ConfigFileInitializer)
 	if cfgInit.path != "AGENTS.md" {
 		t.Errorf("CodexProvider ConfigFileInitializer path = %s, want \"AGENTS.md\"", cfgInit.path)
 	}
@@ -476,7 +523,7 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 		usesPrefix    bool
 		usesHomeFs    bool
 	}{
-		{"claude-code", &ClaudeProvider{}, 5, true, false, false, false},
+		{"claude-code", &ClaudeProvider{}, 6, true, false, false, false},
 		{"gemini", &GeminiProvider{}, 2, false, true, false, false},
 		{"costrict", &CostrictProvider{}, 3, true, false, false, false},
 		{"qoder", &QoderProvider{}, 3, true, false, false, false},
@@ -484,7 +531,7 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 		{"antigravity", &AntigravityProvider{}, 3, true, false, true, false},
 		{"cline", &ClineProvider{}, 3, true, false, false, false},
 		{"cursor", &CursorProvider{}, 2, false, false, false, false},
-		{"codex", &CodexProvider{}, 3, true, false, true, true},
+		{"codex", &CodexProvider{}, 6, true, false, true, true},
 		{"aider", &AiderProvider{}, 2, false, false, false, false},
 		{"windsurf", &WindsurfProvider{}, 2, false, false, false, false},
 		{"kilocode", &KilocodeProvider{}, 2, false, false, false, false},

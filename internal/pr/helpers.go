@@ -157,7 +157,9 @@ func stageAndCommit(
 	return nil
 }
 
-// pushBranch pushes the branch to origin.
+// pushBranch pushes the worktree's current HEAD to the remote branch.
+// Uses explicit refspec (HEAD:branchName) to ensure the current HEAD is pushed,
+// avoiding ambiguity in worktree contexts where the checked-out branch might differ.
 func pushBranch(
 	worktreePath, branchName string,
 ) error {
@@ -168,7 +170,7 @@ func pushBranch(
 		"push",
 		"-u",
 		"origin",
-		branchName,
+		fmt.Sprintf("HEAD:%s", branchName),
 	)
 	cmd.Dir = worktreePath
 

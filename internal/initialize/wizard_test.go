@@ -317,28 +317,54 @@ func TestNewWizardModelWithConfiguredProviders(
 		)
 	}
 
-	// Create the skill directory with SKILL.md
-	skillTargetDir := filepath.Join(
+	// Create the accept skill directory with SKILL.md
+	acceptSkillDir := filepath.Join(
 		skillsDir,
 		"spectr-accept-wo-spectr-bin",
 	)
-	err = os.MkdirAll(skillTargetDir, 0o755)
+	err = os.MkdirAll(acceptSkillDir, 0o755)
 	if err != nil {
 		t.Fatalf(
-			"Failed to create skill target directory: %v",
+			"Failed to create accept skill directory: %v",
 			err,
 		)
 	}
 
-	skillMdPath := filepath.Join(skillTargetDir, "SKILL.md")
+	acceptSkillMdPath := filepath.Join(acceptSkillDir, "SKILL.md")
 	err = os.WriteFile(
-		skillMdPath,
+		acceptSkillMdPath,
 		[]byte("# Skill\n"),
 		0o644,
 	)
 	if err != nil {
 		t.Fatalf(
-			"Failed to create SKILL.md: %v",
+			"Failed to create accept SKILL.md: %v",
+			err,
+		)
+	}
+
+	// Create the validate skill directory with SKILL.md
+	validateSkillDir := filepath.Join(
+		skillsDir,
+		"spectr-validate-wo-spectr-bin",
+	)
+	err = os.MkdirAll(validateSkillDir, 0o755)
+	if err != nil {
+		t.Fatalf(
+			"Failed to create validate skill directory: %v",
+			err,
+		)
+	}
+
+	validateSkillMdPath := filepath.Join(validateSkillDir, "SKILL.md")
+	err = os.WriteFile(
+		validateSkillMdPath,
+		[]byte("# Skill\n"),
+		0o644,
+	)
+	if err != nil {
+		t.Fatalf(
+			"Failed to create validate SKILL.md: %v",
 			err,
 		)
 	}

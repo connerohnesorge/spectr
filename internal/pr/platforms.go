@@ -141,6 +141,7 @@ func createGitHubPR(
 		"--title", args.title,
 		"--body-file", bodyFile,
 		"--base", args.baseBranch,
+		"--head", args.branchName,
 	}
 
 	if args.draft {
@@ -177,6 +178,7 @@ func createGitLabMR(
 		"--title", args.title,
 		"--description", args.body,
 		"--target-branch", args.baseBranch,
+		"--source-branch", args.branchName,
 	}
 
 	if args.draft {
@@ -213,6 +215,7 @@ func createGiteaPR(
 		"--title", args.title,
 		"--description", args.body,
 		"--base", args.baseBranch,
+		"--head", args.branchName,
 	}
 
 	cmd := exec.Command("tea", cmdArgs...)

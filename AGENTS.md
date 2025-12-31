@@ -1,222 +1,132 @@
+# AGENTS.md
 
-# YOU ARE THE ORCHESTRATOR
+This file provides guidance to Coding Agents when working with code in this repository.
 
-You are Claude Code with a 200k context window, and you ARE the orchestration
-system. You manage the entire project, create todo lists, and delegate
-individual tasks to specialized subagents.
+## Development Commands
 
-## 🎯 Your Role: Master Orchestrator
+All commands run inside `nix develop` shell (or use `nix develop -c '<command>'`):
 
-You maintain the big picture, create comprehensive todo lists, and delegate
-individual todo items to specialized subagents that work in their own context
-windows.
+```bash
+# Build
+go build -o spectr              # Build binary
+nix build                       # Build via Nix
 
-## 🚨 YOUR MANDATORY WORKFLOW
+# Lint & Format
+nix develop -c lint             # Run golangci-lint + markdownlint on spectr/
+golangci-lint run               # Go linting only
 
-When the user gives you a project:
+# Test
+nix develop -c tests            # Run tests with race detector (gotestsum)
+go test ./...                   # Basic test run
+go test -v ./internal/validation/...  # Specific package
 
-### Step 1: ANALYZE & PLAN (You do this)
+# Single test
+go test -run TestValidateSpec ./internal/validation/
 
-1. Understand the complete project scope
-2. Break it down into clear, actionable todo items
-3. **USE TodoWrite** to create a detailed todo list
-4. Each todo should be specific enough to delegate
-
-### Step 2: DELEGATE TO SUBAGENTS (One todo at a time)
-
-1. Take the FIRST todo item
-2. Invoke the **`coder`** subagent with that specific task (Never trust that the
-  `coder` agent will complete the task correctly always verify, test, and
-  investigate changes)
-3. The coder works in its OWN context window
-4. Wait for coder to complete and report back
-
-### Step 3: TEST THE IMPLEMENTATION
-
-1. Take the coder's completion report
-2. Invoke the **`tester`** subagent to verify
-3. Tester uses Playwright MCP in its OWN context window
-4. Wait for test results
-
-### Step 4: HANDLE RESULTS
-
-- **If tests pass**: Mark todo complete, move to next todo
-- **If tests fail**: Invoke **`stuck`** agent for human input
-- **If coder hits error**: They will invoke stuck agent automatically
-
-### Step 5: ITERATE
-
-1. Update todo list (mark completed items)
-2. Move to next todo item
-3. Repeat steps 2-4 until ALL todos are complete
-
-## 🛠️ Available Subagents
-
-### coder
-
-**Purpose**: Implement one specific todo item
-
-- **When to invoke**: For each coding task on your todo list
-- **What to pass**: ONE specific todo item with clear requirements
-- **Context**: Gets its own clean context window
-- **Returns**: Implementation details and completion status
-- **On error**: Will invoke stuck agent automatically
-
-### tester
-
-**Purpose**: Visual verification with Playwright MCP
-
-- **When to invoke**: After EVERY coder completion
-- **What to pass**: What was just implemented and what to verify
-- **Context**: Gets its own clean context window
-- **Returns**: Pass/fail with screenshots
-- **On failure**: Will invoke stuck agent automatically
-
-### stuck
-
-**Purpose**: Human escalation for ANY problem
-
-- **When to invoke**: When tests fail or you need human decision
-- **What to pass**: The problem and context
-- **Returns**: Human's decision on how to proceed
-- **Critical**: ONLY agent that can use AskUserQuestion
-
-## 🚨 CRITICAL RULES FOR YOU
-
-**YOU (the orchestrator) MUST:**
-
-1. ✅ Create detailed todo lists with TodoWrite
-2. ✅ Delegate ONE todo at a time to coder
-3. ✅ Test EVERY implementation with tester
-4. ✅ Track progress and update todos
-5. ✅ Maintain the big picture across 200k context
-6. ✅ **ALWAYS create pages for EVERY link in headers/footers** - NO 404s
-  allowed!
-
-**YOU MUST NEVER:**
-
-1. ❌ Implement code yourself (delegate to coder)
-2. ❌ Skip testing (always use tester after coder)
-3. ❌ Let agents use fallbacks (enforce stuck agent)
-4. ❌ Lose track of progress (maintain todo list)
-5. ❌ **Put links in headers/footers without creating the actual pages** - this
-  causes 404s!
-
-## 📋 Example Workflow
-
-```text
-User: "Build a React todo app"
-
-YOU (Orchestrator):
-1. Create todo list:
-   [ ] Set up React project
-   [ ] Create TodoList component
-   [ ] Create TodoItem component
-   [ ] Add state management
-   [ ] Style the app
-   [ ] Test all functionality
-
-2. Invoke coder with: "Set up React project"
-   → Coder works in own context, implements, reports back
-
-3. Invoke tester with: "Verify React app runs at localhost:3000"
-   → Tester uses Playwright, takes screenshots, reports success
-
-4. Mark first todo complete
-
-5. Invoke coder with: "Create TodoList component"
-   → Coder implements in own context
-
-6. Invoke tester with: "Verify TodoList renders correctly"
-   → Tester validates with screenshots
-
-... Continue until all todos done
+# Format (via treefmt)
+nix fmt                         # Format Go + Nix files
 ```
 
-## 🔄 The Orchestration Flow
+## Architecture Overview
 
-```text
-USER gives project
-    ↓
-YOU analyze & create todo list (TodoWrite)
-    ↓
-YOU invoke coder(todo #1)
-    ↓
-    ├─→ Error? → Coder invokes stuck → Human decides → Continue
-    ↓
-CODER reports completion
-    ↓
-YOU invoke tester(verify todo #1)
-    ↓
-    ├─→ Fail? → Tester invokes stuck → Human decides → Continue
-    ↓
-TESTER reports success
-    ↓
-YOU mark todo #1 complete
-    ↓
-YOU invoke coder(todo #2)
-    ↓
-... Repeat until all todos done ...
-    ↓
-YOU report final results to USER
+Spectr is a CLI tool for spec-driven development. Key concepts:
+- specs/ - Current truth: what IS built (requirements + scenarios)
+- changes/ - Proposals: what SHOULD change (deltas against specs)
+- archive/ - Completed changes with timestamps
+
+### Code Structure
+
+```
+cmd/                    # CLI commands (thin layer using Kong framework)
+├── root.go            # CLI setup with kong.Context
+├── init.go            # spectr init
+├── list.go            # spectr list
+├── validate.go        # spectr validate
+├── accept.go          # spectr accept (converts tasks.md → tasks.jsonc)
+├── pr.go              # spectr pr archive|new (git worktree + PR creation)
+└── view.go            # spectr view
+
+internal/               # Business logic (not importable externally)
+├── validation/        # Validation rules for specs and changes
+├── parsers/           # Requirement and delta parsing from markdown
+├── archive/           # Archive workflow and spec merging
+├── discovery/         # File discovery utilities
+├── initialize/        # Init wizard and AI tool templates
+├── tui/               # Interactive terminal UI (Bubble Tea)
+├── domain/            # Core domain types (Spec, Change, Requirement)
+├── pr/                # Pull request creation via git worktree
+└── git/               # Git operations
 ```
 
-## 🎯 Why This Works
+### Key Dependencies
+- Kong: CLI framework (`github.com/alecthomas/kong`)
+- Bubble Tea/Bubbles/Lipgloss: TUI framework (Charmbracelet)
+- Afero: Filesystem abstraction for testing
 
-**Your 200k context** = Big picture, project state, todos, progress
-**Coder's fresh context** = Clean slate for implementing one task
-**Tester's fresh context** = Clean slate for verifying one task
-**Stuck's context** = Problem + human decision
+### Data Flow
+1. Commands in `cmd/` parse flags and call `internal/` packages
+2. `discovery/` finds spec/change files in `spectr/` directory
+3. `parsers/` extracts requirements and scenarios from markdown
+4. `validation/` enforces rules (scenarios required, format checks)
+5. `archive/` merges delta specs into main specs
 
-Each subagent gets a focused, isolated context for their specific job!
+## Spectr Workflow
 
-## 💡 Key Principles
+See `spectr/AGENTS.md` for detailed spec-driven development instructions:
+- Create proposals in `spectr/changes/<id>/` with `proposal.md`, `tasks.md`, delta specs
+- Run `spectr validate <id>` before implementation
+- Run `spectr accept <id>` to convert tasks.md to tasks.jsonc
+- Track task status in `tasks.jsonc` during implementation
+- Archive completed changes with `spectr pr archive <id>`
 
-1. **You maintain state**: Todo list, project vision, overall progress
-2. **Subagents are stateless**: Each gets one task, completes it, returns
-3. **One task at a time**: Don't delegate multiple tasks simultaneously
-4. **Always test**: Every implementation gets verified by tester
-5. **Human in the loop**: Stuck agent ensures no blind fallbacks
+## Delta Spec Format
 
-## 🚀 Your First Action
+```markdown
+## ADDED Requirements
+### Requirement: Feature Name
+The system SHALL...
 
-When you receive a project:
+#### Scenario: Success case
+- WHEN condition
+- THEN result
 
-1. **IMMEDIATELY** use TodoWrite to create comprehensive todo list
-2. **IMMEDIATELY** invoke coder with first todo item
-3. Wait for results, test, iterate
-4. Report to user ONLY when ALL todos complete
+## MODIFIED Requirements
+### Requirement: Existing Feature
+[Complete updated requirement with all scenarios]
 
-## ⚠️ Common Mistakes to Avoid
+## REMOVED Requirements
+### Requirement: Old Feature
+Reason: Why removing
+Migration: How to handle
+```
 
-❌ Implementing code yourself instead of delegating to coder
-❌ Skipping the tester after coder completes
-❌ Delegating multiple todos at once (do ONE at a time)
-❌ Not maintaining/updating the todo list
-❌ Reporting back before all todos are complete
-❌ **Creating header/footer links without creating the actual pages** (causes
-404s)
-❌ **Not verifying all links work with tester** (always test navigation!)
+## Testing Patterns
 
-## ✅ Success Looks Like
+Tests use table-driven style with `t.Run()`:
+```go
+tests := []struct {
+    name    string
+    input   string
+    wantErr bool
+}{...}
+for _, tt := range tests {
+    t.Run(tt.name, func(t *testing.T) {...})
+}
+```
 
-- Detailed todo list created immediately
-- Each todo delegated to coder → tested by tester → marked complete
-- Human consulted via stuck agent when problems occur
-- All todos completed before final report to user
-- Zero fallbacks or workarounds used
-- **ALL header/footer links have actual pages created** (zero 404 errors)
-- **Tester verifies ALL navigation links work** with Playwright
+Test fixtures in `testdata/`. TUI tests use `charmbracelet/x/exp/teatest`.
 
----
+## Orchestration Model
 
-**You are the conductor with perfect memory (200k context). The subagents are
-specialists you hire for individual tasks. Together you build amazing things!**
-🚀
-Note that if you are waiting for an action to complete you should not return,
-you must call a Bash(sleep {best estimate of seconds to sleep until complete}).
+This project uses an orchestrator pattern for complex tasks:
+- Orchestrator (you): Maintains big picture, creates todo lists, delegates
+- coder agent: Implements ONE specific todo item (`.claude/agents/coder.md`)
+- tester agent: Verifies implementations with Playwright
+- stuck agent: Escalates to human when blocked
 
-\<!-- spectr:START --\>
+Workflow: Create todos → delegate to coder → verify with tester → mark complete
+
+<!-- spectr:start -->
 # Spectr Instructions
 
 These instructions are for AI assistants working in this project.
@@ -239,667 +149,5 @@ When delegating tasks from a change proposal to subagents:
 - Provide the proposal path: `spectr/changes/<id>/proposal.md`
 - Include task context: `spectr/changes/<id>/tasks.jsonc`
 - Reference delta specs: `spectr/changes/<id>/specs/<capability>/spec.md`
-
-\<!-- spectr:END --\>
-
-<project>
-./.
-├── CLAUDE.md
-├── cmd
-│   ├── archive.go
-│   ├── init_test.go
-│   ├── list.go
-│   ├── list_test.go
-│   ├── root.go
-│   ├── validate.go
-│   ├── view.go
-│   └── view_test.go
-├── flake.nix
-├── go.mod
-├── go.sum
-├── internal
-│   ├── archive
-│   │   ├── archiver.go
-│   │   ├── constants.go
-│   │   ├── interactive_bridge.go
-│   │   ├── spec_merger.go
-│   │   ├── spec_merger_test.go
-│   │   ├── types.go
-│   │   ├── validator.go
-│   │   └── validator_test.go
-│   ├── discovery
-│   │   ├── discovery.go
-│   │   ├── discovery_test.go
-│   │   ├── doc.go
-│   │   └── test_helpers.go
-│   ├── init
-│   │   ├── configurator.go
-│   │   ├── configurator_test.go
-│   │   ├── constants.go
-│   │   ├── executor.go
-│   │   ├── executor_test.go
-│   │   ├── filesystem.go
-│   │   ├── filesystem_test.go
-│   │   ├── init_test.go
-│   │   ├── models.go
-│   │   ├── registry.go
-│   │   ├── registry_test.go
-│   │   ├── templates
-│   │   ├── templates.go
-│   │   ├── templates_test.go
-│   │   ├── wizard.go
-│   │   └── wizard_test.go
-│   ├── list
-│   │   ├── formatters.go
-│   │   ├── formatters_test.go
-│   │   ├── helpers.go
-│   │   ├── interactive.go
-│   │   ├── interactive_test.go
-│   │   ├── lister.go
-│   │   ├── lister_test.go
-│   │   └── types.go
-│   ├── parsers
-│   │   ├── delta_parser.go
-│   │   ├── delta_parser_test.go
-│   │   ├── parsers.go
-│   │   ├── parsers_test.go
-│   │   ├── requirement_parser.go
-│   │   └── requirement_parser_test.go
-│   ├── validation
-│   │   ├── change_rules.go
-│   │   ├── change_rules_test.go
-│   │   ├── constants.go
-│   │   ├── delta_validators.go
-│   │   ├── formatters.go
-│   │   ├── formatters_test.go
-│   │   ├── helpers.go
-│   │   ├── helpers_test.go
-│   │   ├── integration_base_spec_test.go
-│   │   ├── interactive.go
-│   │   ├── interactive_test.go
-│   │   ├── items.go
-│   │   ├── items_test.go
-│   │   ├── parser.go
-│   │   ├── parser_test.go
-│   │   ├── spec_rules.go
-│   │   ├── spec_rules_test.go
-│   │   ├── types.go
-│   │   ├── types_test.go
-│   │   ├── validator.go
-│   │   └── validator_test.go
-│   └── view
-│       ├── dashboard.go
-│       ├── dashboard_test.go
-│       ├── formatters_demo_test.go
-│       ├── formatters.go
-│       ├── formatters_test.go
-│       ├── progress_demo_test.go
-│       ├── progress.go
-│       ├── progress_test.go
-│       └── types.go
-├── main.go
-├── spectr
-│   ├── AGENTS.md
-│   ├── changes
-│   │   └── archive
-│   ├── project.md
-│   ├── specs
-│   │   ├── archive-workflow
-│   │   ├── cli-framework
-│   │   ├── cli-interface
-│   │   └── validation
-│   └── spectr
-├── testdata
-│   └── integration
-│       ├── changes
-│       └── specs
-└── TODO.md
-
-24 directories, 94 files
-</project>
-
-<!-- spectr:start -->
-# Spectr Instructions
-
-Instructions for AI coding assistants using Spectr for spec-driven
-development.
-
-## TL;DR Quick Checklist
-
-- Search existing work: Read `spectr/changes/` and `spectr/specs/`
-  directories (use `rg` for full-text search)
-- Decide scope: new capability vs modify existing capability
-- Pick a unique `change-id`: kebab-case, verb-led (`add-`, `update-`,
-  `remove-`, `refactor-`)
-- Scaffold: `proposal.md`, `tasks.md`, `design.md` (only if needed), and delta
-  specs per affected capability
-- Write deltas: use `## ADDED|MODIFIED|REMOVED|RENAMED Requirements`; include
-  at least one `#### Scenario:` per requirement
-- Validate: `spectr validate [change-id]` and fix issues
-- Request approval: Do not start implementation until proposal is approved
-
-## Two-Stage Workflow
-
-### Stage 1: Creating Changes
-
-Create proposal when you need to:
-
-- Add features or functionality
-- Make breaking changes (API, schema)
-- Change architecture or patterns
-- Optimize performance (changes behavior)
-- Update security patterns
-
-Loose matching guidance:
-
-- Contains one of: `proposal`, `change`, `spec`
-- With one of: `create`, `plan`, `make`, `start`, `help`
-
-Skip proposal for:
-
-- Bug fixes (restore intended behavior)
-- Typos, formatting, comments
-- Dependency updates (non-breaking)
-- Configuration changes
-- Tests for existing behavior
-
-Workflow:
-
-1. Review `spectr/project.md` and read `spectr/specs/` and
-   `spectr/changes/` directories to understand current context.
-2. Choose a unique verb-led `change-id` and scaffold `proposal.md`,
-   `tasks.md`, optional `design.md`, and spec deltas under
-   `spectr/changes/<id>/`.
-3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at
-   least one `#### Scenario:` per requirement.
-4. Run `spectr validate <id>` and resolve any issues before sharing the
-   proposal.
-
-### Stage 2: Implementing Changes
-
-Track these steps as TODOs and complete them one by one.
-
-1. Read proposal.md - Understand what's being built
-2. Read design.md (if exists) - Review technical decisions
-3. Read tasks.md - Get implementation checklist
-4. Implement tasks sequentially - Complete in order
-5. Confirm completion - Ensure every item in `tasks.md` is finished before
-   updating statuses
-6. Update checklist - After all work is done, set every task to `- [x]` so the
-   list reflects reality
-7. Approval gate - Do not start implementation until the proposal is reviewed
-   and approved
-
-## Before Any Task
-
-Context Checklist:
-
-- [ ] Read relevant specs in `specs/[capability]/spec.md`
-- [ ] Check pending changes in `changes/` for conflicts
-- [ ] Read `spectr/project.md` for conventions
-- [ ] Read `spectr/changes/` directory to see active changes
-- [ ] Read `spectr/specs/` directory to see existing capabilities
-
-Before Creating Specs:
-
-- Always check if capability already exists
-- Prefer modifying existing specs over creating duplicates
-- Read `spectr/specs/<capability>/spec.md` directly to review current state
-- If request is ambiguous, ask 1-2 clarifying questions before scaffolding
-
-### Search Guidance
-
-- Enumerate specs: Read `spectr/specs/` directory (or
-  `spectr spec list --long` for formatted output)
-- Enumerate changes: Read `spectr/changes/` directory (or `spectr list` for
-  formatted output)
-- Read details directly:
-  - Spec: Read `spectr/specs/<capability>/spec.md`
-  - Change: Read `spectr/changes/<change-id>/proposal.md`
-- Full-text search (use ripgrep):
-  `rg -n "Requirement:|Scenario:" spectr/specs`
-
-## Quick Start
-
-### CLI Commands
-
-```bash
-# Essential commands
-spectr list                  # List active changes
-spectr list --specs          # List specifications
-spectr validate [item]       # Validate changes or specs
-
-# Project management
-spectr init [path]           # Initialize or update instruction files
-
-# Interactive mode
-spectr validate              # Bulk validation mode
-
-# Debugging
-spectr validate [change]
-```
-
-Reading Specs and Changes (for AI agents):
-
-- Specs: Read `spectr/specs/<capability>/spec.md` directly
-- Changes: Read `spectr/changes/<change-id>/proposal.md` directly
-- Tasks: Read `spectr/changes/<change-id>/tasks.md` directly
-
-### Command Flags
-
-- `--json` - Machine-readable output
-- `--type change|spec` - Disambiguate items
-- `--no-interactive` - Disable prompts
-
-## Directory Structure
-
-```text
-spectr/
-├── project.md              # Project conventions
-├── specs/                  # Current truth - what IS built
-│   └── [capability]/       # Single focused capability
-│       ├── spec.md         # Requirements and scenarios
-│       └── design.md       # Technical patterns
-├── changes/                # Proposals - what SHOULD change
-│   ├── [change-name]/
-│   │   ├── proposal.md     # Why, what, impact
-│   │   ├── tasks.md        # Implementation checklist
-│   │   ├── design.md       # Technical decisions (optional; see criteria)
-│   │   └── specs/          # Delta changes
-│   │       └── [capability]/
-│   │           └── spec.md # ADDED/MODIFIED/REMOVED
-│   └── archive/            # Completed changes
-```
-
-## Creating Change Proposals
-
-### Decision Tree
-
-```text
-New request?
-├─ Bug fix restoring spec behavior? → Fix directly
-├─ Typo/format/comment? → Fix directly
-├─ New feature/capability? → Create proposal
-├─ Breaking change? → Create proposal
-├─ Architecture change? → Create proposal
-└─ Unclear? → Create proposal (safer)
-```
-
-### Proposal Structure
-
-1. Create directory: `changes/[change-id]/` (kebab-case, verb-led, unique)
-
-2. Write proposal.md:
-
-```markdown
-# Change: [Brief description of change]
-
-## Why
-
-[1-2 sentences on problem/opportunity]
-
-## What Changes
-
-- [Bullet list of changes]
-- [Mark breaking changes with BREAKING]
-
-## Impact
-
-- Affected specs: [list capabilities]
-- Affected code: [key files/systems]
-```
-
-1. Create spec deltas: `specs/[capability]/spec.md`
-
-```markdown
-## ADDED Requirements
-
-### Requirement: New Feature
-
-The system SHALL provide...
-
-#### Scenario: Success case
-
-- WHEN user performs action
-- THEN expected result
-
-## MODIFIED Requirements
-
-### Requirement: Existing Feature
-
-[Complete modified requirement]
-
-## REMOVED Requirements
-
-### Requirement: Old Feature
-
-Reason: [Why removing]
-Migration: [How to handle]
-```
-
-If multiple capabilities are affected, create multiple delta files under
-`changes/[change-id]/specs/<capability>/spec.md`—one per capability.
-
-1. Create tasks.md:
-
-```markdown
-## 1. Implementation
-
-- [ ] 1.1 Create database schema
-- [ ] 1.2 Implement API endpoint
-- [ ] 1.3 Add frontend component
-- [ ] 1.4 Write tests
-```
-
-1. Create design.md when needed:
-
-Create `design.md` if any of the following apply; otherwise omit it:
-
-- Cross-cutting change (multiple services/modules) or a new architectural
-  pattern
-- New external dependency or significant data model changes
-- Security, performance, or migration complexity
-- Ambiguity that benefits from technical decisions before coding
-
-Minimal `design.md` skeleton:
-
-```markdown
-## Context
-
-[Background, constraints, stakeholders]
-
-## Goals / Non-Goals
-
-- Goals: [...]
-- Non-Goals: [...]
-
-## Decisions
-
-- Decision: [What and why]
-- Alternatives considered: [Options + rationale]
-
-## Risks / Trade-offs
-
-- [Risk] → Mitigation
-
-## Migration Plan
-
-[Steps, rollback]
-
-## Open Questions
-
-- [...]
-```
-
-## Spec File Format
-
-### Critical: Scenario Formatting
-
-CORRECT (use #### headers):
-
-```markdown
-#### Scenario: User login success
-
-- WHEN valid credentials provided
-- THEN return JWT token
-```
-
-WRONG (don't use bullets or bold):
-
-```markdown
-- Scenario: User login  ❌
-Scenario: User login     ❌
-### Scenario: User login      ❌
-```
-
-Every requirement MUST have at least one scenario.
-
-### Requirement Wording
-
-- Use SHALL/MUST for normative requirements (avoid should/may unless
-  intentionally non-normative)
-
-### Delta Operations
-
-- `## ADDED Requirements` - New capabilities
-- `## MODIFIED Requirements` - Changed behavior
-- `## REMOVED Requirements` - Deprecated features
-- `## RENAMED Requirements` - Name changes
-
-Headers matched with `trim(header)` - whitespace ignored.
-
-#### When to use ADDED vs MODIFIED
-
-- ADDED: Introduces a new capability or sub-capability that can stand alone as
-  a requirement. Prefer ADDED when the change is orthogonal (e.g., adding
-  "Slash Command Configuration") rather than altering the semantics of an
-  existing requirement.
-- MODIFIED: Changes the behavior, scope, or acceptance criteria of an existing
-  requirement. Always paste the full, updated requirement content (header + all
-  scenarios). The archiver will replace the entire requirement with what you
-  provide here; partial deltas will drop previous details.
-- RENAMED: Use when only the name changes. If you also change behavior, use
-  RENAMED (name) plus MODIFIED (content) referencing the new name.
-
-Common pitfall: Using MODIFIED to add a new concern without including the
-previous text. This causes loss of detail at archive time. If you aren't
-explicitly changing the existing requirement, add a new requirement under ADDED
-instead.
-
-Authoring a MODIFIED requirement correctly:
-
-1. Locate the existing requirement in `spectr/specs/<capability>/spec.md`.
-2. Copy the entire requirement block (from `### Requirement: ...` through its
-   scenarios).
-3. Paste it under `## MODIFIED Requirements` and edit to reflect the new
-   behavior.
-4. Ensure the header text matches exactly (whitespace-insensitive) and keep at
-   least one `#### Scenario:`.
-
-Example for RENAMED:
-
-```markdown
-## RENAMED Requirements
-
-- FROM: `### Requirement: Login`
-- TO: `### Requirement: User Authentication`
-```
-
-## Troubleshooting
-
-### Common Errors
-
-"Change must have at least one delta"
-
-- Check `changes/[name]/specs/` exists with .md files
-- Verify files have operation prefixes (## ADDED Requirements)
-
-"Requirement must have at least one scenario"
-
-- Check scenarios use `#### Scenario:` format (4 hashtags)
-- Don't use bullet points or bold for scenario headers
-
-Silent scenario parsing failures
-
-- Exact format required: `#### Scenario: Name`
-- Debug by reading the delta spec file directly:
-  `spectr/changes/<change-id>/specs/<capability>/spec.md`
-
-### Validation Tips
-
-```bash
-# Validate a change (validation is always strict by default)
-spectr validate [change]
-```
-
-For validation debugging:
-
-- Read delta specs directly:
-  `spectr/changes/<change-id>/specs/<capability>/spec.md`
-- Check spec content by reading: `spectr/specs/<capability>/spec.md`
-
-## Happy Path Script
-
-```bash
-# 1) Explore current state
-spectr spec list --long
-spectr list
-# Optional full-text search:
-# rg -n "Requirement:|Scenario:" spectr/specs
-# rg -n "^#|Requirement:" spectr/changes
-
-# 2) Choose change id and scaffold
-CHANGE=add-two-factor-auth
-mkdir -p spectr/changes/$CHANGE/{specs/auth}
-printf "## Why\\n...\\n\\n## What Changes\\n- ...\\n\\n## Impact\\n- ...\\n" \
-  > spectr/changes/$CHANGE/proposal.md
-printf "## 1. Implementation\\n- [ ] 1.1 ...\\n" \
-  > spectr/changes/$CHANGE/tasks.md
-
-# 3) Add deltas (example)
-cat > spectr/changes/$CHANGE/specs/auth/spec.md << 'EOF'
-## ADDED Requirements
-### Requirement: Two-Factor Authentication
-Users MUST provide a second factor during login.
-
-#### Scenario: OTP required
-- WHEN valid credentials are provided
-- THEN an OTP challenge is required
-EOF
-
-# 4) Validate
-spectr validate $CHANGE
-```
-
-## Multi-Capability Example
-
-```text
-spectr/changes/add-2fa-notify/
-├── proposal.md
-├── tasks.md
-└── specs/
-    ├── auth/
-    │   └── spec.md   # ADDED: Two-Factor Authentication
-    └── notifications/
-        └── spec.md   # ADDED: OTP email notification
-```
-
-auth/spec.md
-
-```markdown
-## ADDED Requirements
-
-### Requirement: Two-Factor Authentication
-
-...
-```
-
-notifications/spec.md
-
-```markdown
-## ADDED Requirements
-
-### Requirement: OTP Email Notification
-
-...
-```
-
-## Best Practices
-
-### Simplicity First
-
-- Default to <100 lines of new code
-- Single-file implementations until proven insufficient
-- Avoid frameworks without clear justification
-- Choose boring, proven patterns
-
-### Complexity Triggers
-
-Only add complexity with:
-
-- Performance data showing current solution too slow
-- Concrete scale requirements (>1000 users, >100MB data)
-- Multiple proven use cases requiring abstraction
-
-### Clear References
-
-- Use `file.ts:42` format for code locations
-- Reference specs as `specs/auth/spec.md`
-- Link related changes and PRs
-
-### Capability Naming
-
-- Use verb-noun: `user-auth`, `payment-capture`
-- Single purpose per capability
-- 10-minute understandability rule
-- Split if description needs "AND"
-
-### Change ID Naming
-
-- Use kebab-case, short and descriptive: `add-two-factor-auth`
-- Prefer verb-led prefixes: `add-`, `update-`, `remove-`, `refactor-`
-- Ensure uniqueness; if taken, append `-2`, `-3`, etc.
-
-## Tool Selection Guide
-
-| Task | Tool | Why |
-|------|------|-----|
-| Find files by pattern | Glob | Fast pattern matching |
-| Search code content | Grep | Optimized regex search |
-| Read specific files | Read | Direct file access |
-| Explore unknown scope | Task | Multi-step investigation |
-
-## Error Recovery
-
-### Change Conflicts
-
-1. Read `spectr/changes/` directory to see active changes
-2. Check for overlapping specs
-3. Coordinate with change owners
-4. Consider combining proposals
-
-### Validation Failures
-
-1. Run `spectr validate` (validation is always strict)
-2. Check JSON output for details
-3. Verify spec file format
-4. Ensure scenarios properly formatted
-
-### Missing Context
-
-1. Read project.md first
-2. Check related specs
-3. Review recent archives
-4. Ask for clarification
-
-## Quick Reference
-
-### Stage Indicators
-
-- `changes/` - Proposed, not yet built
-- `specs/` - Built and deployed
-- `archive/` - Completed changes
-
-### File Purposes
-
-- `proposal.md` - Why and what
-- `tasks.md` - Implementation steps
-- `spec.md` - Requirements and behavior
-- `design.md` - Technical decisions (optional)
-
-### CLI Essentials
-
-```bash
-spectr list              # What's in progress?
-spectr validate          # Is it correct?
-spectr archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
-```
-
-Reading Details (for AI agents):
-
-- Read `spectr/specs/<capability>/spec.md` for spec details
-- Read `spectr/changes/<change-id>/proposal.md` for change details
-
-Remember: Specs are truth. Changes are proposals. Keep them in sync.
 
 <!-- spectr:end -->

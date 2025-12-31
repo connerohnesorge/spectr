@@ -741,51 +741,75 @@ func TestFilterChangesNotOnRef_MixedChanges(
 	if !isGitAvailable() {
 		t.Skip("git is not available")
 	}
-	if !isInGitRepo() {
-		t.Skip("not in a git repository")
-	}
-	if !hasOriginRemote() {
-		t.Skip("origin remote not configured")
+
+	tmpDir := t.TempDir()
+
+	repoRoot := filepath.Join(tmpDir, "repo")
+	if err := os.MkdirAll(repoRoot, 0o755); err != nil {
+		t.Fatalf("failed to create repo root: %v", err)
 	}
 
-	// Change to the repo root for consistent path resolution
-	cmd := exec.Command(
-		"git",
-		"rev-parse",
-		"--show-toplevel",
-	)
-	output, err := cmd.Output()
-	if err != nil {
-		t.Fatalf(
-			"failed to get repo root: %v",
-			err,
-		)
-	}
-	repoRoot := string(
-		output[:len(output)-1],
-	) // trim newline
-
-	oldWd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf(
-			"failed to get working directory: %v",
-			err,
-		)
-	}
-	defer func() { _ = os.Chdir(oldWd) }()
 	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatalf(
-			"failed to change to repo root: %v",
-			err,
-		)
+		t.Fatalf("failed to change to repo root: %v", err)
+	}
+	defer func() { _ = os.Chdir("..") }()
+
+	initGitRepo := func() {
+		cmd := exec.Command("git", "init")
+		cmd.Dir = repoRoot
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("failed to init git repo: %v", err)
+		}
+
+		cmd = exec.Command("git", "config", "user.email", "test@example.com")
+		cmd.Dir = repoRoot
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("failed to set git user email: %v", err)
+		}
+
+		cmd = exec.Command("git", "config", "user.name", "Test User")
+		cmd.Dir = repoRoot
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("failed to set git user name: %v", err)
+		}
 	}
 
-	// Test with a mix of changes - one that exists (archive) and ones that don't
+	createChange := func(changeID string) {
+		changeDir := filepath.Join(repoRoot, "spectr", "changes", changeID)
+		if err := os.MkdirAll(changeDir, 0o755); err != nil {
+			t.Fatalf("failed to create change dir %s: %v", changeID, err)
+		}
+
+		proposalContent := "# Change: " + changeID
+		if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
+			t.Fatalf("failed to write proposal.md for %s: %v", changeID, err)
+		}
+	}
+
+	commitChange := func(changeID string) {
+		cmd := exec.Command("git", "add", ".")
+		cmd.Dir = repoRoot
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("failed to git add: %v", err)
+		}
+
+		cmd = exec.Command("git", "commit", "-m", "Add "+changeID)
+		cmd.Dir = repoRoot
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("failed to git commit: %v", err)
+		}
+	}
+
+	initGitRepo()
+
+	createChange("existing-change-on-main")
+	commitChange("existing-change-on-main")
+
 	changes := []ChangeInfo{
 		{
-			ID:         "archive",
-			Title:      "Archive",
-			DeltaCount: 0,
+			ID:         "existing-change-on-main",
+			Title:      "Existing Change",
+			DeltaCount: 1,
 			TaskStatus: parsers.TaskStatus{},
 		},
 		{
@@ -810,16 +834,12 @@ func TestFilterChangesNotOnRef_MixedChanges(
 
 	result, err := FilterChangesNotOnRef(
 		changes,
-		"origin/main",
+		"HEAD",
 	)
 	if err != nil {
-		t.Fatalf(
-			"FilterChangesNotOnRef failed: %v",
-			err,
-		)
+		t.Fatalf("FilterChangesNotOnRef failed: %v", err)
 	}
 
-	// "archive" exists on origin/main, so only the two fake changes should remain
 	if len(result) != 2 {
 		t.Errorf(
 			"Expected 2 filtered changes (non-existent ones), got %d",
@@ -830,16 +850,14 @@ func TestFilterChangesNotOnRef_MixedChanges(
 		}
 	}
 
-	// Verify archive is NOT in the result
 	for _, change := range result {
-		if change.ID == "archive" {
+		if change.ID == "existing-change-on-main" {
 			t.Error(
-				"archive should have been filtered out (it exists on origin/main)",
+				"existing-change-on-main should have been filtered out (it exists on HEAD)",
 			)
 		}
 	}
 
-	// Verify the non-existent changes ARE in the result
 	foundAbc := false
 	foundXyz := false
 	for _, change := range result {
@@ -868,46 +886,47 @@ func TestFilterChangesNotOnRef_PreservesChangeInfo(
 	if !isGitAvailable() {
 		t.Skip("git is not available")
 	}
-	if !isInGitRepo() {
-		t.Skip("not in a git repository")
-	}
-	if !hasOriginRemote() {
-		t.Skip("origin remote not configured")
+
+	tmpDir := t.TempDir()
+
+	repoRoot := filepath.Join(tmpDir, "repo")
+	if err := os.MkdirAll(repoRoot, 0o755); err != nil {
+		t.Fatalf("failed to create repo root: %v", err)
 	}
 
-	// Change to the repo root for consistent path resolution
-	cmd := exec.Command(
-		"git",
-		"rev-parse",
-		"--show-toplevel",
-	)
-	output, err := cmd.Output()
-	if err != nil {
-		t.Fatalf(
-			"failed to get repo root: %v",
-			err,
-		)
-	}
-	repoRoot := string(
-		output[:len(output)-1],
-	) // trim newline
-
-	oldWd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf(
-			"failed to get working directory: %v",
-			err,
-		)
-	}
-	defer func() { _ = os.Chdir(oldWd) }()
 	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatalf(
-			"failed to change to repo root: %v",
-			err,
-		)
+		t.Fatalf("failed to change to repo root: %v", err)
+	}
+	defer func() { _ = os.Chdir("..") }()
+
+	initGitRepo := func() {
+		cmd := exec.Command("git", "init")
+		cmd.Dir = repoRoot
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("failed to init git repo: %v", err)
+		}
+
+		cmd = exec.Command("git", "config", "user.email", "test@example.com")
+		cmd.Dir = repoRoot
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("failed to set git user email: %v", err)
+		}
+
+		cmd = exec.Command("git", "config", "user.name", "Test User")
+		cmd.Dir = repoRoot
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("failed to set git user name: %v", err)
+		}
 	}
 
-	// Create a change with full info to verify it's preserved
+	initGitRepo()
+
+	cmd := exec.Command("git", "commit", "--allow-empty", "-m", "Initial commit")
+	cmd.Dir = repoRoot
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("failed to create initial commit: %v", err)
+	}
+
 	originalChange := ChangeInfo{
 		ID:         "test-change-preserve-info-xyz",
 		Title:      "Test Change with Full Info",
@@ -922,7 +941,7 @@ func TestFilterChangesNotOnRef_PreservesChangeInfo(
 
 	result, err := FilterChangesNotOnRef(
 		changes,
-		"origin/main",
+		"HEAD",
 	)
 	if err != nil {
 		t.Fatalf(
@@ -938,7 +957,6 @@ func TestFilterChangesNotOnRef_PreservesChangeInfo(
 		)
 	}
 
-	// Verify all fields are preserved
 	filteredChange := result[0]
 	if filteredChange.ID != originalChange.ID {
 		t.Errorf(

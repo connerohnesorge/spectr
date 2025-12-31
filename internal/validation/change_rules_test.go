@@ -1034,28 +1034,6 @@ The system SHALL provide secure authentication.
 	}
 }
 
-// TestValidateChangeDeltaSpecs_SameCapabilityDuplicateAcrossFiles tests that
-// duplicate requirement names within the SAME capability but across multiple
-// files are still detected as errors.
-func TestValidateChangeDeltaSpecs_SameCapabilityDuplicateAcrossFiles(
-	t *testing.T,
-) {
-	// This test uses a workaround: we create two spec files in the same
-	// capability directory by using a nested directory structure.
-	// However, since the spec structure requires <capability>/spec.md,
-	// we need to test duplicate detection within the same file instead,
-	// which is already tested by TestValidateChangeDeltaSpecs_DuplicateRequirementNames.
-	//
-	// For cross-file duplicate detection within the same capability to work,
-	// we would need multiple spec.md files under the same capability,
-	// which is not the typical structure. The composite key approach ensures
-	// that different capabilities can have same-named requirements while
-	// same-capability duplicates are still caught within a single file.
-	t.Skip(
-		"Cross-file duplicate detection within same capability is covered by within-file tests",
-	)
-}
-
 func TestValidateChangeDeltaSpecs_MalformedScenarios(
 	t *testing.T,
 ) {

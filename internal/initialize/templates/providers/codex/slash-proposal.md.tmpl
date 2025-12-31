@@ -1,0 +1,14 @@
+{{define "steps"}}
+## Steps
+
+Codex uses global prompts at `~/.codex/prompts/` and skills at `~/.codex/skills/`. Confirm the intended target location before scaffolding.
+
+{{template "base_steps" .}}
+{{end}}
+
+{{define "reference"}}
+## Reference
+
+- Codex prompts live at `~/.codex/prompts/` and skills at `~/.codex/skills/`.
+{{template "base_reference" .}}
+{{end}}

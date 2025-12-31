@@ -22,8 +22,14 @@ func (*ClaudeProvider) Initializers(
 		NewSlashCommandsInitializer(
 			".claude/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.ProviderSlashCommand(
+					"claude-code",
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.ProviderSlashCommand(
+					"claude-code",
+					domain.SlashApply,
+				),
 			},
 		),
 		NewAgentSkillsInitializer(

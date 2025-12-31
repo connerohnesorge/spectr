@@ -1,0 +1,8 @@
+{{define "guardrails"}}
+## Guardrails
+
+- Delegate implementation to the coder subagent for focused delivery.
+- Verify subagent work with the tester subagent before marking tasks complete.
+- Use the orchestrator pattern to coordinate coder/tester/stuck handoffs.
+{{template "base_guardrails" .}}
+{{end}}

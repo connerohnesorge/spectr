@@ -24,8 +24,14 @@ func (*CodexProvider) Initializers(
 			".codex/prompts",
 			"spectr-",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.ProviderSlashCommand(
+					"codex",
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.ProviderSlashCommand(
+					"codex",
+					domain.SlashApply,
+				),
 			},
 		),
 		NewAgentSkillsInitializer(

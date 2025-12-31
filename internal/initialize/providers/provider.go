@@ -63,8 +63,16 @@ type TemplateManager interface {
 	// SlashCommand returns the template for a Markdown slash command
 	SlashCommand(cmd domain.SlashCommand) domain.TemplateRef
 
+	// ProviderSlashCommand returns a provider-aware Markdown slash command template.
+	// Providers can opt in to custom overrides by specifying a provider ID.
+	ProviderSlashCommand(providerID string, cmd domain.SlashCommand) domain.TemplateRef
+
 	// TOMLSlashCommand returns the template for a TOML slash command
 	TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef
+
+	// ProviderTOMLSlashCommand returns a provider-aware TOML slash command template.
+	// Providers can opt in to custom overrides by specifying a provider ID.
+	ProviderTOMLSlashCommand(providerID string, cmd domain.SlashCommand) domain.TemplateRef
 
 	// SkillFS returns an fs.FS rooted at the skill directory for the given
 	// skill name. Returns an error if the skill does not exist.

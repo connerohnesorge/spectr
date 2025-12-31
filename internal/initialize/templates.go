@@ -3,14 +3,16 @@ package initialize
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
+	"strings"
 	"text/template"
 
 	"github.com/connerohnesorge/spectr/internal/domain"
 )
 
-//go:embed templates/**/*.tmpl
+//go:embed templates/**/*.tmpl templates/providers/**/*.tmpl
 var templateFS embed.FS
 
 //go:embed templates/skills
@@ -18,7 +20,9 @@ var skillFS embed.FS
 
 // TemplateManager manages embedded templates for initialization
 type TemplateManager struct {
-	templates *template.Template
+	templates         *template.Template
+	slashTemplates    map[string]*template.Template
+	providerTemplates map[string]map[string]*template.Template
 }
 
 // NewTemplateManager creates a new template manager with all
@@ -39,33 +43,181 @@ func NewTemplateManager() (*TemplateManager, error) {
 		)
 	}
 
-	// Parse and merge domain templates (slash commands)
-	domainTmpl, err := template.ParseFS(
-		domain.TemplateFS,
-		"templates/*.tmpl",
-	)
+	slashTemplates, err := parseSlashTemplates()
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to parse domain templates: %w",
-			err,
-		)
+		return nil, err
 	}
 
-	// Merge: add domain templates to main template set
-	// If duplicate template names exist, last-wins precedence applies
-	for _, t := range domainTmpl.Templates() {
-		if _, err := mainTmpl.AddParseTree(t.Name(), t.Tree); err != nil {
-			return nil, fmt.Errorf(
-				"failed to merge template %s: %w",
-				t.Name(),
-				err,
+	providerTmpls, err := loadProviderTemplates(slashTemplates, templateFS)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TemplateManager{
+		templates:         mainTmpl,
+		slashTemplates:    slashTemplates,
+		providerTemplates: providerTmpls,
+	}, nil
+}
+
+func validateProviderTemplate(_, provider *template.Template) error {
+	knownSections := map[string]struct{}{
+		"guardrails":      {},
+		"steps":           {},
+		"reference":       {},
+		"main":            {},
+		"base_guardrails": {},
+		"base_steps":      {},
+		"base_reference":  {},
+	}
+
+	for _, tmpl := range provider.Templates() {
+		name := tmpl.Name()
+		if strings.HasSuffix(name, ".tmpl") {
+			continue
+		}
+		if _, ok := knownSections[name]; !ok {
+			return fmt.Errorf(
+				"unknown section %q (allowed: guardrails, steps, reference, main, base_guardrails, base_steps, base_reference)",
+				name,
 			)
 		}
 	}
 
-	return &TemplateManager{
-		templates: mainTmpl,
-	}, nil
+	return nil
+}
+
+func loadProviderTemplates(
+	baseTemplates map[string]*template.Template,
+	providerFS fs.FS,
+) (map[string]map[string]*template.Template, error) {
+	providerTmpls := make(map[string]map[string]*template.Template)
+	entries, err := fs.ReadDir(providerFS, "templates/providers")
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return providerTmpls, nil
+		}
+
+		return nil, fmt.Errorf(
+			"failed to read provider template directory: %w",
+			err,
+		)
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		providerID := entry.Name()
+		providerPath := fmt.Sprintf(
+			"templates/providers/%s",
+			providerID,
+		)
+		providerTemplates, err := loadProviderTemplatesForProvider(
+			providerID,
+			providerPath,
+			baseTemplates,
+			providerFS,
+		)
+		if err != nil {
+			return nil, err
+		}
+		if len(providerTemplates) == 0 {
+			continue
+		}
+
+		providerTmpls[providerID] = providerTemplates
+	}
+
+	return providerTmpls, nil
+}
+
+func loadProviderTemplatesForProvider(
+	providerID, providerPath string,
+	baseTemplates map[string]*template.Template,
+	providerFS fs.FS,
+) (map[string]*template.Template, error) {
+	providerEntries, err := fs.ReadDir(providerFS, providerPath)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to read provider %s directory: %w",
+			providerID,
+			err,
+		)
+	}
+
+	providerTemplates := make(map[string]*template.Template)
+	for _, providerEntry := range providerEntries {
+		if providerEntry.IsDir() {
+			continue
+		}
+		if !strings.HasSuffix(providerEntry.Name(), ".tmpl") {
+			continue
+		}
+
+		templateName := providerEntry.Name()
+		baseTemplate, ok := baseTemplates[templateName]
+		if !ok {
+			return nil, fmt.Errorf(
+				"unknown base template %s for provider %s",
+				templateName,
+				providerID,
+			)
+		}
+
+		pattern := fmt.Sprintf("%s/%s", providerPath, templateName)
+		providerTmpl, err := template.ParseFS(
+			providerFS,
+			pattern,
+		)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to parse provider %s template %s: %w",
+				providerID,
+				templateName,
+				err,
+			)
+		}
+
+		if err := validateProviderTemplate(baseTemplate, providerTmpl); err != nil {
+			return nil, fmt.Errorf(
+				"provider %s template validation failed: %w",
+				providerID,
+				err,
+			)
+		}
+
+		providerTemplates[templateName] = providerTmpl
+	}
+
+	return providerTemplates, nil
+}
+
+func parseSlashTemplates() (map[string]*template.Template, error) {
+	slashTemplateNames := []string{
+		"slash-proposal.md.tmpl",
+		"slash-apply.md.tmpl",
+		"slash-proposal.toml.tmpl",
+		"slash-apply.toml.tmpl",
+	}
+
+	slashTemplates := make(map[string]*template.Template, len(slashTemplateNames))
+	for _, name := range slashTemplateNames {
+		pattern := fmt.Sprintf("templates/%s", name)
+		tmpl, err := template.ParseFS(domain.TemplateFS, pattern)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to parse domain template %s: %w",
+				name,
+				err,
+			)
+		}
+
+		slashTemplates[name] = tmpl
+	}
+
+	return slashTemplates, nil
 }
 
 // RenderProject renders the project.md template with the given context
@@ -144,8 +296,15 @@ func (tm *TemplateManager) RenderSlashCommand(
 		"slash-%s.md.tmpl",
 		commandType,
 	)
+	tmpl, ok := tm.slashTemplates[templateName]
+	if !ok {
+		return "", fmt.Errorf(
+			"unknown slash command template %s",
+			commandType,
+		)
+	}
 	var buf bytes.Buffer
-	err := tm.templates.ExecuteTemplate(
+	err := tmpl.ExecuteTemplate(
 		&buf,
 		templateName,
 		ctx,
@@ -199,28 +358,48 @@ func (tm *TemplateManager) Agents() domain.TemplateRef {
 // SlashCommand returns a Markdown template reference for the given slash command type.
 // Used by SlashCommandsInitializer, HomeSlashCommandsInitializer, and PrefixedSlashCommandsInitializer.
 func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+	return tm.ProviderSlashCommand("", cmd)
+}
+
+// ProviderSlashCommand returns a provider-aware template reference for the given slash command.
+// Providers without overrides will receive a nil ProviderTemplate and use the base template.
+func (tm *TemplateManager) ProviderSlashCommand(
+	providerID string,
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.md.tmpl",
 		domain.SlashApply:    "slash-apply.md.tmpl",
 	}
 
 	return domain.TemplateRef{
-		Name:     names[cmd],
-		Template: tm.templates,
+		Name:             names[cmd],
+		Template:         tm.slashTemplates[names[cmd]],
+		ProviderTemplate: tm.providerTemplates[providerID][names[cmd]],
 	}
 }
 
 // TOMLSlashCommand returns a TOML template reference for the given slash command type.
 // Used by TOMLSlashCommandsInitializer (Gemini only).
 func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+	return tm.ProviderTOMLSlashCommand("", cmd)
+}
+
+// ProviderTOMLSlashCommand returns a provider-aware TOML template reference for the given slash command.
+// Providers without overrides will receive a nil ProviderTemplate and use the base template.
+func (tm *TemplateManager) ProviderTOMLSlashCommand(
+	providerID string,
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.toml.tmpl",
 		domain.SlashApply:    "slash-apply.toml.tmpl",
 	}
 
 	return domain.TemplateRef{
-		Name:     names[cmd],
-		Template: tm.templates,
+		Name:             names[cmd],
+		Template:         tm.slashTemplates[names[cmd]],
+		ProviderTemplate: tm.providerTemplates[providerID][names[cmd]],
 	}
 }
 

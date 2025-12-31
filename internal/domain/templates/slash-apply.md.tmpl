@@ -1,14 +1,19 @@
-# Guardrails
-
+{{define "base_guardrails"}}
 - Favor straightforward, minimal implementations first and add complexity only
   when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
 - Refer to `{{ .AgentsFile }}` and `{{ .BaseDir }}/project.md` (located inside
   the `{{ .BaseDir }}/` directory—run `ls {{ .BaseDir }}`) if you need
   additional Spectr conventions or clarifications.
+{{end}}
 
-## Steps
+{{define "guardrails"}}
+## Guardrails
 
+{{template "base_guardrails" .}}
+{{end}}
+
+{{define "base_steps"}}
 Track these steps as TODOs and complete them one by one.
 
 1. Run `spectr accept <id>` to convert `tasks.md` to `tasks.jsonc` format for
@@ -26,8 +31,33 @@ Track these steps as TODOs and complete them one by one.
    have status values: `pending`, `in_progress`, `completed`.
 6. Read `{{ .ChangesDir }}/` and `{{ .SpecsDir }}/` directories when additional
    context is required.
+{{end}}
 
-## Reference
+{{define "steps"}}
+## Steps
 
+{{template "base_steps" .}}
+{{end}}
+
+{{define "base_reference"}}
 - Read `{{ .ChangesDir }}/<id>/proposal.md` for proposal details.
 - Read `{{ .ChangesDir }}/<id>/specs/<capability>/spec.md` for delta specs.
+{{end}}
+
+{{define "reference"}}
+## Reference
+
+{{template "base_reference" .}}
+{{end}}
+
+{{define "main"}}
+# Apply Guide
+
+{{template "guardrails" .}}
+
+{{template "steps" .}}
+
+{{template "reference" .}}
+{{end}}
+
+{{template "main" .}}

@@ -3,6 +3,8 @@ package initialize
 import (
 	"strings"
 	"testing"
+	"testing/fstest"
+	"text/template"
 
 	"github.com/connerohnesorge/spectr/internal/domain"
 )
@@ -779,5 +781,123 @@ func TestTemplateManager_TOMLSlashCommand(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestTemplateManager_ParseProviderTemplates(t *testing.T) {
+	baseTemplates := map[string]*template.Template{
+		"slash-proposal.md.tmpl": template.New("slash-proposal.md.tmpl"),
+	}
+	providerFS := fstest.MapFS{
+		"templates/providers/claude-code/slash-proposal.md.tmpl": &fstest.MapFile{
+			Data: []byte(`{{define "guardrails"}}claude{{end}}`),
+		},
+		"templates/providers/codex/slash-proposal.md.tmpl": &fstest.MapFile{
+			Data: []byte(`{{define "guardrails"}}codex{{end}}`),
+		},
+	}
+
+	providerTemplates, err := loadProviderTemplates(baseTemplates, providerFS)
+	if err != nil {
+		t.Fatalf("loadProviderTemplates() error = %v", err)
+	}
+	if providerTemplates["claude-code"]["slash-proposal.md.tmpl"] == nil {
+		t.Error("expected claude-code proposal template override")
+	}
+	if providerTemplates["codex"]["slash-proposal.md.tmpl"] == nil {
+		t.Error("expected codex proposal template override")
+	}
+}
+
+func TestTemplateManager_MissingProvidersDirectory(t *testing.T) {
+	providerTemplates, err := loadProviderTemplates(
+		make(map[string]*template.Template),
+		fstest.MapFS{},
+	)
+	if err != nil {
+		t.Fatalf("loadProviderTemplates() error = %v", err)
+	}
+	if len(providerTemplates) != 0 {
+		t.Errorf("loadProviderTemplates() expected empty map, got %d", len(providerTemplates))
+	}
+}
+
+func TestTemplateManager_ProviderSlashCommand(t *testing.T) {
+	tm, err := NewTemplateManager()
+	if err != nil {
+		t.Fatalf("NewTemplateManager() error = %v", err)
+	}
+
+	ref := tm.ProviderSlashCommand("claude-code", domain.SlashProposal)
+	if ref.ProviderTemplate == nil {
+		t.Fatal("ProviderSlashCommand() expected provider template for claude-code")
+	}
+
+	ctx := domain.DefaultTemplateContext()
+	rendered, err := ref.Render(&ctx)
+	if err != nil {
+		t.Fatalf("ProviderSlashCommand().Render() error = %v", err)
+	}
+	if !strings.Contains(rendered, "orchestrator pattern") {
+		t.Errorf(
+			"ProviderSlashCommand() missing provider-specific content in output:\n%s",
+			rendered,
+		)
+	}
+}
+
+func TestTemplateManager_ProviderSlashCommand_Unknown(t *testing.T) {
+	tm := &TemplateManager{
+		slashTemplates: map[string]*template.Template{
+			"slash-proposal.md.tmpl": template.New("slash-proposal.md.tmpl"),
+		},
+		providerTemplates: make(map[string]map[string]*template.Template),
+	}
+
+	ref := tm.ProviderSlashCommand("unknown-provider", domain.SlashProposal)
+	if ref.ProviderTemplate != nil {
+		t.Error("ProviderSlashCommand() expected nil ProviderTemplate for unknown provider")
+	}
+}
+
+func TestTemplateManager_BackwardCompatibility(t *testing.T) {
+	tm := &TemplateManager{
+		slashTemplates: map[string]*template.Template{
+			"slash-proposal.md.tmpl": template.New("slash-proposal.md.tmpl"),
+			"slash-apply.toml.tmpl":  template.New("slash-apply.toml.tmpl"),
+		},
+		providerTemplates: make(map[string]map[string]*template.Template),
+	}
+
+	ref := tm.SlashCommand(domain.SlashProposal)
+	if ref.ProviderTemplate != nil {
+		t.Error("SlashCommand() expected nil ProviderTemplate")
+	}
+
+	ref = tm.TOMLSlashCommand(domain.SlashApply)
+	if ref.ProviderTemplate != nil {
+		t.Error("TOMLSlashCommand() expected nil ProviderTemplate")
+	}
+}
+
+func TestTemplateManager_ValidationError(t *testing.T) {
+	base := template.New("slash-proposal.md.tmpl")
+	providerFS := fstest.MapFS{
+		"templates/providers/bad/slash-proposal.md.tmpl": &fstest.MapFile{
+			Data: []byte(`{{define "unknown"}}bad{{end}}`),
+		},
+	}
+
+	_, err := loadProviderTemplates(
+		map[string]*template.Template{
+			"slash-proposal.md.tmpl": base,
+		},
+		providerFS,
+	)
+	if err == nil {
+		t.Fatal("loadProviderTemplates() expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "unknown section") {
+		t.Errorf("loadProviderTemplates() error = %v, want unknown section error", err)
 	}
 }

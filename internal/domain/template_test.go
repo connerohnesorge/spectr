@@ -6,37 +6,150 @@ import (
 	"text/template"
 )
 
-func TestTemplateRef_Render(t *testing.T) {
-	// Create a simple template
-	tmpl := template.New("test.tmpl")
-	tmpl, err := tmpl.Parse("BaseDir: {{.BaseDir}}, SpecsDir: {{.SpecsDir}}")
-	if err != nil {
-		t.Fatalf("failed to parse template: %v", err)
-	}
+func TestTemplateRef_Render_NoProvider(t *testing.T) {
+	base := template.Must(template.New("base.tmpl").Parse(
+		`{{define "guardrails"}}base-guardrails{{end}}
+{{define "steps"}}base-steps{{end}}
+{{define "reference"}}base-reference{{end}}
+{{define "main"}}{{template "guardrails" .}}|{{template "steps" .}}|{{template "reference" .}}{{end}}
+{{template "main" .}}`,
+	))
 
 	ref := TemplateRef{
-		Name:     "test.tmpl",
-		Template: tmpl,
+		Name:     "base.tmpl",
+		Template: base,
 	}
 
-	ctx := TemplateContext{
-		BaseDir:  "spectr",
-		SpecsDir: "spectr/specs",
-	}
-
-	result, err := ref.Render(&ctx)
+	result, err := ref.Render(&TemplateContext{})
 	if err != nil {
 		t.Fatalf("Render() error = %v", err)
 	}
 
-	expected := "BaseDir: spectr, SpecsDir: spectr/specs"
+	result = strings.TrimSpace(result)
+	expected := "base-guardrails|base-steps|base-reference"
 	if result != expected {
 		t.Errorf("Render() = %q, want %q", result, expected)
 	}
 }
 
+func TestTemplateRef_Render_WithProvider(t *testing.T) {
+	base := template.Must(template.New("base.tmpl").Parse(
+		`{{define "guardrails"}}base-guardrails{{end}}
+{{define "steps"}}base-steps{{end}}
+{{define "reference"}}base-reference{{end}}
+{{define "main"}}{{template "guardrails" .}}|{{template "steps" .}}|{{template "reference" .}}{{end}}
+{{template "main" .}}`,
+	))
+	provider := template.Must(template.New("provider.tmpl").Parse(
+		`{{define "guardrails"}}provider-guardrails{{end}}`,
+	))
+
+	ref := TemplateRef{
+		Name:             "base.tmpl",
+		Template:         base,
+		ProviderTemplate: provider,
+	}
+
+	result, err := ref.Render(&TemplateContext{})
+	if err != nil {
+		t.Fatalf("Render() error = %v", err)
+	}
+
+	expected := "provider-guardrails|base-steps|base-reference"
+	if result != expected {
+		t.Errorf("Render() = %q, want %q", result, expected)
+	}
+}
+
+func TestTemplateRef_Render_PartialOverride(t *testing.T) {
+	base := template.Must(template.New("base.tmpl").Parse(
+		`{{define "guardrails"}}base-guardrails{{end}}
+{{define "steps"}}base-steps{{end}}
+{{define "reference"}}base-reference{{end}}
+{{define "main"}}{{template "guardrails" .}}|{{template "steps" .}}|{{template "reference" .}}{{end}}
+{{template "main" .}}`,
+	))
+	provider := template.Must(template.New("provider.tmpl").Parse(
+		`{{define "steps"}}provider-steps{{end}}`,
+	))
+
+	ref := TemplateRef{
+		Name:             "base.tmpl",
+		Template:         base,
+		ProviderTemplate: provider,
+	}
+
+	result, err := ref.Render(&TemplateContext{})
+	if err != nil {
+		t.Fatalf("Render() error = %v", err)
+	}
+
+	expected := "base-guardrails|provider-steps|base-reference"
+	if result != expected {
+		t.Errorf("Render() = %q, want %q", result, expected)
+	}
+}
+
+func TestTemplateRef_composeTemplate(t *testing.T) {
+	base := template.Must(template.New("base.tmpl").Parse(
+		`{{define "guardrails"}}base-guardrails{{end}}
+{{define "steps"}}base-steps{{end}}
+{{define "reference"}}base-reference{{end}}
+{{define "main"}}{{template "guardrails" .}}|{{template "steps" .}}|{{template "reference" .}}{{end}}
+{{template "main" .}}`,
+	))
+	provider := template.Must(template.New("provider.tmpl").Parse(
+		`{{define "reference"}}provider-reference{{end}}`,
+	))
+
+	ref := TemplateRef{
+		Name:             "base.tmpl",
+		Template:         base,
+		ProviderTemplate: provider,
+	}
+
+	composed, err := ref.composeTemplate()
+	if err != nil {
+		t.Fatalf("composeTemplate() error = %v", err)
+	}
+
+	var buf strings.Builder
+	if err := composed.ExecuteTemplate(&buf, "main", &TemplateContext{}); err != nil {
+		t.Fatalf("ExecuteTemplate() error = %v", err)
+	}
+
+	expected := "base-guardrails|base-steps|provider-reference"
+	if buf.String() != expected {
+		t.Errorf("composeTemplate() result = %q, want %q", buf.String(), expected)
+	}
+}
+
+func TestTemplateRef_composeTemplate_Error(t *testing.T) {
+	base := template.Must(template.New("base.tmpl").Parse(`{{define "main"}}ok{{end}}`))
+	provider := template.Must(
+		template.New("provider.tmpl").Parse(`{{define "guardrails"}}bad{{end}}`),
+	)
+	provider.Tree = nil
+	if guardrails := provider.Lookup("guardrails"); guardrails != nil {
+		guardrails.Tree = nil
+	}
+
+	ref := TemplateRef{
+		Name:             "base.tmpl",
+		Template:         base,
+		ProviderTemplate: provider,
+	}
+
+	_, err := ref.composeTemplate()
+	if err == nil {
+		t.Fatal("composeTemplate() expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), "base.tmpl") {
+		t.Errorf("composeTemplate() error = %v, want template name in error", err)
+	}
+}
+
 func TestTemplateRef_Render_Error(t *testing.T) {
-	// Create a template with an invalid reference
 	tmpl := template.New("error.tmpl")
 	tmpl, err := tmpl.Parse("{{.NonExistentField}}")
 	if err != nil {

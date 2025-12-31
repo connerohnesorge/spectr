@@ -1,7 +1,4 @@
-# Proposal Creation Guide
-
-## Guardrails
-
+{{define "base_guardrails"}}
 - Favor straightforward, minimal implementations first and add complexity
   only when it is requested or clearly required.
 - Keep changes tightly scoped to the requested outcome.
@@ -12,9 +9,15 @@
   questions before editing files.
 
 Note: You are not implementing yet, you are fully planning and creating the change proposal using spectr.
+{{end}}
 
-## Steps
+{{define "guardrails"}}
+## Guardrails
 
+{{template "base_guardrails" .}}
+{{end}}
+
+{{define "base_steps"}}
 1. Review `{{ .ProjectFile }}`, read `{{ .SpecsDir }}/` and
    `{{ .ChangesDir }}/` directories, and inspect related code or docs (e.g.,
    via `rg`/`ls`) to ground the proposal in current behaviour; note any gaps
@@ -40,9 +43,15 @@ Note: You are not implementing yet, you are fully planning and creating the chan
    while the latter becomes the runtime source of truth.
 7. Validate with `spectr validate <id>` and resolve every issue before
    sharing the proposal.
+{{end}}
 
-## Reference
+{{define "steps"}}
+## Steps
 
+{{template "base_steps" .}}
+{{end}}
+
+{{define "base_reference"}}
 - Read delta specs directly at
   `{{ .ChangesDir }}/<id>/specs/<capability>/spec.md` when validation fails.
 - Read existing specs at `{{ .SpecsDir }}/<capability>/spec.md` to understand
@@ -51,3 +60,22 @@ Note: You are not implementing yet, you are fully planning and creating the chan
   {{ .SpecsDir }}` before writing new ones.
 - Explore the codebase with `rg <keyword>`, `ls`, or direct file reads so
   proposals align with current implementation realities.
+{{end}}
+
+{{define "reference"}}
+## Reference
+
+{{template "base_reference" .}}
+{{end}}
+
+{{define "main"}}
+# Proposal Creation Guide
+
+{{template "guardrails" .}}
+
+{{template "steps" .}}
+
+{{template "reference" .}}
+{{end}}
+
+{{template "main" .}}

@@ -33,8 +33,22 @@ func (*mockTemplateManager) SlashCommand(cmd domain.SlashCommand) domain.Templat
 	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.md.tmpl", cmd.String())}
 }
 
+func (m *mockTemplateManager) ProviderSlashCommand(
+	_ string,
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
+	return m.SlashCommand(cmd)
+}
+
 func (*mockTemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
 	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.toml.tmpl", cmd.String())}
+}
+
+func (m *mockTemplateManager) ProviderTOMLSlashCommand(
+	_ string,
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
+	return m.TOMLSlashCommand(cmd)
 }
 
 func (*mockTemplateManager) SkillFS(skillName string) (fs.FS, error) {

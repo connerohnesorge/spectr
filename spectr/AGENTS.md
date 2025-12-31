@@ -69,6 +69,14 @@ Track these steps as TODOs and complete them one by one.
 3. **Read tasks.md** - Get implementation checklist
 4. **Run `spectr accept <id>`** - Convert `tasks.md` to `tasks.jsonc` for
    stable task tracking
+   - **Note**: Both `tasks.md` and `tasks.jsonc` coexist after accept
+   - `tasks.md` is preserved as the human-readable source (retains formatting,
+     links, comments)
+   - `tasks.jsonc` becomes the runtime source of truth (used by all commands)
+   - During implementation, always update task statuses in `tasks.jsonc`
+   - **Fallback behavior**: If `tasks.jsonc` is deleted after accept, all
+     commands automatically fall back to reading `tasks.md`. You can re-run
+     `spectr accept <id>` to regenerate `tasks.jsonc` from `tasks.md`
 5. **Approval gate** - Do not start implementation until the proposal is
    reviewed and approved
 6. **For each task in `tasks.jsonc`:**
@@ -80,6 +88,75 @@ Track these steps as TODOs and complete them one by one.
      complete it
    - Using a single edit to mark a task completed AND the next task
      in_progress is allowed (this is a single transition, not batching)
+
+#### Task File Management Workflow
+
+Understanding the relationship between `tasks.md` and `tasks.jsonc`:
+
+**Before Accept:**
+
+- Only `tasks.md` exists in the change directory
+- Contains human-authored checklist with formatting, links, and context
+- Used by all Spectr commands for task information
+
+**After Accept (`spectr accept <id>`):**
+
+- `tasks.md` is preserved unchanged (human-readable source of truth)
+- `tasks.jsonc` is generated (machine-readable runtime source of truth)
+- All Spectr commands now prefer `tasks.jsonc` for task information
+- Both files coexist permanently
+
+**Why Both Files?**
+
+- `tasks.md`: Preserves rich formatting, markdown links, detailed context,
+  and human-friendly structure
+- `tasks.jsonc`: Provides reliable machine parsing, status tracking, and
+  consistent command output
+
+**Best Practices:**
+
+1. **During Implementation:**
+   - Always update task statuses in `tasks.jsonc` (not `tasks.md`)
+   - Use the status values: `"pending"`, `"in_progress"`, `"completed"`
+   - Update immediately after each task transition (no batching)
+
+2. **Reading Tasks:**
+   - AI agents should read `tasks.jsonc` for current status
+   - Humans can read either file (tasks.md often more readable)
+   - Commands like `spectr list` and `spectr view` use `tasks.jsonc`
+
+3. **Fallback Behavior:**
+   - If `tasks.jsonc` is deleted, commands automatically read `tasks.md`
+   - Run `spectr accept <id>` again to regenerate `tasks.jsonc`
+   - This provides a recovery path without data loss
+
+4. **When to Sync:**
+   - If you need to add/modify task descriptions, edit `tasks.md`
+   - Then re-run `spectr accept <id>` to regenerate `tasks.jsonc`
+   - Status values in existing `tasks.jsonc` are preserved during regeneration
+   - New tasks inherit `"pending"` status, removed tasks are dropped
+
+5. **Validation:**
+   - Run `spectr validate <id>` to check both files
+   - Validates that tasks.jsonc structure matches expected schema
+   - Warns if files are significantly out of sync (informational, not an error)
+
+**Common Scenarios:**
+
+- **Scenario: Adding new tasks mid-implementation**
+  1. Edit `tasks.md` to add new checklist items
+  2. Run `spectr accept <id>` to regenerate `tasks.jsonc`
+  3. Existing task statuses are preserved, new tasks start as `"pending"`
+
+- **Scenario: tasks.jsonc accidentally deleted**
+  1. All commands automatically fall back to `tasks.md`
+  2. Run `spectr accept <id>` to regenerate `tasks.jsonc`
+  3. All tasks reset to `"pending"` (manual status restoration needed)
+
+- **Scenario: Divergence between files**
+  1. `spectr validate <id>` shows informational warning
+  2. Decide if tasks.md needs updates or if it's intentional
+  3. Re-run `spectr accept <id>` if tasks.md is the authoritative source
 
 ### Stage 3: Syncing Specs
 

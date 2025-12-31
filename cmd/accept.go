@@ -27,9 +27,15 @@ const filePerm = 0o644
 // AcceptCmd represents the accept command for converting tasks.md to
 // tasks.jsonc. This command parses the human-readable tasks.md file and
 // produces a machine-readable tasks.jsonc file with structured task data.
+// Both files are preserved after conversion: tasks.md remains as the
+// human-readable source, while tasks.jsonc becomes the runtime source of truth.
+// If tasks.jsonc is deleted, all commands automatically fall back to tasks.md.
+//
+// Note: A --sync-from-md flag is not needed because running accept again
+// is idempotent and already handles re-generating tasks.jsonc from tasks.md.
 type AcceptCmd struct {
 	// ChangeID is the optional change identifier to process
-	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Change"` //nolint:lll,revive // Kong struct tag exceeds line length
+	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Convert tasks.md to tasks.jsonc (preserves tasks.md)"` //nolint:lll,revive // Kong struct tag exceeds line length
 	// DryRun enables preview mode without writing files
 	DryRun bool `                                        help:"Preview without writing" name:"dry-run"` //nolint:lll,revive // Kong struct tag with alignment padding
 
@@ -106,7 +112,7 @@ func (c *AcceptCmd) processChange(
 
 	if c.DryRun {
 		fmt.Printf(
-			"Would convert: %s\nwould write to: %s\nWould remove: %s\nFound %d tasks\n", //nolint:lll,revive // Long format string for dry-run output
+			"Would convert: %s\nwould write to: %s\nWould preserve: %s\nFound %d tasks\n", //nolint:lll,revive // Long format string for dry-run output
 			tasksMdPath,
 			tasksJSONPath,
 			tasksMdPath,
@@ -159,7 +165,11 @@ func resolveChangePaths(
 	return changeDir, tasksMdPath, nil
 }
 
-// writeAndCleanup writes the tasks.jsonc file and removes tasks.md.
+// writeAndCleanup writes the tasks.jsonc file and preserves tasks.md.
+// We preserve tasks.md to avoid information loss (markdown formatting,
+// comments, links) during the conversion to tasks.jsonc. Both files
+// will coexist, with tasks.jsonc serving as the machine-readable format
+// and tasks.md as the human-readable source of truth.
 func writeAndCleanup(
 	tasksMdPath, tasksJSONPath string,
 	tasks []parsers.Task,
@@ -171,16 +181,11 @@ func writeAndCleanup(
 		)
 	}
 
-	// Remove tasks.md after successful tasks.jsonc creation
-	if err := os.Remove(tasksMdPath); err != nil {
-		return fmt.Errorf(
-			"failed to remove tasks.md: %w",
-			err,
-		)
-	}
+	// Preserve tasks.md to avoid information loss (formatting, comments, links)
+	// Both tasks.md and tasks.jsonc now coexist after conversion
 
 	fmt.Printf(
-		"Converted %s -> %s\nRemoved %s\nWrote %d tasks\n",
+		"Converted %s -> %s\nPreserved %s\nWrote %d tasks\n",
 		tasksMdPath,
 		tasksJSONPath,
 		tasksMdPath,

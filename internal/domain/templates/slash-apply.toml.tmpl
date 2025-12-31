@@ -7,7 +7,7 @@ prompt = """
 
 # Steps
 Track these steps as TODOs and complete them one by one.
-1. Run `spectr accept <id>` to convert `tasks.md` to `tasks.jsonc` format for stable task tracking.
+1. Run `spectr accept <id>` to convert `tasks.md` to `tasks.jsonc` format for stable task tracking. Note: Both `tasks.md` (human-readable source) and `tasks.jsonc` (runtime source of truth) coexist after accept—update task statuses in `tasks.jsonc`.
 2. Read `{{ .ChangesDir }}/<id>/proposal.md`, `design.md` (if present), and `tasks.jsonc` to confirm scope and acceptance criteria.
 3. Work through tasks sequentially, keeping edits minimal and focused on the requested change. Update the task status in `tasks.jsonc` after verifying the work.
 4. Confirm completion before updating statuses—make sure every item in `tasks.jsonc` is finished.

@@ -174,6 +174,10 @@ func ValidateChangeDeltaSpecs(
 	tasksIssues := validateTasksFile(changeDir)
 	allIssues = append(allIssues, tasksIssues...)
 
+	// Check for divergence between tasks.md and tasks.jsonc
+	divergenceIssues := validateTasksDivergence(changeDir)
+	allIssues = append(allIssues, divergenceIssues...)
+
 	// Always convert warnings to errors (strict mode)
 	for i := range allIssues {
 		if allIssues[i].Level == LevelWarning {
@@ -807,4 +811,164 @@ func validateTasksFile(
 	}
 
 	return nil
+}
+
+// validateTasksDivergence checks if tasks.md and tasks.jsonc both exist
+// and have divergent content. Returns an informational warning if they differ.
+func validateTasksDivergence(
+	changeDir string,
+) []ValidationIssue {
+	tasksMdPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
+	tasksJsoncPath := filepath.Join(
+		changeDir,
+		"tasks.jsonc",
+	)
+
+	// Check if both files exist
+	_, mdErr := os.Stat(tasksMdPath)
+	_, jsoncErr := os.Stat(tasksJsoncPath)
+
+	// If either file doesn't exist, no divergence check needed
+	if os.IsNotExist(mdErr) || os.IsNotExist(jsoncErr) {
+		return nil
+	}
+
+	// If we can't access the files, skip validation (other errors will catch this)
+	if mdErr != nil || jsoncErr != nil {
+		return nil
+	}
+
+	// Parse tasks.md
+	mdTasks, err := parseTasksMdForValidation(tasksMdPath)
+	if err != nil {
+		// If parsing fails, don't report divergence (other validation will catch it)
+		return nil
+	}
+
+	// Parse tasks.jsonc
+	jsoncTasks, err := parsers.ReadTasksJson(tasksJsoncPath)
+	if err != nil {
+		// If parsing fails, don't report divergence (other validation will catch it)
+		return nil
+	}
+
+	// Check for divergence by comparing task IDs and statuses
+	diverged := checkTasksDivergence(mdTasks, jsoncTasks.Tasks)
+
+	if diverged {
+		return []ValidationIssue{
+			{
+				Level: LevelInfo,
+				Path:  tasksJsoncPath,
+				Line:  1,
+				Message: "tasks.md and tasks.jsonc have different content. " +
+					"Note: tasks.jsonc is the runtime source of truth used by spectr commands. " +
+					"Consider running 'spectr accept' again to regenerate tasks.jsonc from tasks.md.",
+			},
+		}
+	}
+
+	return nil
+}
+
+// parseTasksMdForValidation parses tasks.md file and returns a simplified task list
+// This is similar to parseTasksMd in cmd/accept.go but focused on validation
+func parseTasksMdForValidation(
+	path string,
+) ([]parsers.Task, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = file.Close() }()
+
+	var tasks []parsers.Task
+	var currentSection string
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Check for section header
+		if name, _, ok := markdown.MatchAnySection(line); ok {
+			currentSection = name
+
+			continue
+		}
+
+		// Check for task line
+		match, ok := markdown.MatchFlexibleTask(line)
+		if !ok {
+			continue
+		}
+
+		// Determine task status
+		status := parsers.TaskStatusPending
+		if match.Status == 'x' || match.Status == 'X' {
+			status = parsers.TaskStatusCompleted
+		}
+
+		// Create task ID from Number field
+		taskID := match.Number
+		if taskID == "" {
+			// If no explicit ID, we can't reliably compare, skip
+			continue
+		}
+
+		tasks = append(tasks, parsers.Task{
+			ID:          taskID,
+			Section:     currentSection,
+			Description: match.Content,
+			Status:      status,
+		})
+	}
+
+	return tasks, scanner.Err()
+}
+
+// checkTasksDivergence compares two task lists and returns true if they differ
+// We compare task IDs and statuses, ignoring description differences since
+// tasks.jsonc descriptions may be truncated
+func checkTasksDivergence(
+	mdTasks []parsers.Task,
+	jsoncTasks []parsers.Task,
+) bool {
+	// If different number of tasks, they diverge
+	if len(mdTasks) != len(jsoncTasks) {
+		return true
+	}
+
+	// Create maps for easier comparison
+	mdMap := make(map[string]parsers.TaskStatusValue)
+	for _, task := range mdTasks {
+		mdMap[task.ID] = task.Status
+	}
+
+	jsoncMap := make(map[string]parsers.TaskStatusValue)
+	for _, task := range jsoncTasks {
+		jsoncMap[task.ID] = task.Status
+	}
+
+	// Check if all task IDs match and have same status
+	for id, mdStatus := range mdMap {
+		jsoncStatus, exists := jsoncMap[id]
+		if !exists {
+			return true // Task ID missing in jsonc
+		}
+		if mdStatus != jsoncStatus {
+			return true // Status differs
+		}
+	}
+
+	// Check if jsonc has any extra task IDs
+	for id := range jsoncMap {
+		if _, exists := mdMap[id]; !exists {
+			return true // Task ID missing in md
+		}
+	}
+
+	return false
 }

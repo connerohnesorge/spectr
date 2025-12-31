@@ -34,7 +34,10 @@ Note: You are not implementing yet, you are fully planning and creating the chan
    related capabilities when relevant.
 6. Draft `tasks.md` as an ordered list of small, verifiable work items that
    deliver user-visible progress, include validation (tests, tooling), and
-   highlight dependencies or parallelizable work.
+   highlight dependencies or parallelizable work. Note: After running `spectr
+   accept`, both `tasks.md` (human-readable) and `tasks.jsonc`
+   (machine-readable) will coexist—the former preserves formatting and context,
+   while the latter becomes the runtime source of truth.
 7. Validate with `spectr validate <id>` and resolve every issue before
    sharing the proposal.
 

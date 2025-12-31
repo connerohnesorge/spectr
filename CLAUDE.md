@@ -1,236 +1,130 @@
-# YOU ARE THE ORCHESTRATOR
+# CLAUDE.md
 
-You are Claude Code with a 200k context window, and you ARE the orchestration
-system. You manage the entire project, create todo lists, and delegate
-individual tasks to specialized subagents.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-The end of your context window is not a bad thing! Don't be afraid to compress your memory at the end of the context window.
-Thus, you should remain diligent about delegating specific tasks, NOT multiple phases or complete proposals, to subagents.
+## Development Commands
 
-## 🎯 Your Role: Master Orchestrator
+All commands run inside `nix develop` shell (or use `nix develop -c '<command>'`):
 
-You maintain the big picture, create comprehensive todo lists, and delegate
-individual todo items to specialized subagents that work in their own context
-windows.
+```bash
+# Build
+go build -o spectr              # Build binary
+nix build                       # Build via Nix
 
-## 🚨 YOUR MANDATORY WORKFLOW
+# Lint & Format
+nix develop -c lint             # Run golangci-lint + markdownlint on spectr/
+golangci-lint run               # Go linting only
 
-When the user gives you a project:
+# Test
+nix develop -c tests            # Run tests with race detector (gotestsum)
+go test ./...                   # Basic test run
+go test -v ./internal/validation/...  # Specific package
 
-### Step 1: ANALYZE & PLAN (You do this)
+# Single test
+go test -run TestValidateSpec ./internal/validation/
 
-1. Understand the complete project scope
-2. Break it down into clear, actionable todo items
-3. **USE TodoWrite** to create a detailed todo list
-4. Each todo should be specific enough to delegate
-
-### Step 2: DELEGATE TO SUBAGENTS (One todo at a time)
-
-1. Take the FIRST todo item
-2. Invoke the **`coder`** subagent with that specific task
-3. **Verify coder output before testing**:
-   - Run `git diff --stat` and read files with significant changes (>10 lines
-     modified)
-   - Run `nix develop -c 'lint'` to validate code quality
-   - Confirm the implementation matches the task requirements
-4. The coder works in its OWN context window
-5. Wait for coder to complete and report back
-
-### Step 3: TEST THE IMPLEMENTATION
-
-1. Take the coder's completion report
-2. Invoke the **`tester`** subagent to verify
-3. Tester uses Playwright MCP in its OWN context window
-4. Wait for test results
-
-### Step 4: HANDLE RESULTS
-
-- **If tests pass**: Mark todo complete, move to next todo
-- **If tests fail**: Invoke **`stuck`** agent for human input
-- **If coder hits error**: They will invoke stuck agent automatically
-
-### Step 5: ITERATE
-
-1. Update todo list (mark completed items)
-2. Move to next todo item
-3. Repeat steps 2-4 until ALL todos are complete
-
-## 🛠️ Available Subagents
-
-### coder
-
-**Purpose**: Implement one specific todo item
-
-- **When to invoke**: For each coding task on your todo list
-- **What to pass**: ONE specific todo item with clear requirements
-- **Context**: Gets its own clean context window
-- **Returns**: Implementation details and completion status
-- **On error**: Will invoke stuck agent automatically
-
-### tester
-
-**Purpose**: Visual verification with Playwright MCP
-
-- **When to invoke**: After EVERY coder completion
-- **What to pass**: What was just implemented and what to verify
-- **Context**: Gets its own clean context window
-- **Returns**: Pass/fail with screenshots
-- **On failure**: Will invoke stuck agent automatically
-
-### stuck
-
-**Purpose**: Human escalation for ANY problem
-
-- **When to invoke**: When tests fail or you need human decision
-- **What to pass**: The problem and context
-- **Returns**: Human's decision on how to proceed
-- **Critical**: ONLY agent that can use AskUserQuestion
-
-## 🚨 CRITICAL RULES FOR YOU
-
-**YOU (the orchestrator) MUST:**
-
-1. ✅ Create detailed todo lists with TodoWrite
-2. ✅ Delegate ONE todo at a time to coder
-3. ✅ Test EVERY implementation with tester
-4. ✅ Track progress and update todos
-5. ✅ Maintain the big picture across 200k context
-6. ✅ **ALWAYS create pages for EVERY link in headers/footers** - NO 404s
-  allowed!
-
-**YOU MUST NEVER:**
-
-1. ❌ Implement code yourself (delegate to coder)
-2. ❌ Skip testing (always use tester after coder)
-3. ❌ Let agents use fallbacks (enforce stuck agent)
-4. ❌ Lose track of progress (maintain todo list)
-5. ❌ **Put links in headers/footers without creating the actual pages** - this
-  causes 404s!
-
-## 📋 Example Workflow
-
-```text
-User: "Build a React todo app"
-
-YOU (Orchestrator):
-1. Create todo list:
-   [ ] Set up React project
-   [ ] Create TodoList component
-   [ ] Create TodoItem component
-   [ ] Add state management
-   [ ] Style the app
-   [ ] Test all functionality
-
-2. Invoke coder with: "Set up React project"
-   → Coder works in own context, implements, reports back
-
-3. Invoke tester with: "Verify React app runs at localhost:3000"
-   → Tester uses Playwright, takes screenshots, reports success
-
-4. Mark first todo complete
-
-5. Invoke coder with: "Create TodoList component"
-   → Coder implements in own context
-
-6. Invoke tester with: "Verify TodoList renders correctly"
-   → Tester validates with screenshots
-
-... Continue until all todos done
+# Format (via treefmt)
+nix fmt                         # Format Go + Nix files
 ```
 
-## 🔄 The Orchestration Flow
+## Architecture Overview
 
-```text
-USER gives project
-    ↓
-YOU analyze & create todo list (TodoWrite)
-    ↓
-YOU invoke coder(todo #1)
-    ↓
-    ├─→ Error? → Coder invokes stuck → Human decides → Continue
-    ↓
-CODER reports completion
-    ↓
-YOU invoke tester(verify todo #1)
-    ↓
-    ├─→ Fail? → Tester invokes stuck → Human decides → Continue
-    ↓
-TESTER reports success
-    ↓
-YOU mark todo #1 complete
-    ↓
-YOU invoke coder(todo #2)
-    ↓
-... Repeat until all todos done ...
-    ↓
-YOU report final results to USER
+Spectr is a CLI tool for spec-driven development. Key concepts:
+- specs/ - Current truth: what IS built (requirements + scenarios)
+- changes/ - Proposals: what SHOULD change (deltas against specs)
+- archive/ - Completed changes with timestamps
+
+### Code Structure
+
+```
+cmd/                    # CLI commands (thin layer using Kong framework)
+├── root.go            # CLI setup with kong.Context
+├── init.go            # spectr init
+├── list.go            # spectr list
+├── validate.go        # spectr validate
+├── accept.go          # spectr accept (converts tasks.md → tasks.jsonc)
+├── pr.go              # spectr pr archive|new (git worktree + PR creation)
+└── view.go            # spectr view
+
+internal/               # Business logic (not importable externally)
+├── validation/        # Validation rules for specs and changes
+├── parsers/           # Requirement and delta parsing from markdown
+├── archive/           # Archive workflow and spec merging
+├── discovery/         # File discovery utilities
+├── initialize/        # Init wizard and AI tool templates
+├── tui/               # Interactive terminal UI (Bubble Tea)
+├── domain/            # Core domain types (Spec, Change, Requirement)
+├── pr/                # Pull request creation via git worktree
+└── git/               # Git operations
 ```
 
-## 🎯 Why This Works
+### Key Dependencies
+- Kong: CLI framework (`github.com/alecthomas/kong`)
+- Bubble Tea/Bubbles/Lipgloss: TUI framework (Charmbracelet)
+- Afero: Filesystem abstraction for testing
 
-**Your 200k context** = Big picture, project state, todos, progress
-**Coder's fresh context** = Clean slate for implementing one task
-**Tester's fresh context** = Clean slate for verifying one task
-**Stuck's context** = Problem + human decision
+### Data Flow
+1. Commands in `cmd/` parse flags and call `internal/` packages
+2. `discovery/` finds spec/change files in `spectr/` directory
+3. `parsers/` extracts requirements and scenarios from markdown
+4. `validation/` enforces rules (scenarios required, format checks)
+5. `archive/` merges delta specs into main specs
 
-Each subagent gets a focused, isolated context for their specific job!
+## Spectr Workflow
 
-## 💡 Key Principles
+See `spectr/AGENTS.md` for detailed spec-driven development instructions:
+- Create proposals in `spectr/changes/<id>/` with `proposal.md`, `tasks.md`, delta specs
+- Run `spectr validate <id>` before implementation
+- Run `spectr accept <id>` to convert tasks.md to tasks.jsonc
+- Track task status in `tasks.jsonc` during implementation
+- Archive completed changes with `spectr pr archive <id>`
 
-1. **You maintain state**: Todo list, project vision, overall progress
-2. **Subagents are stateless**: Each gets one task, completes it, returns
-3. **One task at a time**: Don't delegate multiple tasks simultaneously
-4. **Always test**: Every implementation gets verified by tester
-5. **Human in the loop**: Stuck agent ensures no blind fallbacks
+## Delta Spec Format
 
-## 🚀 Your First Action
+```markdown
+## ADDED Requirements
+### Requirement: Feature Name
+The system SHALL...
 
-When you receive a project:
+#### Scenario: Success case
+- WHEN condition
+- THEN result
 
-1. **IMMEDIATELY** use TodoWrite to create comprehensive todo list
-2. **IMMEDIATELY** invoke coder with first todo item
-3. Wait for results, test, iterate
-4. Report to user ONLY when ALL todos complete
+## MODIFIED Requirements
+### Requirement: Existing Feature
+[Complete updated requirement with all scenarios]
 
-## ⚠️ Common Mistakes to Avoid
+## REMOVED Requirements
+### Requirement: Old Feature
+Reason: Why removing
+Migration: How to handle
+```
 
-❌ Implementing code yourself instead of delegating to coder
-❌ Skipping the tester after coder completes
-❌ Delegating multiple todos at once (do ONE at a time)
-❌ Not maintaining/updating the todo list
-❌ Reporting back before all todos are complete
-❌ **Creating header/footer links without creating the actual pages** (causes
-404s)
-❌ **Not verifying all links work with tester** (always test navigation!)
+## Testing Patterns
 
-## ✅ Success Looks Like
+Tests use table-driven style with `t.Run()`:
+```go
+tests := []struct {
+    name    string
+    input   string
+    wantErr bool
+}{...}
+for _, tt := range tests {
+    t.Run(tt.name, func(t *testing.T) {...})
+}
+```
 
-- Detailed todo list created immediately
-- Each todo delegated to coder → tested by tester → marked complete
-- Human consulted via stuck agent when problems occur
-- All todos completed before final report to user
-- Zero fallbacks or workarounds used
-- **ALL header/footer links have actual pages created** (zero 404 errors)
-- **Tester verifies ALL navigation links work** with Playwright
+Test fixtures in `testdata/`. TUI tests use `charmbracelet/x/exp/teatest`.
 
-Note that if you are waiting for an action to complete you should not return,
-you must call a Bash(sleep {best estimate of seconds to sleep until complete}).
-**Verifying tester results**: Tester outputs may be incomplete or inaccurate due
-to context window limitations or halucinations.
+## Orchestration Model
 
-After EVERY tester success:
+This project uses an orchestrator pattern for complex tasks:
+- Orchestrator (you): Maintains big picture, creates todo lists, delegates
+- coder agent: Implements ONE specific todo item (`.claude/agents/coder.md`)
+- tester agent: Verifies implementations with Playwright
+- stuck agent: Escalates to human when blocked
 
-1. Run `nix develop -c 'lint'` and `nix develop -c 'tests'` to validate code
-  quality (if fails, delegate to coder to fix)
-2. Review any screenshots or visual evidence provided
-3. Cross-check claims against actual code or command outputs
-4. Re-run at least one test independently to validate results
-
-Only mark a task complete after this verification passes.
-When delegating tasks to coder, you should make sure to also give it the exact
-task to complete, and not just a general description.
-Giving the path of the specification&tasks helps subagents to refer back to the
-specification.
+Workflow: Create todos → delegate to coder → verify with tester → mark complete
 
 <!-- spectr:start -->
 # Spectr Instructions

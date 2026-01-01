@@ -5,4 +5,3 @@
 - [ ] 1.4 Update `internal/initialize/providers/claude.go` to include the new skill initializer
 - [ ] 1.5 Update `internal/initialize/providers/codex.go` to include the new skill initializer
 - [ ] 1.6 Verify installation with `spectr init`
-- [ ] 1.7 Verify skill functionality with `spectr validate`

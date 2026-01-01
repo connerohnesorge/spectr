@@ -6,7 +6,7 @@ Enforces spec and change formatting rules. Critical quality gate.
 Validates specs (`spectr/specs/`) and changes (`spectr/changes/`). Ensures scenarios exist, headers follow format, MODIFIED requirements include complete content.
 
 ## STRUCTURE
-```go
+```text
 
 internal/validation/
 ├── validator.go           # Main validation orchestration

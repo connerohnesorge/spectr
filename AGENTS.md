@@ -28,6 +28,7 @@ spectr/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | CLI entry points | cmd/*.go | Kong framework, thin layer |
@@ -241,6 +242,7 @@ spectr/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | Create proposals | spectr/changes/ | Scaffold with proposal.md, tasks.md, delta specs |

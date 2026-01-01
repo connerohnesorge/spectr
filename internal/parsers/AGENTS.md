@@ -6,7 +6,7 @@ Parses requirements and delta operations from markdown AST. Bridge between markd
 Converts markdown/ AST nodes into domain types (Requirement, Scenario, DeltaOp). Supports incremental parsing updates.
 
 ## STRUCTURE
-```go
+```text
 internal/parsers/
 ├── parsers.go           # Main parsing entry points
 ├── delta_parser.go      # Delta operation parsing

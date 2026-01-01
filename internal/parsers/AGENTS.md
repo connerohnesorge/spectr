@@ -6,7 +6,7 @@ Parses requirements and delta operations from markdown AST. Bridge between markd
 Converts markdown/ AST nodes into domain types (Requirement, Scenario, DeltaOp). Supports incremental parsing updates.
 
 ## STRUCTURE
-```
+```go
 internal/parsers/
 ├── parsers.go           # Main parsing entry points
 ├── delta_parser.go      # Delta operation parsing
@@ -15,6 +15,7 @@ internal/parsers/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | Parse requirements | ParseRequirements() | Extract from markdown AST |
@@ -47,7 +48,7 @@ internal/parsers/
 - **Scenario**: Name, WHEN/THEN/AND steps
 
 ## FLOW
-1. Parse markdown source with `markdown.Parse()`
+1. Parse Markdown source with `markdown.Parse()`
 2. Find section headers with markdown.Find()
 3. For each requirement section:
    - Extract requirement name from header

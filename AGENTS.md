@@ -7,7 +7,8 @@
 Spectr enforces a three-stage workflow: propose → validate → archive. Specs (`spectr/specs/`) represent current truth. Changes (`spectr/changes/`) are proposed deltas. Archive merges deltas and preserves history.
 
 ## STRUCTURE
-```
+```text
+
 spectr/
 ├── cmd/                    # CLI commands (Kong framework)
 ├── internal/                # Business logic (not importable externally)

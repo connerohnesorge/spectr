@@ -6,7 +6,8 @@ Custom two-phase lexer+parser for CommonMark subset + Spectr extensions. NOT gol
 Two-phase architecture: tokenizes input → builds immutable AST. Separation enables testing, error recovery, and incremental reparsing (tree-sitter-style).
 
 ## STRUCTURE
-```
+```go
+
 internal/markdown/
 ├── lexer.go              # Tokenizer (delimiters, text, whitespace)
 ├── parser.go             # AST builder from tokens
@@ -24,6 +25,7 @@ internal/markdown/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | Parse markdown | Parse() in api.go | Main entry point |

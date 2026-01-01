@@ -6,7 +6,8 @@ Enforces spec and change formatting rules. Critical quality gate.
 Validates specs (`spectr/specs/`) and changes (`spectr/changes/`). Ensures scenarios exist, headers follow format, MODIFIED requirements include complete content.
 
 ## STRUCTURE
-```
+```go
+
 internal/validation/
 ├── validator.go           # Main validation orchestration
 ├── spec_validators.go    # Spec-specific rules
@@ -18,6 +19,7 @@ internal/validation/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | Validate specs | ValidateSpec() | Spec-level rules |
@@ -31,6 +33,7 @@ internal/validation/
 - **Table tests**: All validators use t.Run() subtests
 
 ## RULES (ENFORCED)
+
 | Rule | Severity | Description |
 |------|----------|-------------|
 | RequirementScenarios | Error | Every requirement MUST have ≥1 scenario |

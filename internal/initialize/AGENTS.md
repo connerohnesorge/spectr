@@ -6,7 +6,8 @@ Project initialization wizard and AI tool templates. Interactive setup via TUI o
 `spectr init` creates `spectr/` directory with templates and configuration. Supports 32+ AI coding assistant providers. Wizard guides users through tool selection, project conventions.
 
 ## STRUCTURE
-```
+```go
+
 internal/initialize/
 ├── executor.go          # Wizard orchestration and validation
 ├── filesystem.go       # Directory creation and file operations
@@ -16,6 +17,7 @@ internal/initialize/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | Wizard orchestration | executor.go | Main flow control |

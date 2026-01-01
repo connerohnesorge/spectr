@@ -6,7 +6,8 @@ Creates pull requests from changes using git worktree isolation. Multi-platform 
 `spectr pr archive` creates PR for completed change. Creates isolated git worktree, commits archive changes, pushes, creates PR via platform CLI (gh, glab, tea, or manual URL). Cleans up worktree after completion.
 
 ## STRUCTURE
-```
+```go
+
 internal/pr/
 ├── platforms.go         # Platform detection and CLI invocation
 ├── helpers.go           # Git worktree operations
@@ -16,6 +17,7 @@ internal/pr/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | Archive PR flow | cmd/pr.go (embeds ArchiveCmd) | Main orchestration |
@@ -30,6 +32,7 @@ internal/pr/
 - **Structured commits**: Conventional commits with spectr metadata
 
 ## SUPPORTED PLATFORMS
+
 | Platform | CLI | Commands |
 |----------|-----|----------|
 | GitHub | gh | `gh pr create --base <base> --title <title> --body <body>` |

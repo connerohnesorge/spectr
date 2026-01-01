@@ -6,7 +6,8 @@ Bubble Tea components and interactive flows. Charmbracelet-based.
 Internal TUI utilities for interactive CLI commands. Uses Bubble Tea framework, Bubbles widgets, Lipgloss styling. Provides reusable components: prompts, menus, dashboards.
 
 ## STRUCTURE
-```
+```go
+
 internal/tui/
 ├── menu.go              # Interactive menu selection
 ├── styles.go            # Lipgloss styles/constants
@@ -15,6 +16,7 @@ internal/tui/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | Menu selection | menu.go | Bubble Tea model |

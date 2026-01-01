@@ -6,7 +6,8 @@ Thin layer using Kong framework. Entry points to internal/ packages.
 CLI commands in cmd/ parse flags, call internal/ business logic, exit with status codes. No business logic here.
 
 ## STRUCTURE
-```
+```go
+
 cmd/
 ├── root.go              # Kong CLI struct with all commands
 ├── init.go              # spectr init
@@ -20,6 +21,7 @@ cmd/
 ```
 
 ## WHERE TO LOOK
+
 | Command | Handler | Internal Package |
 |---------|----------|-----------------|
 | spectr init | InitCmd.Run() | internal/initialize |

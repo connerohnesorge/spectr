@@ -6,7 +6,7 @@ Merges change deltas into specs and moves changes to archive. Atomic workflow.
 `spectr archive` validates change, merges delta specs into `spectr/specs/`, moves `spectr/changes/<id>/` → `spectr/changes/archive/YYYY-MM-DD-<id>/`. Ensures history preservation and spec consistency.
 
 ## STRUCTURE
-```
+```go
 internal/archive/
 ├── archiver.go          # Main archive orchestration
 ├── merger.go            # Spec merging logic
@@ -18,6 +18,7 @@ internal/archive/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
 | Archive workflow | archiver.go | Validation → merge → move |
@@ -32,6 +33,7 @@ internal/archive/
 - **Validation first**: Validate change before merging
 
 ## MERGE ALGORITHM (per requirement)
+
 | Operation | Action | Detail |
 |-----------|--------|--------|
 | ADDED | Append to spec | New requirement added to end |

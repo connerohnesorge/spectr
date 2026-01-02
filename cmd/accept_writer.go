@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
@@ -51,38 +53,128 @@ const tasksJSONHeader = `// Spectr Tasks File (JSONC)
 
 `
 
+// childTasksJSONHeader is an abbreviated header for child task files
+// (specs/<capability>/tasks.jsonc) in hierarchical structures.
+const childTasksJSONHeader = `// Spectr Tasks File (JSONC) - Child File
+//
+// This is a child task file for a hierarchical task structure.
+// See parent tasks.jsonc for full documentation.
+//
+
+`
+
 // writeTasksJSONC writes tasks to a tasks.jsonc file with header.
 // Prepends tasksJSONHeader to the JSON data (see parsers/types.go).
 func writeTasksJSONC(
 	path string,
 	tasks []parsers.Task,
 ) error {
-	tasksFile := parsers.TasksFile{
-		Version: 1,
-		Tasks:   tasks,
+	return writeTasksJSONCWithOptions(path, tasks, false, nil, nil)
+}
+
+// writeTasksJSONCHierarchical writes a root tasks.jsonc file with hierarchical
+// support including summary and includes patterns.
+func writeTasksJSONCHierarchical(
+	path string,
+	tasks []parsers.Task,
+	includes []string,
+) error {
+	summary := computeSummary(tasks)
+	return writeTasksJSONCWithOptions(path, tasks, true, summary, includes)
+}
+
+// writeTasksJSONCWithOptions writes tasks with optional hierarchical support.
+func writeTasksJSONCWithOptions(
+	path string,
+	tasks []parsers.Task,
+	useVersion2 bool,
+	summary *parsers.Summary,
+	includes []string,
+) error {
+	var tasksFile parsers.TasksFile
+
+	if useVersion2 {
+		tasksFile = parsers.TasksFile{
+			Version:  2,
+			Tasks:    tasks,
+			Summary:  summary,
+			Includes: includes,
+		}
+	} else {
+		tasksFile = parsers.TasksFile{
+			Version: 1,
+			Tasks:   tasks,
+		}
 	}
 
-	jsonData, err := json.MarshalIndent(
-		tasksFile,
-		"",
-		"  ",
-	)
+	jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
 	if err != nil {
-		return fmt.Errorf(
-			"failed to marshal tasks to JSON: %w",
-			err,
-		)
+		return fmt.Errorf("failed to marshal tasks to JSON: %w", err)
 	}
 
-	// Prepend the JSONC header to the JSON data
-	output := tasksJSONHeader + string(jsonData)
+	// Use appropriate header based on version
+	header := tasksJSONHeader
+	if useVersion2 && len(includes) > 0 {
+		// Prepend includes comment to header for version 2
+		header = tasksJSONHeader[:len(tasksJSONHeader)-6] +
+			fmt.Sprintf("// Hierarchical Structure:\n//   Includes: %v\n//\n", strings.Join(includes, ", ")) +
+			tasksJSONHeader[len(tasksJSONHeader)-6:]
+	}
+
+	output := header + string(jsonData)
 
 	if err := os.WriteFile(path, []byte(output), filePerm); err != nil {
-		return fmt.Errorf(
-			"failed to write tasks.jsonc: %w",
-			err,
-		)
+		return fmt.Errorf("failed to write tasks.jsonc: %w", err)
 	}
 
 	return nil
+}
+
+// writeChildTasksJSONC writes a child task file for hierarchical structures.
+// Child files have abbreviated headers and include the parent reference.
+func writeChildTasksJSONC(
+	changeDir, capability string,
+	parentID string,
+	tasks []parsers.Task,
+) error {
+	childPath := filepath.Join(changeDir, "specs", capability, "tasks.jsonc")
+
+	tasksFile := parsers.TasksFile{
+		Version: 2,
+		Parent:  parentID,
+		Tasks:   tasks,
+	}
+
+	jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal child tasks to JSON: %w", err)
+	}
+
+	output := childTasksJSONHeader + string(jsonData)
+
+	if err := os.WriteFile(childPath, []byte(output), filePerm); err != nil {
+		return fmt.Errorf("failed to write child tasks.jsonc: %w", err)
+	}
+
+	return nil
+}
+
+// computeSummary calculates aggregated task counts from a list of tasks.
+func computeSummary(tasks []parsers.Task) *parsers.Summary {
+	summary := &parsers.Summary{
+		Total: len(tasks),
+	}
+
+	for _, task := range tasks {
+		switch task.Status {
+		case parsers.TaskStatusCompleted:
+			summary.Completed++
+		case parsers.TaskStatusInProgress:
+			summary.InProgress++
+		case parsers.TaskStatusPending:
+			summary.Pending++
+		}
+	}
+
+	return summary
 }

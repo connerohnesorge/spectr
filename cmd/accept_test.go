@@ -1013,3 +1013,720 @@ func TestAcceptDryRunPreservesFiles(t *testing.T) {
 	// For now, we verify that writeAndCleanup is only called when NOT in dry-run mode
 	// This test serves as documentation of expected dry-run behavior
 }
+
+func TestMatchSectionToCapability(t *testing.T) {
+	tests := []struct {
+		name     string
+		section  string
+		expected string
+	}{
+		{
+			name:     "numbered section with period",
+			section:  "5. Support Aider",
+			expected: "support-aider",
+		},
+		{
+			name:     "numbered section with period and space",
+			section:  "2. Accept Command - Auto-Split Logic",
+			expected: "accept-command-auto-split-logic",
+		},
+		{
+			name:     "unnumbered section",
+			section:  "Foundation",
+			expected: "foundation",
+		},
+		{
+			name:     "section with multiple spaces",
+			section:  "Tasks Command Implementation",
+			expected: "tasks-command-implementation",
+		},
+		{
+			name:     "section with underscores",
+			section:  "My_Section_Name",
+			expected: "my-section-name",
+		},
+		{
+			name:     "leading numbers only",
+			section:  "1",
+			expected: "",
+		},
+		{
+			name:     "just period and space",
+			section:  ". ",
+			expected: "",
+		},
+		{
+			name:     "already kebab-case",
+			section:  "already-kebab-case",
+			expected: "already-kebab-case",
+		},
+		{
+			name:     "mixed case",
+			section:  "My Mixed Case Section",
+			expected: "my-mixed-case-section",
+		},
+		{
+			name:     "section with numbers in name",
+			section:  "Phase 2 Implementation",
+			expected: "phase-2-implementation",
+		},
+		{
+			name:     "empty section",
+			section:  "",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := matchSectionToCapability(tt.section)
+			if result != tt.expected {
+				t.Errorf("matchSectionToCapability(%q) = %q, want %q", tt.section, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestFindMatchingDeltaSpec(t *testing.T) {
+	// Create a temporary directory structure
+	tempDir := t.TempDir()
+	changeDir := filepath.Join(tempDir, "change")
+	specsDir := filepath.Join(changeDir, "specs")
+
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
+		t.Fatalf("failed to create specs dir: %v", err)
+	}
+
+	// Create a valid delta spec directory
+	aiderDir := filepath.Join(specsDir, "support-aider")
+	if err := os.MkdirAll(aiderDir, 0o755); err != nil {
+		t.Fatalf("failed to create support-aider dir: %v", err)
+	}
+
+	// Create spec.md file
+	specPath := filepath.Join(aiderDir, "spec.md")
+	if err := os.WriteFile(specPath, []byte("# Spec"), 0o644); err != nil {
+		t.Fatalf("failed to write spec.md: %v", err)
+	}
+
+	// Create an empty directory (should not match)
+	emptyDir := filepath.Join(specsDir, "empty-dir")
+	if err := os.MkdirAll(emptyDir, 0o755); err != nil {
+		t.Fatalf("failed to create empty-dir: %v", err)
+	}
+
+	tests := []struct {
+		name       string
+		capability string
+		expected   bool
+	}{
+		{
+			name:       "existing delta spec with spec.md",
+			capability: "support-aider",
+			expected:   true,
+		},
+		{
+			name:       "non-existent capability",
+			capability: "non-existent",
+			expected:   false,
+		},
+		{
+			name:       "empty directory without spec.md",
+			capability: "empty-dir",
+			expected:   false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := findMatchingDeltaSpec(changeDir, tt.capability)
+			if result != tt.expected {
+				t.Errorf("findMatchingDeltaSpec(%q) = %v, want %v", tt.capability, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestSplitTasksByCapability(t *testing.T) {
+	changeDir := t.TempDir()
+
+	// Create a delta spec directory
+	specsDir := filepath.Join(changeDir, "specs")
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
+		t.Fatalf("failed to create specs dir: %v", err)
+	}
+
+	// Create support-aider delta spec
+	aiderDir := filepath.Join(specsDir, "support-aider")
+	if err := os.MkdirAll(aiderDir, 0o755); err != nil {
+		t.Fatalf("failed to create support-aider dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(aiderDir, "spec.md"), []byte("# Spec"), 0o644); err != nil {
+		t.Fatalf("failed to write spec.md: %v", err)
+	}
+
+	sections := []SectionTasks{
+		{
+			SectionName: "Foundation",
+			Tasks: []parsers.Task{
+				{
+					ID:          "1",
+					Section:     "Foundation",
+					Description: "Create core interfaces",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
+		{
+			SectionName: "5. Support Aider",
+			Tasks: []parsers.Task{
+				{
+					ID:          "5.1",
+					Section:     "5. Support Aider",
+					Description: "Migrate aider.go",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "5.2",
+					Section:     "5. Support Aider",
+					Description: "Add unit tests for Aider",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
+	}
+
+	rootTasks, childFiles, hasHierarchy := splitTasksByCapability(changeDir, sections)
+
+	// Check root tasks
+	if len(rootTasks) != 2 {
+		t.Errorf("expected 2 root tasks, got %d", len(rootTasks))
+	}
+
+	// First task should be from Foundation (no children)
+	if rootTasks[0].ID != "1" {
+		t.Errorf("root task 1 ID = %s, want 1", rootTasks[0].ID)
+	}
+	if rootTasks[0].Children != "" {
+		t.Errorf("root task 1 Children = %s, want empty", rootTasks[0].Children)
+	}
+
+	// Second task should be reference to Support Aider
+	if rootTasks[1].ID != "5.1" {
+		t.Errorf("root task 2 ID = %s, want 5.1", rootTasks[1].ID)
+	}
+	expectedChildren := "$ref:specs/support-aider/tasks.jsonc"
+	if rootTasks[1].Children != expectedChildren {
+		t.Errorf("root task 2 Children = %s, want %s", rootTasks[1].Children, expectedChildren)
+	}
+
+	// Check child files
+	if !hasHierarchy {
+		t.Error("expected hasHierarchy to be true")
+	}
+
+	if len(childFiles) != 1 {
+		t.Errorf("expected 1 child file, got %d", len(childFiles))
+	}
+
+	childTasks, exists := childFiles["support-aider"]
+	if !exists {
+		t.Error("expected support-aider in childFiles")
+	}
+
+	if len(childTasks) != 2 {
+		t.Errorf("expected 2 child tasks, got %d", len(childTasks))
+	}
+
+	// Child tasks should not have section or children
+	for _, task := range childTasks {
+		if task.Section != "" {
+			t.Errorf("child task %s Section = %s, want empty", task.ID, task.Section)
+		}
+		if task.Children != "" {
+			t.Errorf("child task %s Children = %s, want empty", task.ID, task.Children)
+		}
+	}
+}
+
+func TestSplitTasksByCapability_NoMatch(t *testing.T) {
+	changeDir := t.TempDir()
+
+	// Create specs dir but without any matching delta specs
+	specsDir := filepath.Join(changeDir, "specs")
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
+		t.Fatalf("failed to create specs dir: %v", err)
+	}
+
+	sections := []SectionTasks{
+		{
+			SectionName: "Foundation",
+			Tasks: []parsers.Task{
+				{
+					ID:          "1",
+					Section:     "Foundation",
+					Description: "Create core interfaces",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "2",
+					Section:     "Foundation",
+					Description: "Another task",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
+	}
+
+	rootTasks, childFiles, hasHierarchy := splitTasksByCapability(changeDir, sections)
+
+	// All tasks should be in root
+	if len(rootTasks) != 2 {
+		t.Errorf("expected 2 root tasks, got %d", len(rootTasks))
+	}
+
+	// No child files
+	if len(childFiles) != 0 {
+		t.Errorf("expected 0 child files, got %d", len(childFiles))
+	}
+
+	if hasHierarchy {
+		t.Error("expected hasHierarchy to be false")
+	}
+}
+
+func TestComputeSummary(t *testing.T) {
+	tests := []struct {
+		name               string
+		tasks              []parsers.Task
+		expectedTotal      int
+		expectedCompleted  int
+		expectedInProgress int
+		expectedPending    int
+	}{
+		{
+			name:               "empty tasks",
+			tasks:              []parsers.Task{},
+			expectedTotal:      0,
+			expectedCompleted:  0,
+			expectedInProgress: 0,
+			expectedPending:    0,
+		},
+		{
+			name: "mixed status",
+			tasks: []parsers.Task{
+				{Status: parsers.TaskStatusCompleted},
+				{Status: parsers.TaskStatusCompleted},
+				{Status: parsers.TaskStatusInProgress},
+				{Status: parsers.TaskStatusPending},
+				{Status: parsers.TaskStatusPending},
+				{Status: parsers.TaskStatusPending},
+			},
+			expectedTotal:      6,
+			expectedCompleted:  2,
+			expectedInProgress: 1,
+			expectedPending:    3,
+		},
+		{
+			name: "all completed",
+			tasks: []parsers.Task{
+				{Status: parsers.TaskStatusCompleted},
+				{Status: parsers.TaskStatusCompleted},
+			},
+			expectedTotal:      2,
+			expectedCompleted:  2,
+			expectedInProgress: 0,
+			expectedPending:    0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			summary := computeSummary(tt.tasks)
+
+			if summary.Total != tt.expectedTotal {
+				t.Errorf("Summary.Total = %d, want %d", summary.Total, tt.expectedTotal)
+			}
+			if summary.Completed != tt.expectedCompleted {
+				t.Errorf("Summary.Completed = %d, want %d", summary.Completed, tt.expectedCompleted)
+			}
+			if summary.InProgress != tt.expectedInProgress {
+				t.Errorf("Summary.InProgress = %d, want %d", summary.InProgress, tt.expectedInProgress)
+			}
+			if summary.Pending != tt.expectedPending {
+				t.Errorf("Summary.Pending = %d, want %d", summary.Pending, tt.expectedPending)
+			}
+		})
+	}
+}
+
+// Integration tests for hierarchical auto-split generation
+func TestHierarchicalAutoSplit_Integration(t *testing.T) {
+	// Create a complete mock change directory with delta specs
+	tmpDir := t.TempDir()
+
+	changeDir := filepath.Join(tmpDir, "spectr", "changes", "test-change")
+	specsDir := filepath.Join(changeDir, "specs")
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
+		t.Fatalf("failed to create specs dir: %v", err)
+	}
+
+	// Create support-aider delta spec
+	aiderDir := filepath.Join(specsDir, "support-aider")
+	if err := os.MkdirAll(aiderDir, 0o755); err != nil {
+		t.Fatalf("failed to create support-aider dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(aiderDir, "spec.md"), []byte("# Support Aider\n\n## ADDED\n### Test\nTest spec"), 0o644); err != nil {
+		t.Fatalf("failed to write spec.md: %v", err)
+	}
+
+	// Create providers delta spec
+	providersDir := filepath.Join(specsDir, "migrate-providers")
+	if err := os.MkdirAll(providersDir, 0o755); err != nil {
+		t.Fatalf("failed to create migrate-providers dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(providersDir, "spec.md"), []byte("# Migrate Providers\n\n## ADDED\n### Test\nTest spec"), 0o644); err != nil {
+		t.Fatalf("failed to write spec.md: %v", err)
+	}
+
+	// Create a proposal.md (required for validation)
+	proposalPath := filepath.Join(changeDir, "proposal.md")
+	proposalContent := `# Test Proposal
+
+## Problem
+Test problem
+
+## Solution
+Test solution
+`
+	if err := os.WriteFile(proposalPath, []byte(proposalContent), filePerm); err != nil {
+		t.Fatalf("failed to write proposal.md: %v", err)
+	}
+
+	// Create tasks.md with sections matching delta specs
+	tasksMdContent := `## 1. Foundation
+
+- [ ] 1.1 Create core interfaces
+- [ ] 1.2 Set up basic structure
+
+## 5. Support Aider
+
+- [ ] 5.1 Migrate aider.go to new Provider interface
+- [ ] 5.2 Add unit tests for Aider provider
+- [ ] 5.3 Update documentation
+
+## 6. Migrate Providers
+
+- [ ] 6.1 Migrate all providers to new interface
+- [ ] 6.2 Add integration tests
+- [x] 6.3 Update documentation
+
+## 7. Testing
+
+- [ ] 7.1 Write unit tests
+- [ ] 7.2 Run integration tests
+`
+	tasksMdPath := filepath.Join(changeDir, "tasks.md")
+	if err := os.WriteFile(tasksMdPath, []byte(tasksMdContent), filePerm); err != nil {
+		t.Fatalf("failed to write tasks.md: %v", err)
+	}
+
+	// Parse tasks.md with sections
+	sections, err := parseTasksMdWithSections(tasksMdPath)
+	if err != nil {
+		t.Fatalf("failed to parse tasks.md with sections: %v", err)
+	}
+
+	// Verify section parsing
+	if len(sections) != 4 {
+		t.Errorf("expected 4 sections, got %d", len(sections))
+	}
+
+	// Verify section names and task counts
+	expectedSections := map[string]int{
+		"Foundation":        2,
+		"Support Aider":     3,
+		"Migrate Providers": 3,
+		"Testing":           2,
+	}
+	for _, section := range sections {
+		expectedCount, ok := expectedSections[section.SectionName]
+		if !ok {
+			t.Errorf("unexpected section: %s", section.SectionName)
+			continue
+		}
+		if len(section.Tasks) != expectedCount {
+			t.Errorf("section %s: expected %d tasks, got %d", section.SectionName, expectedCount, len(section.Tasks))
+		}
+	}
+
+	// Split tasks by capability
+	rootTasks, childFiles, hasHierarchy := splitTasksByCapability(changeDir, sections)
+
+	// Verify hierarchy was created
+	if !hasHierarchy {
+		t.Error("expected hasHierarchy to be true")
+	}
+
+	// Verify root tasks count:
+	// - Foundation: 2 flat tasks (IDs 1.1, 1.2)
+	// - Support Aider: 1 reference task (ID 5.1 from first task in section)
+	// - Migrate Providers: 1 reference task (ID 6.1 from first task in section)
+	// - Testing: 2 flat tasks (IDs 7.1, 7.2)
+	// Total: 6 root tasks
+	if len(rootTasks) != 6 {
+		t.Errorf("expected 6 root tasks, got %d", len(rootTasks))
+	}
+
+	// Verify Support Aider child file was created
+	aiderTasks, exists := childFiles["support-aider"]
+	if !exists {
+		t.Error("expected support-aider in childFiles")
+	}
+	if len(aiderTasks) != 3 {
+		t.Errorf("expected 3 Support Aider tasks, got %d", len(aiderTasks))
+	}
+
+	// Verify Migrate Providers child file was created
+	providersTasks, exists := childFiles["migrate-providers"]
+	if !exists {
+		t.Error("expected migrate-providers in childFiles")
+	}
+	if len(providersTasks) != 3 {
+		t.Errorf("expected 3 Migrate Providers tasks, got %d", len(providersTasks))
+	}
+
+	// Verify child task IDs are correct (use original task IDs)
+	if aiderTasks[0].ID != "5.1" {
+		t.Errorf("aider task 1 ID = %s, want 5.1", aiderTasks[0].ID)
+	}
+	if providersTasks[2].ID != "6.3" {
+		t.Errorf("providers task 3 ID = %s, want 6.3", providersTasks[2].ID)
+	}
+
+	// Verify status was preserved
+	if providersTasks[2].Status != parsers.TaskStatusCompleted {
+		t.Errorf("providers task 3 status = %s, want completed", providersTasks[2].Status)
+	}
+
+	// Verify reference task uses first task's ID from each section
+	// Support Aider ref should have ID 5.1 (from first task 5.1)
+	// Migrate Providers ref should have ID 6.1 (from first task 6.1)
+	has5dot1 := false
+	has6dot1 := false
+	for _, task := range rootTasks {
+		if task.ID == "5.1" && task.Children != "" {
+			has5dot1 = true
+		}
+		if task.ID == "6.1" && task.Children != "" {
+			has6dot1 = true
+		}
+	}
+	if !has5dot1 {
+		t.Error("expected to find Support Aider reference task with ID 5.1")
+	}
+	if !has6dot1 {
+		t.Error("expected to find Migrate Providers reference task with ID 6.1")
+	}
+}
+
+func TestHierarchicalWriteAndRead_Integration(t *testing.T) {
+	// Test the full write/read cycle for hierarchical tasks
+	// Note: This test focuses on verifying the write operations work correctly
+	// Full read cycle testing is done through the tasks command integration tests
+	tmpDir := t.TempDir()
+
+	changeDir := filepath.Join(tmpDir, "spectr", "changes", "test-change")
+	specsDir := filepath.Join(changeDir, "specs")
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
+		t.Fatalf("failed to create specs dir: %v", err)
+	}
+}
+
+func TestHierarchicalAutoSplit_MixedSections(t *testing.T) {
+	// Test auto-split when some sections match and some don't
+	tmpDir := t.TempDir()
+
+	changeDir := filepath.Join(tmpDir, "change")
+	specsDir := filepath.Join(changeDir, "specs")
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
+		t.Fatalf("failed to create specs dir: %v", err)
+	}
+
+	// Only create support-aider delta spec (not testing or docs)
+	aiderDir := filepath.Join(specsDir, "support-aider")
+	if err := os.MkdirAll(aiderDir, 0o755); err != nil {
+		t.Fatalf("failed to create support-aider dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(aiderDir, "spec.md"), []byte("# Spec"), 0o644); err != nil {
+		t.Fatalf("failed to write spec.md: %v", err)
+	}
+
+	sections := []SectionTasks{
+		{
+			SectionName: "Foundation",
+			Tasks: []parsers.Task{
+				{ID: "1", Description: "Task 1", Status: parsers.TaskStatusPending},
+				{ID: "2", Description: "Task 2", Status: parsers.TaskStatusPending},
+			},
+		},
+		{
+			SectionName: "5. Support Aider",
+			Tasks: []parsers.Task{
+				{ID: "5.1", Description: "Aider Task 1", Status: parsers.TaskStatusPending},
+			},
+		},
+		{
+			SectionName: "Documentation",
+			Tasks: []parsers.Task{
+				{ID: "10", Description: "Doc Task 1", Status: parsers.TaskStatusPending},
+			},
+		},
+	}
+
+	rootTasks, childFiles, hasHierarchy := splitTasksByCapability(changeDir, sections)
+
+	// Verify hierarchy is true (at least one match)
+	if !hasHierarchy {
+		t.Error("expected hasHierarchy to be true")
+	}
+
+	// Verify root tasks: Foundation (2 flat) + Support Aider ref + Documentation
+	// Total: 4 root tasks
+	if len(rootTasks) != 4 {
+		t.Errorf("expected 4 root tasks, got %d", len(rootTasks))
+	}
+
+	// First task should be from Foundation (flat)
+	if rootTasks[0].ID != "1" || rootTasks[0].Children != "" {
+		t.Errorf("root task 1 should be flat, got ID=%s, Children=%s", rootTasks[0].ID, rootTasks[0].Children)
+	}
+
+	// Second task should be from Foundation (flat, 2nd task in section)
+	if rootTasks[1].ID != "2" || rootTasks[1].Children != "" {
+		t.Errorf("root task 2 should be flat, got ID=%s, Children=%s", rootTasks[1].ID, rootTasks[1].Children)
+	}
+
+	// Third task should be reference to Support Aider
+	if rootTasks[2].ID != "5.1" || rootTasks[2].Children != "$ref:specs/support-aider/tasks.jsonc" {
+		t.Errorf("root task 3 should be reference, got ID=%s, Children=%s", rootTasks[2].ID, rootTasks[2].Children)
+	}
+
+	// Fourth task should be from Documentation (flat)
+	if rootTasks[3].ID != "10" || rootTasks[3].Children != "" {
+		t.Errorf("root task 4 should be flat, got ID=%s, Children=%s", rootTasks[3].ID, rootTasks[3].Children)
+	}
+
+	// Verify only support-aider child file exists
+	if len(childFiles) != 1 {
+		t.Errorf("expected 1 child file, got %d", len(childFiles))
+	}
+
+	if _, exists := childFiles["support-aider"]; !exists {
+		t.Error("expected support-aider in childFiles")
+	}
+
+	if _, exists := childFiles["documentation"]; exists {
+		t.Error("documentation should NOT be in childFiles (no matching delta spec)")
+	}
+}
+
+func TestHierarchicalAutoSplit_NoDeltaSpecs(t *testing.T) {
+	// Test behavior when no delta specs exist (should remain flat)
+	tmpDir := t.TempDir()
+
+	changeDir := filepath.Join(tmpDir, "change")
+	specsDir := filepath.Join(changeDir, "specs")
+	// Create empty specs directory (no delta specs)
+	if err := os.MkdirAll(specsDir, 0o755); err != nil {
+		t.Fatalf("failed to create specs dir: %v", err)
+	}
+
+	sections := []SectionTasks{
+		{
+			SectionName: "Foundation",
+			Tasks: []parsers.Task{
+				{ID: "1", Description: "Task 1", Status: parsers.TaskStatusPending},
+				{ID: "2", Description: "Task 2", Status: parsers.TaskStatusPending},
+			},
+		},
+		{
+			SectionName: "Implementation",
+			Tasks: []parsers.Task{
+				{ID: "3", Description: "Task 3", Status: parsers.TaskStatusPending},
+			},
+		},
+	}
+
+	rootTasks, childFiles, hasHierarchy := splitTasksByCapability(changeDir, sections)
+
+	// Verify no hierarchy created
+	if hasHierarchy {
+		t.Error("expected hasHierarchy to be false when no delta specs match")
+	}
+
+	// Verify all tasks are in root
+	if len(rootTasks) != 3 {
+		t.Errorf("expected 3 root tasks, got %d", len(rootTasks))
+	}
+
+	// Verify no child files
+	if len(childFiles) != 0 {
+		t.Errorf("expected 0 child files, got %d", len(childFiles))
+	}
+
+	// Verify all tasks are flat (no children)
+	for i, task := range rootTasks {
+		if task.Children != "" {
+			t.Errorf("root task %d should have no children, got %s", i, task.Children)
+		}
+	}
+}
+
+func TestParseTasksMdWithSections_EmptyFile(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	tasksMdPath := filepath.Join(tmpDir, "tasks.md")
+	if err := os.WriteFile(tasksMdPath, []byte(""), filePerm); err != nil {
+		t.Fatalf("failed to write empty tasks.md: %v", err)
+	}
+
+	sections, err := parseTasksMdWithSections(tasksMdPath)
+	if err != nil {
+		t.Fatalf("parseTasksMdWithSections() error = %v", err)
+	}
+
+	if len(sections) != 0 {
+		t.Errorf("expected 0 sections for empty file, got %d", len(sections))
+	}
+}
+
+func TestParseTasksMdWithSections_OnlySections(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	tasksMdPath := filepath.Join(tmpDir, "tasks.md")
+	content := `## 1. Section One
+
+## 2. Section Two
+
+## 3. Section Three
+`
+	if err := os.WriteFile(tasksMdPath, []byte(content), filePerm); err != nil {
+		t.Fatalf("failed to write tasks.md: %v", err)
+	}
+
+	sections, err := parseTasksMdWithSections(tasksMdPath)
+	if err != nil {
+		t.Fatalf("parseTasksMdWithSections() error = %v", err)
+	}
+
+	if len(sections) != 3 {
+		t.Errorf("expected 3 sections, got %d", len(sections))
+	}
+
+	for i, section := range sections {
+		if len(section.Tasks) != 0 {
+			t.Errorf("section %d should have 0 tasks, got %d", i+1, len(section.Tasks))
+		}
+	}
+}

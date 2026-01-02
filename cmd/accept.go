@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
 	"github.com/connerohnesorge/spectr/internal/discovery"
@@ -20,6 +21,64 @@ import (
 	"github.com/connerohnesorge/spectr/internal/parsers"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
 )
+
+// matchSectionToCapability normalizes a section name to kebab-case for
+// matching with delta spec directory names. It strips leading numbers,
+// periods, and whitespace, then converts to kebab-case.
+func matchSectionToCapability(sectionName string) string {
+	// Strip leading numbers and punctuation (e.g., "5. Support Aider" -> "Support Aider")
+	sectionName = strings.TrimLeftFunc(sectionName, func(r rune) bool {
+		return unicode.IsDigit(r) || r == '.' || unicode.IsSpace(r)
+	})
+
+	// Convert to kebab-case
+	var result strings.Builder
+	for i, r := range sectionName {
+		if r == '-' {
+			// Preserve existing dashes
+			if i > 0 && result.Len() > 0 && result.String()[result.Len()-1] != '-' {
+				result.WriteRune('-')
+			}
+		} else if unicode.IsSpace(r) || r == '_' {
+			if i > 0 && result.Len() > 0 && result.String()[result.Len()-1] != '-' {
+				result.WriteRune('-')
+			}
+		} else if unicode.IsUpper(r) {
+			if i > 0 && result.Len() > 0 && result.String()[result.Len()-1] != '-' {
+				result.WriteRune('-')
+			}
+			result.WriteRune(unicode.ToLower(r))
+		} else if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			result.WriteRune(r)
+		}
+	}
+
+	return strings.ToLower(result.String())
+}
+
+// findMatchingDeltaSpec checks if a delta spec directory exists for the given
+// capability name within the change directory and contains a spec.md file.
+func findMatchingDeltaSpec(changeDir, capability string) bool {
+	deltaSpecDir := filepath.Join(changeDir, "specs", capability)
+	specPath := filepath.Join(deltaSpecDir, "spec.md")
+
+	// Check if directory exists AND contains a spec.md file
+	info, err := os.Stat(deltaSpecDir)
+	if err != nil || !info.IsDir() {
+		return false
+	}
+
+	_, err = os.Stat(specPath)
+	return err == nil
+}
+
+// SectionTasks holds tasks for a specific section, used for hierarchical splitting.
+type SectionTasks struct {
+	SectionName string
+	Tasks       []parsers.Task
+	Capability  string // matched delta spec capability (empty if no match)
+	HasChildren bool   // true if this section should have children ref
+}
 
 // filePerm is the standard file permission for created files (rw-r--r--)
 const filePerm = 0o644
@@ -92,17 +151,53 @@ func (c *AcceptCmd) processChange(
 		)
 	}
 
-	tasks, err := parseTasksMd(tasksMdPath)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to parse tasks.md: %w",
-			err,
-		)
-	}
+	// Check if any delta specs exist for hierarchical structure
+	hasDeltaSpecs := c.hasDeltaSpecs(changeDir)
 
-	// Safety check: if tasks.md has content but no valid tasks were found
-	if err := validateParsedTasks(tasks, tasksMdPath); err != nil {
-		return err
+	var tasks []parsers.Task
+	var childFiles map[string][]parsers.Task
+	var hasHierarchy bool
+
+	if hasDeltaSpecs {
+		// Use hierarchical parsing with section tracking
+		sections, err := parseTasksMdWithSections(tasksMdPath)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to parse tasks.md: %w",
+				err,
+			)
+		}
+
+		tasks, childFiles, hasHierarchy = splitTasksByCapability(changeDir, sections)
+
+		// Safety check: if tasks.md has content but no valid tasks were found
+		totalTasks := len(tasks)
+		for _, childTasks := range childFiles {
+			totalTasks += len(childTasks)
+		}
+		if totalTasks == 0 {
+			info, statErr := os.Stat(tasksMdPath)
+			if statErr == nil && info.Size() > 0 {
+				return &specterrs.NoValidTasksError{
+					TasksMdPath: tasksMdPath,
+					FileSize:    info.Size(),
+				}
+			}
+		}
+	} else {
+		// Use simple parsing (backwards compatible)
+		tasks, err = parseTasksMd(tasksMdPath)
+		if err != nil {
+			return fmt.Errorf(
+				"failed to parse tasks.md: %w",
+				err,
+			)
+		}
+
+		// Safety check: if tasks.md has content but no valid tasks were found
+		if err := validateParsedTasks(tasks, tasksMdPath); err != nil {
+			return err
+		}
 	}
 
 	tasksJSONPath := filepath.Join(
@@ -118,15 +213,104 @@ func (c *AcceptCmd) processChange(
 			tasksMdPath,
 			len(tasks),
 		)
+		if hasHierarchy {
+			fmt.Printf("Would create %d child task file(s)\n", len(childFiles))
+			for cap, childTasks := range childFiles {
+				fmt.Printf("  - specs/%s/tasks.jsonc: %d tasks\n", cap, len(childTasks))
+			}
+		}
 
 		return nil
 	}
 
-	return writeAndCleanup(
+	return c.writeHierarchicalTasks(
 		tasksMdPath,
 		tasksJSONPath,
 		tasks,
+		childFiles,
+		hasHierarchy,
 	)
+}
+
+// hasDeltaSpecs checks if the change directory has any delta spec directories.
+func (c *AcceptCmd) hasDeltaSpecs(changeDir string) bool {
+	specsDir := filepath.Join(changeDir, "specs")
+	info, err := os.Stat(specsDir)
+	if err != nil || !info.IsDir() {
+		return false
+	}
+
+	entries, err := os.ReadDir(specsDir)
+	if err != nil {
+		return false
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			specPath := filepath.Join(specsDir, entry.Name(), "spec.md")
+			if _, err := os.Stat(specPath); err == nil {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// writeHierarchicalTasks writes root and child task files for hierarchical structure.
+func (c *AcceptCmd) writeHierarchicalTasks(
+	tasksMdPath, tasksJSONPath string,
+	rootTasks []parsers.Task,
+	childFiles map[string][]parsers.Task,
+	hasHierarchy bool,
+) error {
+	if hasHierarchy {
+		// Write root tasks.jsonc with hierarchical format
+		includes := []string{"specs/*/tasks.jsonc"}
+		if err := writeTasksJSONCHierarchical(tasksJSONPath, rootTasks, includes); err != nil {
+			return fmt.Errorf("failed to write tasks.jsonc: %w", err)
+		}
+
+		// Write child task files
+		for capability, childTasks := range childFiles {
+			if len(childTasks) == 0 {
+				continue
+			}
+			parentID := childTasks[0].ID
+			if err := writeChildTasksJSONC(
+				filepath.Dir(tasksJSONPath),
+				capability,
+				parentID,
+				childTasks,
+			); err != nil {
+				return fmt.Errorf("failed to write child tasks.jsonc for %s: %w", capability, err)
+			}
+		}
+
+		fmt.Printf(
+			"Converted %s -> %s (hierarchical)\nPreserved %s\nWrote %d root tasks, %d child files\n",
+			tasksMdPath,
+			tasksJSONPath,
+			tasksMdPath,
+			len(rootTasks),
+			len(childFiles),
+		)
+	} else {
+		// Use simple write for backwards compatibility
+		if err := writeTasksJSONC(tasksJSONPath, rootTasks); err != nil {
+			return fmt.Errorf("failed to write tasks.jsonc: %w", err)
+		}
+
+		fmt.Printf(
+			"Converted %s -> %s\nPreserved %s\nWrote %d tasks\n",
+			tasksMdPath,
+			tasksJSONPath,
+			tasksMdPath,
+			len(rootTasks),
+		)
+	}
+
+	return nil
 }
 
 // resolveChangePaths validates and returns the change directory and
@@ -411,6 +595,112 @@ func parseTasksMd(
 	}
 
 	return tasks, nil
+}
+
+// parseTasksMdWithSections parses tasks.md and returns tasks grouped by section.
+// This is used for hierarchical task file splitting.
+func parseTasksMdWithSections(
+	path string,
+) ([]SectionTasks, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	}
+	defer func() { _ = file.Close() }()
+
+	var sections []SectionTasks
+	state := &taskParseState{}
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Check for section header (numbered or unnumbered)
+		if name, number, ok := markdown.MatchAnySection(line); ok {
+			state.handleSection(name, number)
+
+			// Add new section to list
+			sections = append(sections, SectionTasks{
+				SectionName: state.sectionName,
+			})
+			continue
+		}
+
+		// Skip if no current section
+		if len(sections) == 0 {
+			continue
+		}
+
+		// Check for task line using flexible matching
+		match, ok := markdown.MatchFlexibleTask(line)
+		if !ok {
+			continue
+		}
+
+		// Add task to current section
+		task := state.createTask(match)
+		lastIdx := len(sections) - 1
+		sections[lastIdx].Tasks = append(sections[lastIdx].Tasks, task)
+	}
+
+	err = scanner.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error reading file: %w", err)
+	}
+
+	return sections, nil
+}
+
+// splitTasksByCapability partitions tasks into root and child files based on
+// whether the section matches a delta spec directory.
+func splitTasksByCapability(
+	changeDir string,
+	sections []SectionTasks,
+) (rootTasks []parsers.Task, childFiles map[string][]parsers.Task, hasHierarchy bool) {
+	childFiles = make(map[string][]parsers.Task)
+
+	for _, section := range sections {
+		if len(section.Tasks) == 0 {
+			continue
+		}
+
+		capability := matchSectionToCapability(section.SectionName)
+
+		// Check if this section matches a delta spec
+		if findMatchingDeltaSpec(changeDir, capability) {
+			hasHierarchy = true
+			section.HasChildren = true
+
+			// Add reference task to root
+			refTask := parsers.Task{
+				ID:          section.Tasks[0].ID, // Use first task's ID as parent ID
+				Section:     section.SectionName,
+				Description: section.Tasks[0].Description,
+				Status:      section.Tasks[0].Status,
+				Children:    fmt.Sprintf("$ref:specs/%s/tasks.jsonc", capability),
+			}
+			rootTasks = append(rootTasks, refTask)
+
+			// Store child tasks (without section, keeping only ID and description)
+			var childTasks []parsers.Task
+			for _, task := range section.Tasks {
+				childTasks = append(childTasks, parsers.Task{
+					ID:          task.ID,
+					Section:     "", // Child tasks don't need section
+					Description: task.Description,
+					Status:      task.Status,
+					Children:    "", // Child tasks don't have children
+				})
+			}
+			childFiles[capability] = childTasks
+		} else {
+			// No match - tasks stay in root
+			section.HasChildren = false
+			rootTasks = append(rootTasks, section.Tasks...)
+		}
+	}
+
+	return rootTasks, childFiles, hasHierarchy
 }
 
 // validateParsedTasks checks if tasks.md has content but no valid tasks

@@ -50,9 +50,9 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	inits := p.Initializers(ctx, tm)
 
-	// Claude should return 6 initializers: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills (accept), AgentSkills (validate)
-	if len(inits) != 6 {
-		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 6", len(inits))
+	// Claude should return 7 initializers: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills (accept), AgentSkills (validate wo bin), AgentSkills (validate w bin)
+	if len(inits) != 7 {
+		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 7", len(inits))
 	}
 
 	// Check types
@@ -123,6 +123,36 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 		t.Errorf(
 			"ClaudeProvider AgentSkillsInitializer targetDir = %s, want \".claude/skills/spectr-accept-wo-spectr-bin\"",
 			skillInit.targetDir,
+		)
+	}
+
+	// Check fifth AgentSkillsInitializer for validate without binary
+	validateWOInit := inits[5].(*AgentSkillsInitializer) //nolint:revive // test code, type checked above
+	if validateWOInit.skillName != "spectr-validate-wo-spectr-bin" {
+		t.Errorf(
+			"ClaudeProvider AgentSkillsInitializer[5] skillName = %s, want \"spectr-validate-wo-spectr-bin\"",
+			validateWOInit.skillName,
+		)
+	}
+	if validateWOInit.targetDir != ".claude/skills/spectr-validate-wo-spectr-bin" {
+		t.Errorf(
+			"ClaudeProvider AgentSkillsInitializer[5] targetDir = %s, want \".claude/skills/spectr-validate-wo-spectr-bin\"",
+			validateWOInit.targetDir,
+		)
+	}
+
+	// Check sixth AgentSkillsInitializer for validate with binary
+	validateWInit := inits[6].(*AgentSkillsInitializer) //nolint:revive // test code, type checked above
+	if validateWInit.skillName != "spectr-validate-w-spectr-bin" {
+		t.Errorf(
+			"ClaudeProvider AgentSkillsInitializer[6] skillName = %s, want \"spectr-validate-w-spectr-bin\"",
+			validateWInit.skillName,
+		)
+	}
+	if validateWInit.targetDir != ".claude/skills/spectr-validate-w-spectr-bin" {
+		t.Errorf(
+			"ClaudeProvider AgentSkillsInitializer[6] targetDir = %s, want \".claude/skills/spectr-validate-w-spectr-bin\"",
+			validateWInit.targetDir,
 		)
 	}
 }
@@ -331,9 +361,9 @@ func TestCodexProvider_Initializers(t *testing.T) {
 
 	inits := p.Initializers(ctx, tm)
 
-	// Codex should return 6 initializers: HomeDirectory, Directory, ConfigFile, HomePrefixedSlashCommands, 2x AgentSkills
-	if len(inits) != 6 {
-		t.Fatalf("CodexProvider.Initializers() returned %d initializers, want 6", len(inits))
+	// Codex should return 7 initializers: HomeDirectory, Directory, ConfigFile, HomePrefixedSlashCommands, 3x AgentSkills
+	if len(inits) != 7 {
+		t.Fatalf("CodexProvider.Initializers() returned %d initializers, want 7", len(inits))
 	}
 
 	// Check types
@@ -418,6 +448,21 @@ func TestCodexProvider_Initializers(t *testing.T) {
 		t.Errorf(
 			"CodexProvider AgentSkillsInitializer[5] targetDir = %s, want \".codex/skills/spectr-validate-wo-spectr-bin\"",
 			validateSkill.targetDir,
+		)
+	}
+
+	// Check sixth AgentSkillsInitializer for validate with binary
+	validateWSkill := inits[6].(*AgentSkillsInitializer)
+	if validateWSkill.skillName != "spectr-validate-w-spectr-bin" {
+		t.Errorf(
+			"CodexProvider AgentSkillsInitializer[6] skillName = %s, want \"spectr-validate-w-spectr-bin\"",
+			validateWSkill.skillName,
+		)
+	}
+	if validateWSkill.targetDir != ".codex/skills/spectr-validate-w-spectr-bin" {
+		t.Errorf(
+			"CodexProvider AgentSkillsInitializer[6] targetDir = %s, want \".codex/skills/spectr-validate-w-spectr-bin\"",
+			validateWSkill.targetDir,
 		)
 	}
 
@@ -523,7 +568,7 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 		usesPrefix    bool
 		usesHomeFs    bool
 	}{
-		{"claude-code", &ClaudeProvider{}, 6, true, false, false, false},
+		{"claude-code", &ClaudeProvider{}, 7, true, false, false, false},
 		{"gemini", &GeminiProvider{}, 2, false, true, false, false},
 		{"costrict", &CostrictProvider{}, 3, true, false, false, false},
 		{"qoder", &QoderProvider{}, 3, true, false, false, false},
@@ -531,7 +576,7 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 		{"antigravity", &AntigravityProvider{}, 3, true, false, true, false},
 		{"cline", &ClineProvider{}, 3, true, false, false, false},
 		{"cursor", &CursorProvider{}, 2, false, false, false, false},
-		{"codex", &CodexProvider{}, 6, true, false, true, true},
+		{"codex", &CodexProvider{}, 7, true, false, true, true},
 		{"aider", &AiderProvider{}, 2, false, false, false, false},
 		{"windsurf", &WindsurfProvider{}, 2, false, false, false, false},
 		{"kilocode", &KilocodeProvider{}, 2, false, false, false, false},

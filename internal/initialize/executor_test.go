@@ -49,8 +49,8 @@ func TestExecutorIntegration_FullInitializationFlow(t *testing.T) {
 	// Get initializers from Claude provider
 	inits := claudeReg.Provider.Initializers(ctx, tm)
 
-	if len(inits) != 6 {
-		t.Fatalf("Claude provider returned %d initializers, want 6", len(inits))
+	if len(inits) != 7 {
+		t.Fatalf("Claude provider returned %d initializers, want 7", len(inits))
 	}
 
 	// Execute each initializer and collect results

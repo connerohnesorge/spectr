@@ -369,6 +369,32 @@ func TestNewWizardModelWithConfiguredProviders(
 		)
 	}
 
+	// Create the validate with binary skill directory with SKILL.md
+	validateWSkillDir := filepath.Join(
+		skillsDir,
+		"spectr-validate-w-spectr-bin",
+	)
+	err = os.MkdirAll(validateWSkillDir, 0o755)
+	if err != nil {
+		t.Fatalf(
+			"Failed to create validate with binary skill directory: %v",
+			err,
+		)
+	}
+
+	validateWSkillMdPath := filepath.Join(validateWSkillDir, "SKILL.md")
+	err = os.WriteFile(
+		validateWSkillMdPath,
+		[]byte("# Skill\n"),
+		0o644,
+	)
+	if err != nil {
+		t.Fatalf(
+			"Failed to create validate with binary SKILL.md: %v",
+			err,
+		)
+	}
+
 	// Create the two slash command files (in the spectr/ subdirectory)
 	for _, cmdFile := range []string{
 		"proposal.md",

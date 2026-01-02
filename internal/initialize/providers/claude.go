@@ -36,5 +36,10 @@ func (*ClaudeProvider) Initializers(
 			".claude/skills/spectr-validate-wo-spectr-bin",
 			tm,
 		),
+		NewAgentSkillsInitializer(
+			"spectr-validate-w-spectr-bin",
+			".claude/skills/spectr-validate-w-spectr-bin",
+			tm,
+		),
 	}
 }

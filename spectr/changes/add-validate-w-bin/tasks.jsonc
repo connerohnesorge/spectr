@@ -42,43 +42,37 @@
       "id": "1.1",
       "section": "Implementation",
       "description": "Create skill template directory `internal/initialize/templates/skills/spectr-validate-w-spectr-bin/`",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.2",
       "section": "Implementation",
       "description": "Create `SKILL.md` for the new skill",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.3",
       "section": "Implementation",
       "description": "Create `scripts/validate.sh` wrapping the spectr binary",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.4",
       "section": "Implementation",
       "description": "Update `internal/initialize/providers/claude.go` to include the new skill initializer",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.5",
       "section": "Implementation",
       "description": "Update `internal/initialize/providers/codex.go` to include the new skill initializer",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.6",
       "section": "Implementation",
       "description": "Verify installation with `spectr init`",
-      "status": "pending"
-    },
-    {
-      "id": "1.7",
-      "section": "Implementation",
-      "description": "Verify skill functionality with `spectr validate`",
-      "status": "pending"
+      "status": "completed"
     }
   ]
 }

@@ -38,5 +38,10 @@ func (*CodexProvider) Initializers(
 			".codex/skills/spectr-validate-wo-spectr-bin",
 			tm,
 		),
+		NewAgentSkillsInitializer(
+			"spectr-validate-w-spectr-bin",
+			".codex/skills/spectr-validate-w-spectr-bin",
+			tm,
+		),
 	}
 }

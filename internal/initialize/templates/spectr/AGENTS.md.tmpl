@@ -150,6 +150,33 @@ Reading Specs and Changes (for AI agents):
 │   └── archive/            # Completed changes
 ```
 
+## WHERE TO LOOK
+| Task | Location | Notes |
+|------|----------|-------|
+| Create proposals | spectr/changes/ | Scaffold with proposal.md, tasks.md, delta specs |
+| Validate changes | spectr validate | Enforce scenarios, formatting rules |
+| Accept proposals | spectr accept | Convert tasks.md → tasks.jsonc |
+| Archive changes | spectr archive | Merge deltas into specs/ |
+| View status | spectr view | Interactive dashboard |
+
+## CONVENTIONS
+- **Verb-led IDs**: Use `add-`, `update-`, `remove-`, `refactor-` prefixes
+- **Delta operations**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, `## RENAMED Requirements`
+- **Scenario format**: Use `#### Scenario:` (4 hashtags) with WHEN/THEN bullets
+- **tasks.md + tasks.jsonc**: Both coexist, update status in .jsonc after accept
+
+## UNIQUE PATTERNS
+- **Spec-driven development**: All features tracked in specs/ before implementation
+- **Three-stage workflow**: Propose → Validate (pre-implementation) → Archive (post-deployment)
+- **Dual task files**: tasks.md (human-readable) + tasks.jsonc (machine-readable)
+
+## ANTI-PATTERNS
+- **NEVER implement without proposal**: Features need change in spectr/changes/
+- **DON'T skip validation**: Always run `spectr validate` before `spectr accept`
+- **NO partial MODIFIED**: MODIFIED requirements must include complete content (header + all scenarios)
+- **NO scenario-less requirements**: Every requirement must have at least one scenario
+
+
 ## Creating Change Proposals
 
 ### Decision Tree
@@ -510,29 +537,6 @@ Only add complexity with:
 2. Check related specs
 3. Review recent archives
 4. Ask for clarification
-
-## Quick Reference
-
-### Stage Indicators
-
-- `changes/` - Proposed, not yet built
-- `specs/` - Built and deployed
-- `archive/` - Completed changes
-
-### File Purposes
-
-- `proposal.md` - Why and what
-- `tasks.md` - Implementation steps
-- `spec.md` - Requirements and behavior
-- `design.md` - Technical decisions (optional)
-
-### CLI Essentials
-
-```bash
-spectr list              # What's in progress?
-spectr validate          # Is it correct?
-spectr archive <change-id> [--yes|-y]  # Mark complete (add --yes for automation)
-```
 
 Reading Details (for AI agents):
 

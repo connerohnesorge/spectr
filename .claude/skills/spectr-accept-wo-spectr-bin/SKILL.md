@@ -1,6 +1,10 @@
 ---
 name: spectr-accept-wo-spectr-bin
-description: Accept Spectr change proposals by converting tasks.md to tasks.jsonc without requiring the spectr binary
+description: |
+  Accept Spectr change proposals by converting tasks.md to tasks.jsonc without requiring the spectr binary.
+  USE WHEN you're in a sandboxed or restricted execution context and spectr is not available in your path.
+  DO NOT USE WHEN you need a lightweight alternative for task acceptance, but have the spectr binary available.
+  DO NOT USE when you have the spectr binary available.
 compatibility:
   requirements:
     - jq (JSON processor)

@@ -1,6 +1,10 @@
 ---
 name: spectr-validate-wo-spectr-bin
-description: Validate Spectr specifications and change proposals without requiring the spectr binary
+description: |
+  Validate Spectr specifications and change proposals without requiring the spectr binary
+  USE WHEN you're in a sandboxed or restricted execution context and spectr is not available in your path.
+  DO NOT USE WHEN you need a lightweight alternative for task acceptance, but have the spectr binary available.
+  DO NOT USE when you have the spectr binary available.
 compatibility:
   requirements:
     - bash 4.0+

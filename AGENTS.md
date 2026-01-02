@@ -229,12 +229,12 @@ spectr/
 ├── specs/                  # Current truth - what IS built
 │   └── [capability]/       # Single focused capability
 │       ├── spec.md         # Requirements and scenarios
-│       └── design.md       # Technical patterns
+│       └── design.md       # Implementation details (code structures, APIs, data models)
 ├── changes/                # Proposals - what SHOULD change
 │   ├── [change-name]/
 │   │   ├── proposal.md     # Why, what, impact
 │   │   ├── tasks.md        # Implementation checklist
-│   │   ├── design.md       # Technical decisions (optional; see criteria)
+│   │   ├── design.md       # Implementation details (optional; see criteria)
 │   │   └── specs/          # Delta changes
 │   │       └── [capability]/
 │   │           └── spec.md # ADDED/MODIFIED/REMOVED
@@ -242,7 +242,6 @@ spectr/
 ```
 
 ## WHERE TO LOOK
-
 | Task | Location | Notes |
 |------|----------|-------|
 | Create proposals | spectr/changes/ | Scaffold with proposal.md, tasks.md, delta specs |
@@ -362,6 +361,15 @@ Create `design.md` if any of the following apply; otherwise omit it:
 Minimal `design.md` skeleton:
 
 ```markdown
+## Implementation Details
+
+[Specific implementation details such as:]
+- Data structures and type definitions
+- API signatures and interfaces
+- File and directory structures
+- Code snippets showing patterns
+- Configuration schemas
+
 ## Context
 
 [Background, constraints, stakeholders]

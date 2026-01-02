@@ -41,6 +41,7 @@ Update documentation to clarify that `design.md` contains **specific implementat
 - **Affected documentation files**: 4 files need updates
 - **No code changes** - purely documentation
 - **Backward compatible** - existing design.md files remain valid
+- **Impact on existing users**: Agents will receive more specific guidance
 
 ## Files to Update
 

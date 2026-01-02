@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: design.md File Purpose Clarification
 The `design.md` file SHALL contain specific implementation details to guide developers and AI agents during implementation. This includes code structures, API signatures, data models, file structures, and concrete examples—not abstract principles or high-level decisions.
@@ -28,7 +28,7 @@ The `design.md` file SHALL contain specific implementation details to guide deve
 - **WHEN** reading design.md guidance
 - **THEN** there SHALL be concrete examples showing:
   - **VAGUE (avoid)**: "Use clean architecture principles"
-  - **DETAILED (preferred)**: Specific struct definitions, function signatures, and composition patterns"
+  - **DETAILED (preferred)**: Specific struct definitions, function signatures, and composition patterns
 
 ### Requirement: Documentation Files to Update
 The following documentation files SHALL be updated to clarify design.md purpose:

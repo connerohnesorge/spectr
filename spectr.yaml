@@ -1,5 +1,11 @@
+# Auto-append tasks configuration
+# Tasks defined here are automatically appended to all change proposals
+# when running 'spectr accept <id>'
+
 append_tasks:
+  # Section label for appended tasks
   section: 99.99.99 Final section (after all tasks)
+  # List of tasks to append
   tasks:
     - |
       Output/return: <promise>"This is the last task: COMPLETE"</promise>

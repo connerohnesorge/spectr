@@ -1,0 +1,5 @@
+append_tasks:
+  section: 99.99.99 Final section (after all tasks)
+  tasks:
+    - |
+      Output/return: <promise>"This is the last task: COMPLETE"</promise>

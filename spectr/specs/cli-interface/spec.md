@@ -8,7 +8,7 @@ Defines the CLI framework using Kong for declarative commands, struct tags, subc
 
 ### Requirement: Archive Command
 
-Provide `archive` command to move completed changes and apply deltas.
+The system SHALL provide an `archive` command to move completed changes and apply deltas.
 
 #### Scenario: Archive with change ID
 - WHEN `spectr archive <change-id>`
@@ -32,7 +32,7 @@ Provide `archive` command to move completed changes and apply deltas.
 
 ### Requirement: Positional Argument Support
 
-Support positional arguments via struct fields tagged `arg`.
+The system SHALL support positional arguments via struct fields tagged `arg`.
 
 #### Scenario: Optional positional argument
 - WHEN command accepts optional arg
@@ -44,7 +44,7 @@ Support positional arguments via struct fields tagged `arg`.
 
 ### Requirement: Built-in Help Generation
 
-Generate help text from struct tags.
+The system SHALL generate help text from struct tags.
 
 #### Scenario: Root help display
 - WHEN `--help` or no args
@@ -56,7 +56,7 @@ Generate help text from struct tags.
 
 ### Requirement: Error Handling and Exit Codes
 
-Provide clear errors and exit codes.
+The system SHALL provide clear errors and exit codes.
 
 #### Scenario: Parse error handling
 - WHEN invalid flags/args
@@ -68,7 +68,7 @@ Provide clear errors and exit codes.
 
 ### Requirement: Backward-Compatible CLI Interface
 
-Maintain syntax and flag compatibility.
+The system SHALL maintain syntax and flag compatibility.
 
 #### Scenario: Init command compatibility
 - WHEN `spectr init` invoked
@@ -80,7 +80,7 @@ Maintain syntax and flag compatibility.
 
 ### Requirement: List Command for Changes
 
-`list` command enumerates active changes (IDs default).
+The system SHALL provide a `list` command that enumerates active changes (IDs default).
 
 #### Scenario: List changes with IDs only
 - WHEN `spectr list`
@@ -100,7 +100,7 @@ Maintain syntax and flag compatibility.
 
 ### Requirement: List Command for Specs
 
-Support `--specs` flag to list specifications.
+The system SHALL support a `--specs` flag to list specifications.
 
 #### Scenario: List specs with IDs only
 - WHEN `spectr list --specs`
@@ -120,7 +120,7 @@ Support `--specs` flag to list specifications.
 
 ### Requirement: Change Discovery
 
-Scan `spectr/changes/` for subdirectories with `proposal.md`.
+The system SHALL scan `spectr/changes/` for subdirectories with `proposal.md`.
 
 #### Scenario: Find active changes
 - WHEN scanning
@@ -129,7 +129,7 @@ Scan `spectr/changes/` for subdirectories with `proposal.md`.
 
 ### Requirement: Spec Discovery
 
-Scan `spectr/specs/` for subdirectories with `spec.md`.
+The system SHALL scan `spectr/specs/` for subdirectories with `spec.md`.
 
 #### Scenario: Find specs
 - WHEN scanning
@@ -138,7 +138,7 @@ Scan `spectr/specs/` for subdirectories with `spec.md`.
 
 ### Requirement: Title Extraction
 
-Extract title from first level-1 heading in markdown (removing "Change:"/"Spec:" prefix).
+The system SHALL extract title from first level-1 heading in markdown (removing "Change:"/"Spec:" prefix).
 
 #### Scenario: Extract title from proposal
 - WHEN reading proposal
@@ -154,7 +154,7 @@ Extract title from first level-1 heading in markdown (removing "Change:"/"Spec:"
 
 ### Requirement: Task Counting
 
-Count tasks from `tasks.jsonc` or `tasks.md` (ignore `tasks.json`).
+The system SHALL count tasks from `tasks.jsonc` or `tasks.md` (ignore `tasks.json`).
 
 #### Scenario: Count tasks from JSONC
 - WHEN `tasks.jsonc` exists
@@ -178,7 +178,7 @@ Count tasks from `tasks.jsonc` or `tasks.md` (ignore `tasks.json`).
 
 ### Requirement: Validate Command
 
-Check spec/change correctness.
+The system SHALL check spec/change correctness.
 
 #### Scenario: Validate command registration
 - WHEN initialized
@@ -222,7 +222,7 @@ Check spec/change correctness.
 
 ### Requirement: Validate Command Help Text
 
-Document validation purpose and flags.
+The system SHALL document validation purpose and flags.
 
 #### Scenario: Command help display
 - WHEN `spectr validate --help`
@@ -230,7 +230,7 @@ Document validation purpose and flags.
 
 ### Requirement: Positional Argument Support for Item Name
 
-Accept optional item name.
+The system SHALL accept an optional item name.
 
 #### Scenario: Optional item name argument
 - WHEN defined
@@ -242,7 +242,7 @@ Accept optional item name.
 
 ### Requirement: View Command
 
-Display project dashboard (`spectr view`).
+The system SHALL display a project dashboard (`spectr view`).
 
 #### Scenario: View command registration
 - WHEN initialized
@@ -270,7 +270,7 @@ Display project dashboard (`spectr view`).
 
 ### Requirement: Dashboard Summary Metrics
 
-Display aggregated stats.
+The system SHALL display aggregated stats.
 
 #### Scenario: Display summary with all metrics
 - WHEN rendering summary
@@ -286,7 +286,7 @@ Display aggregated stats.
 
 ### Requirement: Active Changes Display
 
-Show active changes with progress bars.
+The system SHALL show active changes with progress bars.
 
 #### Scenario: List active changes with progress
 - WHEN rendering active changes
@@ -307,7 +307,7 @@ Show active changes with progress bars.
 
 ### Requirement: Completed Changes Display
 
-Show completed changes.
+The system SHALL show completed changes.
 
 #### Scenario: List completed changes
 - WHEN rendering completed
@@ -323,7 +323,7 @@ Show completed changes.
 
 ### Requirement: Specifications Display
 
-Show specs sorted by complexity.
+The system SHALL show specs sorted by complexity.
 
 #### Scenario: List specifications with requirement counts
 - WHEN rendering specs
@@ -339,7 +339,7 @@ Show specs sorted by complexity.
 
 ### Requirement: Dashboard Visual Formatting
 
-Use colors and box-drawing chars.
+The system SHALL use colors and box-drawing chars.
 
 #### Scenario: Render dashboard header
 - WHEN rendering
@@ -359,7 +359,7 @@ Use colors and box-drawing chars.
 
 ### Requirement: Sorting Strategy
 
-Sort for relevance.
+The system SHALL sort for relevance.
 
 #### Scenario: Sort active changes by priority
 - WHEN sorting active
@@ -375,7 +375,7 @@ Sort for relevance.
 
 ### Requirement: View Command Help Text
 
-Document view command.
+The system SHALL document the view command.
 
 #### Scenario: View command help display
 - WHEN `spectr view --help`
@@ -383,7 +383,7 @@ Document view command.
 
 ### Requirement: Provider Interface
 
-`Provider` interface for AI tools (instruction files + slash commands).
+The system SHALL provide a `Provider` interface for AI tools (instruction files + slash commands).
 
 #### Scenario: Provider interface methods
 - WHEN provider created
@@ -403,7 +403,7 @@ Document view command.
 
 ### Requirement: Command Format Support
 
-Support Markdown/TOML formats.
+The system SHALL support Markdown/TOML formats.
 
 #### Scenario: Markdown command format
 - WHEN `FormatMarkdown`
@@ -415,7 +415,7 @@ Support Markdown/TOML formats.
 
 ### Requirement: Version Command Structure
 
-Display version/commit/date.
+The system SHALL display version/commit/date.
 
 #### Scenario: Version command registration
 - WHEN initialized
@@ -435,7 +435,7 @@ Display version/commit/date.
 
 ### Requirement: Version Variable Injection
 
-Inject via ldflags.
+The system SHALL inject version variables via ldflags.
 
 #### Scenario: Goreleaser/Nix/Dev injection
 - WHEN building
@@ -443,7 +443,7 @@ Inject via ldflags.
 
 ### Requirement: Completion Command Structure
 
-Generate shell completions.
+The system SHALL generate shell completions.
 
 #### Scenario: Completion command registration
 - WHEN initialized
@@ -455,7 +455,7 @@ Generate shell completions.
 
 ### Requirement: Custom Predictors for Dynamic Arguments
 
-Suggest IDs.
+The system SHALL suggest IDs.
 
 #### Scenario: Change/Spec ID completion
 - WHEN tabbing ID arg
@@ -467,7 +467,7 @@ Suggest IDs.
 
 ### Requirement: Accept Command Structure
 
-Convert `tasks.md` to `tasks.jsonc`.
+The system SHALL convert `tasks.md` to `tasks.jsonc`.
 
 #### Scenario: Accept command registration
 - WHEN initialized
@@ -499,7 +499,7 @@ Convert `tasks.md` to `tasks.jsonc`.
 
 ### Requirement: Tasks JSON Schema
 
-Generate versioned `tasks.jsonc`.
+The system SHALL generate a versioned `tasks.jsonc`.
 
 #### Scenario: JSONC file structure
 - WHEN generating
@@ -519,7 +519,7 @@ Generate versioned `tasks.jsonc`.
 
 ### Requirement: Accept Command Flags
 
-Control behavior.
+The system SHALL provide flags to control behavior.
 
 #### Scenario: Dry-run flag
 - WHEN `--dry-run`
@@ -531,7 +531,7 @@ Control behavior.
 
 ### Requirement: List Command Alias
 
-Alias `ls` to `list`.
+The system SHALL alias `ls` to `list`.
 
 #### Scenario: User runs spectr ls shorthand
 - WHEN `spectr ls`
@@ -539,7 +539,7 @@ Alias `ls` to `list`.
 
 ### Requirement: Item Name Path Normalization
 
-Normalize paths to IDs.
+The system SHALL normalize paths to IDs.
 
 #### Scenario: Path/ID normalization
 - WHEN path provided (e.g. `spectr/changes/id`)
@@ -547,7 +547,7 @@ Normalize paths to IDs.
 
 ### Requirement: Interactive List Mode
 
-Unified TUI for changes/specs.
+The system SHALL provide a unified TUI for changes/specs.
 
 #### Scenario: Default behavior unchanged
 - WHEN `spectr list -I`
@@ -567,7 +567,7 @@ Unified TUI for changes/specs.
 
 ### Requirement: Clipboard Copy on Selection
 
-Copy ID on Enter.
+The system SHALL copy ID on Enter.
 
 #### Scenario: Copy ID
 - WHEN Enter pressed
@@ -575,7 +575,7 @@ Copy ID on Enter.
 
 ### Requirement: Interactive Mode Exit Controls
 
-Standard quit.
+The system SHALL provide standard quit controls.
 
 #### Scenario: Quit
 - WHEN `q` or `Ctrl+C`
@@ -583,7 +583,7 @@ Standard quit.
 
 ### Requirement: Table Visual Styling
 
-Consistent TUI styling.
+The system SHALL provide consistent TUI styling.
 
 #### Scenario: Visual hierarchy
 - WHEN displaying
@@ -591,7 +591,7 @@ Consistent TUI styling.
 
 ### Requirement: Cross-Platform Clipboard Support
 
-Linux/macOS/Windows/SSH support.
+The system SHALL support Linux/macOS/Windows/SSH.
 
 #### Scenario: Clipboard support
 - WHEN copying
@@ -599,7 +599,7 @@ Linux/macOS/Windows/SSH support.
 
 ### Requirement: Initialization Next Steps Message
 
-Guide user after init.
+The system SHALL guide the user after init.
 
 #### Scenario: Next steps display
 - WHEN init succeeds
@@ -611,7 +611,7 @@ Guide user after init.
 
 ### Requirement: Flat Tool List in Initialization Wizard
 
-Unified tool list.
+The system SHALL provide a unified tool list.
 
 #### Scenario: Display only config-based tools
 - WHEN selecting tools
@@ -623,7 +623,7 @@ Unified tool list.
 
 ### Requirement: Interactive Archive Mode
 
-Table interface for archive.
+The system SHALL provide a table interface for archive.
 
 #### Scenario: Archive no args / -I
 - WHEN `spectr archive [-I]`
@@ -635,7 +635,7 @@ Table interface for archive.
 
 ### Requirement: Archive Interactive Table Display
 
-Match list columns.
+The system SHALL match list columns in archive mode.
 
 #### Scenario: Table columns
 - WHEN displaying
@@ -643,7 +643,7 @@ Match list columns.
 
 ### Requirement: Archive Selection Without Clipboard
 
-Internal capture only.
+The system SHALL capture selection internally only.
 
 #### Scenario: Enter key
 - WHEN Enter
@@ -651,7 +651,7 @@ Internal capture only.
 
 ### Requirement: Validation Output Format
 
-Consistent issue reporting.
+The system SHALL provide consistent issue reporting.
 
 #### Scenario: Single/Bulk output
 - WHEN validating
@@ -663,7 +663,7 @@ Consistent issue reporting.
 
 ### Requirement: Editor Hotkey in Interactive Specs List
 
-Edit spec with 'e'.
+The system SHALL allow editing specs with 'e'.
 
 #### Scenario: Edit spec
 - WHEN `e` pressed (specs mode)
@@ -671,7 +671,7 @@ Edit spec with 'e'.
 
 ### Requirement: Editor Hotkey Scope
 
-Specs only.
+The system SHALL limit editor hotkey to specs only.
 
 #### Scenario: No edit for changes
 - WHEN `e` pressed (changes mode)
@@ -679,7 +679,7 @@ Specs only.
 
 ### Requirement: Project Path Display in Interactive Mode
 
-Show context.
+The system SHALL show context by displaying the project path.
 
 #### Scenario: Path display
 - WHEN interactive
@@ -687,7 +687,7 @@ Show context.
 
 ### Requirement: Unified Item List Display
 
-Mixed table for changes/specs.
+The system SHALL provide a mixed table for changes/specs.
 
 #### Scenario: Unified display
 - WHEN `--all -I`
@@ -695,7 +695,7 @@ Mixed table for changes/specs.
 
 ### Requirement: Type-Aware Item Selection
 
-Handle types correctly.
+The system SHALL handle types correctly.
 
 #### Scenario: Selection
 - WHEN Enter
@@ -707,7 +707,7 @@ Handle types correctly.
 
 ### Requirement: Backward-Compatible Separate Modes
 
-Preserve existing modes.
+The system SHALL preserve existing modes.
 
 #### Scenario: Separate modes
 - WHEN `-I` (no `--all`) -> Changes
@@ -715,7 +715,7 @@ Preserve existing modes.
 
 ### Requirement: Enhanced List Command Flags
 
-Validate flags.
+The system SHALL validate flags.
 
 #### Scenario: Validation
 - WHEN conflicting flags (e.g. `-I` + `--json`)
@@ -723,7 +723,7 @@ Validate flags.
 
 ### Requirement: Automatic Slash Command Installation
 
-Install slash commands with config.
+The system SHALL install slash commands with config.
 
 #### Scenario: Auto-install
 - WHEN config tool selected
@@ -731,7 +731,7 @@ Install slash commands with config.
 
 ### Requirement: Archive Hotkey in Interactive Changes Mode
 
-Archive with 'a'.
+The system SHALL allow archiving with 'a'.
 
 #### Scenario: Archive action
 - WHEN `a` pressed (changes mode)
@@ -739,7 +739,7 @@ Archive with 'a'.
 
 ### Requirement: Shared TUI Component Library
 
-Use `internal/tui`.
+The system SHALL use `internal/tui`.
 
 #### Scenario: Components
 - WHEN building UI
@@ -747,7 +747,7 @@ Use `internal/tui`.
 
 ### Requirement: Search Hotkey in Interactive Lists
 
-Filter with '/'.
+The system SHALL filter lists with '/'.
 
 #### Scenario: Search mode
 - WHEN `/` pressed
@@ -755,7 +755,7 @@ Filter with '/'.
 
 ### Requirement: Help Toggle Hotkey
 
-Toggle help with '?'.
+The system SHALL toggle help with '?'.
 
 #### Scenario: Help toggle
 - WHEN `?` pressed
@@ -763,7 +763,7 @@ Toggle help with '?'.
 
 ### Requirement: Partial Change ID Resolution for Archive Command
 
-Resolve prefixes/substrings.
+The system SHALL resolve prefixes/substrings.
 
 #### Scenario: Resolution
 - WHEN partial ID provided
@@ -771,7 +771,7 @@ Resolve prefixes/substrings.
 
 ### Requirement: Configured Provider Detection in Init Wizard
 
-Detect existing config.
+The system SHALL detect existing config.
 
 #### Scenario: Detection
 - WHEN initializing
@@ -779,7 +779,7 @@ Detect existing config.
 
 ### Requirement: Instruction File Pointer Template
 
-Use pointers in root files.
+The system SHALL use pointers in root files.
 
 #### Scenario: Pointer content
 - WHEN creating `CLAUDE.md` etc
@@ -787,7 +787,7 @@ Use pointers in root files.
 
 ### Requirement: PR Archive Subcommand Alias
 
-Alias `a` to `archive`.
+The system SHALL alias `a` to `archive`.
 
 #### Scenario: Alias
 - WHEN `spectr pr a`
@@ -795,7 +795,7 @@ Alias `a` to `archive`.
 
 ### Requirement: PR Branch Naming Convention
 
-Consistent naming.
+The system SHALL use consistent branch naming.
 
 #### Scenario: Naming
 - WHEN archive -> `spectr/archive/<id>`
@@ -803,7 +803,7 @@ Consistent naming.
 
 ### Requirement: PR Command Structure
 
-`spectr pr <subcommand>`.
+The system SHALL support `spectr pr <subcommand>`.
 
 #### Scenario: Subcommands
 - WHEN `archive`/`proposal`
@@ -811,7 +811,7 @@ Consistent naming.
 
 ### Requirement: PR Archive Subcommand
 
-Create archive PR (isolated worktree).
+The system SHALL create an archive PR (isolated worktree).
 
 #### Scenario: Workflow
 - WHEN `spectr pr archive <id>`
@@ -819,7 +819,7 @@ Create archive PR (isolated worktree).
 
 ### Requirement: PR Proposal Subcommand
 
-Create proposal PR (isolated worktree).
+The system SHALL create a proposal PR (isolated worktree).
 
 #### Scenario: Workflow
 - WHEN `spectr pr proposal <id>`
@@ -827,7 +827,7 @@ Create proposal PR (isolated worktree).
 
 ### Requirement: PR Common Flags
 
-Shared flags.
+The system SHALL provide shared flags.
 
 #### Scenario: Flags
 - WHEN `--base`, `--draft`, `--force`, `--dry-run`
@@ -835,7 +835,7 @@ Shared flags.
 
 ### Requirement: Git Platform Detection
 
-Detect GitHub/GitLab/Gitea/Bitbucket.
+The system SHALL detect GitHub/GitLab/Gitea/Bitbucket.
 
 #### Scenario: Detection
 - WHEN remote URL
@@ -843,7 +843,7 @@ Detect GitHub/GitLab/Gitea/Bitbucket.
 
 ### Requirement: Platform CLI Availability
 
-Check CLI installed.
+The system SHALL check if CLI is installed.
 
 #### Scenario: Check
 - WHEN running
@@ -851,7 +851,7 @@ Check CLI installed.
 
 ### Requirement: Git Worktree Isolation
 
-Isolate operations.
+The system SHALL isolate operations.
 
 #### Scenario: Isolation
 - WHEN running
@@ -859,7 +859,7 @@ Isolate operations.
 
 ### Requirement: PR Commit Message Format
 
-Conventional commits.
+The system SHALL use conventional commits.
 
 #### Scenario: Format
 - WHEN committing
@@ -867,7 +867,7 @@ Conventional commits.
 
 ### Requirement: PR Body Content
 
-Useful description.
+The system SHALL provide a useful description.
 
 #### Scenario: Content
 - WHEN creating PR
@@ -875,7 +875,7 @@ Useful description.
 
 ### Requirement: PR Branch Naming
 
-`spectr/<id>`.
+The system SHALL use branch naming pattern `spectr/<id>`.
 
 #### Scenario: Naming
 - WHEN creating branch
@@ -883,7 +883,7 @@ Useful description.
 
 ### Requirement: PR Error Handling
 
-Clear errors.
+The system SHALL provide clear errors.
 
 #### Scenario: Errors
 - WHEN no git/remote/change/push fail
@@ -891,7 +891,7 @@ Clear errors.
 
 ### Requirement: Partial Change ID Resolution for PR Commands
 
-Resolve IDs.
+The system SHALL resolve IDs.
 
 #### Scenario: Resolution
 - WHEN partial ID
@@ -899,7 +899,7 @@ Resolve IDs.
 
 ### Requirement: PR Proposal Interactive Selection Filters Unmerged Changes
 
-Filter already merged.
+The system SHALL filter already merged changes.
 
 #### Scenario: Filtering
 - WHEN selecting proposal
@@ -907,7 +907,7 @@ Filter already merged.
 
 ### Requirement: Template Path Variables
 
-Dynamic paths.
+The system SHALL support dynamic paths.
 
 #### Scenario: Variables
 - WHEN templating
@@ -915,7 +915,7 @@ Dynamic paths.
 
 ### Requirement: Copy Populate Context Prompt in Init Next Steps
 
-Copy prompt with 'c'.
+The system SHALL copy prompt with 'c'.
 
 #### Scenario: Copy prompt
 - WHEN 'c' pressed (success screen)
@@ -923,7 +923,7 @@ Copy prompt with 'c'.
 
 ### Requirement: PR Hotkey in Interactive Changes List Mode
 
-PR with 'P'.
+The system SHALL enable PR workflow with 'P'.
 
 #### Scenario: PR action
 - WHEN `Shift+P` pressed
@@ -931,7 +931,7 @@ PR with 'P'.
 
 ### Requirement: VHS Demo for PR Hotkey
 
-Demo asset.
+The system SHALL include a demo asset.
 
 #### Scenario: Demo
 - WHEN viewing assets
@@ -939,7 +939,7 @@ Demo asset.
 
 ### Requirement: PR Proposal Local Change Cleanup Confirmation
 
-Prompt to remove local.
+The system SHALL prompt to remove local changes.
 
 #### Scenario: Prompt
 - WHEN proposal PR success
@@ -947,7 +947,7 @@ Prompt to remove local.
 
 ### Requirement: CI Workflow Setup Option in Init Wizard Review Step
 
-Setup GitHub Actions.
+The system SHALL setup GitHub Actions.
 
 #### Scenario: CI option
 - WHEN init review
@@ -955,7 +955,7 @@ Setup GitHub Actions.
 
 ### Requirement: PR Remove Subcommand
 
-Remove change PR.
+The system SHALL remove change PR.
 
 #### Scenario: Remove workflow
 - WHEN `spectr pr rm <id>`
@@ -963,7 +963,7 @@ Remove change PR.
 
 ### Requirement: Remove PR Branch Naming
 
-`spectr/remove/<id>`.
+The system SHALL use branch naming pattern `spectr/remove/<id>`.
 
 #### Scenario: Naming
 - WHEN remove PR
@@ -971,7 +971,7 @@ Remove change PR.
 
 ### Requirement: Remove PR Commit Message Format
 
-`spectr(remove): <id>`.
+The system SHALL use commit message format `spectr(remove): <id>`.
 
 #### Scenario: Format
 - WHEN committing
@@ -979,7 +979,7 @@ Remove change PR.
 
 ### Requirement: Remove PR Body Content
 
-Explain removal.
+The system SHALL explain removal in PR body.
 
 #### Scenario: Content
 - WHEN PR body
@@ -987,7 +987,7 @@ Explain removal.
 
 ### Requirement: Responsive Table Column Layout
 
-Adapt columns to width.
+The system SHALL adapt columns to width.
 
 #### Scenario: Responsive columns
 - WHEN displaying
@@ -995,7 +995,7 @@ Adapt columns to width.
 
 ### Requirement: Dynamic Terminal Resize Handling
 
-Handle resize.
+The system SHALL handle terminal resize.
 
 #### Scenario: Resize
 - WHEN resized
@@ -1003,7 +1003,7 @@ Handle resize.
 
 ### Requirement: Column Priority System
 
-Prioritize columns.
+The system SHALL prioritize columns.
 
 #### Scenario: Priority
 - WHEN calculating
@@ -1011,7 +1011,7 @@ Prioritize columns.
 
 ### Requirement: Provider Search in Init Wizard
 
-Search tools with '/'.
+The system SHALL search tools with '/'.
 
 #### Scenario: Search
 - WHEN `/` in wizard
@@ -1019,7 +1019,7 @@ Search tools with '/'.
 
 ### Requirement: Stdout Output Mode for Interactive List
 
-Output ID to stdout.
+The system SHALL output ID to stdout.
 
 #### Scenario: Stdout mode
 - WHEN `-I --stdout`
@@ -1027,7 +1027,7 @@ Output ID to stdout.
 
 ### Requirement: JSONC Comment Parsing
 
-Strip comments.
+The system SHALL strip comments.
 
 #### Scenario: Parsing
 - WHEN reading JSONC
@@ -1035,7 +1035,7 @@ Strip comments.
 
 ### Requirement: TTY Error Hint
 
-Hint for non-TTY.
+The system SHALL provide hints for non-TTY.
 
 #### Scenario: Hint
 - WHEN TTY error
@@ -1043,7 +1043,7 @@ Hint for non-TTY.
 
 ### Requirement: File Coexistence Documentation
 
-Document tasks.md/jsonc.
+The system SHALL document tasks.md/jsonc coexistence.
 
 #### Scenario: Docs
 - WHEN help/success
@@ -1051,7 +1051,7 @@ Document tasks.md/jsonc.
 
 ### Requirement: Slash Command Template Updates
 
-Instructions for tasks.
+The system SHALL provide instructions for tasks.
 
 #### Scenario: Templates
 - WHEN proposal/apply

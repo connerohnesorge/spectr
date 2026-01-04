@@ -15,6 +15,9 @@ import (
 // when append_tasks.section is not specified in the config.
 const DefaultAppendTasksSection = "Automated Tasks"
 
+// ErrConfigMalformed is returned when the config file contains invalid YAML.
+var ErrConfigMalformed = errors.New("config file is malformed")
+
 // Config represents the root configuration structure for spectr.yaml.
 type Config struct {
 	// AppendTasks defines tasks to automatically append during accept.
@@ -95,11 +98,8 @@ func parseConfigFile(path string) (*Config, error) {
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("failed to parse config file %s: %w", path, err)
+		return nil, fmt.Errorf("%w: %s: %v", ErrConfigMalformed, path, err)
 	}
 
 	return &cfg, nil
 }
-
-// ErrConfigMalformed is returned when the config file contains invalid YAML.
-var ErrConfigMalformed = errors.New("config file is malformed")

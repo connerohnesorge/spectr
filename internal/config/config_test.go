@@ -58,7 +58,7 @@ func TestLoadConfig_MalformedConfig(t *testing.T) {
 	cfg, err := LoadConfig(tmpDir)
 	assert.Error(t, err)
 	assert.Equal(t, (*Config)(nil), cfg)
-	assert.Contains(t, err.Error(), "failed to parse config file")
+	assert.Contains(t, err.Error(), "config file is malformed")
 }
 
 func TestLoadConfig_MissingSectionName(t *testing.T) {

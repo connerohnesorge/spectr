@@ -40,7 +40,7 @@ stop:
       showStdout: false
       showStderr: false
       showCommand: true
-      message: "Build failed - please fix build errors before continuing"
+      message: "Build failed - if vendor based error, ensure files are tracked with git and ensure nix vendorHash is up to date"
       maxOutputLines: 5
   # Example:
   # - run: "npm test"

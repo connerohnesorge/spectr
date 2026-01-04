@@ -1,6 +1,6 @@
 # spectr
 
-\<img
+<img
 src="https://github.com/connerohnesorge/spectr/blob/main/docs/src/assets/logo.png"
 alt="Logo" width="95"\>
 

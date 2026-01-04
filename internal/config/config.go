@@ -35,7 +35,7 @@ type AppendTasksConfig struct {
 
 // GetSection returns the section name, using the default if not specified.
 func (c *AppendTasksConfig) GetSection() string {
-	if c.Section == "" {
+	if c == nil || c.Section == "" {
 		return DefaultAppendTasksSection
 	}
 
@@ -44,6 +44,10 @@ func (c *AppendTasksConfig) GetSection() string {
 
 // HasTasks returns true if there are tasks to append.
 func (c *AppendTasksConfig) HasTasks() bool {
+	if c == nil {
+		return false
+	}
+
 	return len(c.Tasks) > 0
 }
 

@@ -178,3 +178,15 @@ func TestAppendTasksConfig_HasTasks(t *testing.T) {
 		})
 	}
 }
+
+func TestAppendTasksConfig_NilReceiver(t *testing.T) {
+	var cfg *AppendTasksConfig
+
+	t.Run("GetSection on nil receiver", func(t *testing.T) {
+		assert.Equal(t, DefaultAppendTasksSection, cfg.GetSection())
+	})
+
+	t.Run("HasTasks on nil receiver", func(t *testing.T) {
+		assert.Equal(t, false, cfg.HasTasks())
+	})
+}

@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/archive"
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
@@ -84,6 +85,15 @@ func (c *AcceptCmd) processChange(
 		return err
 	}
 
+	// Load project configuration (optional)
+	cfg, err := config.LoadConfig(projectRoot)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to load config: %w",
+			err,
+		)
+	}
+
 	// Validate the change before conversion
 	if err = c.runValidation(changeDir); err != nil {
 		return fmt.Errorf(
@@ -105,18 +115,28 @@ func (c *AcceptCmd) processChange(
 		return err
 	}
 
+	// Append configured tasks if present
+	var appendCfg *config.AppendTasksConfig
+	if cfg != nil && cfg.AppendTasks != nil && cfg.AppendTasks.HasTasks() {
+		appendCfg = cfg.AppendTasks
+	}
+
 	tasksJSONPath := filepath.Join(
 		changeDir,
 		"tasks.jsonc",
 	)
 
 	if c.DryRun {
+		totalTasks := len(tasks)
+		if appendCfg != nil {
+			totalTasks += len(appendCfg.Tasks)
+		}
 		fmt.Printf(
 			"Would convert: %s\nwould write to: %s\nWould preserve: %s\nFound %d tasks\n", //nolint:lll,revive // Long format string for dry-run output
 			tasksMdPath,
 			tasksJSONPath,
 			tasksMdPath,
-			len(tasks),
+			totalTasks,
 		)
 
 		return nil
@@ -126,6 +146,7 @@ func (c *AcceptCmd) processChange(
 		tasksMdPath,
 		tasksJSONPath,
 		tasks,
+		appendCfg,
 	)
 }
 
@@ -173,8 +194,9 @@ func resolveChangePaths(
 func writeAndCleanup(
 	tasksMdPath, tasksJSONPath string,
 	tasks []parsers.Task,
+	appendCfg *config.AppendTasksConfig,
 ) error {
-	if err := writeTasksJSONC(tasksJSONPath, tasks); err != nil {
+	if err := writeTasksJSONC(tasksJSONPath, tasks, appendCfg); err != nil {
 		return fmt.Errorf(
 			"failed to write tasks.jsonc: %w",
 			err,
@@ -184,12 +206,17 @@ func writeAndCleanup(
 	// Preserve tasks.md to avoid information loss (formatting, comments, links)
 	// Both tasks.md and tasks.jsonc now coexist after conversion
 
+	totalTasks := len(tasks)
+	if appendCfg != nil {
+		totalTasks += len(appendCfg.Tasks)
+	}
+
 	fmt.Printf(
 		"Converted %s -> %s\nPreserved %s\nWrote %d tasks\n",
 		tasksMdPath,
 		tasksJSONPath,
 		tasksMdPath,
-		len(tasks),
+		totalTasks,
 	)
 
 	return nil

@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -590,8 +591,8 @@ func TestWriteTasksJson(t *testing.T) {
 				"tasks.jsonc",
 			)
 
-			// Write the tasks
-			if err := writeTasksJSONC(tasksJSONPath, tt.tasks); err != nil {
+			// Write the tasks (nil appendCfg for no appended tasks)
+			if err := writeTasksJSONC(tasksJSONPath, tt.tasks, nil); err != nil {
 				t.Fatalf(
 					"writeTasksJSONC() error = %v",
 					err,
@@ -659,7 +660,7 @@ func TestWriteTasksJsonIndentation(t *testing.T) {
 		},
 	}
 
-	if err := writeTasksJSONC(tasksJSONPath, tasks); err != nil {
+	if err := writeTasksJSONC(tasksJSONPath, tasks, nil); err != nil {
 		t.Fatalf(
 			"writeTasksJSONC() error = %v",
 			err,
@@ -722,7 +723,7 @@ func TestWriteTasksJsonFilePermissions(
 		},
 	}
 
-	err := writeTasksJSONC(tasksJsonPath, tasks)
+	err := writeTasksJSONC(tasksJsonPath, tasks, nil)
 	if err != nil {
 		t.Fatalf(
 			"writeTasksJSONC() error = %v",
@@ -865,7 +866,7 @@ Test solution
 	}
 
 	tasksJSONPath := filepath.Join(changeDir, "tasks.jsonc")
-	if err := writeAndCleanup(tasksMdPath, tasksJSONPath, tasks); err != nil {
+	if err := writeAndCleanup(tasksMdPath, tasksJSONPath, tasks, nil); err != nil {
 		t.Fatalf("writeAndCleanup failed: %v", err)
 	}
 
@@ -948,7 +949,7 @@ Test solution
 		t.Fatalf("failed to parse tasks.md: %v", err)
 	}
 
-	if err := writeAndCleanup(tasksMdPath, tasksJSONPath, tasks); err != nil {
+	if err := writeAndCleanup(tasksMdPath, tasksJSONPath, tasks, nil); err != nil {
 		t.Fatalf("writeAndCleanup failed: %v", err)
 	}
 
@@ -1012,4 +1013,262 @@ func TestAcceptDryRunPreservesFiles(t *testing.T) {
 	// Note: Full dry-run test would require mocking the AcceptCmd.Run() method
 	// For now, we verify that writeAndCleanup is only called when NOT in dry-run mode
 	// This test serves as documentation of expected dry-run behavior
+}
+
+// TestWriteTasksJSONCWithAppendConfig verifies that append tasks are added correctly
+func TestWriteTasksJSONCWithAppendConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	tasksJSONPath := filepath.Join(tmpDir, "tasks.jsonc")
+
+	existingTasks := []parsers.Task{
+		{
+			ID:          "1.1",
+			Section:     "Setup",
+			Description: "First task",
+			Status:      parsers.TaskStatusCompleted,
+		},
+		{
+			ID:          "1.2",
+			Section:     "Setup",
+			Description: "Second task",
+			Status:      parsers.TaskStatusPending,
+		},
+		{
+			ID:          "2.1",
+			Section:     "Implementation",
+			Description: "Third task",
+			Status:      parsers.TaskStatusPending,
+		},
+	}
+
+	appendCfg := &config.AppendTasksConfig{
+		Section: "Project Workflow",
+		Tasks: []string{
+			"Run linter and tests",
+			"Update changelog",
+		},
+	}
+
+	err := writeTasksJSONC(tasksJSONPath, existingTasks, appendCfg)
+	if err != nil {
+		t.Fatalf("writeTasksJSONC() error = %v", err)
+	}
+
+	// Read and parse the output
+	data, err := os.ReadFile(tasksJSONPath)
+	if err != nil {
+		t.Fatalf("failed to read tasks.jsonc: %v", err)
+	}
+
+	strippedData := parsers.StripJSONComments(data)
+	var tasksFile parsers.TasksFile
+	if err := json.Unmarshal(strippedData, &tasksFile); err != nil {
+		t.Fatalf("failed to unmarshal JSON: %v", err)
+	}
+
+	// Should have 5 tasks (3 existing + 2 appended)
+	if len(tasksFile.Tasks) != 5 {
+		t.Errorf("expected 5 tasks, got %d", len(tasksFile.Tasks))
+	}
+
+	// Verify appended tasks have correct IDs (section 3, since max was 2)
+	if tasksFile.Tasks[3].ID != "3.1" {
+		t.Errorf("expected appended task ID '3.1', got '%s'", tasksFile.Tasks[3].ID)
+	}
+	if tasksFile.Tasks[4].ID != "3.2" {
+		t.Errorf("expected appended task ID '3.2', got '%s'", tasksFile.Tasks[4].ID)
+	}
+
+	// Verify appended tasks have correct section
+	if tasksFile.Tasks[3].Section != "Project Workflow" {
+		t.Errorf("expected section 'Project Workflow', got '%s'", tasksFile.Tasks[3].Section)
+	}
+
+	// Verify appended tasks have pending status
+	if tasksFile.Tasks[3].Status != parsers.TaskStatusPending {
+		t.Errorf("expected status 'pending', got '%s'", tasksFile.Tasks[3].Status)
+	}
+
+	// Verify appended task descriptions
+	if tasksFile.Tasks[3].Description != "Run linter and tests" {
+		t.Error("wrong description for appended task")
+	}
+}
+
+// TestWriteTasksJSONCWithDefaultSection verifies default section name
+func TestWriteTasksJSONCWithDefaultSection(t *testing.T) {
+	tmpDir := t.TempDir()
+	tasksJSONPath := filepath.Join(tmpDir, "tasks.jsonc")
+
+	existingTasks := []parsers.Task{
+		{
+			ID:          "1.1",
+			Section:     "Setup",
+			Description: "Task",
+			Status:      parsers.TaskStatusPending,
+		},
+	}
+
+	appendCfg := &config.AppendTasksConfig{
+		// No section specified - should use default
+		Tasks: []string{"Appended task"},
+	}
+
+	err := writeTasksJSONC(tasksJSONPath, existingTasks, appendCfg)
+	if err != nil {
+		t.Fatalf("writeTasksJSONC() error = %v", err)
+	}
+
+	data, err := os.ReadFile(tasksJSONPath)
+	if err != nil {
+		t.Fatalf("failed to read tasks.jsonc: %v", err)
+	}
+
+	strippedData := parsers.StripJSONComments(data)
+	var tasksFile parsers.TasksFile
+	if err := json.Unmarshal(strippedData, &tasksFile); err != nil {
+		t.Fatalf("failed to unmarshal JSON: %v", err)
+	}
+
+	// Verify default section name is used
+	if tasksFile.Tasks[1].Section != config.DefaultAppendTasksSection {
+		t.Errorf("expected default section '%s', got '%s'",
+			config.DefaultAppendTasksSection, tasksFile.Tasks[1].Section)
+	}
+}
+
+// TestWriteTasksJSONCWithEmptyAppendTasks verifies no change when append tasks is empty
+func TestWriteTasksJSONCWithEmptyAppendTasks(t *testing.T) {
+	tmpDir := t.TempDir()
+	tasksJSONPath := filepath.Join(tmpDir, "tasks.jsonc")
+
+	existingTasks := []parsers.Task{
+		{
+			ID:          "1.1",
+			Section:     "Setup",
+			Description: "Task",
+			Status:      parsers.TaskStatusPending,
+		},
+	}
+
+	appendCfg := &config.AppendTasksConfig{
+		Section: "Workflow",
+		Tasks:   make([]string, 0), // Empty
+	}
+
+	err := writeTasksJSONC(tasksJSONPath, existingTasks, appendCfg)
+	if err != nil {
+		t.Fatalf("writeTasksJSONC() error = %v", err)
+	}
+
+	data, err := os.ReadFile(tasksJSONPath)
+	if err != nil {
+		t.Fatalf("failed to read tasks.jsonc: %v", err)
+	}
+
+	strippedData := parsers.StripJSONComments(data)
+	var tasksFile parsers.TasksFile
+	if err := json.Unmarshal(strippedData, &tasksFile); err != nil {
+		t.Fatalf("failed to unmarshal JSON: %v", err)
+	}
+
+	// Should have only the original task
+	if len(tasksFile.Tasks) != 1 {
+		t.Errorf("expected 1 task, got %d", len(tasksFile.Tasks))
+	}
+}
+
+// TestFindNextSectionNumber verifies section number calculation
+func TestFindNextSectionNumber(t *testing.T) {
+	tests := []struct {
+		name     string
+		tasks    []parsers.Task
+		expected int
+	}{
+		{
+			name:     "empty tasks",
+			tasks:    make([]parsers.Task, 0),
+			expected: 1,
+		},
+		{
+			name: "single section",
+			tasks: []parsers.Task{
+				{ID: "1.1"},
+				{ID: "1.2"},
+			},
+			expected: 2,
+		},
+		{
+			name: "multiple sections",
+			tasks: []parsers.Task{
+				{ID: "1.1"},
+				{ID: "2.1"},
+				{ID: "3.1"},
+			},
+			expected: 4,
+		},
+		{
+			name: "non-sequential sections",
+			tasks: []parsers.Task{
+				{ID: "1.1"},
+				{ID: "5.1"},
+				{ID: "3.1"},
+			},
+			expected: 6,
+		},
+		{
+			name: "tasks without section prefix",
+			tasks: []parsers.Task{
+				{ID: "1"},
+				{ID: "2"},
+			},
+			expected: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := findNextSectionNumber(tt.tasks)
+			if got != tt.expected {
+				t.Errorf("findNextSectionNumber() = %d, want %d", got, tt.expected)
+			}
+		})
+	}
+}
+
+// TestCreateAppendedTasks verifies task creation from config
+func TestCreateAppendedTasks(t *testing.T) {
+	existingTasks := []parsers.Task{
+		{ID: "1.1", Section: "Setup", Description: "Task 1", Status: parsers.TaskStatusPending},
+		{ID: "2.1", Section: "Impl", Description: "Task 2", Status: parsers.TaskStatusPending},
+	}
+
+	cfg := &config.AppendTasksConfig{
+		Section: "Workflow",
+		Tasks:   []string{"Task A", "Task B", "Task C"},
+	}
+
+	tasks := createAppendedTasks(existingTasks, cfg)
+
+	if len(tasks) != 3 {
+		t.Fatalf("expected 3 tasks, got %d", len(tasks))
+	}
+
+	// Verify IDs start at section 3
+	expectedIDs := []string{"3.1", "3.2", "3.3"}
+	for i, task := range tasks {
+		if task.ID != expectedIDs[i] {
+			t.Errorf("task %d: expected ID '%s', got '%s'", i, expectedIDs[i], task.ID)
+		}
+		if task.Section != "Workflow" {
+			t.Errorf("task %d: expected section 'Workflow', got '%s'", i, task.Section)
+		}
+		if task.Status != parsers.TaskStatusPending {
+			t.Errorf("task %d: expected status 'pending', got '%s'", i, task.Status)
+		}
+	}
+
+	if tasks[0].Description != "Task A" {
+		t.Errorf("expected description 'Task A', got '%s'", tasks[0].Description)
+	}
 }

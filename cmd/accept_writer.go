@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
+	"github.com/connerohnesorge/spectr/internal/config"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
@@ -53,13 +56,22 @@ const tasksJSONHeader = `// Spectr Tasks File (JSONC)
 
 // writeTasksJSONC writes tasks to a tasks.jsonc file with header.
 // Prepends tasksJSONHeader to the JSON data (see parsers/types.go).
+// If appendCfg is provided, appends configured tasks with sequential IDs.
 func writeTasksJSONC(
 	path string,
 	tasks []parsers.Task,
+	appendCfg *config.AppendTasksConfig,
 ) error {
+	// Append configured tasks if present
+	allTasks := tasks
+	if appendCfg != nil && appendCfg.HasTasks() {
+		appendedTasks := createAppendedTasks(tasks, appendCfg)
+		allTasks = append(allTasks, appendedTasks...)
+	}
+
 	tasksFile := parsers.TasksFile{
 		Version: 1,
-		Tasks:   tasks,
+		Tasks:   allTasks,
 	}
 
 	jsonData, err := json.MarshalIndent(
@@ -85,4 +97,51 @@ func writeTasksJSONC(
 	}
 
 	return nil
+}
+
+// createAppendedTasks creates Task structs from the append config.
+// It generates sequential task IDs continuing from the last existing task.
+// For example, if the last task ID was 3.2, appended tasks start at 4.1.
+func createAppendedTasks(
+	existingTasks []parsers.Task,
+	cfg *config.AppendTasksConfig,
+) []parsers.Task {
+	nextSectionNum := findNextSectionNumber(existingTasks)
+	section := cfg.GetSection()
+
+	tasks := make([]parsers.Task, 0, len(cfg.Tasks))
+	for i, desc := range cfg.Tasks {
+		taskID := fmt.Sprintf("%d.%d", nextSectionNum, i+1)
+		tasks = append(tasks, parsers.Task{
+			ID:          taskID,
+			Section:     section,
+			Description: desc,
+			Status:      parsers.TaskStatusPending,
+		})
+	}
+
+	return tasks
+}
+
+// findNextSectionNumber determines the next section number for appended tasks.
+// It parses existing task IDs to find the highest section number, then adds 1.
+// Returns 1 if no existing tasks or task IDs are not in expected format.
+func findNextSectionNumber(tasks []parsers.Task) int {
+	maxSection := 0
+	for _, task := range tasks {
+		// Parse section number from task ID (e.g., "3.2" -> 3)
+		parts := strings.Split(task.ID, ".")
+		if len(parts) < 1 {
+			continue
+		}
+		sectionNum, err := strconv.Atoi(parts[0])
+		if err != nil {
+			continue
+		}
+		if sectionNum > maxSection {
+			maxSection = sectionNum
+		}
+	}
+
+	return maxSection + 1
 }

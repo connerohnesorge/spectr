@@ -1,3 +1,11 @@
+---
+description: Proposal Creation Guide (project)
+allowed-tools: Read, Glob, Grep, Write, Edit, Bash(spectr:*)
+agent: plan
+model: null
+subtask: false
+---
+
 # Proposal Creation Guide
 
 ## Guardrails

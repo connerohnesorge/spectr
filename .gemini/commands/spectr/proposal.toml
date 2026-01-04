@@ -1,4 +1,7 @@
 description = "Create a Spectr change proposal"
+agent = "plan"
+model = ""
+subtask = false
 prompt = """
 # Guardrails
 - Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.

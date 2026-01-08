@@ -198,6 +198,7 @@ func (tm *TemplateManager) Agents() domain.TemplateRef {
 
 // SlashCommand returns a Markdown template reference for the given slash command type.
 // Used by SlashCommandsInitializer, HomeSlashCommandsInitializer, and PrefixedSlashCommandsInitializer.
+// The returned TemplateRef will assemble frontmatter from BaseSlashCommandFrontmatter.
 func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.md.tmpl",
@@ -207,17 +208,33 @@ func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.Template
 	return domain.TemplateRef{
 		Name:     names[cmd],
 		Template: tm.templates,
+		Command:  &cmd,
 	}
+}
+
+// SlashCommandWithOverrides returns a Markdown template with frontmatter overrides.
+// Used when providers need to customize slash command frontmatter.
+// If overrides is nil, behaves identically to SlashCommand(cmd).
+func (tm *TemplateManager) SlashCommandWithOverrides(
+	cmd domain.SlashCommand,
+	overrides *domain.FrontmatterOverride,
+) domain.TemplateRef {
+	ref := tm.SlashCommand(cmd)
+	ref.Overrides = overrides
+
+	return ref
 }
 
 // TOMLSlashCommand returns a TOML template reference for the given slash command type.
 // Used by TOMLSlashCommandsInitializer (Gemini only).
+// Note: TOML templates have frontmatter embedded in the template file, not assembled dynamically.
 func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.toml.tmpl",
 		domain.SlashApply:    "slash-apply.toml.tmpl",
 	}
 
+	// TOML templates don't use dynamic frontmatter (Command is nil)
 	return domain.TemplateRef{
 		Name:     names[cmd],
 		Template: tm.templates,

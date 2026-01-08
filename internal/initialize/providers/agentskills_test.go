@@ -28,6 +28,12 @@ func (*mockSkillTemplateManager) Agents() domain.TemplateRef {
 func (*mockSkillTemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
 	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.md.tmpl", cmd.String())}
 }
+func (*mockSkillTemplateManager) SlashCommandWithOverrides(
+	cmd domain.SlashCommand,
+	_ *domain.FrontmatterOverride,
+) domain.TemplateRef {
+	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.md.tmpl", cmd.String())}
+}
 func (*mockSkillTemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
 	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.toml.tmpl", cmd.String())}
 }

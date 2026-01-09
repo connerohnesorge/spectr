@@ -11,18 +11,40 @@ import (
 // TemplateRef is a type-safe reference to a parsed template.
 // It can be safely passed between packages without creating import cycles.
 type TemplateRef struct {
-	Name     string             // template file name (e.g., "instruction-pointer.md.tmpl")
-	Template *template.Template // pre-parsed template
+	Name      string               // template file name (e.g., "instruction-pointer.md.tmpl")
+	Template  *template.Template   // pre-parsed template
+	Command   *SlashCommand        // slash command type (for frontmatter lookup), nil if not a slash command
+	Overrides *FrontmatterOverride // optional frontmatter modifications
 }
 
 // Render executes the template with the given context.
+// If Command is set, it assembles frontmatter from BaseSlashCommandFrontmatter
+// and applies any Overrides before prepending to the template body.
 func (tr TemplateRef) Render(ctx *TemplateContext) (string, error) {
 	var buf bytes.Buffer
 	if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
 		return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)
 	}
 
-	return buf.String(), nil
+	body := buf.String()
+
+	// If this is a slash command template, assemble frontmatter
+	if tr.Command != nil {
+		// Get base frontmatter for this command
+		fm := GetBaseFrontmatter(*tr.Command)
+
+		// Apply overrides if present
+		if tr.Overrides != nil {
+			fm = ApplyFrontmatterOverrides(fm, tr.Overrides)
+		}
+
+		// Only render frontmatter if we have fields
+		if len(fm) > 0 {
+			return RenderFrontmatter(fm, body)
+		}
+	}
+
+	return body, nil
 }
 
 // TemplateContext holds path-related template variables for dynamic directory names.

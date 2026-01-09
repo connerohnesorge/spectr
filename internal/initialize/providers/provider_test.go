@@ -33,6 +33,13 @@ func (*mockTemplateManager) SlashCommand(cmd domain.SlashCommand) domain.Templat
 	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.md.tmpl", cmd.String())}
 }
 
+func (*mockTemplateManager) SlashCommandWithOverrides(
+	cmd domain.SlashCommand,
+	_ *domain.FrontmatterOverride,
+) domain.TemplateRef {
+	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.md.tmpl", cmd.String())}
+}
+
 func (*mockTemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
 	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.toml.tmpl", cmd.String())}
 }

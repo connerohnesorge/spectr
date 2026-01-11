@@ -14,25 +14,25 @@ The current system embeds frontmatter directly in `.tmpl` files, requiring dupli
 
 Implement an intelligent frontmatter override system that:
 
-1. **Parses** existing frontmatter from base templates as YAML
+1. **Looks up** base frontmatter from the frontmatter package
 2. **Merges** provider-specific overrides intelligently
 3. **Renders** the merged frontmatter back to YAML
 4. **Inserts** the final frontmatter into the generated file
 
 This allows:
-- Base templates to define default frontmatter
+- Base frontmatter stored centrally in the package (not in templates)
 - Providers to override specific fields (e.g., add `context: fork`, remove `agent: plan`)
-- Clean, maintainable template reuse without duplication
+- Clean, maintainable template reuse without duplication or parsing from templates
 
 ## Architecture
 
 ```
-Template (.tmpl file)
-  ↓ parse frontmatter as YAML
+Frontmatter Package (base frontmatter map)
+  ↓ lookup base frontmatter
 Base Frontmatter (map[string]interface{})
   ↓ + Provider overrides (map[string]interface{})
 Merged Frontmatter (map[string]interface{})
-  ↓ render as YAML
+  ↓ render to YAML + template body
 Final Slash Command (.md file)
 ```
 
@@ -53,14 +53,16 @@ Final Slash Command (.md file)
 ## Implementation
 
 ### Phase 1: Core Frontmatter System
-- Add YAML parsing/rendering utilities in `internal/domain`
-- Implement `FrontmatterOverride` type
-- Add tests for frontmatter merge logic
+- Create base frontmatter map in `internal/frontmatter` package (keyed by slash command name)
+- Implement `FrontmatterOverride` type in `internal/domain` with Set and Remove fields
+- Add YAML rendering utilities to convert merged map back to YAML
+- Add tests for frontmatter merge logic and override application
 
 ### Phase 2: TemplateManager Extension
-- Add `SlashCommandWithOverrides()` method
-- Parse frontmatter from template content
-- Apply overrides and re-render
+- Add `SlashCommandWithOverrides()` method to lookup base frontmatter from package
+- Apply provider-specific overrides (Set then Remove)
+- Render merged frontmatter map to YAML
+- Combine rendered YAML with template body to create final slash command file
 
 ### Phase 3: ClaudeProvider Integration
 - Update `ClaudeProvider.Initializers()` to use overrides

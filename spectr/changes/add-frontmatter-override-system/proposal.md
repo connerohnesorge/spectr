@@ -26,7 +26,7 @@ This allows:
 
 ## Architecture
 
-```
+```text
 Frontmatter Package (base frontmatter map)
   ↓ lookup base frontmatter
 Base Frontmatter (map[string]interface{})

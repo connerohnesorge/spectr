@@ -19,9 +19,7 @@ func (*ClaudeProvider) Initializers(
 	// - Add "context: fork" to run in forked sub-agent context
 	// - Remove "agent" field (not supported by Claude Code slash commands)
 	proposalOverrides := &domain.FrontmatterOverride{
-		Set: map[string]any{
-			"context": "fork",
-		},
+		// Set:    map[string]any{"context": "fork"},
 		Remove: []string{"agent"},
 	}
 

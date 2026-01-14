@@ -23,11 +23,15 @@ type FrontmatterOverride struct {
 
 // ValidFrontmatterKeys defines all known valid frontmatter field names.
 // Used to validate overrides and catch typos.
+//
+// Claude: https://code.claude.com/docs/en/slash-commands
+// OpenCode: https://opencode.ai/docs/commands/
 var ValidFrontmatterKeys = map[string]bool{
 	"description":   true,
 	"allowed-tools": true,
 	"subtask":       true,
-	"context":       true, // Claude Code: "fork" runs in forked sub-agent context
+	"context":       false, // Claude Code: "fork" runs in forked sub-agent context
+	"agent":         true,  // Agent routing (e.g., "plan" for planning subagent)
 }
 
 // ValidateFrontmatterOverride checks that all keys in an override are known valid keys.

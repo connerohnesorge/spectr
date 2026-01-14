@@ -10,19 +10,16 @@ func TestGetBaseFrontmatter(t *testing.T) {
 		name       string
 		cmd        SlashCommand
 		wantFields []string
-		wantAgent  bool // whether "agent" field should be present
 	}{
 		{
 			name:       "proposal command has expected fields",
 			cmd:        SlashProposal,
-			wantFields: []string{"description", "allowed-tools", "agent", "subtask"},
-			wantAgent:  true,
+			wantFields: []string{"description", "allowed-tools", "subtask"},
 		},
 		{
 			name:       "apply command has expected fields",
 			cmd:        SlashApply,
 			wantFields: []string{"description", "allowed-tools", "subtask"},
-			wantAgent:  false,
 		},
 	}
 
@@ -37,15 +34,9 @@ func TestGetBaseFrontmatter(t *testing.T) {
 				}
 			}
 
-			// Check agent field presence
-			_, hasAgent := fm["agent"]
-			if hasAgent != tt.wantAgent {
-				t.Errorf(
-					"GetBaseFrontmatter(%v) agent field presence = %v, want %v",
-					tt.cmd,
-					hasAgent,
-					tt.wantAgent,
-				)
+			// Ensure agent field is not present
+			if _, hasAgent := fm["agent"]; hasAgent {
+				t.Errorf("GetBaseFrontmatter(%v) should not have agent field", tt.cmd)
 			}
 		})
 	}

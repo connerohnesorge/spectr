@@ -26,7 +26,6 @@ type FrontmatterOverride struct {
 var ValidFrontmatterKeys = map[string]bool{
 	"description":   true,
 	"allowed-tools": true,
-	"agent":         true,
 	"subtask":       true,
 	"context":       true, // Claude Code: "fork" runs in forked sub-agent context
 }
@@ -70,7 +69,6 @@ var BaseSlashCommandFrontmatter = map[SlashCommand]map[string]any{
 	SlashProposal: {
 		"description":   "Proposal Creation Guide (project)",
 		"allowed-tools": "Read, Glob, Grep, Write, Edit, Bash(spectr:*)",
-		"agent":         "plan",
 		"subtask":       false,
 	},
 	SlashApply: {

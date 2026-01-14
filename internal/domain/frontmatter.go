@@ -21,6 +21,49 @@ type FrontmatterOverride struct {
 	Remove []string
 }
 
+// ValidFrontmatterKeys defines all known valid frontmatter field names.
+// Used to validate overrides and catch typos.
+var ValidFrontmatterKeys = map[string]bool{
+	"description":   true,
+	"allowed-tools": true,
+	"agent":         true,
+	"subtask":       true,
+	"context":       true, // Claude Code: "fork" runs in forked sub-agent context
+}
+
+// ValidateFrontmatterOverride checks that all keys in an override are known valid keys.
+// Returns an error listing any unknown keys found.
+// This helps catch typos like "contxt" instead of "context".
+func ValidateFrontmatterOverride(overrides *FrontmatterOverride) error {
+	if overrides == nil {
+		return nil
+	}
+
+	var unknownKeys []string
+
+	// Check Set keys
+	for k := range overrides.Set {
+		if !ValidFrontmatterKeys[k] {
+			unknownKeys = append(unknownKeys, k)
+		}
+	}
+
+	// Check Remove keys
+	for _, k := range overrides.Remove {
+		if !ValidFrontmatterKeys[k] {
+			unknownKeys = append(unknownKeys, k)
+		}
+	}
+
+	if len(unknownKeys) > 0 {
+		sort.Strings(unknownKeys)
+
+		return fmt.Errorf("unknown frontmatter keys: %v", unknownKeys)
+	}
+
+	return nil
+}
+
 // BaseSlashCommandFrontmatter defines default frontmatter for each slash command.
 // Templates (.tmpl files) contain only body content; frontmatter is data.
 var BaseSlashCommandFrontmatter = map[SlashCommand]map[string]any{
@@ -74,6 +117,8 @@ func copyValue(v any) any {
 		return copySlice(val)
 	case []string:
 		return copyStringSlice(val)
+	case []int:
+		return copyIntSlice(val)
 	default:
 		// Primitive types (string, bool, int, etc.) are copied by value
 		return v
@@ -101,6 +146,18 @@ func copyStringSlice(src []string) []string {
 	}
 
 	dst := make([]string, len(src))
+	copy(dst, src)
+
+	return dst
+}
+
+// copyIntSlice creates a copy of a []int.
+func copyIntSlice(src []int) []int {
+	if src == nil {
+		return nil
+	}
+
+	dst := make([]int, len(src))
 	copy(dst, src)
 
 	return dst
@@ -150,6 +207,8 @@ func ApplyFrontmatterOverrides(
 //	key: value
 //	---
 //	Body content
+//
+// Keys are sorted alphabetically to ensure deterministic output.
 func RenderFrontmatter(fm map[string]any, body string) (string, error) {
 	var buf bytes.Buffer
 
@@ -165,16 +224,30 @@ func RenderFrontmatter(fm map[string]any, body string) (string, error) {
 		}
 		sort.Strings(keys)
 
-		// Create ordered map for YAML rendering
-		orderedFm := make(map[string]any, len(fm))
+		// Build yaml.Node with explicit key ordering
+		// Go maps don't preserve insertion order, so we use yaml.Node
+		// to guarantee deterministic output
+		mapNode := &yaml.Node{
+			Kind: yaml.MappingNode,
+		}
 		for _, k := range keys {
-			orderedFm[k] = fm[k]
+			// Add key node
+			keyNode := &yaml.Node{
+				Kind:  yaml.ScalarNode,
+				Value: k,
+			}
+			// Add value node
+			valNode := &yaml.Node{}
+			if err := valNode.Encode(fm[k]); err != nil {
+				return "", fmt.Errorf("failed to encode frontmatter field %q: %w", k, err)
+			}
+			mapNode.Content = append(mapNode.Content, keyNode, valNode)
 		}
 
-		// Encode YAML
+		// Encode the ordered node
 		encoder := yaml.NewEncoder(&buf)
 		encoder.SetIndent(0) // No extra indentation
-		if err := encoder.Encode(orderedFm); err != nil {
+		if err := encoder.Encode(mapNode); err != nil {
 			return "", fmt.Errorf("failed to encode frontmatter as YAML: %w", err)
 		}
 		if err := encoder.Close(); err != nil {

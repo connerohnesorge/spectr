@@ -20,7 +20,13 @@ type TemplateRef struct {
 // Render executes the template with the given context.
 // If Command is set, it assembles frontmatter from BaseSlashCommandFrontmatter
 // and applies any Overrides before prepending to the template body.
+// Returns an error if Overrides contains unknown frontmatter keys.
 func (tr TemplateRef) Render(ctx *TemplateContext) (string, error) {
+	// Validate overrides before rendering to catch typos early
+	if err := ValidateFrontmatterOverride(tr.Overrides); err != nil {
+		return "", fmt.Errorf("invalid frontmatter overrides for template %s: %w", tr.Name, err)
+	}
+
 	var buf bytes.Buffer
 	if err := tr.Template.ExecuteTemplate(&buf, tr.Name, ctx); err != nil {
 		return "", fmt.Errorf("failed to render template %s: %w", tr.Name, err)

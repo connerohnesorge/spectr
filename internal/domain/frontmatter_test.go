@@ -458,3 +458,169 @@ func TestRenderFrontmatter_DeterministicOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateFrontmatterOverride(t *testing.T) {
+	tests := []struct {
+		name      string
+		overrides *FrontmatterOverride
+		wantErr   bool
+		errMsg    string
+	}{
+		{
+			name:      "nil overrides is valid",
+			overrides: nil,
+			wantErr:   false,
+		},
+		{
+			name: "valid Set keys",
+			overrides: &FrontmatterOverride{
+				Set: map[string]any{
+					"context":     "fork",
+					"description": "Test",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid Remove keys",
+			overrides: &FrontmatterOverride{
+				Remove: []string{"agent", "subtask"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid Set key - typo",
+			overrides: &FrontmatterOverride{
+				Set: map[string]any{
+					"contxt": "fork", // typo for "context"
+				},
+			},
+			wantErr: true,
+			errMsg:  "contxt",
+		},
+		{
+			name: "invalid Remove key",
+			overrides: &FrontmatterOverride{
+				Remove: []string{"unknown-field"},
+			},
+			wantErr: true,
+			errMsg:  "unknown-field",
+		},
+		{
+			name: "multiple invalid keys",
+			overrides: &FrontmatterOverride{
+				Set:    map[string]any{"bad1": "v1", "bad2": "v2"},
+				Remove: []string{"bad3"},
+			},
+			wantErr: true,
+			errMsg:  "bad1",
+		},
+		{
+			name: "claude code proposal overrides are valid",
+			overrides: &FrontmatterOverride{
+				Set:    map[string]any{"context": "fork"},
+				Remove: []string{"agent"},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateFrontmatterOverride(tt.overrides)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateFrontmatterOverride() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr || tt.errMsg == "" {
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
+				t.Errorf(
+					"ValidateFrontmatterOverride() error should contain %q, got %v",
+					tt.errMsg,
+					err,
+				)
+			}
+		})
+	}
+}
+
+func TestCopyIntSlice(t *testing.T) {
+	tests := []struct {
+		name string
+		src  []int
+	}{
+		{
+			name: "nil slice",
+			src:  nil,
+		},
+		{
+			name: "empty slice",
+			src:  make([]int, 0),
+		},
+		{
+			name: "slice with values",
+			src:  []int{8080, 443, 80},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dst := copyIntSlice(tt.src)
+
+			if tt.src == nil {
+				if dst != nil {
+					t.Error("copyIntSlice(nil) should return nil")
+				}
+
+				return
+			}
+
+			if len(dst) != len(tt.src) {
+				t.Errorf("copyIntSlice length = %d, want %d", len(dst), len(tt.src))
+			}
+
+			// Verify values match
+			for i, v := range tt.src {
+				if dst[i] != v {
+					t.Errorf("copyIntSlice[%d] = %d, want %d", i, dst[i], v)
+				}
+			}
+		})
+	}
+}
+
+func TestCopyIntSlice_Mutation(t *testing.T) {
+	src := []int{1, 2, 3}
+	dst := copyIntSlice(src)
+
+	// Modify dst
+	dst[0] = 999
+
+	// src should be unaffected
+	if src[0] != 1 {
+		t.Error("copyIntSlice: modifying copy affected original")
+	}
+}
+
+func TestCopyMap_WithIntSlice(t *testing.T) {
+	src := map[string]any{
+		"ports": []int{8080, 443},
+	}
+
+	dst := copyMap(src)
+
+	// Modify dst
+	if ports, ok := dst["ports"].([]int); ok {
+		ports[0] = 9999
+	}
+
+	// src should be unaffected
+	srcPorts, ok := src["ports"].([]int)
+	if !ok {
+		t.Fatal("src ports is not []int")
+	}
+	if srcPorts[0] != 8080 {
+		t.Error("copyMap: modifying []int copy affected original")
+	}
+}

@@ -12,14 +12,22 @@ func TestGetBaseFrontmatter(t *testing.T) {
 		wantFields []string
 	}{
 		{
-			name:       "proposal command has expected fields",
-			cmd:        SlashProposal,
-			wantFields: []string{"description", "allowed-tools", "subtask"},
+			name: "proposal command has expected fields",
+			cmd:  SlashProposal,
+			wantFields: []string{
+				"description",
+				"allowed-tools",
+				"subtask",
+			},
 		},
 		{
-			name:       "apply command has expected fields",
-			cmd:        SlashApply,
-			wantFields: []string{"description", "allowed-tools", "subtask"},
+			name: "apply command has expected fields",
+			cmd:  SlashApply,
+			wantFields: []string{
+				"description",
+				"allowed-tools",
+				"subtask",
+			},
 		},
 	}
 
@@ -30,13 +38,20 @@ func TestGetBaseFrontmatter(t *testing.T) {
 			// Check expected fields exist
 			for _, field := range tt.wantFields {
 				if _, ok := fm[field]; !ok {
-					t.Errorf("GetBaseFrontmatter(%v) missing field %q", tt.cmd, field)
+					t.Errorf(
+						"GetBaseFrontmatter(%v) missing field %q",
+						tt.cmd,
+						field,
+					)
 				}
 			}
 
 			// Ensure agent field is not present
 			if _, hasAgent := fm["agent"]; hasAgent {
-				t.Errorf("GetBaseFrontmatter(%v) should not have agent field", tt.cmd)
+				t.Errorf(
+					"GetBaseFrontmatter(%v) should not have agent field",
+					tt.cmd,
+				)
 			}
 		})
 	}
@@ -44,7 +59,9 @@ func TestGetBaseFrontmatter(t *testing.T) {
 
 const testModifiedValue = "modified"
 
-func TestGetBaseFrontmatter_ReturnsDeepCopy(t *testing.T) {
+func TestGetBaseFrontmatter_ReturnsDeepCopy(
+	t *testing.T,
+) {
 	fm1 := GetBaseFrontmatter(SlashProposal)
 	fm2 := GetBaseFrontmatter(SlashProposal)
 
@@ -53,24 +70,35 @@ func TestGetBaseFrontmatter_ReturnsDeepCopy(t *testing.T) {
 
 	// fm2 should be unaffected
 	if fm2["description"] == testModifiedValue {
-		t.Error("GetBaseFrontmatter did not return a deep copy - mutations affect other copies")
+		t.Error(
+			"GetBaseFrontmatter did not return a deep copy - mutations affect other copies",
+		)
 	}
 
 	// Original BaseSlashCommandFrontmatter should be unaffected
 	original := BaseSlashCommandFrontmatter[SlashProposal]
 	if original["description"] == testModifiedValue {
-		t.Error("GetBaseFrontmatter did not return a deep copy - mutations affect original")
+		t.Error(
+			"GetBaseFrontmatter did not return a deep copy - mutations affect original",
+		)
 	}
 }
 
-func TestGetBaseFrontmatter_UnknownCommand(t *testing.T) {
+func TestGetBaseFrontmatter_UnknownCommand(
+	t *testing.T,
+) {
 	// Using an invalid command value
 	fm := GetBaseFrontmatter(SlashCommand(999))
 	if fm == nil {
-		t.Error("GetBaseFrontmatter should return empty map for unknown command, got nil")
+		t.Error(
+			"GetBaseFrontmatter should return empty map for unknown command, got nil",
+		)
 	}
 	if len(fm) != 0 {
-		t.Errorf("GetBaseFrontmatter should return empty map for unknown command, got %v", fm)
+		t.Errorf(
+			"GetBaseFrontmatter should return empty map for unknown command, got %v",
+			fm,
+		)
 	}
 }
 
@@ -123,7 +151,9 @@ func TestCopyMap(t *testing.T) {
 
 			if tt.src == nil {
 				if dst != nil {
-					t.Error("copyMap(nil) should return nil")
+					t.Error(
+						"copyMap(nil) should return nil",
+					)
 				}
 
 				return
@@ -131,7 +161,11 @@ func TestCopyMap(t *testing.T) {
 
 			// Verify same length
 			if len(dst) != len(tt.src) {
-				t.Errorf("copyMap length = %d, want %d", len(dst), len(tt.src))
+				t.Errorf(
+					"copyMap length = %d, want %d",
+					len(dst),
+					len(tt.src),
+				)
 			}
 		})
 	}
@@ -155,7 +189,9 @@ func TestCopyMap_Mutation(t *testing.T) {
 
 	// src should be unaffected
 	if src["key"] != "original" {
-		t.Error("copyMap: modifying copy affected original (top-level)")
+		t.Error(
+			"copyMap: modifying copy affected original (top-level)",
+		)
 	}
 
 	nested, ok := src["nested"].(map[string]any)
@@ -163,7 +199,9 @@ func TestCopyMap_Mutation(t *testing.T) {
 		return
 	}
 	if nested["inner"] != "value" {
-		t.Error("copyMap: modifying copy affected original (nested)")
+		t.Error(
+			"copyMap: modifying copy affected original (nested)",
+		)
 	}
 }
 
@@ -182,7 +220,9 @@ func TestApplyFrontmatterOverrides(t *testing.T) {
 			},
 			overrides: nil,
 			wantKeys:  []string{"key"},
-			wantValue: map[string]any{"key": "value"},
+			wantValue: map[string]any{
+				"key": "value",
+			},
 		},
 		{
 			name: "set adds new field",
@@ -210,8 +250,10 @@ func TestApplyFrontmatterOverrides(t *testing.T) {
 					"key": "modified",
 				},
 			},
-			wantKeys:  []string{"key"},
-			wantValue: map[string]any{"key": "modified"},
+			wantKeys: []string{"key"},
+			wantValue: map[string]any{
+				"key": "modified",
+			},
 		},
 		{
 			name: "remove deletes field",
@@ -222,8 +264,10 @@ func TestApplyFrontmatterOverrides(t *testing.T) {
 			overrides: &FrontmatterOverride{
 				Remove: []string{"remove"},
 			},
-			wantKeys:  []string{"keep"},
-			wantValue: map[string]any{"keep": "value"},
+			wantKeys: []string{"keep"},
+			wantValue: map[string]any{
+				"keep": "value",
+			},
 		},
 		{
 			name: "remove ignores non-existent field",
@@ -233,8 +277,10 @@ func TestApplyFrontmatterOverrides(t *testing.T) {
 			overrides: &FrontmatterOverride{
 				Remove: []string{"nonexistent"},
 			},
-			wantKeys:  []string{"key"},
-			wantValue: map[string]any{"key": "value"},
+			wantKeys: []string{"key"},
+			wantValue: map[string]any{
+				"key": "value",
+			},
 		},
 		{
 			name: "set then remove same field removes it",
@@ -242,7 +288,9 @@ func TestApplyFrontmatterOverrides(t *testing.T) {
 				"key": "original",
 			},
 			overrides: &FrontmatterOverride{
-				Set:    map[string]any{"key": "set-value"},
+				Set: map[string]any{
+					"key": "set-value",
+				},
 				Remove: []string{"key"},
 			},
 			wantKeys: nil,
@@ -256,27 +304,43 @@ func TestApplyFrontmatterOverrides(t *testing.T) {
 				"subtask":       false,
 			},
 			overrides: &FrontmatterOverride{
-				Set:    map[string]any{"context": "fork"},
+				Set: map[string]any{
+					"context": "fork",
+				},
 				Remove: []string{"agent"},
 			},
-			wantKeys: []string{"description", "allowed-tools", "context", "subtask"},
+			wantKeys: []string{
+				"description",
+				"allowed-tools",
+				"context",
+				"subtask",
+			},
 			wantValue: map[string]any{
 				"context": "fork",
 				"subtask": false,
 			},
 		},
 		{
-			name:      "nil base with overrides",
-			base:      nil,
-			overrides: &FrontmatterOverride{Set: map[string]any{"key": "value"}},
-			wantKeys:  []string{"key"},
-			wantValue: map[string]any{"key": "value"},
+			name: "nil base with overrides",
+			base: nil,
+			overrides: &FrontmatterOverride{
+				Set: map[string]any{
+					"key": "value",
+				},
+			},
+			wantKeys: []string{"key"},
+			wantValue: map[string]any{
+				"key": "value",
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ApplyFrontmatterOverrides(tt.base, tt.overrides)
+			result := ApplyFrontmatterOverrides(
+				tt.base,
+				tt.overrides,
+			)
 
 			// Check expected keys
 			if len(result) != len(tt.wantKeys) {
@@ -289,7 +353,10 @@ func TestApplyFrontmatterOverrides(t *testing.T) {
 
 			for _, key := range tt.wantKeys {
 				if _, ok := result[key]; !ok {
-					t.Errorf("ApplyFrontmatterOverrides missing expected key %q", key)
+					t.Errorf(
+						"ApplyFrontmatterOverrides missing expected key %q",
+						key,
+					)
 				}
 			}
 
@@ -308,22 +375,31 @@ func TestApplyFrontmatterOverrides(t *testing.T) {
 	}
 }
 
-func TestApplyFrontmatterOverrides_DoesNotMutateBase(t *testing.T) {
+func TestApplyFrontmatterOverrides_DoesNotMutateBase(
+	t *testing.T,
+) {
 	base := map[string]any{
 		"key": "original",
 	}
 	overrides := &FrontmatterOverride{
-		Set: map[string]any{"key": "modified", "new": "value"},
+		Set: map[string]any{
+			"key": "modified",
+			"new": "value",
+		},
 	}
 
 	ApplyFrontmatterOverrides(base, overrides)
 
 	// base should be unaffected
 	if base["key"] != "original" {
-		t.Error("ApplyFrontmatterOverrides mutated base map")
+		t.Error(
+			"ApplyFrontmatterOverrides mutated base map",
+		)
 	}
 	if _, ok := base["new"]; ok {
-		t.Error("ApplyFrontmatterOverrides added field to base map")
+		t.Error(
+			"ApplyFrontmatterOverrides added field to base map",
+		)
 	}
 }
 
@@ -349,10 +425,12 @@ func TestRenderFrontmatter(t *testing.T) {
 			fm: map[string]any{
 				"description": "Test",
 			},
-			body:        "# Body",
-			wantPrefix:  "---\n",
-			wantSuffix:  "---\n# Body",
-			wantContain: []string{"description: Test"},
+			body:       "# Body",
+			wantPrefix: "---\n",
+			wantSuffix: "---\n# Body",
+			wantContain: []string{
+				"description: Test",
+			},
 		},
 		{
 			name: "multiple fields",
@@ -360,8 +438,11 @@ func TestRenderFrontmatter(t *testing.T) {
 				"description": "Test",
 				"subtask":     false,
 			},
-			body:        "# Body",
-			wantContain: []string{"description: Test", "subtask: false"},
+			body: "# Body",
+			wantContain: []string{
+				"description: Test",
+				"subtask: false",
+			},
 		},
 		{
 			name: "claude code proposal frontmatter",
@@ -384,16 +465,33 @@ func TestRenderFrontmatter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := RenderFrontmatter(tt.fm, tt.body)
+			result, err := RenderFrontmatter(
+				tt.fm,
+				tt.body,
+			)
 			if err != nil {
-				t.Fatalf("RenderFrontmatter error = %v", err)
+				t.Fatalf(
+					"RenderFrontmatter error = %v",
+					err,
+				)
 			}
 
-			if tt.wantPrefix != "" && !strings.HasPrefix(result, tt.wantPrefix) {
-				t.Errorf("RenderFrontmatter result does not have expected prefix\ngot:\n%s", result)
+			if tt.wantPrefix != "" &&
+				!strings.HasPrefix(
+					result,
+					tt.wantPrefix,
+				) {
+				t.Errorf(
+					"RenderFrontmatter result does not have expected prefix\ngot:\n%s",
+					result,
+				)
 			}
 
-			if tt.wantSuffix != "" && !strings.HasSuffix(result, tt.wantSuffix) {
+			if tt.wantSuffix != "" &&
+				!strings.HasSuffix(
+					result,
+					tt.wantSuffix,
+				) {
 				t.Errorf(
 					"RenderFrontmatter result does not have expected suffix\ngot:\n%s\nwant suffix:\n%s",
 					result,
@@ -402,13 +500,23 @@ func TestRenderFrontmatter(t *testing.T) {
 			}
 
 			for _, want := range tt.wantContain {
-				if !strings.Contains(result, want) {
-					t.Errorf("RenderFrontmatter result does not contain %q\ngot:\n%s", want, result)
+				if !strings.Contains(
+					result,
+					want,
+				) {
+					t.Errorf(
+						"RenderFrontmatter result does not contain %q\ngot:\n%s",
+						want,
+						result,
+					)
 				}
 			}
 
 			for _, notWant := range tt.wantNotContain {
-				if strings.Contains(result, notWant) {
+				if strings.Contains(
+					result,
+					notWant,
+				) {
 					t.Errorf(
 						"RenderFrontmatter result should not contain %q\ngot:\n%s",
 						notWant,
@@ -420,7 +528,9 @@ func TestRenderFrontmatter(t *testing.T) {
 	}
 }
 
-func TestRenderFrontmatter_DeterministicOrder(t *testing.T) {
+func TestRenderFrontmatter_DeterministicOrder(
+	t *testing.T,
+) {
 	fm := map[string]any{
 		"zebra":  "last",
 		"alpha":  "first",
@@ -431,13 +541,20 @@ func TestRenderFrontmatter_DeterministicOrder(t *testing.T) {
 	// Render multiple times and verify consistent output
 	first, err := RenderFrontmatter(fm, body)
 	if err != nil {
-		t.Fatalf("RenderFrontmatter error = %v", err)
+		t.Fatalf(
+			"RenderFrontmatter error = %v",
+			err,
+		)
 	}
 
 	for i := range 10 {
 		result, err := RenderFrontmatter(fm, body)
 		if err != nil {
-			t.Fatalf("RenderFrontmatter error on iteration %d = %v", i, err)
+			t.Fatalf(
+				"RenderFrontmatter error on iteration %d = %v",
+				i,
+				err,
+			)
 		}
 		if result != first {
 			t.Errorf(
@@ -450,7 +567,9 @@ func TestRenderFrontmatter_DeterministicOrder(t *testing.T) {
 	}
 }
 
-func TestValidateFrontmatterOverride(t *testing.T) {
+func TestValidateFrontmatterOverride(
+	t *testing.T,
+) {
 	tests := []struct {
 		name      string
 		overrides *FrontmatterOverride
@@ -466,7 +585,7 @@ func TestValidateFrontmatterOverride(t *testing.T) {
 			name: "valid Set keys",
 			overrides: &FrontmatterOverride{
 				Set: map[string]any{
-					"context":     "fork",
+					"agent":       "plan",
 					"description": "Test",
 				},
 			},
@@ -475,7 +594,10 @@ func TestValidateFrontmatterOverride(t *testing.T) {
 		{
 			name: "valid Remove keys",
 			overrides: &FrontmatterOverride{
-				Remove: []string{"agent", "subtask"},
+				Remove: []string{
+					"agent",
+					"subtask",
+				},
 			},
 			wantErr: false,
 		},
@@ -500,7 +622,10 @@ func TestValidateFrontmatterOverride(t *testing.T) {
 		{
 			name: "multiple invalid keys",
 			overrides: &FrontmatterOverride{
-				Set:    map[string]any{"bad1": "v1", "bad2": "v2"},
+				Set: map[string]any{
+					"bad1": "v1",
+					"bad2": "v2",
+				},
 				Remove: []string{"bad3"},
 			},
 			wantErr: true,
@@ -509,8 +634,10 @@ func TestValidateFrontmatterOverride(t *testing.T) {
 		{
 			name: "claude code proposal overrides are valid",
 			overrides: &FrontmatterOverride{
-				Set:    map[string]any{"context": "fork"},
-				Remove: []string{"agent"},
+				Set: map[string]any{
+					"agent": "plan",
+				},
+				Remove: []string{"subtask"},
 			},
 			wantErr: false,
 		},
@@ -518,14 +645,24 @@ func TestValidateFrontmatterOverride(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateFrontmatterOverride(tt.overrides)
+			err := ValidateFrontmatterOverride(
+				tt.overrides,
+			)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ValidateFrontmatterOverride() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"ValidateFrontmatterOverride() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 			if !tt.wantErr || tt.errMsg == "" {
 				return
 			}
-			if err == nil || !strings.Contains(err.Error(), tt.errMsg) {
+			if err == nil ||
+				!strings.Contains(
+					err.Error(),
+					tt.errMsg,
+				) {
 				t.Errorf(
 					"ValidateFrontmatterOverride() error should contain %q, got %v",
 					tt.errMsg,
@@ -561,20 +698,31 @@ func TestCopyIntSlice(t *testing.T) {
 
 			if tt.src == nil {
 				if dst != nil {
-					t.Error("copyIntSlice(nil) should return nil")
+					t.Error(
+						"copyIntSlice(nil) should return nil",
+					)
 				}
 
 				return
 			}
 
 			if len(dst) != len(tt.src) {
-				t.Errorf("copyIntSlice length = %d, want %d", len(dst), len(tt.src))
+				t.Errorf(
+					"copyIntSlice length = %d, want %d",
+					len(dst),
+					len(tt.src),
+				)
 			}
 
 			// Verify values match
 			for i, v := range tt.src {
 				if dst[i] != v {
-					t.Errorf("copyIntSlice[%d] = %d, want %d", i, dst[i], v)
+					t.Errorf(
+						"copyIntSlice[%d] = %d, want %d",
+						i,
+						dst[i],
+						v,
+					)
 				}
 			}
 		})
@@ -590,7 +738,9 @@ func TestCopyIntSlice_Mutation(t *testing.T) {
 
 	// src should be unaffected
 	if src[0] != 1 {
-		t.Error("copyIntSlice: modifying copy affected original")
+		t.Error(
+			"copyIntSlice: modifying copy affected original",
+		)
 	}
 }
 
@@ -612,6 +762,8 @@ func TestCopyMap_WithIntSlice(t *testing.T) {
 		t.Fatal("src ports is not []int")
 	}
 	if srcPorts[0] != 8080 {
-		t.Error("copyMap: modifying []int copy affected original")
+		t.Error(
+			"copyMap: modifying []int copy affected original",
+		)
 	}
 }

@@ -420,7 +420,10 @@ func FindRequirement(
 	targetName := strings.ToLower(name)
 
 	for _, req := range requirements {
-		if strings.EqualFold(req.Name, targetName) {
+		if strings.EqualFold(
+			req.Name,
+			targetName,
+		) {
 			return req, true
 		}
 	}

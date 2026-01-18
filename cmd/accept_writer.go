@@ -65,8 +65,13 @@ func writeTasksJSONC(
 	// Append configured tasks if present
 	allTasks := tasks
 	if appendCfg != nil && appendCfg.HasTasks() {
-		appendedTasks := createAppendedTasks(tasks, appendCfg)
-		allTasks = append(allTasks, appendedTasks...)
+		appendedTasks := createAppendedTasks(
+			tasks,
+			appendCfg,
+		)
+		allTasks = append(
+			allTasks,
+			appendedTasks...)
 	}
 
 	tasksFile := parsers.TasksFile{
@@ -106,12 +111,22 @@ func createAppendedTasks(
 	existingTasks []parsers.Task,
 	cfg *config.AppendTasksConfig,
 ) []parsers.Task {
-	nextSectionNum := findNextSectionNumber(existingTasks)
+	nextSectionNum := findNextSectionNumber(
+		existingTasks,
+	)
 	section := cfg.GetSection()
 
-	tasks := make([]parsers.Task, 0, len(cfg.Tasks))
+	tasks := make(
+		[]parsers.Task,
+		0,
+		len(cfg.Tasks),
+	)
 	for i, desc := range cfg.Tasks {
-		taskID := fmt.Sprintf("%d.%d", nextSectionNum, i+1)
+		taskID := fmt.Sprintf(
+			"%d.%d",
+			nextSectionNum,
+			i+1,
+		)
 		tasks = append(tasks, parsers.Task{
 			ID:          taskID,
 			Section:     section,
@@ -126,7 +141,9 @@ func createAppendedTasks(
 // findNextSectionNumber determines the next section number for appended tasks.
 // It parses existing task IDs to find the highest section number, then adds 1.
 // Returns 1 if no existing tasks or task IDs are not in expected format.
-func findNextSectionNumber(tasks []parsers.Task) int {
+func findNextSectionNumber(
+	tasks []parsers.Task,
+) int {
 	maxSection := 0
 	for _, task := range tasks {
 		// Parse section number from task ID (e.g., "3.2" -> 3)

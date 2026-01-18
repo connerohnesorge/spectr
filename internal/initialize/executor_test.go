@@ -12,26 +12,37 @@ import (
 
 // TestExecutorIntegration_FullInitializationFlow tests the full initialization flow
 // using afero.MemMapFs for filesystem operations
-func TestExecutorIntegration_FullInitializationFlow(t *testing.T) {
+func TestExecutorIntegration_FullInitializationFlow(
+	t *testing.T,
+) {
 	// Create in-memory filesystems
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
 	// Create spectr directory structure
 	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
-		t.Fatalf("Failed to create spectr directory: %v", err)
+		t.Fatalf(
+			"Failed to create spectr directory: %v",
+			err,
+		)
 	}
 
 	// Initialize template manager
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("Failed to create template manager: %v", err)
+		t.Fatalf(
+			"Failed to create template manager: %v",
+			err,
+		)
 	}
 
 	// Reset and register all providers
 	providers.Reset()
 	if err := providers.RegisterAllProviders(); err != nil {
-		t.Fatalf("Failed to register providers: %v", err)
+		t.Fatalf(
+			"Failed to register providers: %v",
+			err,
+		)
 	}
 
 	// Test with Claude Code provider (ID: "claude-code")
@@ -43,23 +54,44 @@ func TestExecutorIntegration_FullInitializationFlow(t *testing.T) {
 	// Get Claude provider
 	claudeReg, ok := providers.Get("claude-code")
 	if !ok {
-		t.Fatal("Claude provider not found in registry")
+		t.Fatal(
+			"Claude provider not found in registry",
+		)
 	}
 
 	// Get initializers from Claude provider
-	inits := claudeReg.Provider.Initializers(ctx, tm)
+	inits := claudeReg.Provider.Initializers(
+		ctx,
+		tm,
+	)
 
 	if len(inits) != 6 {
-		t.Fatalf("Claude provider returned %d initializers, want 6", len(inits))
+		t.Fatalf(
+			"Claude provider returned %d initializers, want 6",
+			len(inits),
+		)
 	}
 
 	// Execute each initializer and collect results
-	allResults := make([]providers.InitResult, 0, len(inits))
+	allResults := make(
+		[]providers.InitResult,
+		0,
+		len(inits),
+	)
 
 	for _, init := range inits {
-		result, err := init.Init(ctx, projectFs, homeFs, cfg, tm)
+		result, err := init.Init(
+			ctx,
+			projectFs,
+			homeFs,
+			cfg,
+			tm,
+		)
 		if err != nil {
-			t.Fatalf("Initializer failed: %v", err)
+			t.Fatalf(
+				"Initializer failed: %v",
+				err,
+			)
 		}
 		allResults = append(allResults, result)
 	}
@@ -73,43 +105,77 @@ func TestExecutorIntegration_FullInitializationFlow(t *testing.T) {
 	}
 
 	for _, expectedFile := range expectedFiles {
-		exists, err := afero.Exists(projectFs, expectedFile)
+		exists, err := afero.Exists(
+			projectFs,
+			expectedFile,
+		)
 		if err != nil {
-			t.Errorf("Failed to check file %s: %v", expectedFile, err)
+			t.Errorf(
+				"Failed to check file %s: %v",
+				expectedFile,
+				err,
+			)
 
 			continue
 		}
 		if !exists {
-			t.Errorf("Expected file %s was not created", expectedFile)
+			t.Errorf(
+				"Expected file %s was not created",
+				expectedFile,
+			)
 		}
 	}
 
 	// Verify CLAUDE.md contains spectr markers
-	claudeContent, err := afero.ReadFile(projectFs, "CLAUDE.md")
+	claudeContent, err := afero.ReadFile(
+		projectFs,
+		"CLAUDE.md",
+	)
 	if err != nil {
-		t.Fatalf("Failed to read CLAUDE.md: %v", err)
+		t.Fatalf(
+			"Failed to read CLAUDE.md: %v",
+			err,
+		)
 	}
 
 	claudeStr := string(claudeContent)
-	if !strings.Contains(claudeStr, "<!-- spectr:start -->") {
+	if !strings.Contains(
+		claudeStr,
+		"<!-- spectr:start -->",
+	) {
 		t.Error("CLAUDE.md missing start marker")
 	}
-	if !strings.Contains(claudeStr, "<!-- spectr:end -->") {
+	if !strings.Contains(
+		claudeStr,
+		"<!-- spectr:end -->",
+	) {
 		t.Error("CLAUDE.md missing end marker")
 	}
 
 	// Verify slash command files contain content
-	proposalContent, err := afero.ReadFile(projectFs, ".claude/commands/spectr/proposal.md")
+	proposalContent, err := afero.ReadFile(
+		projectFs,
+		".claude/commands/spectr/proposal.md",
+	)
 	if err != nil {
-		t.Fatalf("Failed to read proposal.md: %v", err)
+		t.Fatalf(
+			"Failed to read proposal.md: %v",
+			err,
+		)
 	}
 	if len(proposalContent) == 0 {
 		t.Error("proposal.md is empty")
 	}
 
-	applyContent, err := afero.ReadFile(projectFs, ".claude/commands/spectr/apply.md")
+	applyContent, err := afero.ReadFile(
+		projectFs,
+		".claude/commands/spectr/apply.md",
+	)
 	if err != nil {
-		t.Fatalf("Failed to read apply.md: %v", err)
+		t.Fatalf(
+			"Failed to read apply.md: %v",
+			err,
+		)
 	}
 	if len(applyContent) == 0 {
 		t.Error("apply.md is empty")
@@ -125,28 +191,41 @@ func TestExecutorIntegration_FullInitializationFlow(t *testing.T) {
 
 	// First run should create files (directories count as created)
 	if totalCreated == 0 {
-		t.Error("No files were reported as created")
+		t.Error(
+			"No files were reported as created",
+		)
 	}
 }
 
 // TestExecutorIntegration_InitResultAccumulation tests that InitResult
 // correctly tracks created and updated files
-func TestExecutorIntegration_InitResultAccumulation(t *testing.T) {
+func TestExecutorIntegration_InitResultAccumulation(
+	t *testing.T,
+) {
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
 	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
-		t.Fatalf("Failed to create spectr directory: %v", err)
+		t.Fatalf(
+			"Failed to create spectr directory: %v",
+			err,
+		)
 	}
 
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("Failed to create template manager: %v", err)
+		t.Fatalf(
+			"Failed to create template manager: %v",
+			err,
+		)
 	}
 
 	providers.Reset()
 	if err := providers.RegisterAllProviders(); err != nil {
-		t.Fatalf("Failed to register providers: %v", err)
+		t.Fatalf(
+			"Failed to register providers: %v",
+			err,
+		)
 	}
 
 	ctx := context.Background()
@@ -159,16 +238,35 @@ func TestExecutorIntegration_InitResultAccumulation(t *testing.T) {
 		t.Fatal("Claude provider not found")
 	}
 
-	inits := claudeReg.Provider.Initializers(ctx, tm)
+	inits := claudeReg.Provider.Initializers(
+		ctx,
+		tm,
+	)
 
 	// First run: should create files
-	firstResults := make([]providers.InitResult, 0, len(inits))
+	firstResults := make(
+		[]providers.InitResult,
+		0,
+		len(inits),
+	)
 	for _, init := range inits {
-		result, err := init.Init(ctx, projectFs, homeFs, cfg, tm)
+		result, err := init.Init(
+			ctx,
+			projectFs,
+			homeFs,
+			cfg,
+			tm,
+		)
 		if err != nil {
-			t.Fatalf("First run initializer failed: %v", err)
+			t.Fatalf(
+				"First run initializer failed: %v",
+				err,
+			)
 		}
-		firstResults = append(firstResults, result)
+		firstResults = append(
+			firstResults,
+			result,
+		)
 	}
 
 	// Count created files in first run
@@ -180,20 +278,41 @@ func TestExecutorIntegration_InitResultAccumulation(t *testing.T) {
 	}
 
 	if firstCreated == 0 {
-		t.Error("First run: no files were created")
+		t.Error(
+			"First run: no files were created",
+		)
 	}
 	if firstUpdated != 0 {
-		t.Errorf("First run: %d files reported as updated, want 0", firstUpdated)
+		t.Errorf(
+			"First run: %d files reported as updated, want 0",
+			firstUpdated,
+		)
 	}
 
 	// Second run: should update existing files (config file should be updated)
-	secondResults := make([]providers.InitResult, 0, len(inits))
+	secondResults := make(
+		[]providers.InitResult,
+		0,
+		len(inits),
+	)
 	for _, init := range inits {
-		result, err := init.Init(ctx, projectFs, homeFs, cfg, tm)
+		result, err := init.Init(
+			ctx,
+			projectFs,
+			homeFs,
+			cfg,
+			tm,
+		)
 		if err != nil {
-			t.Fatalf("Second run initializer failed: %v", err)
+			t.Fatalf(
+				"Second run initializer failed: %v",
+				err,
+			)
 		}
-		secondResults = append(secondResults, result)
+		secondResults = append(
+			secondResults,
+			result,
+		)
 	}
 
 	// Count updated files in second run
@@ -223,22 +342,33 @@ func TestExecutorIntegration_InitResultAccumulation(t *testing.T) {
 }
 
 // TestExecutorIntegration_MultipleProviders tests initialization with multiple providers
-func TestExecutorIntegration_MultipleProviders(t *testing.T) {
+func TestExecutorIntegration_MultipleProviders(
+	t *testing.T,
+) {
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
 	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
-		t.Fatalf("Failed to create spectr directory: %v", err)
+		t.Fatalf(
+			"Failed to create spectr directory: %v",
+			err,
+		)
 	}
 
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("Failed to create template manager: %v", err)
+		t.Fatalf(
+			"Failed to create template manager: %v",
+			err,
+		)
 	}
 
 	providers.Reset()
 	if err := providers.RegisterAllProviders(); err != nil {
-		t.Fatalf("Failed to register providers: %v", err)
+		t.Fatalf(
+			"Failed to register providers: %v",
+			err,
+		)
 	}
 
 	ctx := context.Background()
@@ -247,7 +377,10 @@ func TestExecutorIntegration_MultipleProviders(t *testing.T) {
 	}
 
 	// Test with Claude and Gemini providers
-	providerIDs := []string{"claude-code", "gemini"}
+	providerIDs := []string{
+		"claude-code",
+		"gemini",
+	}
 	var allInitializers []providers.Initializer
 
 	for _, id := range providerIDs {
@@ -255,15 +388,29 @@ func TestExecutorIntegration_MultipleProviders(t *testing.T) {
 		if !ok {
 			t.Fatalf("Provider %s not found", id)
 		}
-		inits := reg.Provider.Initializers(ctx, tm)
-		allInitializers = append(allInitializers, inits...)
+		inits := reg.Provider.Initializers(
+			ctx,
+			tm,
+		)
+		allInitializers = append(
+			allInitializers,
+			inits...)
 	}
 
 	// Execute all initializers
 	for _, init := range allInitializers {
-		_, err := init.Init(ctx, projectFs, homeFs, cfg, tm)
+		_, err := init.Init(
+			ctx,
+			projectFs,
+			homeFs,
+			cfg,
+			tm,
+		)
 		if err != nil {
-			t.Fatalf("Initializer failed: %v", err)
+			t.Fatalf(
+				"Initializer failed: %v",
+				err,
+			)
 		}
 	}
 
@@ -280,55 +427,96 @@ func TestExecutorIntegration_MultipleProviders(t *testing.T) {
 	}
 
 	for _, file := range claudeFiles {
-		exists, err := afero.Exists(projectFs, file)
+		exists, err := afero.Exists(
+			projectFs,
+			file,
+		)
 		if err != nil {
-			t.Errorf("Failed to check %s: %v", file, err)
+			t.Errorf(
+				"Failed to check %s: %v",
+				file,
+				err,
+			)
 		} else if !exists {
 			t.Errorf("Claude file %s not created", file)
 		}
 	}
 
 	for _, file := range geminiFiles {
-		exists, err := afero.Exists(projectFs, file)
+		exists, err := afero.Exists(
+			projectFs,
+			file,
+		)
 		if err != nil {
-			t.Errorf("Failed to check %s: %v", file, err)
+			t.Errorf(
+				"Failed to check %s: %v",
+				file,
+				err,
+			)
 		} else if !exists {
 			t.Errorf("Gemini file %s not created", file)
 		}
 	}
 
 	// Verify Gemini files are TOML format
-	proposalContent, err := afero.ReadFile(projectFs, ".gemini/commands/spectr/proposal.toml")
+	proposalContent, err := afero.ReadFile(
+		projectFs,
+		".gemini/commands/spectr/proposal.toml",
+	)
 	if err != nil {
-		t.Fatalf("Failed to read Gemini proposal.toml: %v", err)
+		t.Fatalf(
+			"Failed to read Gemini proposal.toml: %v",
+			err,
+		)
 	}
 
 	proposalStr := string(proposalContent)
-	if !strings.Contains(proposalStr, "description =") {
-		t.Error("Gemini proposal.toml missing 'description =' field")
+	if !strings.Contains(
+		proposalStr,
+		"description =",
+	) {
+		t.Error(
+			"Gemini proposal.toml missing 'description =' field",
+		)
 	}
-	if !strings.Contains(proposalStr, "prompt =") {
-		t.Error("Gemini proposal.toml missing 'prompt =' field")
+	if !strings.Contains(
+		proposalStr,
+		"prompt =",
+	) {
+		t.Error(
+			"Gemini proposal.toml missing 'prompt =' field",
+		)
 	}
 }
 
 // TestExecutorIntegration_HomeFilesystem tests providers that use home filesystem
-func TestExecutorIntegration_HomeFilesystem(t *testing.T) {
+func TestExecutorIntegration_HomeFilesystem(
+	t *testing.T,
+) {
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
 	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
-		t.Fatalf("Failed to create spectr directory: %v", err)
+		t.Fatalf(
+			"Failed to create spectr directory: %v",
+			err,
+		)
 	}
 
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("Failed to create template manager: %v", err)
+		t.Fatalf(
+			"Failed to create template manager: %v",
+			err,
+		)
 	}
 
 	providers.Reset()
 	if err := providers.RegisterAllProviders(); err != nil {
-		t.Fatalf("Failed to register providers: %v", err)
+		t.Fatalf(
+			"Failed to register providers: %v",
+			err,
+		)
 	}
 
 	ctx := context.Background()
@@ -342,13 +530,25 @@ func TestExecutorIntegration_HomeFilesystem(t *testing.T) {
 		t.Fatal("Codex provider not found")
 	}
 
-	inits := codexReg.Provider.Initializers(ctx, tm)
+	inits := codexReg.Provider.Initializers(
+		ctx,
+		tm,
+	)
 
 	// Execute initializers
 	for _, init := range inits {
-		_, err := init.Init(ctx, projectFs, homeFs, cfg, tm)
+		_, err := init.Init(
+			ctx,
+			projectFs,
+			homeFs,
+			cfg,
+			tm,
+		)
 		if err != nil {
-			t.Fatalf("Codex initializer failed: %v", err)
+			t.Fatalf(
+				"Codex initializer failed: %v",
+				err,
+			)
 		}
 	}
 
@@ -362,43 +562,69 @@ func TestExecutorIntegration_HomeFilesystem(t *testing.T) {
 	for _, file := range homeFiles {
 		exists, err := afero.Exists(homeFs, file)
 		if err != nil {
-			t.Errorf("Failed to check home file %s: %v", file, err)
+			t.Errorf(
+				"Failed to check home file %s: %v",
+				file,
+				err,
+			)
 		} else if !exists {
 			t.Errorf("Home file %s not created", file)
 		}
 	}
 
 	// Verify project file (AGENTS.md should be in project, not home)
-	projectExists, err := afero.Exists(projectFs, "AGENTS.md")
+	projectExists, err := afero.Exists(
+		projectFs,
+		"AGENTS.md",
+	)
 	if err != nil {
-		t.Errorf("Failed to check AGENTS.md: %v", err)
+		t.Errorf(
+			"Failed to check AGENTS.md: %v",
+			err,
+		)
 	} else if !projectExists {
 		t.Error("AGENTS.md should be in project filesystem")
 	}
 
 	// Verify it's NOT in home filesystem
-	homeExists, err := afero.Exists(homeFs, "AGENTS.md")
+	homeExists, err := afero.Exists(
+		homeFs,
+		"AGENTS.md",
+	)
 	if err != nil {
-		t.Errorf("Failed to check home AGENTS.md: %v", err)
+		t.Errorf(
+			"Failed to check home AGENTS.md: %v",
+			err,
+		)
 	} else if homeExists {
 		t.Error("AGENTS.md should NOT be in home filesystem")
 	}
 }
 
 // TestExecutorIntegration_ErrorHandling tests fail-fast error behavior
-func TestExecutorIntegration_ErrorHandling(t *testing.T) {
+func TestExecutorIntegration_ErrorHandling(
+	t *testing.T,
+) {
 	// Use a read-only filesystem to trigger errors
-	projectFs := afero.NewReadOnlyFs(afero.NewMemMapFs())
+	projectFs := afero.NewReadOnlyFs(
+		afero.NewMemMapFs(),
+	)
 	homeFs := afero.NewMemMapFs()
 
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("Failed to create template manager: %v", err)
+		t.Fatalf(
+			"Failed to create template manager: %v",
+			err,
+		)
 	}
 
 	providers.Reset()
 	if err := providers.RegisterAllProviders(); err != nil {
-		t.Fatalf("Failed to register providers: %v", err)
+		t.Fatalf(
+			"Failed to register providers: %v",
+			err,
+		)
 	}
 
 	ctx := context.Background()
@@ -411,11 +637,20 @@ func TestExecutorIntegration_ErrorHandling(t *testing.T) {
 		t.Fatal("Claude provider not found")
 	}
 
-	inits := claudeReg.Provider.Initializers(ctx, tm)
+	inits := claudeReg.Provider.Initializers(
+		ctx,
+		tm,
+	)
 
 	// Execute initializers - should fail on read-only filesystem
 	for i, init := range inits {
-		_, err := init.Init(ctx, projectFs, homeFs, cfg, tm)
+		_, err := init.Init(
+			ctx,
+			projectFs,
+			homeFs,
+			cfg,
+			tm,
+		)
 		if err == nil {
 			// Some initializers might succeed (e.g., checking if files exist)
 			// but directory creation should fail
@@ -425,10 +660,22 @@ func TestExecutorIntegration_ErrorHandling(t *testing.T) {
 		// Error occurred - verify it's a meaningful error
 		if err != nil && i == 0 {
 			// First initializer is directory creation, should fail on read-only fs
-			if !strings.Contains(err.Error(), "failed to create directory") &&
-				!strings.Contains(err.Error(), "operation not permitted") &&
-				!strings.Contains(err.Error(), "read-only") {
-				t.Errorf("Expected directory creation error, got: %v", err)
+			if !strings.Contains(
+				err.Error(),
+				"failed to create directory",
+			) &&
+				!strings.Contains(
+					err.Error(),
+					"operation not permitted",
+				) &&
+				!strings.Contains(
+					err.Error(),
+					"read-only",
+				) {
+				t.Errorf(
+					"Expected directory creation error, got: %v",
+					err,
+				)
 			}
 
 			return // Test passed - fail-fast worked
@@ -440,22 +687,33 @@ func TestExecutorIntegration_ErrorHandling(t *testing.T) {
 }
 
 // TestExecutorIntegration_InitializerOrdering tests that initializers are executed in the correct order
-func TestExecutorIntegration_InitializerOrdering(t *testing.T) {
+func TestExecutorIntegration_InitializerOrdering(
+	t *testing.T,
+) {
 	projectFs := afero.NewMemMapFs()
 	homeFs := afero.NewMemMapFs()
 
 	if err := projectFs.MkdirAll("spectr", 0o755); err != nil {
-		t.Fatalf("Failed to create spectr directory: %v", err)
+		t.Fatalf(
+			"Failed to create spectr directory: %v",
+			err,
+		)
 	}
 
 	tm, err := NewTemplateManager()
 	if err != nil {
-		t.Fatalf("Failed to create template manager: %v", err)
+		t.Fatalf(
+			"Failed to create template manager: %v",
+			err,
+		)
 	}
 
 	providers.Reset()
 	if err := providers.RegisterAllProviders(); err != nil {
-		t.Fatalf("Failed to register providers: %v", err)
+		t.Fatalf(
+			"Failed to register providers: %v",
+			err,
+		)
 	}
 
 	ctx := context.Background()
@@ -468,65 +726,122 @@ func TestExecutorIntegration_InitializerOrdering(t *testing.T) {
 		t.Fatal("Claude provider not found")
 	}
 
-	inits := claudeReg.Provider.Initializers(ctx, tm)
+	inits := claudeReg.Provider.Initializers(
+		ctx,
+		tm,
+	)
 
 	// Verify initializer order: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills
 	if len(inits) < 5 {
-		t.Fatalf("Expected at least 5 initializers, got %d", len(inits))
+		t.Fatalf(
+			"Expected at least 5 initializers, got %d",
+			len(inits),
+		)
 	}
 
 	// Check type order
 	if _, ok := inits[0].(*providers.DirectoryInitializer); !ok {
-		t.Errorf("First initializer should be DirectoryInitializer, got %T", inits[0])
+		t.Errorf(
+			"First initializer should be DirectoryInitializer, got %T",
+			inits[0],
+		)
 	}
 
 	if _, ok := inits[1].(*providers.DirectoryInitializer); !ok {
-		t.Errorf("Second initializer should be DirectoryInitializer, got %T", inits[1])
+		t.Errorf(
+			"Second initializer should be DirectoryInitializer, got %T",
+			inits[1],
+		)
 	}
 
 	if _, ok := inits[2].(*providers.ConfigFileInitializer); !ok {
-		t.Errorf("Third initializer should be ConfigFileInitializer, got %T", inits[2])
+		t.Errorf(
+			"Third initializer should be ConfigFileInitializer, got %T",
+			inits[2],
+		)
 	}
 
 	if _, ok := inits[3].(*providers.SlashCommandsInitializer); !ok {
-		t.Errorf("Fourth initializer should be SlashCommandsInitializer, got %T", inits[3])
+		t.Errorf(
+			"Fourth initializer should be SlashCommandsInitializer, got %T",
+			inits[3],
+		)
 	}
 
 	if _, ok := inits[4].(*providers.AgentSkillsInitializer); !ok {
-		t.Errorf("Fifth initializer should be AgentSkillsInitializer, got %T", inits[4])
+		t.Errorf(
+			"Fifth initializer should be AgentSkillsInitializer, got %T",
+			inits[4],
+		)
 	}
 
 	// Execute in order and verify each step
 	// 1. Directory should be created first
-	result1, err := inits[0].Init(ctx, projectFs, homeFs, cfg, tm)
+	result1, err := inits[0].Init(
+		ctx,
+		projectFs,
+		homeFs,
+		cfg,
+		tm,
+	)
 	if err != nil {
-		t.Fatalf("Directory initializer failed: %v", err)
+		t.Fatalf(
+			"Directory initializer failed: %v",
+			err,
+		)
 	}
 	if len(result1.CreatedFiles) == 0 {
-		t.Error("Directory initializer should create directory")
+		t.Error(
+			"Directory initializer should create directory",
+		)
 	}
 
 	// 2. Config file should be created second (depends on nothing)
-	result2, err := inits[1].Init(ctx, projectFs, homeFs, cfg, tm)
+	result2, err := inits[1].Init(
+		ctx,
+		projectFs,
+		homeFs,
+		cfg,
+		tm,
+	)
 	if err != nil {
-		t.Fatalf("ConfigFile initializer failed: %v", err)
+		t.Fatalf(
+			"ConfigFile initializer failed: %v",
+			err,
+		)
 	}
 	if len(result2.CreatedFiles) == 0 {
-		t.Error("ConfigFile initializer should create file")
+		t.Error(
+			"ConfigFile initializer should create file",
+		)
 	}
 
 	// 3. Slash commands should be created last (depends on directory existing)
-	result3, err := inits[2].Init(ctx, projectFs, homeFs, cfg, tm)
+	result3, err := inits[2].Init(
+		ctx,
+		projectFs,
+		homeFs,
+		cfg,
+		tm,
+	)
 	if err != nil {
-		t.Fatalf("SlashCommands initializer failed: %v", err)
+		t.Fatalf(
+			"SlashCommands initializer failed: %v",
+			err,
+		)
 	}
-	if len(result3.CreatedFiles) == 0 && len(result3.UpdatedFiles) == 0 {
-		t.Error("SlashCommands initializer should create or update files")
+	if len(result3.CreatedFiles) == 0 &&
+		len(result3.UpdatedFiles) == 0 {
+		t.Error(
+			"SlashCommands initializer should create or update files",
+		)
 	}
 }
 
 // TestAggregateResultsDeduplication tests that aggregateResults deduplicates file paths
-func TestAggregateResultsDeduplication(t *testing.T) {
+func TestAggregateResultsDeduplication(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		results  []providers.InitResult
@@ -537,12 +852,24 @@ func TestAggregateResultsDeduplication(t *testing.T) {
 			name: "deduplicates created files",
 			results: []providers.InitResult{
 				{
-					CreatedFiles: []string{"file1.txt", "file2.txt"},
-					UpdatedFiles: make([]string, 0),
+					CreatedFiles: []string{
+						"file1.txt",
+						"file2.txt",
+					},
+					UpdatedFiles: make(
+						[]string,
+						0,
+					),
 				},
 				{
-					CreatedFiles: []string{"file1.txt", "file3.txt"},
-					UpdatedFiles: make([]string, 0),
+					CreatedFiles: []string{
+						"file1.txt",
+						"file3.txt",
+					},
+					UpdatedFiles: make(
+						[]string,
+						0,
+					),
 				},
 			},
 			wantLen:  3, // file1.txt, file2.txt, file3.txt (file1.txt appears once)
@@ -552,12 +879,23 @@ func TestAggregateResultsDeduplication(t *testing.T) {
 			name: "deduplicates updated files",
 			results: []providers.InitResult{
 				{
-					CreatedFiles: make([]string, 0),
-					UpdatedFiles: []string{"config.yml", "settings.json"},
+					CreatedFiles: make(
+						[]string,
+						0,
+					),
+					UpdatedFiles: []string{
+						"config.yml",
+						"settings.json",
+					},
 				},
 				{
-					CreatedFiles: make([]string, 0),
-					UpdatedFiles: []string{"config.yml"},
+					CreatedFiles: make(
+						[]string,
+						0,
+					),
+					UpdatedFiles: []string{
+						"config.yml",
+					},
 				},
 			},
 			wantLen:  2, // config.yml, settings.json (config.yml appears once)
@@ -567,16 +905,31 @@ func TestAggregateResultsDeduplication(t *testing.T) {
 			name: "deduplicates across multiple initializers",
 			results: []providers.InitResult{
 				{
-					CreatedFiles: []string{"dir/file.txt"},
-					UpdatedFiles: make([]string, 0),
+					CreatedFiles: []string{
+						"dir/file.txt",
+					},
+					UpdatedFiles: make(
+						[]string,
+						0,
+					),
 				},
 				{
-					CreatedFiles: []string{"other.txt"},
-					UpdatedFiles: make([]string, 0),
+					CreatedFiles: []string{
+						"other.txt",
+					},
+					UpdatedFiles: make(
+						[]string,
+						0,
+					),
 				},
 				{
-					CreatedFiles: []string{"dir/file.txt"},
-					UpdatedFiles: make([]string, 0),
+					CreatedFiles: []string{
+						"dir/file.txt",
+					},
+					UpdatedFiles: make(
+						[]string,
+						0,
+					),
 				},
 			},
 			wantLen:  2, // dir/file.txt, other.txt
@@ -588,9 +941,17 @@ func TestAggregateResultsDeduplication(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := aggregateResults(tt.results)
 
-			totalFiles := len(result.CreatedFiles) + len(result.UpdatedFiles)
+			totalFiles := len(
+				result.CreatedFiles,
+			) + len(
+				result.UpdatedFiles,
+			)
 			if totalFiles != tt.wantLen {
-				t.Errorf("aggregateResults returned %d files, want %d", totalFiles, tt.wantLen)
+				t.Errorf(
+					"aggregateResults returned %d files, want %d",
+					totalFiles,
+					tt.wantLen,
+				)
 			}
 
 			// Check that the expected file is present
@@ -612,7 +973,10 @@ func TestAggregateResultsDeduplication(t *testing.T) {
 				}
 			}
 			if !found {
-				t.Errorf("Expected file %q not found in aggregated results", tt.wantFile)
+				t.Errorf(
+					"Expected file %q not found in aggregated results",
+					tt.wantFile,
+				)
 			}
 		})
 	}

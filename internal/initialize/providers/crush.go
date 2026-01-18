@@ -16,13 +16,22 @@ func (*CrushProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
-		NewDirectoryInitializer(".crush/commands/spectr"),
-		NewConfigFileInitializer("CRUSH.md", tm.InstructionPointer()),
+		NewDirectoryInitializer(
+			".crush/commands/spectr",
+		),
+		NewConfigFileInitializer(
+			"CRUSH.md",
+			tm.InstructionPointer(),
+		),
 		NewSlashCommandsInitializer(
 			".crush/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

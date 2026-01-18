@@ -16,12 +16,18 @@ func (*ContinueProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer {
 	return []Initializer{
-		NewDirectoryInitializer(".continue/commands/spectr"),
+		NewDirectoryInitializer(
+			".continue/commands/spectr",
+		),
 		NewSlashCommandsInitializer(
 			".continue/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

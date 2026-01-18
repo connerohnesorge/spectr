@@ -15,8 +15,13 @@ import (
 // Returns nil on success; errors are logged but don't block execution.
 //
 //nolint:revive // verbose flag is intentional for CLI integration
-func SyncAllActiveChanges(projectRoot string, verbose bool) error {
-	changeIDs, err := discovery.GetActiveChanges(projectRoot)
+func SyncAllActiveChanges(
+	projectRoot string,
+	verbose bool,
+) error {
+	changeIDs, err := discovery.GetActiveChanges(
+		projectRoot,
+	)
 	if err != nil {
 		// Directory doesn't exist or other error - skip silently
 		return nil
@@ -24,18 +29,34 @@ func SyncAllActiveChanges(projectRoot string, verbose bool) error {
 
 	var totalSynced int
 	for _, id := range changeIDs {
-		changeDir := filepath.Join(projectRoot, "spectr", "changes", id)
+		changeDir := filepath.Join(
+			projectRoot,
+			"spectr",
+			"changes",
+			id,
+		)
 
-		synced, err := SyncTasksToMarkdown(changeDir)
+		synced, err := SyncTasksToMarkdown(
+			changeDir,
+		)
 		if err != nil {
 			// Log error but continue with other changes
-			fmt.Fprintf(os.Stderr, "sync: %s: %v\n", id, err)
+			fmt.Fprintf(
+				os.Stderr,
+				"sync: %s: %v\n",
+				id,
+				err,
+			)
 
 			continue
 		}
 
 		if verbose && synced > 0 {
-			fmt.Printf("Synced %d task statuses in %s\n", synced, id)
+			fmt.Printf(
+				"Synced %d task statuses in %s\n",
+				synced,
+				id,
+			)
 		}
 		totalSynced += synced
 	}

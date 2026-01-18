@@ -306,7 +306,10 @@ func TestWriteFile(t *testing.T) {
 				)
 			}
 
-			if !bytes.Equal(readContent, content) {
+			if !bytes.Equal(
+				readContent,
+				content,
+			) {
 				t.Errorf(
 					"expected content %q, got %q",
 					content,
@@ -678,7 +681,10 @@ func TestBackupFile(t *testing.T) {
 				)
 			}
 
-			if !bytes.Equal(backupContent, content) {
+			if !bytes.Equal(
+				backupContent,
+				content,
+			) {
 				t.Errorf(
 					"backup content %q does not match original %q",
 					backupContent,

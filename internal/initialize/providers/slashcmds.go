@@ -52,17 +52,34 @@ func (s *SlashCommandsInitializer) Init(
 	cfg *Config,
 	_ TemplateManager,
 ) (InitResult, error) {
-	return createSlashCommands(projectFs, s.dir, s.commands, cfg, extMD)
+	return createSlashCommands(
+		projectFs,
+		s.dir,
+		s.commands,
+		cfg,
+		extMD,
+	)
 }
 
 // IsSetup checks if all slash command files exist in the project filesystem.
-func (s *SlashCommandsInitializer) IsSetup(projectFs, _ afero.Fs, _ *Config) bool {
-	return checkSlashCommandsExist(projectFs, s.dir, s.commands, extMD)
+func (s *SlashCommandsInitializer) IsSetup(
+	projectFs, _ afero.Fs,
+	_ *Config,
+) bool {
+	return checkSlashCommandsExist(
+		projectFs,
+		s.dir,
+		s.commands,
+		extMD,
+	)
 }
 
 // dedupeKey returns a unique key for deduplication.
 func (s *SlashCommandsInitializer) dedupeKey() string {
-	return fmt.Sprintf("SlashCommandsInitializer:%s", filepath.Clean(s.dir))
+	return fmt.Sprintf(
+		"SlashCommandsInitializer:%s",
+		filepath.Clean(s.dir),
+	)
 }
 
 // HomeSlashCommandsInitializer creates Markdown slash command files in the home filesystem.
@@ -95,17 +112,34 @@ func (h *HomeSlashCommandsInitializer) Init(
 	cfg *Config,
 	_ TemplateManager,
 ) (InitResult, error) {
-	return createSlashCommands(homeFs, h.dir, h.commands, cfg, extMD)
+	return createSlashCommands(
+		homeFs,
+		h.dir,
+		h.commands,
+		cfg,
+		extMD,
+	)
 }
 
 // IsSetup checks if all slash command files exist in the home filesystem.
-func (h *HomeSlashCommandsInitializer) IsSetup(_, homeFs afero.Fs, _ *Config) bool {
-	return checkSlashCommandsExist(homeFs, h.dir, h.commands, extMD)
+func (h *HomeSlashCommandsInitializer) IsSetup(
+	_, homeFs afero.Fs,
+	_ *Config,
+) bool {
+	return checkSlashCommandsExist(
+		homeFs,
+		h.dir,
+		h.commands,
+		extMD,
+	)
 }
 
 // dedupeKey returns a unique key for deduplication.
 func (h *HomeSlashCommandsInitializer) dedupeKey() string {
-	return fmt.Sprintf("HomeSlashCommandsInitializer:%s", filepath.Clean(h.dir))
+	return fmt.Sprintf(
+		"HomeSlashCommandsInitializer:%s",
+		filepath.Clean(h.dir),
+	)
 }
 
 // PrefixedSlashCommandsInitializer creates Markdown slash command files with custom prefix in project filesystem.
@@ -140,17 +174,37 @@ func (p *PrefixedSlashCommandsInitializer) Init(
 	cfg *Config,
 	_ TemplateManager,
 ) (InitResult, error) {
-	return createPrefixedSlashCommands(projectFs, p.dir, p.prefix, p.commands, cfg, extMD)
+	return createPrefixedSlashCommands(
+		projectFs,
+		p.dir,
+		p.prefix,
+		p.commands,
+		cfg,
+		extMD,
+	)
 }
 
 // IsSetup checks if all prefixed slash command files exist in the project filesystem.
-func (p *PrefixedSlashCommandsInitializer) IsSetup(projectFs, _ afero.Fs, _ *Config) bool {
-	return checkPrefixedSlashCommandsExist(projectFs, p.dir, p.prefix, p.commands, extMD)
+func (p *PrefixedSlashCommandsInitializer) IsSetup(
+	projectFs, _ afero.Fs,
+	_ *Config,
+) bool {
+	return checkPrefixedSlashCommandsExist(
+		projectFs,
+		p.dir,
+		p.prefix,
+		p.commands,
+		extMD,
+	)
 }
 
 // dedupeKey returns a unique key for deduplication.
 func (p *PrefixedSlashCommandsInitializer) dedupeKey() string {
-	return fmt.Sprintf("PrefixedSlashCommandsInitializer:%s:%s", filepath.Clean(p.dir), p.prefix)
+	return fmt.Sprintf(
+		"PrefixedSlashCommandsInitializer:%s:%s",
+		filepath.Clean(p.dir),
+		p.prefix,
+	)
 }
 
 // HomePrefixedSlashCommandsInitializer creates Markdown slash command files with custom prefix in home filesystem.
@@ -185,7 +239,14 @@ func (h *HomePrefixedSlashCommandsInitializer) Init(
 	cfg *Config,
 	_ TemplateManager,
 ) (InitResult, error) {
-	return createPrefixedSlashCommands(homeFs, h.dir, h.prefix, h.commands, cfg, extMD)
+	return createPrefixedSlashCommands(
+		homeFs,
+		h.dir,
+		h.prefix,
+		h.commands,
+		cfg,
+		extMD,
+	)
 }
 
 // IsSetup checks if all prefixed slash command files exist in the home filesystem.
@@ -193,7 +254,13 @@ func (h *HomePrefixedSlashCommandsInitializer) IsSetup(
 	_, homeFs afero.Fs,
 	_ *Config,
 ) bool {
-	return checkPrefixedSlashCommandsExist(homeFs, h.dir, h.prefix, h.commands, extMD)
+	return checkPrefixedSlashCommandsExist(
+		homeFs,
+		h.dir,
+		h.prefix,
+		h.commands,
+		extMD,
+	)
 }
 
 // dedupeKey returns a unique key for deduplication.
@@ -242,12 +309,26 @@ func (t *TOMLSlashCommandsInitializer) Init(
 	cfg *Config,
 	_ TemplateManager,
 ) (InitResult, error) {
-	return createSlashCommands(projectFs, t.dir, t.commands, cfg, extTOML)
+	return createSlashCommands(
+		projectFs,
+		t.dir,
+		t.commands,
+		cfg,
+		extTOML,
+	)
 }
 
 // IsSetup checks if all TOML slash command files exist in the project filesystem.
-func (t *TOMLSlashCommandsInitializer) IsSetup(projectFs, _ afero.Fs, _ *Config) bool {
-	return checkSlashCommandsExist(projectFs, t.dir, t.commands, extTOML)
+func (t *TOMLSlashCommandsInitializer) IsSetup(
+	projectFs, _ afero.Fs,
+	_ *Config,
+) bool {
+	return checkSlashCommandsExist(
+		projectFs,
+		t.dir,
+		t.commands,
+		extTOML,
+	)
 }
 
 // dedupeKey returns a unique key for deduplication.
@@ -280,7 +361,11 @@ func createSlashCommands(
 
 	// Create parent directory if it doesn't exist
 	if err := fs.MkdirAll(dir, 0o755); err != nil {
-		return InitResult{}, fmt.Errorf("failed to create directory %s: %w", dir, err)
+		return InitResult{}, fmt.Errorf(
+			"failed to create directory %s: %w",
+			dir,
+			err,
+		)
 	}
 
 	var created []string
@@ -297,17 +382,28 @@ func createSlashCommands(
 			)
 		}
 		// Create file path: {dir}/{command}{ext}
-		filePath := filepath.Join(dir, cmd.String()+ext)
+		filePath := filepath.Join(
+			dir,
+			cmd.String()+ext,
+		)
 
 		// Check if file already exists //nolint:lll
 		exists, err := afero.Exists(fs, filePath)
 		if err != nil {
-			return InitResult{}, fmt.Errorf("failed to check file %s: %w", filePath, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to check file %s: %w",
+				filePath,
+				err,
+			)
 		}
 
 		// Write file (always overwrite for idempotent behavior)
 		if err := afero.WriteFile(fs, filePath, []byte(content), fileMode); err != nil {
-			return InitResult{}, fmt.Errorf("failed to write file %s: %w", filePath, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to write file %s: %w",
+				filePath,
+				err,
+			)
 		}
 
 		if exists {
@@ -345,7 +441,11 @@ func createPrefixedSlashCommands(
 
 	// Create parent directory if it doesn't exist
 	if err := fs.MkdirAll(dir, 0o755); err != nil {
-		return InitResult{}, fmt.Errorf("failed to create directory %s: %w", dir, err)
+		return InitResult{}, fmt.Errorf(
+			"failed to create directory %s: %w",
+			dir,
+			err,
+		)
 	}
 
 	var created []string
@@ -363,17 +463,28 @@ func createPrefixedSlashCommands(
 		}
 
 		// Create file path: {dir}/{prefix}{command}{ext}
-		filePath := filepath.Join(dir, prefix+cmd.String()+ext)
+		filePath := filepath.Join(
+			dir,
+			prefix+cmd.String()+ext,
+		)
 
 		// Check if file already exists
 		exists, err := afero.Exists(fs, filePath)
 		if err != nil {
-			return InitResult{}, fmt.Errorf("failed to check file %s: %w", filePath, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to check file %s: %w",
+				filePath,
+				err,
+			)
 		}
 
 		// Write file (always overwrite for idempotent behavior)
 		if err := afero.WriteFile(fs, filePath, []byte(content), fileMode); err != nil {
-			return InitResult{}, fmt.Errorf("failed to write file %s: %w", filePath, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to write file %s: %w",
+				filePath,
+				err,
+			)
 		}
 
 		if exists {
@@ -397,7 +508,10 @@ func checkSlashCommandsExist(
 	ext string,
 ) bool {
 	for cmd := range commands {
-		filePath := filepath.Join(dir, cmd.String()+ext)
+		filePath := filepath.Join(
+			dir,
+			cmd.String()+ext,
+		)
 		exists, err := afero.Exists(fs, filePath)
 		if err != nil || !exists {
 			return false
@@ -417,7 +531,10 @@ func checkPrefixedSlashCommandsExist(
 	ext string,
 ) bool {
 	for cmd := range commands {
-		filePath := filepath.Join(dir, prefix+cmd.String()+ext)
+		filePath := filepath.Join(
+			dir,
+			prefix+cmd.String()+ext,
+		)
 		exists, err := afero.Exists(fs, filePath)
 		if err != nil || !exists {
 			return false

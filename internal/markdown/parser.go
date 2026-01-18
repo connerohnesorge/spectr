@@ -1670,7 +1670,9 @@ func (ip *inlineParser) processDelimiters(
 
 	result := nodes
 	for {
-		newResult, found := ip.processEmphasisPass(result)
+		newResult, found := ip.processEmphasisPass(
+			result,
+		)
 		if !found {
 			break
 		}
@@ -1704,7 +1706,8 @@ func (ip *inlineParser) processEmphasisPass(
 			closer := &ip.delimiters[j]
 
 			// Skip inactive closers and those that can't close
-			if !closer.active || !closer.canClose {
+			if !closer.active ||
+				!closer.canClose {
 				continue
 			}
 
@@ -1715,7 +1718,8 @@ func (ip *inlineParser) processEmphasisPass(
 
 			// Found a potential match
 			// Try to match strong emphasis first (use 2 delimiters)
-			if opener.count >= 2 && closer.count >= 2 {
+			if opener.count >= 2 &&
+				closer.count >= 2 {
 				result, success := ip.createEmphasisNode(
 					nodes,
 					i,
@@ -1729,7 +1733,8 @@ func (ip *inlineParser) processEmphasisPass(
 			}
 
 			// Try regular emphasis (use 1 delimiter)
-			if opener.count >= 1 && closer.count >= 1 {
+			if opener.count >= 1 &&
+				closer.count >= 1 {
 				result, success := ip.createEmphasisNode(
 					nodes,
 					i,
@@ -1755,7 +1760,8 @@ func (ip *inlineParser) createEmphasisNode(
 	delimCount int,
 	nodeType NodeType,
 ) ([]Node, bool) {
-	if openerIdx >= len(ip.delimiters) || closerIdx >= len(ip.delimiters) {
+	if openerIdx >= len(ip.delimiters) ||
+		closerIdx >= len(ip.delimiters) {
 		return nodes, false
 	}
 
@@ -1800,7 +1806,8 @@ func (ip *inlineParser) createEmphasisNode(
 		}
 	}
 
-	if startIdx > endIdx || startIdx >= len(nodes) {
+	if startIdx > endIdx ||
+		startIdx >= len(nodes) {
 		return nodes, false
 	}
 
@@ -1824,10 +1831,14 @@ func (ip *inlineParser) createEmphasisNode(
 
 	// Build new node list with emphasis node replacing the matched range
 	newNodes := make([]Node, 0, len(nodes))
-	newNodes = append(newNodes, nodes[:startIdx]...)
+	newNodes = append(
+		newNodes,
+		nodes[:startIdx]...)
 	newNodes = append(newNodes, node)
 	if endIdx+1 < len(nodes) {
-		newNodes = append(newNodes, nodes[endIdx+1:]...)
+		newNodes = append(
+			newNodes,
+			nodes[endIdx+1:]...)
 	}
 
 	// Mark all delimiters between opener and closer as inactive

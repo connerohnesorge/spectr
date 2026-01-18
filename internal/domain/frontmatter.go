@@ -37,7 +37,9 @@ var ValidFrontmatterKeys = map[string]bool{
 // ValidateFrontmatterOverride checks that all keys in an override are known valid keys.
 // Returns an error listing any unknown keys found.
 // This helps catch typos like "contxt" instead of "context".
-func ValidateFrontmatterOverride(overrides *FrontmatterOverride) error {
+func ValidateFrontmatterOverride(
+	overrides *FrontmatterOverride,
+) error {
 	if overrides == nil {
 		return nil
 	}
@@ -61,7 +63,10 @@ func ValidateFrontmatterOverride(overrides *FrontmatterOverride) error {
 	if len(unknownKeys) > 0 {
 		sort.Strings(unknownKeys)
 
-		return fmt.Errorf("unknown frontmatter keys: %v", unknownKeys)
+		return fmt.Errorf(
+			"unknown frontmatter keys: %v",
+			unknownKeys,
+		)
 	}
 
 	return nil
@@ -84,7 +89,9 @@ var BaseSlashCommandFrontmatter = map[SlashCommand]map[string]any{
 
 // GetBaseFrontmatter returns a copy of the base frontmatter for a command.
 // Returns empty map if command not found.
-func GetBaseFrontmatter(cmd SlashCommand) map[string]any {
+func GetBaseFrontmatter(
+	cmd SlashCommand,
+) map[string]any {
 	base, ok := BaseSlashCommandFrontmatter[cmd]
 	if !ok {
 		return make(map[string]any)
@@ -211,7 +218,10 @@ func ApplyFrontmatterOverrides(
 //	Body content
 //
 // Keys are sorted alphabetically to ensure deterministic output.
-func RenderFrontmatter(fm map[string]any, body string) (string, error) {
+func RenderFrontmatter(
+	fm map[string]any,
+	body string,
+) (string, error) {
 	var buf bytes.Buffer
 
 	// Write opening fence
@@ -241,19 +251,35 @@ func RenderFrontmatter(fm map[string]any, body string) (string, error) {
 			// Add value node
 			valNode := &yaml.Node{}
 			if err := valNode.Encode(fm[k]); err != nil {
-				return "", fmt.Errorf("failed to encode frontmatter field %q: %w", k, err)
+				return "", fmt.Errorf(
+					"failed to encode frontmatter field %q: %w",
+					k,
+					err,
+				)
 			}
-			mapNode.Content = append(mapNode.Content, keyNode, valNode)
+			mapNode.Content = append(
+				mapNode.Content,
+				keyNode,
+				valNode,
+			)
 		}
 
 		// Encode the ordered node
 		encoder := yaml.NewEncoder(&buf)
-		encoder.SetIndent(0) // No extra indentation
+		encoder.SetIndent(
+			0,
+		) // No extra indentation
 		if err := encoder.Encode(mapNode); err != nil {
-			return "", fmt.Errorf("failed to encode frontmatter as YAML: %w", err)
+			return "", fmt.Errorf(
+				"failed to encode frontmatter as YAML: %w",
+				err,
+			)
 		}
 		if err := encoder.Close(); err != nil {
-			return "", fmt.Errorf("failed to close YAML encoder: %w", err)
+			return "", fmt.Errorf(
+				"failed to close YAML encoder: %w",
+				err,
+			)
 		}
 	}
 

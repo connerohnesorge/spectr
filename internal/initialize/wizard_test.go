@@ -20,7 +20,9 @@ const (
 func TestMain(m *testing.M) {
 	// Register all providers for tests
 	if err := providers.RegisterAllProviders(); err != nil {
-		panic("Failed to register providers: " + err.Error())
+		panic(
+			"Failed to register providers: " + err.Error(),
+		)
 	}
 
 	// Run tests - return value handled automatically as of Go 1.15
@@ -181,7 +183,10 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty execute output",
 			)
 		}
-		if !strings.Contains(output, "Initializing") {
+		if !strings.Contains(
+			output,
+			"Initializing",
+		) {
 			t.Error(
 				"Expected execute screen to contain 'Initializing'",
 			)
@@ -203,7 +208,10 @@ func TestWizardRenderFunctions(t *testing.T) {
 				"Expected non-empty complete output",
 			)
 		}
-		if !strings.Contains(output, "Successfully") {
+		if !strings.Contains(
+			output,
+			"Successfully",
+		) {
 			t.Error(
 				"Expected complete screen to contain 'Successfully'",
 			)
@@ -330,7 +338,10 @@ func TestNewWizardModelWithConfiguredProviders(
 		)
 	}
 
-	acceptSkillMdPath := filepath.Join(acceptSkillDir, "SKILL.md")
+	acceptSkillMdPath := filepath.Join(
+		acceptSkillDir,
+		"SKILL.md",
+	)
 	err = os.WriteFile(
 		acceptSkillMdPath,
 		[]byte("# Skill\n"),
@@ -356,7 +367,10 @@ func TestNewWizardModelWithConfiguredProviders(
 		)
 	}
 
-	validateSkillMdPath := filepath.Join(validateSkillDir, "SKILL.md")
+	validateSkillMdPath := filepath.Join(
+		validateSkillDir,
+		"SKILL.md",
+	)
 	err = os.WriteFile(
 		validateSkillMdPath,
 		[]byte("# Skill\n"),

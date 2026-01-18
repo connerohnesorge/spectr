@@ -199,7 +199,9 @@ func (tm *TemplateManager) Agents() domain.TemplateRef {
 // SlashCommand returns a Markdown template reference for the given slash command type.
 // Used by SlashCommandsInitializer, HomeSlashCommandsInitializer, and PrefixedSlashCommandsInitializer.
 // The returned TemplateRef will assemble frontmatter from BaseSlashCommandFrontmatter.
-func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+func (tm *TemplateManager) SlashCommand(
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.md.tmpl",
 		domain.SlashApply:    "slash-apply.md.tmpl",
@@ -228,7 +230,9 @@ func (tm *TemplateManager) SlashCommandWithOverrides(
 // TOMLSlashCommand returns a TOML template reference for the given slash command type.
 // Used by TOMLSlashCommandsInitializer (Gemini only).
 // Note: TOML templates have frontmatter embedded in the template file, not assembled dynamically.
-func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+func (tm *TemplateManager) TOMLSlashCommand(
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.toml.tmpl",
 		domain.SlashApply:    "slash-apply.toml.tmpl",
@@ -247,12 +251,21 @@ func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.Temp
 // relative to the skill root (e.g., SKILL.md, scripts/accept.sh).
 //
 //nolint:revive // receiver not used but required by TemplateManager interface
-func (*TemplateManager) SkillFS(skillName string) (fs.FS, error) {
+func (*TemplateManager) SkillFS(
+	skillName string,
+) (fs.FS, error) {
 	// Create a sub-filesystem rooted at templates/skills/<skillName>
-	skillPath := fmt.Sprintf("templates/skills/%s", skillName)
+	skillPath := fmt.Sprintf(
+		"templates/skills/%s",
+		skillName,
+	)
 	subFS, err := fs.Sub(skillFS, skillPath)
 	if err != nil {
-		return nil, fmt.Errorf("skill %s not found: %w", skillName, err)
+		return nil, fmt.Errorf(
+			"skill %s not found: %w",
+			skillName,
+			err,
+		)
 	}
 
 	return subFS, nil

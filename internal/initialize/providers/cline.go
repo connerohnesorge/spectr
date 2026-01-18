@@ -11,15 +11,27 @@ import (
 type ClineProvider struct{}
 
 // Initializers returns the list of initializers for Cline.
-func (*ClineProvider) Initializers(_ context.Context, tm TemplateManager) []Initializer {
+func (*ClineProvider) Initializers(
+	_ context.Context,
+	tm TemplateManager,
+) []Initializer {
 	return []Initializer{
-		NewDirectoryInitializer(".clinerules/commands/spectr"),
-		NewConfigFileInitializer("CLINE.md", tm.InstructionPointer()),
+		NewDirectoryInitializer(
+			".clinerules/commands/spectr",
+		),
+		NewConfigFileInitializer(
+			"CLINE.md",
+			tm.InstructionPointer(),
+		),
 		NewSlashCommandsInitializer(
 			".clinerules/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

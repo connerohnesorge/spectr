@@ -16,13 +16,22 @@ func (*QwenProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer {
 	return []Initializer{
-		NewDirectoryInitializer(".qwen/commands/spectr"),
-		NewConfigFileInitializer("QWEN.md", tm.InstructionPointer()),
+		NewDirectoryInitializer(
+			".qwen/commands/spectr",
+		),
+		NewConfigFileInitializer(
+			"QWEN.md",
+			tm.InstructionPointer(),
+		),
 		NewSlashCommandsInitializer(
 			".qwen/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

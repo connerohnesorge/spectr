@@ -21,7 +21,10 @@ type InitCmd struct {
 func (c *InitCmd) Run() error {
 	// Register all providers with error handling
 	if err := providers.RegisterAllProviders(); err != nil {
-		return fmt.Errorf("failed to register providers: %w", err)
+		return fmt.Errorf(
+			"failed to register providers: %w",
+			err,
+		)
 	}
 
 	// Determine project path - positional arg takes precedence over flag
@@ -85,14 +88,16 @@ func isTTYError(err error) bool {
 	}
 
 	// Check underlying syscall errors (works through wrapped errors)
-	if errors.Is(err, syscall.ENXIO) || errors.Is(err, syscall.ENOTTY) {
+	if errors.Is(err, syscall.ENXIO) ||
+		errors.Is(err, syscall.ENOTTY) {
 		return true
 	}
 
 	// Check for PathError with TTY-related paths
 	var pathErr *os.PathError
 	if errors.As(err, &pathErr) {
-		if pathErr.Path == "/dev/tty" || pathErr.Path == "CONIN$" {
+		if pathErr.Path == "/dev/tty" ||
+			pathErr.Path == "CONIN$" {
 			return true
 		}
 	}
@@ -150,7 +155,10 @@ func runNonInteractiveInit(c *InitCmd) error {
 	if len(c.Tools) == 1 && c.Tools[0] == "all" {
 		// Get all provider IDs from registered providers
 		allProviders := providers.RegisteredProviders()
-		selectedProviders = make([]string, len(allProviders))
+		selectedProviders = make(
+			[]string,
+			len(allProviders),
+		)
 		for i, reg := range allProviders {
 			selectedProviders[i] = reg.ID
 		}

@@ -24,9 +24,14 @@ func (*ClaudeProvider) Initializers(
 	}
 
 	return []Initializer{
-		NewDirectoryInitializer(".claude/commands/spectr"),
+		NewDirectoryInitializer(
+			".claude/commands/spectr",
+		),
 		NewDirectoryInitializer(".claude/skills"),
-		NewConfigFileInitializer("CLAUDE.md", tm.InstructionPointer()),
+		NewConfigFileInitializer(
+			"CLAUDE.md",
+			tm.InstructionPointer(),
+		),
 		NewSlashCommandsInitializer(
 			".claude/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
@@ -34,7 +39,9 @@ func (*ClaudeProvider) Initializers(
 					domain.SlashProposal,
 					proposalOverrides,
 				),
-				domain.SlashApply: tm.SlashCommand(domain.SlashApply),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 		NewAgentSkillsInitializer(

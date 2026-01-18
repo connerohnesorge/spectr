@@ -84,120 +84,144 @@ func (a *AgentSkillsInitializer) Init(
 	var updatedFiles []string
 
 	// Walk the skill filesystem and copy all files
-	err = fs.WalkDir(skillFS, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
+	err = fs.WalkDir(
+		skillFS,
+		".",
+		func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
 
-		// Compute target path
-		targetPath := filepath.Join(a.targetDir, path)
+			// Compute target path
+			targetPath := filepath.Join(
+				a.targetDir,
+				path,
+			)
 
-		// Create directory
-		if d.IsDir() {
-			exists, existsErr := afero.DirExists(projectFs, targetPath)
+			// Create directory
+			if d.IsDir() {
+				exists, existsErr := afero.DirExists(
+					projectFs,
+					targetPath,
+				)
+				if existsErr != nil {
+					return fmt.Errorf(
+						"failed to check directory %s: %w",
+						targetPath,
+						existsErr,
+					)
+				}
+
+				if mkdirErr := projectFs.MkdirAll(targetPath, 0o755); mkdirErr != nil {
+					return fmt.Errorf(
+						"failed to create directory %s: %w",
+						targetPath,
+						mkdirErr,
+					)
+				}
+
+				if !exists {
+					createdFiles = append(
+						createdFiles,
+						targetPath,
+					)
+				}
+
+				return nil
+			}
+
+			// Check if file exists
+			fileExists, existsErr := afero.Exists(
+				projectFs,
+				targetPath,
+			)
 			if existsErr != nil {
 				return fmt.Errorf(
-					"failed to check directory %s: %w",
+					"failed to check file %s: %w",
 					targetPath,
 					existsErr,
 				)
 			}
 
-			if mkdirErr := projectFs.MkdirAll(targetPath, 0o755); mkdirErr != nil {
+			// Read source file
+			sourceFile, openErr := skillFS.Open(
+				path,
+			)
+			if openErr != nil {
 				return fmt.Errorf(
-					"failed to create directory %s: %w",
-					targetPath,
-					mkdirErr,
+					"failed to open skill file %s: %w",
+					path,
+					openErr,
+				)
+			}
+			defer func() {
+				_ = sourceFile.Close()
+			}()
+
+			sourceData, readErr := io.ReadAll(
+				sourceFile,
+			)
+			if readErr != nil {
+				return fmt.Errorf(
+					"failed to read skill file %s: %w",
+					path,
+					readErr,
 				)
 			}
 
-			if !exists {
+			// Get source file permissions to detect executables
+			sourceInfo, statErr := d.Info()
+			if statErr != nil {
+				return fmt.Errorf(
+					"failed to get file info for %s: %w",
+					path,
+					statErr,
+				)
+			}
+
+			// Determine target file mode: use 0755 for executables, 0644 for regular files
+			// Don't preserve readonly permissions from embed.FS
+			targetMode := fs.FileMode(0o644)
+
+			// Check if source has executable bit OR if it's a .sh file
+			// (embed.FS doesn't preserve executable bits from git, so we check extension)
+			isExecutable := sourceInfo.Mode()&0o111 != 0
+			isShellScript := filepath.Ext(
+				path,
+			) == ".sh"
+
+			if isExecutable || isShellScript {
+				targetMode = 0o755
+			}
+
+			// Write target file with normal write permissions
+			writeErr := afero.WriteFile(
+				projectFs,
+				targetPath,
+				sourceData,
+				targetMode,
+			)
+			if writeErr != nil {
+				return fmt.Errorf(
+					"failed to write file %s: %w",
+					targetPath,
+					writeErr,
+				)
+			}
+
+			// Track created/updated files
+			if fileExists {
+				updatedFiles = append(
+					updatedFiles,
+					targetPath,
+				)
+			} else {
 				createdFiles = append(createdFiles, targetPath)
 			}
 
 			return nil
-		}
-
-		// Check if file exists
-		fileExists, existsErr := afero.Exists(projectFs, targetPath)
-		if existsErr != nil {
-			return fmt.Errorf(
-				"failed to check file %s: %w",
-				targetPath,
-				existsErr,
-			)
-		}
-
-		// Read source file
-		sourceFile, openErr := skillFS.Open(path)
-		if openErr != nil {
-			return fmt.Errorf(
-				"failed to open skill file %s: %w",
-				path,
-				openErr,
-			)
-		}
-		defer func() {
-			_ = sourceFile.Close()
-		}()
-
-		sourceData, readErr := io.ReadAll(sourceFile)
-		if readErr != nil {
-			return fmt.Errorf(
-				"failed to read skill file %s: %w",
-				path,
-				readErr,
-			)
-		}
-
-		// Get source file permissions to detect executables
-		sourceInfo, statErr := d.Info()
-		if statErr != nil {
-			return fmt.Errorf(
-				"failed to get file info for %s: %w",
-				path,
-				statErr,
-			)
-		}
-
-		// Determine target file mode: use 0755 for executables, 0644 for regular files
-		// Don't preserve readonly permissions from embed.FS
-		targetMode := fs.FileMode(0o644)
-
-		// Check if source has executable bit OR if it's a .sh file
-		// (embed.FS doesn't preserve executable bits from git, so we check extension)
-		isExecutable := sourceInfo.Mode()&0o111 != 0
-		isShellScript := filepath.Ext(path) == ".sh"
-
-		if isExecutable || isShellScript {
-			targetMode = 0o755
-		}
-
-		// Write target file with normal write permissions
-		writeErr := afero.WriteFile(
-			projectFs,
-			targetPath,
-			sourceData,
-			targetMode,
-		)
-		if writeErr != nil {
-			return fmt.Errorf(
-				"failed to write file %s: %w",
-				targetPath,
-				writeErr,
-			)
-		}
-
-		// Track created/updated files
-		if fileExists {
-			updatedFiles = append(updatedFiles, targetPath)
-		} else {
-			createdFiles = append(createdFiles, targetPath)
-		}
-
-		return nil
-	})
-
+		},
+	)
 	if err != nil {
 		return InitResult{}, fmt.Errorf(
 			"failed to copy skill %s to %s: %w",
@@ -223,8 +247,14 @@ func (a *AgentSkillsInitializer) IsSetup(
 	projectFs, _ afero.Fs,
 	_ *Config,
 ) bool { //nolint:lll // Function signature defined by Initializer interface
-	skillMdPath := filepath.Join(a.targetDir, "SKILL.md")
-	exists, err := afero.Exists(projectFs, skillMdPath)
+	skillMdPath := filepath.Join(
+		a.targetDir,
+		"SKILL.md",
+	)
+	exists, err := afero.Exists(
+		projectFs,
+		skillMdPath,
+	)
 
 	return err == nil && exists
 }
@@ -241,5 +271,8 @@ func (a *AgentSkillsInitializer) IsSetup(
 func (a *AgentSkillsInitializer) dedupeKey() string {
 	normalizedPath := filepath.Clean(a.targetDir)
 
-	return fmt.Sprintf("AgentSkillsInitializer:%s", normalizedPath)
+	return fmt.Sprintf(
+		"AgentSkillsInitializer:%s",
+		normalizedPath,
+	)
 }

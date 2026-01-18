@@ -20,15 +20,21 @@ type Config struct {
 // Returns an error if any validation rule fails.
 func (c *Config) Validate() error {
 	if c.SpectrDir == "" {
-		return errors.New("SpectrDir must not be empty")
+		return errors.New(
+			"SpectrDir must not be empty",
+		)
 	}
 
 	if filepath.IsAbs(c.SpectrDir) {
-		return errors.New("SpectrDir must be relative, not absolute")
+		return errors.New(
+			"SpectrDir must be relative, not absolute",
+		)
 	}
 
 	if strings.Contains(c.SpectrDir, "..") {
-		return errors.New("SpectrDir must not contain path traversal")
+		return errors.New(
+			"SpectrDir must not contain path traversal",
+		)
 	}
 
 	return nil

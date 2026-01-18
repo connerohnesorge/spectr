@@ -63,8 +63,8 @@ The previous `add-hierarchical-tasks` proposal attempted to solve this by tying 
 3. If >100 lines: enter splitting mode
    - Parse tasks.md into sections (by `## N. Section Name`)
    - For each section:
-     - If section <100 lines: candidate for splitting
-     - If section >100 lines: split by subsections (task ID prefixes like "1.1", "1.2")
+     - If section ≤100 lines: keep together (no splitting needed)
+     - If section >100 lines: candidate for splitting by subsections (task ID prefixes like "1.1", "1.2")
    - Generate root tasks.jsonc with reference tasks
    - Generate tasks-N.jsonc files for each split section/subsection group
 

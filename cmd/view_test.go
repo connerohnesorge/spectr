@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -33,8 +32,8 @@ func TestViewCmd_Integration_TextOutput(
 		}
 	}()
 
-	// Change to project root (where spectr directory exists)
-	projectRoot := filepath.Join(originalWd, "..")
+	// Change to project root using reliable detection
+	projectRoot := FindProjectRoot(t)
 	err = os.Chdir(projectRoot)
 	if err != nil {
 		t.Fatalf(
@@ -44,13 +43,7 @@ func TestViewCmd_Integration_TextOutput(
 	}
 
 	// Verify spectr directory exists
-	_, err = os.Stat("spectr")
-	if err != nil {
-		t.Skipf(
-			"Skipping integration test: spectr directory not found at %s",
-			projectRoot,
-		)
-	}
+	GetSpectrDir(t)
 
 	// Capture stdout
 	oldStdout := os.Stdout
@@ -122,8 +115,8 @@ func TestViewCmd_Integration_JSONOutput(
 		}
 	}()
 
-	// Change to project root (where spectr directory exists)
-	projectRoot := filepath.Join(originalWd, "..")
+	// Change to project root using reliable detection
+	projectRoot := FindProjectRoot(t)
 	err = os.Chdir(projectRoot)
 	if err != nil {
 		t.Fatalf(
@@ -133,13 +126,7 @@ func TestViewCmd_Integration_JSONOutput(
 	}
 
 	// Verify spectr directory exists
-	_, err = os.Stat("spectr")
-	if err != nil {
-		t.Skipf(
-			"Skipping integration test: spectr directory not found at %s",
-			projectRoot,
-		)
-	}
+	GetSpectrDir(t)
 
 	// Capture stdout
 	oldStdout := os.Stdout
@@ -256,8 +243,8 @@ func TestViewCmd_Integration_NOCOLOREnvironment(
 		}
 	}()
 
-	// Change to project root
-	projectRoot := filepath.Join(originalWd, "..")
+	// Change to project root using reliable detection
+	projectRoot := FindProjectRoot(t)
 	err = os.Chdir(projectRoot)
 	if err != nil {
 		t.Fatalf(
@@ -267,13 +254,7 @@ func TestViewCmd_Integration_NOCOLOREnvironment(
 	}
 
 	// Verify spectr directory exists
-	_, err = os.Stat("spectr")
-	if err != nil {
-		t.Skipf(
-			"Skipping integration test: spectr directory not found at %s",
-			projectRoot,
-		)
-	}
+	GetSpectrDir(t)
 
 	// Set NO_COLOR environment variable
 	_ = os.Setenv("NO_COLOR", "1")

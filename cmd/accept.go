@@ -526,7 +526,7 @@ func parseTasksMd(
 			}
 
 			// Check if this line is indented (continuation of the task)
-			if len(nextLine) > 0 && (nextLine[0] == ' ' || nextLine[0] == '\t') {
+			if nextLine != "" && (nextLine[0] == ' ' || nextLine[0] == '\t') {
 				// This is a continuation line - append it
 				description += "\n" + nextLine
 				i = j // Skip this line in the outer loop
@@ -692,7 +692,7 @@ func parseSections(path string) ([]Section, error) {
 				}
 
 				// Check if this line is indented (continuation of the task)
-				if len(nextLine) > 0 && (nextLine[0] == ' ' || nextLine[0] == '\t') {
+				if nextLine != "" && (nextLine[0] == ' ' || nextLine[0] == '\t') {
 					// This is a continuation line - append it
 					description += "\n" + nextLine
 					i = j // Skip this line in the outer loop

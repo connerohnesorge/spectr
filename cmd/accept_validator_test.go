@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -786,23 +787,97 @@ func TestBuildJSONCValidationError_ContextSize(t *testing.T) {
 	}
 }
 
+// verifyRoundTrip checks that a round-trip conversion preserves data
+func verifyRoundTrip(t *testing.T, originalFile, roundTrippedFile *parsers.TasksFile) {
+	// Verify version
+	if roundTrippedFile.Version != originalFile.Version {
+		t.Errorf("Version mismatch: got %d, want %d", roundTrippedFile.Version, originalFile.Version)
+	}
+
+	// Verify task count
+	if len(roundTrippedFile.Tasks) != len(originalFile.Tasks) {
+		t.Fatalf("Task count mismatch: got %d, want %d", len(roundTrippedFile.Tasks), len(originalFile.Tasks))
+	}
+
+	// Verify each task
+	for i := range originalFile.Tasks {
+		verifyTaskPreserved(t, i, &roundTrippedFile.Tasks[i], &originalFile.Tasks[i])
+	}
+
+	// Verify parent
+	if roundTrippedFile.Parent != originalFile.Parent {
+		t.Errorf("Parent mismatch: got %q, want %q", roundTrippedFile.Parent, originalFile.Parent)
+	}
+
+	// Verify includes
+	verifyIncludesPreserved(t, originalFile.Includes, roundTrippedFile.Includes)
+}
+
+// verifyTaskPreserved checks that a task is preserved correctly
+func verifyTaskPreserved(t *testing.T, idx int, roundTripped, original *parsers.Task) {
+	if roundTripped.ID != original.ID {
+		t.Errorf("Task %d ID mismatch: got %q, want %q", idx, roundTripped.ID, original.ID)
+	}
+	if roundTripped.Section != original.Section {
+		t.Errorf("Task %d Section mismatch: got %q, want %q", idx, roundTripped.Section, original.Section)
+	}
+	if roundTripped.Description != original.Description {
+		t.Errorf("Task %d Description mismatch:\nOriginal: %q\nAfter:    %q", idx, original.Description, roundTripped.Description)
+	}
+	if roundTripped.Status != original.Status {
+		t.Errorf("Task %d Status mismatch: got %q, want %q", idx, roundTripped.Status, original.Status)
+	}
+	if roundTripped.Children != original.Children {
+		t.Errorf("Task %d Children mismatch: got %q, want %q", idx, roundTripped.Children, original.Children)
+	}
+}
+
+// verifyIncludesPreserved checks that includes are preserved
+func verifyIncludesPreserved(t *testing.T, original, roundTripped []string) {
+	if len(roundTripped) != len(original) {
+		t.Errorf("Includes count mismatch: got %d, want %d", len(roundTripped), len(original))
+
+		return
+	}
+	for i, inc := range original {
+		if roundTripped[i] != inc {
+			t.Errorf("Includes[%d] mismatch: got %q, want %q", i, roundTripped[i], inc)
+		}
+	}
+}
+
 // TestRoundTripConversion_RealWorldData tests round-trip conversion using
 // actual archived tasks.jsonc files to ensure validation works with production data.
 func TestRoundTripConversion_RealWorldData(t *testing.T) {
-	// Define the archived tasks.jsonc files to test
-	archivedFiles := []string{
-		"/home/connerohnesorge/Documents/001Repos/spectr/spectr/changes/archive/2026-01-04-add-auto-sync-tasks/tasks.jsonc",
-		"/home/connerohnesorge/Documents/001Repos/spectr/spectr/changes/archive/2026-01-04-add-slash-command-frontmatter/tasks.jsonc",
-		"/home/connerohnesorge/Documents/001Repos/spectr/spectr/changes/archive/2025-12-31-preserve-tasks-md/tasks.jsonc",
+	// Get testdata directory and walk archived changes
+	testDataDir := GetTestDataDir(t)
+	archivedDir := filepath.Join(testDataDir, "integration", "changes", "archive")
+
+	// Find all tasks.jsonc files in archived changes
+	entries, err := os.ReadDir(archivedDir)
+	if err != nil {
+		t.Fatalf("Failed to read archived changes directory: %v", err)
+	}
+
+	var archivedFiles []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			// Check for tasks.jsonc in each archived change subdirectory
+			tasksPath := filepath.Join(archivedDir, entry.Name(), "tasks.jsonc")
+			if _, err := os.Stat(tasksPath); err == nil {
+				archivedFiles = append(archivedFiles, tasksPath)
+			}
+		}
+	}
+
+	if len(archivedFiles) == 0 {
+		t.Skip(
+			"No archived test files found in testdata/integration/changes/archive/",
+		)
 	}
 
 	for _, filePath := range archivedFiles {
-		t.Run(filePath, func(t *testing.T) {
-			// Skip if file doesn't exist (e.g., in nix build sandbox)
-			if _, err := os.Stat(filePath); os.IsNotExist(err) {
-				t.Skipf("Skipping test: file not found: %s", filePath)
-			}
-
+		t.Run(filepath.Base(filePath), func(t *testing.T) {
 			// Read the archived tasks.jsonc file
 			tasksFile, err := parsers.ReadTasksJson(filePath)
 			if err != nil {
@@ -825,101 +900,7 @@ func TestRoundTripConversion_RealWorldData(t *testing.T) {
 			}
 
 			// Verify the round-trip is lossless
-			if roundTrippedFile.Version != tasksFile.Version {
-				t.Errorf(
-					"Version mismatch: got %d, want %d",
-					roundTrippedFile.Version,
-					tasksFile.Version,
-				)
-			}
-
-			if len(roundTrippedFile.Tasks) != len(tasksFile.Tasks) {
-				t.Fatalf(
-					"Task count mismatch: got %d, want %d",
-					len(roundTrippedFile.Tasks),
-					len(tasksFile.Tasks),
-				)
-			}
-
-			// Verify each task is preserved correctly
-			for i, originalTask := range tasksFile.Tasks {
-				roundTrippedTask := roundTrippedFile.Tasks[i]
-
-				if roundTrippedTask.ID != originalTask.ID {
-					t.Errorf(
-						"Task %d ID mismatch: got %q, want %q",
-						i,
-						roundTrippedTask.ID,
-						originalTask.ID,
-					)
-				}
-
-				if roundTrippedTask.Section != originalTask.Section {
-					t.Errorf(
-						"Task %d Section mismatch: got %q, want %q",
-						i,
-						roundTrippedTask.Section,
-						originalTask.Section,
-					)
-				}
-
-				if roundTrippedTask.Description != originalTask.Description {
-					t.Errorf(
-						"Task %d Description mismatch:\nOriginal: %q\nAfter:    %q",
-						i,
-						originalTask.Description,
-						roundTrippedTask.Description,
-					)
-				}
-
-				if roundTrippedTask.Status != originalTask.Status {
-					t.Errorf(
-						"Task %d Status mismatch: got %q, want %q",
-						i,
-						roundTrippedTask.Status,
-						originalTask.Status,
-					)
-				}
-
-				// Verify Children field if present (for hierarchical tasks)
-				if roundTrippedTask.Children != originalTask.Children {
-					t.Errorf(
-						"Task %d Children mismatch: got %q, want %q",
-						i,
-						roundTrippedTask.Children,
-						originalTask.Children,
-					)
-				}
-			}
-
-			// Verify Parent field if present (for hierarchical child files)
-			if roundTrippedFile.Parent != tasksFile.Parent {
-				t.Errorf(
-					"Parent mismatch: got %q, want %q",
-					roundTrippedFile.Parent,
-					tasksFile.Parent,
-				)
-			}
-
-			// Verify Includes field if present (for hierarchical root files)
-			if len(roundTrippedFile.Includes) != len(tasksFile.Includes) {
-				t.Errorf(
-					"Includes count mismatch: got %d, want %d",
-					len(roundTrippedFile.Includes),
-					len(tasksFile.Includes),
-				)
-			} else {
-				for i, inc := range tasksFile.Includes {
-					if roundTrippedFile.Includes[i] != inc {
-						t.Errorf(
-							"Includes[%d] mismatch: got %q, want %q",
-							i,
-							roundTrippedFile.Includes[i],
-							inc,
-						)
-					}
-				}
-			}
+			verifyRoundTrip(t, tasksFile, &roundTrippedFile)
 		})
 	}
 }

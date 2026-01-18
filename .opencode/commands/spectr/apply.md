@@ -1,8 +1,7 @@
 ---
 description: Change Proposal Application/Acceptance Process (project)
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(spectr:*)
-agent: null
-model: null
+agent: implement
 subtask: false
 ---
 

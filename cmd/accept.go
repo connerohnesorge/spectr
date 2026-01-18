@@ -455,6 +455,9 @@ func (s *taskParseState) createTask(
 //   - "- [ ] 1. Task" (simple dot ID)
 //   - "- [ ] 1 Task" (number only ID)
 //   - "- [ ] Task" (no ID - auto-generated)
+//
+// Multi-line task descriptions: If a task is followed by indented lines
+// (continuation lines), they are appended to the task description.
 func parseTasksMd(
 	path string,
 ) ([]parsers.Task, error) {
@@ -467,12 +470,25 @@ func parseTasksMd(
 	}
 	defer func() { _ = file.Close() }()
 
+	// Read all lines first so we can look ahead
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf(
+			"error reading file: %w",
+			err,
+		)
+	}
+
 	var tasks []parsers.Task
 	state := &taskParseState{}
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
 
 		// Check for section header (numbered or unnumbered)
 		if name, number, ok := markdown.MatchAnySection(line); ok {
@@ -489,18 +505,41 @@ func parseTasksMd(
 			continue
 		}
 
-		tasks = append(
-			tasks,
-			state.createTask(match),
-		)
-	}
+		// Collect continuation lines (indented lines following the task)
+		description := match.Content
+		for j := i + 1; j < len(lines); j++ {
+			nextLine := lines[j]
 
-	err = scanner.Err()
-	if err != nil {
-		return nil, fmt.Errorf(
-			"error reading file: %w",
-			err,
-		)
+			// Stop if we hit another section header
+			if _, _, ok := markdown.MatchAnySection(nextLine); ok {
+				break
+			}
+
+			// Stop if we hit another task
+			if _, ok := markdown.MatchFlexibleTask(nextLine); ok {
+				break
+			}
+
+			// Stop if we hit a blank line
+			if strings.TrimSpace(nextLine) == "" {
+				break
+			}
+
+			// Check if this line is indented (continuation of the task)
+			if len(nextLine) > 0 && (nextLine[0] == ' ' || nextLine[0] == '\t') {
+				// This is a continuation line - append it
+				description += "\n" + nextLine
+				i = j // Skip this line in the outer loop
+			} else {
+				// Non-indented, non-task, non-section line - stop
+				break
+			}
+		}
+
+		// Create task with the complete description
+		task := state.createTask(match)
+		task.Description = description
+		tasks = append(tasks, task)
 	}
 
 	return tasks, nil
@@ -583,6 +622,7 @@ func (s *Section) LineCount() int {
 // It identifies sections by "## N. Section Name" or "## Section Name" headers,
 // tracks their line ranges, and returns a slice of Section structs.
 // Tasks are extracted and associated with their containing section.
+// Multi-line task descriptions with indented continuation lines are supported.
 func parseSections(path string) ([]Section, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -590,15 +630,24 @@ func parseSections(path string) ([]Section, error) {
 	}
 	defer func() { _ = file.Close() }()
 
+	// Read all lines first so we can look ahead
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading file: %w", err)
+	}
+
 	var sections []Section
 	var currentSection *Section
 	state := &taskParseState{}
-	lineNum := 0
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lineNum++
-		line := scanner.Text()
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		lineNum := i + 1
 
 		// Check for section header
 		if name, number, ok := markdown.MatchAnySection(line); ok {
@@ -622,7 +671,40 @@ func parseSections(path string) ([]Section, error) {
 
 		// Check for task line
 		if match, ok := markdown.MatchFlexibleTask(line); ok {
+			// Collect continuation lines (indented lines following the task)
+			description := match.Content
+			for j := i + 1; j < len(lines); j++ {
+				nextLine := lines[j]
+
+				// Stop if we hit another section header
+				if _, _, ok := markdown.MatchAnySection(nextLine); ok {
+					break
+				}
+
+				// Stop if we hit another task
+				if _, ok := markdown.MatchFlexibleTask(nextLine); ok {
+					break
+				}
+
+				// Stop if we hit a blank line
+				if strings.TrimSpace(nextLine) == "" {
+					break
+				}
+
+				// Check if this line is indented (continuation of the task)
+				if len(nextLine) > 0 && (nextLine[0] == ' ' || nextLine[0] == '\t') {
+					// This is a continuation line - append it
+					description += "\n" + nextLine
+					i = j // Skip this line in the outer loop
+				} else {
+					// Non-indented, non-task, non-section line - stop
+					break
+				}
+			}
+
+			// Create task with the complete description
 			task := state.createTask(match)
+			task.Description = description
 
 			// Add task to current section if we have one
 			if currentSection != nil {
@@ -633,12 +715,8 @@ func parseSections(path string) ([]Section, error) {
 
 	// Close final section
 	if currentSection != nil {
-		currentSection.EndLine = lineNum
+		currentSection.EndLine = len(lines)
 		sections = append(sections, *currentSection)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
 	}
 
 	return sections, nil

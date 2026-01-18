@@ -503,6 +503,48 @@ func TestParseTasksMd(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "multi-line task descriptions with sub-bullets",
+			markdown: `## 3. Property-Based Testing
+
+- [ ] 3.1 Create test infrastructure
+- [ ] 3.2 Implement TestJSONCValidation_SpecialCharacters with test cases for:
+  - Backslash ` + "`\\`" + `
+  - Quote ` + "`\"`" + `
+  - Newline ` + "`\\n`" + `
+  - Tab ` + "`\\t`" + `
+- [ ] 3.3 Implement TestJSONCValidation_Unicode with test cases for:
+  - Emoji (🚀, 💻, ✅)
+  - Non-ASCII characters (你好, مرحبا)
+- [ ] 3.4 Simple task without sub-bullets
+`,
+			expected: []parsers.Task{
+				{
+					ID:          "3.1",
+					Section:     "Property-Based Testing",
+					Description: "Create test infrastructure",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "3.2",
+					Section:     "Property-Based Testing",
+					Description: "Implement TestJSONCValidation_SpecialCharacters with test cases for:\n  - Backslash `\\`\n  - Quote `\"`\n  - Newline `\\n`\n  - Tab `\\t`",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "3.3",
+					Section:     "Property-Based Testing",
+					Description: "Implement TestJSONCValidation_Unicode with test cases for:\n  - Emoji (🚀, 💻, ✅)\n  - Non-ASCII characters (你好, مرحبا)",
+					Status:      parsers.TaskStatusPending,
+				},
+				{
+					ID:          "3.4",
+					Section:     "Property-Based Testing",
+					Description: "Simple task without sub-bullets",
+					Status:      parsers.TaskStatusPending,
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

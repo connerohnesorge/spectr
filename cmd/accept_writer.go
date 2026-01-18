@@ -151,6 +151,16 @@ func writeTasksJSONC(
 	// Prepend the JSONC header to the JSON data
 	output := tasksJSONHeader + string(jsonData)
 
+	// Validate JSONC output BEFORE writing to disk (fail fast)
+	if err := validateJSONCOutput([]byte(output)); err != nil {
+		return fmt.Errorf("JSONC validation failed before writing %s: %w", path, err)
+	}
+
+	// Validate round-trip integrity (ensures no data loss during serialization)
+	if err := validateTasksJSONC(tasksFile, []byte(output)); err != nil {
+		return fmt.Errorf("round-trip validation failed for %s: %w", path, err)
+	}
+
 	if err := os.WriteFile(path, []byte(output), filePerm); err != nil {
 		return fmt.Errorf(
 			"failed to write tasks.jsonc: %w",
@@ -484,6 +494,11 @@ func writeRootTasksJSONC(path string, referenceTasks []parsers.Task) error {
 	// Prepend the JSONC header to the JSON data
 	output := tasksJSONHeader + string(jsonData)
 
+	// Validate JSONC output before writing to disk
+	if err := validateJSONCOutput([]byte(output)); err != nil {
+		return fmt.Errorf("validation failed for root tasks.jsonc: %w", err)
+	}
+
 	if err := os.WriteFile(path, []byte(output), filePerm); err != nil {
 		return fmt.Errorf("failed to write root tasks.jsonc: %w", err)
 	}
@@ -512,6 +527,16 @@ func writeChildTasksJSONC(path, changeID, parentTaskID string, tasks []parsers.T
 	jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal child tasks to JSON: %w", err)
+	}
+
+	// Validate JSONC output before writing to disk
+	if err := validateJSONCOutput(jsonData); err != nil {
+		return fmt.Errorf("validation failed for child tasks file %s: %w", path, err)
+	}
+
+	// Perform round-trip validation
+	if err := validateTasksJSONC(tasksFile, jsonData); err != nil {
+		return fmt.Errorf("round-trip validation failed for child tasks file %s: %w", path, err)
 	}
 
 	// Use the child-specific header with origin information

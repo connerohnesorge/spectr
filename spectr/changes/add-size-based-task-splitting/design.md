@@ -96,7 +96,7 @@ tasks.md (160 lines):
 ```
 
 Generated files:
-- `tasks.jsonc` (root: ~30 lines with 3 reference tasks)
+- `tasks.jsonc` (root: ~40 lines with 4 reference tasks)
 - `tasks-1.jsonc` (Foundation: 40 lines)
 - `tasks-2.jsonc` (Implementation subsection A: 40 lines)
 - `tasks-3.jsonc` (Implementation subsection B: 40 lines)
@@ -135,22 +135,49 @@ Root tasks.jsonc:
       "description": "Implement core features",
       "status": "pending",
       "children": "$ref:tasks-1.jsonc"  // NEW
+    },
+    {
+      "id": "2",
+      "section": "Implementation (subsection A)",
+      "description": "Implement subsection A",
+      "status": "pending",
+      "children": "$ref:tasks-2.jsonc"  // NEW
+    },
+    {
+      "id": "3",
+      "section": "Implementation (subsection B)",
+      "description": "Implement subsection B",
+      "status": "pending",
+      "children": "$ref:tasks-3.jsonc"  // NEW
+    },
+    {
+      "id": "4",
+      "section": "Testing",
+      "description": "Test all features",
+      "status": "pending",
+      "children": "$ref:tasks-4.jsonc"  // NEW
     }
   ],
   "includes": ["tasks-*.jsonc"]  // NEW
 }
 ```
 
-Child tasks-N.jsonc:
+Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 ```jsonc
 {
   "version": 2,
-  "parent": "1",  // NEW
+  "parent": "1",  // NEW - references root task 1
   "tasks": [
     {
-      "id": "1.1",  // Hierarchical ID
+      "id": "1.1",  // Hierarchical ID: parent.child
       "section": "Foundation",
       "description": "Create database schema",
+      "status": "pending"
+    },
+    {
+      "id": "1.2",  // Hierarchical ID: parent.child
+      "section": "Foundation",
+      "description": "Set up database indexes",
       "status": "pending"
     }
   ]
@@ -263,9 +290,16 @@ This phase MUST be completed before phases 1-5, as it fixes the underlying issue
    - Ensure file is readable by agents
 
 4. **Functions to implement**:
-   - `MarshalTaskToJSONLines(task Task) string` - convert single task to JSONC lines
-   - `MarshalTasksToJSONLines(tasks []Task) string` - convert task list to JSONC
-   - `ValidateJSONCSyntax(content string) error` - validate output
+   - `MarshalTaskToJSONLines(task Task) (string, error)` - convert single task to JSONC lines, return error if JSON encoding or JSONC formatting fails
+   - `MarshalTasksToJSONLines(tasks []Task) (string, error)` - convert task list to JSONC, return error if JSON encoding or JSONC formatting fails
+   - `ValidateJSONCSyntax(content string) error` - validate JSONC syntax and return error if invalid
+
+   **Error handling requirements**:
+   - Marshallers MUST return `(string, error)` to follow Go conventions
+   - Marshallers MUST call `ValidateJSONCSyntax()` on generated content and propagate validation errors
+   - Marshallers MUST return errors for JSON encoding failures (e.g., unencodable field values)
+   - All call sites (writeTasksJSONC, writeChildTasksJSONC) MUST handle returned errors
+   - All tests MUST verify error cases in addition to success cases
 
 ### Phase 1: Schema Updates
 
@@ -319,7 +353,7 @@ This phase MUST be completed before phases 1-5, as it fixes the underlying issue
 |------|------------|
 | Agents confused by new format | Version field enables detection; include clear headers |
 | Loss of context across files | Keep root file minimal (<40 lines) for quick overview |
-| Status desync between files | tasks.jsonc is source of truth; regenerate from tasks.md to update |
+| Status desync between files | tasks.jsonc is source of truth for task status/state (runtime values); tasks.md is source of truth for task structure/definitions; regenerate tasks.jsonc from tasks.md when structural changes are made |
 | Hardcoded 100-line threshold too aggressive/conservative | Start with 100, collect feedback, adjust in future if needed |
 | Breaking existing workflows | Version 1 format remains fully supported; no migration required |
 | Complexity in splitting logic | Extensive testing; clear edge case handling |

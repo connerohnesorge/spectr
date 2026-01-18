@@ -2802,58 +2802,77 @@ func TestParseSubsections(t *testing.T) {
 	}
 }
 
-// TestSubsectionGroupLineCount verifies line count calculation for subsection groups
-func TestSubsectionGroupLineCount(t *testing.T) {
-	tests := []struct {
-		name     string
-		group    SubsectionGroup
-		expected int
-	}{
+// TestParseSubsectionsFieldInitialization verifies that parseSubsections
+// properly initializes all fields of SubsectionGroup structs.
+// This test would have caught the bug where StartLine/EndLine fields
+// were defined but never populated.
+func TestParseSubsectionsFieldInitialization(t *testing.T) {
+	tasks := []parsers.Task{
 		{
-			name: "normal subsection group",
-			group: SubsectionGroup{
-				Prefix:    "1",
-				StartLine: 1,
-				EndLine:   50,
-			},
-			expected: 50,
+			ID:          "1.1",
+			Section:     "Test Section",
+			Description: "Task 1",
+			Status:      parsers.TaskStatusPending,
 		},
 		{
-			name: "single line subsection",
-			group: SubsectionGroup{
-				Prefix:    "2",
-				StartLine: 10,
-				EndLine:   10,
-			},
-			expected: 1,
+			ID:          "1.2",
+			Section:     "Test Section",
+			Description: "Task 2",
+			Status:      parsers.TaskStatusPending,
 		},
 		{
-			name: "invalid subsection end before start",
-			group: SubsectionGroup{
-				Prefix:    "3",
-				StartLine: 20,
-				EndLine:   10,
-			},
-			expected: 0,
-		},
-		{
-			name: "large subsection group",
-			group: SubsectionGroup{
-				Prefix:    "1.1",
-				StartLine: 5,
-				EndLine:   125,
-			},
-			expected: 121,
+			ID:          "2.1",
+			Section:     "Test Section",
+			Description: "Task 3",
+			Status:      parsers.TaskStatusPending,
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := tt.group.LineCount()
-			if got != tt.expected {
-				t.Errorf("LineCount() = %d, want %d", got, tt.expected)
+	groups := parseSubsections(tasks)
+
+	if len(groups) != 2 {
+		t.Fatalf("parseSubsections() returned %d groups, want 2", len(groups))
+	}
+
+	// Verify all fields are properly initialized for each group
+	for i, group := range groups {
+		// Prefix must be set (non-empty)
+		if group.Prefix == "" {
+			t.Errorf("group %d: Prefix is empty, should be initialized", i)
+		}
+
+		// Tasks must be initialized (non-nil) and contain tasks
+		if group.Tasks == nil {
+			t.Errorf("group %d: Tasks is nil, should be initialized", i)
+		}
+		if len(group.Tasks) == 0 {
+			t.Errorf("group %d: Tasks is empty, should contain tasks", i)
+		}
+
+		// Verify Tasks slice contains actual task data
+		for j, task := range group.Tasks {
+			if task.ID == "" {
+				t.Errorf("group %d, task %d: ID is empty", i, j)
 			}
-		})
+			if task.Description == "" {
+				t.Errorf("group %d, task %d: Description is empty", i, j)
+			}
+		}
+	}
+
+	// Verify specific group contents
+	if groups[0].Prefix != "1" {
+		t.Errorf("group 0: Prefix = %q, want \"1\"", groups[0].Prefix)
+	}
+	if len(groups[0].Tasks) != 2 {
+		t.Errorf("group 0: len(Tasks) = %d, want 2", len(groups[0].Tasks))
+	}
+
+	if groups[1].Prefix != "2" {
+		t.Errorf("group 1: Prefix = %q, want \"2\"", groups[1].Prefix)
+	}
+	if len(groups[1].Tasks) != 1 {
+		t.Errorf("group 1: len(Tasks) = %d, want 1", len(groups[1].Tasks))
 	}
 }
 
@@ -4506,4 +4525,136 @@ func TestEdgeCaseTasksFileWithOnlyComments(t *testing.T) {
 	}
 
 	t.Log("Successfully handled tasks.md with only comments")
+}
+
+// TestJSONCValidation_JSONMetaCharacters tests that task descriptions containing
+// JSON structural characters are properly escaped and survive round-trip validation.
+func TestJSONCValidation_JSONMetaCharacters(t *testing.T) {
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "opening brace",
+			description: "Task with { opening brace",
+		},
+		{
+			name:        "closing brace",
+			description: "Task with } closing brace",
+		},
+		{
+			name:        "opening bracket",
+			description: "Task with [ opening bracket",
+		},
+		{
+			name:        "closing bracket",
+			description: "Task with ] closing bracket",
+		},
+		{
+			name:        "colon",
+			description: "Task with : colon separator",
+		},
+		{
+			name:        "comma",
+			description: "Task with , comma separator",
+		},
+		{
+			name:        "json object",
+			description: `Task with {"key": "value"} JSON object`,
+		},
+		{
+			name:        "json array",
+			description: "Task with [1, 2, 3] JSON array",
+		},
+		{
+			name:        "nested json",
+			description: `Task with {"items": [1, 2], "name": "test"} nested structure`,
+		},
+		{
+			name:        "multiple braces",
+			description: "Task with {{nested}} and {separate} braces",
+		},
+		{
+			name:        "mixed json chars",
+			description: `Handle: {"a": [1, 2], "b": {"c": "d"}}`,
+		},
+		{
+			name:        "colon in middle",
+			description: "Configure setting: value pairs properly",
+		},
+		{
+			name:        "brackets and braces",
+			description: "Array[{object}] syntax support",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a task with the test description
+			task := parsers.Task{
+				ID:          "1.1",
+				Section:     "Test Section",
+				Description: tt.description,
+				Status:      parsers.TaskStatusPending,
+			}
+
+			// Step 1: Verify json.Marshal properly escapes the description
+			marshalled, err := json.Marshal(task)
+			if err != nil {
+				t.Fatalf("json.Marshal failed: %v", err)
+			}
+
+			// Step 2: Verify the marshalled JSON is valid and can be unmarshalled
+			var unmarshalled parsers.Task
+			if err := json.Unmarshal(marshalled, &unmarshalled); err != nil {
+				t.Fatalf("json.Unmarshal failed: %v\nMarshalled JSON: %s", err, string(marshalled))
+			}
+
+			// Step 3: Verify the description survived the round-trip unchanged
+			if unmarshalled.Description != tt.description {
+				t.Errorf(
+					"Description changed during round-trip:\nOriginal: %q\nGot:      %q",
+					tt.description,
+					unmarshalled.Description,
+				)
+			}
+
+			// Step 4: Test with TasksFile structure (as used in actual code)
+			tasksFile := parsers.TasksFile{
+				Version: 2,
+				Tasks:   []parsers.Task{task},
+			}
+
+			// Marshal the full TasksFile structure with indentation
+			fullMarshalled, err := json.MarshalIndent(tasksFile, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent failed: %v", err)
+			}
+
+			// Step 5: Verify the full structure can be parsed back
+			var fullUnmarshalled parsers.TasksFile
+			if err := json.Unmarshal(fullMarshalled, &fullUnmarshalled); err != nil {
+				t.Fatalf(
+					"Failed to unmarshal full TasksFile: %v\nJSON: %s",
+					err,
+					string(fullMarshalled),
+				)
+			}
+
+			// Step 6: Verify task description is still intact
+			if len(fullUnmarshalled.Tasks) != 1 {
+				t.Fatalf("Expected 1 task, got %d", len(fullUnmarshalled.Tasks))
+			}
+
+			if fullUnmarshalled.Tasks[0].Description != tt.description {
+				t.Errorf(
+					"Description changed in full structure round-trip:\nOriginal: %q\nGot:      %q",
+					tt.description,
+					fullUnmarshalled.Tasks[0].Description,
+				)
+			}
+
+			t.Logf("Successfully validated JSON meta characters in description: %q", tt.description)
+		})
+	}
 }

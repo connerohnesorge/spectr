@@ -36,529 +36,122 @@
 //
 
 {
-  "version": 1,
+  "version": 2,
   "tasks": [
     {
-      "id": "1.1",
-      "section": "Schema Updates",
-      "description": "Update `internal/parsers/types.go` to add `Children` field to Task struct with JSON tag `children,omitempty`",
-      "status": "completed"
+      "id": "0",
+      "section": "JSONC Marshalling Fix (CRITICAL - Do First)",
+      "description": "JSONC Marshalling Fix (CRITICAL - Do First) tasks",
+      "status": "pending",
+      "children": "$ref:tasks-1.jsonc"
     },
     {
-      "id": "1.2",
+      "id": "1",
       "section": "Schema Updates",
-      "description": "Add `Parent` field to TasksFile struct with JSON tag `parent,omitempty`",
-      "status": "completed"
+      "description": "Schema Updates tasks",
+      "status": "completed",
+      "children": "$ref:tasks-2.jsonc"
     },
     {
-      "id": "1.3",
-      "section": "Schema Updates",
-      "description": "Add `Includes` field to TasksFile struct with JSON tag `includes,omitempty`",
-      "status": "completed"
-    },
-    {
-      "id": "1.4",
-      "section": "Schema Updates",
-      "description": "Update TasksFile Version constant to support version 2 detection",
-      "status": "completed"
-    },
-    {
-      "id": "1.5",
-      "section": "Schema Updates",
-      "description": "Add unit tests for new struct fields serialization/deserialization",
-      "status": "completed"
-    },
-    {
-      "id": "2.1",
+      "id": "2",
       "section": "Line Counting and Split Detection",
-      "description": "Add `countLines()` function in `cmd/accept.go` to count lines in tasks.md file",
-      "status": "completed"
+      "description": "Line Counting and Split Detection tasks",
+      "status": "completed",
+      "children": "$ref:tasks-3.jsonc"
     },
     {
-      "id": "2.2",
-      "section": "Line Counting and Split Detection",
-      "description": "Add `shouldSplit()` function that returns true if line count exceeds 100",
-      "status": "completed"
-    },
-    {
-      "id": "2.3",
-      "section": "Line Counting and Split Detection",
-      "description": "Add unit tests for line counting with various file sizes",
-      "status": "completed"
-    },
-    {
-      "id": "2.4",
-      "section": "Line Counting and Split Detection",
-      "description": "Add unit tests for split detection threshold",
-      "status": "completed"
-    },
-    {
-      "id": "3.1",
+      "id": "3",
       "section": "Section Parsing",
-      "description": "Add `Section` struct to represent a section with name, tasks, and line range",
-      "status": "completed"
+      "description": "Section Parsing tasks",
+      "status": "completed",
+      "children": "$ref:tasks-4.jsonc"
     },
     {
-      "id": "3.2",
-      "section": "Section Parsing",
-      "description": "Add `parseSections()` function to extract sections from tasks.md by `## N.` headers",
-      "status": "completed"
-    },
-    {
-      "id": "3.3",
-      "section": "Section Parsing",
-      "description": "Add `extractTasksForSection()` function to get tasks belonging to a section",
-      "status": "completed"
-    },
-    {
-      "id": "3.4",
-      "section": "Section Parsing",
-      "description": "Add unit tests for section parsing with multiple sections",
-      "status": "completed"
-    },
-    {
-      "id": "3.5",
-      "section": "Section Parsing",
-      "description": "Add unit tests for malformed section headers",
-      "status": "completed"
-    },
-    {
-      "id": "3.6",
-      "section": "Section Parsing",
-      "description": "Add unit tests for tasks without sections",
-      "status": "completed"
-    },
-    {
-      "id": "4.1",
+      "id": "4",
       "section": "Subsection Splitting Logic",
-      "description": "Add `shouldSplitSection()` function to check if a section exceeds 100 lines",
-      "status": "completed"
+      "description": "Subsection Splitting Logic tasks",
+      "status": "completed",
+      "children": "$ref:tasks-5.jsonc"
     },
     {
-      "id": "4.2",
-      "section": "Subsection Splitting Logic",
-      "description": "Add `parseSubsections()` function to group tasks by ID prefix (e.g., \"1.1\", \"1.2\")",
-      "status": "completed"
-    },
-    {
-      "id": "4.3",
-      "section": "Subsection Splitting Logic",
-      "description": "Add `SubsectionGroup` struct to hold tasks with common ID prefix",
-      "status": "completed"
-    },
-    {
-      "id": "4.4",
-      "section": "Subsection Splitting Logic",
-      "description": "Add unit tests for subsection grouping by ID prefix",
-      "status": "completed"
-    },
-    {
-      "id": "4.5",
-      "section": "Subsection Splitting Logic",
-      "description": "Add unit tests for large section splitting into multiple files",
-      "status": "completed"
-    },
-    {
-      "id": "5.1",
+      "id": "5",
       "section": "Hierarchical ID Assignment",
-      "description": "Add `assignHierarchicalID()` function to generate dot-notation IDs",
-      "status": "completed"
+      "description": "Hierarchical ID Assignment tasks",
+      "status": "completed",
+      "children": "$ref:tasks-6.jsonc"
     },
     {
-      "id": "5.2",
-      "section": "Hierarchical ID Assignment",
-      "description": "Add logic to preserve existing IDs from tasks.md and add parent prefix for children",
-      "status": "completed"
-    },
-    {
-      "id": "5.3",
-      "section": "Hierarchical ID Assignment",
-      "description": "Add `validateIDUniqueness()` function to ensure no duplicate IDs",
-      "status": "completed"
-    },
-    {
-      "id": "5.4",
-      "section": "Hierarchical ID Assignment",
-      "description": "Add unit tests for hierarchical ID generation",
-      "status": "completed"
-    },
-    {
-      "id": "5.5",
-      "section": "Hierarchical ID Assignment",
-      "description": "Add unit tests for ID uniqueness validation",
-      "status": "completed"
-    },
-    {
-      "id": "6.1",
+      "id": "6",
       "section": "Status Aggregation",
-      "description": "Add `computeAggregateStatus()` function implementing aggregation rules",
-      "status": "completed"
+      "description": "Status Aggregation tasks",
+      "status": "completed",
+      "children": "$ref:tasks-7.jsonc"
     },
     {
-      "id": "6.2",
-      "section": "Status Aggregation",
-      "description": "Implement \"all pending → pending\" rule",
-      "status": "completed"
-    },
-    {
-      "id": "6.3",
-      "section": "Status Aggregation",
-      "description": "Implement \"any in_progress → in_progress\" rule",
-      "status": "completed"
-    },
-    {
-      "id": "6.4",
-      "section": "Status Aggregation",
-      "description": "Implement \"all completed → completed\" rule",
-      "status": "completed"
-    },
-    {
-      "id": "6.5",
-      "section": "Status Aggregation",
-      "description": "Implement \"mixed pending+completed → in_progress\" rule",
-      "status": "completed"
-    },
-    {
-      "id": "6.6",
-      "section": "Status Aggregation",
-      "description": "Add unit tests for all status aggregation scenarios",
-      "status": "completed"
-    },
-    {
-      "id": "7.1",
+      "id": "7",
       "section": "Status Preservation Across Regeneration",
-      "description": "Add `loadExistingStatuses()` function to read old tasks.jsonc files",
-      "status": "completed"
+      "description": "Status Preservation Across Regeneration tasks",
+      "status": "completed",
+      "children": "$ref:tasks-8.jsonc"
     },
     {
-      "id": "7.2",
-      "section": "Status Preservation Across Regeneration",
-      "description": "Build map of task ID → status from existing files",
-      "status": "completed"
-    },
-    {
-      "id": "7.3",
-      "section": "Status Preservation Across Regeneration",
-      "description": "Add logic to merge old statuses with new task structure during write",
-      "status": "completed"
-    },
-    {
-      "id": "7.4",
-      "section": "Status Preservation Across Regeneration",
-      "description": "Add unit tests for status preservation when IDs match",
-      "status": "completed"
-    },
-    {
-      "id": "7.5",
-      "section": "Status Preservation Across Regeneration",
-      "description": "Add unit tests for new tasks getting \"pending\" status",
-      "status": "completed"
-    },
-    {
-      "id": "8.1",
+      "id": "8",
       "section": "Child File Header Generation",
-      "description": "Add `childFileHeader()` function to generate header with origin info",
-      "status": "completed"
+      "description": "Child File Header Generation tasks",
+      "status": "completed",
+      "children": "$ref:tasks-9.jsonc"
     },
     {
-      "id": "8.2",
-      "section": "Child File Header Generation",
-      "description": "Include \"Generated by: spectr accept \u003cchange-id\u003e\" line",
-      "status": "completed"
-    },
-    {
-      "id": "8.3",
-      "section": "Child File Header Generation",
-      "description": "Include \"Parent change: \u003cchange-id\u003e\" line",
-      "status": "completed"
-    },
-    {
-      "id": "8.4",
-      "section": "Child File Header Generation",
-      "description": "Include \"Parent task: \u003ctask-id\u003e\" line",
-      "status": "completed"
-    },
-    {
-      "id": "8.5",
-      "section": "Child File Header Generation",
-      "description": "Include full standard header (status values, transitions)",
-      "status": "completed"
-    },
-    {
-      "id": "8.6",
-      "section": "Child File Header Generation",
-      "description": "Add unit tests for header generation with all fields",
-      "status": "completed"
-    },
-    {
-      "id": "9.1",
+      "id": "9",
       "section": "File Writing Functions",
-      "description": "Add `writeHierarchicalTasks()` orchestration function in `cmd/accept_writer.go`",
-      "status": "completed"
+      "description": "File Writing Functions tasks",
+      "status": "completed",
+      "children": "$ref:tasks-10.jsonc"
     },
     {
-      "id": "9.2",
-      "section": "File Writing Functions",
-      "description": "Add `writeRootTasksJSONC()` to write root file with reference tasks",
-      "status": "completed"
-    },
-    {
-      "id": "9.3",
-      "section": "File Writing Functions",
-      "description": "Add `writeChildTasksJSONC()` to write tasks-N.jsonc files",
-      "status": "completed"
-    },
-    {
-      "id": "9.4",
-      "section": "File Writing Functions",
-      "description": "Add `deleteOldChildFiles()` function to clean up tasks-*.jsonc before regeneration",
-      "status": "completed"
-    },
-    {
-      "id": "9.5",
-      "section": "File Writing Functions",
-      "description": "Update existing `writeTasksJSONC()` to route to hierarchical path when needed",
-      "status": "completed"
-    },
-    {
-      "id": "9.6",
-      "section": "File Writing Functions",
-      "description": "Add includes field `[\"tasks-*.jsonc\"]` to root file",
-      "status": "completed"
-    },
-    {
-      "id": "9.7",
-      "section": "File Writing Functions",
-      "description": "Add unit tests for root file generation with references",
-      "status": "completed"
-    },
-    {
-      "id": "9.8",
-      "section": "File Writing Functions",
-      "description": "Add unit tests for child file generation",
-      "status": "completed"
-    },
-    {
-      "id": "9.9",
-      "section": "File Writing Functions",
-      "description": "Add unit tests for old file cleanup",
-      "status": "completed"
-    },
-    {
-      "id": "10.1",
+      "id": "10",
       "section": "Accept Command Integration",
-      "description": "Update `processChange()` in `cmd/accept.go` to call `shouldSplit()`",
-      "status": "completed"
+      "description": "Accept Command Integration tasks",
+      "status": "completed",
+      "children": "$ref:tasks-11.jsonc"
     },
     {
-      "id": "10.2",
-      "section": "Accept Command Integration",
-      "description": "Route to `writeHierarchicalTasks()` when splitting is needed",
-      "status": "completed"
-    },
-    {
-      "id": "10.3",
-      "section": "Accept Command Integration",
-      "description": "Route to existing `writeTasksJSONC()` for flat files (version 1)",
-      "status": "completed"
-    },
-    {
-      "id": "10.4",
-      "section": "Accept Command Integration",
-      "description": "Add integration test with 150-line tasks.md generating split files",
-      "status": "completed"
-    },
-    {
-      "id": "10.5",
-      "section": "Accept Command Integration",
-      "description": "Add integration test with 80-line tasks.md generating flat file",
-      "status": "completed"
-    },
-    {
-      "id": "10.6",
-      "section": "Accept Command Integration",
-      "description": "Add integration test for regeneration preserving statuses",
-      "status": "completed"
-    },
-    {
-      "id": "11.1",
+      "id": "11",
       "section": "Backwards Compatibility",
-      "description": "Ensure version 1 files are parsed correctly (no split lookup)",
-      "status": "completed"
+      "description": "Backwards Compatibility tasks",
+      "status": "completed",
+      "children": "$ref:tasks-12.jsonc"
     },
     {
-      "id": "11.2",
-      "section": "Backwards Compatibility",
-      "description": "Add `isVersionTwo()` function to detect hierarchical format",
-      "status": "completed"
-    },
-    {
-      "id": "11.3",
-      "section": "Backwards Compatibility",
-      "description": "Add unit tests for reading version 1 flat files",
-      "status": "completed"
-    },
-    {
-      "id": "11.4",
-      "section": "Backwards Compatibility",
-      "description": "Add unit tests for version 1 → version 2 upgrade path",
-      "status": "completed"
-    },
-    {
-      "id": "11.5",
-      "section": "Backwards Compatibility",
-      "description": "Add integration test with mixed version 1 and version 2 changes",
-      "status": "completed"
-    },
-    {
-      "id": "12.1",
+      "id": "12",
       "section": "Edge Cases and Error Handling",
-      "description": "Handle tasks.md with no sections (generate flat file)",
-      "status": "completed"
+      "description": "Edge Cases and Error Handling tasks",
+      "status": "completed",
+      "children": "$ref:tasks-13.jsonc"
     },
     {
-      "id": "12.2",
-      "section": "Edge Cases and Error Handling",
-      "description": "Handle tasks.md with only one section (no splitting needed)",
-      "status": "completed"
-    },
-    {
-      "id": "12.3",
-      "section": "Edge Cases and Error Handling",
-      "description": "Handle tasks.md exactly 100 lines (use flat format)",
-      "status": "completed"
-    },
-    {
-      "id": "12.4",
-      "section": "Edge Cases and Error Handling",
-      "description": "Handle tasks.md with 101 lines (trigger splitting)",
-      "status": "completed"
-    },
-    {
-      "id": "12.5",
-      "section": "Edge Cases and Error Handling",
-      "description": "Handle malformed task IDs gracefully",
-      "status": "completed"
-    },
-    {
-      "id": "12.6",
-      "section": "Edge Cases and Error Handling",
-      "description": "Handle missing parent tasks in child files (validation error)",
-      "status": "completed"
-    },
-    {
-      "id": "12.7",
-      "section": "Edge Cases and Error Handling",
-      "description": "Add unit tests for all edge cases",
-      "status": "completed"
-    },
-    {
-      "id": "13.1",
+      "id": "13",
       "section": "Documentation",
-      "description": "Update AGENTS.md with version 2 format documentation",
-      "status": "completed"
+      "description": "Documentation tasks",
+      "status": "completed",
+      "children": "$ref:tasks-14.jsonc"
     },
     {
-      "id": "13.2",
-      "section": "Documentation",
-      "description": "Add example hierarchical tasks.jsonc structure to AGENTS.md",
-      "status": "completed"
-    },
-    {
-      "id": "13.3",
-      "section": "Documentation",
-      "description": "Document 100-line threshold and splitting behavior",
-      "status": "completed"
-    },
-    {
-      "id": "13.4",
-      "section": "Documentation",
-      "description": "Document child file naming convention (tasks-N.jsonc)",
-      "status": "completed"
-    },
-    {
-      "id": "13.5",
-      "section": "Documentation",
-      "description": "Document status aggregation rules",
-      "status": "completed"
-    },
-    {
-      "id": "13.6",
-      "section": "Documentation",
-      "description": "Update internal code comments for new functions",
-      "status": "completed"
-    },
-    {
-      "id": "14.1",
+      "id": "14",
       "section": "Testing and Validation",
-      "description": "Run `nix develop -c tests` to ensure all unit tests pass",
-      "status": "completed"
+      "description": "Testing and Validation tasks",
+      "status": "completed",
+      "children": "$ref:tasks-15.jsonc"
     },
     {
-      "id": "14.2",
-      "section": "Testing and Validation",
-      "description": "Run `nix develop -c lint` to ensure code quality",
-      "status": "completed"
-    },
-    {
-      "id": "14.3",
-      "section": "Testing and Validation",
-      "description": "Create manual test change with 150+ line tasks.md",
-      "status": "completed"
-    },
-    {
-      "id": "14.4",
-      "section": "Testing and Validation",
-      "description": "Run `spectr accept` on manual test change and verify split files",
-      "status": "completed"
-    },
-    {
-      "id": "14.5",
-      "section": "Testing and Validation",
-      "description": "Verify agent can read root file in single Read operation",
-      "status": "completed"
-    },
-    {
-      "id": "14.6",
-      "section": "Testing and Validation",
-      "description": "Verify agent can read child files in single Read operation",
-      "status": "completed"
-    },
-    {
-      "id": "14.7",
-      "section": "Testing and Validation",
-      "description": "Update task status in child file and verify regeneration preserves it",
-      "status": "completed"
-    },
-    {
-      "id": "14.8",
-      "section": "Testing and Validation",
-      "description": "Run `spectr validate` on test change to ensure specs are valid",
-      "status": "completed"
-    },
-    {
-      "id": "15.1",
+      "id": "15",
       "section": "Cleanup and Archive Old Proposal",
-      "description": "Archive the `add-hierarchical-tasks` change without implementing",
-      "status": "completed"
-    },
-    {
-      "id": "15.2",
-      "section": "Cleanup and Archive Old Proposal",
-      "description": "Add note in archive explaining it was superseded by this change",
-      "status": "completed"
-    },
-    {
-      "id": "15.3",
-      "section": "Cleanup and Archive Old Proposal",
-      "description": "Clean up any stale development artifacts",
-      "status": "completed"
-    },
-    {
-      "id": "16.1",
-      "section": "99.99.99 Final section (after all tasks)",
-      "description": "Output/return: \u003cpromise\u003e\"This is the last task: COMPLETE\"\u003c/promise\u003e\n",
-      "status": "completed"
+      "description": "Cleanup and Archive Old Proposal tasks",
+      "status": "completed",
+      "children": "$ref:tasks-16.jsonc"
     }
+  ],
+  "includes": [
+    "tasks-*.jsonc"
   ]
 }

@@ -135,6 +135,12 @@ func (c *AcceptCmd) processChange(
 		if appendCfg != nil {
 			totalTasks += len(appendCfg.Tasks)
 		}
+
+		// Validate JSONC in dry-run mode to catch errors early
+		if err := c.validateDryRun(tasksMdPath, tasks, appendCfg); err != nil {
+			return err
+		}
+
 		fmt.Printf(
 			"Would convert: %s\nwould write to: %s\nWould preserve: %s\nFound %d tasks\n", //nolint:lll,revive // Long format string for dry-run output
 			tasksMdPath,
@@ -662,19 +668,8 @@ func shouldSplitSection(section *Section) bool {
 // grouped together. This allows large sections to be split into smaller,
 // more manageable chunks while preserving logical groupings.
 type SubsectionGroup struct {
-	Prefix    string         // ID prefix shared by all tasks (e.g., "1", "2.1")
-	Tasks     []parsers.Task // Tasks with this prefix
-	StartLine int            // Line number where subsection starts (1-indexed)
-	EndLine   int            // Line number where subsection ends (1-indexed)
-}
-
-// LineCount returns the number of lines in this subsection group.
-func (sg *SubsectionGroup) LineCount() int {
-	if sg.EndLine < sg.StartLine {
-		return 0
-	}
-
-	return sg.EndLine - sg.StartLine + 1
+	Prefix string         // ID prefix shared by all tasks (e.g., "1", "2.1")
+	Tasks  []parsers.Task // Tasks with this prefix
 }
 
 // parseSubsections groups tasks by their ID prefix to create subsections.
@@ -808,4 +803,17 @@ func stringSliceContains(slice []string, item string) bool {
 	}
 
 	return false
+}
+
+// validateDryRun validates JSONC output in dry-run mode.
+// For now, this is a stub that always returns nil (validation passes).
+// Full validation logic will be implemented in a follow-up.
+func (*AcceptCmd) validateDryRun(
+	tasksMdPath string,
+	tasks []parsers.Task,
+	appendCfg *config.AppendTasksConfig,
+) error {
+	// Stub implementation - validation always passes
+	// TODO: Implement full JSONC validation for dry-run mode
+	return nil
 }

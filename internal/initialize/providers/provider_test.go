@@ -11,11 +11,13 @@ import (
 )
 
 const (
-	testClaudeCommandsDir = ".claude/commands/spectr"
-	testGeminiCommandsDir = ".gemini/commands/spectr"
-	testAgentWorkflowsDir = ".agent/workflows"
-	testSpectrPrefix      = "spectr-"
-	testCodexPromptsDir   = ".codex/prompts"
+	testClaudeCommandsDir    = ".claude/commands/spectr"
+	testGeminiCommandsDir    = ".gemini/commands/spectr"
+	testAgentWorkflowsDir    = ".agent/workflows"
+	testSpectrPrefix         = "spectr-"
+	testCodexPromptsDir      = ".codex/prompts"
+	skillAcceptWoSpectrBin   = "spectr-accept-wo-spectr-bin"
+	skillValidateWoSpectrBin = "spectr-validate-wo-spectr-bin"
 )
 
 // mockTemplateManager implements TemplateManager for testing
@@ -113,16 +115,18 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	// Check AgentSkillsInitializer
 	skillInit := inits[4].(*AgentSkillsInitializer) //nolint:revive // test code, type checked above
-	if skillInit.skillName != "spectr-accept-wo-spectr-bin" {
+	if skillInit.skillName != skillAcceptWoSpectrBin {
 		t.Errorf(
-			"ClaudeProvider AgentSkillsInitializer skillName = %s, want \"spectr-accept-wo-spectr-bin\"",
+			"ClaudeProvider AgentSkillsInitializer skillName = %s, want %q",
 			skillInit.skillName,
+			skillAcceptWoSpectrBin,
 		)
 	}
-	if skillInit.targetDir != ".claude/skills/spectr-accept-wo-spectr-bin" {
+	if skillInit.targetDir != ".claude/skills/"+skillAcceptWoSpectrBin {
 		t.Errorf(
-			"ClaudeProvider AgentSkillsInitializer targetDir = %s, want \".claude/skills/spectr-accept-wo-spectr-bin\"",
+			"ClaudeProvider AgentSkillsInitializer targetDir = %s, want \".claude/skills/%s\"",
 			skillInit.targetDir,
+			skillAcceptWoSpectrBin,
 		)
 	}
 }
@@ -134,33 +138,63 @@ func TestGeminiProvider_Initializers(t *testing.T) {
 
 	inits := p.Initializers(ctx, tm)
 
-	// Gemini should return 2 initializers: Directory, TOMLSlashCommands (no config file)
-	if len(inits) != 2 {
-		t.Fatalf("GeminiProvider.Initializers() returned %d initializers, want 2", len(inits))
+	// Gemini should return 6 initializers: Directory (commands), Directory (skills), ConfigFile, TOMLSlashCommands, AgentSkills (accept), AgentSkills (validate)
+	if len(inits) != 6 {
+		t.Fatalf("GeminiProvider.Initializers() returned %d initializers, want 6", len(inits))
 	}
 
-	// Check types
+	// Check types - order matters
 	if _, ok := inits[0].(*DirectoryInitializer); !ok {
 		t.Errorf("GeminiProvider.Initializers()[0] is %T, want *DirectoryInitializer", inits[0])
 	}
-	if _, ok := inits[1].(*TOMLSlashCommandsInitializer); !ok {
+	if _, ok := inits[1].(*DirectoryInitializer); !ok {
+		t.Errorf("GeminiProvider.Initializers()[1] is %T, want *DirectoryInitializer", inits[1])
+	}
+	if _, ok := inits[2].(*ConfigFileInitializer); !ok {
+		t.Errorf("GeminiProvider.Initializers()[2] is %T, want *ConfigFileInitializer", inits[2])
+	}
+	if _, ok := inits[3].(*TOMLSlashCommandsInitializer); !ok {
 		t.Errorf(
-			"GeminiProvider.Initializers()[1] is %T, want *TOMLSlashCommandsInitializer",
-			inits[1],
+			"GeminiProvider.Initializers()[3] is %T, want *TOMLSlashCommandsInitializer",
+			inits[3],
+		)
+	}
+	if _, ok := inits[4].(*AgentSkillsInitializer); !ok {
+		t.Errorf("GeminiProvider.Initializers()[4] is %T, want *AgentSkillsInitializer", inits[4])
+	}
+	if _, ok := inits[5].(*AgentSkillsInitializer); !ok {
+		t.Errorf("GeminiProvider.Initializers()[5] is %T, want *AgentSkillsInitializer", inits[5])
+	}
+
+	// Check DirectoryInitializer paths - first one should be commands dir
+	dirInit1 := inits[0].(*DirectoryInitializer)
+	if len(dirInit1.paths) != 1 || dirInit1.paths[0] != testGeminiCommandsDir {
+		t.Errorf(
+			"GeminiProvider DirectoryInitializer[0] paths = %v, want [\".gemini/commands/spectr\"]",
+			dirInit1.paths,
 		)
 	}
 
-	// Check DirectoryInitializer paths
-	dirInit := inits[0].(*DirectoryInitializer)
-	if len(dirInit.paths) != 1 || dirInit.paths[0] != testGeminiCommandsDir {
+	// Check second DirectoryInitializer - should be skills dir
+	dirInit2 := inits[1].(*DirectoryInitializer)
+	if len(dirInit2.paths) != 1 || dirInit2.paths[0] != ".gemini/skills" {
 		t.Errorf(
-			"GeminiProvider DirectoryInitializer paths = %v, want [\".gemini/commands/spectr\"]",
-			dirInit.paths,
+			"GeminiProvider DirectoryInitializer[1] paths = %v, want [\".gemini/skills\"]",
+			dirInit2.paths,
+		)
+	}
+
+	// Check ConfigFileInitializer
+	cfgInit := inits[2].(*ConfigFileInitializer)
+	if cfgInit.path != "GEMINI.md" {
+		t.Errorf(
+			"GeminiProvider ConfigFileInitializer path = %s, want \"GEMINI.md\"",
+			cfgInit.path,
 		)
 	}
 
 	// Check TOMLSlashCommandsInitializer dir
-	slashInit := inits[1].(*TOMLSlashCommandsInitializer)
+	slashInit := inits[3].(*TOMLSlashCommandsInitializer)
 	if slashInit.dir != testGeminiCommandsDir {
 		t.Errorf(
 			"GeminiProvider TOMLSlashCommandsInitializer dir = %s, want \".gemini/commands/spectr\"",
@@ -171,6 +205,40 @@ func TestGeminiProvider_Initializers(t *testing.T) {
 		t.Errorf(
 			"GeminiProvider TOMLSlashCommandsInitializer has %d commands, want 2",
 			len(slashInit.commands),
+		)
+	}
+
+	// Check AgentSkillsInitializer for accept
+	acceptSkillInit := inits[4].(*AgentSkillsInitializer)
+	if acceptSkillInit.skillName != skillAcceptWoSpectrBin {
+		t.Errorf(
+			"GeminiProvider AgentSkillsInitializer[4] skillName = %s, want %q",
+			acceptSkillInit.skillName,
+			skillAcceptWoSpectrBin,
+		)
+	}
+	if acceptSkillInit.targetDir != ".gemini/skills/"+skillAcceptWoSpectrBin {
+		t.Errorf(
+			"GeminiProvider AgentSkillsInitializer[4] targetDir = %s, want \".gemini/skills/%s\"",
+			acceptSkillInit.targetDir,
+			skillAcceptWoSpectrBin,
+		)
+	}
+
+	// Check AgentSkillsInitializer for validate
+	validateSkillInit := inits[5].(*AgentSkillsInitializer)
+	if validateSkillInit.skillName != skillValidateWoSpectrBin {
+		t.Errorf(
+			"GeminiProvider AgentSkillsInitializer[5] skillName = %s, want %q",
+			validateSkillInit.skillName,
+			skillValidateWoSpectrBin,
+		)
+	}
+	if validateSkillInit.targetDir != ".gemini/skills/"+skillValidateWoSpectrBin {
+		t.Errorf(
+			"GeminiProvider AgentSkillsInitializer[5] targetDir = %s, want \".gemini/skills/%s\"",
+			validateSkillInit.targetDir,
+			skillValidateWoSpectrBin,
 		)
 	}
 }
@@ -394,30 +462,34 @@ func TestCodexProvider_Initializers(t *testing.T) {
 
 	// Check AgentSkillsInitializer instances
 	acceptSkill := inits[4].(*AgentSkillsInitializer)
-	if acceptSkill.skillName != "spectr-accept-wo-spectr-bin" {
+	if acceptSkill.skillName != skillAcceptWoSpectrBin {
 		t.Errorf(
-			"CodexProvider AgentSkillsInitializer[4] skillName = %s, want \"spectr-accept-wo-spectr-bin\"",
+			"CodexProvider AgentSkillsInitializer[4] skillName = %s, want %q",
 			acceptSkill.skillName,
+			skillAcceptWoSpectrBin,
 		)
 	}
-	if acceptSkill.targetDir != ".codex/skills/spectr-accept-wo-spectr-bin" {
+	if acceptSkill.targetDir != ".codex/skills/"+skillAcceptWoSpectrBin {
 		t.Errorf(
-			"CodexProvider AgentSkillsInitializer[4] targetDir = %s, want \".codex/skills/spectr-accept-wo-spectr-bin\"",
+			"CodexProvider AgentSkillsInitializer[4] targetDir = %s, want \".codex/skills/%s\"",
 			acceptSkill.targetDir,
+			skillAcceptWoSpectrBin,
 		)
 	}
 
 	validateSkill := inits[5].(*AgentSkillsInitializer)
-	if validateSkill.skillName != "spectr-validate-wo-spectr-bin" {
+	if validateSkill.skillName != skillValidateWoSpectrBin {
 		t.Errorf(
-			"CodexProvider AgentSkillsInitializer[5] skillName = %s, want \"spectr-validate-wo-spectr-bin\"",
+			"CodexProvider AgentSkillsInitializer[5] skillName = %s, want %q",
 			validateSkill.skillName,
+			skillValidateWoSpectrBin,
 		)
 	}
-	if validateSkill.targetDir != ".codex/skills/spectr-validate-wo-spectr-bin" {
+	if validateSkill.targetDir != ".codex/skills/"+skillValidateWoSpectrBin {
 		t.Errorf(
-			"CodexProvider AgentSkillsInitializer[5] targetDir = %s, want \".codex/skills/spectr-validate-wo-spectr-bin\"",
+			"CodexProvider AgentSkillsInitializer[5] targetDir = %s, want \".codex/skills/%s\"",
 			validateSkill.targetDir,
+			skillValidateWoSpectrBin,
 		)
 	}
 
@@ -524,7 +596,7 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 		usesHomeFs    bool
 	}{
 		{"claude-code", &ClaudeProvider{}, 6, true, false, false, false},
-		{"gemini", &GeminiProvider{}, 2, false, true, false, false},
+		{"gemini", &GeminiProvider{}, 6, true, true, false, false},
 		{"costrict", &CostrictProvider{}, 3, true, false, false, false},
 		{"qoder", &QoderProvider{}, 3, true, false, false, false},
 		{"qwen", &QwenProvider{}, 3, true, false, false, false},

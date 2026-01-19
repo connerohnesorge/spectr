@@ -18,7 +18,9 @@ type DirectoryInitializer struct {
 // NewDirectoryInitializer creates an initializer for project directories.
 // Paths are relative to the project filesystem root.
 // Example: NewDirectoryInitializer(".claude/commands/spectr")
-func NewDirectoryInitializer(paths ...string) Initializer {
+func NewDirectoryInitializer(
+	paths ...string,
+) Initializer {
 	return &DirectoryInitializer{paths: paths}
 }
 
@@ -36,14 +38,25 @@ func (d *DirectoryInitializer) Init(
 
 	for _, path := range d.paths {
 		// Check if directory already exists
-		exists, err := afero.DirExists(projectFs, path)
+		exists, err := afero.DirExists(
+			projectFs,
+			path,
+		)
 		if err != nil {
-			return InitResult{}, fmt.Errorf("failed to check directory %s: %w", path, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to check directory %s: %w",
+				path,
+				err,
+			)
 		}
 
 		// Create directory with parents if needed
 		if err := projectFs.MkdirAll(path, 0o755); err != nil {
-			return InitResult{}, fmt.Errorf("failed to create directory %s: %w", path, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to create directory %s: %w",
+				path,
+				err,
+			)
 		}
 
 		// Only report as created if it didn't exist before
@@ -64,7 +77,10 @@ func (d *DirectoryInitializer) IsSetup(
 	_ *Config,
 ) bool { //nolint:lll // Function signature defined by Initializer interface
 	for _, path := range d.paths {
-		exists, err := afero.DirExists(projectFs, path)
+		exists, err := afero.DirExists(
+			projectFs,
+			path,
+		)
 		if err != nil || !exists {
 			return false
 		}
@@ -82,10 +98,16 @@ func (d *DirectoryInitializer) dedupeKey() string {
 	// Normalize paths and join with separator
 	normalized := make([]string, 0, len(d.paths))
 	for _, p := range d.paths {
-		normalized = append(normalized, filepath.Clean(p))
+		normalized = append(
+			normalized,
+			filepath.Clean(p),
+		)
 	}
 	// Use first path for key (most initializers have single path)
-	return fmt.Sprintf("DirectoryInitializer:%s", normalized[0])
+	return fmt.Sprintf(
+		"DirectoryInitializer:%s",
+		normalized[0],
+	)
 }
 
 // HomeDirectoryInitializer creates directories in the home filesystem.
@@ -98,7 +120,9 @@ type HomeDirectoryInitializer struct {
 // NewHomeDirectoryInitializer creates an initializer for home directories.
 // Paths are relative to the home filesystem root (~/).
 // Example: NewHomeDirectoryInitializer(".codex/prompts")
-func NewHomeDirectoryInitializer(paths ...string) Initializer {
+func NewHomeDirectoryInitializer(
+	paths ...string,
+) Initializer {
 	return &HomeDirectoryInitializer{paths: paths}
 }
 
@@ -116,14 +140,25 @@ func (h *HomeDirectoryInitializer) Init(
 
 	for _, path := range h.paths {
 		// Check if directory already exists
-		exists, err := afero.DirExists(homeFs, path)
+		exists, err := afero.DirExists(
+			homeFs,
+			path,
+		)
 		if err != nil {
-			return InitResult{}, fmt.Errorf("failed to check directory %s: %w", path, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to check directory %s: %w",
+				path,
+				err,
+			)
 		}
 
 		// Create directory with parents if needed
 		if err := homeFs.MkdirAll(path, 0o755); err != nil {
-			return InitResult{}, fmt.Errorf("failed to create directory %s: %w", path, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to create directory %s: %w",
+				path,
+				err,
+			)
 		}
 
 		// Only report as created if it didn't exist before
@@ -144,7 +179,10 @@ func (h *HomeDirectoryInitializer) IsSetup(
 	_ *Config,
 ) bool { //nolint:lll // Function signature defined by Initializer interface
 	for _, path := range h.paths {
-		exists, err := afero.DirExists(homeFs, path)
+		exists, err := afero.DirExists(
+			homeFs,
+			path,
+		)
 		if err != nil || !exists {
 			return false
 		}
@@ -163,8 +201,14 @@ func (h *HomeDirectoryInitializer) dedupeKey() string {
 	// Normalize paths and join with separator
 	normalized := make([]string, 0, len(h.paths))
 	for _, p := range h.paths {
-		normalized = append(normalized, filepath.Clean(p))
+		normalized = append(
+			normalized,
+			filepath.Clean(p),
+		)
 	}
 	// Use first path for key (most initializers have single path)
-	return fmt.Sprintf("HomeDirectoryInitializer:%s", normalized[0])
+	return fmt.Sprintf(
+		"HomeDirectoryInitializer:%s",
+		normalized[0],
+	)
 }

@@ -60,11 +60,25 @@ type TemplateManager interface {
 	// Agents returns the template for the AGENTS.md file
 	Agents() domain.TemplateRef
 
-	// SlashCommand returns the template for a Markdown slash command
-	SlashCommand(cmd domain.SlashCommand) domain.TemplateRef
+	// SlashCommand returns the template for a Markdown slash command.
+	// The returned TemplateRef will assemble frontmatter from BaseSlashCommandFrontmatter.
+	SlashCommand(
+		cmd domain.SlashCommand,
+	) domain.TemplateRef
+
+	// SlashCommandWithOverrides returns a Markdown slash command template
+	// with frontmatter overrides. Used when providers need to customize
+	// slash command frontmatter (e.g., add "context: fork" for Claude Code).
+	// If overrides is nil, behaves identically to SlashCommand(cmd).
+	SlashCommandWithOverrides(
+		cmd domain.SlashCommand,
+		overrides *domain.FrontmatterOverride,
+	) domain.TemplateRef
 
 	// TOMLSlashCommand returns the template for a TOML slash command
-	TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef
+	TOMLSlashCommand(
+		cmd domain.SlashCommand,
+	) domain.TemplateRef
 
 	// SkillFS returns an fs.FS rooted at the skill directory for the given
 	// skill name. Returns an error if the skill does not exist.
@@ -115,5 +129,8 @@ type Provider interface {
 	//			),
 	//		}
 	//	}
-	Initializers(ctx context.Context, tm TemplateManager) []Initializer
+	Initializers(
+		ctx context.Context,
+		tm TemplateManager,
+	) []Initializer
 }

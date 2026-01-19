@@ -22,28 +22,68 @@ const (
 type mockTemplateManager struct{}
 
 func (*mockTemplateManager) InstructionPointer() domain.TemplateRef {
-	return domain.TemplateRef{Name: "instruction-pointer.md.tmpl"}
+	return domain.TemplateRef{
+		Name: "instruction-pointer.md.tmpl",
+	}
 }
 
 func (*mockTemplateManager) Agents() domain.TemplateRef {
-	return domain.TemplateRef{Name: "AGENTS.md.tmpl"}
+	return domain.TemplateRef{
+		Name: "AGENTS.md.tmpl",
+	}
 }
 
-func (*mockTemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
-	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.md.tmpl", cmd.String())}
+func (*mockTemplateManager) SlashCommand(
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: fmt.Sprintf(
+			"slash-%s.md.tmpl",
+			cmd.String(),
+		),
+		Command: &cmd,
+	}
 }
 
-func (*mockTemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
-	return domain.TemplateRef{Name: fmt.Sprintf("slash-%s.toml.tmpl", cmd.String())}
+func (*mockTemplateManager) SlashCommandWithOverrides(
+	cmd domain.SlashCommand,
+	overrides *domain.FrontmatterOverride,
+) domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: fmt.Sprintf(
+			"slash-%s.md.tmpl",
+			cmd.String(),
+		),
+		Command:   &cmd,
+		Overrides: overrides,
+	}
 }
 
-func (*mockTemplateManager) SkillFS(skillName string) (fs.FS, error) {
-	return nil, fmt.Errorf("skill %s not found", skillName)
+func (*mockTemplateManager) TOMLSlashCommand(
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: fmt.Sprintf(
+			"slash-%s.toml.tmpl",
+			cmd.String(),
+		),
+	}
+}
+
+func (*mockTemplateManager) SkillFS(
+	skillName string,
+) (fs.FS, error) {
+	return nil, fmt.Errorf(
+		"skill %s not found",
+		skillName,
+	)
 }
 
 // Test each provider returns expected initializers
 
-func TestClaudeProvider_Initializers(t *testing.T) {
+func TestClaudeProvider_Initializers(
+	t *testing.T,
+) {
 	p := &ClaudeProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -52,29 +92,48 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	// Claude should return 6 initializers: Directory (commands), Directory (skills), ConfigFile, SlashCommands, AgentSkills (accept), AgentSkills (validate)
 	if len(inits) != 6 {
-		t.Fatalf("ClaudeProvider.Initializers() returned %d initializers, want 6", len(inits))
+		t.Fatalf(
+			"ClaudeProvider.Initializers() returned %d initializers, want 6",
+			len(inits),
+		)
 	}
 
 	// Check types
 	if _, ok := inits[0].(*DirectoryInitializer); !ok {
-		t.Errorf("ClaudeProvider.Initializers()[0] is %T, want *DirectoryInitializer", inits[0])
+		t.Errorf(
+			"ClaudeProvider.Initializers()[0] is %T, want *DirectoryInitializer",
+			inits[0],
+		)
 	}
 	if _, ok := inits[1].(*DirectoryInitializer); !ok {
-		t.Errorf("ClaudeProvider.Initializers()[1] is %T, want *DirectoryInitializer", inits[1])
+		t.Errorf(
+			"ClaudeProvider.Initializers()[1] is %T, want *DirectoryInitializer",
+			inits[1],
+		)
 	}
 	if _, ok := inits[2].(*ConfigFileInitializer); !ok {
-		t.Errorf("ClaudeProvider.Initializers()[2] is %T, want *ConfigFileInitializer", inits[2])
+		t.Errorf(
+			"ClaudeProvider.Initializers()[2] is %T, want *ConfigFileInitializer",
+			inits[2],
+		)
 	}
 	if _, ok := inits[3].(*SlashCommandsInitializer); !ok {
-		t.Errorf("ClaudeProvider.Initializers()[3] is %T, want *SlashCommandsInitializer", inits[3])
+		t.Errorf(
+			"ClaudeProvider.Initializers()[3] is %T, want *SlashCommandsInitializer",
+			inits[3],
+		)
 	}
 	if _, ok := inits[4].(*AgentSkillsInitializer); !ok {
-		t.Errorf("ClaudeProvider.Initializers()[4] is %T, want *AgentSkillsInitializer", inits[4])
+		t.Errorf(
+			"ClaudeProvider.Initializers()[4] is %T, want *AgentSkillsInitializer",
+			inits[4],
+		)
 	}
 
 	// Check DirectoryInitializer paths
 	dirInit := inits[0].(*DirectoryInitializer) //nolint:revive // test code, type checked above
-	if len(dirInit.paths) != 1 || dirInit.paths[0] != testClaudeCommandsDir {
+	if len(dirInit.paths) != 1 ||
+		dirInit.paths[0] != testClaudeCommandsDir {
 		t.Errorf(
 			"ClaudeProvider DirectoryInitializer paths = %v, want [\".claude/commands/spectr\"]",
 			dirInit.paths,
@@ -83,7 +142,8 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 
 	// Check second DirectoryInitializer for skills
 	skillsDirInit := inits[1].(*DirectoryInitializer) //nolint:revive // test code, type checked above
-	if len(skillsDirInit.paths) != 1 || skillsDirInit.paths[0] != ".claude/skills" {
+	if len(skillsDirInit.paths) != 1 ||
+		skillsDirInit.paths[0] != ".claude/skills" {
 		t.Errorf(
 			"ClaudeProvider DirectoryInitializer[1] paths = %v, want [\".claude/skills\"]",
 			skillsDirInit.paths,
@@ -93,7 +153,10 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 	// Check ConfigFileInitializer path
 	cfgInit := inits[2].(*ConfigFileInitializer) //nolint:revive // test code, type checked above
 	if cfgInit.path != "CLAUDE.md" {
-		t.Errorf("ClaudeProvider ConfigFileInitializer path = %s, want \"CLAUDE.md\"", cfgInit.path)
+		t.Errorf(
+			"ClaudeProvider ConfigFileInitializer path = %s, want \"CLAUDE.md\"",
+			cfgInit.path,
+		)
 	}
 
 	// Check SlashCommandsInitializer dir
@@ -127,7 +190,9 @@ func TestClaudeProvider_Initializers(t *testing.T) {
 	}
 }
 
-func TestGeminiProvider_Initializers(t *testing.T) {
+func TestGeminiProvider_Initializers(
+	t *testing.T,
+) {
 	p := &GeminiProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -136,12 +201,18 @@ func TestGeminiProvider_Initializers(t *testing.T) {
 
 	// Gemini should return 2 initializers: Directory, TOMLSlashCommands (no config file)
 	if len(inits) != 2 {
-		t.Fatalf("GeminiProvider.Initializers() returned %d initializers, want 2", len(inits))
+		t.Fatalf(
+			"GeminiProvider.Initializers() returned %d initializers, want 2",
+			len(inits),
+		)
 	}
 
 	// Check types
 	if _, ok := inits[0].(*DirectoryInitializer); !ok {
-		t.Errorf("GeminiProvider.Initializers()[0] is %T, want *DirectoryInitializer", inits[0])
+		t.Errorf(
+			"GeminiProvider.Initializers()[0] is %T, want *DirectoryInitializer",
+			inits[0],
+		)
 	}
 	if _, ok := inits[1].(*TOMLSlashCommandsInitializer); !ok {
 		t.Errorf(
@@ -152,7 +223,8 @@ func TestGeminiProvider_Initializers(t *testing.T) {
 
 	// Check DirectoryInitializer paths
 	dirInit := inits[0].(*DirectoryInitializer)
-	if len(dirInit.paths) != 1 || dirInit.paths[0] != testGeminiCommandsDir {
+	if len(dirInit.paths) != 1 ||
+		dirInit.paths[0] != testGeminiCommandsDir {
 		t.Errorf(
 			"GeminiProvider DirectoryInitializer paths = %v, want [\".gemini/commands/spectr\"]",
 			dirInit.paths,
@@ -175,7 +247,9 @@ func TestGeminiProvider_Initializers(t *testing.T) {
 	}
 }
 
-func TestCostrictProvider_Initializers(t *testing.T) {
+func TestCostrictProvider_Initializers(
+	t *testing.T,
+) {
 	p := &CostrictProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -184,7 +258,10 @@ func TestCostrictProvider_Initializers(t *testing.T) {
 
 	// Costrict should return 3 initializers: Directory, ConfigFile, SlashCommands
 	if len(inits) != 3 {
-		t.Fatalf("CostrictProvider.Initializers() returned %d initializers, want 3", len(inits))
+		t.Fatalf(
+			"CostrictProvider.Initializers() returned %d initializers, want 3",
+			len(inits),
+		)
 	}
 
 	// Check ConfigFileInitializer path
@@ -197,7 +274,9 @@ func TestCostrictProvider_Initializers(t *testing.T) {
 	}
 }
 
-func TestQoderProvider_Initializers(t *testing.T) {
+func TestQoderProvider_Initializers(
+	t *testing.T,
+) {
 	p := &QoderProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -206,12 +285,18 @@ func TestQoderProvider_Initializers(t *testing.T) {
 
 	// Qoder should return 3 initializers
 	if len(inits) != 3 {
-		t.Fatalf("QoderProvider.Initializers() returned %d initializers, want 3", len(inits))
+		t.Fatalf(
+			"QoderProvider.Initializers() returned %d initializers, want 3",
+			len(inits),
+		)
 	}
 
 	cfgInit := inits[1].(*ConfigFileInitializer)
 	if cfgInit.path != "QODER.md" {
-		t.Errorf("QoderProvider ConfigFileInitializer path = %s, want \"QODER.md\"", cfgInit.path)
+		t.Errorf(
+			"QoderProvider ConfigFileInitializer path = %s, want \"QODER.md\"",
+			cfgInit.path,
+		)
 	}
 }
 
@@ -224,16 +309,24 @@ func TestQwenProvider_Initializers(t *testing.T) {
 
 	// Qwen should return 3 initializers
 	if len(inits) != 3 {
-		t.Fatalf("QwenProvider.Initializers() returned %d initializers, want 3", len(inits))
+		t.Fatalf(
+			"QwenProvider.Initializers() returned %d initializers, want 3",
+			len(inits),
+		)
 	}
 
 	cfgInit := inits[1].(*ConfigFileInitializer)
 	if cfgInit.path != "QWEN.md" {
-		t.Errorf("QwenProvider ConfigFileInitializer path = %s, want \"QWEN.md\"", cfgInit.path)
+		t.Errorf(
+			"QwenProvider ConfigFileInitializer path = %s, want \"QWEN.md\"",
+			cfgInit.path,
+		)
 	}
 }
 
-func TestAntigravityProvider_Initializers(t *testing.T) {
+func TestAntigravityProvider_Initializers(
+	t *testing.T,
+) {
 	p := &AntigravityProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -242,7 +335,10 @@ func TestAntigravityProvider_Initializers(t *testing.T) {
 
 	// Antigravity should return 3 initializers: Directory, ConfigFile, PrefixedSlashCommands
 	if len(inits) != 3 {
-		t.Fatalf("AntigravityProvider.Initializers() returned %d initializers, want 3", len(inits))
+		t.Fatalf(
+			"AntigravityProvider.Initializers() returned %d initializers, want 3",
+			len(inits),
+		)
 	}
 
 	// Check types
@@ -278,7 +374,9 @@ func TestAntigravityProvider_Initializers(t *testing.T) {
 	}
 }
 
-func TestClineProvider_Initializers(t *testing.T) {
+func TestClineProvider_Initializers(
+	t *testing.T,
+) {
 	p := &ClineProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -286,16 +384,24 @@ func TestClineProvider_Initializers(t *testing.T) {
 	inits := p.Initializers(ctx, tm)
 
 	if len(inits) != 3 {
-		t.Fatalf("ClineProvider.Initializers() returned %d initializers, want 3", len(inits))
+		t.Fatalf(
+			"ClineProvider.Initializers() returned %d initializers, want 3",
+			len(inits),
+		)
 	}
 
 	cfgInit := inits[1].(*ConfigFileInitializer)
 	if cfgInit.path != "CLINE.md" {
-		t.Errorf("ClineProvider ConfigFileInitializer path = %s, want \"CLINE.md\"", cfgInit.path)
+		t.Errorf(
+			"ClineProvider ConfigFileInitializer path = %s, want \"CLINE.md\"",
+			cfgInit.path,
+		)
 	}
 }
 
-func TestCursorProvider_Initializers(t *testing.T) {
+func TestCursorProvider_Initializers(
+	t *testing.T,
+) {
 	p := &CursorProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -304,19 +410,29 @@ func TestCursorProvider_Initializers(t *testing.T) {
 
 	// Cursor should return 2 initializers: Directory, SlashCommands (no config file)
 	if len(inits) != 2 {
-		t.Fatalf("CursorProvider.Initializers() returned %d initializers, want 2", len(inits))
+		t.Fatalf(
+			"CursorProvider.Initializers() returned %d initializers, want 2",
+			len(inits),
+		)
 	}
 
 	// Check types
 	if _, ok := inits[0].(*DirectoryInitializer); !ok {
-		t.Errorf("CursorProvider.Initializers()[0] is %T, want *DirectoryInitializer", inits[0])
+		t.Errorf(
+			"CursorProvider.Initializers()[0] is %T, want *DirectoryInitializer",
+			inits[0],
+		)
 	}
 	if _, ok := inits[1].(*SlashCommandsInitializer); !ok {
-		t.Errorf("CursorProvider.Initializers()[1] is %T, want *SlashCommandsInitializer", inits[1])
+		t.Errorf(
+			"CursorProvider.Initializers()[1] is %T, want *SlashCommandsInitializer",
+			inits[1],
+		)
 	}
 
 	dirInit := inits[0].(*DirectoryInitializer)
-	if len(dirInit.paths) != 1 || dirInit.paths[0] != ".cursorrules/commands/spectr" {
+	if len(dirInit.paths) != 1 ||
+		dirInit.paths[0] != ".cursorrules/commands/spectr" {
 		t.Errorf(
 			"CursorProvider DirectoryInitializer paths = %v, want [\".cursorrules/commands/spectr\"]",
 			dirInit.paths,
@@ -324,7 +440,9 @@ func TestCursorProvider_Initializers(t *testing.T) {
 	}
 }
 
-func TestCodexProvider_Initializers(t *testing.T) {
+func TestCodexProvider_Initializers(
+	t *testing.T,
+) {
 	p := &CodexProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -333,18 +451,30 @@ func TestCodexProvider_Initializers(t *testing.T) {
 
 	// Codex should return 6 initializers: HomeDirectory, Directory, ConfigFile, HomePrefixedSlashCommands, 2x AgentSkills
 	if len(inits) != 6 {
-		t.Fatalf("CodexProvider.Initializers() returned %d initializers, want 6", len(inits))
+		t.Fatalf(
+			"CodexProvider.Initializers() returned %d initializers, want 6",
+			len(inits),
+		)
 	}
 
 	// Check types
 	if _, ok := inits[0].(*HomeDirectoryInitializer); !ok {
-		t.Errorf("CodexProvider.Initializers()[0] is %T, want *HomeDirectoryInitializer", inits[0])
+		t.Errorf(
+			"CodexProvider.Initializers()[0] is %T, want *HomeDirectoryInitializer",
+			inits[0],
+		)
 	}
 	if _, ok := inits[1].(*DirectoryInitializer); !ok {
-		t.Errorf("CodexProvider.Initializers()[1] is %T, want *DirectoryInitializer", inits[1])
+		t.Errorf(
+			"CodexProvider.Initializers()[1] is %T, want *DirectoryInitializer",
+			inits[1],
+		)
 	}
 	if _, ok := inits[2].(*ConfigFileInitializer); !ok {
-		t.Errorf("CodexProvider.Initializers()[2] is %T, want *ConfigFileInitializer", inits[2])
+		t.Errorf(
+			"CodexProvider.Initializers()[2] is %T, want *ConfigFileInitializer",
+			inits[2],
+		)
 	}
 	if _, ok := inits[3].(*HomePrefixedSlashCommandsInitializer); !ok {
 		t.Errorf(
@@ -353,15 +483,22 @@ func TestCodexProvider_Initializers(t *testing.T) {
 		)
 	}
 	if _, ok := inits[4].(*AgentSkillsInitializer); !ok {
-		t.Errorf("CodexProvider.Initializers()[4] is %T, want *AgentSkillsInitializer", inits[4])
+		t.Errorf(
+			"CodexProvider.Initializers()[4] is %T, want *AgentSkillsInitializer",
+			inits[4],
+		)
 	}
 	if _, ok := inits[5].(*AgentSkillsInitializer); !ok {
-		t.Errorf("CodexProvider.Initializers()[5] is %T, want *AgentSkillsInitializer", inits[5])
+		t.Errorf(
+			"CodexProvider.Initializers()[5] is %T, want *AgentSkillsInitializer",
+			inits[5],
+		)
 	}
 
 	// Check HomeDirectoryInitializer paths
 	dirInit := inits[0].(*HomeDirectoryInitializer)
-	if len(dirInit.paths) != 1 || dirInit.paths[0] != testCodexPromptsDir {
+	if len(dirInit.paths) != 1 ||
+		dirInit.paths[0] != testCodexPromptsDir {
 		t.Errorf(
 			"CodexProvider HomeDirectoryInitializer paths = %v, want [\".codex/prompts\"]",
 			dirInit.paths,
@@ -370,7 +507,8 @@ func TestCodexProvider_Initializers(t *testing.T) {
 
 	// Check DirectoryInitializer paths
 	skillsDirInit := inits[1].(*DirectoryInitializer)
-	if len(skillsDirInit.paths) != 1 || skillsDirInit.paths[0] != ".codex/skills" {
+	if len(skillsDirInit.paths) != 1 ||
+		skillsDirInit.paths[0] != ".codex/skills" {
 		t.Errorf(
 			"CodexProvider DirectoryInitializer paths = %v, want [\".codex/skills\"]",
 			skillsDirInit.paths,
@@ -424,11 +562,16 @@ func TestCodexProvider_Initializers(t *testing.T) {
 	// Check ConfigFileInitializer uses AGENTS.md
 	cfgInit := inits[2].(*ConfigFileInitializer)
 	if cfgInit.path != "AGENTS.md" {
-		t.Errorf("CodexProvider ConfigFileInitializer path = %s, want \"AGENTS.md\"", cfgInit.path)
+		t.Errorf(
+			"CodexProvider ConfigFileInitializer path = %s, want \"AGENTS.md\"",
+			cfgInit.path,
+		)
 	}
 }
 
-func TestAiderProvider_Initializers(t *testing.T) {
+func TestAiderProvider_Initializers(
+	t *testing.T,
+) {
 	p := &AiderProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -437,11 +580,16 @@ func TestAiderProvider_Initializers(t *testing.T) {
 
 	// Aider should return 2 initializers: Directory, SlashCommands (no config file)
 	if len(inits) != 2 {
-		t.Fatalf("AiderProvider.Initializers() returned %d initializers, want 2", len(inits))
+		t.Fatalf(
+			"AiderProvider.Initializers() returned %d initializers, want 2",
+			len(inits),
+		)
 	}
 }
 
-func TestWindsurfProvider_Initializers(t *testing.T) {
+func TestWindsurfProvider_Initializers(
+	t *testing.T,
+) {
 	p := &WindsurfProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -449,11 +597,16 @@ func TestWindsurfProvider_Initializers(t *testing.T) {
 	inits := p.Initializers(ctx, tm)
 
 	if len(inits) != 2 {
-		t.Fatalf("WindsurfProvider.Initializers() returned %d initializers, want 2", len(inits))
+		t.Fatalf(
+			"WindsurfProvider.Initializers() returned %d initializers, want 2",
+			len(inits),
+		)
 	}
 }
 
-func TestKilocodeProvider_Initializers(t *testing.T) {
+func TestKilocodeProvider_Initializers(
+	t *testing.T,
+) {
 	p := &KilocodeProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -461,11 +614,16 @@ func TestKilocodeProvider_Initializers(t *testing.T) {
 	inits := p.Initializers(ctx, tm)
 
 	if len(inits) != 2 {
-		t.Fatalf("KilocodeProvider.Initializers() returned %d initializers, want 2", len(inits))
+		t.Fatalf(
+			"KilocodeProvider.Initializers() returned %d initializers, want 2",
+			len(inits),
+		)
 	}
 }
 
-func TestContinueProvider_Initializers(t *testing.T) {
+func TestContinueProvider_Initializers(
+	t *testing.T,
+) {
 	p := &ContinueProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -473,11 +631,16 @@ func TestContinueProvider_Initializers(t *testing.T) {
 	inits := p.Initializers(ctx, tm)
 
 	if len(inits) != 2 {
-		t.Fatalf("ContinueProvider.Initializers() returned %d initializers, want 2", len(inits))
+		t.Fatalf(
+			"ContinueProvider.Initializers() returned %d initializers, want 2",
+			len(inits),
+		)
 	}
 }
 
-func TestCrushProvider_Initializers(t *testing.T) {
+func TestCrushProvider_Initializers(
+	t *testing.T,
+) {
 	p := &CrushProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -486,16 +649,24 @@ func TestCrushProvider_Initializers(t *testing.T) {
 
 	// Crush should return 3 initializers
 	if len(inits) != 3 {
-		t.Fatalf("CrushProvider.Initializers() returned %d initializers, want 3", len(inits))
+		t.Fatalf(
+			"CrushProvider.Initializers() returned %d initializers, want 3",
+			len(inits),
+		)
 	}
 
 	cfgInit := inits[1].(*ConfigFileInitializer)
 	if cfgInit.path != "CRUSH.md" {
-		t.Errorf("CrushProvider ConfigFileInitializer path = %s, want \"CRUSH.md\"", cfgInit.path)
+		t.Errorf(
+			"CrushProvider ConfigFileInitializer path = %s, want \"CRUSH.md\"",
+			cfgInit.path,
+		)
 	}
 }
 
-func TestOpencodeProvider_Initializers(t *testing.T) {
+func TestOpencodeProvider_Initializers(
+	t *testing.T,
+) {
 	p := &OpencodeProvider{}
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
@@ -504,13 +675,18 @@ func TestOpencodeProvider_Initializers(t *testing.T) {
 
 	// Opencode should return 2 initializers: Directory, SlashCommands (no config file)
 	if len(inits) != 2 {
-		t.Fatalf("OpencodeProvider.Initializers() returned %d initializers, want 2", len(inits))
+		t.Fatalf(
+			"OpencodeProvider.Initializers() returned %d initializers, want 2",
+			len(inits),
+		)
 	}
 }
 
 // Test all 15 providers return expected initializer counts and types
 
-func TestAllProviders_InitializerCounts(t *testing.T) {
+func TestAllProviders_InitializerCounts(
+	t *testing.T,
+) {
 	ctx := context.Background()
 	tm := &mockTemplateManager{}
 
@@ -523,26 +699,149 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 		usesPrefix    bool
 		usesHomeFs    bool
 	}{
-		{"claude-code", &ClaudeProvider{}, 6, true, false, false, false},
-		{"gemini", &GeminiProvider{}, 2, false, true, false, false},
-		{"costrict", &CostrictProvider{}, 3, true, false, false, false},
-		{"qoder", &QoderProvider{}, 3, true, false, false, false},
-		{"qwen", &QwenProvider{}, 3, true, false, false, false},
-		{"antigravity", &AntigravityProvider{}, 3, true, false, true, false},
-		{"cline", &ClineProvider{}, 3, true, false, false, false},
-		{"cursor", &CursorProvider{}, 2, false, false, false, false},
-		{"codex", &CodexProvider{}, 6, true, false, true, true},
-		{"aider", &AiderProvider{}, 2, false, false, false, false},
-		{"windsurf", &WindsurfProvider{}, 2, false, false, false, false},
-		{"kilocode", &KilocodeProvider{}, 2, false, false, false, false},
-		{"continue", &ContinueProvider{}, 2, false, false, false, false},
-		{"crush", &CrushProvider{}, 3, true, false, false, false},
-		{"opencode", &OpencodeProvider{}, 2, false, false, false, false},
+		{
+			"claude-code",
+			&ClaudeProvider{},
+			6,
+			true,
+			false,
+			false,
+			false,
+		},
+		{
+			"gemini",
+			&GeminiProvider{},
+			2,
+			false,
+			true,
+			false,
+			false,
+		},
+		{
+			"costrict",
+			&CostrictProvider{},
+			3,
+			true,
+			false,
+			false,
+			false,
+		},
+		{
+			"qoder",
+			&QoderProvider{},
+			3,
+			true,
+			false,
+			false,
+			false,
+		},
+		{
+			"qwen",
+			&QwenProvider{},
+			3,
+			true,
+			false,
+			false,
+			false,
+		},
+		{
+			"antigravity",
+			&AntigravityProvider{},
+			3,
+			true,
+			false,
+			true,
+			false,
+		},
+		{
+			"cline",
+			&ClineProvider{},
+			3,
+			true,
+			false,
+			false,
+			false,
+		},
+		{
+			"cursor",
+			&CursorProvider{},
+			2,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"codex",
+			&CodexProvider{},
+			6,
+			true,
+			false,
+			true,
+			true,
+		},
+		{
+			"aider",
+			&AiderProvider{},
+			2,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"windsurf",
+			&WindsurfProvider{},
+			2,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"kilocode",
+			&KilocodeProvider{},
+			2,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"continue",
+			&ContinueProvider{},
+			2,
+			false,
+			false,
+			false,
+			false,
+		},
+		{
+			"crush",
+			&CrushProvider{},
+			3,
+			true,
+			false,
+			false,
+			false,
+		},
+		{
+			"opencode",
+			&OpencodeProvider{},
+			2,
+			false,
+			false,
+			false,
+			false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			inits := tt.provider.Initializers(ctx, tm)
+			inits := tt.provider.Initializers(
+				ctx,
+				tm,
+			)
 
 			// Check count
 			if len(inits) != tt.expectedCount {
@@ -587,17 +886,30 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 
 			// All providers should have either project or home directory
 			if !hasDir && !hasHomeDir {
-				t.Errorf("%s has no directory initializer", tt.name)
+				t.Errorf(
+					"%s has no directory initializer",
+					tt.name,
+				)
 			}
 
 			// Check config file expectation
 			if hasConfig != tt.hasConfigFile {
-				t.Errorf("%s hasConfigFile = %v, want %v", tt.name, hasConfig, tt.hasConfigFile)
+				t.Errorf(
+					"%s hasConfigFile = %v, want %v",
+					tt.name,
+					hasConfig,
+					tt.hasConfigFile,
+				)
 			}
 
 			// Check TOML expectation
 			if hasToml != tt.usesTOML {
-				t.Errorf("%s usesTOML = %v, want %v", tt.name, hasToml, tt.usesTOML)
+				t.Errorf(
+					"%s usesTOML = %v, want %v",
+					tt.name,
+					hasToml,
+					tt.usesTOML,
+				)
 			}
 
 			// Check prefix expectation
@@ -621,8 +933,14 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 			}
 
 			// All providers should have slash commands in some form
-			if !hasSlash && !hasHomeSlash && !hasToml && !hasPrefix && !hasHomePrefix {
-				t.Errorf("%s has no slash command initializer", tt.name)
+			if !hasSlash && !hasHomeSlash &&
+				!hasToml &&
+				!hasPrefix &&
+				!hasHomePrefix {
+				t.Errorf(
+					"%s has no slash command initializer",
+					tt.name,
+				)
 			}
 		})
 	}
@@ -630,12 +948,17 @@ func TestAllProviders_InitializerCounts(t *testing.T) {
 
 // Test provider registration metadata
 
-func TestProviderRegistration_AllProviders(t *testing.T) {
+func TestProviderRegistration_AllProviders(
+	t *testing.T,
+) {
 	// Reset and register all providers
 	Reset()
 	err := RegisterAllProviders()
 	if err != nil {
-		t.Fatalf("RegisterAllProviders() failed: %v", err)
+		t.Fatalf(
+			"RegisterAllProviders() failed: %v",
+			err,
+		)
 	}
 
 	// Expected provider metadata
@@ -670,22 +993,43 @@ func TestProviderRegistration_AllProviders(t *testing.T) {
 	for _, exp := range expected {
 		reg, ok := Get(exp.id)
 		if !ok {
-			t.Errorf("Provider %s not found in registry", exp.id)
+			t.Errorf(
+				"Provider %s not found in registry",
+				exp.id,
+			)
 
 			continue
 		}
 
 		if reg.ID != exp.id {
-			t.Errorf("Provider %s has ID %s, want %s", exp.id, reg.ID, exp.id)
+			t.Errorf(
+				"Provider %s has ID %s, want %s",
+				exp.id,
+				reg.ID,
+				exp.id,
+			)
 		}
 		if reg.Name != exp.name {
-			t.Errorf("Provider %s has Name %s, want %s", exp.id, reg.Name, exp.name)
+			t.Errorf(
+				"Provider %s has Name %s, want %s",
+				exp.id,
+				reg.Name,
+				exp.name,
+			)
 		}
 		if reg.Priority != exp.priority {
-			t.Errorf("Provider %s has Priority %d, want %d", exp.id, reg.Priority, exp.priority)
+			t.Errorf(
+				"Provider %s has Priority %d, want %d",
+				exp.id,
+				reg.Priority,
+				exp.priority,
+			)
 		}
 		if reg.Provider == nil {
-			t.Errorf("Provider %s has nil Provider", exp.id)
+			t.Errorf(
+				"Provider %s has nil Provider",
+				exp.id,
+			)
 		}
 	}
 
@@ -700,7 +1044,8 @@ func TestProviderRegistration_AllProviders(t *testing.T) {
 				i+1,
 			)
 		}
-		if i < len(expected) && registered[i].ID != expected[i].id {
+		if i < len(expected) &&
+			registered[i].ID != expected[i].id {
 			t.Errorf(
 				"RegisteredProviders()[%d].ID = %s, want %s (priority order incorrect)",
 				i,

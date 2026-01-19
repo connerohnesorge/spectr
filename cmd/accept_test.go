@@ -723,7 +723,11 @@ func TestWriteTasksJsonFilePermissions(
 		},
 	}
 
-	err := writeTasksJSONC(tasksJsonPath, tasks, nil)
+	err := writeTasksJSONC(
+		tasksJsonPath,
+		tasks,
+		nil,
+	)
 	if err != nil {
 		t.Fatalf(
 			"writeTasksJSONC() error = %v",
@@ -819,13 +823,24 @@ func TestAcceptPreservesTasksMd(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create a mock change directory structure
-	changeDir := filepath.Join(tmpDir, "spectr", "changes", "test-change")
+	changeDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+		"test-change",
+	)
 	if err := os.MkdirAll(changeDir, 0o755); err != nil {
-		t.Fatalf("failed to create change dir: %v", err)
+		t.Fatalf(
+			"failed to create change dir: %v",
+			err,
+		)
 	}
 
 	// Create a proposal.md (required for validation)
-	proposalPath := filepath.Join(changeDir, "proposal.md")
+	proposalPath := filepath.Join(
+		changeDir,
+		"proposal.md",
+	)
 	proposalContent := `# Test Proposal
 
 ## Problem
@@ -835,18 +850,27 @@ Test problem
 Test solution
 `
 	if err := os.WriteFile(proposalPath, []byte(proposalContent), filePerm); err != nil {
-		t.Fatalf("failed to write proposal.md: %v", err)
+		t.Fatalf(
+			"failed to write proposal.md: %v",
+			err,
+		)
 	}
 
 	// Create a tasks.md file
-	tasksMdPath := filepath.Join(changeDir, "tasks.md")
+	tasksMdPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
 	tasksMdContent := `## 1. Implementation
 
 - [ ] 1.1 First task
 - [x] 1.2 Second task
 `
 	if err := os.WriteFile(tasksMdPath, []byte(tasksMdContent), filePerm); err != nil {
-		t.Fatalf("failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"failed to write tasks.md: %v",
+			err,
+		)
 	}
 
 	// Run writeAndCleanup (the function that previously deleted tasks.md)
@@ -865,25 +889,40 @@ Test solution
 		},
 	}
 
-	tasksJSONPath := filepath.Join(changeDir, "tasks.jsonc")
+	tasksJSONPath := filepath.Join(
+		changeDir,
+		"tasks.jsonc",
+	)
 	if err := writeAndCleanup(tasksMdPath, tasksJSONPath, tasks, nil); err != nil {
-		t.Fatalf("writeAndCleanup failed: %v", err)
+		t.Fatalf(
+			"writeAndCleanup failed: %v",
+			err,
+		)
 	}
 
 	// Verify tasks.md still exists
-	if _, err := os.Stat(tasksMdPath); os.IsNotExist(err) {
-		t.Error("tasks.md was deleted but should be preserved")
+	if _, err := os.Stat(tasksMdPath); os.IsNotExist(
+		err,
+	) {
+		t.Error(
+			"tasks.md was deleted but should be preserved",
+		)
 	}
 
 	// Verify tasks.jsonc was created
-	if _, err := os.Stat(tasksJSONPath); os.IsNotExist(err) {
+	if _, err := os.Stat(tasksJSONPath); os.IsNotExist(
+		err,
+	) {
 		t.Error("tasks.jsonc was not created")
 	}
 
 	// Verify tasks.md content is unchanged
 	mdContent, err := os.ReadFile(tasksMdPath)
 	if err != nil {
-		t.Fatalf("failed to read tasks.md: %v", err)
+		t.Fatalf(
+			"failed to read tasks.md: %v",
+			err,
+		)
 	}
 	if string(mdContent) != tasksMdContent {
 		t.Error("tasks.md content was modified")
@@ -891,17 +930,30 @@ Test solution
 }
 
 // TestAcceptWithBothFilesPresent verifies behavior when both tasks.md and tasks.jsonc already exist
-func TestAcceptWithBothFilesPresent(t *testing.T) {
+func TestAcceptWithBothFilesPresent(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create a mock change directory structure
-	changeDir := filepath.Join(tmpDir, "spectr", "changes", "test-change")
+	changeDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+		"test-change",
+	)
 	if err := os.MkdirAll(changeDir, 0o755); err != nil {
-		t.Fatalf("failed to create change dir: %v", err)
+		t.Fatalf(
+			"failed to create change dir: %v",
+			err,
+		)
 	}
 
 	// Create a proposal.md
-	proposalPath := filepath.Join(changeDir, "proposal.md")
+	proposalPath := filepath.Join(
+		changeDir,
+		"proposal.md",
+	)
 	proposalContent := `# Test Proposal
 
 ## Problem
@@ -911,22 +963,34 @@ Test problem
 Test solution
 `
 	if err := os.WriteFile(proposalPath, []byte(proposalContent), filePerm); err != nil {
-		t.Fatalf("failed to write proposal.md: %v", err)
+		t.Fatalf(
+			"failed to write proposal.md: %v",
+			err,
+		)
 	}
 
 	// Create tasks.md
-	tasksMdPath := filepath.Join(changeDir, "tasks.md")
+	tasksMdPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
 	tasksMdContent := `## 1. Updated Section
 
 - [ ] 1.1 Updated task
 - [ ] 1.2 New task
 `
 	if err := os.WriteFile(tasksMdPath, []byte(tasksMdContent), filePerm); err != nil {
-		t.Fatalf("failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"failed to write tasks.md: %v",
+			err,
+		)
 	}
 
 	// Create existing tasks.jsonc (from previous accept)
-	tasksJSONPath := filepath.Join(changeDir, "tasks.jsonc")
+	tasksJSONPath := filepath.Join(
+		changeDir,
+		"tasks.jsonc",
+	)
 	existingJSONContent := `{
   "version": 1,
   "tasks": [
@@ -940,74 +1004,124 @@ Test solution
 }
 `
 	if err := os.WriteFile(tasksJSONPath, []byte(existingJSONContent), filePerm); err != nil {
-		t.Fatalf("failed to write existing tasks.jsonc: %v", err)
+		t.Fatalf(
+			"failed to write existing tasks.jsonc: %v",
+			err,
+		)
 	}
 
 	// Parse tasks.md and write new tasks.jsonc (simulating accept command)
 	tasks, err := parseTasksMd(tasksMdPath)
 	if err != nil {
-		t.Fatalf("failed to parse tasks.md: %v", err)
+		t.Fatalf(
+			"failed to parse tasks.md: %v",
+			err,
+		)
 	}
 
 	if err := writeAndCleanup(tasksMdPath, tasksJSONPath, tasks, nil); err != nil {
-		t.Fatalf("writeAndCleanup failed: %v", err)
+		t.Fatalf(
+			"writeAndCleanup failed: %v",
+			err,
+		)
 	}
 
 	// Verify both files exist
-	if _, err := os.Stat(tasksMdPath); os.IsNotExist(err) {
+	if _, err := os.Stat(tasksMdPath); os.IsNotExist(
+		err,
+	) {
 		t.Error("tasks.md should still exist")
 	}
-	if _, err := os.Stat(tasksJSONPath); os.IsNotExist(err) {
+	if _, err := os.Stat(tasksJSONPath); os.IsNotExist(
+		err,
+	) {
 		t.Error("tasks.jsonc should exist")
 	}
 
 	// Verify tasks.jsonc was overwritten with new content
 	jsonContent, err := os.ReadFile(tasksJSONPath)
 	if err != nil {
-		t.Fatalf("failed to read tasks.jsonc: %v", err)
+		t.Fatalf(
+			"failed to read tasks.jsonc: %v",
+			err,
+		)
 	}
 
 	// Strip JSONC comments and parse
-	strippedJSON := parsers.StripJSONComments(jsonContent)
+	strippedJSON := parsers.StripJSONComments(
+		jsonContent,
+	)
 	var tasksFile parsers.TasksFile
 	if err := json.Unmarshal(strippedJSON, &tasksFile); err != nil {
-		t.Fatalf("failed to parse tasks.jsonc: %v", err)
+		t.Fatalf(
+			"failed to parse tasks.jsonc: %v",
+			err,
+		)
 	}
 
 	// Verify it has the new tasks, not the old ones
 	if len(tasksFile.Tasks) != 2 {
-		t.Errorf("expected 2 tasks, got %d", len(tasksFile.Tasks))
+		t.Errorf(
+			"expected 2 tasks, got %d",
+			len(tasksFile.Tasks),
+		)
 	}
 	if tasksFile.Tasks[0].Description != "Updated task" {
-		t.Errorf("expected 'Updated task', got '%s'", tasksFile.Tasks[0].Description)
+		t.Errorf(
+			"expected 'Updated task', got '%s'",
+			tasksFile.Tasks[0].Description,
+		)
 	}
 }
 
 // TestAcceptDryRunPreservesFiles verifies that dry-run mode doesn't modify any files
-func TestAcceptDryRunPreservesFiles(t *testing.T) {
+func TestAcceptDryRunPreservesFiles(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
 
 	// Create a mock change directory structure
-	changeDir := filepath.Join(tmpDir, "spectr", "changes", "test-change")
+	changeDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+		"test-change",
+	)
 	if err := os.MkdirAll(changeDir, 0o755); err != nil {
-		t.Fatalf("failed to create change dir: %v", err)
+		t.Fatalf(
+			"failed to create change dir: %v",
+			err,
+		)
 	}
 
 	// Create tasks.md
-	tasksMdPath := filepath.Join(changeDir, "tasks.md")
+	tasksMdPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
 	tasksMdContent := `## 1. Test
 
 - [ ] 1.1 Task
 `
 	if err := os.WriteFile(tasksMdPath, []byte(tasksMdContent), filePerm); err != nil {
-		t.Fatalf("failed to write tasks.md: %v", err)
+		t.Fatalf(
+			"failed to write tasks.md: %v",
+			err,
+		)
 	}
 
-	tasksJSONPath := filepath.Join(changeDir, "tasks.jsonc")
+	tasksJSONPath := filepath.Join(
+		changeDir,
+		"tasks.jsonc",
+	)
 
 	// Verify tasks.jsonc doesn't exist before dry-run
-	if _, err := os.Stat(tasksJSONPath); !os.IsNotExist(err) {
-		t.Fatal("tasks.jsonc should not exist before dry-run")
+	if _, err := os.Stat(tasksJSONPath); !os.IsNotExist(
+		err,
+	) {
+		t.Fatal(
+			"tasks.jsonc should not exist before dry-run",
+		)
 	}
 
 	// Note: Full dry-run test would require mocking the AcceptCmd.Run() method
@@ -1016,9 +1130,14 @@ func TestAcceptDryRunPreservesFiles(t *testing.T) {
 }
 
 // TestWriteTasksJSONCWithAppendConfig verifies that append tasks are added correctly
-func TestWriteTasksJSONCWithAppendConfig(t *testing.T) {
+func TestWriteTasksJSONCWithAppendConfig(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	tasksJSONPath := filepath.Join(tmpDir, "tasks.jsonc")
+	tasksJSONPath := filepath.Join(
+		tmpDir,
+		"tasks.jsonc",
+	)
 
 	existingTasks := []parsers.Task{
 		{
@@ -1049,56 +1168,93 @@ func TestWriteTasksJSONCWithAppendConfig(t *testing.T) {
 		},
 	}
 
-	err := writeTasksJSONC(tasksJSONPath, existingTasks, appendCfg)
+	err := writeTasksJSONC(
+		tasksJSONPath,
+		existingTasks,
+		appendCfg,
+	)
 	if err != nil {
-		t.Fatalf("writeTasksJSONC() error = %v", err)
+		t.Fatalf(
+			"writeTasksJSONC() error = %v",
+			err,
+		)
 	}
 
 	// Read and parse the output
 	data, err := os.ReadFile(tasksJSONPath)
 	if err != nil {
-		t.Fatalf("failed to read tasks.jsonc: %v", err)
+		t.Fatalf(
+			"failed to read tasks.jsonc: %v",
+			err,
+		)
 	}
 
-	strippedData := parsers.StripJSONComments(data)
+	strippedData := parsers.StripJSONComments(
+		data,
+	)
 	var tasksFile parsers.TasksFile
 	if err := json.Unmarshal(strippedData, &tasksFile); err != nil {
-		t.Fatalf("failed to unmarshal JSON: %v", err)
+		t.Fatalf(
+			"failed to unmarshal JSON: %v",
+			err,
+		)
 	}
 
 	// Should have 5 tasks (3 existing + 2 appended)
 	if len(tasksFile.Tasks) != 5 {
-		t.Errorf("expected 5 tasks, got %d", len(tasksFile.Tasks))
+		t.Errorf(
+			"expected 5 tasks, got %d",
+			len(tasksFile.Tasks),
+		)
 	}
 
 	// Verify appended tasks have correct IDs (section 3, since max was 2)
 	if tasksFile.Tasks[3].ID != "3.1" {
-		t.Errorf("expected appended task ID '3.1', got '%s'", tasksFile.Tasks[3].ID)
+		t.Errorf(
+			"expected appended task ID '3.1', got '%s'",
+			tasksFile.Tasks[3].ID,
+		)
 	}
 	if tasksFile.Tasks[4].ID != "3.2" {
-		t.Errorf("expected appended task ID '3.2', got '%s'", tasksFile.Tasks[4].ID)
+		t.Errorf(
+			"expected appended task ID '3.2', got '%s'",
+			tasksFile.Tasks[4].ID,
+		)
 	}
 
 	// Verify appended tasks have correct section
 	if tasksFile.Tasks[3].Section != "Project Workflow" {
-		t.Errorf("expected section 'Project Workflow', got '%s'", tasksFile.Tasks[3].Section)
+		t.Errorf(
+			"expected section 'Project Workflow', got '%s'",
+			tasksFile.Tasks[3].Section,
+		)
 	}
 
 	// Verify appended tasks have pending status
 	if tasksFile.Tasks[3].Status != parsers.TaskStatusPending {
-		t.Errorf("expected status 'pending', got '%s'", tasksFile.Tasks[3].Status)
+		t.Errorf(
+			"expected status 'pending', got '%s'",
+			tasksFile.Tasks[3].Status,
+		)
 	}
 
 	// Verify appended task descriptions
 	if tasksFile.Tasks[3].Description != "Run linter and tests" {
-		t.Error("wrong description for appended task")
+		t.Error(
+			"wrong description for appended task",
+		)
 	}
 }
 
 // TestWriteTasksJSONCWithDefaultSection verifies default section name
-func TestWriteTasksJSONCWithDefaultSection(t *testing.T) {
+func TestWriteTasksJSONCWithDefaultSection(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	tasksJSONPath := filepath.Join(tmpDir, "tasks.jsonc")
+	tasksJSONPath := filepath.Join(
+		tmpDir,
+		"tasks.jsonc",
+	)
 
 	existingTasks := []parsers.Task{
 		{
@@ -1114,33 +1270,56 @@ func TestWriteTasksJSONCWithDefaultSection(t *testing.T) {
 		Tasks: []string{"Appended task"},
 	}
 
-	err := writeTasksJSONC(tasksJSONPath, existingTasks, appendCfg)
+	err := writeTasksJSONC(
+		tasksJSONPath,
+		existingTasks,
+		appendCfg,
+	)
 	if err != nil {
-		t.Fatalf("writeTasksJSONC() error = %v", err)
+		t.Fatalf(
+			"writeTasksJSONC() error = %v",
+			err,
+		)
 	}
 
 	data, err := os.ReadFile(tasksJSONPath)
 	if err != nil {
-		t.Fatalf("failed to read tasks.jsonc: %v", err)
+		t.Fatalf(
+			"failed to read tasks.jsonc: %v",
+			err,
+		)
 	}
 
-	strippedData := parsers.StripJSONComments(data)
+	strippedData := parsers.StripJSONComments(
+		data,
+	)
 	var tasksFile parsers.TasksFile
 	if err := json.Unmarshal(strippedData, &tasksFile); err != nil {
-		t.Fatalf("failed to unmarshal JSON: %v", err)
+		t.Fatalf(
+			"failed to unmarshal JSON: %v",
+			err,
+		)
 	}
 
 	// Verify default section name is used
 	if tasksFile.Tasks[1].Section != config.DefaultAppendTasksSection {
-		t.Errorf("expected default section '%s', got '%s'",
-			config.DefaultAppendTasksSection, tasksFile.Tasks[1].Section)
+		t.Errorf(
+			"expected default section '%s', got '%s'",
+			config.DefaultAppendTasksSection,
+			tasksFile.Tasks[1].Section,
+		)
 	}
 }
 
 // TestWriteTasksJSONCWithEmptyAppendTasks verifies no change when append tasks is empty
-func TestWriteTasksJSONCWithEmptyAppendTasks(t *testing.T) {
+func TestWriteTasksJSONCWithEmptyAppendTasks(
+	t *testing.T,
+) {
 	tmpDir := t.TempDir()
-	tasksJSONPath := filepath.Join(tmpDir, "tasks.jsonc")
+	tasksJSONPath := filepath.Join(
+		tmpDir,
+		"tasks.jsonc",
+	)
 
 	existingTasks := []parsers.Task{
 		{
@@ -1156,25 +1335,43 @@ func TestWriteTasksJSONCWithEmptyAppendTasks(t *testing.T) {
 		Tasks:   make([]string, 0), // Empty
 	}
 
-	err := writeTasksJSONC(tasksJSONPath, existingTasks, appendCfg)
+	err := writeTasksJSONC(
+		tasksJSONPath,
+		existingTasks,
+		appendCfg,
+	)
 	if err != nil {
-		t.Fatalf("writeTasksJSONC() error = %v", err)
+		t.Fatalf(
+			"writeTasksJSONC() error = %v",
+			err,
+		)
 	}
 
 	data, err := os.ReadFile(tasksJSONPath)
 	if err != nil {
-		t.Fatalf("failed to read tasks.jsonc: %v", err)
+		t.Fatalf(
+			"failed to read tasks.jsonc: %v",
+			err,
+		)
 	}
 
-	strippedData := parsers.StripJSONComments(data)
+	strippedData := parsers.StripJSONComments(
+		data,
+	)
 	var tasksFile parsers.TasksFile
 	if err := json.Unmarshal(strippedData, &tasksFile); err != nil {
-		t.Fatalf("failed to unmarshal JSON: %v", err)
+		t.Fatalf(
+			"failed to unmarshal JSON: %v",
+			err,
+		)
 	}
 
 	// Should have only the original task
 	if len(tasksFile.Tasks) != 1 {
-		t.Errorf("expected 1 task, got %d", len(tasksFile.Tasks))
+		t.Errorf(
+			"expected 1 task, got %d",
+			len(tasksFile.Tasks),
+		)
 	}
 }
 
@@ -1230,7 +1427,11 @@ func TestFindNextSectionNumber(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := findNextSectionNumber(tt.tasks)
 			if got != tt.expected {
-				t.Errorf("findNextSectionNumber() = %d, want %d", got, tt.expected)
+				t.Errorf(
+					"findNextSectionNumber() = %d, want %d",
+					got,
+					tt.expected,
+				)
 			}
 		})
 	}
@@ -1239,36 +1440,72 @@ func TestFindNextSectionNumber(t *testing.T) {
 // TestCreateAppendedTasks verifies task creation from config
 func TestCreateAppendedTasks(t *testing.T) {
 	existingTasks := []parsers.Task{
-		{ID: "1.1", Section: "Setup", Description: "Task 1", Status: parsers.TaskStatusPending},
-		{ID: "2.1", Section: "Impl", Description: "Task 2", Status: parsers.TaskStatusPending},
+		{
+			ID:          "1.1",
+			Section:     "Setup",
+			Description: "Task 1",
+			Status:      parsers.TaskStatusPending,
+		},
+		{
+			ID:          "2.1",
+			Section:     "Impl",
+			Description: "Task 2",
+			Status:      parsers.TaskStatusPending,
+		},
 	}
 
 	cfg := &config.AppendTasksConfig{
 		Section: "Workflow",
-		Tasks:   []string{"Task A", "Task B", "Task C"},
+		Tasks: []string{
+			"Task A",
+			"Task B",
+			"Task C",
+		},
 	}
 
-	tasks := createAppendedTasks(existingTasks, cfg)
+	tasks := createAppendedTasks(
+		existingTasks,
+		cfg,
+	)
 
 	if len(tasks) != 3 {
-		t.Fatalf("expected 3 tasks, got %d", len(tasks))
+		t.Fatalf(
+			"expected 3 tasks, got %d",
+			len(tasks),
+		)
 	}
 
 	// Verify IDs start at section 3
 	expectedIDs := []string{"3.1", "3.2", "3.3"}
 	for i, task := range tasks {
 		if task.ID != expectedIDs[i] {
-			t.Errorf("task %d: expected ID '%s', got '%s'", i, expectedIDs[i], task.ID)
+			t.Errorf(
+				"task %d: expected ID '%s', got '%s'",
+				i,
+				expectedIDs[i],
+				task.ID,
+			)
 		}
 		if task.Section != "Workflow" {
-			t.Errorf("task %d: expected section 'Workflow', got '%s'", i, task.Section)
+			t.Errorf(
+				"task %d: expected section 'Workflow', got '%s'",
+				i,
+				task.Section,
+			)
 		}
 		if task.Status != parsers.TaskStatusPending {
-			t.Errorf("task %d: expected status 'pending', got '%s'", i, task.Status)
+			t.Errorf(
+				"task %d: expected status 'pending', got '%s'",
+				i,
+				task.Status,
+			)
 		}
 	}
 
 	if tasks[0].Description != "Task A" {
-		t.Errorf("expected description 'Task A', got '%s'", tasks[0].Description)
+		t.Errorf(
+			"expected description 'Task A', got '%s'",
+			tasks[0].Description,
+		)
 	}
 }

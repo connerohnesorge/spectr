@@ -16,7 +16,9 @@ import (
 const DefaultAppendTasksSection = "Automated Tasks"
 
 // ErrConfigMalformed is returned when the config file contains invalid YAML.
-var ErrConfigMalformed = errors.New("config file is malformed")
+var ErrConfigMalformed = errors.New(
+	"config file is malformed",
+)
 
 // Config represents the root configuration structure for spectr.yaml.
 type Config struct {
@@ -54,7 +56,9 @@ func (c *AppendTasksConfig) HasTasks() bool {
 // LoadConfig searches for and loads spectr.yaml from the given directory
 // or any parent directory. Returns nil config (not an error) if no config
 // file is found.
-func LoadConfig(startDir string) (*Config, error) {
+func LoadConfig(
+	startDir string,
+) (*Config, error) {
 	configPath, err := findConfigFile(startDir)
 	if err != nil {
 		return nil, err
@@ -69,14 +73,22 @@ func LoadConfig(startDir string) (*Config, error) {
 
 // findConfigFile walks up from startDir to find spectr.yaml.
 // Returns empty string if not found (not an error).
-func findConfigFile(startDir string) (string, error) {
+func findConfigFile(
+	startDir string,
+) (string, error) {
 	dir, err := filepath.Abs(startDir)
 	if err != nil {
-		return "", fmt.Errorf("failed to get absolute path: %w", err)
+		return "", fmt.Errorf(
+			"failed to get absolute path: %w",
+			err,
+		)
 	}
 
 	for {
-		configPath := filepath.Join(dir, "spectr.yaml")
+		configPath := filepath.Join(
+			dir,
+			"spectr.yaml",
+		)
 		if _, err := os.Stat(configPath); err == nil {
 			return configPath, nil
 		}
@@ -94,15 +106,25 @@ func findConfigFile(startDir string) (string, error) {
 }
 
 // parseConfigFile reads and parses the config file at the given path.
-func parseConfigFile(path string) (*Config, error) {
+func parseConfigFile(
+	path string,
+) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		return nil, fmt.Errorf(
+			"failed to read config file: %w",
+			err,
+		)
 	}
 
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("%w: %s: %v", ErrConfigMalformed, path, err)
+		return nil, fmt.Errorf(
+			"%w: %s: %v",
+			ErrConfigMalformed,
+			path,
+			err,
+		)
 	}
 
 	return &cfg, nil

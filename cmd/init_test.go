@@ -109,12 +109,14 @@ func TestIsTTYError(t *testing.T) {
 	}{
 		{
 			name: "wrapped ENXIO from bubbletea (real error format)",
-			err: fmt.Errorf("could not open a new TTY: %w",
+			err: fmt.Errorf(
+				"could not open a new TTY: %w",
 				&os.PathError{
 					Op:   "open",
 					Path: "/dev/tty",
 					Err:  syscall.ENXIO,
-				}),
+				},
+			),
 			expected: true,
 		},
 		{
@@ -147,13 +149,17 @@ func TestIsTTYError(t *testing.T) {
 		},
 		{
 			name: "deeply wrapped ENXIO error",
-			err: fmt.Errorf("wizard failed: %w",
-				fmt.Errorf("could not open a new TTY: %w",
+			err: fmt.Errorf(
+				"wizard failed: %w",
+				fmt.Errorf(
+					"could not open a new TTY: %w",
 					&os.PathError{
 						Op:   "open",
 						Path: "/dev/tty",
 						Err:  syscall.ENXIO,
-					})),
+					},
+				),
+			),
 			expected: true,
 		},
 		{
@@ -166,13 +172,17 @@ func TestIsTTYError(t *testing.T) {
 			expected: false,
 		},
 		{
-			name:     "regular error without TTY reference",
-			err:      errors.New("some other error"),
+			name: "regular error without TTY reference",
+			err: errors.New(
+				"some other error",
+			),
 			expected: false,
 		},
 		{
-			name:     "string error mentioning tty (should NOT match)",
-			err:      errors.New("pretty formatted output"),
+			name: "string error mentioning tty (should NOT match)",
+			err: errors.New(
+				"pretty formatted output",
+			),
 			expected: false,
 		},
 		{

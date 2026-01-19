@@ -175,8 +175,12 @@ func ValidateChangeDeltaSpecs(
 	allIssues = append(allIssues, tasksIssues...)
 
 	// Check for divergence between tasks.md and tasks.jsonc
-	divergenceIssues := validateTasksDivergence(changeDir)
-	allIssues = append(allIssues, divergenceIssues...)
+	divergenceIssues := validateTasksDivergence(
+		changeDir,
+	)
+	allIssues = append(
+		allIssues,
+		divergenceIssues...)
 
 	// Always convert warnings to errors (strict mode)
 	for i := range allIssues {
@@ -832,7 +836,8 @@ func validateTasksDivergence(
 	_, jsoncErr := os.Stat(tasksJsoncPath)
 
 	// If either file doesn't exist, no divergence check needed
-	if os.IsNotExist(mdErr) || os.IsNotExist(jsoncErr) {
+	if os.IsNotExist(mdErr) ||
+		os.IsNotExist(jsoncErr) {
 		return nil
 	}
 
@@ -842,21 +847,28 @@ func validateTasksDivergence(
 	}
 
 	// Parse tasks.md
-	mdTasks, err := parseTasksMdForValidation(tasksMdPath)
+	mdTasks, err := parseTasksMdForValidation(
+		tasksMdPath,
+	)
 	if err != nil {
 		// If parsing fails, don't report divergence (other validation will catch it)
 		return nil
 	}
 
 	// Parse tasks.jsonc
-	jsoncTasks, err := parsers.ReadTasksJson(tasksJsoncPath)
+	jsoncTasks, err := parsers.ReadTasksJson(
+		tasksJsoncPath,
+	)
 	if err != nil {
 		// If parsing fails, don't report divergence (other validation will catch it)
 		return nil
 	}
 
 	// Check for divergence by comparing task IDs and statuses
-	diverged := checkTasksDivergence(mdTasks, jsoncTasks.Tasks)
+	diverged := checkTasksDivergence(
+		mdTasks,
+		jsoncTasks.Tasks,
+	)
 
 	if diverged {
 		return []ValidationIssue{
@@ -900,14 +912,17 @@ func parseTasksMdForValidation(
 		}
 
 		// Check for task line
-		match, ok := markdown.MatchFlexibleTask(line)
+		match, ok := markdown.MatchFlexibleTask(
+			line,
+		)
 		if !ok {
 			continue
 		}
 
 		// Determine task status
 		status := parsers.TaskStatusPending
-		if match.Status == 'x' || match.Status == 'X' {
+		if match.Status == 'x' ||
+			match.Status == 'X' {
 			status = parsers.TaskStatusCompleted
 		}
 
@@ -942,12 +957,16 @@ func checkTasksDivergence(
 	}
 
 	// Create maps for easier comparison
-	mdMap := make(map[string]parsers.TaskStatusValue)
+	mdMap := make(
+		map[string]parsers.TaskStatusValue,
+	)
 	for _, task := range mdTasks {
 		mdMap[task.ID] = task.Status
 	}
 
-	jsoncMap := make(map[string]parsers.TaskStatusValue)
+	jsoncMap := make(
+		map[string]parsers.TaskStatusValue,
+	)
 	for _, task := range jsoncTasks {
 		jsoncMap[task.ID] = task.Status
 	}

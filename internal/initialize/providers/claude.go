@@ -15,15 +15,33 @@ func (*ClaudeProvider) Initializers(
 	_ context.Context,
 	tm TemplateManager,
 ) []Initializer {
+	// Claude Code needs special frontmatter for the proposal command:
+	// - Add "context: fork" to run in forked sub-agent context
+	// - Remove "agent" field (not supported by Claude Code slash commands)
+	proposalOverrides := &domain.FrontmatterOverride{
+		// Set:    map[string]any{"context": "fork"},
+		Remove: []string{"agent"},
+	}
+
 	return []Initializer{
-		NewDirectoryInitializer(".claude/commands/spectr"),
+		NewDirectoryInitializer(
+			".claude/commands/spectr",
+		),
 		NewDirectoryInitializer(".claude/skills"),
-		NewConfigFileInitializer("CLAUDE.md", tm.InstructionPointer()),
+		NewConfigFileInitializer(
+			"CLAUDE.md",
+			tm.InstructionPointer(),
+		),
 		NewSlashCommandsInitializer(
 			".claude/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommandWithOverrides(
+					domain.SlashProposal,
+					proposalOverrides,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 		NewAgentSkillsInitializer(

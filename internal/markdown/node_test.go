@@ -1534,7 +1534,10 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 				o := original.(*NodeSection)
 				r := rebuilt.(*NodeSection)
 				if o.Level() != r.Level() ||
-					!bytes.Equal(o.Title(), r.Title()) ||
+					!bytes.Equal(
+						o.Title(),
+						r.Title(),
+					) ||
 					o.DeltaType() != r.DeltaType() {
 					t.Error(
 						"Section fields should match",
@@ -1650,8 +1653,14 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeCodeBlock)
 				r := rebuilt.(*NodeCodeBlock)
-				if !bytes.Equal(o.Language(), r.Language()) ||
-					!bytes.Equal(o.Content(), r.Content()) {
+				if !bytes.Equal(
+					o.Language(),
+					r.Language(),
+				) ||
+					!bytes.Equal(
+						o.Content(),
+						r.Content(),
+					) {
 					t.Error(
 						"CodeBlock fields should match",
 					)
@@ -1674,8 +1683,14 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeLink)
 				r := rebuilt.(*NodeLink)
-				if !bytes.Equal(o.URL(), r.URL()) ||
-					!bytes.Equal(o.Title(), r.Title()) {
+				if !bytes.Equal(
+					o.URL(),
+					r.URL(),
+				) ||
+					!bytes.Equal(
+						o.Title(),
+						r.Title(),
+					) {
 					t.Error(
 						"Link fields should match",
 					)
@@ -1698,8 +1713,14 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeLinkDef)
 				r := rebuilt.(*NodeLinkDef)
-				if !bytes.Equal(o.URL(), r.URL()) ||
-					!bytes.Equal(o.Title(), r.Title()) {
+				if !bytes.Equal(
+					o.URL(),
+					r.URL(),
+				) ||
+					!bytes.Equal(
+						o.Title(),
+						r.Title(),
+					) {
 					t.Error(
 						"LinkDef fields should match",
 					)
@@ -1723,9 +1744,18 @@ func TestNodeBuilder_ToBuilder_AllTypes(
 			func(t *testing.T, original, rebuilt Node) {
 				o := original.(*NodeWikilink)
 				r := rebuilt.(*NodeWikilink)
-				if !bytes.Equal(o.Target(), r.Target()) ||
-					!bytes.Equal(o.Display(), r.Display()) ||
-					!bytes.Equal(o.Anchor(), r.Anchor()) {
+				if !bytes.Equal(
+					o.Target(),
+					r.Target(),
+				) ||
+					!bytes.Equal(
+						o.Display(),
+						r.Display(),
+					) ||
+					!bytes.Equal(
+						o.Anchor(),
+						r.Anchor(),
+					) {
 					t.Error(
 						"Wikilink fields should match",
 					)

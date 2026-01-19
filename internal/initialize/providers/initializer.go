@@ -42,5 +42,8 @@ type Initializer interface {
 	//
 	// PURPOSE: Used by the setup wizard to show which providers are already configured.
 	// NOT used to skip initializers during execution - Init() always runs (idempotent).
-	IsSetup(projectFs, homeFs afero.Fs, cfg *Config) bool
+	IsSetup(
+		projectFs, homeFs afero.Fs,
+		cfg *Config,
+	) bool
 }

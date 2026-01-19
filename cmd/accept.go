@@ -38,7 +38,7 @@ type AcceptCmd struct {
 	// ChangeID is the optional change identifier to process
 	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Convert tasks.md to tasks.jsonc (preserves tasks.md)"` //nolint:lll,revive // Kong struct tag exceeds line length
 	// DryRun enables preview mode without writing files
-	DryRun bool `                                        help:"Preview without writing" name:"dry-run"` //nolint:lll,revive // Kong struct tag with alignment padding
+	DryRun bool `                                        help:"Preview without writing"                              name:"dry-run"` //nolint:lll,revive // Kong struct tag with alignment padding
 
 	// NoInteractive disables interactive prompts
 	NoInteractive bool `help:"Disable prompts" name:"no-interactive"` //nolint:lll,revive // Kong struct tag exceeds line length
@@ -117,7 +117,8 @@ func (c *AcceptCmd) processChange(
 
 	// Append configured tasks if present
 	var appendCfg *config.AppendTasksConfig
-	if cfg != nil && cfg.AppendTasks != nil && cfg.AppendTasks.HasTasks() {
+	if cfg != nil && cfg.AppendTasks != nil &&
+		cfg.AppendTasks.HasTasks() {
 		appendCfg = cfg.AppendTasks
 	}
 

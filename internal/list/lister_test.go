@@ -746,11 +746,17 @@ func TestFilterChangesNotOnRef_MixedChanges(
 
 	repoRoot := filepath.Join(tmpDir, "repo")
 	if err := os.MkdirAll(repoRoot, 0o755); err != nil {
-		t.Fatalf("failed to create repo root: %v", err)
+		t.Fatalf(
+			"failed to create repo root: %v",
+			err,
+		)
 	}
 
 	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatalf("failed to change to repo root: %v", err)
+		t.Fatalf(
+			"failed to change to repo root: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir("..") }()
 
@@ -758,31 +764,63 @@ func TestFilterChangesNotOnRef_MixedChanges(
 		cmd := exec.Command("git", "init")
 		cmd.Dir = repoRoot
 		if err := cmd.Run(); err != nil {
-			t.Fatalf("failed to init git repo: %v", err)
+			t.Fatalf(
+				"failed to init git repo: %v",
+				err,
+			)
 		}
 
-		cmd = exec.Command("git", "config", "user.email", "test@example.com")
+		cmd = exec.Command(
+			"git",
+			"config",
+			"user.email",
+			"test@example.com",
+		)
 		cmd.Dir = repoRoot
 		if err := cmd.Run(); err != nil {
-			t.Fatalf("failed to set git user email: %v", err)
+			t.Fatalf(
+				"failed to set git user email: %v",
+				err,
+			)
 		}
 
-		cmd = exec.Command("git", "config", "user.name", "Test User")
+		cmd = exec.Command(
+			"git",
+			"config",
+			"user.name",
+			"Test User",
+		)
 		cmd.Dir = repoRoot
 		if err := cmd.Run(); err != nil {
-			t.Fatalf("failed to set git user name: %v", err)
+			t.Fatalf(
+				"failed to set git user name: %v",
+				err,
+			)
 		}
 	}
 
 	createChange := func(changeID string) {
-		changeDir := filepath.Join(repoRoot, "spectr", "changes", changeID)
+		changeDir := filepath.Join(
+			repoRoot,
+			"spectr",
+			"changes",
+			changeID,
+		)
 		if err := os.MkdirAll(changeDir, 0o755); err != nil {
-			t.Fatalf("failed to create change dir %s: %v", changeID, err)
+			t.Fatalf(
+				"failed to create change dir %s: %v",
+				changeID,
+				err,
+			)
 		}
 
 		proposalContent := "# Change: " + changeID
 		if err := os.WriteFile(filepath.Join(changeDir, "proposal.md"), []byte(proposalContent), 0o644); err != nil {
-			t.Fatalf("failed to write proposal.md for %s: %v", changeID, err)
+			t.Fatalf(
+				"failed to write proposal.md for %s: %v",
+				changeID,
+				err,
+			)
 		}
 	}
 
@@ -793,10 +831,18 @@ func TestFilterChangesNotOnRef_MixedChanges(
 			t.Fatalf("failed to git add: %v", err)
 		}
 
-		cmd = exec.Command("git", "commit", "-m", "Add "+changeID)
+		cmd = exec.Command(
+			"git",
+			"commit",
+			"-m",
+			"Add "+changeID,
+		)
 		cmd.Dir = repoRoot
 		if err := cmd.Run(); err != nil {
-			t.Fatalf("failed to git commit: %v", err)
+			t.Fatalf(
+				"failed to git commit: %v",
+				err,
+			)
 		}
 	}
 
@@ -837,7 +883,10 @@ func TestFilterChangesNotOnRef_MixedChanges(
 		"HEAD",
 	)
 	if err != nil {
-		t.Fatalf("FilterChangesNotOnRef failed: %v", err)
+		t.Fatalf(
+			"FilterChangesNotOnRef failed: %v",
+			err,
+		)
 	}
 
 	if len(result) != 2 {
@@ -891,11 +940,17 @@ func TestFilterChangesNotOnRef_PreservesChangeInfo(
 
 	repoRoot := filepath.Join(tmpDir, "repo")
 	if err := os.MkdirAll(repoRoot, 0o755); err != nil {
-		t.Fatalf("failed to create repo root: %v", err)
+		t.Fatalf(
+			"failed to create repo root: %v",
+			err,
+		)
 	}
 
 	if err := os.Chdir(repoRoot); err != nil {
-		t.Fatalf("failed to change to repo root: %v", err)
+		t.Fatalf(
+			"failed to change to repo root: %v",
+			err,
+		)
 	}
 	defer func() { _ = os.Chdir("..") }()
 
@@ -903,28 +958,56 @@ func TestFilterChangesNotOnRef_PreservesChangeInfo(
 		cmd := exec.Command("git", "init")
 		cmd.Dir = repoRoot
 		if err := cmd.Run(); err != nil {
-			t.Fatalf("failed to init git repo: %v", err)
+			t.Fatalf(
+				"failed to init git repo: %v",
+				err,
+			)
 		}
 
-		cmd = exec.Command("git", "config", "user.email", "test@example.com")
+		cmd = exec.Command(
+			"git",
+			"config",
+			"user.email",
+			"test@example.com",
+		)
 		cmd.Dir = repoRoot
 		if err := cmd.Run(); err != nil {
-			t.Fatalf("failed to set git user email: %v", err)
+			t.Fatalf(
+				"failed to set git user email: %v",
+				err,
+			)
 		}
 
-		cmd = exec.Command("git", "config", "user.name", "Test User")
+		cmd = exec.Command(
+			"git",
+			"config",
+			"user.name",
+			"Test User",
+		)
 		cmd.Dir = repoRoot
 		if err := cmd.Run(); err != nil {
-			t.Fatalf("failed to set git user name: %v", err)
+			t.Fatalf(
+				"failed to set git user name: %v",
+				err,
+			)
 		}
 	}
 
 	initGitRepo()
 
-	cmd := exec.Command("git", "commit", "--allow-empty", "-m", "Initial commit")
+	cmd := exec.Command(
+		"git",
+		"commit",
+		"--allow-empty",
+		"-m",
+		"Initial commit",
+	)
 	cmd.Dir = repoRoot
 	if err := cmd.Run(); err != nil {
-		t.Fatalf("failed to create initial commit: %v", err)
+		t.Fatalf(
+			"failed to create initial commit: %v",
+			err,
+		)
 	}
 
 	originalChange := ChangeInfo{

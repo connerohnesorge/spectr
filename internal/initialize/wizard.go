@@ -120,11 +120,17 @@ func NewWizardModel(
 	selectedProviders := make(map[string]bool)
 
 	// Create filesystems for IsSetup checks
-	projectFs := afero.NewBasePathFs(afero.NewOsFs(), projectPath)
+	projectFs := afero.NewBasePathFs(
+		afero.NewOsFs(),
+		projectPath,
+	)
 	homeDir, err := os.UserHomeDir()
 	var homeFs afero.Fs
 	if err == nil {
-		homeFs = afero.NewBasePathFs(afero.NewOsFs(), homeDir)
+		homeFs = afero.NewBasePathFs(
+			afero.NewOsFs(),
+			homeDir,
+		)
 	} else {
 		// If we can't get home dir, use a no-op filesystem
 		homeFs = afero.NewMemMapFs()
@@ -138,19 +144,31 @@ func NewWizardModel(
 	// Create a template manager for initializer checks
 	tm, err := NewTemplateManager()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create template manager: %w", err)
+		return nil, fmt.Errorf(
+			"failed to create template manager: %w",
+			err,
+		)
 	}
 
 	// For each provider, check if any of its initializers are already setup
 	for _, reg := range allProviders {
 		// Get initializers for this provider
-		initializers := reg.Provider.Initializers(context.Background(), tm)
+		initializers := reg.Provider.Initializers(
+			context.Background(),
+			tm,
+		)
 
 		// Check if ALL initializers are already setup
 		// (all must be setup for the provider to be considered configured)
-		allSetup := len(initializers) > 0 // need at least one initializer
+		allSetup := len(
+			initializers,
+		) > 0 // need at least one initializer
 		for _, init := range initializers {
-			if !init.IsSetup(projectFs, homeFs, cfg) {
+			if !init.IsSetup(
+				projectFs,
+				homeFs,
+				cfg,
+			) {
 				allSetup = false
 
 				break

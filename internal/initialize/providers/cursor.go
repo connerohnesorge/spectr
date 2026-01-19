@@ -17,12 +17,18 @@ func (*CursorProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer {
 	return []Initializer{
-		NewDirectoryInitializer(".cursorrules/commands/spectr"),
+		NewDirectoryInitializer(
+			".cursorrules/commands/spectr",
+		),
 		NewSlashCommandsInitializer(
 			".cursorrules/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

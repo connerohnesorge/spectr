@@ -24,7 +24,10 @@ type ConfigFileInitializer struct {
 // Path is relative to the project filesystem root.
 // Template is rendered with TemplateContext and inserted between markers.
 // Example: NewConfigFileInitializer("CLAUDE.md", tm.InstructionPointer())
-func NewConfigFileInitializer(path string, template domain.TemplateRef) Initializer {
+func NewConfigFileInitializer(
+	path string,
+	template domain.TemplateRef,
+) Initializer {
 	return &ConfigFileInitializer{
 		path:     path,
 		template: template,
@@ -55,20 +58,34 @@ func (c *ConfigFileInitializer) Init(
 	// Render template content
 	content, err := c.template.Render(tmplCtx)
 	if err != nil {
-		return InitResult{}, fmt.Errorf("failed to render template: %w", err)
+		return InitResult{}, fmt.Errorf(
+			"failed to render template: %w",
+			err,
+		)
 	}
 
 	// Check if file exists
 	exists, err := afero.Exists(projectFs, c.path)
 	if err != nil {
-		return InitResult{}, fmt.Errorf("failed to check file %s: %w", c.path, err)
+		return InitResult{}, fmt.Errorf(
+			"failed to check file %s: %w",
+			c.path,
+			err,
+		)
 	}
 
 	if !exists {
 		// Create new file with markers
-		newContent := fmt.Sprintf("<!-- spectr:start -->\n%s\n<!-- spectr:end -->", content)
+		newContent := fmt.Sprintf(
+			"<!-- spectr:start -->\n%s\n<!-- spectr:end -->",
+			content,
+		)
 		if err := afero.WriteFile(projectFs, c.path, []byte(newContent), 0o644); err != nil {
-			return InitResult{}, fmt.Errorf("failed to create file %s: %w", c.path, err)
+			return InitResult{}, fmt.Errorf(
+				"failed to create file %s: %w",
+				c.path,
+				err,
+			)
 		}
 
 		return InitResult{
@@ -80,18 +97,33 @@ func (c *ConfigFileInitializer) Init(
 	// Read existing file
 	data, err := afero.ReadFile(projectFs, c.path)
 	if err != nil {
-		return InitResult{}, fmt.Errorf("failed to read file %s: %w", c.path, err)
+		return InitResult{}, fmt.Errorf(
+			"failed to read file %s: %w",
+			c.path,
+			err,
+		)
 	}
 
 	// Update content between markers
-	updated, err := updateWithMarkers(string(data), content)
+	updated, err := updateWithMarkers(
+		string(data),
+		content,
+	)
 	if err != nil {
-		return InitResult{}, fmt.Errorf("failed to update markers in %s: %w", c.path, err)
+		return InitResult{}, fmt.Errorf(
+			"failed to update markers in %s: %w",
+			c.path,
+			err,
+		)
 	}
 
 	// Write updated content
 	if err := afero.WriteFile(projectFs, c.path, []byte(updated), 0o644); err != nil {
-		return InitResult{}, fmt.Errorf("failed to write file %s: %w", c.path, err)
+		return InitResult{}, fmt.Errorf(
+			"failed to write file %s: %w",
+			c.path,
+			err,
+		)
 	}
 
 	return InitResult{
@@ -101,7 +133,10 @@ func (c *ConfigFileInitializer) Init(
 }
 
 // IsSetup checks if the instruction file exists in the project filesystem.
-func (c *ConfigFileInitializer) IsSetup(projectFs, _ afero.Fs, _ *Config) bool {
+func (c *ConfigFileInitializer) IsSetup(
+	projectFs, _ afero.Fs,
+	_ *Config,
+) bool {
 	exists, err := afero.Exists(projectFs, c.path)
 
 	return err == nil && exists
@@ -110,7 +145,10 @@ func (c *ConfigFileInitializer) IsSetup(projectFs, _ afero.Fs, _ *Config) bool {
 // dedupeKey returns a unique key for deduplication.
 // Uses type name + normalized path to prevent duplicate config file updates.
 func (c *ConfigFileInitializer) dedupeKey() string {
-	return fmt.Sprintf("ConfigFileInitializer:%s", filepath.Clean(c.path))
+	return fmt.Sprintf(
+		"ConfigFileInitializer:%s",
+		filepath.Clean(c.path),
+	)
 }
 
 // updateWithMarkers updates content between markers.
@@ -122,16 +160,26 @@ func (c *ConfigFileInitializer) dedupeKey() string {
 // - Multiple start markers: error (ambiguous)
 // - Orphaned start marker: replace from start marker to end of file
 // - Normal case: replace content between existing markers
-func updateWithMarkers(existing, newContent string) (string, error) {
+func updateWithMarkers(
+	existing, newContent string,
+) (string, error) {
 	const (
 		startMarker = "<!-- spectr:start -->"
 		endMarker   = "<!-- spectr:end -->"
 	)
 
-	startIdx, startLen := findMarkerCaseInsensitive(existing, startMarker)
+	startIdx, startLen := findMarkerCaseInsensitive(
+		existing,
+		startMarker,
+	)
 
 	if startIdx == -1 {
-		return handleNoStartMarker(existing, newContent, startMarker, endMarker)
+		return handleNoStartMarker(
+			existing,
+			newContent,
+			startMarker,
+			endMarker,
+		)
 	}
 
 	return handleStartMarkerFound(
@@ -149,7 +197,10 @@ func handleNoStartMarker(
 	existing, newContent, startMarker, endMarker string,
 ) (string, error) {
 	// Check for orphaned end marker
-	endIdx, _ := findMarkerCaseInsensitive(existing, endMarker)
+	endIdx, _ := findMarkerCaseInsensitive(
+		existing,
+		endMarker,
+	)
 	if endIdx != -1 {
 		return "", fmt.Errorf(
 			"orphaned end marker at position %d without start marker",
@@ -159,7 +210,8 @@ func handleNoStartMarker(
 
 	// No markers exist - append new block at end with lowercase markers
 	result := existing
-	if existing != "" && !strings.HasSuffix(existing, newline) {
+	if existing != "" &&
+		!strings.HasSuffix(existing, newline) {
 		result += newline
 	}
 
@@ -174,7 +226,10 @@ func handleStartMarkerFound(
 	startIdx, startLen int,
 ) (string, error) {
 	searchFrom := startIdx + startLen
-	endIdx, endLen := findMarkerCaseInsensitive(existing[searchFrom:], endMarker)
+	endIdx, endLen := findMarkerCaseInsensitive(
+		existing[searchFrom:],
+		endMarker,
+	)
 
 	if endIdx != -1 {
 		return replaceMarkedSection(
@@ -235,7 +290,10 @@ func handleOrphanedStartMarker(
 	startIdx, searchFrom int,
 ) (string, error) {
 	// Check for multiple start markers without end
-	nextStartIdx, _ := findMarkerCaseInsensitive(existing[searchFrom:], startMarker)
+	nextStartIdx, _ := findMarkerCaseInsensitive(
+		existing[searchFrom:],
+		startMarker,
+	)
 	if nextStartIdx != -1 {
 		return "", fmt.Errorf(
 			"multiple start markers at positions %d and %d without end markers",
@@ -252,7 +310,9 @@ func handleOrphanedStartMarker(
 
 // findMarkerCaseInsensitive finds a marker in content using case-insensitive matching.
 // Returns the index and length of the matched marker, or (-1, 0) if not found.
-func findMarkerCaseInsensitive(content, marker string) (index, length int) {
+func findMarkerCaseInsensitive(
+	content, marker string,
+) (index, length int) {
 	lower := strings.ToLower(content)
 	lowerMarker := strings.ToLower(marker)
 	idx := strings.Index(lower, lowerMarker)

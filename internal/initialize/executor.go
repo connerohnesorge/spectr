@@ -81,13 +81,22 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 2. Create dual filesystem (Task 8.2)
-	projectFs := afero.NewBasePathFs(afero.NewOsFs(), e.projectPath)
+	projectFs := afero.NewBasePathFs(
+		afero.NewOsFs(),
+		e.projectPath,
+	)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return result, fmt.Errorf("failed to get home directory: %w", err)
+		return result, fmt.Errorf(
+			"failed to get home directory: %w",
+			err,
+		)
 	}
-	homeFs := afero.NewBasePathFs(afero.NewOsFs(), homeDir)
+	homeFs := afero.NewBasePathFs(
+		afero.NewOsFs(),
+		homeDir,
+	)
 
 	// 3. Create spectr/ directory structure
 	spectrDir := "spectr" // Relative to projectFs root
@@ -104,7 +113,11 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 4. Create project.md
-	err = e.createProjectMd(projectFs, spectrDir, result)
+	err = e.createProjectMd(
+		projectFs,
+		spectrDir,
+		result,
+	)
 	if err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -116,7 +129,11 @@ func (e *InitExecutor) Execute(
 	}
 
 	// 5. Create AGENTS.md
-	err = e.createAgentsMd(projectFs, spectrDir, result)
+	err = e.createAgentsMd(
+		projectFs,
+		spectrDir,
+		result,
+	)
 	if err != nil {
 		result.Errors = append(
 			result.Errors,
@@ -136,16 +153,26 @@ func (e *InitExecutor) Execute(
 	)
 
 	// Merge provider results into main result (even on error, to preserve partial results)
-	result.CreatedFiles = append(result.CreatedFiles, providerResult.CreatedFiles...)
-	result.UpdatedFiles = append(result.UpdatedFiles, providerResult.UpdatedFiles...)
+	result.CreatedFiles = append(
+		result.CreatedFiles,
+		providerResult.CreatedFiles...)
+	result.UpdatedFiles = append(
+		result.UpdatedFiles,
+		providerResult.UpdatedFiles...)
 
 	if err != nil {
-		return result, fmt.Errorf("failed to configure providers: %w", err)
+		return result, fmt.Errorf(
+			"failed to configure providers: %w",
+			err,
+		)
 	}
 
 	// 7. Create CI workflow if enabled
 	if ciWorkflowEnabled {
-		err = e.createCIWorkflow(projectFs, result)
+		err = e.createCIWorkflow(
+			projectFs,
+			result,
+		)
 		if err != nil {
 			result.Errors = append(
 				result.Errors,
@@ -174,7 +201,10 @@ func (*InitExecutor) createDirectoryStructure(
 	}
 
 	for _, dir := range dirs {
-		exists, err := afero.DirExists(projectFs, dir)
+		exists, err := afero.DirExists(
+			projectFs,
+			dir,
+		)
 		if err != nil {
 			return fmt.Errorf(
 				"failed to check directory %s: %w",
@@ -213,9 +243,15 @@ func (e *InitExecutor) createProjectMd(
 	)
 
 	// Check if it already exists
-	exists, err := afero.Exists(projectFs, projectFile)
+	exists, err := afero.Exists(
+		projectFs,
+		projectFile,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to check project.md: %w", err)
+		return fmt.Errorf(
+			"failed to check project.md: %w",
+			err,
+		)
 	}
 	if exists {
 		result.Errors = append(
@@ -278,9 +314,15 @@ func (e *InitExecutor) createAgentsMd(
 	)
 
 	// Check if it already exists
-	exists, err := afero.Exists(projectFs, agentsFile)
+	exists, err := afero.Exists(
+		projectFs,
+		agentsFile,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to check AGENTS.md: %w", err)
+		return fmt.Errorf(
+			"failed to check AGENTS.md: %w",
+			err,
+		)
 	}
 	if exists {
 		result.Errors = append(
@@ -341,7 +383,10 @@ func (e *InitExecutor) configureProviders(
 
 	// Validate config
 	if err := cfg.Validate(); err != nil {
-		return providers.ExecutionResult{}, fmt.Errorf("invalid config: %w", err)
+		return providers.ExecutionResult{}, fmt.Errorf(
+			"invalid config: %w",
+			err,
+		)
 	}
 
 	// Task 8.3: Use RegisteredProviders() for sorted provider list
@@ -352,7 +397,10 @@ func (e *InitExecutor) configureProviders(
 	for _, reg := range allRegistrations {
 		for _, id := range selectedProviderIDs {
 			if reg.ID == id {
-				selectedRegistrations = append(selectedRegistrations, reg)
+				selectedRegistrations = append(
+					selectedRegistrations,
+					reg,
+				)
 
 				break
 			}
@@ -362,26 +410,50 @@ func (e *InitExecutor) configureProviders(
 	// Task 8.4: Collect initializers from selected providers
 	var allInitializers []providers.Initializer
 	for _, reg := range selectedRegistrations {
-		inits := reg.Provider.Initializers(ctx, e.tm)
-		allInitializers = append(allInitializers, inits...)
+		inits := reg.Provider.Initializers(
+			ctx,
+			e.tm,
+		)
+		allInitializers = append(
+			allInitializers,
+			inits...)
 	}
 
 	// Task 8.7: Sort initializers by type (stable sort preserves provider priority order)
-	allInitializers = sortInitializers(allInitializers)
+	allInitializers = sortInitializers(
+		allInitializers,
+	)
 
 	// Task 8.6: Deduplicate initializers (keep first occurrence = highest priority provider wins)
-	allInitializers = dedupeInitializers(allInitializers)
+	allInitializers = dedupeInitializers(
+		allInitializers,
+	)
 
 	// Task 8.8, 8.9, 8.10: Execute initializers with fail-fast behavior
-	allResults := make([]providers.InitResult, 0, len(allInitializers))
+	allResults := make(
+		[]providers.InitResult,
+		0,
+		len(allInitializers),
+	)
 
 	for _, init := range allInitializers {
-		result, err := init.Init(ctx, projectFs, homeFs, cfg, e.tm)
+		result, err := init.Init(
+			ctx,
+			projectFs,
+			homeFs,
+			cfg,
+			e.tm,
+		)
 		if err != nil {
 			// Task 8.10: Fail-fast - stop on first error, return partial results
-			partialResult := aggregateResults(allResults)
+			partialResult := aggregateResults(
+				allResults,
+			)
 
-			return partialResult, fmt.Errorf("initializer failed: %w", err)
+			return partialResult, fmt.Errorf(
+				"initializer failed: %w",
+				err,
+			)
 		}
 		allResults = append(allResults, result)
 	}
@@ -392,12 +464,21 @@ func (e *InitExecutor) configureProviders(
 
 // sortInitializers sorts initializers by type priority (Task 8.7)
 // Uses stable sort to preserve provider priority order within each type
-func sortInitializers(all []providers.Initializer) []providers.Initializer {
-	sorted := make([]providers.Initializer, len(all))
+func sortInitializers(
+	all []providers.Initializer,
+) []providers.Initializer {
+	sorted := make(
+		[]providers.Initializer,
+		len(all),
+	)
 	copy(sorted, all)
 
 	sort.SliceStable(sorted, func(i, j int) bool {
-		return initializerPriority(sorted[i]) < initializerPriority(sorted[j])
+		return initializerPriority(
+			sorted[i],
+		) < initializerPriority(
+			sorted[j],
+		)
 	})
 
 	return sorted
@@ -405,7 +486,9 @@ func sortInitializers(all []providers.Initializer) []providers.Initializer {
 
 // initializerPriority returns the priority for initializer ordering (Task 8.7)
 // Uses explicit type assertions for concrete initializer types instead of string matching
-func initializerPriority(init providers.Initializer) int {
+func initializerPriority(
+	init providers.Initializer,
+) int {
 	switch init.(type) {
 	// Priority 1: Directory initializers (foundation for other initializers)
 	case *providers.DirectoryInitializer, *providers.HomeDirectoryInitializer:
@@ -428,9 +511,15 @@ func initializerPriority(init providers.Initializer) int {
 
 // dedupeInitializers removes duplicate initializers (Task 8.6)
 // Keeps first occurrence when duplicates are found
-func dedupeInitializers(all []providers.Initializer) []providers.Initializer {
+func dedupeInitializers(
+	all []providers.Initializer,
+) []providers.Initializer {
 	seen := make(map[string]bool)
-	result := make([]providers.Initializer, 0, len(all))
+	result := make(
+		[]providers.Initializer,
+		0,
+		len(all),
+	)
 
 	for _, init := range all {
 		// Check if initializer supports deduplication
@@ -449,7 +538,9 @@ func dedupeInitializers(all []providers.Initializer) []providers.Initializer {
 
 // aggregateResults combines multiple InitResult values into a single ExecutionResult (Task 8.9)
 // File paths are deduplicated to ensure each path appears only once in the result
-func aggregateResults(results []providers.InitResult) providers.ExecutionResult {
+func aggregateResults(
+	results []providers.InitResult,
+) providers.ExecutionResult {
 	createdSet := make(map[string]bool)
 	updatedSet := make(map[string]bool)
 
@@ -499,9 +590,15 @@ func (e *InitExecutor) createCIWorkflow(
 		workflowDir,
 		"spectr-ci.yml",
 	)
-	wasConfigured, err := afero.Exists(projectFs, workflowFile)
+	wasConfigured, err := afero.Exists(
+		projectFs,
+		workflowFile,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to check workflow file: %w", err)
+		return fmt.Errorf(
+			"failed to check workflow file: %w",
+			err,
+		)
 	}
 
 	// Render the CI workflow template

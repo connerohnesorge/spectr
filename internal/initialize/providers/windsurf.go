@@ -16,12 +16,18 @@ func (*WindsurfProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer {
 	return []Initializer{
-		NewDirectoryInitializer(".windsurf/commands/spectr"),
+		NewDirectoryInitializer(
+			".windsurf/commands/spectr",
+		),
 		NewSlashCommandsInitializer(
 			".windsurf/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

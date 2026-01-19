@@ -226,7 +226,9 @@ func TestInteractiveModel_HandleEdit(
 		updatedModel, _ := model.handleEdit()
 		m, ok := updatedModel.(*interactiveModel)
 		if !ok {
-			t.Fatal("Expected *interactiveModel type")
+			t.Fatal(
+				"Expected *interactiveModel type",
+			)
 		}
 		if m.err == nil {
 			t.Error(
@@ -322,7 +324,9 @@ func TestInteractiveModel_HandleEdit(
 			}
 			m, ok := updatedModel.(*interactiveModel)
 			if !ok {
-				t.Fatal("Expected *interactiveModel type")
+				t.Fatal(
+					"Expected *interactiveModel type",
+				)
 			}
 			if m.err != nil {
 				t.Errorf(
@@ -357,7 +361,9 @@ func TestInteractiveModel_HandleEdit(
 			updatedModel, _ := model.handleEdit()
 			m, ok := updatedModel.(*interactiveModel)
 			if !ok {
-				t.Fatal("Expected *interactiveModel type")
+				t.Fatal(
+					"Expected *interactiveModel type",
+				)
 			}
 			if m.err == nil {
 				t.Error(

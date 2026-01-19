@@ -19,26 +19,43 @@ const checkboxOffset = 3
 
 // SyncTasksToMarkdown updates tasks.md checkbox statuses from tasks.jsonc.
 // Returns the number of tasks whose status was updated.
-func SyncTasksToMarkdown(changeDir string) (int, error) {
-	tasksJsoncPath := filepath.Join(changeDir, "tasks.jsonc")
-	tasksMdPath := filepath.Join(changeDir, "tasks.md")
+func SyncTasksToMarkdown(
+	changeDir string,
+) (int, error) {
+	tasksJsoncPath := filepath.Join(
+		changeDir,
+		"tasks.jsonc",
+	)
+	tasksMdPath := filepath.Join(
+		changeDir,
+		"tasks.md",
+	)
 
 	// Skip if no tasks.jsonc (not yet accepted)
-	if _, err := os.Stat(tasksJsoncPath); os.IsNotExist(err) {
+	if _, err := os.Stat(tasksJsoncPath); os.IsNotExist(
+		err,
+	) {
 		return 0, nil
 	}
 
 	// Read source of truth
-	tasksFile, err := parsers.ReadTasksJson(tasksJsoncPath)
+	tasksFile, err := parsers.ReadTasksJson(
+		tasksJsoncPath,
+	)
 	if err != nil {
-		return 0, fmt.Errorf("read tasks.jsonc: %w", err)
+		return 0, fmt.Errorf(
+			"read tasks.jsonc: %w",
+			err,
+		)
 	}
 
 	// Build ID -> status map
 	statusMap := buildStatusMap(tasksFile.Tasks)
 
 	// Check if tasks.md exists
-	if _, err := os.Stat(tasksMdPath); os.IsNotExist(err) {
+	if _, err := os.Stat(tasksMdPath); os.IsNotExist(
+		err,
+	) {
 		// Skip sync if tasks.md doesn't exist (per spec: skip silently)
 		return 0, nil
 	}
@@ -49,7 +66,9 @@ func SyncTasksToMarkdown(changeDir string) (int, error) {
 
 // buildStatusMap creates a map from task ID to checkbox character.
 // pending/in_progress -> ' ' (unchecked), completed -> 'x' (checked)
-func buildStatusMap(tasks []parsers.Task) map[string]rune {
+func buildStatusMap(
+	tasks []parsers.Task,
+) map[string]rune {
 	m := make(map[string]rune, len(tasks))
 	for _, t := range tasks {
 		if t.Status == parsers.TaskStatusCompleted {
@@ -64,7 +83,10 @@ func buildStatusMap(tasks []parsers.Task) map[string]rune {
 
 // updateTasksMd reads tasks.md, updates checkbox statuses, writes back.
 // Preserves all formatting, comments, and structure.
-func updateTasksMd(path string, statusMap map[string]rune) (int, error) {
+func updateTasksMd(
+	path string,
+	statusMap map[string]rune,
+) (int, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return 0, err
@@ -77,7 +99,10 @@ func updateTasksMd(path string, statusMap map[string]rune) (int, error) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		newLine, changed := updateTaskLine(line, statusMap)
+		newLine, changed := updateTaskLine(
+			line,
+			statusMap,
+		)
 		lines = append(lines, newLine)
 		if changed {
 			updated++
@@ -104,7 +129,10 @@ func updateTasksMd(path string, statusMap map[string]rune) (int, error) {
 
 // updateTaskLine updates a single line's checkbox if it's a task line.
 // Returns the (possibly modified) line and whether it was changed.
-func updateTaskLine(line string, statusMap map[string]rune) (string, bool) {
+func updateTaskLine(
+	line string,
+	statusMap map[string]rune,
+) (string, bool) {
 	match, ok := markdown.MatchFlexibleTask(line)
 	if !ok {
 		return line, false
@@ -121,8 +149,10 @@ func updateTaskLine(line string, statusMap map[string]rune) (string, bool) {
 	}
 
 	// Compare checkbox states: both 'x' and 'X' count as checked
-	currentIsChecked := match.Status == 'x' || match.Status == 'X'
-	desiredIsChecked := desiredStatus == 'x' || desiredStatus == 'X'
+	currentIsChecked := match.Status == 'x' ||
+		match.Status == 'X'
+	desiredIsChecked := desiredStatus == 'x' ||
+		desiredStatus == 'X'
 
 	if currentIsChecked == desiredIsChecked {
 		return line, false
@@ -136,7 +166,9 @@ func updateTaskLine(line string, statusMap map[string]rune) (string, bool) {
 	}
 	checkboxIdx := idx + checkboxOffset
 
-	newLine := line[:checkboxIdx] + string(desiredStatus) + line[checkboxIdx+1:]
+	newLine := line[:checkboxIdx] + string(
+		desiredStatus,
+	) + line[checkboxIdx+1:]
 
 	return newLine, true
 }

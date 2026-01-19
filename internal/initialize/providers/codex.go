@@ -17,15 +17,24 @@ func (*CodexProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
-		NewHomeDirectoryInitializer(".codex/prompts"),
+		NewHomeDirectoryInitializer(
+			".codex/prompts",
+		),
 		NewDirectoryInitializer(".codex/skills"),
-		NewConfigFileInitializer("AGENTS.md", tm.Agents()),
+		NewConfigFileInitializer(
+			"AGENTS.md",
+			tm.Agents(),
+		),
 		NewHomePrefixedSlashCommandsInitializer(
 			".codex/prompts",
 			"spectr-",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 		NewAgentSkillsInitializer(

@@ -199,10 +199,10 @@ func TestGeminiProvider_Initializers(
 
 	inits := p.Initializers(ctx, tm)
 
-	// Gemini should return 2 initializers: Directory, TOMLSlashCommands (no config file)
-	if len(inits) != 2 {
+	// Gemini should return 6 initializers: Directory (commands), Directory (skills), ConfigFile, TOMLSlashCommands, AgentSkills (accept), AgentSkills (validate)
+	if len(inits) != 6 {
 		t.Fatalf(
-			"GeminiProvider.Initializers() returned %d initializers, want 2",
+			"GeminiProvider.Initializers() returned %d initializers, want 6",
 			len(inits),
 		)
 	}

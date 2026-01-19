@@ -658,7 +658,7 @@ func TestParseTasksMdContinuationIntegrity(t *testing.T) {
 	testNoCrossContamination(t, got)
 
 	tasksJSONPath := filepath.Join(tmpDir, "tasks.jsonc")
-	if err := writeTasksJSONC(tasksJSONPath, got, nil, nil); err != nil {
+	if err := writeTasksJSONC(tasksJSONPath, got, nil); err != nil {
 		t.Fatalf("writeTasksJSONC() error = %v", err)
 	}
 

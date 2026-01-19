@@ -25,17 +25,24 @@ func RegisterProvider(reg Registration) error {
 
 	// Validate ID
 	if reg.ID == "" {
-		return errors.New("provider ID is required")
+		return errors.New(
+			"provider ID is required",
+		)
 	}
 
 	// Validate Provider
 	if reg.Provider == nil {
-		return errors.New("provider implementation is required")
+		return errors.New(
+			"provider implementation is required",
+		)
 	}
 
 	// Check for duplicates
 	if _, exists := registry[reg.ID]; exists {
-		return fmt.Errorf("provider %q already registered", reg.ID)
+		return fmt.Errorf(
+			"provider %q already registered",
+			reg.ID,
+		)
 	}
 
 	// Register
@@ -50,7 +57,11 @@ func RegisteredProviders() []Registration {
 	registryLock.RLock()
 	defer registryLock.RUnlock()
 
-	result := make([]Registration, 0, len(registry))
+	result := make(
+		[]Registration,
+		0,
+		len(registry),
+	)
 	for _, reg := range registry {
 		result = append(result, reg)
 	}
@@ -210,7 +221,11 @@ func RegisterAllProviders() error {
 
 	for _, reg := range providers {
 		if err := RegisterProvider(reg); err != nil {
-			return fmt.Errorf("failed to register %s provider: %w", reg.ID, err)
+			return fmt.Errorf(
+				"failed to register %s provider: %w",
+				reg.ID,
+				err,
+			)
 		}
 	}
 

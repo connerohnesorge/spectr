@@ -25,10 +25,6 @@ import (
 // filePerm is the standard file permission for created files (rw-r--r--)
 const filePerm = 0o644
 
-// splitThreshold is the line count threshold for splitting tasks.jsonc files.
-// Files with more than this many lines will be split into multiple files.
-const splitThreshold = 100
-
 // AcceptCmd represents the accept command for converting tasks.md to
 // tasks.jsonc. This command parses the human-readable tasks.md file and
 // produces a machine-readable tasks.jsonc file with structured task data.
@@ -42,7 +38,7 @@ type AcceptCmd struct {
 	// ChangeID is the optional change identifier to process
 	ChangeID string `arg:"" optional:"" predictor:"changeID" help:"Convert tasks.md to tasks.jsonc (preserves tasks.md)"` //nolint:lll,revive // Kong struct tag exceeds line length
 	// DryRun enables preview mode without writing files
-	DryRun bool `                                        help:"Preview without writing" name:"dry-run"` //nolint:lll,revive // Kong struct tag with alignment padding
+	DryRun bool `                                        help:"Preview without writing"                              name:"dry-run"` //nolint:lll,revive // Kong struct tag with alignment padding
 
 	// NoInteractive disables interactive prompts
 	NoInteractive bool `help:"Disable prompts" name:"no-interactive"` //nolint:lll,revive // Kong struct tag exceeds line length
@@ -121,7 +117,8 @@ func (c *AcceptCmd) processChange(
 
 	// Append configured tasks if present
 	var appendCfg *config.AppendTasksConfig
-	if cfg != nil && cfg.AppendTasks != nil && cfg.AppendTasks.HasTasks() {
+	if cfg != nil && cfg.AppendTasks != nil &&
+		cfg.AppendTasks.HasTasks() {
 		appendCfg = cfg.AppendTasks
 	}
 
@@ -135,12 +132,6 @@ func (c *AcceptCmd) processChange(
 		if appendCfg != nil {
 			totalTasks += len(appendCfg.Tasks)
 		}
-
-		// Validate JSONC in dry-run mode to catch errors early
-		if err := c.validateDryRun(tasksMdPath, tasks, appendCfg); err != nil {
-			return err
-		}
-
 		fmt.Printf(
 			"Would convert: %s\nwould write to: %s\nWould preserve: %s\nFound %d tasks\n", //nolint:lll,revive // Long format string for dry-run output
 			tasksMdPath,
@@ -201,89 +192,33 @@ func resolveChangePaths(
 // comments, links) during the conversion to tasks.jsonc. Both files
 // will coexist, with tasks.jsonc serving as the machine-readable format
 // and tasks.md as the human-readable source of truth.
-//
-// During regeneration (re-running `spectr accept`), this function loads
-// existing task statuses and preserves them for tasks whose IDs match.
-//
-// If the tasks.md file exceeds the split threshold (100 lines), this function
-// will automatically split it into multiple tasks.jsonc files for better
-// agent readability.
 func writeAndCleanup(
 	tasksMdPath, tasksJSONPath string,
 	tasks []parsers.Task,
 	appendCfg *config.AppendTasksConfig,
 ) error {
-	// Load existing statuses from the change directory
-	changeDir := filepath.Dir(tasksJSONPath)
-	statusMap, err := loadExistingStatuses(changeDir)
-	if err != nil {
+	if err := writeTasksJSONC(tasksJSONPath, tasks, appendCfg); err != nil {
 		return fmt.Errorf(
-			"failed to load existing statuses: %w",
+			"failed to write tasks.jsonc: %w",
 			err,
 		)
 	}
 
-	// Check if we should split the file
-	split, err := shouldSplit(tasksMdPath)
-	if err != nil {
-		return fmt.Errorf(
-			"failed to check split threshold: %w",
-			err,
-		)
-	}
+	// Preserve tasks.md to avoid information loss (formatting, comments, links)
+	// Both tasks.md and tasks.jsonc now coexist after conversion
 
 	totalTasks := len(tasks)
 	if appendCfg != nil {
 		totalTasks += len(appendCfg.Tasks)
 	}
 
-	if split {
-		// Route to hierarchical writing (version 2)
-		sections, err := parseSections(tasksMdPath)
-		if err != nil {
-			return fmt.Errorf(
-				"failed to parse sections: %w",
-				err,
-			)
-		}
-
-		// Extract change ID from path for child file headers
-		changeID := filepath.Base(changeDir)
-
-		if err := writeHierarchicalTasks(changeDir, changeID, sections, statusMap); err != nil {
-			return fmt.Errorf(
-				"failed to write hierarchical tasks: %w",
-				err,
-			)
-		}
-
-		fmt.Printf(
-			"Converted %s -> %s (split into multiple files)\nPreserved %s\nWrote %d tasks\n",
-			tasksMdPath,
-			tasksJSONPath,
-			tasksMdPath,
-			totalTasks,
-		)
-	} else {
-		// Route to flat file writing (version 1)
-		if err := writeTasksJSONC(tasksJSONPath, tasks, appendCfg, statusMap); err != nil {
-			return fmt.Errorf(
-				"failed to write tasks.jsonc: %w",
-				err,
-			)
-		}
-
-		fmt.Printf(
-			"Converted %s -> %s\nPreserved %s\nWrote %d tasks\n",
-			tasksMdPath,
-			tasksJSONPath,
-			tasksMdPath,
-			totalTasks,
-		)
-	}
-
-	// Preserve tasks.md to avoid information loss (formatting, comments, links)
-	// Both tasks.md and tasks.jsonc now coexist after conversion
+	fmt.Printf(
+		"Converted %s -> %s\nPreserved %s\nWrote %d tasks\n",
+		tasksMdPath,
+		tasksJSONPath,
+		tasksMdPath,
+		totalTasks,
+	)
 
 	return nil
 }
@@ -455,9 +390,6 @@ func (s *taskParseState) createTask(
 //   - "- [ ] 1. Task" (simple dot ID)
 //   - "- [ ] 1 Task" (number only ID)
 //   - "- [ ] Task" (no ID - auto-generated)
-//
-// Multi-line task descriptions: If a task is followed by indented lines
-// (continuation lines), they are appended to the task description.
 func parseTasksMd(
 	path string,
 ) ([]parsers.Task, error) {
@@ -470,25 +402,12 @@ func parseTasksMd(
 	}
 	defer func() { _ = file.Close() }()
 
-	// Read all lines first so we can look ahead
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf(
-			"error reading file: %w",
-			err,
-		)
-	}
-
 	var tasks []parsers.Task
 	state := &taskParseState{}
 
-	for i := 0; i < len(lines); i++ {
-		line := lines[i]
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
 
 		// Check for section header (numbered or unnumbered)
 		if name, number, ok := markdown.MatchAnySection(line); ok {
@@ -505,41 +424,18 @@ func parseTasksMd(
 			continue
 		}
 
-		// Collect continuation lines (indented lines following the task)
-		description := match.Content
-		for j := i + 1; j < len(lines); j++ {
-			nextLine := lines[j]
+		tasks = append(
+			tasks,
+			state.createTask(match),
+		)
+	}
 
-			// Stop if we hit another section header
-			if _, _, ok := markdown.MatchAnySection(nextLine); ok {
-				break
-			}
-
-			// Stop if we hit another task
-			if _, ok := markdown.MatchFlexibleTask(nextLine); ok {
-				break
-			}
-
-			// Stop if we hit a blank line
-			if strings.TrimSpace(nextLine) == "" {
-				break
-			}
-
-			// Check if this line is indented (continuation of the task)
-			if nextLine != "" && (nextLine[0] == ' ' || nextLine[0] == '\t') {
-				// This is a continuation line - append it
-				description += "\n" + nextLine
-				i = j // Skip this line in the outer loop
-			} else {
-				// Non-indented, non-task, non-section line - stop
-				break
-			}
-		}
-
-		// Create task with the complete description
-		task := state.createTask(match)
-		task.Description = description
-		tasks = append(tasks, task)
+	err = scanner.Err()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error reading file: %w",
+			err,
+		)
 	}
 
 	return tasks, nil
@@ -561,337 +457,5 @@ func validateParsedTasks(
 		}
 	}
 
-	return nil
-}
-
-// countLines counts the number of lines in a file.
-// Returns the line count or an error if the file cannot be read.
-func countLines(path string) (int, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return 0, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer func() { _ = file.Close() }()
-
-	lineCount := 0
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lineCount++
-	}
-
-	if err := scanner.Err(); err != nil {
-		return 0, fmt.Errorf("error reading file: %w", err)
-	}
-
-	return lineCount, nil
-}
-
-// shouldSplit determines whether a tasks.md file should be split into
-// multiple tasks.jsonc files based on the line count threshold.
-// Returns true if the file exceeds splitThreshold (100 lines).
-func shouldSplit(path string) (bool, error) {
-	lineCount, err := countLines(path)
-	if err != nil {
-		return false, err
-	}
-
-	return lineCount > splitThreshold, nil
-}
-
-// Section represents a section in tasks.md with its name, tasks, and line range.
-// Sections are identified by headers like "## 1. Section Name" or "## Section Name".
-// The line range tracks where the section starts and ends in the file for size calculations.
-type Section struct {
-	Name      string         // Section name (e.g., "Implementation", "Testing")
-	Number    string         // Section number (e.g., "1", "2") - empty for unnumbered sections
-	Tasks     []parsers.Task // Tasks belonging to this section
-	StartLine int            // Line number where section starts (1-indexed)
-	EndLine   int            // Line number where section ends (1-indexed)
-}
-
-// LineCount returns the number of lines in this section.
-func (s *Section) LineCount() int {
-	if s.EndLine < s.StartLine {
-		return 0
-	}
-
-	return s.EndLine - s.StartLine + 1
-}
-
-// parseSections extracts sections from tasks.md file.
-// It identifies sections by "## N. Section Name" or "## Section Name" headers,
-// tracks their line ranges, and returns a slice of Section structs.
-// Tasks are extracted and associated with their containing section.
-// Multi-line task descriptions with indented continuation lines are supported.
-func parseSections(path string) ([]Section, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer func() { _ = file.Close() }()
-
-	// Read all lines first so we can look ahead
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading file: %w", err)
-	}
-
-	var sections []Section
-	var currentSection *Section
-	state := &taskParseState{}
-
-	for i := 0; i < len(lines); i++ {
-		line := lines[i]
-		lineNum := i + 1
-
-		// Check for section header
-		if name, number, ok := markdown.MatchAnySection(line); ok {
-			// Close previous section
-			if currentSection != nil {
-				currentSection.EndLine = lineNum - 1
-				sections = append(sections, *currentSection)
-			}
-
-			// Start new section
-			state.handleSection(name, number)
-			currentSection = &Section{
-				Name:      state.sectionName,
-				Number:    state.sectionNum,
-				Tasks:     make([]parsers.Task, 0),
-				StartLine: lineNum,
-			}
-
-			continue
-		}
-
-		// Check for task line
-		if match, ok := markdown.MatchFlexibleTask(line); ok {
-			// Collect continuation lines (indented lines following the task)
-			description := match.Content
-			for j := i + 1; j < len(lines); j++ {
-				nextLine := lines[j]
-
-				// Stop if we hit another section header
-				if _, _, ok := markdown.MatchAnySection(nextLine); ok {
-					break
-				}
-
-				// Stop if we hit another task
-				if _, ok := markdown.MatchFlexibleTask(nextLine); ok {
-					break
-				}
-
-				// Stop if we hit a blank line
-				if strings.TrimSpace(nextLine) == "" {
-					break
-				}
-
-				// Check if this line is indented (continuation of the task)
-				if nextLine != "" && (nextLine[0] == ' ' || nextLine[0] == '\t') {
-					// This is a continuation line - append it
-					description += "\n" + nextLine
-					i = j // Skip this line in the outer loop
-				} else {
-					// Non-indented, non-task, non-section line - stop
-					break
-				}
-			}
-
-			// Create task with the complete description
-			task := state.createTask(match)
-			task.Description = description
-
-			// Add task to current section if we have one
-			if currentSection != nil {
-				currentSection.Tasks = append(currentSection.Tasks, task)
-			}
-		}
-	}
-
-	// Close final section
-	if currentSection != nil {
-		currentSection.EndLine = len(lines)
-		sections = append(sections, *currentSection)
-	}
-
-	return sections, nil
-}
-
-// extractTasksForSection returns all tasks that belong to the specified section.
-// It matches tasks by their section name and returns them in the order they appear.
-func extractTasksForSection(allTasks []parsers.Task, sectionName string) []parsers.Task {
-	var tasks []parsers.Task
-	for _, task := range allTasks {
-		if task.Section == sectionName {
-			tasks = append(tasks, task)
-		}
-	}
-
-	return tasks
-}
-
-// shouldSplitSection determines whether a section should be split into subsections
-// based on its line count. Returns true if the section exceeds splitThreshold (100 lines).
-func shouldSplitSection(section *Section) bool {
-	return section.LineCount() > splitThreshold
-}
-
-// SubsectionGroup represents a group of tasks that share a common ID prefix.
-// For example, tasks "1.1", "1.2", "1.3" share the prefix "1" and would be
-// grouped together. This allows large sections to be split into smaller,
-// more manageable chunks while preserving logical groupings.
-type SubsectionGroup struct {
-	Prefix string         // ID prefix shared by all tasks (e.g., "1", "2.1")
-	Tasks  []parsers.Task // Tasks with this prefix
-}
-
-// parseSubsections groups tasks by their ID prefix to create subsections.
-// For example, tasks "1.1", "1.2", "1.3" all share prefix "1" and will be
-// grouped together. This is used when a section is too large and needs to
-// be split into smaller chunks.
-//
-// The function extracts the prefix from each task's ID (everything before the
-// last dot) and groups tasks with the same prefix together.
-//
-// Example:
-//
-//	Tasks: ["1.1", "1.2", "2.1", "2.2", "2.3"]
-//	Groups: [["1.1", "1.2"], ["2.1", "2.2", "2.3"]]
-func parseSubsections(tasks []parsers.Task) []SubsectionGroup {
-	// Map to track subsection groups by prefix
-	groupMap := make(map[string]*SubsectionGroup)
-	var orderedPrefixes []string
-
-	for _, task := range tasks {
-		// Extract prefix from task ID (everything before the last dot)
-		prefix := extractIDPrefix(task.ID)
-
-		// Create new group if it doesn't exist
-		if _, exists := groupMap[prefix]; !exists {
-			groupMap[prefix] = &SubsectionGroup{
-				Prefix: prefix,
-				Tasks:  make([]parsers.Task, 0),
-			}
-			orderedPrefixes = append(orderedPrefixes, prefix)
-		}
-
-		// Add task to the group
-		groupMap[prefix].Tasks = append(groupMap[prefix].Tasks, task)
-	}
-
-	// Convert map to ordered slice
-	groups := make([]SubsectionGroup, 0, len(orderedPrefixes))
-	for _, prefix := range orderedPrefixes {
-		groups = append(groups, *groupMap[prefix])
-	}
-
-	return groups
-}
-
-// extractIDPrefix returns the prefix of a task ID.
-// For hierarchical IDs like "1.2.3", it returns everything before the last dot ("1.2").
-// For simple IDs like "1", it returns the ID itself.
-// For IDs with one dot like "1.1", it returns the part before the dot ("1").
-func extractIDPrefix(id string) string {
-	// Find the last dot in the ID
-	lastDot := strings.LastIndex(id, ".")
-	if lastDot == -1 {
-		// No dot found - this is a simple ID like "1"
-		return id
-	}
-
-	// Return everything before the last dot
-	return id[:lastDot]
-}
-
-// assignHierarchicalID generates a hierarchical ID for a child task based on the parent ID.
-// It uses dot notation to create hierarchical relationships:
-//   - Root tasks: "1", "2", "5" (no parent)
-//   - Child tasks: "5.1", "5.2" (parent "5")
-//   - Nested children: "5.1.1", "5.1.2" (parent "5.1")
-//
-// The function preserves existing IDs from tasks.md when the task already has an ID.
-// For new tasks or when generating IDs for split files, it prepends the parent ID.
-//
-// Parameters:
-//   - existingID: The task's current ID from tasks.md (may be empty)
-//   - parentID: The parent task ID (empty string for root tasks)
-//   - childIndex: The sequential index of this child within the parent (1-based)
-//
-// Returns the hierarchical ID (e.g., "5.1", "5.2", etc.)
-func assignHierarchicalID(existingID, parentID string, childIndex int) string {
-	// If no parent, this is a root task - use existing ID or generate simple ID
-	if parentID == "" {
-		if existingID != "" {
-			return existingID
-		}
-
-		return strconv.Itoa(childIndex)
-	}
-
-	// If existing ID already has the parent prefix, preserve it
-	// For example, if parentID is "5" and existingID is "5.1", keep "5.1"
-	if existingID != "" && strings.HasPrefix(existingID, parentID+".") {
-		return existingID
-	}
-
-	// Generate hierarchical ID: parent.child
-	// For example, parent "5" + child 1 = "5.1"
-	return fmt.Sprintf("%s.%d", parentID, childIndex)
-}
-
-// validateIDUniqueness checks that all task IDs are unique within a set of tasks.
-// Duplicate IDs can cause confusion and errors when tracking task status.
-//
-// Returns an error if any duplicate IDs are found, listing all duplicates.
-// Returns nil if all IDs are unique.
-func validateIDUniqueness(tasks []parsers.Task) error {
-	seen := make(map[string]bool)
-	duplicates := make([]string, 0)
-
-	for _, task := range tasks {
-		if seen[task.ID] {
-			// Only add to duplicates list once
-			if !stringSliceContains(duplicates, task.ID) {
-				duplicates = append(duplicates, task.ID)
-			}
-		} else {
-			seen[task.ID] = true
-		}
-	}
-
-	if len(duplicates) > 0 {
-		return fmt.Errorf("duplicate task IDs found: %v", duplicates)
-	}
-
-	return nil
-}
-
-// stringSliceContains checks if a string slice contains a specific string.
-func stringSliceContains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-
-	return false
-}
-
-// validateDryRun validates JSONC output in dry-run mode.
-// For now, this is a stub that always returns nil (validation passes).
-// Full validation logic will be implemented in a follow-up.
-func (*AcceptCmd) validateDryRun(
-	tasksMdPath string,
-	tasks []parsers.Task,
-	appendCfg *config.AppendTasksConfig,
-) error {
-	// Stub implementation - validation always passes
-	// TODO: Implement full JSONC validation for dry-run mode
 	return nil
 }

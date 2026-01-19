@@ -28,7 +28,11 @@ func TestSlashCommand_String(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.cmd.String(); got != tt.want {
-				t.Errorf("SlashCommand.String() = %q, want %q", got, tt.want)
+				t.Errorf(
+					"SlashCommand.String() = %q, want %q",
+					got,
+					tt.want,
+				)
 			}
 		})
 	}

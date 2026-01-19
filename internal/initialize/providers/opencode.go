@@ -16,12 +16,18 @@ func (*OpencodeProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
-		NewDirectoryInitializer(".opencode/commands/spectr"),
+		NewDirectoryInitializer(
+			".opencode/commands/spectr",
+		),
 		NewSlashCommandsInitializer(
 			".opencode/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

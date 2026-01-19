@@ -198,7 +198,10 @@ func (tm *TemplateManager) Agents() domain.TemplateRef {
 
 // SlashCommand returns a Markdown template reference for the given slash command type.
 // Used by SlashCommandsInitializer, HomeSlashCommandsInitializer, and PrefixedSlashCommandsInitializer.
-func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+// The returned TemplateRef will assemble frontmatter from BaseSlashCommandFrontmatter.
+func (tm *TemplateManager) SlashCommand(
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.md.tmpl",
 		domain.SlashApply:    "slash-apply.md.tmpl",
@@ -207,17 +210,35 @@ func (tm *TemplateManager) SlashCommand(cmd domain.SlashCommand) domain.Template
 	return domain.TemplateRef{
 		Name:     names[cmd],
 		Template: tm.templates,
+		Command:  &cmd,
 	}
+}
+
+// SlashCommandWithOverrides returns a Markdown template with frontmatter overrides.
+// Used when providers need to customize slash command frontmatter.
+// If overrides is nil, behaves identically to SlashCommand(cmd).
+func (tm *TemplateManager) SlashCommandWithOverrides(
+	cmd domain.SlashCommand,
+	overrides *domain.FrontmatterOverride,
+) domain.TemplateRef {
+	ref := tm.SlashCommand(cmd)
+	ref.Overrides = overrides
+
+	return ref
 }
 
 // TOMLSlashCommand returns a TOML template reference for the given slash command type.
 // Used by TOMLSlashCommandsInitializer (Gemini only).
-func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.TemplateRef {
+// Note: TOML templates have frontmatter embedded in the template file, not assembled dynamically.
+func (tm *TemplateManager) TOMLSlashCommand(
+	cmd domain.SlashCommand,
+) domain.TemplateRef {
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.toml.tmpl",
 		domain.SlashApply:    "slash-apply.toml.tmpl",
 	}
 
+	// TOML templates don't use dynamic frontmatter (Command is nil)
 	return domain.TemplateRef{
 		Name:     names[cmd],
 		Template: tm.templates,
@@ -230,12 +251,21 @@ func (tm *TemplateManager) TOMLSlashCommand(cmd domain.SlashCommand) domain.Temp
 // relative to the skill root (e.g., SKILL.md, scripts/accept.sh).
 //
 //nolint:revive // receiver not used but required by TemplateManager interface
-func (*TemplateManager) SkillFS(skillName string) (fs.FS, error) {
+func (*TemplateManager) SkillFS(
+	skillName string,
+) (fs.FS, error) {
 	// Create a sub-filesystem rooted at templates/skills/<skillName>
-	skillPath := fmt.Sprintf("templates/skills/%s", skillName)
+	skillPath := fmt.Sprintf(
+		"templates/skills/%s",
+		skillName,
+	)
 	subFS, err := fs.Sub(skillFS, skillPath)
 	if err != nil {
-		return nil, fmt.Errorf("skill %s not found: %w", skillName, err)
+		return nil, fmt.Errorf(
+			"skill %s not found: %w",
+			skillName,
+			err,
+		)
 	}
 
 	return subFS, nil

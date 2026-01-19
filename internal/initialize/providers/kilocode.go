@@ -11,14 +11,23 @@ import (
 type KilocodeProvider struct{}
 
 // Initializers returns the list of initializers for Kilocode.
-func (*KilocodeProvider) Initializers(_ context.Context, tm TemplateManager) []Initializer {
+func (*KilocodeProvider) Initializers(
+	_ context.Context,
+	tm TemplateManager,
+) []Initializer {
 	return []Initializer{
-		NewDirectoryInitializer(".kilocode/commands/spectr"),
+		NewDirectoryInitializer(
+			".kilocode/commands/spectr",
+		),
 		NewSlashCommandsInitializer(
 			".kilocode/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

@@ -16,13 +16,22 @@ func (*QoderProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer {
 	return []Initializer{
-		NewDirectoryInitializer(".qoder/commands/spectr"),
-		NewConfigFileInitializer("QODER.md", tm.InstructionPointer()),
+		NewDirectoryInitializer(
+			".qoder/commands/spectr",
+		),
+		NewConfigFileInitializer(
+			"QODER.md",
+			tm.InstructionPointer(),
+		),
 		NewSlashCommandsInitializer(
 			".qoder/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.SlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.SlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.SlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.SlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 	}

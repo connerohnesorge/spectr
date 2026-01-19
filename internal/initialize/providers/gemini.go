@@ -22,8 +22,12 @@ func (*GeminiProvider) Initializers(
 		NewTOMLSlashCommandsInitializer(
 			".gemini/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{
-				domain.SlashProposal: tm.TOMLSlashCommand(domain.SlashProposal),
-				domain.SlashApply:    tm.TOMLSlashCommand(domain.SlashApply),
+				domain.SlashProposal: tm.TOMLSlashCommand(
+					domain.SlashProposal,
+				),
+				domain.SlashApply: tm.TOMLSlashCommand(
+					domain.SlashApply,
+				),
 			},
 		),
 		NewAgentSkillsInitializer(

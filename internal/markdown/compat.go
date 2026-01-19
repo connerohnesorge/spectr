@@ -560,7 +560,9 @@ func IsListItem(line string) bool {
 // IsCodeFence checks if a line starts a code fence (``` or ~~~).
 // Returns true and the fence character ('`' or '~') if it's a fence,
 // or false and 0 otherwise.
-func IsCodeFence(line string) (isFence bool, delimiter rune) {
+func IsCodeFence(
+	line string,
+) (isFence bool, delimiter rune) {
 	trimmed := strings.TrimLeft(line, " \t")
 
 	if strings.HasPrefix(trimmed, "```") {

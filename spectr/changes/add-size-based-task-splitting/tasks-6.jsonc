@@ -48,7 +48,7 @@
     {
       "id": "5.2",
       "section": "Hierarchical ID Assignment",
-      "description": "Add logic to preserve existing IDs from tasks.md and add parent prefix for children",
+      "description": "Add logic to preserve existing IDs from tasks.md and add parent prefix\n  for children",
       "status": "completed"
     },
     {

@@ -42,7 +42,7 @@
     {
       "id": "2.1",
       "section": "Line Counting and Split Detection",
-      "description": "Add `countLines()` function in `cmd/accept.go` to count lines in tasks.md file",
+      "description": "Add `countLines()` function in `cmd/accept.go` to count lines in\n  tasks.md file",
       "status": "completed"
     },
     {

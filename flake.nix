@@ -48,7 +48,7 @@
           exec = rooted ''
             cd "$REPO_ROOT"
             golangci-lint run
-            markdownlint ./spectr/
+            markdownlint ./spectr/ --ignore ./spectr/changes/archive
             cd -
           '';
           description = "Run golangci-lint and markdownlint";

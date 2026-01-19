@@ -42,13 +42,13 @@
     {
       "id": "4.1",
       "section": "Subsection Splitting Logic",
-      "description": "Add `shouldSplitSection()` function to check if a section exceeds 100 lines",
+      "description": "Add `shouldSplitSection()` function to check if a section exceeds 100\n  lines",
       "status": "completed"
     },
     {
       "id": "4.2",
       "section": "Subsection Splitting Logic",
-      "description": "Add `parseSubsections()` function to group tasks by ID prefix (e.g., \"1.1\", \"1.2\")",
+      "description": "Add `parseSubsections()` function to group tasks by ID prefix\n  (e.g., \"1.1\", \"1.2\")",
       "status": "completed"
     },
     {

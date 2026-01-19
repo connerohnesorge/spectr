@@ -42,7 +42,7 @@
     {
       "id": "1.1",
       "section": "Schema Updates",
-      "description": "Update `internal/parsers/types.go` to add `Children` field to Task struct with JSON tag `children,omitempty`",
+      "description": "Update `internal/parsers/types.go` to add `Children` field to Task\n  struct with JSON tag `children,omitempty`",
       "status": "completed"
     },
     {

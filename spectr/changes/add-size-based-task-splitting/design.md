@@ -2,17 +2,25 @@
 
 ## Context
 
-AI agents (Claude Code, Cursor, Aider, etc.) have practical limits on Read operations:
+AI agents (Claude Code, Cursor, Aider, etc.) have practical limits on Read
+operations:
+
 - Typical context windows allow ~100-150 lines per read
 - Larger files require offset/limit parameters, losing context
-- Reading files in chunks forces agents to make multiple reads and mentally stitch results
+- Reading files in chunks forces agents to make multiple reads and mentally stitch
+  results
 
-The current flat `tasks.jsonc` format works well for small changes (10-30 tasks, <100 lines) but breaks down for large changes. For example:
+The current flat `tasks.jsonc` format works well for small changes (10-30 tasks,
+<100 lines) but breaks down for large changes. For example:
+
 - A change with 60 tasks across 9 sections → 180+ line tasks.jsonc
 - Agents hit truncation limits or must request multiple reads
 - Loss of context between reads leads to missing tasks or incomplete understanding
 
-The previous `add-hierarchical-tasks` proposal attempted to solve this by tying splitting to delta spec directories. However, this created unnecessary coupling and complexity. The new approach is simpler: **split purely based on file size, using natural section boundaries**.
+The previous `add-hierarchical-tasks` proposal attempted to solve this by tying
+splitting to delta spec directories. However, this created unnecessary coupling
+and complexity. The new approach is simpler: **split purely based on file size,
+using natural section boundaries**.
 
 ## Goals / Non-Goals
 
@@ -41,6 +49,7 @@ The previous `add-hierarchical-tasks` proposal attempted to solve this by tying 
 **Choice:** Hardcode 100 lines as the splitting threshold.
 
 **Rationale:**
+
 - 100 lines fits comfortably in most AI agent Read operations
 - Provides headroom for JSONC comments and formatting
 - Aligns with typical terminal viewport height (~50-80 lines visible)
@@ -48,13 +57,15 @@ The previous `add-hierarchical-tasks` proposal attempted to solve this by tying 
 - Can be adjusted later if needed, but start with proven value
 
 **Trade-offs:**
+
 - Less flexible than configurable threshold
 - May split some files that could fit in a single read
 - But: simplicity wins over premature optimization
 
 ### Decision 2: Section-Based Splitting
 
-**Choice:** Split on top-level section boundaries (lines starting with `## N.`), then subsections if needed.
+**Choice:** Split on top-level section boundaries (lines starting with `## N.`),
+then subsections if needed.
 
 **Splitting algorithm:**
 
@@ -64,11 +75,13 @@ The previous `add-hierarchical-tasks` proposal attempted to solve this by tying 
    - Parse tasks.md into sections (by `## N. Section Name`)
    - For each section:
      - If section ≤100 lines: keep together (no splitting needed)
-     - If section >100 lines: candidate for splitting by subsections (task ID prefixes like "1.1", "1.2")
+     - If section >100 lines: candidate for splitting by subsections (task ID prefixes
+     like "1.1", "1.2")
    - Generate root tasks.jsonc with reference tasks
    - Generate tasks-N.jsonc files for each split section/subsection group
 
 **Rationale:**
+
 - Sections are natural conceptual boundaries (Implementation, Testing, Documentation)
 - Preserves related tasks together (better for agent understanding)
 - Subsection splitting handles edge case of single large section
@@ -77,6 +90,7 @@ The previous `add-hierarchical-tasks` proposal attempted to solve this by tying 
 **Example:**
 
 tasks.md (160 lines):
+
 ```markdown
 ## 1. Foundation (40 lines)
 - [ ] 1.1 Task...
@@ -96,6 +110,7 @@ tasks.md (160 lines):
 ```
 
 Generated files:
+
 - `tasks.jsonc` (root: ~40 lines with 4 reference tasks)
 - `tasks-1.jsonc` (Foundation: 40 lines)
 - `tasks-2.jsonc` (Implementation subsection A: 40 lines)
@@ -107,6 +122,7 @@ Generated files:
 **Choice:** Use `tasks-N.jsonc` suffixes where N is sequential (1, 2, 3...).
 
 **Rationale:**
+
 - Simple, predictable naming
 - Avoids filename conflicts
 - Sequential numbering matches section order from tasks.md
@@ -114,6 +130,7 @@ Generated files:
 - Glob pattern `tasks-*.jsonc` catches all files
 
 **Alternatives considered:**
+
 - `tasks-<section-name>.jsonc` → too long, requires normalization, conflicts
 - `tasks/<N>.jsonc` → extra directory, complicates file discovery
 - `tasks.part<N>.jsonc` → uglier, less clear
@@ -125,6 +142,7 @@ Generated files:
 **New fields:**
 
 Root tasks.jsonc:
+
 ```jsonc
 {
   "version": 2,
@@ -163,6 +181,7 @@ Root tasks.jsonc:
 ```
 
 Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
+
 ```jsonc
 {
   "version": 2,
@@ -185,6 +204,7 @@ Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 ```
 
 **Rationale:**
+
 - `version` field enables detection and backwards compatibility
 - `children` field makes parent-child relationship explicit
 - `$ref:` prefix signals file reference (extensible for future use)
@@ -196,11 +216,13 @@ Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 **Choice:** Use dot notation for hierarchical IDs (e.g., "5", "5.1", "5.1.1").
 
 **Rules:**
+
 - Root tasks: single number or decimal (e.g., "1", "2", "5")
 - Child tasks: parent ID + dot + child number (e.g., "5.1", "5.2")
 - Nested children: additional dots (e.g., "5.1.1", "5.1.2")
 
 **Rationale:**
+
 - Standard hierarchical notation (familiar from outlines, TOCs)
 - Preserves existing task IDs from tasks.md
 - Parent ID becomes prefix for children (clear relationship)
@@ -211,12 +233,14 @@ Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 **Choice:** Compute parent reference task status from children.
 
 **Aggregation rules:**
+
 - All children "pending" → parent "pending"
 - Any child "in_progress" → parent "in_progress"
 - All children "completed" → parent "completed"
 - Mixed "pending" + "completed" (no "in_progress") → parent "in_progress"
 
 **Rationale:**
+
 - Provides quick status overview in root file
 - "in_progress" acts as catch-all for partial completion
 - Agents can see progress without reading all child files
@@ -227,6 +251,7 @@ Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 **Choice:** Re-running `spectr accept` regenerates all tasks.jsonc files from tasks.md.
 
 **Behavior:**
+
 1. Delete existing `tasks-*.jsonc` files
 2. Parse tasks.md from scratch
 3. Apply splitting logic
@@ -234,6 +259,7 @@ Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 5. Preserve task statuses from old files where IDs match
 
 **Rationale:**
+
 - tasks.md remains the source of truth for structure
 - Avoids complex sync logic and partial updates
 - Idempotent operation (safe to run multiple times)
@@ -245,6 +271,7 @@ Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 **Choice:** Include full header with origin information in child files.
 
 **Header format:**
+
 ```jsonc
 // Generated by: spectr accept add-size-based-task-splitting
 // Parent change: add-size-based-task-splitting
@@ -255,6 +282,7 @@ Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 ```
 
 **Rationale:**
+
 - Provides context when agent reads child file standalone
 - Documents origin for debugging and understanding
 - Full header ensures child files are self-documenting
@@ -264,9 +292,11 @@ Child tasks-N.jsonc (e.g., tasks-1.jsonc from example):
 
 ### Phase 0: JSONC Marshalling (CRITICAL - Do First)
 
-This phase MUST be completed before phases 1-5, as it fixes the underlying issue that breaks file generation.
+This phase MUST be completed before phases 1-5, as it fixes the underlying issue
+that breaks file generation.
 
 **Problem**: `json.MarshalIndent()` produces strict JSON that:
+
 - Double-escapes quotes in field values, breaking JSONC parsing
 - Doesn't support trailing commas (JSONC feature)
 - Doesn't support inline comments
@@ -290,15 +320,22 @@ This phase MUST be completed before phases 1-5, as it fixes the underlying issue
    - Ensure file is readable by agents
 
 4. **Functions to implement**:
-   - `MarshalTaskToJSONLines(task Task) (string, error)` - convert single task to JSONC lines, return error if JSON encoding or JSONC formatting fails
-   - `MarshalTasksToJSONLines(tasks []Task) (string, error)` - convert task list to JSONC, return error if JSON encoding or JSONC formatting fails
-   - `ValidateJSONCSyntax(content string) error` - validate JSONC syntax and return error if invalid
+   - `MarshalTaskToJSONLines(task Task) (string, error)` - convert single task to
+     JSONC lines, return error if JSON encoding or JSONC formatting fails
+   - `MarshalTasksToJSONLines(tasks []Task) (string, error)` - convert task list
+     to JSONC, return error if JSON encoding or JSONC formatting fails
+   - `ValidateJSONCSyntax(content string) error` - validate JSONC syntax and return
+     error if invalid
 
    **Error handling requirements**:
+
    - Marshallers MUST return `(string, error)` to follow Go conventions
-   - Marshallers MUST call `ValidateJSONCSyntax()` on generated content and propagate validation errors
-   - Marshallers MUST return errors for JSON encoding failures (e.g., unencodable field values)
-   - All call sites (writeTasksJSONC, writeChildTasksJSONC) MUST handle returned errors
+   - Marshallers MUST call `ValidateJSONCSyntax()` on generated content and
+     propagate validation errors
+   - Marshallers MUST return errors for JSON encoding failures (e.g., unencodable
+     field values)
+   - All call sites (writeTasksJSONC, writeChildTasksJSONC) MUST handle returned
+     errors
    - All tests MUST verify error cases in addition to success cases
 
 ### Phase 1: Schema Updates
@@ -351,11 +388,19 @@ This phase MUST be completed before phases 1-5, as it fixes the underlying issue
 
 | Risk | Mitigation |
 |------|------------|
-| Agents confused by new format | Version field enables detection; include clear headers |
-| Loss of context across files | Keep root file minimal (<40 lines) for quick overview |
-| Status desync between files | tasks.jsonc is source of truth for task status/state (runtime values); tasks.md is source of truth for task structure/definitions; regenerate tasks.jsonc from tasks.md when structural changes are made |
-| Hardcoded 100-line threshold too aggressive/conservative | Start with 100, collect feedback, adjust in future if needed |
-| Breaking existing workflows | Version 1 format remains fully supported; no migration required |
+| Agents confused by format | Version field enables detection; include clear |
+| | headers |
+| Loss of context across files | Keep root file minimal (<40 lines) for quick |
+| | overview |
+| Status desync between files | tasks.jsonc is source of truth for task |
+| | status/state (runtime values); tasks.md is source of |
+| | truth for task structure/definitions; regenerate |
+| | tasks.jsonc from tasks.md when structural changes |
+| | are made |
+| Hardcoded 100-line threshold | Start with 100, collect feedback, adjust in |
+| too aggressive/conservative | future if needed |
+| Breaking existing workflows | Version 1 format remains fully supported; no |
+| | migration required |
 | Complexity in splitting logic | Extensive testing; clear edge case handling |
 
 ## Open Questions

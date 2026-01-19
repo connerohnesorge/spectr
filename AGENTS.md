@@ -140,8 +140,8 @@ Workflow:
 2. Choose a unique verb-led `change-id` and scaffold `proposal.md`,
    `tasks.md`, optional `design.md`, and spec deltas under
    `spectr/changes/<id>/`.
-3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with at
-   least one `#### Scenario:` per requirement.
+3. Draft spec deltas using `## ADDED|MODIFIED|REMOVED Requirements` with
+   at least one `#### Scenario:` per requirement.
 4. Run `spectr validate <id>` and resolve any issues before sharing the
    proposal.
 
@@ -153,8 +153,8 @@ Track these steps as TODOs and complete them one by one.
 2. Read design.md (if exists) - Review technical decisions
 3. Read tasks.md - Get implementation checklist
 4. Implement tasks sequentially - Complete in order
-5. Confirm completion - Ensure every item in `tasks.md` is finished before
-   updating statuses
+5. Confirm completion - Ensure every item in `tasks.md` is finished
+   before updating statuses
 6. Update checklist - After all work is done, set every task to `- [x]` so the
    list reflects reality
 7. Approval gate - Do not start implementation until the proposal is reviewed
@@ -229,7 +229,8 @@ spectr/
 ├── specs/                  # Current truth - what IS built
 │   └── [capability]/       # Single focused capability
 │       ├── spec.md         # Requirements and scenarios
-│       └── design.md       # Implementation details (code structures, APIs, data models)
+│       └── design.md       # Implementation details (code structures,
+│                           # APIs, data models)
 ├── changes/                # Proposals - what SHOULD change
 │   ├── [change-name]/
 │   │   ├── proposal.md     # Why, what, impact
@@ -242,9 +243,11 @@ spectr/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
-| Create proposals | spectr/changes/ | Scaffold with proposal.md, tasks.md, delta specs |
+| Create proposals | spectr/changes/ | Scaffold with proposal.md, tasks.md,
+|                  |                 | delta specs |
 | Validate changes | spectr validate | Enforce scenarios, formatting rules |
 | Accept proposals | spectr accept | Convert tasks.md → tasks.jsonc |
 | Archive changes | spectr archive | Merge deltas into specs/ |
@@ -252,7 +255,8 @@ spectr/
 
 ## CONVENTIONS
 - **Verb-led IDs**: Use `add-`, `update-`, `remove-`, `refactor-` prefixes
-- **Delta operations**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, `## RENAMED Requirements`
+- **Delta operations**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`,
+  `## RENAMED Requirements`
 - **Scenario format**: Use `#### Scenario:` (4 hashtags) with WHEN/THEN bullets
 - **tasks.md + tasks.jsonc**: Both coexist, update status in .jsonc after accept
 
@@ -264,9 +268,9 @@ spectr/
 ## ANTI-PATTERNS
 - **NEVER implement without proposal**: Features need change in spectr/changes/
 - **DON'T skip validation**: Always run `spectr validate` before `spectr accept`
-- **NO partial MODIFIED**: MODIFIED requirements must include complete content (header + all scenarios)
+- **NO partial MODIFIED**: MODIFIED requirements must include complete content
+  (header + all scenarios)
 - **NO scenario-less requirements**: Every requirement must have at least one scenario
-
 
 ## Creating Change Proposals
 

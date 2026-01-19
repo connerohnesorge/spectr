@@ -138,7 +138,8 @@ spectr/
 ├── specs/                  # Current truth - what IS built
 │   └── [capability]/       # Single focused capability
 │       ├── spec.md         # Requirements and scenarios
-│       └── design.md       # Implementation details (code structures, APIs, data models)
+│       └── design.md       # Implementation details (code structures,
+│                           # APIs, data models)
 ├── changes/                # Proposals - what SHOULD change
 │   ├── [change-name]/
 │   │   ├── proposal.md     # Why, what, impact
@@ -151,31 +152,37 @@ spectr/
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
-| Create proposals | spectr/changes/ | Scaffold with proposal.md, tasks.md, delta specs |
+| Create proposals | spectr/changes/ | Create tasks.md, delta specs |
 | Validate changes | spectr validate | Enforce scenarios, formatting rules |
 | Accept proposals | spectr accept | Convert tasks.md → tasks.jsonc |
 | Archive changes | spectr archive | Merge deltas into specs/ |
 | View status | spectr view | Interactive dashboard |
 
 ## CONVENTIONS
+
 - **Verb-led IDs**: Use `add-`, `update-`, `remove-`, `refactor-` prefixes
-- **Delta operations**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`, `## RENAMED Requirements`
+- **Delta operations**: Use `## ADDED`, `## MODIFIED`, `## REMOVED`,
+  `## RENAMED Requirements`
 - **Scenario format**: Use `#### Scenario:` (4 hashtags) with WHEN/THEN bullets
 - **tasks.md + tasks.jsonc**: Both coexist, update status in .jsonc after accept
 
 ## UNIQUE PATTERNS
-- **Spec-driven development**: All features tracked in specs/ before implementation
-- **Three-stage workflow**: Propose → Validate (pre-implementation) → Archive (post-deployment)
-- **Dual task files**: tasks.md (human-readable) + tasks.jsonc (machine-readable)
+
+- **Three-stage workflow**: Propose → Validate (pre-implementation)
+  → Archive (post-deployment)
+- **Three-stage workflow**: Propose → Validate (pre-implementation)
+  → Archive (post-deployment)
 
 ## ANTI-PATTERNS
+
 - **NEVER implement without proposal**: Features need change in spectr/changes/
 - **DON'T skip validation**: Always run `spectr validate` before `spectr accept`
-- **NO partial MODIFIED**: MODIFIED requirements must include complete content (header + all scenarios)
+- **NO partial MODIFIED**: MODIFIED requirements must include complete content
+  (header + all scenarios)
 - **NO scenario-less requirements**: Every requirement must have at least one scenario
-
 
 ## Creating Change Proposals
 

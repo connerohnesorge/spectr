@@ -42,97 +42,97 @@
       "id": "1.1",
       "section": "Edge Case Testing",
       "description": "Normal task with \"quotes\" and 'single quotes'",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.2",
       "section": "Edge Case Testing",
       "description": "Task with backslashes: C:\\Users\\test\\path and \\\\network\\share",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.3",
       "section": "Edge Case Testing",
       "description": "Task with newlines: This is line 1",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.4",
       "section": "Edge Case Testing",
       "description": "Task with special JSON chars: { \"key\": \"value\" } and [array]",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.5",
       "section": "Edge Case Testing",
       "description": "Task with unicode: 🚀 Emoji test with 中文 Chinese chars and Ñoño",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.6",
       "section": "Edge Case Testing",
-      "description": "Task with tabs:\tindented\twith\ttabs\there",
-      "status": "pending"
+      "description": "Task with tabs: indented with tabs here",
+      "status": "completed"
     },
     {
       "id": "1.7",
       "section": "Edge Case Testing",
       "description": "Task with escape sequences: \\n \\t \\r \\b \\f \\\" \\\\ \\/ \\u0041",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.8",
       "section": "Edge Case Testing",
-      "description": "Very long description that exceeds normal length limits to test if the system can handle descriptions that go on and on and on with lots of text that might cause buffer issues or memory problems or other edge cases that only appear with extremely long strings that contain multiple sentences and potentially hundreds of characters that need to be properly escaped and validated during the JSON marshaling process which should handle this gracefully without any errors or truncation or corruption of the data regardless of how verbose the task description becomes over time",
-      "status": "pending"
+      "description": "Very long description that exceeds normal length limits to test if the\n  system can handle descriptions that go on and on and on with lots of text\n  that might cause buffer issues or memory problems or other edge cases that\n  only appear with extremely long strings that contain multiple sentences and\n  potentially hundreds of characters that need to be properly escaped and\n  validated during the JSON marshaling process which should handle this\n  gracefully without any errors or truncation or corruption of the data\n  regardless of how verbose the task description becomes over time",
+      "status": "completed"
     },
     {
       "id": "1.9",
       "section": "Edge Case Testing",
-      "description": "Mixed special chars: C:\\path\\to\\file.txt with \"quotes\" and {json} and \u003chtml\u003e and 50% discount",
-      "status": "pending"
+      "description": "Mixed special chars: C:\\path\\to\\file.txt with \"quotes\" and {json}\n  and \\u003chtml\\u003e and 50% discount",
+      "status": "completed"
     },
     {
       "id": "1.10",
       "section": "Edge Case Testing",
       "description": "Backslash at end: path\\to\\directory\\",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.11",
       "section": "Edge Case Testing",
       "description": "Control chars: ASCII control characters like  (backspace) and  (form feed)",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.12",
       "section": "Edge Case Testing",
       "description": "JSON edge case: Task with \"},{ which might break naive parsers",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.13",
       "section": "Edge Case Testing",
       "description": "Unicode edge: Combining diacritics é café naïve Zürich",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.14",
       "section": "Edge Case Testing",
       "description": "Math symbols: ∑ ∫ √ ± × ÷ ≠ ≈ ≤ ≥",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.15",
       "section": "Edge Case Testing",
       "description": "Currency and symbols: $100 €50 £30 ¥1000 © ® ™ § ¶",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.1",
       "section": "99.99.99 Final section (after all tasks)",
       "description": "Output/return: \u003cpromise\u003e\"This is the last task: COMPLETE\"\u003c/promise\u003e\n",
-      "status": "pending"
+      "status": "completed"
     }
   ]
 }

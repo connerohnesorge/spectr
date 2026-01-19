@@ -14,8 +14,6 @@ Add your project description here
 
 - Here
 
-
-
 ## Project Conventions
 
 ### Code Style
@@ -47,9 +45,11 @@ Each file in the `spectr/` directory serves a specific purpose:
 | `proposal.md` | High-level why, what, and impact |
 | `tasks.md` | Implementation checklist |
 | `spec.md` | Requirements and acceptance criteria |
-| `design.md` | Specific implementation details (code structures, APIs, data models) |
+| `design.md` | Specific implementation details (code structures, APIs, |
+|             | data models) |
 
-**About `design.md`**: This file contains **specific implementation details** for developers and AI agents—not abstract principles or high-level decisions. Include:
+**About `design.md`**: This file contains **specific implementation details** for
+  developers and AI agents—not abstract principles or high-level decisions. Include:
 
 - Data structures and type definitions
 - API signatures and interfaces
@@ -58,6 +58,7 @@ Each file in the `spectr/` directory serves a specific purpose:
 - Configuration schemas
 
 Create `design.md` only when:
+
 - Cross-cutting change (multiple systems)
 - New architectural patterns
 - External dependencies or data model changes

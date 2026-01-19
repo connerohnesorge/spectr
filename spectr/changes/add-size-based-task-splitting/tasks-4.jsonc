@@ -42,13 +42,13 @@
     {
       "id": "3.1",
       "section": "Section Parsing",
-      "description": "Add `Section` struct to represent a section with name, tasks, and line range",
+      "description": "Add `Section` struct to represent a section with name, tasks, and\n  line range",
       "status": "completed"
     },
     {
       "id": "3.2",
       "section": "Section Parsing",
-      "description": "Add `parseSections()` function to extract sections from tasks.md by `## N.` headers",
+      "description": "Add `parseSections()` function to extract sections from tasks.md by\n  `## N.` headers",
       "status": "completed"
     },
     {

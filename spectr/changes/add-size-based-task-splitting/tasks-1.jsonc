@@ -48,25 +48,25 @@
     {
       "id": "0.2",
       "section": "JSONC Marshalling Fix (CRITICAL - Do First)",
-      "description": "Implement `escapeJSONString()` function to properly escape quotes without double-escaping",
+      "description": "Implement `escapeJSONString()` function to properly escape quotes\n  without double-escaping",
       "status": "pending"
     },
     {
       "id": "0.3",
       "section": "JSONC Marshalling Fix (CRITICAL - Do First)",
-      "description": "Implement `MarshalTaskToJSONLines()` to convert single Task to JSONC format",
+      "description": "Implement `MarshalTaskToJSONLines()` to convert single Task to JSONC\n  format",
       "status": "pending"
     },
     {
       "id": "0.4",
       "section": "JSONC Marshalling Fix (CRITICAL - Do First)",
-      "description": "Implement `MarshalTasksToJSONLines()` to convert task array with proper indentation",
+      "description": "Implement `MarshalTasksToJSONLines()` to convert task array with proper\n  indentation",
       "status": "pending"
     },
     {
       "id": "0.5",
       "section": "JSONC Marshalling Fix (CRITICAL - Do First)",
-      "description": "Implement `ValidateJSONCSyntax()` to validate output is valid JSONC before writing",
+      "description": "Implement `ValidateJSONCSyntax()` to validate output is valid JSONC before\n  writing",
       "status": "pending"
     },
     {
@@ -90,7 +90,7 @@
     {
       "id": "0.9",
       "section": "JSONC Marshalling Fix (CRITICAL - Do First)",
-      "description": "Update `cmd/accept_writer.go` line 77-81 to use custom marshaller instead of `json.MarshalIndent()`",
+      "description": "Update `cmd/accept_writer.go` line 77-81 to use custom marshaller instead\n  of `json.MarshalIndent()`",
       "status": "pending"
     },
     {

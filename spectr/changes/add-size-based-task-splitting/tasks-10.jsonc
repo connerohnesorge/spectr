@@ -42,7 +42,7 @@
     {
       "id": "9.1",
       "section": "File Writing Functions",
-      "description": "Add `writeHierarchicalTasks()` orchestration function in `cmd/accept_writer.go`",
+      "description": "Add `writeHierarchicalTasks()` orchestration function in\n  `cmd/accept_writer.go`",
       "status": "completed"
     },
     {
@@ -60,13 +60,13 @@
     {
       "id": "9.4",
       "section": "File Writing Functions",
-      "description": "Add `deleteOldChildFiles()` function to clean up tasks-*.jsonc before regeneration",
+      "description": "Add `deleteOldChildFiles()` function to clean up tasks-*.jsonc before\n  regeneration",
       "status": "completed"
     },
     {
       "id": "9.5",
       "section": "File Writing Functions",
-      "description": "Update existing `writeTasksJSONC()` to route to hierarchical path when needed",
+      "description": "Update existing `writeTasksJSONC()` to route to hierarchical path when\n  needed",
       "status": "completed"
     },
     {

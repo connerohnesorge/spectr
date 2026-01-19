@@ -54,7 +54,7 @@
     {
       "id": "6.3",
       "section": "Comprehensive Testing",
-      "description": "**6.3** Test with real tasks.md files:",
+      "description": "**6.3** Test with real tasks.md files:\n  - Create test tasks.md with special characters\n  - Run `spectr accept` and verify JSONC is valid\n  - Edit tasks.jsonc manually with invalid escape sequences and verify error detection",
       "status": "completed"
     },
     {

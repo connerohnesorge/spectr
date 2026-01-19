@@ -48,7 +48,7 @@
     {
       "id": "5.2",
       "section": "Integration with Existing Code",
-      "description": "**5.2** Add helpful error messages when validation fails:",
+      "description": "**5.2** Add helpful error messages when validation fails:\n  - Show task ID and description excerpt\n  - Suggest common fixes (escape backslashes, etc.)\n  - Include character position if available",
       "status": "completed"
     },
     {

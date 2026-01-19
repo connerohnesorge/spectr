@@ -42,97 +42,97 @@
       "id": "1.1",
       "section": "Extreme Edge Cases",
       "description": "Nested quotes: \"He said \\\"Hello\\\" and she replied \\\"Hi there\\\"\"",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.2",
       "section": "Extreme Edge Cases",
       "description": "Multiple backslashes: C:\\\\\\\\\\\\\\\\path\\\\\\\\\\\\\\\\to\\\\\\\\\\\\\\\\file",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.3",
       "section": "Extreme Edge Cases",
       "description": "JSON injection attempt: \"},{\"id\":\"injected\",\"status\":\"hacked",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.4",
       "section": "Extreme Edge Cases",
       "description": "Unicode edge: null bytes (if any), zero-width chars: ​‌‍, RTL marks: ‏‎",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.5",
       "section": "Extreme Edge Cases",
       "description": "HTML injection: \u003cscript\u003ealert('xss')\u003c/script\u003e and \u003c!-- comment --\u003e",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.6",
       "section": "Extreme Edge Cases",
       "description": "Path traversal: ../../../etc/passwd and ..\\..\\..\\..\\windows\\system32",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.7",
       "section": "Extreme Edge Cases",
       "description": "Quote bombardment: \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.8",
       "section": "Extreme Edge Cases",
       "description": "Backslash bombardment: \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.9",
       "section": "Extreme Edge Cases",
       "description": "Mixed bombardment: \\\"\\\"\\\"\\\"\\\\ \\\"\\\"\\\"\\\"\\\\ \\\"\\\"\\\"\\\"\\\\ \\\"\\\"\\\"\\\"\\\\",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.10",
       "section": "Extreme Edge Cases",
       "description": "JSONC comment injection: // comment */ or /* comment */ in description",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.11",
       "section": "Extreme Edge Cases",
       "description": "Literal newline char test: Line1\\nLine2\\nLine3 (with literal \\n not actual newline)",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.12",
       "section": "Extreme Edge Cases",
       "description": "Empty-ish: \"\" and '' and ``",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.13",
       "section": "Extreme Edge Cases",
       "description": "Format string: %s %d %x %n ${var} #{var} {{var}}",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.14",
       "section": "Extreme Edge Cases",
       "description": "Regex chars: .* .+ .? ^$ [a-z] (foo|bar) \\d+ \\w+ \\s+",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.15",
       "section": "Extreme Edge Cases",
       "description": "All printable ASCII: !\"#$%\u0026'()*+,-./0123456789:;\u003c=\u003e?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.1",
       "section": "99.99.99 Final section (after all tasks)",
       "description": "Output/return: \u003cpromise\u003e\"This is the last task: COMPLETE\"\u003c/promise\u003e\n",
-      "status": "pending"
+      "status": "completed"
     }
   ]
 }

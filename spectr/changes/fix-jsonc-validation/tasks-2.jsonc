@@ -42,25 +42,25 @@
     {
       "id": "2.1",
       "section": "Core Validation Functions",
-      "description": "**2.1** Implement `validateJSONCOutput(jsonData []byte) error` function that:",
+      "description": "**2.1** Implement `validateJSONCOutput(jsonData []byte) error` function that:\n  - Strips JSONC comments using existing `parsers.StripJSONComments`\n  - Attempts to unmarshal into `map[string]interface{}`\n  - Returns detailed error if parsing fails",
       "status": "completed"
     },
     {
       "id": "2.2",
       "section": "Core Validation Functions",
-      "description": "**2.2** Implement `validateTasksJSONC(tasksFile TasksFile, jsonData []byte) error` for round-trip validation:",
+      "description": "**2.2** Implement `validateTasksJSONC(tasksFile TasksFile, jsonData []byte) error` for round-trip validation:\n  - Parse JSONC back into TasksFile struct\n  - Compare all fields deeply (ID, Section, Description, Status, Children for each task)\n  - Return error with details if any field differs",
       "status": "completed"
     },
     {
       "id": "2.3",
       "section": "Core Validation Functions",
-      "description": "**2.3** Implement `validateWithExternalParser(jsonData []byte) error` if external library selected:",
+      "description": "**2.3** Implement `validateWithExternalParser(jsonData []byte) error` if external library selected:\n  - Use external JSONC parser to validate format\n  - Return detailed error on failure",
       "status": "completed"
     },
     {
       "id": "2.4",
       "section": "Core Validation Functions",
-      "description": "**2.4** Add validation calls to `writeTasksJSONC()` in `cmd/accept_writer.go`:",
+      "description": "**2.4** Add validation calls to `writeTasksJSONC()` in `cmd/accept_writer.go`:\n  - Call `validateJSONCOutput()` before writing file\n  - Call `validateTasksJSONC()` for round-trip check\n  - Return error if validation fails (don't write file)",
       "status": "completed"
     },
     {

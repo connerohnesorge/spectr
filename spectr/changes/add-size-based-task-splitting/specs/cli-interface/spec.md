@@ -1,6 +1,6 @@
 # CLI Interface Changes
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Tasks JSON Schema
 

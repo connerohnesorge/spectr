@@ -10,6 +10,11 @@ import (
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
 
+// Constants for test data
+const (
+	testSectionExtremeEdgeCases = "Extreme Edge Cases"
+)
+
 // Helper functions for JSONC validation tests
 
 // createTaskWithDescription creates a test Task with a specific description
@@ -791,12 +796,20 @@ func TestBuildJSONCValidationError_ContextSize(t *testing.T) {
 func verifyRoundTrip(t *testing.T, originalFile, roundTrippedFile *parsers.TasksFile) {
 	// Verify version
 	if roundTrippedFile.Version != originalFile.Version {
-		t.Errorf("Version mismatch: got %d, want %d", roundTrippedFile.Version, originalFile.Version)
+		t.Errorf(
+			"Version mismatch: got %d, want %d",
+			roundTrippedFile.Version,
+			originalFile.Version,
+		)
 	}
 
 	// Verify task count
 	if len(roundTrippedFile.Tasks) != len(originalFile.Tasks) {
-		t.Fatalf("Task count mismatch: got %d, want %d", len(roundTrippedFile.Tasks), len(originalFile.Tasks))
+		t.Fatalf(
+			"Task count mismatch: got %d, want %d",
+			len(roundTrippedFile.Tasks),
+			len(originalFile.Tasks),
+		)
 	}
 
 	// Verify each task
@@ -819,16 +832,36 @@ func verifyTaskPreserved(t *testing.T, idx int, roundTripped, original *parsers.
 		t.Errorf("Task %d ID mismatch: got %q, want %q", idx, roundTripped.ID, original.ID)
 	}
 	if roundTripped.Section != original.Section {
-		t.Errorf("Task %d Section mismatch: got %q, want %q", idx, roundTripped.Section, original.Section)
+		t.Errorf(
+			"Task %d Section mismatch: got %q, want %q",
+			idx,
+			roundTripped.Section,
+			original.Section,
+		)
 	}
 	if roundTripped.Description != original.Description {
-		t.Errorf("Task %d Description mismatch:\nOriginal: %q\nAfter:    %q", idx, original.Description, roundTripped.Description)
+		t.Errorf(
+			"Task %d Description mismatch:\nOriginal: %q\nAfter:    %q",
+			idx,
+			original.Description,
+			roundTripped.Description,
+		)
 	}
 	if roundTripped.Status != original.Status {
-		t.Errorf("Task %d Status mismatch: got %q, want %q", idx, roundTripped.Status, original.Status)
+		t.Errorf(
+			"Task %d Status mismatch: got %q, want %q",
+			idx,
+			roundTripped.Status,
+			original.Status,
+		)
 	}
 	if roundTripped.Children != original.Children {
-		t.Errorf("Task %d Children mismatch: got %q, want %q", idx, roundTripped.Children, original.Children)
+		t.Errorf(
+			"Task %d Children mismatch: got %q, want %q",
+			idx,
+			roundTripped.Children,
+			original.Children,
+		)
 	}
 }
 
@@ -861,12 +894,13 @@ func TestRoundTripConversion_RealWorldData(t *testing.T) {
 
 	var archivedFiles []string
 	for _, entry := range entries {
-		if entry.IsDir() {
-			// Check for tasks.jsonc in each archived change subdirectory
-			tasksPath := filepath.Join(archivedDir, entry.Name(), "tasks.jsonc")
-			if _, err := os.Stat(tasksPath); err == nil {
-				archivedFiles = append(archivedFiles, tasksPath)
-			}
+		if !entry.IsDir() {
+			continue
+		}
+		// Check for tasks.jsonc in each archived change subdirectory
+		tasksPath := filepath.Join(archivedDir, entry.Name(), "tasks.jsonc")
+		if _, err := os.Stat(tasksPath); err == nil {
+			archivedFiles = append(archivedFiles, tasksPath)
 		}
 	}
 
@@ -901,6 +935,135 @@ func TestRoundTripConversion_RealWorldData(t *testing.T) {
 
 			// Verify the round-trip is lossless
 			verifyRoundTrip(t, tasksFile, &roundTrippedFile)
+		})
+	}
+}
+
+// TestJSONCValidation_FormatStrings tests that format string patterns commonly
+// found in programming contexts are properly escaped and preserved in JSONC.
+// This includes printf-style format specifiers (%s, %d, %x), shell-style variable
+// substitutions (${var}, #{var}), and template variable patterns ({{var}}).
+//
+// These patterns are common in task descriptions related to code implementation,
+// configuration files, and shell scripts. The test ensures they round-trip correctly
+// through JSON marshaling/unmarshaling without data loss or corruption.
+func TestJSONCValidation_FormatStrings(t *testing.T) {
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "printf-style format specifiers",
+			description: "Format string: %s %d %x %n ${var} #{var} {{var}}",
+		},
+		{
+			name:        "single format specifiers",
+			description: "Use %s for strings and %d for integers",
+		},
+		{
+			name:        "hex and pointer formats",
+			description: "Memory address: %p, Hex: %x, Octal: %o",
+		},
+		{
+			name:        "dangerous %n specifier",
+			description: "Warning: %n can write to memory in C printf",
+		},
+		{
+			name:        "shell variable substitution",
+			description: "Export PATH=${PATH}:/usr/local/bin",
+		},
+		{
+			name:        "bash parameter expansion",
+			description: "Use ${var:-default} for default values",
+		},
+		{
+			name:        "ruby/perl hash variable",
+			description: "Access hash with #{variable} interpolation",
+		},
+		{
+			name:        "handlebars template",
+			description: "Render with {{title}} and {{content}} placeholders",
+		},
+		{
+			name:        "jinja2 template",
+			description: "Template uses {{var}} for variables and {% for %} for loops",
+		},
+		{
+			name:        "mixed format patterns",
+			description: "Log: printf(%s, ${USER}) {{timestamp}}",
+		},
+		{
+			name:        "nested braces",
+			description: "Complex: {{outer {{inner}} }} and ${a${b}}",
+		},
+		{
+			name:        "percent signs",
+			description: "Complete: 100% done, use %% to escape percent",
+		},
+		{
+			name:        "all specifiers combined",
+			description: "Format: %s %d %x %n ${var} #{var} {{var}} %p %o %%",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a TasksFile with the format string description
+			tasksFile := parsers.TasksFile{
+				Version: 1,
+				Tasks: []parsers.Task{
+					{
+						ID:          "1.13",
+						Section:     testSectionExtremeEdgeCases,
+						Description: tt.description,
+						Status:      parsers.TaskStatusPending,
+					},
+				},
+			}
+
+			// Marshal to JSON (this is what writeTasksJSONC does internally)
+			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent failed: %v", err)
+			}
+
+			// Validate that the generated JSON can be parsed back
+			if err := validateJSONCOutput(jsonData); err != nil {
+				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+			}
+
+			// Verify round-trip: unmarshal and check that description is preserved
+			var roundTrip parsers.TasksFile
+			stripped := parsers.StripJSONComments(jsonData)
+			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
+				t.Fatalf("round-trip unmarshal failed: %v", err)
+			}
+
+			if len(roundTrip.Tasks) != 1 {
+				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+			}
+
+			if roundTrip.Tasks[0].Description != tt.description {
+				t.Errorf(
+					"round-trip failed to preserve description\noriginal: %q\nround-trip: %q",
+					tt.description,
+					roundTrip.Tasks[0].Description,
+				)
+			}
+
+			// Verify all other fields are preserved
+			if roundTrip.Tasks[0].ID != tasksFile.Tasks[0].ID {
+				t.Errorf("Task ID mismatch: got %q, want %q",
+					roundTrip.Tasks[0].ID, tasksFile.Tasks[0].ID)
+			}
+			if roundTrip.Tasks[0].Section != tasksFile.Tasks[0].Section {
+				t.Errorf("Task Section mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Section, tasksFile.Tasks[0].Section)
+			}
+			if roundTrip.Tasks[0].Status != tasksFile.Tasks[0].Status {
+				t.Errorf("Task Status mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Status, tasksFile.Tasks[0].Status)
+			}
 		})
 	}
 }
@@ -1609,4 +1772,1076 @@ func TestRoundTripConversion_AllFields(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestJSONCValidation_HTMLInjection tests that JSONC validation correctly
+// handles HTML and XSS injection attempts in task descriptions.
+//
+// This test ensures that potentially malicious HTML tags, script tags, and
+// HTML comments are properly escaped during JSON marshaling and can be
+// successfully round-tripped through the validation process without losing data.
+//
+// The test covers:
+//   - <script> tags with XSS payloads
+//   - HTML comments (<!-- -->)
+//   - Various HTML tags (<div>, <img>, etc.)
+//   - Mixed HTML and text content
+//   - HTML entities and special characters
+//
+// This is critical for security and data integrity when task descriptions
+// might contain code examples, documentation snippets, or malicious input.
+func TestJSONCValidation_HTMLInjection(t *testing.T) {
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "simple script tag",
+			description: "<script>alert('xss')</script>",
+		},
+		{
+			name:        "script tag with double quotes",
+			description: "<script>alert(\"xss\")</script>",
+		},
+		{
+			name:        "html comment",
+			description: "<!-- comment -->",
+		},
+		{
+			name:        "html comment with text",
+			description: "Text before <!-- comment --> text after",
+		},
+		{
+			name:        "script and comment together",
+			description: "<script>alert('xss')</script> and <!-- comment -->",
+		},
+		{
+			name:        "img tag with onerror",
+			description: "<img src=x onerror=alert('xss')>",
+		},
+		{
+			name:        "div tag",
+			description: "<div>content</div>",
+		},
+		{
+			name:        "nested html tags",
+			description: "<div><span>nested</span></div>",
+		},
+		{
+			name:        "html with attributes",
+			description: "<a href=\"javascript:alert('xss')\">click</a>",
+		},
+		{
+			name:        "multiple script tags",
+			description: "<script>alert('1')</script><script>alert('2')</script>",
+		},
+		{
+			name:        "html entities",
+			description: "&lt;script&gt;alert('xss')&lt;/script&gt;",
+		},
+		{
+			name:        "mixed html and special chars",
+			description: "<script>alert(\"test\\nwith\\ttabs\")</script>",
+		},
+		{
+			name:        "html comment multiline",
+			description: "<!-- This is a\nmultiline\ncomment -->",
+		},
+		{
+			name:        "style tag with css",
+			description: "<style>body { background: red; }</style>",
+		},
+		{
+			name:        "iframe injection",
+			description: "<iframe src=\"javascript:alert('xss')\"></iframe>",
+		},
+		{
+			name:        "html with unicode",
+			description: "<script>alert('🚀');</script>",
+		},
+		{
+			name:        "xss with quotes",
+			description: "<script>alert('He said \"Hello\"')</script>",
+		},
+		{
+			name:        "svg xss vector",
+			description: "<svg onload=alert('xss')>",
+		},
+		{
+			name:        "data uri xss",
+			description: "<img src=\"data:text/html,<script>alert('xss')</script>\">",
+		},
+		{
+			name:        "all html special chars",
+			description: "<>&\"'",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a TasksFile with the HTML injection description
+			original := parsers.TasksFile{
+				Version: 1,
+				Tasks: []parsers.Task{
+					{
+						ID:          "1.5",
+						Section:     testSectionExtremeEdgeCases,
+						Description: tt.description,
+						Status:      parsers.TaskStatusPending,
+					},
+				},
+			}
+
+			// Marshal to JSON (this is what writeTasksJSONC does internally)
+			jsonData, err := json.MarshalIndent(original, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent failed: %v", err)
+			}
+
+			// Validate that the generated JSONC can be parsed back
+			if err := validateJSONCOutput(jsonData); err != nil {
+				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+			}
+
+			// Verify round-trip is lossless:
+			// Strip comments (though we don't have any in this test)
+			stripped := parsers.StripJSONComments(jsonData)
+
+			// Unmarshal back to TasksFile
+			var result parsers.TasksFile
+			if err := json.Unmarshal(stripped, &result); err != nil {
+				t.Fatalf("round-trip unmarshal failed: %v", err)
+			}
+
+			// Verify we got exactly one task back
+			if len(result.Tasks) != 1 {
+				t.Fatalf("expected 1 task after round-trip, got %d", len(result.Tasks))
+			}
+
+			// Verify the description matches exactly (lossless round-trip)
+			if result.Tasks[0].Description != original.Tasks[0].Description {
+				t.Errorf(
+					"round-trip lost data for HTML injection:\nOriginal: %q\nResult:   %q",
+					original.Tasks[0].Description,
+					result.Tasks[0].Description,
+				)
+			}
+
+			// Verify all other fields match
+			if result.Tasks[0].ID != original.Tasks[0].ID {
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					result.Tasks[0].ID,
+					original.Tasks[0].ID,
+				)
+			}
+			if result.Tasks[0].Section != original.Tasks[0].Section {
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					result.Tasks[0].Section,
+					original.Tasks[0].Section,
+				)
+			}
+			if result.Tasks[0].Status != original.Tasks[0].Status {
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					result.Tasks[0].Status,
+					original.Tasks[0].Status,
+				)
+			}
+			if result.Version != original.Version {
+				t.Errorf(
+					"Version mismatch: got %d, want %d",
+					result.Version,
+					original.Version,
+				)
+			}
+		})
+	}
+}
+
+// TestJSONCValidation_QuoteBombardment verifies that task descriptions
+// containing pathological numbers of consecutive quotes are properly escaped
+// and can be successfully round-tripped through JSON marshaling.
+//
+// This test validates the edge case of "quote bombardment" - many consecutive
+// quote characters that could potentially break JSON escaping if not handled
+// correctly. Each quote must be properly escaped as \" in the JSON output.
+//
+// This test covers task 1.7 from test-extreme-jsonc change proposal:
+// "Quote bombardment: \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\""
+func TestJSONCValidation_QuoteBombardment(t *testing.T) {
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "10 consecutive quotes",
+			description: `""""""""""`,
+		},
+		{
+			name:        "20 consecutive quotes",
+			description: `""""""""""""""""""""`,
+		},
+		{
+			name:        "38 consecutive quotes (from task 1.7)",
+			description: `""""""""""""""""""""""""""""""""""""""`,
+		},
+		{
+			name:        "50 consecutive quotes",
+			description: strings.Repeat(`"`, 50),
+		},
+		{
+			name:        "100 consecutive quotes",
+			description: strings.Repeat(`"`, 100),
+		},
+		{
+			name:        "quotes with text prefix",
+			description: `Quote bombardment: """"""""""""""""""""""""""""""""""""""""""`,
+		},
+		{
+			name:        "quotes with text suffix",
+			description: `"""""""""""""""""""""""""""""""""""""" in description`,
+		},
+		{
+			name:        "quotes with text in middle",
+			description: `"""""""""""" text """""""""""`,
+		},
+		{
+			name:        "alternating quotes and spaces",
+			description: `" " " " " " " " " "`,
+		},
+		{
+			name:        "quotes with newlines",
+			description: "\"\"\"\"\"\n\"\"\"\"\"\n\"\"\"\"\"",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a TasksFile with the quote bombardment description
+			tasksFile := parsers.TasksFile{
+				Version: 1,
+				Tasks: []parsers.Task{
+					{
+						ID:          "1.7",
+						Section:     testSectionExtremeEdgeCases,
+						Description: tt.description,
+						Status:      parsers.TaskStatusPending,
+					},
+				},
+			}
+
+			// Marshal to JSON (this is what writeTasksJSONC does internally)
+			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent failed: %v", err)
+			}
+
+			// Validate that the generated JSON can be parsed back
+			if err := validateJSONCOutput(jsonData); err != nil {
+				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+			}
+
+			// Verify round-trip: unmarshal and check that description is preserved
+			var roundTrip parsers.TasksFile
+			stripped := parsers.StripJSONComments(jsonData)
+			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
+				t.Fatalf("round-trip unmarshal failed: %v", err)
+			}
+
+			if len(roundTrip.Tasks) != 1 {
+				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+			}
+
+			if roundTrip.Tasks[0].Description != tt.description {
+				t.Errorf(
+					"round-trip failed to preserve quote bombardment\noriginal length: %d quotes\nround-trip length: %d quotes\noriginal: %q\nround-trip: %q",
+					strings.Count(tt.description, `"`),
+					strings.Count(roundTrip.Tasks[0].Description, `"`),
+					tt.description,
+					roundTrip.Tasks[0].Description,
+				)
+			}
+
+			// Verify all other fields are preserved
+			if roundTrip.Tasks[0].ID != "1.7" {
+				t.Errorf("Task ID mismatch: got %q, want %q", roundTrip.Tasks[0].ID, "1.7")
+			}
+			if roundTrip.Tasks[0].Section != testSectionExtremeEdgeCases {
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Section,
+					testSectionExtremeEdgeCases,
+				)
+			}
+			if roundTrip.Tasks[0].Status != parsers.TaskStatusPending {
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Status,
+					parsers.TaskStatusPending,
+				)
+			}
+
+			// Additional validation: count escaped quotes in JSON
+			jsonStr := string(jsonData)
+			// In JSON, each quote in the description should be escaped as \"
+			// So we should find the escaped version in the JSON string
+			if !strings.Contains(jsonStr, `\"`) {
+				t.Error("JSON output does not contain escaped quotes as expected")
+			}
+		})
+	}
+}
+
+// TestJSONCValidation_PathTraversal verifies that JSONC validation preserves
+// path traversal strings correctly through round-trip conversion.
+//
+// This test ensures that task descriptions containing path traversal patterns:
+//   - Unix path traversal: ../../../etc/passwd
+//   - Windows path traversal: ..\..\..\..\windows\system32
+//
+// are properly escaped in JSON and can be successfully round-tripped
+// through the validation process without losing data.
+func TestJSONCValidation_PathTraversal(t *testing.T) {
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "unix path traversal simple",
+			description: "../../../etc/passwd",
+		},
+		{
+			name:        "unix path traversal deep",
+			description: "../../../../../../../../etc/passwd",
+		},
+		{
+			name:        "windows path traversal simple",
+			description: "..\\..\\..\\..\\windows\\system32",
+		},
+		{
+			name:        "windows path traversal deep",
+			description: "..\\..\\..\\..\\..\\..\\..\\..\\windows\\system32\\config\\sam",
+		},
+		{
+			name:        "mixed path traversal",
+			description: "../../../etc/passwd and ..\\..\\..\\..\\windows\\system32",
+		},
+		{
+			name:        "path traversal with file",
+			description: "Read file: ../../../etc/passwd or ..\\..\\..\\..\\windows\\system32\\drivers\\etc\\hosts",
+		},
+		{
+			name:        "url encoded path traversal",
+			description: "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+		},
+		{
+			name:        "double encoded path traversal",
+			description: "%252e%252e%252f%252e%252e%252f",
+		},
+		{
+			name:        "path traversal with null byte",
+			description: "../../../etc/passwd\x00.jpg",
+		},
+		{
+			name:        "path traversal with unicode",
+			description: "..\\..\\..\\..\\windows\\system32\\驱动程序",
+		},
+		{
+			name:        "forward and backward slash mix",
+			description: "..\\../..\\../etc/passwd",
+		},
+		{
+			name:        "multiple consecutive dots",
+			description: "....//....//etc/passwd",
+		},
+		{
+			name:        "path with spaces",
+			description: ".. / .. / .. / etc / passwd",
+		},
+		{
+			name:        "absolute and relative paths",
+			description: "/etc/passwd and ../../../etc/shadow and C:\\Windows\\System32",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a TasksFile with the path traversal description
+			original := parsers.TasksFile{
+				Version: 1,
+				Tasks: []parsers.Task{
+					{
+						ID:          "1.6",
+						Section:     testSectionExtremeEdgeCases,
+						Description: tt.description,
+						Status:      parsers.TaskStatusPending,
+					},
+				},
+			}
+
+			// Marshal to JSON (this is what writeTasksJSONC does internally)
+			jsonData, err := json.MarshalIndent(original, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent failed: %v", err)
+			}
+
+			// Validate that the generated JSONC can be parsed back
+			if err := validateJSONCOutput(jsonData); err != nil {
+				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+			}
+
+			// Verify round-trip is lossless:
+			// Strip comments (though we don't have any in this test)
+			stripped := parsers.StripJSONComments(jsonData)
+
+			// Unmarshal back to TasksFile
+			var result parsers.TasksFile
+			if err := json.Unmarshal(stripped, &result); err != nil {
+				t.Fatalf("round-trip unmarshal failed: %v", err)
+			}
+
+			// Verify we got exactly one task back
+			if len(result.Tasks) != 1 {
+				t.Fatalf("expected 1 task after round-trip, got %d", len(result.Tasks))
+			}
+
+			// Verify the description matches exactly (lossless round-trip)
+			if result.Tasks[0].Description != original.Tasks[0].Description {
+				t.Errorf(
+					"round-trip lost data for path traversal:\nOriginal: %q\nResult:   %q",
+					original.Tasks[0].Description,
+					result.Tasks[0].Description,
+				)
+			}
+
+			// Verify all other fields match
+			if result.Tasks[0].ID != original.Tasks[0].ID {
+				t.Errorf("Task ID mismatch: got %q, want %q",
+					result.Tasks[0].ID, original.Tasks[0].ID)
+			}
+			if result.Tasks[0].Section != original.Tasks[0].Section {
+				t.Errorf("Task Section mismatch: got %q, want %q",
+					result.Tasks[0].Section, original.Tasks[0].Section)
+			}
+			if result.Tasks[0].Status != original.Tasks[0].Status {
+				t.Errorf("Task Status mismatch: got %q, want %q",
+					result.Tasks[0].Status, original.Tasks[0].Status)
+			}
+			if result.Version != original.Version {
+				t.Errorf("Version mismatch: got %d, want %d",
+					result.Version, original.Version)
+			}
+		})
+	}
+}
+
+// TestJSONCValidation_AllPrintableASCII tests that all printable ASCII characters
+// (ASCII 32-126) are correctly handled in JSONC output. This is the specific test
+// for task 1.15 from the test-extreme-jsonc change proposal.
+//
+// The test verifies that the exact string from task 1.15:
+// !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+// can be marshaled to JSON, parsed back, and round-trip correctly without data loss.
+func TestJSONCValidation_AllPrintableASCII(t *testing.T) {
+	// The exact description from task 1.15
+	task115Description := "All printable ASCII: !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+
+	// Also test with the generated version to ensure consistency
+	generatedASCII := generatePrintableASCII()
+
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "task 1.15 exact description",
+			description: task115Description,
+		},
+		{
+			name:        "generated printable ASCII",
+			description: generatedASCII,
+		},
+		{
+			name:        "printable ASCII with prefix",
+			description: "Testing all chars: " + generatedASCII,
+		},
+		{
+			name:        "printable ASCII with suffix",
+			description: generatedASCII + " <- all printable ASCII chars",
+		},
+		{
+			name:        "printable ASCII in middle of text",
+			description: "Start -> " + generatedASCII + " <- End",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a TasksFile with the test description
+			original := parsers.TasksFile{
+				Version: 1,
+				Tasks: []parsers.Task{
+					{
+						ID:          "1.15",
+						Section:     testSectionExtremeEdgeCases,
+						Description: tt.description,
+						Status:      parsers.TaskStatusPending,
+					},
+				},
+			}
+
+			// Marshal to JSON (this is what writeTasksJSONC does internally)
+			jsonData, err := json.MarshalIndent(original, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent failed: %v", err)
+			}
+
+			// Validate that the generated JSONC can be parsed back
+			if err := validateJSONCOutput(jsonData); err != nil {
+				t.Errorf("validateJSONCOutput failed: %v", err)
+			}
+
+			// Verify round-trip: Strip comments and unmarshal
+			stripped := parsers.StripJSONComments(jsonData)
+
+			var result parsers.TasksFile
+			if err := json.Unmarshal(stripped, &result); err != nil {
+				t.Fatalf("round-trip unmarshal failed: %v", err)
+			}
+
+			// Verify we got exactly one task back
+			if len(result.Tasks) != 1 {
+				t.Fatalf("expected 1 task after round-trip, got %d", len(result.Tasks))
+			}
+
+			// Verify the description matches exactly (lossless round-trip)
+			if result.Tasks[0].Description != original.Tasks[0].Description {
+				t.Errorf(
+					"round-trip lost data:\nOriginal: %q\nResult:   %q",
+					original.Tasks[0].Description,
+					result.Tasks[0].Description,
+				)
+			}
+
+			// Verify all other fields match
+			if result.Tasks[0].ID != original.Tasks[0].ID {
+				t.Errorf("Task ID mismatch: got %q, want %q",
+					result.Tasks[0].ID, original.Tasks[0].ID)
+			}
+			if result.Tasks[0].Section != original.Tasks[0].Section {
+				t.Errorf("Task Section mismatch: got %q, want %q",
+					result.Tasks[0].Section, original.Tasks[0].Section)
+			}
+			if result.Tasks[0].Status != original.Tasks[0].Status {
+				t.Errorf("Task Status mismatch: got %q, want %q",
+					result.Tasks[0].Status, original.Tasks[0].Status)
+			}
+			if result.Version != original.Version {
+				t.Errorf("Version mismatch: got %d, want %d",
+					result.Version, original.Version)
+			}
+		})
+	}
+}
+
+// TestJSONCValidation_JSONInjectionAttempt tests that task descriptions
+// containing JSON injection attempts are properly escaped and do not corrupt
+// the generated JSONC structure.
+//
+// A malicious or malformed task description like:
+//
+//	"},{"id":"injected","status":"hacked
+//
+// should be treated as a simple string value, not as a JSON structure break.
+// This test verifies that:
+//  1. The description is properly JSON-escaped when marshaled
+//  2. The generated JSONC remains valid and parseable
+//  3. Round-trip conversion preserves the exact injection attempt string
+//  4. The JSONC structure is not corrupted (no extra tasks injected)
+//
+// This is a security-critical test for any system that processes user-provided
+// text and serializes it to JSON.
+func TestJSONCValidation_JSONInjectionAttempt(t *testing.T) {
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "basic JSON injection - object break",
+			description: "\"},{\"id\":\"injected\",\"status\":\"hacked",
+		},
+		{
+			name:        "JSON injection with array break",
+			description: "\"}],\"tasks\":[{\"id\":\"injected\",\"status\":\"hacked",
+		},
+		{
+			name:        "JSON injection with nested structures",
+			description: "\"},\"extra\":{\"nested\":{\"id\":\"injected\"}},\"more\":{",
+		},
+		{
+			name:        "JSON injection closing and opening",
+			description: "\"}},{\"id\":\"1.99\",\"description\":\"injected task\",\"status\":\"completed\",\"section\":\"Injected\"}",
+		},
+		{
+			name:        "JSON key injection attempt",
+			description: "\",\"admin\":true,\"injected\":\"",
+		},
+		{
+			name:        "JSON array injection",
+			description: "\"],[\"injected\",\"array\",\"elements\"],[\"",
+		},
+		{
+			name:        "Mixed quotes and braces",
+			description: "\"},\"key\":\"value\",\"another\":\"{\"nested\":\"object\"}",
+		},
+		{
+			name:        "Escaped quote injection",
+			description: "\\\"},\\\"injection\\\":\\\"attempt",
+		},
+		{
+			name:        "Unicode escape injection",
+			description: "\\u0022},{\\u0022id\\u0022:\\u0022injected",
+		},
+		{
+			name:        "Complex nested injection",
+			description: "\"},\"tasks\":[{\"id\":\"evil\",\"children\":\"$ref:evil.jsonc\"}],\"includes\":[\"evil.jsonc\"],\"version\":999,\"data\":{",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a TasksFile with the injection attempt as a task description
+			original := parsers.TasksFile{
+				Version: 1,
+				Tasks: []parsers.Task{
+					{
+						ID:          "1.1",
+						Section:     "Security Testing",
+						Description: "Normal task before injection",
+						Status:      parsers.TaskStatusPending,
+					},
+					{
+						ID:          "1.2",
+						Section:     "Security Testing",
+						Description: tt.description, // The injection attempt
+						Status:      parsers.TaskStatusPending,
+					},
+					{
+						ID:          "1.3",
+						Section:     "Security Testing",
+						Description: "Normal task after injection",
+						Status:      parsers.TaskStatusPending,
+					},
+				},
+			}
+
+			// Marshal to JSON (this is what writeTasksJSONC does internally)
+			jsonData, err := json.MarshalIndent(original, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent() error = %v", err)
+			}
+
+			// CRITICAL: Validate that the generated JSON is valid and parseable
+			// If the injection succeeded, this would fail or produce wrong structure
+			if err := validateJSONCOutput(jsonData); err != nil {
+				t.Errorf("validateJSONCOutput failed for %s: %v\nGenerated JSON:\n%s",
+					tt.name, err, string(jsonData))
+			}
+
+			// Verify round-trip: unmarshal and check structure integrity
+			stripped := parsers.StripJSONComments(jsonData)
+			var roundTrip parsers.TasksFile
+			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
+				t.Fatalf("round-trip unmarshal failed: %v\nJSON:\n%s", err, string(jsonData))
+			}
+
+			// CRITICAL: Verify that we still have exactly 3 tasks (not injected extras)
+			if len(roundTrip.Tasks) != 3 {
+				t.Errorf(
+					"JSON injection corrupted structure: expected 3 tasks, got %d\nJSON:\n%s",
+					len(roundTrip.Tasks),
+					string(jsonData),
+				)
+			}
+
+			// Verify that the injection attempt is preserved as a safe string
+			if roundTrip.Tasks[1].Description != tt.description {
+				t.Errorf(
+					"round-trip failed to preserve injection attempt as safe string:\nOriginal: %q\nResult:   %q",
+					tt.description,
+					roundTrip.Tasks[1].Description,
+				)
+			}
+
+			// Verify that other task fields are not affected by the injection
+			if roundTrip.Tasks[0].Description != "Normal task before injection" {
+				t.Errorf("Task before injection was corrupted: %q", roundTrip.Tasks[0].Description)
+			}
+			if len(roundTrip.Tasks) >= 3 &&
+				roundTrip.Tasks[2].Description != "Normal task after injection" {
+				t.Errorf("Task after injection was corrupted: %q", roundTrip.Tasks[2].Description)
+			}
+
+			// Verify task IDs are preserved (not replaced by injected IDs)
+			if roundTrip.Tasks[1].ID != "1.2" {
+				t.Errorf("Task ID corrupted: expected %q, got %q", "1.2", roundTrip.Tasks[1].ID)
+			}
+
+			// Verify task statuses are preserved (not changed to "hacked" or "completed")
+			if roundTrip.Tasks[1].Status != parsers.TaskStatusPending {
+				t.Errorf(
+					"Task status corrupted: expected %q, got %q",
+					parsers.TaskStatusPending,
+					roundTrip.Tasks[1].Status,
+				)
+			}
+
+			// Verify version is preserved (not changed by injection)
+			if roundTrip.Version != 1 {
+				t.Errorf("Version corrupted: expected 1, got %d", roundTrip.Version)
+			}
+		})
+	}
+}
+
+// TestJSONCValidation_LiteralNewlineChars tests that task descriptions containing
+// literal backslash-n sequences (not actual newline characters) are properly
+// escaped in JSONC output and can be successfully round-tripped.
+//
+// This test covers task 1.11 from test-extreme-jsonc change proposal:
+// "Literal newline char test: Line1\nLine2\nLine3 (with literal \n not actual newline)"
+//
+// The distinction is critical:
+//   - Actual newline character: '\n' (single byte, ASCII 10)
+//   - Literal backslash-n: '\\' + 'n' (two characters: backslash and letter n)
+//
+// When marshaling to JSON:
+//   - Actual newline '\n' becomes "\\n" in JSON
+//   - Literal backslash-n '\\n' becomes "\\\\n" in JSON (backslash escaped, then n)
+func TestJSONCValidation_LiteralNewlineChars(t *testing.T) {
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "literal backslash-n sequence",
+			description: "Line1\\nLine2\\nLine3",
+		},
+		{
+			name:        "literal backslash-t sequence",
+			description: "Col1\\tCol2\\tCol3",
+		},
+		{
+			name:        "literal backslash-r sequence",
+			description: "Line1\\rLine2\\rLine3",
+		},
+		{
+			name:        "mixed literal escape sequences",
+			description: "Text\\nWith\\tMixed\\rLiteral\\bEscapes",
+		},
+		{
+			name:        "literal backslash followed by various chars",
+			description: "\\a\\b\\c\\d\\e\\f\\g\\h\\i\\j\\k\\l\\m\\n\\o\\p\\q\\r\\s\\t\\u\\v\\w\\x\\y\\z",
+		},
+		{
+			name:        "literal backslash-n at start",
+			description: "\\nStarts with literal backslash-n",
+		},
+		{
+			name:        "literal backslash-n at end",
+			description: "Ends with literal backslash-n\\n",
+		},
+		{
+			name:        "multiple consecutive literal backslash-n",
+			description: "Multiple\\n\\n\\nLiteral\\n\\n\\nNewlines",
+		},
+		{
+			name:        "literal vs actual newline comparison",
+			description: "Literal: \\n vs Actual: \n (mixed)",
+		},
+		{
+			name:        "literal backslash-backslash-n (triple escape)",
+			description: "Triple escape: \\\\nText",
+		},
+		{
+			name:        "path with literal backslash-n",
+			description: "C:\\new\\folder\\test.txt",
+		},
+		{
+			name:        "regex with literal backslash-n",
+			description: "Regex pattern: .*\\n.* matches lines with newline",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a TasksFile with the literal escape sequence
+			tasksFile := parsers.TasksFile{
+				Version: 1,
+				Tasks: []parsers.Task{
+					{
+						ID:          "1.11",
+						Section:     testSectionExtremeEdgeCases,
+						Description: tt.description,
+						Status:      parsers.TaskStatusPending,
+					},
+				},
+			}
+
+			// Marshal to JSON (this is what writeTasksJSONC does internally)
+			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent failed: %v", err)
+			}
+
+			// Validate that the generated JSONC can be parsed back
+			if err := validateJSONCOutput(jsonData); err != nil {
+				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+			}
+
+			// Verify round-trip: unmarshal and check that description is preserved
+			var roundTrip parsers.TasksFile
+			stripped := parsers.StripJSONComments(jsonData)
+			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
+				t.Fatalf("round-trip unmarshal failed: %v", err)
+			}
+
+			if len(roundTrip.Tasks) != 1 {
+				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+			}
+
+			// Verify the description is preserved EXACTLY (this is the critical test)
+			if roundTrip.Tasks[0].Description != tt.description {
+				t.Errorf(
+					"round-trip failed to preserve literal escape sequences\noriginal: %q\nround-trip: %q\nJSON output:\n%s",
+					tt.description,
+					roundTrip.Tasks[0].Description,
+					string(jsonData),
+				)
+			}
+
+			// Additional verification: check the actual JSON string representation
+			// For "Line1\\nLine2" input, JSON should contain "Line1\\\\nLine2"
+			// (the backslash is escaped as \\, making it \\\\ in the JSON literal)
+			jsonStr := string(jsonData)
+
+			// Verify that literal backslash sequences are properly escaped
+			// If input contains \n (backslash + n), JSON must contain \\n (escaped backslash + n)
+			if !strings.Contains(tt.description, "\\n") {
+				return
+			}
+
+			// The JSON representation should have the backslash escaped
+			if !strings.Contains(jsonStr, "\\\\n") {
+				t.Errorf(
+					"JSON output does not properly escape literal \\n sequence\nInput: %q\nJSON:\n%s",
+					tt.description,
+					jsonStr,
+				)
+			}
+		})
+	}
+}
+
+// TestJSONCValidation_MixedBombardment tests pathological mixed quote and backslash patterns.
+// This test ensures that task descriptions containing extreme combinations of quotes
+// and backslashes (as seen in task 1.9 of test-extreme-jsonc) are properly escaped
+// during JSON marshalling and can be successfully round-tripped through the validation process.
+func TestJSONCValidation_MixedBombardment(t *testing.T) {
+	tests := []struct {
+		name        string
+		description string
+	}{
+		{
+			name:        "mixed bombardment from task 1.9",
+			description: "Mixed bombardment: \\\"\\\"\\\"\\\"\\\\ \\\"\\\"\\\"\\\"\\\\ \\\"\\\"\\\"\\\"\\\\ \\\"\\\"\\\"\\\"\\\\",
+		},
+		{
+			name:        "alternating quote backslash",
+			description: "\\\"\\\"\\\"\\\"\\\"\\\"\\\"\\\"",
+		},
+		{
+			name:        "quote backslash pairs",
+			description: "\\\"\\\\\\\"\\\\\\\"\\\\\\\"\\\\",
+		},
+		{
+			name:        "backslash then quotes",
+			description: "\\\\\\\\\\\"\\\"\\\"\\\"",
+		},
+		{
+			name:        "quotes then backslashes",
+			description: "\\\"\\\"\\\"\\\"\\\\\\\\\\\\\\\\",
+		},
+		{
+			name:        "mixed with text",
+			description: "Start \\\"\\\"\\\"\\\"\\\\ middle \\\"\\\"\\\"\\\"\\\\ end",
+		},
+		{
+			name:        "triple quote backslash pattern",
+			description: "\\\"\\\"\\\"\\\\\\\\\\\"\\\"\\\"\\\\\\\\\\\"\\\"\\\"\\\\\\\\",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a TasksFile with the pathological description
+			tasksFile := parsers.TasksFile{
+				Version: 1,
+				Tasks: []parsers.Task{
+					{
+						ID:          "1.9",
+						Section:     "Extreme Edge Cases",
+						Description: tt.description,
+						Status:      parsers.TaskStatusPending,
+					},
+				},
+			}
+
+			// Marshal to JSON (this is what writeTasksJSONC does internally)
+			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			if err != nil {
+				t.Fatalf("json.MarshalIndent failed: %v", err)
+			}
+
+			// Validate that the generated JSON can be parsed back
+			if err := validateJSONCOutput(jsonData); err != nil {
+				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+			}
+
+			// Verify round-trip: unmarshal and check that description is preserved
+			var roundTrip parsers.TasksFile
+			stripped := parsers.StripJSONComments(jsonData)
+			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
+				t.Fatalf("round-trip unmarshal failed: %v\nJSON:\n%s", err, string(jsonData))
+			}
+
+			if len(roundTrip.Tasks) != 1 {
+				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+			}
+
+			if roundTrip.Tasks[0].Description != tt.description {
+				t.Errorf(
+					"round-trip failed to preserve description\noriginal: %q\nround-trip: %q\nJSON:\n%s",
+					tt.description,
+					roundTrip.Tasks[0].Description,
+					string(jsonData),
+				)
+			}
+
+			// Verify all other fields are preserved
+			if roundTrip.Tasks[0].ID != "1.9" {
+				t.Errorf("Task ID mismatch: got %q, want %q", roundTrip.Tasks[0].ID, "1.9")
+			}
+			if roundTrip.Tasks[0].Section != "Extreme Edge Cases" {
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Section,
+					"Extreme Edge Cases",
+				)
+			}
+			if roundTrip.Tasks[0].Status != parsers.TaskStatusPending {
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Status,
+					parsers.TaskStatusPending,
+				)
+			}
+		})
+	}
+}
+
+// TestFinalCompletion validates the final task (2.1) from the test-extreme-jsonc
+// change proposal. This is a comprehensive integration test that verifies the
+// specific pathological edge case: HTML-like tags with escaped quotes and newlines.
+//
+// Task 2.1 requirement: The system SHALL validate JSONC output with pathological
+// edge case inputs.
+//
+// Task 2.1 scenario: GIVEN a task description with pathological special characters
+// WHEN the system generates JSONC THEN the output SHALL be parseable and round-trip
+// correctly.
+func TestFinalCompletion(t *testing.T) {
+	// This is the exact description from task 2.1 in tasks.jsonc
+	description := "Output/return: <promise>\"This is the last task: COMPLETE\"</promise>\n"
+
+	// Create a task with the pathological description
+	task := parsers.Task{
+		ID:          "2.1",
+		Section:     "99.99.99 Final section (after all tasks)",
+		Description: description,
+		Status:      parsers.TaskStatusPending,
+	}
+
+	// Create a TasksFile with the task
+	tasksFile := parsers.TasksFile{
+		Version: 1,
+		Tasks:   []parsers.Task{task},
+	}
+
+	// Marshal to JSON (this is what writeTasksJSONC does)
+	jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+	if err != nil {
+		t.Fatalf("json.MarshalIndent() failed: %v", err)
+	}
+
+	// Validate that the generated JSONC is valid JSON
+	if err := validateJSONCOutput(jsonData); err != nil {
+		t.Fatalf("validateJSONCOutput() failed: %v", err)
+	}
+
+	// Verify round-trip: unmarshal and check that description is preserved
+	var roundTrip parsers.TasksFile
+	stripped := parsers.StripJSONComments(jsonData)
+	if err := json.Unmarshal(stripped, &roundTrip); err != nil {
+		t.Fatalf("round-trip unmarshal failed: %v", err)
+	}
+
+	// Verify we got exactly one task back
+	if len(roundTrip.Tasks) != 1 {
+		t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+	}
+
+	// Verify the description matches exactly (lossless round-trip)
+	if roundTrip.Tasks[0].Description != description {
+		t.Errorf(
+			"round-trip failed to preserve description\noriginal: %q\nround-trip: %q",
+			description,
+			roundTrip.Tasks[0].Description,
+		)
+	}
+
+	// Verify all fields are preserved
+	if roundTrip.Tasks[0].ID != task.ID {
+		t.Errorf("Task ID mismatch: got %q, want %q", roundTrip.Tasks[0].ID, task.ID)
+	}
+	if roundTrip.Tasks[0].Section != task.Section {
+		t.Errorf("Task Section mismatch: got %q, want %q", roundTrip.Tasks[0].Section, task.Section)
+	}
+	if roundTrip.Tasks[0].Status != task.Status {
+		t.Errorf("Task Status mismatch: got %q, want %q", roundTrip.Tasks[0].Status, task.Status)
+	}
+	if roundTrip.Version != tasksFile.Version {
+		t.Errorf("Version mismatch: got %d, want %d", roundTrip.Version, tasksFile.Version)
+	}
+
+	// Extra verification: Ensure specific characters are present
+	if !strings.Contains(roundTrip.Tasks[0].Description, "<promise>") {
+		t.Error("Missing <promise> tag in round-tripped description")
+	}
+	if !strings.Contains(roundTrip.Tasks[0].Description, "</promise>") {
+		t.Error("Missing </promise> tag in round-tripped description")
+	}
+	if !strings.Contains(roundTrip.Tasks[0].Description, "\"This is the last task: COMPLETE\"") {
+		t.Error("Missing quoted text in round-tripped description")
+	}
+	if !strings.HasSuffix(roundTrip.Tasks[0].Description, "\n") {
+		t.Error("Missing trailing newline in round-tripped description")
+	}
+
+	// SUCCESS: This is the last task - COMPLETE
+	t.Log(
+		"Final validation test COMPLETE: HTML-like tags with pathological special characters are properly escaped and round-trip correctly",
+	)
 }

@@ -95,7 +95,10 @@ func validateLongContent(t *testing.T, tasks []parsers.Task) {
 		t.Errorf("Expected 1 task, got %d", len(tasks))
 	}
 	if len(tasks[0].Description) < 200 {
-		t.Errorf("Description too short (%d chars), expected to preserve long content", len(tasks[0].Description))
+		t.Errorf(
+			"Description too short (%d chars), expected to preserve long content",
+			len(tasks[0].Description),
+		)
 	}
 }
 

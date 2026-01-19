@@ -42,19 +42,19 @@
     {
       "id": "4.1",
       "section": "Round-Trip Testing",
-      "description": "**4.1** Implement `TestRoundTripConversion_AllFields` that:",
+      "description": "**4.1** Implement `TestRoundTripConversion_AllFields` that:\n  - Creates TasksFile with all field types populated\n  - Marshals to JSONC\n  - Validates JSONC\n  - Unmarshals back to TasksFile\n  - Compares original and result deeply",
       "status": "completed"
     },
     {
       "id": "4.2",
       "section": "Round-Trip Testing",
-      "description": "**4.2** Implement `TestRoundTripConversion_Version2Hierarchical` for hierarchical format:",
+      "description": "**4.2** Implement `TestRoundTripConversion_Version2Hierarchical` for hierarchical format:\n  - Test root file with Children references\n  - Test child file with Parent field\n  - Verify Includes array preserved",
       "status": "completed"
     },
     {
       "id": "4.3",
       "section": "Round-Trip Testing",
-      "description": "**4.3** Implement `TestRoundTripConversion_RealWorldData` using archived tasks.jsonc files:",
+      "description": "**4.3** Implement `TestRoundTripConversion_RealWorldData` using archived tasks.jsonc files:\n  - Read existing tasks.jsonc from `spectr/changes/archive/*/tasks.jsonc`\n  - Validate they pass round-trip test\n  - Report any files that fail",
       "status": "completed"
     }
   ],

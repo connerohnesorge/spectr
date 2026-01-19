@@ -48,31 +48,31 @@
     {
       "id": "3.2",
       "section": "Property-Based Testing",
-      "description": "**3.2** Implement `TestJSONCValidation_SpecialCharacters` with test cases for:",
+      "description": "**3.2** Implement `TestJSONCValidation_SpecialCharacters` with test cases for:\n  - Backslash `\\`\n  - Quote `\"`\n  - Newline `\\n`\n  - Tab `\\t`\n  - Carriage return `\\r`\n  - Backspace `\\b`\n  - Form feed `\\f`",
       "status": "completed"
     },
     {
       "id": "3.3",
       "section": "Property-Based Testing",
-      "description": "**3.3** Implement `TestJSONCValidation_Unicode` with test cases for:",
+      "description": "**3.3** Implement `TestJSONCValidation_Unicode` with test cases for:\n  - Emoji (🚀, 💻, ✅)\n  - Non-ASCII characters (你好, مرحبا, Здравствуй)\n  - Mixed unicode and ASCII",
       "status": "completed"
     },
     {
       "id": "3.4",
       "section": "Property-Based Testing",
-      "description": "**3.4** Implement `TestJSONCValidation_JSONMetaCharacters` with test cases for:",
+      "description": "**3.4** Implement `TestJSONCValidation_JSONMetaCharacters` with test cases for:\n  - Curly braces in descriptions: `{`, `}`\n  - Square brackets: `[`, `]`\n  - Colons and commas: `:`, `,`",
       "status": "completed"
     },
     {
       "id": "3.5",
       "section": "Property-Based Testing",
-      "description": "**3.5** Implement `TestJSONCValidation_CommentLikeStrings` with test cases for:",
+      "description": "**3.5** Implement `TestJSONCValidation_CommentLikeStrings` with test cases for:\n  - Single-line comment syntax: `//`\n  - Multi-line comment syntax: `/* */`\n  - Mixed: `Update // comment-like text`",
       "status": "completed"
     },
     {
       "id": "3.6",
       "section": "Property-Based Testing",
-      "description": "**3.6** Implement `TestJSONCValidation_EdgeCases` with test cases for:",
+      "description": "**3.6** Implement `TestJSONCValidation_EdgeCases` with test cases for:\n  - Very long descriptions (\u003e1000 chars)\n  - Empty descriptions\n  - Whitespace-only descriptions\n  - Descriptions ending with backslash",
       "status": "completed"
     }
   ],

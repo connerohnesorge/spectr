@@ -214,25 +214,55 @@ func TestGeminiProvider_Initializers(
 			inits[0],
 		)
 	}
-	if _, ok := inits[1].(*TOMLSlashCommandsInitializer); !ok {
+	if _, ok := inits[1].(*DirectoryInitializer); !ok {
 		t.Errorf(
-			"GeminiProvider.Initializers()[1] is %T, want *TOMLSlashCommandsInitializer",
+			"GeminiProvider.Initializers()[1] is %T, want *DirectoryInitializer",
 			inits[1],
 		)
 	}
-
-	// Check DirectoryInitializer paths
-	dirInit := inits[0].(*DirectoryInitializer)
-	if len(dirInit.paths) != 1 ||
-		dirInit.paths[0] != testGeminiCommandsDir {
+	if _, ok := inits[2].(*ConfigFileInitializer); !ok {
 		t.Errorf(
-			"GeminiProvider DirectoryInitializer paths = %v, want [\".gemini/commands/spectr\"]",
-			dirInit.paths,
+			"GeminiProvider.Initializers()[2] is %T, want *ConfigFileInitializer",
+			inits[2],
+		)
+	}
+	if _, ok := inits[3].(*TOMLSlashCommandsInitializer); !ok {
+		t.Errorf(
+			"GeminiProvider.Initializers()[3] is %T, want *TOMLSlashCommandsInitializer",
+			inits[3],
+		)
+	}
+
+	// Check DirectoryInitializer paths - first one should be commands dir
+	dirInit1 := inits[0].(*DirectoryInitializer)
+	if len(dirInit1.paths) != 1 ||
+		dirInit1.paths[0] != testGeminiCommandsDir {
+		t.Errorf(
+			"GeminiProvider DirectoryInitializer[0] paths = %v, want [\".gemini/commands/spectr\"]",
+			dirInit1.paths,
+		)
+	}
+
+	// Check second DirectoryInitializer - should be skills dir
+	dirInit2 := inits[1].(*DirectoryInitializer)
+	if len(dirInit2.paths) != 1 || dirInit2.paths[0] != ".gemini/skills" {
+		t.Errorf(
+			"GeminiProvider DirectoryInitializer[1] paths = %v, want [\".gemini/skills\"]",
+			dirInit2.paths,
+		)
+	}
+
+	// Check ConfigFileInitializer
+	cfgInit := inits[2].(*ConfigFileInitializer)
+	if cfgInit.path != "GEMINI.md" {
+		t.Errorf(
+			"GeminiProvider ConfigFileInitializer path = %s, want \"GEMINI.md\"",
+			cfgInit.path,
 		)
 	}
 
 	// Check TOMLSlashCommandsInitializer dir
-	slashInit := inits[1].(*TOMLSlashCommandsInitializer)
+	slashInit := inits[3].(*TOMLSlashCommandsInitializer)
 	if slashInit.dir != testGeminiCommandsDir {
 		t.Errorf(
 			"GeminiProvider TOMLSlashCommandsInitializer dir = %s, want \".gemini/commands/spectr\"",

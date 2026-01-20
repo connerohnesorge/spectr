@@ -741,8 +741,8 @@ func TestAllProviders_InitializerCounts(
 		{
 			"gemini",
 			&GeminiProvider{},
-			2,
-			false,
+			6,
+			true,
 			true,
 			false,
 			false,

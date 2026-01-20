@@ -390,6 +390,8 @@ func (s *taskParseState) createTask(
 //   - "- [ ] 1. Task" (simple dot ID)
 //   - "- [ ] 1 Task" (number only ID)
 //   - "- [ ] Task" (no ID - auto-generated)
+//
+// Supports continuation lines (indented lines that extend task descriptions).
 func parseTasksMd(
 	path string,
 ) ([]parsers.Task, error) {
@@ -404,6 +406,7 @@ func parseTasksMd(
 
 	var tasks []parsers.Task
 	state := &taskParseState{}
+	var continuingTask *parsers.Task // Pointer to current task to append continuations
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -412,6 +415,7 @@ func parseTasksMd(
 		// Check for section header (numbered or unnumbered)
 		if name, number, ok := markdown.MatchAnySection(line); ok {
 			state.handleSection(name, number)
+			continuingTask = nil // Reset continuation on new section
 
 			continue
 		}
@@ -420,14 +424,24 @@ func parseTasksMd(
 		match, ok := markdown.MatchFlexibleTask(
 			line,
 		)
-		if !ok {
+		if ok {
+			// Create and append the task
+			task := state.createTask(match)
+			tasks = append(tasks, task)
+			continuingTask = &tasks[len(tasks)-1] // Get pointer to last task for continuation
+
 			continue
 		}
 
-		tasks = append(
-			tasks,
-			state.createTask(match),
-		)
+		// If we're in continuation mode and line is indented, add to last task's description
+		if continuingTask != nil && isContinuationLine(line) {
+			continuingTask.Description += "\n" + line
+
+			continue
+		}
+
+		// If line is not a continuation, reset continuation state
+		continuingTask = nil
 	}
 
 	err = scanner.Err()
@@ -439,6 +453,14 @@ func parseTasksMd(
 	}
 
 	return tasks, nil
+}
+
+// isContinuationLine checks if a line should be treated as a continuation
+// of the previous task description (indented lines).
+func isContinuationLine(line string) bool {
+	trimmed := strings.TrimLeft(line, "\t ")
+	// If trimming whitespace changed the line, it's indented
+	return len(trimmed) < len(line)
 }
 
 // validateParsedTasks checks if tasks.md has content but no valid tasks

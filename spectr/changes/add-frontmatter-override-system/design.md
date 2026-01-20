@@ -2,7 +2,10 @@
 
 ## Problem Statement
 
-Claude Code now supports `context: fork` in slash command frontmatter to run commands in forked sub-agent contexts. We need to customize the proposal command's frontmatter for Claude Code by:
+Claude Code now supports `context: fork` in slash command frontmatter to run
+commands in forked sub-agent contexts. We need to customize the proposal
+command's frontmatter for Claude Code by:
+
 - Adding `context: fork`
 - Removing `agent: plan` (not supported by Claude Code slash commands)
 
@@ -14,7 +17,8 @@ However, duplicating entire template files for provider-specific variations is u
 2. **Provider flexibility**: Each provider can customize frontmatter as needed
 3. **Type safety**: Compile-time guarantees for override operations
 4. **Backward compatibility**: Existing providers work unchanged
-5. **TOML support**: Works for both Markdown (Claude, Windsurf) and TOML (Gemini) formats
+5. **TOML support**: Works for both Markdown (Claude, Windsurf) and
+   TOML (Gemini) formats
 
 ## Non-Goals
 
@@ -27,7 +31,7 @@ However, duplicating entire template files for provider-specific variations is u
 
 ### Data Flow
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. Provider.Initializers() calls tm.SlashCommand()         │
 │    with optional FrontmatterOverride                        │
@@ -94,16 +98,22 @@ type FrontmatterOverride struct {
 }
 ```
 
-**Design choice**: Separate Set/Remove maps rather than using nil values because:
-- Clear intent: `Set{"context": "fork"}` vs `Set{"context": "fork", "agent": nil}`
+**Design choice**: Separate Set/Remove maps rather than using nil values
+because:
+
+- Clear intent: `Set{"context": "fork"}` vs
+  `Set{"context": "fork", "agent": nil}`
 - Type safety: nil has different meanings in Go (missing vs null)
 - Explicit ordering: Remove always happens after Set
 
 #### ParseFrontmatter
 
-**Note**: This function is no longer needed in the current design since templates don't contain frontmatter. Frontmatter is defined in Go code and assembled dynamically.
+**Note**: This function is no longer needed in the current design since
+templates don't contain frontmatter. Frontmatter is defined in Go code and
+assembled dynamically.
 
-If needed for other purposes (e.g., reading existing files), the signature would be:
+If needed for other purposes (e.g., reading existing files), the signature
+would be:
 
 ```go
 // ParseFrontmatter extracts YAML frontmatter from markdown content.
@@ -130,6 +140,7 @@ func ApplyFrontmatterOverrides(
 ```
 
 **Design choices**:
+
 - Returns new map (immutable operation) for safety
 - Nil overrides returns copy of base (no-op)
 - Set always overwrites existing values
@@ -152,6 +163,7 @@ func RenderFrontmatter(fm map[string]interface{}, body string) (string, error)
 ```
 
 **Design choices**:
+
 - Always includes `---` delimiters even for empty map
 - Uses `yaml.v3` for consistent formatting
 - Preserves map key order if possible (YAML 1.2 behavior)
@@ -191,6 +203,7 @@ func GetBaseFrontmatter(cmd domain.SlashCommand) map[string]interface{} {
 ```
 
 **Design choices**:
+
 - Frontmatter is data (maps), not text in templates
 - Templates (.tmpl files) contain only body content (no `---` blocks)
 - Base frontmatter is versioned in Go code (type-safe, tracked in git)
@@ -228,13 +241,15 @@ func (tr TemplateRef) Render(ctx *TemplateContext) (string, error) {
 ```
 
 **Design choices**:
+
 - Added `Command` field to TemplateRef for frontmatter lookup
 - Template body rendered first (resolves {{.BaseDir}} etc.)
 - Frontmatter assembled dynamically: base + overrides
 - Standard markdown `---` fences via RenderFrontmatter()
 - Nil overrides = use base frontmatter unchanged
 
-**Key insight**: Templates are pure content, frontmatter is pure data. This separates concerns and makes both easier to maintain.
+**Key insight**: Templates are pure content, frontmatter is pure data. This
+separates concerns and makes both easier to maintain.
 
 ### 4. TemplateManager Extension (`internal/initialize/templates.go`)
 
@@ -264,18 +279,21 @@ func (tm *TemplateManager) TOMLSlashCommandWithOverrides(
 ```
 
 **Design choices**:
+
 - Separate methods for Markdown and TOML (clear intent)
 - Returns modified copy, doesn't mutate cached TemplateRef
 - Nil overrides behaves like SlashCommand() (backward compatible)
 
-**Note on TOML**: Per interview decision, we're only supporting Markdown YAML frontmatter initially. TOML support can be added later if Gemini needs it.
+**Note on TOML**: Per interview decision, we're only supporting Markdown YAML
+frontmatter initially. TOML support can be added later if Gemini needs it.
 
 ### 5. Template File Changes
 
 All `.tmpl` files will have frontmatter removed:
 
 **Before** (`internal/domain/templates/slash-proposal.md.tmpl`):
-```
+
+```yaml
 ---
 description: Proposal Creation Guide (project)
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(spectr:*)
@@ -290,7 +308,8 @@ subtask: false
 ```
 
 **After**:
-```
+
+```markdown
 # Proposal Creation Guide
 
 ## Guardrails
@@ -338,10 +357,12 @@ return []Initializer{
 **Approach**: Create `slash-proposal-claude.md.tmpl` with hardcoded frontmatter.
 
 **Pros**:
+
 - Simple: no parsing/merging logic
 - Explicit: frontmatter visible in template
 
 **Cons**:
+
 - Duplication: must maintain N copies of each template
 - Brittle: body changes require updating all variants
 - Discovery: hard to find all customizations
@@ -350,13 +371,16 @@ return []Initializer{
 
 ### Alternative 2: Frontmatter in Provider Config
 
-**Approach**: Providers define frontmatter in Go structs, completely override template frontmatter.
+**Approach**: Providers define frontmatter in Go structs, completely override
+template frontmatter.
 
 **Pros**:
+
 - Full control: provider owns entire frontmatter
 - Type-safe: Go structs validate at compile time
 
 **Cons**:
+
 - Duplication: every provider must specify all frontmatter fields
 - Fragile: default changes break all providers
 - Verbose: simple overrides require full struct definitions
@@ -365,13 +389,16 @@ return []Initializer{
 
 ### Alternative 3: Post-Processing Hook
 
-**Approach**: SlashCommandsInitializer calls a hook after Render() to modify content.
+**Approach**: SlashCommandsInitializer calls a hook after Render() to modify
+content.
 
 **Pros**:
+
 - Flexible: can modify any part of content
 - Separation: frontmatter logic separate from template system
 
 **Cons**:
+
 - Generic: hook signature `func(string) string` loses type safety
 - Complex: providers must implement their own parsing
 - Error-prone: string manipulation is fragile
@@ -383,19 +410,31 @@ return []Initializer{
 All open questions have been resolved:
 
 ### 1. TOML Support Scope
-**Decision**: Markdown YAML only initially. Gemini doesn't need overrides yet, we can add TOML support later if needed.
+
+**Decision**: Markdown YAML only initially. Gemini doesn't need overrides yet,
+we can add TOML support later if needed.
 
 ### 2. Nested Field Removal
-**Decision**: Top-level keys only. `Remove: []string{"metadata"}` removes entire section. Simpler code, and we don't have nested frontmatter currently.
+
+**Decision**: Top-level keys only. `Remove: []string{"metadata"}` removes
+entire section. Simpler code, and we don't have nested frontmatter currently.
 
 ### 3. Error Handling Philosophy
-**Decision**: Strict mode. Return error if YAML rendering fails. Fail fast to catch bugs early during template development.
+
+**Decision**: Strict mode. Return error if YAML rendering fails. Fail fast to
+catch bugs early during template development.
 
 ### 4. Frontmatter Source
-**Decision**: Define base frontmatter in Go code (`BaseSlashCommandFrontmatter` map), not in .tmpl files. Templates contain only body content. This separates data from presentation.
+
+**Decision**: Define base frontmatter in Go code (`BaseSlashCommandFrontmatter`
+map), not in .tmpl files. Templates contain only body content. This separates
+data from presentation.
 
 ### 5. Override Precedence
-**Decision**: Set first, then Remove. If same field in both, Remove wins. Clear precedence rule: `Set{"context": "fork"}, Remove{"context"}` results in field removed.
+
+**Decision**: Set first, then Remove. If same field in both, Remove wins. Clear
+precedence rule: `Set{"context": "fork"}, Remove{"context"}` results in field
+removed.
 
 ## Implementation Plan
 

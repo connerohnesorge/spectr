@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/markdown"
-	"github.com/tidwall/jsonc"
 )
 
 // ExtractTitle extracts the title from a markdown file by finding
@@ -155,7 +154,7 @@ func ReadTasksJson(
 	}
 
 	// Convert JSONC to standard JSON (handles comments AND trailing commas)
-	data = jsonc.ToJSON(data)
+	data = JSONCToJSON(data)
 
 	var tasksFile TasksFile
 	if err := json.Unmarshal(data, &tasksFile); err != nil {

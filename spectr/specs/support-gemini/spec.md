@@ -98,4 +98,3 @@ correct initialization order.
   - GEMINI.md instruction file (new)
   - spectr-accept-wo-spectr-bin skill (new)
   - spectr-validate-wo-spectr-bin skill (new)
-

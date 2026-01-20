@@ -1039,3 +1039,98 @@ func TestCountTasksFromJson_AllScenarios(
 		})
 	}
 }
+
+func TestReadTasksJsonWithTrailingCommas(t *testing.T) {
+	tests := []struct {
+		name              string
+		content           string
+		expectedVersion   int
+		expectedTaskCount int
+		wantError         bool
+	}{
+		{
+			name: "Trailing comma in array",
+			content: `{
+	"version": 1,
+	"tasks": [
+		{"id": "1.1", "section": "Setup", "description": "Task 1", "status": "pending"},
+		{"id": "1.2", "section": "Setup", "description": "Task 2", "status": "completed"},
+	]
+}`,
+			expectedVersion:   1,
+			expectedTaskCount: 2,
+			wantError:         false,
+		},
+		{
+			name: "Trailing comma in object",
+			content: `{
+	"version": 1,
+	"tasks": [
+		{"id": "1.1", "section": "Setup", "description": "Task 1", "status": "pending",}
+	],
+}`,
+			expectedVersion:   1,
+			expectedTaskCount: 1,
+			wantError:         false,
+		},
+		{
+			name: "Multiple trailing commas with comments",
+			content: `// Task file with trailing commas
+{
+	"version": 1, // version number
+	"tasks": [
+		{"id": "1.1", "section": "Setup", "description": "Task 1", "status": "pending",}, // first task
+		{"id": "1.2", "section": "Setup", "description": "Task 2", "status": "completed",}, // second task
+	], // end tasks
+}`,
+			expectedVersion:   1,
+			expectedTaskCount: 2,
+			wantError:         false,
+		},
+		{
+			name: "Nested trailing commas",
+			content: `{
+	"version": 1,
+	"tasks": [
+		{
+			"id": "1.1",
+			"section": "Setup",
+			"description": "Task with trailing comma",
+			"status": "pending",
+		},
+	],
+}`,
+			expectedVersion:   1,
+			expectedTaskCount: 1,
+			wantError:         false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			filePath := filepath.Join(tmpDir, "tasks.jsonc")
+			if err := os.WriteFile(filePath, []byte(tt.content), 0o644); err != nil {
+				t.Fatal(err)
+			}
+
+			tasksFile, err := ReadTasksJson(filePath)
+			if tt.wantError && err == nil {
+				t.Error("Expected error but got none")
+			}
+			if !tt.wantError && err != nil {
+				t.Fatalf("ReadTasksJson failed: %v", err)
+			}
+			if tt.wantError {
+				return
+			}
+
+			if tasksFile.Version != tt.expectedVersion {
+				t.Errorf("Expected version %d, got %d", tt.expectedVersion, tasksFile.Version)
+			}
+			if len(tasksFile.Tasks) != tt.expectedTaskCount {
+				t.Errorf("Expected %d tasks, got %d", tt.expectedTaskCount, len(tasksFile.Tasks))
+			}
+		})
+	}
+}

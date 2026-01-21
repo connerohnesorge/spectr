@@ -592,7 +592,7 @@ func TestWriteTasksJson(t *testing.T) {
 			)
 
 			// Write the tasks (nil appendCfg for no appended tasks)
-			if err := writeTasksJSONC(tasksJSONPath, tt.tasks, nil); err != nil {
+			if err := writeTasksJSONC(tasksJSONPath, tt.tasks, nil, nil); err != nil {
 				t.Fatalf(
 					"writeTasksJSONC() error = %v",
 					err,
@@ -660,7 +660,7 @@ func TestWriteTasksJsonIndentation(t *testing.T) {
 		},
 	}
 
-	if err := writeTasksJSONC(tasksJSONPath, tasks, nil); err != nil {
+	if err := writeTasksJSONC(tasksJSONPath, tasks, nil, nil); err != nil {
 		t.Fatalf(
 			"writeTasksJSONC() error = %v",
 			err,
@@ -726,6 +726,7 @@ func TestWriteTasksJsonFilePermissions(
 	err := writeTasksJSONC(
 		tasksJsonPath,
 		tasks,
+		nil,
 		nil,
 	)
 	if err != nil {
@@ -1172,6 +1173,7 @@ func TestWriteTasksJSONCWithAppendConfig(
 		tasksJSONPath,
 		existingTasks,
 		appendCfg,
+		nil,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1274,6 +1276,7 @@ func TestWriteTasksJSONCWithDefaultSection(
 		tasksJSONPath,
 		existingTasks,
 		appendCfg,
+		nil,
 	)
 	if err != nil {
 		t.Fatalf(
@@ -1339,6 +1342,7 @@ func TestWriteTasksJSONCWithEmptyAppendTasks(
 		tasksJSONPath,
 		existingTasks,
 		appendCfg,
+		nil,
 	)
 	if err != nil {
 		t.Fatalf(

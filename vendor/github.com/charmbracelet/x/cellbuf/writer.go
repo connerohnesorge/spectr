@@ -22,11 +22,7 @@ type CellBuffer interface {
 
 // FillRect fills the rectangle within the cell buffer with the given cell.
 // This will not fill cells outside the bounds of the cell buffer.
-func FillRect(
-	s CellBuffer,
-	c *Cell,
-	rect Rectangle,
-) {
+func FillRect(s CellBuffer, c *Cell, rect Rectangle) {
 	for y := rect.Min.Y; y < rect.Max.Y; y++ {
 		for x := rect.Min.X; x < rect.Max.X; x++ {
 			s.SetCell(x, y, c) //nolint:errcheck
@@ -52,26 +48,13 @@ func Clear(s CellBuffer) {
 // SetContentRect clears the rectangle within the cell buffer with blank cells,
 // and sets the given string as its content. If the height or width of the
 // string exceeds the height or width of the cell buffer, it will be truncated.
-func SetContentRect(
-	s CellBuffer,
-	str string,
-	rect Rectangle,
-) {
+func SetContentRect(s CellBuffer, str string, rect Rectangle) {
 	// Replace all "\n" with "\r\n" to ensure the cursor is reset to the start
 	// of the line. Make sure we don't replace "\r\n" with "\r\r\n".
 	str = strings.ReplaceAll(str, "\r\n", "\n")
 	str = strings.ReplaceAll(str, "\n", "\r\n")
 	ClearRect(s, rect)
-	printString(
-		s,
-		ansi.GraphemeWidth,
-		rect.Min.X,
-		rect.Min.Y,
-		rect,
-		str,
-		true,
-		"",
-	)
+	printString(s, ansi.GraphemeWidth, rect.Min.X, rect.Min.Y, rect, str, true, "")
 }
 
 // SetContent clears the cell buffer with blank cells, and sets the given string
@@ -97,10 +80,7 @@ func Render(d CellBuffer) string {
 
 // RenderLine returns a string representation of the yth line of the grid along
 // with the width of the line.
-func RenderLine(
-	d CellBuffer,
-	n int,
-) (w int, line string) {
+func RenderLine(d CellBuffer, n int) (w int, line string) {
 	var pen Style
 	var link Link
 	var buf bytes.Buffer
@@ -119,44 +99,31 @@ func RenderLine(
 	}
 
 	for x := 0; x < d.Bounds().Dx(); x++ {
-		if cell := d.Cell(x, n); cell != nil &&
-			cell.Width > 0 {
+		if cell := d.Cell(x, n); cell != nil && cell.Width > 0 {
 			// Convert the cell's style and link to the given color profile.
 			cellStyle := cell.Style
 			cellLink := cell.Link
 			if cellStyle.Empty() && !pen.Empty() {
 				writePending()
-				buf.WriteString(
-					ansi.ResetStyle,
-				) //nolint:errcheck
+				buf.WriteString(ansi.ResetStyle) //nolint:errcheck
 				pen.Reset()
 			}
 			if !cellStyle.Equal(&pen) {
 				writePending()
 				seq := cellStyle.DiffSequence(pen)
-				buf.WriteString(
-					seq,
-				) // nolint:errcheck
+				buf.WriteString(seq) // nolint:errcheck
 				pen = cellStyle
 			}
 
 			// Write the URL escape sequence
-			if cellLink != link &&
-				link.URL != "" {
+			if cellLink != link && link.URL != "" {
 				writePending()
-				buf.WriteString(
-					ansi.ResetHyperlink(),
-				) //nolint:errcheck
+				buf.WriteString(ansi.ResetHyperlink()) //nolint:errcheck
 				link.Reset()
 			}
 			if cellLink != link {
 				writePending()
-				buf.WriteString(
-					ansi.SetHyperlink(
-						cellLink.URL,
-						cellLink.Params,
-					),
-				) //nolint:errcheck
+				buf.WriteString(ansi.SetHyperlink(cellLink.URL, cellLink.Params)) //nolint:errcheck
 				link = cellLink
 			}
 
@@ -173,19 +140,12 @@ func RenderLine(
 		}
 	}
 	if link.URL != "" {
-		buf.WriteString(
-			ansi.ResetHyperlink(),
-		) //nolint:errcheck
+		buf.WriteString(ansi.ResetHyperlink()) //nolint:errcheck
 	}
 	if !pen.Empty() {
-		buf.WriteString(
-			ansi.ResetStyle,
-		) //nolint:errcheck
+		buf.WriteString(ansi.ResetStyle) //nolint:errcheck
 	}
-	return w, strings.TrimRight(
-		buf.String(),
-		" ",
-	) // Trim trailing spaces
+	return w, strings.TrimRight(buf.String(), " ") // Trim trailing spaces
 }
 
 // ScreenWriter represents a writer that writes to a [Screen] parsing ANSI
@@ -204,9 +164,7 @@ func NewScreenWriter(s *Screen) *ScreenWriter {
 // Write writes the given bytes to the screen.
 // This will recognize ANSI [ansi.SGR] style and [ansi.SetHyperlink] escape
 // sequences.
-func (s *ScreenWriter) Write(
-	p []byte,
-) (n int, err error) {
+func (s *ScreenWriter) Write(p []byte) (n int, err error) {
 	printString(s.Screen, s.method,
 		s.cur.X, s.cur.Y, s.Bounds(),
 		p, false, "")
@@ -228,10 +186,7 @@ func (s *ScreenWriter) SetContent(str string) {
 //
 // This will recognize ANSI [ansi.SGR] style and [ansi.SetHyperlink] escape
 // sequences.
-func (s *ScreenWriter) SetContentRect(
-	str string,
-	rect Rectangle,
-) {
+func (s *ScreenWriter) SetContentRect(str string, rect Rectangle) {
 	// Replace all "\n" with "\r\n" to ensure the cursor is reset to the start
 	// of the line. Make sure we don't replace "\r\n" with "\r\r\n".
 	str = strings.ReplaceAll(str, "\r\n", "\n")
@@ -246,10 +201,7 @@ func (s *ScreenWriter) SetContentRect(
 // string to the width of the screen if it exceeds the width of the screen.
 // This will recognize ANSI [ansi.SGR] style and [ansi.SetHyperlink] escape
 // sequences.
-func (s *ScreenWriter) Print(
-	str string,
-	v ...interface{},
-) {
+func (s *ScreenWriter) Print(str string, v ...interface{}) {
 	if len(v) > 0 {
 		str = fmt.Sprintf(str, v...)
 	}
@@ -262,11 +214,7 @@ func (s *ScreenWriter) Print(
 // the width of the screen if it exceeds the width of the screen.
 // This will recognize ANSI [ansi.SGR] style and [ansi.SetHyperlink] escape
 // sequences.
-func (s *ScreenWriter) PrintAt(
-	x, y int,
-	str string,
-	v ...interface{},
-) {
+func (s *ScreenWriter) PrintAt(x, y int, str string, v ...interface{}) {
 	if len(v) > 0 {
 		str = fmt.Sprintf(str, v...)
 	}
@@ -280,10 +228,7 @@ func (s *ScreenWriter) PrintAt(
 // append if the string is truncated.
 // This will recognize ANSI [ansi.SGR] style and [ansi.SetHyperlink] escape
 // sequences.
-func (s *ScreenWriter) PrintCrop(
-	str string,
-	tail string,
-) {
+func (s *ScreenWriter) PrintCrop(str string, tail string) {
 	printString(s.Screen, s.method,
 		s.cur.X, s.cur.Y, s.Bounds(),
 		str, true, tail)
@@ -294,11 +239,7 @@ func (s *ScreenWriter) PrintCrop(
 // if the string is truncated.
 // This will recognize ANSI [ansi.SGR] style and [ansi.SetHyperlink] escape
 // sequences.
-func (s *ScreenWriter) PrintCropAt(
-	x, y int,
-	str string,
-	tail string,
-) {
+func (s *ScreenWriter) PrintCropAt(x, y int, str string, tail string) {
 	printString(s.Screen, s.method,
 		x, y, s.Bounds(),
 		str, true, tail)
@@ -334,30 +275,20 @@ func printString[T []byte | string](
 	var link Link
 	var state byte
 	for len(str) > 0 {
-		seq, width, n, newState := decoder(
-			str,
-			state,
-			p,
-		)
+		seq, width, n, newState := decoder(str, state, p)
 
 		switch width {
-		case 1,
-			2,
-			3,
-			4: // wide cells can go up to 4 cells wide
+		case 1, 2, 3, 4: // wide cells can go up to 4 cells wide
 			cell.Width += width
 			cell.Append([]rune(string(seq))...)
 
-			if !truncate &&
-				x+cell.Width > bounds.Max.X &&
-				y+1 < bounds.Max.Y {
+			if !truncate && x+cell.Width > bounds.Max.X && y+1 < bounds.Max.Y {
 				// Wrap the string to the width of the window
 				x = bounds.Min.X
 				y++
 			}
 			if Pos(x, y).In(bounds) {
-				if truncate && tailc.Width > 0 &&
-					x+cell.Width > bounds.Max.X-tailc.Width {
+				if truncate && tailc.Width > 0 && x+cell.Width > bounds.Max.X-tailc.Width {
 					// Truncate the string and append the tail if any.
 					cell := tailc
 					cell.Style = style
@@ -391,8 +322,7 @@ func printString[T []byte | string](
 			case ansi.Equal(seq, T("\r")):
 				x = bounds.Min.X
 			default:
-				cell.Append(
-					[]rune(string(seq))...)
+				cell.Append([]rune(string(seq))...)
 			}
 		}
 

@@ -32,15 +32,12 @@ type SoftPaletteSettings struct {
 // as a new palette of distinctive colors. Falls back to K-medoid if the mean
 // happens to fall outside of the color-space, which can only happen if you
 // specify a CheckColor function.
-func SoftPaletteEx(
-	colorsCount int,
-	settings SoftPaletteSettings,
-) ([]Color, error) {
+func SoftPaletteEx(colorsCount int, settings SoftPaletteSettings) ([]Color, error) {
+
 	// Checks whether it's a valid RGB and also fulfills the potentially provided constraint.
 	check := func(col lab_t) bool {
 		c := Lab(col.L, col.A, col.B)
-		return c.IsValid() &&
-			(settings.CheckColor == nil || settings.CheckColor(col.L, col.A, col.B))
+		return c.IsValid() && (settings.CheckColor == nil || settings.CheckColor(col.L, col.A, col.B))
 	}
 
 	// Sample the color space. These will be the points k-means is run on.
@@ -51,19 +48,12 @@ func SoftPaletteEx(
 		dab = 0.05
 	}
 
-	samples := make(
-		[]lab_t,
-		0,
-		int(1.0/dl*2.0/dab*2.0/dab),
-	)
+	samples := make([]lab_t, 0, int(1.0/dl*2.0/dab*2.0/dab))
 	for l := 0.0; l <= 1.0; l += dl {
 		for a := -1.0; a <= 1.0; a += dab {
 			for b := -1.0; b <= 1.0; b += dab {
 				if check(lab_t{l, a, b}) {
-					samples = append(
-						samples,
-						lab_t{l, a, b},
-					)
+					samples = append(samples, lab_t{l, a, b})
 				}
 			}
 		}
@@ -71,11 +61,7 @@ func SoftPaletteEx(
 
 	// That would cause some infinite loops down there...
 	if len(samples) < colorsCount {
-		return nil, fmt.Errorf(
-			"palettegen: more colors requested (%v) than samples available (%v). Your requested color count may be wrong, you might want to use many samples or your constraint function makes the valid color space too small",
-			colorsCount,
-			len(samples),
-		)
+		return nil, fmt.Errorf("palettegen: more colors requested (%v) than samples available (%v). Your requested color count may be wrong, you might want to use many samples or your constraint function makes the valid color space too small", colorsCount, len(samples))
 	} else if len(samples) == colorsCount {
 		return labs2cols(samples), nil // Oops?
 	}
@@ -163,20 +149,11 @@ func SoftPaletteEx(
 }
 
 // A wrapper which uses common parameters.
-func SoftPalette(
-	colorsCount int,
-) ([]Color, error) {
-	return SoftPaletteEx(
-		colorsCount,
-		SoftPaletteSettings{nil, 50, false},
-	)
+func SoftPalette(colorsCount int) ([]Color, error) {
+	return SoftPaletteEx(colorsCount, SoftPaletteSettings{nil, 50, false})
 }
 
-func in(
-	haystack []lab_t,
-	upto int,
-	needle lab_t,
-) bool {
+func in(haystack []lab_t, upto int, needle lab_t) bool {
 	for i := 0; i < upto && i < len(haystack); i++ {
 		if haystack[i] == needle {
 			return true
@@ -196,15 +173,7 @@ func lab_eq(lab1, lab2 lab_t) bool {
 // That's faster than using colorful's DistanceLab since we would have to
 // convert back and forth for that. Here is no conversion.
 func lab_dist(lab1, lab2 lab_t) float64 {
-	return math.Sqrt(
-		sq(
-			lab1.L-lab2.L,
-		) + sq(
-			lab1.A-lab2.A,
-		) + sq(
-			lab1.B-lab2.B,
-		),
-	)
+	return math.Sqrt(sq(lab1.L-lab2.L) + sq(lab1.A-lab2.A) + sq(lab1.B-lab2.B))
 }
 
 func labs2cols(labs []lab_t) (cols []Color) {

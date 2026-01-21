@@ -99,10 +99,7 @@ func compactCmds[T ~[]Cmd](cmds []Cmd) Cmd {
 //	}
 //
 // Every is analogous to Tick in the Elm Architecture.
-func Every(
-	duration time.Duration,
-	fn func(time.Time) Msg,
-) Cmd {
+func Every(duration time.Duration, fn func(time.Time) Msg) Cmd {
 	n := time.Now()
 	d := n.Truncate(duration).Add(duration).Sub(n)
 	t := time.NewTimer(d)
@@ -154,10 +151,7 @@ func Every(
 //	    }
 //	    return m, nil
 //	}
-func Tick(
-	d time.Duration,
-	fn func(time.Time) Msg,
-) Cmd {
+func Tick(d time.Duration, fn func(time.Time) Msg) Cmd {
 	t := time.NewTimer(d)
 	return func() Msg {
 		ts := <-t.C

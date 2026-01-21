@@ -38,16 +38,12 @@ func (s DECStatusReport) StatusReport() int {
 // format.
 //
 // See also https://vt100.net/docs/vt510-rm/DSR.html
-func DeviceStatusReport(
-	statues ...StatusReport,
-) string {
+func DeviceStatusReport(statues ...StatusReport) string {
 	var dec bool
 	list := make([]string, len(statues))
 	seq := "\x1b["
 	for i, status := range statues {
-		list[i] = strconv.Itoa(
-			status.StatusReport(),
-		)
+		list[i] = strconv.Itoa(status.StatusReport())
 		switch status.(type) {
 		case DECStatusReport:
 			dec = true
@@ -111,20 +107,14 @@ const RequestLightDarkReport = "\x1b[?996n"
 // Where Pl is the line number and Pc is the column number.
 //
 // See also https://vt100.net/docs/vt510-rm/CPR.html
-func CursorPositionReport(
-	line, column int,
-) string {
+func CursorPositionReport(line, column int) string {
 	if line < 1 {
 		line = 1
 	}
 	if column < 1 {
 		column = 1
 	}
-	return "\x1b[" + strconv.Itoa(
-		line,
-	) + ";" + strconv.Itoa(
-		column,
-	) + "R"
+	return "\x1b[" + strconv.Itoa(line) + ";" + strconv.Itoa(column) + "R"
 }
 
 // CPR is an alias for [CursorPositionReport].
@@ -145,9 +135,7 @@ func CPR(line, column int) string {
 // the page number.
 //
 // See also https://vt100.net/docs/vt510-rm/DECXCPR.html
-func ExtendedCursorPositionReport(
-	line, column, page int,
-) string {
+func ExtendedCursorPositionReport(line, column, page int) string {
 	if line < 1 {
 		line = 1
 	}
@@ -155,28 +143,14 @@ func ExtendedCursorPositionReport(
 		column = 1
 	}
 	if page < 1 {
-		return "\x1b[?" + strconv.Itoa(
-			line,
-		) + ";" + strconv.Itoa(
-			column,
-		) + "R"
+		return "\x1b[?" + strconv.Itoa(line) + ";" + strconv.Itoa(column) + "R"
 	}
-	return "\x1b[?" + strconv.Itoa(
-		line,
-	) + ";" + strconv.Itoa(
-		column,
-	) + ";" + strconv.Itoa(
-		page,
-	) + "R"
+	return "\x1b[?" + strconv.Itoa(line) + ";" + strconv.Itoa(column) + ";" + strconv.Itoa(page) + "R"
 }
 
 // DECXCPR is an alias for [ExtendedCursorPositionReport].
 func DECXCPR(line, column, page int) string {
-	return ExtendedCursorPositionReport(
-		line,
-		column,
-		page,
-	)
+	return ExtendedCursorPositionReport(line, column, page)
 }
 
 // LightDarkReport is a control sequence that reports the terminal's operating

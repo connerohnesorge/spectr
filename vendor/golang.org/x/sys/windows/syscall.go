@@ -34,9 +34,7 @@ import (
 // ByteSliceFromString returns a NUL-terminated slice of bytes
 // containing the text of s. If s contains a NUL byte at any
 // location, it returns (nil, syscall.EINVAL).
-func ByteSliceFromString(
-	s string,
-) ([]byte, error) {
+func ByteSliceFromString(s string) ([]byte, error) {
 	if strings.IndexByte(s, 0) != -1 {
 		return nil, syscall.EINVAL
 	}

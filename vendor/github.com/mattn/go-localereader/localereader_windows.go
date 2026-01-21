@@ -1,4 +1,3 @@
-//go:build windows
 // +build windows
 
 package localereader
@@ -18,15 +17,9 @@ const (
 )
 
 var (
-	modkernel32 = syscall.NewLazyDLL(
-		"kernel32.dll",
-	)
-	procMultiByteToWideChar = modkernel32.NewProc(
-		"MultiByteToWideChar",
-	)
-	procIsDBCSLeadByte = modkernel32.NewProc(
-		"IsDBCSLeadByte",
-	)
+	modkernel32             = syscall.NewLazyDLL("kernel32.dll")
+	procMultiByteToWideChar = modkernel32.NewProc("MultiByteToWideChar")
+	procIsDBCSLeadByte      = modkernel32.NewProc("IsDBCSLeadByte")
 )
 
 type codepageDecoder struct {
@@ -35,10 +28,7 @@ type codepageDecoder struct {
 	cp int
 }
 
-func (codepageDecoder) Transform(
-	dst, src []byte,
-	atEOF bool,
-) (nDst, nSrc int, err error) {
+func (codepageDecoder) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
 	r, size := rune(0), 0
 loop:
 	for ; nSrc < len(src); nSrc += size {
@@ -79,15 +69,14 @@ loop:
 		nDst += utf8.EncodeRune(dst[nDst:], r)
 	}
 	return nDst, nSrc, err
+
 }
 
 func newReader(r io.Reader) io.Reader {
 	return transform.NewReader(r, NewAcpDecoder())
 }
 
-func NewCodePageDecoder(
-	cp int,
-) transform.Transformer {
+func NewCodePageDecoder(cp int) transform.Transformer {
 	return &codepageDecoder{cp: cp}
 }
 

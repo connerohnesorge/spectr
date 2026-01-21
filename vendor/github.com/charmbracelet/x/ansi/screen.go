@@ -222,11 +222,7 @@ func SetScrollingRegion(t, b int) string {
 	if b < 0 {
 		b = 0
 	}
-	return "\x1b[" + strconv.Itoa(
-		t,
-	) + ";" + strconv.Itoa(
-		b,
-	) + "r"
+	return "\x1b[" + strconv.Itoa(t) + ";" + strconv.Itoa(b) + "r"
 }
 
 // InsertCharacter (ICH) inserts n blank characters at the current cursor
@@ -331,9 +327,7 @@ func TBC(n int) string {
 //	CSI Ps $ w
 //
 // See: https://vt100.net/docs/vt510-rm/DECRQPSR.html
-func RequestPresentationStateReport(
-	n int,
-) string {
+func RequestPresentationStateReport(n int) string {
 	var s string
 	if n > 0 {
 		s = strconv.Itoa(n)
@@ -361,10 +355,7 @@ func TabStopReport(stops ...int) string {
 	for _, v := range stops {
 		s = append(s, strconv.Itoa(v))
 	}
-	return "\x1bP2$u" + strings.Join(
-		s,
-		"/",
-	) + "\x1b\\"
+	return "\x1bP2$u" + strings.Join(s, "/") + "\x1b\\"
 }
 
 // DECTABSR is an alias for [TabStopReport].
@@ -384,17 +375,12 @@ func DECTABSR(stops ...int) string {
 // Where D is a decimal number representing a value.
 //
 // See: https://vt100.net/docs/vt510-rm/DECCIR.html
-func CursorInformationReport(
-	values ...int,
-) string {
+func CursorInformationReport(values ...int) string {
 	var s []string //nolint:prealloc
 	for _, v := range values {
 		s = append(s, strconv.Itoa(v))
 	}
-	return "\x1bP1$u" + strings.Join(
-		s,
-		";",
-	) + "\x1b\\"
+	return "\x1bP1$u" + strings.Join(s, ";") + "\x1b\\"
 }
 
 // DECCIR is an alias for [CursorInformationReport].

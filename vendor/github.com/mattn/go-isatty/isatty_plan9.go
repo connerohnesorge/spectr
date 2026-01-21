@@ -13,8 +13,7 @@ func IsTerminal(fd uintptr) bool {
 	if err != nil {
 		return false
 	}
-	return path == "/dev/cons" ||
-		path == "/mnt/term/dev/cons"
+	return path == "/dev/cons" || path == "/mnt/term/dev/cons"
 }
 
 // IsCygwinTerminal return true if the file descriptor is a cygwin or msys2

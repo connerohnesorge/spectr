@@ -35,10 +35,7 @@ func Strip(s string) string {
 			continue
 		}
 
-		state, action := parser.Table.Transition(
-			pstate,
-			s[i],
-		)
+		state, action := parser.Table.Transition(pstate, s[i])
 		switch action {
 		case parser.CollectAction:
 			if state == parser.Utf8State {
@@ -47,8 +44,7 @@ func Strip(s string) string {
 				buf.WriteByte(s[i])
 				ri++
 			}
-		case parser.PrintAction,
-			parser.ExecuteAction:
+		case parser.PrintAction, parser.ExecuteAction:
 			// collects printable ASCII and non-printable characters
 			buf.WriteByte(s[i])
 		}
@@ -93,16 +89,10 @@ func stringWidth(m Method, s string) int {
 	)
 
 	for i := 0; i < len(s); i++ {
-		state, action := parser.Table.Transition(
-			pstate,
-			s[i],
-		)
+		state, action := parser.Table.Transition(pstate, s[i])
 		if state == parser.Utf8State {
 			var w int
-			cluster, _, w, _ = uniseg.FirstGraphemeClusterInString(
-				s[i:],
-				-1,
-			)
+			cluster, _, w, _ = uniseg.FirstGraphemeClusterInString(s[i:], -1)
 			if m == WcWidth {
 				w = runewidth.StringWidth(cluster)
 			}

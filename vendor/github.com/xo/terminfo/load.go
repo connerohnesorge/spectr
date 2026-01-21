@@ -39,27 +39,16 @@ func Load(name string) (*Terminfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	checkDirs = append(
-		checkDirs,
-		path.Join(u.HomeDir, ".terminfo"),
-	)
+	checkDirs = append(checkDirs, path.Join(u.HomeDir, ".terminfo"))
 	// check $TERMINFO_DIRS
 	if dirs := os.Getenv("TERMINFO_DIRS"); dirs != "" {
-		checkDirs = append(
-			checkDirs,
-			strings.Split(dirs, ":")...)
+		checkDirs = append(checkDirs, strings.Split(dirs, ":")...)
 	}
 	// check fallback directories
-	checkDirs = append(
-		checkDirs,
-		"/etc/terminfo",
-		"/lib/terminfo",
-		"/usr/share/terminfo",
-	)
+	checkDirs = append(checkDirs, "/etc/terminfo", "/lib/terminfo", "/usr/share/terminfo")
 	for _, dir := range checkDirs {
 		ti, err = Open(dir, name)
-		if err != nil && err != ErrFileNotFound &&
-			!os.IsNotExist(err) {
+		if err != nil && err != ErrFileNotFound && !os.IsNotExist(err) {
 			return nil, err
 		} else if err == nil {
 			return ti, nil

@@ -63,10 +63,7 @@ func (t *Tag) String() string {
 	out := []string{}
 	for key, list := range t.items {
 		for _, value := range list {
-			out = append(
-				out,
-				fmt.Sprintf("%s:%q", key, value),
-			)
+			out = append(out, fmt.Sprintf("%s:%q", key, value))
 		}
 	}
 	return strings.Join(out, " ")
@@ -77,27 +74,11 @@ type tagChars struct {
 	needsUnquote       bool
 }
 
-var (
-	kongChars = tagChars{
-		sep:          ',',
-		quote:        '\'',
-		assign:       '=',
-		needsUnquote: false,
-	}
-	bareChars = tagChars{
-		sep:          ' ',
-		quote:        '"',
-		assign:       ':',
-		needsUnquote: true,
-	}
-)
+var kongChars = tagChars{sep: ',', quote: '\'', assign: '=', needsUnquote: false}
+var bareChars = tagChars{sep: ' ', quote: '"', assign: ':', needsUnquote: true}
 
-//
 //nolint:gocyclo
-func parseTagItems(
-	tagString string,
-	chr tagChars,
-) (map[string][]string, error) {
+func parseTagItems(tagString string, chr tagChars) (map[string][]string, error) {
 	d := map[string][]string{}
 	key := []rune{}
 	value := []rune{}
@@ -175,10 +156,7 @@ func parseTagItems(
 		}
 	}
 	if quotes {
-		return nil, fmt.Errorf(
-			"%v is not quoted properly",
-			tagString,
-		)
+		return nil, fmt.Errorf("%v is not quoted properly", tagString)
 	}
 
 	if err := add(); err != nil {
@@ -188,9 +166,7 @@ func parseTagItems(
 	return d, nil
 }
 
-func getTagInfo(
-	ft reflect.StructField,
-) (string, tagChars) {
+func getTagInfo(ft reflect.StructField) (string, tagChars) {
 	s, ok := ft.Tag.Lookup("kong")
 	if ok {
 		return s, kongChars
@@ -222,10 +198,7 @@ func parseTagString(s string) (*Tag, error) {
 	return t, nil
 }
 
-func parseTag(
-	parent reflect.Value,
-	ft reflect.StructField,
-) (*Tag, error) {
+func parseTag(parent reflect.Value, ft reflect.StructField) (*Tag, error) {
 	if ft.Tag.Get("kong") == "-" {
 		t := newEmptyTag()
 		t.Ignored = true
@@ -240,28 +213,19 @@ func parseTag(
 	}
 	err = hydrateTag(t, ft.Type)
 	if err != nil {
-		return nil, failField(
-			parent,
-			ft,
-			"%s",
-			err,
-		)
+		return nil, failField(parent, ft, "%s", err)
 	}
 	return t, nil
 }
 
-func hydrateTag(
-	t *Tag,
-	typ reflect.Type,
-) error { //nolint: gocyclo
+func hydrateTag(t *Tag, typ reflect.Type) error { //nolint: gocyclo
 	var typeName string
 	var isBool bool
 	var isBoolPtr bool
 	if typ != nil {
 		typeName = typ.Name()
 		isBool = typ.Kind() == reflect.Bool
-		isBoolPtr = typ.Kind() == reflect.Ptr &&
-			typ.Elem().Kind() == reflect.Bool
+		isBoolPtr = typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Bool
 	}
 	var err error
 	t.Cmd = t.Has("cmd")
@@ -269,9 +233,7 @@ func hydrateTag(
 	required := t.Has("required")
 	optional := t.Has("optional")
 	if required && optional {
-		return fmt.Errorf(
-			"can't specify both required and optional",
-		)
+		return fmt.Errorf("can't specify both required and optional")
 	}
 	t.Required = required
 	t.Optional = optional
@@ -288,20 +250,11 @@ func hydrateTag(
 	t.Type = t.Get("type")
 	t.TypeName = typeName
 	for _, env := range t.GetAll("env") {
-		t.Envs = append(
-			t.Envs,
-			strings.FieldsFunc(
-				env,
-				tagSplitFn,
-			)...)
+		t.Envs = append(t.Envs, strings.FieldsFunc(env, tagSplitFn)...)
 	}
 	t.Short, err = t.GetRune("short")
 	if err != nil && t.Get("short") != "" {
-		return fmt.Errorf(
-			"invalid short flag name %q: %s",
-			t.Get("short"),
-			err,
-		)
+		return fmt.Errorf("invalid short flag name %q: %s", t.Get("short"), err)
 	}
 	t.Hidden = t.Has("hidden")
 	t.Format = t.Get("format")
@@ -309,20 +262,10 @@ func hydrateTag(
 	t.MapSep, _ = t.GetSep("mapsep", ';')
 	t.Group = t.Get("group")
 	for _, xor := range t.GetAll("xor") {
-		t.Xor = append(
-			t.Xor,
-			strings.FieldsFunc(
-				xor,
-				tagSplitFn,
-			)...)
+		t.Xor = append(t.Xor, strings.FieldsFunc(xor, tagSplitFn)...)
 	}
 	for _, and := range t.GetAll("and") {
-		t.And = append(
-			t.And,
-			strings.FieldsFunc(
-				and,
-				tagSplitFn,
-			)...)
+		t.And = append(t.And, strings.FieldsFunc(and, tagSplitFn)...)
 	}
 	t.Prefix = t.Get("prefix")
 	t.EnvPrefix = t.Get("envprefix")
@@ -330,9 +273,7 @@ func hydrateTag(
 	t.Embed = t.Has("embed")
 	if t.Has("negatable") {
 		if !isBool && !isBoolPtr {
-			return fmt.Errorf(
-				"negatable can only be set on booleans",
-			)
+			return fmt.Errorf("negatable can only be set on booleans")
 		}
 		negatable := t.Get("negatable")
 		if negatable == "" {
@@ -342,40 +283,25 @@ func hydrateTag(
 	}
 	aliases := t.Get("aliases")
 	if len(aliases) > 0 {
-		t.Aliases = append(
-			t.Aliases,
-			strings.FieldsFunc(
-				aliases,
-				tagSplitFn,
-			)...)
+		t.Aliases = append(t.Aliases, strings.FieldsFunc(aliases, tagSplitFn)...)
 	}
 	t.Vars = Vars{}
 	for _, set := range t.GetAll("set") {
 		parts := strings.SplitN(set, "=", 2)
 		if len(parts) == 0 {
-			return fmt.Errorf(
-				"set should be in the form key=value but got %q",
-				set,
-			)
+			return fmt.Errorf("set should be in the form key=value but got %q", set)
 		}
 		t.Vars[parts[0]] = parts[1]
 	}
 	t.PlaceHolder = t.Get("placeholder")
 	t.Enum = t.Get("enum")
-	scalarType := typ == nil ||
-		!(typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map || typ.Kind() == reflect.Ptr)
-	if t.Enum != "" &&
-		!(t.Required || t.HasDefault) &&
-		scalarType {
-		return fmt.Errorf(
-			"enum value is only valid if it is either required or has a valid default value",
-		)
+	scalarType := typ == nil || !(typ.Kind() == reflect.Slice || typ.Kind() == reflect.Map || typ.Kind() == reflect.Ptr)
+	if t.Enum != "" && !(t.Required || t.HasDefault) && scalarType {
+		return fmt.Errorf("enum value is only valid if it is either required or has a valid default value")
 	}
 	passthrough := t.Has("passthrough")
 	if passthrough && !t.Arg && !t.Cmd {
-		return fmt.Errorf(
-			"passthrough only makes sense for positional arguments or commands",
-		)
+		return fmt.Errorf("passthrough only makes sense for positional arguments or commands")
 	}
 	t.Passthrough = passthrough
 	if t.Passthrough {
@@ -386,10 +312,7 @@ func hydrateTag(
 		case "all", "":
 			t.PassthroughMode = PassThroughModeAll
 		default:
-			return fmt.Errorf(
-				"invalid passthrough mode %q, must be one of 'partial' or 'all'",
-				passthroughMode,
-			)
+			return fmt.Errorf("invalid passthrough mode %q, must be one of 'partial' or 'all'", passthroughMode)
 		}
 	}
 	return nil
@@ -423,9 +346,7 @@ func (t *Tag) GetBool(k string) (bool, error) {
 }
 
 // GetFloat parses the given tag as a float64.
-func (t *Tag) GetFloat(
-	k string,
-) (float64, error) {
+func (t *Tag) GetFloat(k string) (float64, error) {
 	return strconv.ParseFloat(t.Get(k), 64)
 }
 
@@ -448,10 +369,7 @@ func (t *Tag) GetRune(k string) (rune, error) {
 // The separator is returned, or -1 if "none" is specified. If the tag value is an
 // invalid utf8 sequence, the default rune is returned as well as an error. If the
 // tag value is more than one rune, the first rune is returned as well as an error.
-func (t *Tag) GetSep(
-	k string,
-	dflt rune,
-) (rune, error) {
+func (t *Tag) GetSep(k string, dflt rune) (rune, error) {
 	tv := t.Get(k)
 	if tv == "none" {
 		return -1, nil
@@ -460,11 +378,7 @@ func (t *Tag) GetSep(
 	}
 	r, size := utf8.DecodeRuneInString(tv)
 	if r == utf8.RuneError {
-		return dflt, fmt.Errorf(
-			`%v:"%v" has a rune error`,
-			k,
-			tv,
-		)
+		return dflt, fmt.Errorf(`%v:"%v" has a rune error`, k, tv)
 	} else if size != len(tv) {
 		return r, fmt.Errorf(`%v:"%v" is more than a single rune`, k, tv)
 	}

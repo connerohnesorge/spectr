@@ -46,21 +46,15 @@ const (
 )
 
 // The regular expression for a line containing a code point range property.
-var propertyPattern = regexp.MustCompile(
-	`^([0-9A-F]{4,6})(\.\.([0-9A-F]{4,6}))?\s*;\s*([A-Za-z0-9_]+)\s*#\s(.+)$`,
-)
+var propertyPattern = regexp.MustCompile(`^([0-9A-F]{4,6})(\.\.([0-9A-F]{4,6}))?\s*;\s*([A-Za-z0-9_]+)\s*#\s(.+)$`)
 
 func main() {
 	if len(os.Args) < 5 {
-		fmt.Println(
-			"Not enough arguments, see code for details",
-		)
+		fmt.Println("Not enough arguments, see code for details")
 		os.Exit(1)
 	}
 
-	log.SetPrefix(
-		"gen_properties (" + os.Args[4] + "): ",
-	)
+	log.SetPrefix("gen_properties (" + os.Args[4] + "): ")
 	log.SetFlags(0)
 
 	// Parse flags.
@@ -80,16 +74,9 @@ func main() {
 	_, includeGeneralCategory := flags["gencat"]
 	var mainURL string
 	if os.Args[1] != "-" {
-		mainURL = fmt.Sprintf(
-			propertyURL,
-			os.Args[1],
-		)
+		mainURL = fmt.Sprintf(propertyURL, os.Args[1])
 	}
-	src, err := parse(
-		mainURL,
-		flags["emojis"],
-		includeGeneralCategory,
-	)
+	src, err := parse(mainURL, flags["emojis"], includeGeneralCategory)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -114,14 +101,9 @@ func main() {
 // may pass an empty "propertyURL" to skip parsing the main properties file. If
 // "includeGeneralCategory" is true, the Unicode General Category property will
 // be extracted from the comments and included in the output.
-func parse(
-	propertyURL, emojiProperty string,
-	includeGeneralCategory bool,
-) (string, error) {
+func parse(propertyURL, emojiProperty string, includeGeneralCategory bool) (string, error) {
 	if propertyURL == "" && emojiProperty == "" {
-		return "", errors.New(
-			"no properties to parse",
-		)
+		return "", errors.New("no properties to parse")
 	}
 
 	// Temporary buffer to hold properties.
@@ -142,37 +124,19 @@ func parse(
 		num := 0
 		for scanner.Scan() {
 			num++
-			line := strings.TrimSpace(
-				scanner.Text(),
-			)
+			line := strings.TrimSpace(scanner.Text())
 
 			// Skip comments and empty lines.
-			if strings.HasPrefix(line, "#") ||
-				line == "" {
+			if strings.HasPrefix(line, "#") || line == "" {
 				continue
 			}
 
 			// Everything else must be a code point range, a property and a comment.
-			from, to, property, comment, err := parseProperty(
-				line,
-			)
+			from, to, property, comment, err := parseProperty(line)
 			if err != nil {
-				return "", fmt.Errorf(
-					"%s line %d: %v",
-					os.Args[4],
-					num,
-					err,
-				)
+				return "", fmt.Errorf("%s line %d: %v", os.Args[4], num, err)
 			}
-			properties = append(
-				properties,
-				[4]string{
-					from,
-					to,
-					property,
-					comment,
-				},
-			)
+			properties = append(properties, [4]string{from, to, property, comment})
 		}
 		if err := scanner.Err(); err != nil {
 			return "", err
@@ -198,35 +162,16 @@ func parse(
 
 			// Skip comments, empty lines, and everything not containing
 			// "Extended_Pictographic".
-			if strings.HasPrefix(line, "#") ||
-				line == "" ||
-				!strings.Contains(
-					line,
-					emojiProperty,
-				) {
+			if strings.HasPrefix(line, "#") || line == "" || !strings.Contains(line, emojiProperty) {
 				continue
 			}
 
 			// Everything else must be a code point range, a property and a comment.
-			from, to, property, comment, err := parseProperty(
-				line,
-			)
+			from, to, property, comment, err := parseProperty(line)
 			if err != nil {
-				return "", fmt.Errorf(
-					"emojis line %d: %v",
-					num,
-					err,
-				)
+				return "", fmt.Errorf("emojis line %d: %v", num, err)
 			}
-			properties = append(
-				properties,
-				[4]string{
-					from,
-					to,
-					property,
-					comment,
-				},
-			)
+			properties = append(properties, [4]string{from, to, property, comment})
 		}
 		if err := scanner.Err(); err != nil {
 			return "", err
@@ -235,23 +180,13 @@ func parse(
 
 	// Avoid overflow during binary search.
 	if len(properties) >= 1<<31 {
-		return "", errors.New(
-			"too many properties",
-		)
+		return "", errors.New("too many properties")
 	}
 
 	// Sort properties.
 	sort.Slice(properties, func(i, j int) bool {
-		left, _ := strconv.ParseUint(
-			properties[i][0],
-			16,
-			64,
-		)
-		right, _ := strconv.ParseUint(
-			properties[j][0],
-			16,
-			64,
-		)
+		left, _ := strconv.ParseUint(properties[i][0], 16, 64)
+		right, _ := strconv.ParseUint(properties[j][0], 16, 64)
 		return left < right
 	})
 
@@ -270,22 +205,16 @@ func parse(
 // ` + emojiURL + `
 // ("Extended_Pictographic" only)`
 	}
-	buf.WriteString(
-		`// Code generated via go generate from gen_properties.go. DO NOT EDIT.
+	buf.WriteString(`// Code generated via go generate from gen_properties.go. DO NOT EDIT.
 
 package uniseg
 
 // ` + os.Args[3] + ` are taken from
 // ` + propertyURL + emojiComment + `
-// on ` + time.Now().
-			Format("January 2, 2006") +
-			`. See https://www.unicode.org/license.html for the Unicode
+// on ` + time.Now().Format("January 2, 2006") + `. See https://www.unicode.org/license.html for the Unicode
 // license agreement.
-var ` + os.Args[3] + ` = [][` + strconv.Itoa(
-			columns,
-		) + `]int{
-	`,
-	)
+var ` + os.Args[3] + ` = [][` + strconv.Itoa(columns) + `]int{
+	`)
 
 	// Properties.
 	for _, prop := range properties {
@@ -295,15 +224,7 @@ var ` + os.Args[3] + ` = [][` + strconv.Itoa(
 				generalCategory = "gcLC"
 			}
 			prop[3] = prop[3][3:]
-			fmt.Fprintf(
-				&buf,
-				"{0x%s,0x%s,%s,%s}, // %s\n",
-				prop[0],
-				prop[1],
-				translateProperty("pr", prop[2]),
-				generalCategory,
-				prop[3],
-			)
+			fmt.Fprintf(&buf, "{0x%s,0x%s,%s,%s}, // %s\n", prop[0], prop[1], translateProperty("pr", prop[2]), generalCategory, prop[3])
 		} else {
 			fmt.Fprintf(&buf, "{0x%s,0x%s,%s}, // %s\n", prop[0], prop[1], translateProperty("pr", prop[2]), prop[3])
 		}
@@ -317,12 +238,8 @@ var ` + os.Args[3] + ` = [][` + strconv.Itoa(
 
 // parseProperty parses a line of the Unicode properties text file containing a
 // property for a code point range and returns it along with its comment.
-func parseProperty(
-	line string,
-) (from, to, property, comment string, err error) {
-	fields := propertyPattern.FindStringSubmatch(
-		line,
-	)
+func parseProperty(line string) (from, to, property, comment string, err error) {
+	fields := propertyPattern.FindStringSubmatch(line)
 	if fields == nil {
 		err = errors.New("no property found")
 		return
@@ -339,12 +256,6 @@ func parseProperty(
 
 // translateProperty translates a property name as used in the Unicode data file
 // to a variable used in the Go code.
-func translateProperty(
-	prefix, property string,
-) string {
-	return prefix + strings.ReplaceAll(
-		property,
-		"_",
-		"",
-	)
+func translateProperty(prefix, property string) string {
+	return prefix + strings.ReplaceAll(property, "_", "")
 }

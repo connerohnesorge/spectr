@@ -24,14 +24,8 @@ func (o *Output) ColorProfile() Profile {
 	if buildNumber < 10586 || winVersion < 10 {
 		// No ANSI support before Windows 10 build 10586.
 		if o.environ.Getenv("ANSICON") != "" {
-			conVersion := o.environ.Getenv(
-				"ANSICON_VER",
-			)
-			cv, err := strconv.ParseInt(
-				conVersion,
-				10,
-				64,
-			)
+			conVersion := o.environ.Getenv("ANSICON_VER")
+			cv, err := strconv.ParseInt(conVersion, 10, 64)
 			if err != nil || cv < 181 {
 				// No 8 bit color support before v1.81 release.
 				return ANSI
@@ -67,9 +61,7 @@ func (o Output) backgroundColor() Color {
 //
 // Returns the original console mode and an error if one occurred.
 func EnableWindowsANSIConsole() (uint32, error) {
-	handle, err := windows.GetStdHandle(
-		windows.STD_OUTPUT_HANDLE,
-	)
+	handle, err := windows.GetStdHandle(windows.STD_OUTPUT_HANDLE)
 	if err != nil {
 		return 0, err
 	}
@@ -93,9 +85,7 @@ func EnableWindowsANSIConsole() (uint32, error) {
 
 // RestoreWindowsConsole restores the console mode to a previous state.
 func RestoreWindowsConsole(mode uint32) error {
-	handle, err := windows.GetStdHandle(
-		windows.STD_OUTPUT_HANDLE,
-	)
+	handle, err := windows.GetStdHandle(windows.STD_OUTPUT_HANDLE)
 	if err != nil {
 		return err
 	}
@@ -107,9 +97,7 @@ func RestoreWindowsConsole(mode uint32) error {
 // Windows for o and returns a function that restores o to its previous state.
 // On non-Windows platforms, or if o does not refer to a terminal, then it
 // returns a non-nil no-op function and no error.
-func EnableVirtualTerminalProcessing(
-	o *Output,
-) (restoreFunc func() error, err error) {
+func EnableVirtualTerminalProcessing(o *Output) (restoreFunc func() error, err error) {
 	// There is nothing to restore until we set the console mode.
 	restoreFunc = func() error {
 		return nil
@@ -137,10 +125,7 @@ func EnableVirtualTerminalProcessing(
 	// Enable virtual terminal processing. See
 	// https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
 	if err2 := windows.SetConsoleMode(windows.Handle(tty.Fd()), mode|windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING); err2 != nil {
-		err = fmt.Errorf(
-			"windows.SetConsoleMode: %w",
-			err2,
-		)
+		err = fmt.Errorf("windows.SetConsoleMode: %w", err2)
 		return
 	}
 
@@ -148,10 +133,7 @@ func EnableVirtualTerminalProcessing(
 	// closure (rather than just its handle) to ensure that the tty is not
 	// closed by a finalizer.
 	restoreFunc = func() error {
-		return windows.SetConsoleMode(
-			windows.Handle(tty.Fd()),
-			mode,
-		)
+		return windows.SetConsoleMode(windows.Handle(tty.Fd()), mode)
 	}
 
 	return

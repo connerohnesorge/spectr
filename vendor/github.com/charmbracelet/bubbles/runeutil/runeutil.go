@@ -51,9 +51,7 @@ func ReplaceNewlines(nlRepl string) Option {
 	}
 }
 
-func (s *sanitizer) Sanitize(
-	runes []rune,
-) []rune {
+func (s *sanitizer) Sanitize(runes []rune) []rune {
 	// dstrunes are where we are storing the result.
 	dstrunes := runes[:0:len(runes)]
 	// copied indicates whether dstrunes is an alias of runes
@@ -70,58 +68,29 @@ func (s *sanitizer) Sanitize(
 			// skip
 
 		case r == '\r' || r == '\n':
-			if len(
-				dstrunes,
-			)+len(
-				s.replaceNewLine,
-			) > src &&
-				!copied {
+			if len(dstrunes)+len(s.replaceNewLine) > src && !copied {
 				dst := len(dstrunes)
-				dstrunes = make(
-					[]rune,
-					dst,
-					len(
-						runes,
-					)+len(
-						s.replaceNewLine,
-					),
-				)
+				dstrunes = make([]rune, dst, len(runes)+len(s.replaceNewLine))
 				copy(dstrunes, runes[:dst])
 				copied = true
 			}
-			dstrunes = append(
-				dstrunes,
-				s.replaceNewLine...)
+			dstrunes = append(dstrunes, s.replaceNewLine...)
 
 		case r == '\t':
-			if len(
-				dstrunes,
-			)+len(
-				s.replaceTab,
-			) > src &&
-				!copied {
+			if len(dstrunes)+len(s.replaceTab) > src && !copied {
 				dst := len(dstrunes)
-				dstrunes = make(
-					[]rune,
-					dst,
-					len(runes)+len(s.replaceTab),
-				)
+				dstrunes = make([]rune, dst, len(runes)+len(s.replaceTab))
 				copy(dstrunes, runes[:dst])
 				copied = true
 			}
-			dstrunes = append(
-				dstrunes,
-				s.replaceTab...)
+			dstrunes = append(dstrunes, s.replaceTab...)
 
 		case unicode.IsControl(r):
 			// Other control characters: skip.
 
 		default:
 			// Keep the character.
-			dstrunes = append(
-				dstrunes,
-				runes[src],
-			)
+			dstrunes = append(dstrunes, runes[src])
 		}
 	}
 	return dstrunes

@@ -50,9 +50,7 @@ type WaitForOption func(*WaitingForContext)
 
 // WithCheckInterval sets how much time a WaitFor should sleep between every
 // check.
-func WithCheckInterval(
-	d time.Duration,
-) WaitForOption {
+func WithCheckInterval(d time.Duration) WaitForOption {
 	return func(wf *WaitingForContext) {
 		wf.CheckInterval = d
 	}
@@ -80,11 +78,7 @@ func WaitFor(
 	}
 }
 
-func doWaitFor(
-	r io.Reader,
-	condition func(bts []byte) bool,
-	options ...WaitForOption,
-) error {
+func doWaitFor(r io.Reader, condition func(bts []byte) bool, options ...WaitForOption) error {
 	wf := WaitingForContext{
 		Duration:      time.Second,
 		CheckInterval: 50 * time.Millisecond, //nolint: mnd
@@ -105,11 +99,7 @@ func doWaitFor(
 		}
 		time.Sleep(wf.CheckInterval)
 	}
-	return fmt.Errorf(
-		"WaitFor: condition not met after %s. Last output:\n%s",
-		wf.Duration,
-		b.String(),
-	)
+	return fmt.Errorf("WaitFor: condition not met after %s. Last output:\n%s", wf.Duration, b.String())
 }
 
 // TestModel is a model that is being tested.
@@ -127,11 +117,7 @@ type TestModel struct {
 }
 
 // NewTestModel makes a new TestModel which can be used for tests.
-func NewTestModel(
-	tb testing.TB,
-	m tea.Model,
-	options ...TestOption,
-) *TestModel {
+func NewTestModel(tb testing.TB, m tea.Model, options ...TestOption) *TestModel {
 	tm := &TestModel{
 		in:      bytes.NewBuffer(nil),
 		out:     safe(bytes.NewBuffer(nil)),
@@ -176,10 +162,7 @@ func NewTestModel(
 	return tm
 }
 
-func (tm *TestModel) waitDone(
-	tb testing.TB,
-	opts []FinalOpt,
-) {
+func (tm *TestModel) waitDone(tb testing.TB, opts []FinalOpt) {
 	tm.done.Do(func() {
 		fopts := FinalOpts{}
 		for _, opt := range opts {
@@ -189,10 +172,7 @@ func (tm *TestModel) waitDone(
 			select {
 			case <-time.After(fopts.timeout):
 				if fopts.onTimeout == nil {
-					tb.Fatalf(
-						"timeout after %s",
-						fopts.timeout,
-					)
+					tb.Fatalf("timeout after %s", fopts.timeout)
 				}
 				fopts.onTimeout(tb)
 			case <-tm.doneCh:
@@ -213,9 +193,7 @@ type FinalOpts struct {
 type FinalOpt func(opts *FinalOpts)
 
 // WithTimeoutFn allows to define what happens when WaitFinished times out.
-func WithTimeoutFn(
-	fn func(tb testing.TB),
-) FinalOpt {
+func WithTimeoutFn(fn func(tb testing.TB)) FinalOpt {
 	return func(opts *FinalOpts) {
 		opts.onTimeout = fn
 	}
@@ -232,20 +210,14 @@ func WithFinalTimeout(d time.Duration) FinalOpt {
 // WaitFinished waits for the app to finish.
 // This method only returns once the program has finished running or when it
 // times out.
-func (tm *TestModel) WaitFinished(
-	tb testing.TB,
-	opts ...FinalOpt,
-) {
+func (tm *TestModel) WaitFinished(tb testing.TB, opts ...FinalOpt) {
 	tm.waitDone(tb, opts)
 }
 
 // FinalModel returns the resulting model, resulting from program.Run().
 // This method only returns once the program has finished running or when it
 // times out.
-func (tm *TestModel) FinalModel(
-	tb testing.TB,
-	opts ...FinalOpt,
-) tea.Model {
+func (tm *TestModel) FinalModel(tb testing.TB, opts ...FinalOpt) tea.Model {
 	tm.waitDone(tb, opts)
 	select {
 	case m := <-tm.modelCh:
@@ -261,10 +233,7 @@ func (tm *TestModel) FinalModel(
 // FinalOutput returns the program's final output io.Reader.
 // This method only returns once the program has finished running or when it
 // times out.
-func (tm *TestModel) FinalOutput(
-	tb testing.TB,
-	opts ...FinalOpt,
-) io.Reader {
+func (tm *TestModel) FinalOutput(tb testing.TB, opts ...FinalOpt) io.Reader {
 	tm.waitDone(tb, opts)
 	return tm.Output()
 }
@@ -306,10 +275,7 @@ func (tm *TestModel) GetProgram() *tea.Program {
 // Important: this uses the system `diff` tool.
 //
 // You can update the golden files by running your tests with the -update flag.
-func RequireEqualOutput(
-	tb testing.TB,
-	out []byte,
-) {
+func RequireEqualOutput(tb testing.TB, out []byte) {
 	tb.Helper()
 	golden.RequireEqual(tb, out)
 }
@@ -325,18 +291,14 @@ type safeReadWriter struct {
 }
 
 // Read implements io.ReadWriter.
-func (s *safeReadWriter) Read(
-	p []byte,
-) (n int, err error) {
+func (s *safeReadWriter) Read(p []byte) (n int, err error) {
 	s.m.RLock()
 	defer s.m.RUnlock()
 	return s.rw.Read(p) //nolint: wrapcheck
 }
 
 // Write implements io.ReadWriter.
-func (s *safeReadWriter) Write(
-	p []byte,
-) (int, error) {
+func (s *safeReadWriter) Write(p []byte) (int, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 	return s.rw.Write(p) //nolint: wrapcheck

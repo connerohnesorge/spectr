@@ -135,9 +135,7 @@ func ComposeCommandLine(args []string) string {
 		// TODO(bcmills): since we're already appending to a slice, it would be nice
 		// to avoid the intermediate allocations of EscapeArg.
 		// Perhaps we can factor out an appendEscapedArg function.
-		commandLine = append(
-			commandLine,
-			EscapeArg(arg)...)
+		commandLine = append(commandLine, EscapeArg(arg)...)
 	}
 	return string(commandLine)
 }
@@ -146,25 +144,16 @@ func ComposeCommandLine(args []string) string {
 // as gathered from GetCommandLine, QUERY_SERVICE_CONFIG's BinaryPathName argument, or elsewhere that
 // command lines are passed around.
 // DecomposeCommandLine returns an error if commandLine contains NUL.
-func DecomposeCommandLine(
-	commandLine string,
-) ([]string, error) {
+func DecomposeCommandLine(commandLine string) ([]string, error) {
 	if len(commandLine) == 0 {
 		return []string{}, nil
 	}
-	utf16CommandLine, err := UTF16FromString(
-		commandLine,
-	)
+	utf16CommandLine, err := UTF16FromString(commandLine)
 	if err != nil {
-		return nil, errorspkg.New(
-			"string with NUL passed to DecomposeCommandLine",
-		)
+		return nil, errorspkg.New("string with NUL passed to DecomposeCommandLine")
 	}
 	var argc int32
-	argv, err := commandLineToArgv(
-		&utf16CommandLine[0],
-		&argc,
-	)
+	argv, err := commandLineToArgv(&utf16CommandLine[0], &argc)
 	if err != nil {
 		return nil, err
 	}
@@ -187,29 +176,18 @@ func DecomposeCommandLine(
 // may exceed 8192, and the documentation for CommandLineToArgvW does not mention
 // any bound on the lengths of the individual argument strings.
 // (See https://go.dev/issue/63236.)
-func CommandLineToArgv(
-	cmd *uint16,
-	argc *int32,
-) (argv *[8192]*[8192]uint16, err error) {
+func CommandLineToArgv(cmd *uint16, argc *int32) (argv *[8192]*[8192]uint16, err error) {
 	argp, err := commandLineToArgv(cmd, argc)
-	argv = (*[8192]*[8192]uint16)(
-		unsafe.Pointer(argp),
-	)
+	argv = (*[8192]*[8192]uint16)(unsafe.Pointer(argp))
 	return argv, err
 }
 
 func CloseOnExec(fd Handle) {
-	SetHandleInformation(
-		Handle(fd),
-		HANDLE_FLAG_INHERIT,
-		0,
-	)
+	SetHandleInformation(Handle(fd), HANDLE_FLAG_INHERIT, 0)
 }
 
 // FullPath retrieves the full path of the specified file.
-func FullPath(
-	name string,
-) (path string, err error) {
+func FullPath(name string) (path string, err error) {
 	p, err := UTF16PtrFromString(name)
 	if err != nil {
 		return "", err
@@ -217,12 +195,7 @@ func FullPath(
 	n := uint32(100)
 	for {
 		buf := make([]uint16, n)
-		n, err = GetFullPathName(
-			p,
-			uint32(len(buf)),
-			&buf[0],
-			nil,
-		)
+		n, err = GetFullPathName(p, uint32(len(buf)), &buf[0], nil)
 		if err != nil {
 			return "", err
 		}
@@ -233,43 +206,22 @@ func FullPath(
 }
 
 // NewProcThreadAttributeList allocates a new ProcThreadAttributeListContainer, with the requested maximum number of attributes.
-func NewProcThreadAttributeList(
-	maxAttrCount uint32,
-) (*ProcThreadAttributeListContainer, error) {
+func NewProcThreadAttributeList(maxAttrCount uint32) (*ProcThreadAttributeListContainer, error) {
 	var size uintptr
-	err := initializeProcThreadAttributeList(
-		nil,
-		maxAttrCount,
-		0,
-		&size,
-	)
+	err := initializeProcThreadAttributeList(nil, maxAttrCount, 0, &size)
 	if err != ERROR_INSUFFICIENT_BUFFER {
 		if err == nil {
-			return nil, errorspkg.New(
-				"unable to query buffer size from InitializeProcThreadAttributeList",
-			)
+			return nil, errorspkg.New("unable to query buffer size from InitializeProcThreadAttributeList")
 		}
 		return nil, err
 	}
-	alloc, err := LocalAlloc(
-		LMEM_FIXED,
-		uint32(size),
-	)
+	alloc, err := LocalAlloc(LMEM_FIXED, uint32(size))
 	if err != nil {
 		return nil, err
 	}
 	// size is guaranteed to be ≥1 by InitializeProcThreadAttributeList.
-	al := &ProcThreadAttributeListContainer{
-		data: (*ProcThreadAttributeList)(
-			unsafe.Pointer(alloc),
-		),
-	}
-	err = initializeProcThreadAttributeList(
-		al.data,
-		maxAttrCount,
-		0,
-		&size,
-	)
+	al := &ProcThreadAttributeListContainer{data: (*ProcThreadAttributeList)(unsafe.Pointer(alloc))}
+	err = initializeProcThreadAttributeList(al.data, maxAttrCount, 0, &size)
 	if err != nil {
 		return nil, err
 	}
@@ -277,21 +229,9 @@ func NewProcThreadAttributeList(
 }
 
 // Update modifies the ProcThreadAttributeList using UpdateProcThreadAttribute.
-func (al *ProcThreadAttributeListContainer) Update(
-	attribute uintptr,
-	value unsafe.Pointer,
-	size uintptr,
-) error {
+func (al *ProcThreadAttributeListContainer) Update(attribute uintptr, value unsafe.Pointer, size uintptr) error {
 	al.pointers = append(al.pointers, value)
-	return updateProcThreadAttribute(
-		al.data,
-		0,
-		attribute,
-		value,
-		size,
-		nil,
-		nil,
-	)
+	return updateProcThreadAttribute(al.data, 0, attribute, value, size, nil, nil)
 }
 
 // Delete frees ProcThreadAttributeList's resources.

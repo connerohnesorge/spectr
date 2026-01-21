@@ -21,10 +21,7 @@ const fileScheme = "file"
 type URI string
 
 func (uri URI) IsFile() bool {
-	return strings.HasPrefix(
-		string(uri),
-		"file://",
-	)
+	return strings.HasPrefix(string(uri), "file://")
 }
 
 // Filename returns the file path for the given URI.
@@ -46,18 +43,12 @@ func filename(uri URI) (string, error) {
 		return "", err
 	}
 	if u.Scheme != fileScheme {
-		return "", fmt.Errorf(
-			"only file URIs are supported, got %q from %q",
-			u.Scheme,
-			uri,
-		)
+		return "", fmt.Errorf("only file URIs are supported, got %q from %q", u.Scheme, uri)
 	}
 	// If the URI is a Windows URI, we trim the leading "/" and lowercase
 	// the drive letter, which will never be case sensitive.
 	if isWindowsDriveURIPath(u.Path) {
-		u.Path = strings.ToUpper(
-			string(u.Path[1]),
-		) + u.Path[2:]
+		u.Path = strings.ToUpper(string(u.Path[1])) + u.Path[2:]
 	}
 	return u.Path, nil
 }
@@ -73,9 +64,7 @@ func URIFromURI(s string) URI {
 	}
 	// Even though the input is a URI, it may not be in canonical form. VS Code
 	// in particular over-escapes :, @, etc. Unescape and re-encode to canonicalize.
-	path, err := url.PathUnescape(
-		s[len("file://"):],
-	)
+	path, err := url.PathUnescape(s[len("file://"):])
 	if err != nil {
 		panic(err)
 	}
@@ -85,9 +74,7 @@ func URIFromURI(s string) URI {
 	// we change them to uppercase to remain consistent.
 	// For example, file:///c:/x/y/z becomes file:///C:/x/y/z.
 	if isWindowsDriveURIPath(path) {
-		path = path[:1] + strings.ToUpper(
-			string(path[1]),
-		) + path[2:]
+		path = path[:1] + strings.ToUpper(string(path[1])) + path[2:]
 	}
 	u := url.URL{Scheme: fileScheme, Path: path}
 	return URI(u.String())
@@ -108,10 +95,7 @@ func equalURI(a, b URI) bool {
 		return true
 	}
 	// If we have the same URI basename, we may still have the same file URIs.
-	if !strings.EqualFold(
-		path.Base(string(a)),
-		path.Base(string(b)),
-	) {
+	if !strings.EqualFold(path.Base(string(a)), path.Base(string(b))) {
 		return false
 	}
 	fa, err := filename(a)
@@ -143,11 +127,7 @@ func URIFromPath(path string) URI {
 	// Handle standard library paths that contain the literal "$GOROOT".
 	// TODO(rstambler): The go/packages API should allow one to determine a user's $GOROOT.
 	const prefix = "$GOROOT"
-	if len(path) >= len(prefix) &&
-		strings.EqualFold(
-			prefix,
-			path[:len(prefix)],
-		) {
+	if len(path) >= len(prefix) && strings.EqualFold(prefix, path[:len(prefix)]) {
 		suffix := path[len(prefix):]
 		path = runtime.GOROOT() + suffix
 	}
@@ -158,9 +138,7 @@ func URIFromPath(path string) URI {
 	}
 	// Check the file path again, in case it became absolute.
 	if isWindowsDrivePath(path) {
-		path = "/" + strings.ToUpper(
-			string(path[0]),
-		) + path[1:]
+		path = "/" + strings.ToUpper(string(path[0])) + path[1:]
 	}
 	path = filepath.ToSlash(path)
 	u := url.URL{
@@ -177,8 +155,7 @@ func isWindowsDrivePath(path string) bool {
 	if len(path) < 3 {
 		return false
 	}
-	return unicode.IsLetter(rune(path[0])) &&
-		path[1] == ':'
+	return unicode.IsLetter(rune(path[0])) && path[1] == ':'
 }
 
 // isWindowsDriveURI returns true if the file URI is of the format used by
@@ -188,7 +165,5 @@ func isWindowsDriveURIPath(uri string) bool {
 	if len(uri) < 4 {
 		return false
 	}
-	return uri[0] == '/' &&
-		unicode.IsLetter(rune(uri[1])) &&
-		uri[2] == ':'
+	return uri[0] == '/' && unicode.IsLetter(rune(uri[1])) && uri[2] == ':'
 }

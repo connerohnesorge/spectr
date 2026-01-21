@@ -32,18 +32,12 @@ var (
 	_ fs.SubFS      = IOFS{}
 )
 
-func (iofs IOFS) Open(
-	name string,
-) (fs.File, error) {
+func (iofs IOFS) Open(name string) (fs.File, error) {
 	const op = "open"
 
 	// by convention for fs.FS implementations we should perform this check
 	if !fs.ValidPath(name) {
-		return nil, iofs.wrapError(
-			op,
-			name,
-			fs.ErrInvalid,
-		)
+		return nil, iofs.wrapError(op, name, fs.ErrInvalid)
 	}
 
 	file, err := iofs.Fs.Open(name)
@@ -59,42 +53,26 @@ func (iofs IOFS) Open(
 	return file, nil
 }
 
-func (iofs IOFS) Glob(
-	pattern string,
-) ([]string, error) {
+func (iofs IOFS) Glob(pattern string) ([]string, error) {
 	const op = "glob"
 
 	// afero.Glob does not perform this check but it's required for implementations
 	if _, err := path.Match(pattern, ""); err != nil {
-		return nil, iofs.wrapError(
-			op,
-			pattern,
-			err,
-		)
+		return nil, iofs.wrapError(op, pattern, err)
 	}
 
 	items, err := Glob(iofs.Fs, pattern)
 	if err != nil {
-		return nil, iofs.wrapError(
-			op,
-			pattern,
-			err,
-		)
+		return nil, iofs.wrapError(op, pattern, err)
 	}
 
 	return items, nil
 }
 
-func (iofs IOFS) ReadDir(
-	name string,
-) ([]fs.DirEntry, error) {
+func (iofs IOFS) ReadDir(name string) ([]fs.DirEntry, error) {
 	f, err := iofs.Fs.Open(name)
 	if err != nil {
-		return nil, iofs.wrapError(
-			"readdir",
-			name,
-			err,
-		)
+		return nil, iofs.wrapError("readdir", name, err)
 	}
 
 	defer f.Close()
@@ -102,50 +80,31 @@ func (iofs IOFS) ReadDir(
 	if rdf, ok := f.(fs.ReadDirFile); ok {
 		items, err := rdf.ReadDir(-1)
 		if err != nil {
-			return nil, iofs.wrapError(
-				"readdir",
-				name,
-				err,
-			)
+			return nil, iofs.wrapError("readdir", name, err)
 		}
-		sort.Slice(
-			items,
-			func(i, j int) bool { return items[i].Name() < items[j].Name() },
-		)
+		sort.Slice(items, func(i, j int) bool { return items[i].Name() < items[j].Name() })
 		return items, nil
 	}
 
 	items, err := f.Readdir(-1)
 	if err != nil {
-		return nil, iofs.wrapError(
-			"readdir",
-			name,
-			err,
-		)
+		return nil, iofs.wrapError("readdir", name, err)
 	}
 	sort.Sort(byName(items))
 
 	ret := make([]fs.DirEntry, len(items))
 	for i := range items {
-		ret[i] = common.FileInfoDirEntry{
-			FileInfo: items[i],
-		}
+		ret[i] = common.FileInfoDirEntry{FileInfo: items[i]}
 	}
 
 	return ret, nil
 }
 
-func (iofs IOFS) ReadFile(
-	name string,
-) ([]byte, error) {
+func (iofs IOFS) ReadFile(name string) ([]byte, error) {
 	const op = "readfile"
 
 	if !fs.ValidPath(name) {
-		return nil, iofs.wrapError(
-			op,
-			name,
-			fs.ErrInvalid,
-		)
+		return nil, iofs.wrapError(op, name, fs.ErrInvalid)
 	}
 
 	bytes, err := ReadFile(iofs.Fs, name)
@@ -156,16 +115,9 @@ func (iofs IOFS) ReadFile(
 	return bytes, nil
 }
 
-func (iofs IOFS) Sub(
-	dir string,
-) (fs.FS, error) {
-	return IOFS{NewBasePathFs(iofs.Fs, dir)}, nil
-}
+func (iofs IOFS) Sub(dir string) (fs.FS, error) { return IOFS{NewBasePathFs(iofs.Fs, dir)}, nil }
 
-func (IOFS) wrapError(
-	op, path string,
-	err error,
-) error {
+func (IOFS) wrapError(op, path string, err error) error {
 	if _, ok := err.(*fs.PathError); ok {
 		return err // don't need to wrap again
 	}
@@ -184,9 +136,7 @@ type readDirFile struct {
 
 var _ fs.ReadDirFile = readDirFile{}
 
-func (r readDirFile) ReadDir(
-	n int,
-) ([]fs.DirEntry, error) {
+func (r readDirFile) ReadDir(n int) ([]fs.DirEntry, error) {
 	items, err := r.Readdir(n)
 	if err != nil {
 		return nil, err
@@ -194,9 +144,7 @@ func (r readDirFile) ReadDir(
 
 	ret := make([]fs.DirEntry, len(items))
 	for i := range items {
-		ret[i] = common.FileInfoDirEntry{
-			FileInfo: items[i],
-		}
+		ret[i] = common.FileInfoDirEntry{FileInfo: items[i]}
 	}
 
 	return ret, nil
@@ -211,11 +159,7 @@ type FromIOFS struct {
 
 var _ Fs = FromIOFS{}
 
-func (f FromIOFS) Create(
-	name string,
-) (File, error) {
-	return nil, notImplemented("create", name)
-}
+func (f FromIOFS) Create(name string) (File, error) { return nil, notImplemented("create", name) }
 
 func (f FromIOFS) Mkdir(
 	name string,
@@ -224,32 +168,20 @@ func (f FromIOFS) Mkdir(
 	return notImplemented("mkdir", name)
 }
 
-func (f FromIOFS) MkdirAll(
-	path string,
-	perm os.FileMode,
-) error {
+func (f FromIOFS) MkdirAll(path string, perm os.FileMode) error {
 	return notImplemented("mkdirall", path)
 }
 
-func (f FromIOFS) Open(
-	name string,
-) (File, error) {
+func (f FromIOFS) Open(name string) (File, error) {
 	file, err := f.FS.Open(name)
 	if err != nil {
 		return nil, err
 	}
 
-	return fromIOFSFile{
-		File: file,
-		name: name,
-	}, nil
+	return fromIOFSFile{File: file, name: name}, nil
 }
 
-func (f FromIOFS) OpenFile(
-	name string,
-	flag int,
-	perm os.FileMode,
-) (File, error) {
+func (f FromIOFS) OpenFile(name string, flag int, perm os.FileMode) (File, error) {
 	return f.Open(name)
 }
 
@@ -261,39 +193,23 @@ func (f FromIOFS) RemoveAll(path string) error {
 	return notImplemented("removeall", path)
 }
 
-func (f FromIOFS) Rename(
-	oldname, newname string,
-) error {
+func (f FromIOFS) Rename(oldname, newname string) error {
 	return notImplemented("rename", oldname)
 }
 
-func (f FromIOFS) Stat(
-	name string,
-) (os.FileInfo, error) {
-	return fs.Stat(f.FS, name)
-}
+func (f FromIOFS) Stat(name string) (os.FileInfo, error) { return fs.Stat(f.FS, name) }
 
 func (f FromIOFS) Name() string { return "fromiofs" }
 
-func (f FromIOFS) Chmod(
-	name string,
-	mode os.FileMode,
-) error {
+func (f FromIOFS) Chmod(name string, mode os.FileMode) error {
 	return notImplemented("chmod", name)
 }
 
-func (f FromIOFS) Chown(
-	name string,
-	uid, gid int,
-) error {
+func (f FromIOFS) Chown(name string, uid, gid int) error {
 	return notImplemented("chown", name)
 }
 
-func (f FromIOFS) Chtimes(
-	name string,
-	atime time.Time,
-	mtime time.Time,
-) error {
+func (f FromIOFS) Chtimes(name string, atime time.Time, mtime time.Time) error {
 	return notImplemented("chtimes", name)
 }
 
@@ -302,25 +218,16 @@ type fromIOFSFile struct {
 	name string
 }
 
-func (f fromIOFSFile) ReadAt(
-	p []byte,
-	off int64,
-) (n int, err error) {
+func (f fromIOFSFile) ReadAt(p []byte, off int64) (n int, err error) {
 	readerAt, ok := f.File.(io.ReaderAt)
 	if !ok {
-		return -1, notImplemented(
-			"readat",
-			f.name,
-		)
+		return -1, notImplemented("readat", f.name)
 	}
 
 	return readerAt.ReadAt(p, off)
 }
 
-func (f fromIOFSFile) Seek(
-	offset int64,
-	whence int,
-) (int64, error) {
+func (f fromIOFSFile) Seek(offset int64, whence int) (int64, error) {
 	seeker, ok := f.File.(io.Seeker)
 	if !ok {
 		return -1, notImplemented("seek", f.name)
@@ -329,30 +236,20 @@ func (f fromIOFSFile) Seek(
 	return seeker.Seek(offset, whence)
 }
 
-func (f fromIOFSFile) Write(
-	p []byte,
-) (n int, err error) {
+func (f fromIOFSFile) Write(p []byte) (n int, err error) {
 	return -1, notImplemented("write", f.name)
 }
 
-func (f fromIOFSFile) WriteAt(
-	p []byte,
-	off int64,
-) (n int, err error) {
+func (f fromIOFSFile) WriteAt(p []byte, off int64) (n int, err error) {
 	return -1, notImplemented("writeat", f.name)
 }
 
 func (f fromIOFSFile) Name() string { return f.name }
 
-func (f fromIOFSFile) Readdir(
-	count int,
-) ([]os.FileInfo, error) {
+func (f fromIOFSFile) Readdir(count int) ([]os.FileInfo, error) {
 	rdfile, ok := f.File.(fs.ReadDirFile)
 	if !ok {
-		return nil, notImplemented(
-			"readdir",
-			f.name,
-		)
+		return nil, notImplemented("readdir", f.name)
 	}
 
 	entries, err := rdfile.ReadDir(count)
@@ -371,15 +268,10 @@ func (f fromIOFSFile) Readdir(
 	return ret, nil
 }
 
-func (f fromIOFSFile) Readdirnames(
-	n int,
-) ([]string, error) {
+func (f fromIOFSFile) Readdirnames(n int) ([]string, error) {
 	rdfile, ok := f.File.(fs.ReadDirFile)
 	if !ok {
-		return nil, notImplemented(
-			"readdir",
-			f.name,
-		)
+		return nil, notImplemented("readdir", f.name)
 	}
 
 	entries, err := rdfile.ReadDir(n)
@@ -401,19 +293,10 @@ func (f fromIOFSFile) Truncate(size int64) error {
 	return notImplemented("truncate", f.name)
 }
 
-func (f fromIOFSFile) WriteString(
-	s string,
-) (ret int, err error) {
-	return -1, notImplemented(
-		"writestring",
-		f.name,
-	)
+func (f fromIOFSFile) WriteString(s string) (ret int, err error) {
+	return -1, notImplemented("writestring", f.name)
 }
 
 func notImplemented(op, path string) error {
-	return &fs.PathError{
-		Op:   op,
-		Path: path,
-		Err:  fs.ErrPermission,
-	}
+	return &fs.PathError{Op: op, Path: path, Err: fs.ErrPermission}
 }

@@ -29,14 +29,10 @@ const dumbTerm = "dumb"
 //     colors but not text decoration, i.e. bold, italic, faint, etc.
 //
 // See https://no-color.org/ and https://bixense.com/clicolors/ for more information.
-func Detect(
-	output io.Writer,
-	env []string,
-) Profile {
+func Detect(output io.Writer, env []string) Profile {
 	out, ok := output.(term.File)
 	environ := newEnviron(env)
-	isatty := isTTYForced(environ) ||
-		(ok && term.IsTerminal(out.Fd()))
+	isatty := isTTYForced(environ) || (ok && term.IsTerminal(out.Fd()))
 	term, ok := environ.lookup("TERM")
 	isDumb := !ok || term == dumbTerm
 	envp := colorProfile(isatty, environ)
@@ -74,13 +70,9 @@ func Env(env []string) (p Profile) {
 	return colorProfile(true, newEnviron(env))
 }
 
-func colorProfile(
-	isatty bool,
-	env environ,
-) (p Profile) {
+func colorProfile(isatty bool, env environ) (p Profile) {
 	term, ok := env.lookup("TERM")
-	isDumb := (!ok && runtime.GOOS != "windows") ||
-		term == dumbTerm
+	isDumb := (!ok && runtime.GOOS != "windows") || term == dumbTerm
 	envp := envColorProfile(env)
 	if !isatty || isDumb {
 		// Check if the output is a terminal.
@@ -120,41 +112,29 @@ func colorProfile(
 // envNoColor returns true if the environment variables explicitly disable color output
 // by setting NO_COLOR (https://no-color.org/).
 func envNoColor(env environ) bool {
-	noColor, _ := strconv.ParseBool(
-		env.get("NO_COLOR"),
-	)
+	noColor, _ := strconv.ParseBool(env.get("NO_COLOR"))
 	return noColor
 }
 
 func cliColor(env environ) bool {
-	cliColor, _ := strconv.ParseBool(
-		env.get("CLICOLOR"),
-	)
+	cliColor, _ := strconv.ParseBool(env.get("CLICOLOR"))
 	return cliColor
 }
 
 func cliColorForced(env environ) bool {
-	cliColorForce, _ := strconv.ParseBool(
-		env.get("CLICOLOR_FORCE"),
-	)
+	cliColorForce, _ := strconv.ParseBool(env.get("CLICOLOR_FORCE"))
 	return cliColorForce
 }
 
 func isTTYForced(env environ) bool {
-	skip, _ := strconv.ParseBool(
-		env.get("TTY_FORCE"),
-	)
+	skip, _ := strconv.ParseBool(env.get("TTY_FORCE"))
 	return skip
 }
 
 func colorTerm(env environ) bool {
-	colorTerm := strings.ToLower(
-		env.get("COLORTERM"),
-	)
-	return colorTerm == "truecolor" ||
-		colorTerm == "24bit" ||
-		colorTerm == "yes" ||
-		colorTerm == "true"
+	colorTerm := strings.ToLower(env.get("COLORTERM"))
+	return colorTerm == "truecolor" || colorTerm == "24bit" ||
+		colorTerm == "yes" || colorTerm == "true"
 }
 
 // envColorProfile returns infers the color profile from the environment.
@@ -204,14 +184,11 @@ func envColorProfile(env environ) (p Profile) {
 
 	// GNU Screen doesn't support TrueColor
 	// Tmux doesn't support $COLORTERM
-	if colorTerm(env) &&
-		!strings.HasPrefix(term, "screen") &&
-		!strings.HasPrefix(term, "tmux") {
+	if colorTerm(env) && !strings.HasPrefix(term, "screen") && !strings.HasPrefix(term, "tmux") {
 		return TrueColor
 	}
 
-	if strings.HasSuffix(term, "256color") &&
-		p < ANSI256 {
+	if strings.HasSuffix(term, "256color") && p < ANSI256 {
 		p = ANSI256
 	}
 
@@ -259,8 +236,7 @@ func Tmux(env []string) Profile {
 
 // tmux returns the color profile based on the tmux environment variables.
 func tmux(env environ) (p Profile) {
-	if tmux, ok := env.lookup("TMUX"); !ok ||
-		len(tmux) == 0 {
+	if tmux, ok := env.lookup("TMUX"); !ok || len(tmux) == 0 {
 		// Not in tmux
 		return NoTTY
 	}
@@ -304,9 +280,7 @@ func newEnviron(environ []string) environ {
 
 // lookup returns the value of an environment variable and a boolean indicating
 // if it exists.
-func (e environ) lookup(
-	key string,
-) (string, bool) {
+func (e environ) lookup(key string) (string, bool) {
 	v, ok := e[key]
 	return v, ok
 }

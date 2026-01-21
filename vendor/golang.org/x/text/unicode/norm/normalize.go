@@ -51,13 +51,7 @@ func (f Form) Bytes(b []byte) []byte {
 	}
 	out := make([]byte, n, len(b))
 	copy(out, b[0:n])
-	rb := reorderBuffer{
-		f:      *ft,
-		src:    src,
-		nsrc:   len(b),
-		out:    out,
-		flushF: appendFlush,
-	}
+	rb := reorderBuffer{f: *ft, src: src, nsrc: len(b), out: out, flushF: appendFlush}
 	return doAppendInner(&rb, n)
 }
 
@@ -71,13 +65,7 @@ func (f Form) String(s string) string {
 	}
 	out := make([]byte, n, len(s))
 	copy(out, s[0:n])
-	rb := reorderBuffer{
-		f:      *ft,
-		src:    src,
-		nsrc:   len(s),
-		out:    out,
-		flushF: appendFlush,
-	}
+	rb := reorderBuffer{f: *ft, src: src, nsrc: len(s), out: out, flushF: appendFlush}
 	return string(doAppendInner(&rb, n))
 }
 
@@ -89,23 +77,14 @@ func (f Form) IsNormal(b []byte) bool {
 	if ok {
 		return true
 	}
-	rb := reorderBuffer{
-		f:    *ft,
-		src:  src,
-		nsrc: len(b),
-	}
+	rb := reorderBuffer{f: *ft, src: src, nsrc: len(b)}
 	rb.setFlusher(nil, cmpNormalBytes)
 	for bp < len(b) {
 		rb.out = b[bp:]
 		if bp = decomposeSegment(&rb, bp, true); bp < 0 {
 			return false
 		}
-		bp, _ = rb.f.quickSpan(
-			rb.src,
-			bp,
-			len(b),
-			true,
-		)
+		bp, _ = rb.f.quickSpan(rb.src, bp, len(b), true)
 	}
 	return true
 }
@@ -137,41 +116,29 @@ func (f Form) IsNormalString(s string) bool {
 	if ok {
 		return true
 	}
-	rb := reorderBuffer{
-		f:    *ft,
-		src:  src,
-		nsrc: len(s),
-	}
-	rb.setFlusher(
-		nil,
-		func(rb *reorderBuffer) bool {
-			for i := 0; i < rb.nrune; i++ {
-				info := rb.rune[i]
-				if bp+int(info.size) > len(s) {
+	rb := reorderBuffer{f: *ft, src: src, nsrc: len(s)}
+	rb.setFlusher(nil, func(rb *reorderBuffer) bool {
+		for i := 0; i < rb.nrune; i++ {
+			info := rb.rune[i]
+			if bp+int(info.size) > len(s) {
+				return false
+			}
+			p := info.pos
+			pe := p + info.size
+			for ; p < pe; p++ {
+				if s[bp] != rb.byte[p] {
 					return false
 				}
-				p := info.pos
-				pe := p + info.size
-				for ; p < pe; p++ {
-					if s[bp] != rb.byte[p] {
-						return false
-					}
-					bp++
-				}
+				bp++
 			}
-			return true
-		},
-	)
+		}
+		return true
+	})
 	for bp < len(s) {
 		if bp = decomposeSegment(&rb, bp, true); bp < 0 {
 			return false
 		}
-		bp, _ = rb.f.quickSpan(
-			rb.src,
-			bp,
-			len(s),
-			true,
-		)
+		bp, _ = rb.f.quickSpan(rb.src, bp, len(s), true)
 	}
 	return true
 }
@@ -190,9 +157,7 @@ func patchTail(rb *reorderBuffer) bool {
 		// Potentially allocating memory. However, this only
 		// happens with ill-formed UTF-8.
 		x := make([]byte, 0)
-		x = append(
-			x,
-			rb.out[len(rb.out)-extra:]...)
+		x = append(x, rb.out[len(rb.out)-extra:]...)
 		rb.out = rb.out[:end]
 		decomposeToLastBoundary(rb)
 		rb.doFlush()
@@ -218,34 +183,18 @@ func appendQuick(rb *reorderBuffer, i int) int {
 	if rb.nsrc == i {
 		return i
 	}
-	end, _ := rb.f.quickSpan(
-		rb.src,
-		i,
-		rb.nsrc,
-		true,
-	)
+	end, _ := rb.f.quickSpan(rb.src, i, rb.nsrc, true)
 	rb.out = rb.src.appendSlice(rb.out, i, end)
 	return end
 }
 
 // Append returns f(append(out, b...)).
 // The buffer out must be nil, empty, or equal to f(out).
-func (f Form) Append(
-	out []byte,
-	src ...byte,
-) []byte {
-	return f.doAppend(
-		out,
-		inputBytes(src),
-		len(src),
-	)
+func (f Form) Append(out []byte, src ...byte) []byte {
+	return f.doAppend(out, inputBytes(src), len(src))
 }
 
-func (f Form) doAppend(
-	out []byte,
-	src input,
-	n int,
-) []byte {
+func (f Form) doAppend(out []byte, src input, n int) []byte {
 	if n == 0 {
 		return out
 	}
@@ -257,24 +206,14 @@ func (f Form) doAppend(
 		if p == n {
 			return out
 		}
-		rb := reorderBuffer{
-			f:      *ft,
-			src:    src,
-			nsrc:   n,
-			out:    out,
-			flushF: appendFlush,
-		}
+		rb := reorderBuffer{f: *ft, src: src, nsrc: n, out: out, flushF: appendFlush}
 		return doAppendInner(&rb, p)
 	}
 	rb := reorderBuffer{f: *ft, src: src, nsrc: n}
 	return doAppend(&rb, out, 0)
 }
 
-func doAppend(
-	rb *reorderBuffer,
-	out []byte,
-	p int,
-) []byte {
+func doAppend(rb *reorderBuffer, out []byte, p int) []byte {
 	rb.setFlusher(out, appendFlush)
 	src, n := rb.src, rb.nsrc
 	doMerge := len(out) > 0
@@ -289,8 +228,7 @@ func doAppend(
 		var info Properties
 		if p < n {
 			info = fd.info(src, p)
-			if !info.BoundaryBefore() ||
-				info.nLeadingNonStarters() > 0 {
+			if !info.BoundaryBefore() || info.nLeadingNonStarters() > 0 {
 				if p == 0 {
 					decomposeToLastBoundary(rb)
 				}
@@ -310,10 +248,7 @@ func doAppend(
 	return doAppendInner(rb, p)
 }
 
-func doAppendInner(
-	rb *reorderBuffer,
-	p int,
-) []byte {
+func doAppendInner(rb *reorderBuffer, p int) []byte {
 	for n := rb.nsrc; p < n; {
 		p = decomposeSegment(rb, p, true)
 		p = appendQuick(rb, p)
@@ -323,41 +258,21 @@ func doAppendInner(
 
 // AppendString returns f(append(out, []byte(s))).
 // The buffer out must be nil, empty, or equal to f(out).
-func (f Form) AppendString(
-	out []byte,
-	src string,
-) []byte {
-	return f.doAppend(
-		out,
-		inputString(src),
-		len(src),
-	)
+func (f Form) AppendString(out []byte, src string) []byte {
+	return f.doAppend(out, inputString(src), len(src))
 }
 
 // QuickSpan returns a boundary n such that b[0:n] == f(b[0:n]).
 // It is not guaranteed to return the largest such n.
 func (f Form) QuickSpan(b []byte) int {
-	n, _ := formTable[f].quickSpan(
-		inputBytes(b),
-		0,
-		len(b),
-		true,
-	)
+	n, _ := formTable[f].quickSpan(inputBytes(b), 0, len(b), true)
 	return n
 }
 
 // Span implements transform.SpanningTransformer. It returns a boundary n such
 // that b[0:n] == f(b[0:n]). It is not guaranteed to return the largest such n.
-func (f Form) Span(
-	b []byte,
-	atEOF bool,
-) (n int, err error) {
-	n, ok := formTable[f].quickSpan(
-		inputBytes(b),
-		0,
-		len(b),
-		atEOF,
-	)
+func (f Form) Span(b []byte, atEOF bool) (n int, err error) {
+	n, ok := formTable[f].quickSpan(inputBytes(b), 0, len(b), atEOF)
 	if n < len(b) {
 		if !ok {
 			err = transform.ErrEndOfSpan
@@ -370,16 +285,8 @@ func (f Form) Span(
 
 // SpanString returns a boundary n such that s[0:n] == f(s[0:n]).
 // It is not guaranteed to return the largest such n.
-func (f Form) SpanString(
-	s string,
-	atEOF bool,
-) (n int, err error) {
-	n, ok := formTable[f].quickSpan(
-		inputString(s),
-		0,
-		len(s),
-		atEOF,
-	)
+func (f Form) SpanString(s string, atEOF bool) (n int, err error) {
+	n, ok := formTable[f].quickSpan(inputString(s), 0, len(s), atEOF)
 	if n < len(s) {
 		if !ok {
 			err = transform.ErrEndOfSpan
@@ -394,11 +301,7 @@ func (f Form) SpanString(
 // whether any non-normalized parts were found. If atEOF is false, n will
 // not point past the last segment if this segment might be become
 // non-normalized by appending other runes.
-func (f *formInfo) quickSpan(
-	src input,
-	i, end int,
-	atEOF bool,
-) (n int, ok bool) {
+func (f *formInfo) quickSpan(src input, i, end int, atEOF bool) (n int, ok bool) {
 	var lastCC uint8
 	ss := streamSafe(0)
 	lastSegStart := i
@@ -454,12 +357,7 @@ func (f *formInfo) quickSpan(
 // QuickSpanString returns a boundary n such that s[0:n] == f(s[0:n]).
 // It is not guaranteed to return the largest such n.
 func (f Form) QuickSpanString(s string) int {
-	n, _ := formTable[f].quickSpan(
-		inputString(s),
-		0,
-		len(s),
-		true,
-	)
+	n, _ := formTable[f].quickSpan(inputString(s), 0, len(s), true)
 	return n
 }
 
@@ -469,10 +367,7 @@ func (f Form) FirstBoundary(b []byte) int {
 	return f.firstBoundary(inputBytes(b), len(b))
 }
 
-func (f Form) firstBoundary(
-	src input,
-	nsrc int,
-) int {
+func (f Form) firstBoundary(src input, nsrc int) int {
 	i := src.skipContinuationBytes(0)
 	if i >= nsrc {
 		return -1
@@ -492,8 +387,7 @@ func (f Form) firstBoundary(
 		}
 		i += int(info.size)
 		if i >= nsrc {
-			if !info.BoundaryAfter() &&
-				!ss.isMax() {
+			if !info.BoundaryAfter() && !ss.isMax() {
 				return -1
 			}
 			return nsrc
@@ -503,45 +397,25 @@ func (f Form) firstBoundary(
 
 // FirstBoundaryInString returns the position i of the first boundary in s
 // or -1 if s contains no boundary.
-func (f Form) FirstBoundaryInString(
-	s string,
-) int {
+func (f Form) FirstBoundaryInString(s string) int {
 	return f.firstBoundary(inputString(s), len(s))
 }
 
 // NextBoundary reports the index of the boundary between the first and next
 // segment in b or -1 if atEOF is false and there are not enough bytes to
 // determine this boundary.
-func (f Form) NextBoundary(
-	b []byte,
-	atEOF bool,
-) int {
-	return f.nextBoundary(
-		inputBytes(b),
-		len(b),
-		atEOF,
-	)
+func (f Form) NextBoundary(b []byte, atEOF bool) int {
+	return f.nextBoundary(inputBytes(b), len(b), atEOF)
 }
 
 // NextBoundaryInString reports the index of the boundary between the first and
 // next segment in b or -1 if atEOF is false and there are not enough bytes to
 // determine this boundary.
-func (f Form) NextBoundaryInString(
-	s string,
-	atEOF bool,
-) int {
-	return f.nextBoundary(
-		inputString(s),
-		len(s),
-		atEOF,
-	)
+func (f Form) NextBoundaryInString(s string, atEOF bool) int {
+	return f.nextBoundary(inputString(s), len(s), atEOF)
 }
 
-func (f Form) nextBoundary(
-	src input,
-	nsrc int,
-	atEOF bool,
-) int {
+func (f Form) nextBoundary(src input, nsrc int, atEOF bool) int {
 	if nsrc == 0 {
 		if atEOF {
 			return 0
@@ -573,8 +447,7 @@ func (f Form) nextBoundary(
 			return i
 		}
 	}
-	if !atEOF && !info.BoundaryAfter() &&
-		!ss.isMax() {
+	if !atEOF && !info.BoundaryAfter() && !ss.isMax() {
 		return -1
 	}
 	return nsrc
@@ -602,9 +475,7 @@ func lastBoundary(fd *formInfo, b []byte) int {
 			return i
 		}
 	}
-	if p+int(
-		info.size,
-	) != i { // trailing non-starter bytes: illegal UTF-8
+	if p+int(info.size) != i { // trailing non-starter bytes: illegal UTF-8
 		return i
 	}
 	if info.BoundaryAfter() {
@@ -630,11 +501,7 @@ func lastBoundary(fd *formInfo, b []byte) int {
 // decomposeSegment scans the first segment in src into rb. It inserts 0x034f
 // (Grapheme Joiner) when it encounters a sequence of more than 30 non-starters
 // and returns the number of bytes consumed from src or iShortDst or iShortSrc.
-func decomposeSegment(
-	rb *reorderBuffer,
-	sp int,
-	atEOF bool,
-) int {
+func decomposeSegment(rb *reorderBuffer, sp int, atEOF bool) int {
 	// Force one character to be consumed.
 	info := rb.f.info(rb.src, sp)
 	if info.size == 0 {
@@ -686,10 +553,7 @@ end:
 
 // lastRuneStart returns the runeInfo and position of the last
 // rune in buf or the zero runeInfo and -1 if no rune was found.
-func lastRuneStart(
-	fd *formInfo,
-	buf []byte,
-) (Properties, int) {
+func lastRuneStart(fd *formInfo, buf []byte) (Properties, int) {
 	p := len(buf) - 1
 	for ; p >= 0 && !utf8.RuneStart(buf[p]); p-- {
 	}

@@ -63,10 +63,7 @@ func (i *Iter) InitString(f Form, src string) {
 // Seek sets the segment to be returned by the next call to Next to start
 // at position p.  It is the responsibility of the caller to set p to the
 // start of a segment.
-func (i *Iter) Seek(
-	offset int64,
-	whence int,
-) (int64, error) {
+func (i *Iter) Seek(offset int64, whence int) (int64, error) {
 	var abs int64
 	switch whence {
 	case 0:
@@ -76,14 +73,10 @@ func (i *Iter) Seek(
 	case 2:
 		abs = int64(i.rb.nsrc) + offset
 	default:
-		return 0, fmt.Errorf(
-			"norm: invalid whence",
-		)
+		return 0, fmt.Errorf("norm: invalid whence")
 	}
 	if abs < 0 {
-		return 0, fmt.Errorf(
-			"norm: negative position",
-		)
+		return 0, fmt.Errorf("norm: negative position")
 	}
 	if int(abs) >= i.rb.nsrc {
 		i.setDone()
@@ -216,19 +209,11 @@ func nextMultiNorm(i *Iter) []byte {
 		if info.BoundaryBefore() {
 			i.rb.compose()
 			seg := i.buf[:i.rb.flushCopy(i.buf[:])]
-			i.rb.insertUnsafe(
-				input{bytes: d},
-				j,
-				info,
-			)
+			i.rb.insertUnsafe(input{bytes: d}, j, info)
 			i.multiSeg = d[j+int(info.size):]
 			return seg
 		}
-		i.rb.insertUnsafe(
-			input{bytes: d},
-			j,
-			info,
-		)
+		i.rb.insertUnsafe(input{bytes: d}, j, info)
 		j += int(info.size)
 	}
 	i.multiSeg = nil
@@ -429,11 +414,7 @@ doNorm:
 	if i.info.multiSegment() {
 		d := i.info.Decomposition()
 		info := i.rb.f.info(input{bytes: d}, 0)
-		i.rb.insertUnsafe(
-			input{bytes: d},
-			0,
-			info,
-		)
+		i.rb.insertUnsafe(input{bytes: d}, 0, info)
 		i.multiSeg = d[int(info.size):]
 		i.next = nextMultiNorm
 		return nextMultiNorm(i)

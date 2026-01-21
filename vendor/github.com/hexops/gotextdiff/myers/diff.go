@@ -16,38 +16,19 @@ import (
 // https://blog.jcoglan.com/2017/02/17/the-myers-diff-algorithm-part-3/
 // https://www.codeproject.com/Articles/42279/%2FArticles%2F42279%2FInvestigating-Myers-diff-algorithm-Part-1-of-2
 
-func ComputeEdits(
-	uri span.URI,
-	before, after string,
-) []diff.TextEdit {
-	ops := operations(
-		splitLines(before),
-		splitLines(after),
-	)
+func ComputeEdits(uri span.URI, before, after string) []diff.TextEdit {
+	ops := operations(splitLines(before), splitLines(after))
 	edits := make([]diff.TextEdit, 0, len(ops))
 	for _, op := range ops {
-		s := span.New(
-			uri,
-			span.NewPoint(op.I1+1, 1, 0),
-			span.NewPoint(op.I2+1, 1, 0),
-		)
+		s := span.New(uri, span.NewPoint(op.I1+1, 1, 0), span.NewPoint(op.I2+1, 1, 0))
 		switch op.Kind {
 		case diff.Delete:
 			// Delete: unformatted[i1:i2] is deleted.
-			edits = append(
-				edits,
-				diff.TextEdit{Span: s},
-			)
+			edits = append(edits, diff.TextEdit{Span: s})
 		case diff.Insert:
 			// Insert: formatted[j1:j2] is inserted at unformatted[i1:i1].
 			if content := strings.Join(op.Content, ""); content != "" {
-				edits = append(
-					edits,
-					diff.TextEdit{
-						Span:    s,
-						NewText: content,
-					},
-				)
+				edits = append(edits, diff.TextEdit{Span: s, NewText: content})
 			}
 		}
 	}
@@ -69,12 +50,7 @@ func operations(a, b []string) []*operation {
 	}
 
 	trace, offset := shortestEditSequence(a, b)
-	snakes := backtrack(
-		trace,
-		len(a),
-		len(b),
-		offset,
-	)
+	snakes := backtrack(trace, len(a), len(b), offset)
 
 	M, N := len(a), len(b)
 
@@ -142,10 +118,7 @@ func operations(a, b []string) []*operation {
 // backtrack uses the trace for the edit sequence computation and returns the
 // "snakes" that make up the solution. A "snake" is a single deletion or
 // insertion followed by zero or diagonals.
-func backtrack(
-	trace [][]int,
-	x, y, offset int,
-) [][]int {
+func backtrack(trace [][]int, x, y, offset int) [][]int {
 	snakes := make([][]int, len(trace))
 	d := len(trace) - 1
 	for ; x > 0 && y > 0 && d > 0; d-- {
@@ -158,8 +131,7 @@ func backtrack(
 		k := x - y
 
 		var kPrev int
-		if k == -d ||
-			(k != d && V[k-1+offset] < V[k+1+offset]) {
+		if k == -d || (k != d && V[k-1+offset] < V[k+1+offset]) {
 			kPrev = k + 1
 		} else {
 			kPrev = k - 1
@@ -176,9 +148,7 @@ func backtrack(
 }
 
 // shortestEditSequence returns the shortest edit sequence that converts a into b.
-func shortestEditSequence(
-	a, b []string,
-) ([][]int, int) {
+func shortestEditSequence(a, b []string) ([][]int, int) {
 	M, N := len(a), len(b)
 	V := make([]int, 2*(N+M)+1)
 	offset := N + M
@@ -194,8 +164,7 @@ func shortestEditSequence(
 			// k == -d, and we go to the right if k == d. We also prioritize
 			// the maximum x value, because we prefer deletions to insertions.
 			var x int
-			if k == -d ||
-				(k != d && V[k-1+offset] < V[k+1+offset]) {
+			if k == -d || (k != d && V[k-1+offset] < V[k+1+offset]) {
 				x = V[k+1+offset] // down
 			} else {
 				x = V[k-1+offset] + 1 // right

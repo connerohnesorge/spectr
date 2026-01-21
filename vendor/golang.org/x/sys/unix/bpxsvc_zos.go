@@ -12,12 +12,8 @@ import (
 	"unsafe"
 )
 
-//
 //go:noescape
-func bpxcall(
-	plist []unsafe.Pointer,
-	bpx_offset int64,
-)
+func bpxcall(plist []unsafe.Pointer, bpx_offset int64)
 
 //go:noescape
 func A2e([]byte)
@@ -41,17 +37,17 @@ const (
 )
 
 const (
-	// options
-	// byte1
+	//options
+	//byte1
 	BPX_OPNFHIGH = 0x80
-	// byte2
+	//byte2
 	BPX_OPNFEXEC = 0x80
-	// byte3
+	//byte3
 	BPX_O_NOLARGEFILE = 0x08
 	BPX_O_LARGEFILE   = 0x04
 	BPX_O_ASYNCSIG    = 0x02
 	BPX_O_SYNC        = 0x01
-	// byte4
+	//byte4
 	BPX_O_CREXCL   = 0xc0
 	BPX_O_CREAT    = 0x80
 	BPX_O_EXCL     = 0x40
@@ -66,7 +62,7 @@ const (
 	BPX_O_ACCMODE  = 0x03
 	BPX_O_GETFL    = 0x0f
 
-	// mode
+	//mode
 	// byte1 (file type)
 	BPX_FT_DIR      = 1
 	BPX_FT_CHARSPEC = 2
@@ -74,13 +70,13 @@ const (
 	BPX_FT_FIFO     = 4
 	BPX_FT_SYMLINK  = 5
 	BPX_FT_SOCKET   = 6
-	// byte3
+	//byte3
 	BPX_S_ISUID  = 0x08
 	BPX_S_ISGID  = 0x04
 	BPX_S_ISVTX  = 0x02
 	BPX_S_IRWXU1 = 0x01
 	BPX_S_IRUSR  = 0x01
-	// byte4
+	//byte4
 	BPX_S_IRWXU2 = 0xc0
 	BPX_S_IWUSR  = 0x80
 	BPX_S_IXUSR  = 0x40
@@ -236,11 +232,7 @@ type Bpxyatt_t struct { // DSECT BPXYATT
 	// end of version 3
 }
 
-func BpxOpen(
-	name string,
-	options *BpxFilestatus,
-	mode *BpxMode,
-) (rv int32, rc int32, rn int32) {
+func BpxOpen(name string, options *BpxFilestatus, mode *BpxMode) (rv int32, rc int32, rn int32) {
 	if len(name) < 1024 {
 		var namebuf [1024]byte
 		sz := int32(copy(namebuf[:], name))
@@ -259,9 +251,7 @@ func BpxOpen(
 	return -1, -1, -1
 }
 
-func BpxClose(
-	fd int32,
-) (rv int32, rc int32, rn int32) {
+func BpxClose(fd int32) (rv int32, rc int32, rn int32) {
 	var parms [4]unsafe.Pointer
 	parms[0] = unsafe.Pointer(&fd)
 	parms[1] = unsafe.Pointer(&rv)
@@ -271,10 +261,7 @@ func BpxClose(
 	return rv, rc, rn
 }
 
-func BpxFileFStat(
-	fd int32,
-	st *Bpxystat_t,
-) (rv int32, rc int32, rn int32) {
+func BpxFileFStat(fd int32, st *Bpxystat_t) (rv int32, rc int32, rn int32) {
 	st.St_id = [4]uint8{0xe2, 0xe3, 0xc1, 0xe3}
 	st.St_version = 2
 	stat_sz := uint32(unsafe.Sizeof(*st))
@@ -289,20 +276,12 @@ func BpxFileFStat(
 	return rv, rc, rn
 }
 
-func BpxFileStat(
-	name string,
-	st *Bpxystat_t,
-) (rv int32, rc int32, rn int32) {
+func BpxFileStat(name string, st *Bpxystat_t) (rv int32, rc int32, rn int32) {
 	if len(name) < 1024 {
 		var namebuf [1024]byte
 		sz := int32(copy(namebuf[:], name))
 		A2e(namebuf[:sz])
-		st.St_id = [4]uint8{
-			0xe2,
-			0xe3,
-			0xc1,
-			0xe3,
-		}
+		st.St_id = [4]uint8{0xe2, 0xe3, 0xc1, 0xe3}
 		st.St_version = 2
 		stat_sz := uint32(unsafe.Sizeof(*st))
 		var parms [7]unsafe.Pointer
@@ -319,20 +298,12 @@ func BpxFileStat(
 	return -1, -1, -1
 }
 
-func BpxFileLStat(
-	name string,
-	st *Bpxystat_t,
-) (rv int32, rc int32, rn int32) {
+func BpxFileLStat(name string, st *Bpxystat_t) (rv int32, rc int32, rn int32) {
 	if len(name) < 1024 {
 		var namebuf [1024]byte
 		sz := int32(copy(namebuf[:], name))
 		A2e(namebuf[:sz])
-		st.St_id = [4]uint8{
-			0xe2,
-			0xe3,
-			0xc1,
-			0xe3,
-		}
+		st.St_id = [4]uint8{0xe2, 0xe3, 0xc1, 0xe3}
 		st.St_version = 2
 		stat_sz := uint32(unsafe.Sizeof(*st))
 		var parms [7]unsafe.Pointer
@@ -349,10 +320,7 @@ func BpxFileLStat(
 	return -1, -1, -1
 }
 
-func BpxChattr(
-	path string,
-	attr *Bpxyatt_t,
-) (rv int32, rc int32, rn int32) {
+func BpxChattr(path string, attr *Bpxyatt_t) (rv int32, rc int32, rn int32) {
 	if len(path) >= 1024 {
 		return -1, -1, -1
 	}
@@ -372,10 +340,7 @@ func BpxChattr(
 	return rv, rc, rn
 }
 
-func BpxLchattr(
-	path string,
-	attr *Bpxyatt_t,
-) (rv int32, rc int32, rn int32) {
+func BpxLchattr(path string, attr *Bpxyatt_t) (rv int32, rc int32, rn int32) {
 	if len(path) >= 1024 {
 		return -1, -1, -1
 	}
@@ -395,10 +360,7 @@ func BpxLchattr(
 	return rv, rc, rn
 }
 
-func BpxFchattr(
-	fd int32,
-	attr *Bpxyatt_t,
-) (rv int32, rc int32, rn int32) {
+func BpxFchattr(fd int32, attr *Bpxyatt_t) (rv int32, rc int32, rn int32) {
 	attr_sz := uint32(unsafe.Sizeof(*attr))
 	var parms [6]unsafe.Pointer
 	parms[0] = unsafe.Pointer(&fd)
@@ -411,13 +373,7 @@ func BpxFchattr(
 	return rv, rc, rn
 }
 
-func BpxCondTimedWait(
-	sec uint32,
-	nsec uint32,
-	events uint32,
-	secrem *uint32,
-	nsecrem *uint32,
-) (rv int32, rc int32, rn int32) {
+func BpxCondTimedWait(sec uint32, nsec uint32, events uint32, secrem *uint32, nsecrem *uint32) (rv int32, rc int32, rn int32) {
 	var parms [8]unsafe.Pointer
 	parms[0] = unsafe.Pointer(&sec)
 	parms[1] = unsafe.Pointer(&nsec)
@@ -430,16 +386,9 @@ func BpxCondTimedWait(
 	bpxcall(parms[:], BPX4CTW)
 	return rv, rc, rn
 }
-
-func BpxGetthent(
-	in *Pgtha,
-	outlen *uint32,
-	out unsafe.Pointer,
-) (rv int32, rc int32, rn int32) {
+func BpxGetthent(in *Pgtha, outlen *uint32, out unsafe.Pointer) (rv int32, rc int32, rn int32) {
 	var parms [7]unsafe.Pointer
-	inlen := uint32(
-		26,
-	) // nothing else will work. Go says Pgtha is 28-byte because of alignment, but Pgtha is "packed" and must be 26-byte
+	inlen := uint32(26) // nothing else will work. Go says Pgtha is 28-byte because of alignment, but Pgtha is "packed" and must be 26-byte
 	parms[0] = unsafe.Pointer(&inlen)
 	parms[1] = unsafe.Pointer(&in)
 	parms[2] = unsafe.Pointer(outlen)
@@ -450,7 +399,6 @@ func BpxGetthent(
 	bpxcall(parms[:], BPX4GTH)
 	return rv, rc, rn
 }
-
 func ZosJobname() (jobname string, err error) {
 	var pgtha Pgtha
 	pgtha.Pid = uint32(Getpid())
@@ -459,23 +407,12 @@ func ZosJobname() (jobname string, err error) {
 	var out [256]byte
 	var outlen uint32
 	outlen = 256
-	rv, rc, rn := BpxGetthent(
-		&pgtha,
-		&outlen,
-		unsafe.Pointer(&out[0]),
-	)
+	rv, rc, rn := BpxGetthent(&pgtha, &outlen, unsafe.Pointer(&out[0]))
 	if rv == 0 {
-		gthc := []byte{
-			0x87,
-			0xa3,
-			0x88,
-			0x83,
-		} // 'gthc' in ebcdic
+		gthc := []byte{0x87, 0xa3, 0x88, 0x83} // 'gthc' in ebcdic
 		ix := bytes.Index(out[:], gthc)
 		if ix == -1 {
-			err = fmt.Errorf(
-				"BPX4GTH: gthc return data not found",
-			)
+			err = fmt.Errorf("BPX4GTH: gthc return data not found")
 			return
 		}
 		jn := out[ix+80 : ix+88] // we didn't declare Pgthc, but jobname is 8-byte at offset 80
@@ -487,11 +424,7 @@ func ZosJobname() (jobname string, err error) {
 	}
 	return
 }
-
-func Bpx4ptq(
-	code int32,
-	data string,
-) (rv int32, rc int32, rn int32) {
+func Bpx4ptq(code int32, data string) (rv int32, rc int32, rn int32) {
 	var userdata [8]byte
 	var parms [5]unsafe.Pointer
 	copy(userdata[:], data+"        ")
@@ -510,10 +443,10 @@ const (
 	PT_READ_I               = 1  // Read a full word
 	PT_READ_D               = 2  // Read a full word
 	PT_READ_U               = 3  // Read control info
-	PT_WRITE_I              = 4  // Write a full word
-	PT_WRITE_D              = 5  // Write a full word
-	PT_CONTINUE             = 7  // Continue the process
-	PT_KILL                 = 8  // Terminate the process
+	PT_WRITE_I              = 4  //Write a full word
+	PT_WRITE_D              = 5  //Write a full word
+	PT_CONTINUE             = 7  //Continue the process
+	PT_KILL                 = 8  //Terminate the process
 	PT_READ_GPR             = 11 // Read GPR, CR, PSW
 	PT_READ_FPR             = 12 // Read FPR
 	PT_READ_VR              = 13 // Read VR
@@ -657,13 +590,7 @@ const (
 	PT_PSWG3                = 109 // Bytes 12-15 (IA low word)
 )
 
-func Bpx4ptr(
-	request int32,
-	pid int32,
-	addr unsafe.Pointer,
-	data unsafe.Pointer,
-	buffer unsafe.Pointer,
-) (rv int32, rc int32, rn int32) {
+func Bpx4ptr(request int32, pid int32, addr unsafe.Pointer, data unsafe.Pointer, buffer unsafe.Pointer) (rv int32, rc int32, rn int32) {
 	var parms [8]unsafe.Pointer
 	parms[0] = unsafe.Pointer(&request)
 	parms[1] = unsafe.Pointer(&pid)

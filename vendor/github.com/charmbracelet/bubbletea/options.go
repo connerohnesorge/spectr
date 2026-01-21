@@ -17,9 +17,7 @@ type ProgramOption func(*Program)
 // WithContext lets you specify a context in which to run the Program. This is
 // useful if you want to cancel the execution from outside. When a Program gets
 // cancelled it will exit with an error ErrProgramKilled.
-func WithContext(
-	ctx context.Context,
-) ProgramOption {
+func WithContext(ctx context.Context) ProgramOption {
 	return func(p *Program) {
 		p.externalCtx = ctx
 	}
@@ -225,9 +223,7 @@ func WithANSICompressor() ProgramOption {
 //		fmt.Println("Error running program:", err)
 //		os.Exit(1)
 //	}
-func WithFilter(
-	filter func(Model, Msg) Msg,
-) ProgramOption {
+func WithFilter(filter func(Model, Msg) Msg) ProgramOption {
 	return func(p *Program) {
 		p.filter = filter
 	}

@@ -24,19 +24,10 @@ package unix
 //sys	Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) (err error)
 //sys	Seek(fd int, offset int64, whence int) (off int64, err error) = SYS_LSEEK
 
-func Select(
-	nfd int,
-	r *FdSet,
-	w *FdSet,
-	e *FdSet,
-	timeout *Timeval,
-) (n int, err error) {
+func Select(nfd int, r *FdSet, w *FdSet, e *FdSet, timeout *Timeval) (n int, err error) {
 	var ts *Timespec
 	if timeout != nil {
-		ts = &Timespec{
-			Sec:  timeout.Sec,
-			Nsec: timeout.Usec * 1000,
-		}
+		ts = &Timespec{Sec: timeout.Sec, Nsec: timeout.Usec * 1000}
 	}
 	return pselect6(nfd, r, w, e, ts, nil)
 }
@@ -93,11 +84,7 @@ func setTimeval(sec, usec int64) Timeval {
 	return Timeval{Sec: sec, Usec: usec}
 }
 
-func Ioperm(
-	from int,
-	num int,
-	on int,
-) (err error) {
+func Ioperm(from int, num int, on int) (err error) {
 	return ENOSYS
 }
 
@@ -139,12 +126,7 @@ func Fstat(fd int, s *Stat_t) (err error) {
 	return
 }
 
-func Fstatat(
-	dirfd int,
-	path string,
-	s *Stat_t,
-	flags int,
-) (err error) {
+func Fstatat(dirfd int, path string, s *Stat_t, flags int) (err error) {
 	st := &stat_t{}
 	err = fstatat(dirfd, path, st, flags)
 	fillStat_t(s, st)
@@ -174,29 +156,16 @@ func fillStat_t(s *Stat_t, st *stat_t) {
 	s.Gid = st.Gid
 	s.Rdev = st.Rdev
 	s.Size = st.Size
-	s.Atim = Timespec{
-		int64(st.Atime),
-		int64(st.Atime_nsec),
-	}
-	s.Mtim = Timespec{
-		int64(st.Mtime),
-		int64(st.Mtime_nsec),
-	}
-	s.Ctim = Timespec{
-		int64(st.Ctime),
-		int64(st.Ctime_nsec),
-	}
+	s.Atim = Timespec{int64(st.Atime), int64(st.Atime_nsec)}
+	s.Mtim = Timespec{int64(st.Mtime), int64(st.Mtime_nsec)}
+	s.Ctim = Timespec{int64(st.Ctime), int64(st.Ctime_nsec)}
 	s.Blksize = st.Blksize
 	s.Blocks = st.Blocks
 }
 
 func (r *PtraceRegs) PC() uint64 { return r.Epc }
 
-func (r *PtraceRegs) SetPC(
-	pc uint64,
-) {
-	r.Epc = pc
-}
+func (r *PtraceRegs) SetPC(pc uint64) { r.Epc = pc }
 
 func (iov *Iovec) SetLen(length int) {
 	iov.Len = uint64(length)
@@ -214,8 +183,6 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 	cmsg.Len = uint64(length)
 }
 
-func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(
-	length int,
-) {
+func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(length int) {
 	rsa.Service_name_len = uint64(length)
 }

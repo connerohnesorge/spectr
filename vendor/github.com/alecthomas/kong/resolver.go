@@ -14,11 +14,7 @@ type Resolver interface {
 	Validate(app *Application) error
 
 	// Resolve the value for a Flag.
-	Resolve(
-		context *Context,
-		parent *Path,
-		flag *Flag,
-	) (any, error)
+	Resolve(context *Context, parent *Path, flag *Flag) (any, error)
 }
 
 // ResolverFunc is a convenience type for non-validating Resolvers.
@@ -26,19 +22,10 @@ type ResolverFunc func(context *Context, parent *Path, flag *Flag) (any, error)
 
 var _ Resolver = ResolverFunc(nil)
 
-func (r ResolverFunc) Resolve(
-	context *Context,
-	parent *Path,
-	flag *Flag,
-) (any, error) { //nolint: revive
+func (r ResolverFunc) Resolve(context *Context, parent *Path, flag *Flag) (any, error) { //nolint: revive
 	return r(context, parent, flag)
 }
-
-func (r ResolverFunc) Validate(
-	app *Application,
-) error {
-	return nil
-} //nolint: revive
+func (r ResolverFunc) Validate(app *Application) error { return nil } //nolint: revive
 
 // JSON returns a Resolver that retrieves values from a JSON source.
 //
@@ -50,11 +37,7 @@ func JSON(r io.Reader) (Resolver, error) {
 		return nil, err
 	}
 	var f ResolverFunc = func(context *Context, parent *Path, flag *Flag) (any, error) {
-		name := strings.ReplaceAll(
-			flag.Name,
-			"-",
-			"_",
-		)
+		name := strings.ReplaceAll(flag.Name, "-", "_")
 		snakeCaseName := snakeCase(flag.Name)
 		raw, ok := values[name]
 		if ok {
@@ -80,9 +63,6 @@ func JSON(r io.Reader) (Resolver, error) {
 }
 
 func snakeCase(name string) string {
-	name = strings.Join(
-		strings.Split(strings.Title(name), "-"),
-		"",
-	) //nolint:staticcheck // Unicode punctuation not an issue
+	name = strings.Join(strings.Split(strings.Title(name), "-"), "") //nolint:staticcheck // Unicode punctuation not an issue
 	return strings.ToLower(name[:1]) + name[1:]
 }

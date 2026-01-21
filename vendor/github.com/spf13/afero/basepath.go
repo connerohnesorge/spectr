@@ -34,15 +34,10 @@ type BasePathFile struct {
 
 func (f *BasePathFile) Name() string {
 	sourcename := f.File.Name()
-	return strings.TrimPrefix(
-		sourcename,
-		filepath.Clean(f.path),
-	)
+	return strings.TrimPrefix(sourcename, filepath.Clean(f.path))
 }
 
-func (f *BasePathFile) ReadDir(
-	n int,
-) ([]fs.DirEntry, error) {
+func (f *BasePathFile) ReadDir(n int) ([]fs.DirEntry, error) {
 	if rdf, ok := f.File.(fs.ReadDirFile); ok {
 		return rdf.ReadDir(n)
 	}
@@ -55,17 +50,13 @@ func NewBasePathFs(source Fs, path string) Fs {
 
 // on a file outside the base path it returns the given file name and an error,
 // else the given file with the base path prepended
-func (b *BasePathFs) RealPath(
-	name string,
-) (path string, err error) {
+func (b *BasePathFs) RealPath(name string) (path string, err error) {
 	if err := validateBasePathName(name); err != nil {
 		return name, err
 	}
 
 	bpath := filepath.Clean(b.path)
-	path = filepath.Clean(
-		filepath.Join(bpath, name),
-	)
+	path = filepath.Clean(filepath.Join(bpath, name))
 	if !strings.HasPrefix(path, bpath) {
 		return name, os.ErrNotExist
 	}
@@ -89,44 +80,23 @@ func validateBasePathName(name string) error {
 	return nil
 }
 
-func (b *BasePathFs) Chtimes(
-	name string,
-	atime, mtime time.Time,
-) (err error) {
+func (b *BasePathFs) Chtimes(name string, atime, mtime time.Time) (err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return &os.PathError{
-			Op:   "chtimes",
-			Path: name,
-			Err:  err,
-		}
+		return &os.PathError{Op: "chtimes", Path: name, Err: err}
 	}
 	return b.source.Chtimes(name, atime, mtime)
 }
 
-func (b *BasePathFs) Chmod(
-	name string,
-	mode os.FileMode,
-) (err error) {
+func (b *BasePathFs) Chmod(name string, mode os.FileMode) (err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return &os.PathError{
-			Op:   "chmod",
-			Path: name,
-			Err:  err,
-		}
+		return &os.PathError{Op: "chmod", Path: name, Err: err}
 	}
 	return b.source.Chmod(name, mode)
 }
 
-func (b *BasePathFs) Chown(
-	name string,
-	uid, gid int,
-) (err error) {
+func (b *BasePathFs) Chown(name string, uid, gid int) (err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return &os.PathError{
-			Op:   "chown",
-			Path: name,
-			Err:  err,
-		}
+		return &os.PathError{Op: "chown", Path: name, Err: err}
 	}
 	return b.source.Chown(name, uid, gid)
 }
@@ -135,166 +105,88 @@ func (b *BasePathFs) Name() string {
 	return "BasePathFs"
 }
 
-func (b *BasePathFs) Stat(
-	name string,
-) (fi os.FileInfo, err error) {
+func (b *BasePathFs) Stat(name string) (fi os.FileInfo, err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return nil, &os.PathError{
-			Op:   "stat",
-			Path: name,
-			Err:  err,
-		}
+		return nil, &os.PathError{Op: "stat", Path: name, Err: err}
 	}
 	return b.source.Stat(name)
 }
 
-func (b *BasePathFs) Rename(
-	oldname, newname string,
-) (err error) {
+func (b *BasePathFs) Rename(oldname, newname string) (err error) {
 	if oldname, err = b.RealPath(oldname); err != nil {
-		return &os.PathError{
-			Op:   "rename",
-			Path: oldname,
-			Err:  err,
-		}
+		return &os.PathError{Op: "rename", Path: oldname, Err: err}
 	}
 	if newname, err = b.RealPath(newname); err != nil {
-		return &os.PathError{
-			Op:   "rename",
-			Path: newname,
-			Err:  err,
-		}
+		return &os.PathError{Op: "rename", Path: newname, Err: err}
 	}
 	return b.source.Rename(oldname, newname)
 }
 
-func (b *BasePathFs) RemoveAll(
-	name string,
-) (err error) {
+func (b *BasePathFs) RemoveAll(name string) (err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return &os.PathError{
-			Op:   "remove_all",
-			Path: name,
-			Err:  err,
-		}
+		return &os.PathError{Op: "remove_all", Path: name, Err: err}
 	}
 	return b.source.RemoveAll(name)
 }
 
-func (b *BasePathFs) Remove(
-	name string,
-) (err error) {
+func (b *BasePathFs) Remove(name string) (err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return &os.PathError{
-			Op:   "remove",
-			Path: name,
-			Err:  err,
-		}
+		return &os.PathError{Op: "remove", Path: name, Err: err}
 	}
 	return b.source.Remove(name)
 }
 
-func (b *BasePathFs) OpenFile(
-	name string,
-	flag int,
-	mode os.FileMode,
-) (f File, err error) {
+func (b *BasePathFs) OpenFile(name string, flag int, mode os.FileMode) (f File, err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return nil, &os.PathError{
-			Op:   "openfile",
-			Path: name,
-			Err:  err,
-		}
+		return nil, &os.PathError{Op: "openfile", Path: name, Err: err}
 	}
-	sourcef, err := b.source.OpenFile(
-		name,
-		flag,
-		mode,
-	)
+	sourcef, err := b.source.OpenFile(name, flag, mode)
 	if err != nil {
 		return nil, err
 	}
 	return &BasePathFile{sourcef, b.path}, nil
 }
 
-func (b *BasePathFs) Open(
-	name string,
-) (f File, err error) {
+func (b *BasePathFs) Open(name string) (f File, err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return nil, &os.PathError{
-			Op:   "open",
-			Path: name,
-			Err:  err,
-		}
+		return nil, &os.PathError{Op: "open", Path: name, Err: err}
 	}
 	sourcef, err := b.source.Open(name)
 	if err != nil {
 		return nil, err
 	}
-	return &BasePathFile{
-		File: sourcef,
-		path: b.path,
-	}, nil
+	return &BasePathFile{File: sourcef, path: b.path}, nil
 }
 
-func (b *BasePathFs) Mkdir(
-	name string,
-	mode os.FileMode,
-) (err error) {
+func (b *BasePathFs) Mkdir(name string, mode os.FileMode) (err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return &os.PathError{
-			Op:   "mkdir",
-			Path: name,
-			Err:  err,
-		}
+		return &os.PathError{Op: "mkdir", Path: name, Err: err}
 	}
 	return b.source.Mkdir(name, mode)
 }
 
-func (b *BasePathFs) MkdirAll(
-	name string,
-	mode os.FileMode,
-) (err error) {
+func (b *BasePathFs) MkdirAll(name string, mode os.FileMode) (err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return &os.PathError{
-			Op:   "mkdir",
-			Path: name,
-			Err:  err,
-		}
+		return &os.PathError{Op: "mkdir", Path: name, Err: err}
 	}
 	return b.source.MkdirAll(name, mode)
 }
 
-func (b *BasePathFs) Create(
-	name string,
-) (f File, err error) {
+func (b *BasePathFs) Create(name string) (f File, err error) {
 	if name, err = b.RealPath(name); err != nil {
-		return nil, &os.PathError{
-			Op:   "create",
-			Path: name,
-			Err:  err,
-		}
+		return nil, &os.PathError{Op: "create", Path: name, Err: err}
 	}
 	sourcef, err := b.source.Create(name)
 	if err != nil {
 		return nil, err
 	}
-	return &BasePathFile{
-		File: sourcef,
-		path: b.path,
-	}, nil
+	return &BasePathFile{File: sourcef, path: b.path}, nil
 }
 
-func (b *BasePathFs) LstatIfPossible(
-	name string,
-) (os.FileInfo, bool, error) {
+func (b *BasePathFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
 	name, err := b.RealPath(name)
 	if err != nil {
-		return nil, false, &os.PathError{
-			Op:   "lstat",
-			Path: name,
-			Err:  err,
-		}
+		return nil, false, &os.PathError{Op: "lstat", Path: name, Err: err}
 	}
 	if lstater, ok := b.source.(Lstater); ok {
 		return lstater.LstatIfPossible(name)
@@ -303,58 +195,28 @@ func (b *BasePathFs) LstatIfPossible(
 	return fi, false, err
 }
 
-func (b *BasePathFs) SymlinkIfPossible(
-	oldname, newname string,
-) error {
+func (b *BasePathFs) SymlinkIfPossible(oldname, newname string) error {
 	oldname, err := b.RealPath(oldname)
 	if err != nil {
-		return &os.LinkError{
-			Op:  "symlink",
-			Old: oldname,
-			New: newname,
-			Err: err,
-		}
+		return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: err}
 	}
 	newname, err = b.RealPath(newname)
 	if err != nil {
-		return &os.LinkError{
-			Op:  "symlink",
-			Old: oldname,
-			New: newname,
-			Err: err,
-		}
+		return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: err}
 	}
 	if linker, ok := b.source.(Linker); ok {
-		return linker.SymlinkIfPossible(
-			oldname,
-			newname,
-		)
+		return linker.SymlinkIfPossible(oldname, newname)
 	}
-	return &os.LinkError{
-		Op:  "symlink",
-		Old: oldname,
-		New: newname,
-		Err: ErrNoSymlink,
-	}
+	return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: ErrNoSymlink}
 }
 
-func (b *BasePathFs) ReadlinkIfPossible(
-	name string,
-) (string, error) {
+func (b *BasePathFs) ReadlinkIfPossible(name string) (string, error) {
 	name, err := b.RealPath(name)
 	if err != nil {
-		return "", &os.PathError{
-			Op:   "readlink",
-			Path: name,
-			Err:  err,
-		}
+		return "", &os.PathError{Op: "readlink", Path: name, Err: err}
 	}
 	if reader, ok := b.source.(LinkReader); ok {
 		return reader.ReadlinkIfPossible(name)
 	}
-	return "", &os.PathError{
-		Op:   "readlink",
-		Path: name,
-		Err:  ErrNoReadlink,
-	}
+	return "", &os.PathError{Op: "readlink", Path: name, Err: ErrNoReadlink}
 }

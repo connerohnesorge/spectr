@@ -17,10 +17,7 @@ func (b bash) IsInstalled(cmd, bin string) bool {
 
 func (b bash) Install(cmd, bin string) error {
 	if b.IsInstalled(cmd, bin) {
-		return fmt.Errorf(
-			"already installed in %s",
-			b.rc,
-		)
+		return fmt.Errorf("already installed in %s", b.rc)
 	}
 	completeCmd := b.cmd(cmd, bin)
 	return appendToFile(b.rc, completeCmd)
@@ -28,10 +25,7 @@ func (b bash) Install(cmd, bin string) error {
 
 func (b bash) Uninstall(cmd, bin string) error {
 	if !b.IsInstalled(cmd, bin) {
-		return fmt.Errorf(
-			"does not installed in %s",
-			b.rc,
-		)
+		return fmt.Errorf("does not installed in %s", b.rc)
 	}
 
 	completeCmd := b.cmd(cmd, bin)
@@ -39,9 +33,5 @@ func (b bash) Uninstall(cmd, bin string) error {
 }
 
 func (bash) cmd(cmd, bin string) string {
-	return fmt.Sprintf(
-		"complete -C %s %s",
-		bin,
-		cmd,
-	)
+	return fmt.Sprintf("complete -C %s %s", bin, cmd)
 }

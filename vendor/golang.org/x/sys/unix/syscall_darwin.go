@@ -22,12 +22,7 @@ import (
 //sys	readdir_r(dir uintptr, entry *Dirent, result **Dirent) (res Errno)
 
 func fdopendir(fd int) (dir uintptr, err error) {
-	r0, _, e1 := syscall_syscallPtr(
-		libc_fdopendir_trampoline_addr,
-		uintptr(fd),
-		0,
-		0,
-	)
+	r0, _, e1 := syscall_syscallPtr(libc_fdopendir_trampoline_addr, uintptr(fd), 0, 0)
 	dir = uintptr(r0)
 	if e1 != 0 {
 		err = errnoErr(e1)
@@ -39,11 +34,7 @@ var libc_fdopendir_trampoline_addr uintptr
 
 //go:cgo_import_dynamic libc_fdopendir fdopendir "/usr/lib/libSystem.B.dylib"
 
-func Getdirentries(
-	fd int,
-	buf []byte,
-	basep *uintptr,
-) (n int, err error) {
+func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
 	// Simulate Getdirentries using fdopendir/readdir_r/closedir.
 	// We store the number of entries to skip in the seek
 	// offset of fd. See issue #31368.
@@ -100,10 +91,7 @@ func Getdirentries(
 		}
 
 		// Copy entry into return buffer.
-		s := unsafe.Slice(
-			(*byte)(unsafe.Pointer(&entry)),
-			reclen,
-		)
+		s := unsafe.Slice((*byte)(unsafe.Pointer(&entry)), reclen)
 		copy(buf, s)
 
 		buf = buf[reclen:]
@@ -146,9 +134,7 @@ func (sa *SockaddrCtl) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	sa.raw.Ss_sysaddr = AF_SYS_CONTROL
 	sa.raw.Sc_id = sa.ID
 	sa.raw.Sc_unit = sa.Unit
-	return unsafe.Pointer(
-		&sa.raw,
-	), SizeofSockaddrCtl, nil
+	return unsafe.Pointer(&sa.raw), SizeofSockaddrCtl, nil
 }
 
 // SockaddrVM implements the Sockaddr interface for AF_VSOCK type sockets.
@@ -172,20 +158,13 @@ func (sa *SockaddrVM) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	sa.raw.Port = sa.Port
 	sa.raw.Cid = sa.CID
 
-	return unsafe.Pointer(
-		&sa.raw,
-	), SizeofSockaddrVM, nil
+	return unsafe.Pointer(&sa.raw), SizeofSockaddrVM, nil
 }
 
-func anyToSockaddrGOOS(
-	fd int,
-	rsa *RawSockaddrAny,
-) (Sockaddr, error) {
+func anyToSockaddrGOOS(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
 	switch rsa.Addr.Family {
 	case AF_SYSTEM:
-		pp := (*RawSockaddrCtl)(
-			unsafe.Pointer(rsa),
-		)
+		pp := (*RawSockaddrCtl)(unsafe.Pointer(rsa))
 		if pp.Ss_sysaddr == AF_SYS_CONTROL {
 			sa := new(SockaddrCtl)
 			sa.ID = pp.Sc_id
@@ -193,9 +172,7 @@ func anyToSockaddrGOOS(
 			return sa, nil
 		}
 	case AF_VSOCK:
-		pp := (*RawSockaddrVM)(
-			unsafe.Pointer(rsa),
-		)
+		pp := (*RawSockaddrVM)(unsafe.Pointer(rsa))
 		sa := &SockaddrVM{
 			CID:  pp.Cid,
 			Port: pp.Port,
@@ -211,9 +188,7 @@ func anyToSockaddrGOOS(
 const SYS___SYSCTL = SYS_SYSCTL
 
 // Translate "kern.hostname" to []_C_int{0,1,2,3}.
-func nametomib(
-	name string,
-) (mib []_C_int, err error) {
+func nametomib(name string) (mib []_C_int, err error) {
 	const siz = unsafe.Sizeof(mib[0])
 
 	// NOTE(rsc): It seems strange to set the buffer to have
@@ -241,42 +216,20 @@ func nametomib(
 }
 
 func direntIno(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Ino),
-		unsafe.Sizeof(Dirent{}.Ino),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Ino), unsafe.Sizeof(Dirent{}.Ino))
 }
 
 func direntReclen(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Reclen),
-		unsafe.Sizeof(Dirent{}.Reclen),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Reclen), unsafe.Sizeof(Dirent{}.Reclen))
 }
 
 func direntNamlen(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Namlen),
-		unsafe.Sizeof(Dirent{}.Namlen),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Namlen), unsafe.Sizeof(Dirent{}.Namlen))
 }
 
-func PtraceAttach(
-	pid int,
-) (err error) {
-	return ptrace(PT_ATTACH, pid, 0, 0)
-}
-
-func PtraceDetach(
-	pid int,
-) (err error) {
-	return ptrace(PT_DETACH, pid, 0, 0)
-}
-
-func PtraceDenyAttach() (err error) { return ptrace(PT_DENY_ATTACH, 0, 0, 0) }
+func PtraceAttach(pid int) (err error) { return ptrace(PT_ATTACH, pid, 0, 0) }
+func PtraceDetach(pid int) (err error) { return ptrace(PT_DETACH, pid, 0, 0) }
+func PtraceDenyAttach() (err error)    { return ptrace(PT_DENY_ATTACH, 0, 0, 0) }
 
 //sysnb	pipe(p *[2]int32) (err error)
 
@@ -293,19 +246,12 @@ func Pipe(p []int) (err error) {
 	return
 }
 
-func Getfsstat(
-	buf []Statfs_t,
-	flags int,
-) (n int, err error) {
+func Getfsstat(buf []Statfs_t, flags int) (n int, err error) {
 	var _p0 unsafe.Pointer
 	var bufsize uintptr
 	if len(buf) > 0 {
 		_p0 = unsafe.Pointer(&buf[0])
-		bufsize = unsafe.Sizeof(
-			Statfs_t{},
-		) * uintptr(
-			len(buf),
-		)
+		bufsize = unsafe.Sizeof(Statfs_t{}) * uintptr(len(buf))
 	}
 	return getfsstat(_p0, bufsize, flags)
 }
@@ -325,61 +271,23 @@ func xattrPointer(dest []byte) *byte {
 
 //sys	getxattr(path string, attr string, dest *byte, size int, position uint32, options int) (sz int, err error)
 
-func Getxattr(
-	path string,
-	attr string,
-	dest []byte,
-) (sz int, err error) {
-	return getxattr(
-		path,
-		attr,
-		xattrPointer(dest),
-		len(dest),
-		0,
-		0,
-	)
+func Getxattr(path string, attr string, dest []byte) (sz int, err error) {
+	return getxattr(path, attr, xattrPointer(dest), len(dest), 0, 0)
 }
 
-func Lgetxattr(
-	link string,
-	attr string,
-	dest []byte,
-) (sz int, err error) {
-	return getxattr(
-		link,
-		attr,
-		xattrPointer(dest),
-		len(dest),
-		0,
-		XATTR_NOFOLLOW,
-	)
+func Lgetxattr(link string, attr string, dest []byte) (sz int, err error) {
+	return getxattr(link, attr, xattrPointer(dest), len(dest), 0, XATTR_NOFOLLOW)
 }
 
 //sys	fgetxattr(fd int, attr string, dest *byte, size int, position uint32, options int) (sz int, err error)
 
-func Fgetxattr(
-	fd int,
-	attr string,
-	dest []byte,
-) (sz int, err error) {
-	return fgetxattr(
-		fd,
-		attr,
-		xattrPointer(dest),
-		len(dest),
-		0,
-		0,
-	)
+func Fgetxattr(fd int, attr string, dest []byte) (sz int, err error) {
+	return fgetxattr(fd, attr, xattrPointer(dest), len(dest), 0, 0)
 }
 
 //sys	setxattr(path string, attr string, data *byte, size int, position uint32, options int) (err error)
 
-func Setxattr(
-	path string,
-	attr string,
-	data []byte,
-	flags int,
-) (err error) {
+func Setxattr(path string, attr string, data []byte, flags int) (err error) {
 	// The parameters for the OS X implementation vary slightly compared to the
 	// linux system call, specifically the position parameter:
 	//
@@ -406,116 +314,52 @@ func Setxattr(
 	// current implementation, only the resource fork extended attribute makes
 	// use of this argument. For all others, position is reserved. We simply
 	// default to setting it to zero.
-	return setxattr(
-		path,
-		attr,
-		xattrPointer(data),
-		len(data),
-		0,
-		flags,
-	)
+	return setxattr(path, attr, xattrPointer(data), len(data), 0, flags)
 }
 
-func Lsetxattr(
-	link string,
-	attr string,
-	data []byte,
-	flags int,
-) (err error) {
-	return setxattr(
-		link,
-		attr,
-		xattrPointer(data),
-		len(data),
-		0,
-		flags|XATTR_NOFOLLOW,
-	)
+func Lsetxattr(link string, attr string, data []byte, flags int) (err error) {
+	return setxattr(link, attr, xattrPointer(data), len(data), 0, flags|XATTR_NOFOLLOW)
 }
 
 //sys	fsetxattr(fd int, attr string, data *byte, size int, position uint32, options int) (err error)
 
-func Fsetxattr(
-	fd int,
-	attr string,
-	data []byte,
-	flags int,
-) (err error) {
-	return fsetxattr(
-		fd,
-		attr,
-		xattrPointer(data),
-		len(data),
-		0,
-		0,
-	)
+func Fsetxattr(fd int, attr string, data []byte, flags int) (err error) {
+	return fsetxattr(fd, attr, xattrPointer(data), len(data), 0, 0)
 }
 
 //sys	removexattr(path string, attr string, options int) (err error)
 
-func Removexattr(
-	path string,
-	attr string,
-) (err error) {
+func Removexattr(path string, attr string) (err error) {
 	// We wrap around and explicitly zero out the options provided to the OS X
 	// implementation of removexattr, we do so for interoperability with the
 	// linux variant.
 	return removexattr(path, attr, 0)
 }
 
-func Lremovexattr(
-	link string,
-	attr string,
-) (err error) {
+func Lremovexattr(link string, attr string) (err error) {
 	return removexattr(link, attr, XATTR_NOFOLLOW)
 }
 
 //sys	fremovexattr(fd int, attr string, options int) (err error)
 
-func Fremovexattr(
-	fd int,
-	attr string,
-) (err error) {
+func Fremovexattr(fd int, attr string) (err error) {
 	return fremovexattr(fd, attr, 0)
 }
 
 //sys	listxattr(path string, dest *byte, size int, options int) (sz int, err error)
 
-func Listxattr(
-	path string,
-	dest []byte,
-) (sz int, err error) {
-	return listxattr(
-		path,
-		xattrPointer(dest),
-		len(dest),
-		0,
-	)
+func Listxattr(path string, dest []byte) (sz int, err error) {
+	return listxattr(path, xattrPointer(dest), len(dest), 0)
 }
 
-func Llistxattr(
-	link string,
-	dest []byte,
-) (sz int, err error) {
-	return listxattr(
-		link,
-		xattrPointer(dest),
-		len(dest),
-		XATTR_NOFOLLOW,
-	)
+func Llistxattr(link string, dest []byte) (sz int, err error) {
+	return listxattr(link, xattrPointer(dest), len(dest), XATTR_NOFOLLOW)
 }
 
 //sys	flistxattr(fd int, dest *byte, size int, options int) (sz int, err error)
 
-func Flistxattr(
-	fd int,
-	dest []byte,
-) (sz int, err error) {
-	return flistxattr(
-		fd,
-		xattrPointer(dest),
-		len(dest),
-		0,
-	)
+func Flistxattr(fd int, dest []byte) (sz int, err error) {
+	return flistxattr(fd, xattrPointer(dest), len(dest), 0)
 }
 
 //sys	utimensat(dirfd int, path string, times *[2]Timespec, flags int) (err error)
@@ -528,25 +372,13 @@ func Flistxattr(
 
 //sys	kill(pid int, signum int, posix int) (err error)
 
-func Kill(
-	pid int,
-	signum syscall.Signal,
-) (err error) {
-	return kill(pid, int(signum), 1)
-}
+func Kill(pid int, signum syscall.Signal) (err error) { return kill(pid, int(signum), 1) }
 
 //sys	ioctl(fd int, req uint, arg uintptr) (err error)
 //sys	ioctlPtr(fd int, req uint, arg unsafe.Pointer) (err error) = SYS_IOCTL
 
-func IoctlCtlInfo(
-	fd int,
-	ctlInfo *CtlInfo,
-) error {
-	return ioctlPtr(
-		fd,
-		CTLIOCGINFO,
-		unsafe.Pointer(ctlInfo),
-	)
+func IoctlCtlInfo(fd int, ctlInfo *CtlInfo) error {
+	return ioctlPtr(fd, CTLIOCGINFO, unsafe.Pointer(ctlInfo))
 }
 
 // IfreqMTU is struct ifreq used to get or set a network device's MTU.
@@ -557,59 +389,29 @@ type IfreqMTU struct {
 
 // IoctlGetIfreqMTU performs the SIOCGIFMTU ioctl operation on fd to get the MTU
 // of the network device specified by ifname.
-func IoctlGetIfreqMTU(
-	fd int,
-	ifname string,
-) (*IfreqMTU, error) {
+func IoctlGetIfreqMTU(fd int, ifname string) (*IfreqMTU, error) {
 	var ifreq IfreqMTU
 	copy(ifreq.Name[:], ifname)
-	err := ioctlPtr(
-		fd,
-		SIOCGIFMTU,
-		unsafe.Pointer(&ifreq),
-	)
+	err := ioctlPtr(fd, SIOCGIFMTU, unsafe.Pointer(&ifreq))
 	return &ifreq, err
 }
 
 // IoctlSetIfreqMTU performs the SIOCSIFMTU ioctl operation on fd to set the MTU
 // of the network device specified by ifreq.Name.
-func IoctlSetIfreqMTU(
-	fd int,
-	ifreq *IfreqMTU,
-) error {
-	return ioctlPtr(
-		fd,
-		SIOCSIFMTU,
-		unsafe.Pointer(ifreq),
-	)
+func IoctlSetIfreqMTU(fd int, ifreq *IfreqMTU) error {
+	return ioctlPtr(fd, SIOCSIFMTU, unsafe.Pointer(ifreq))
 }
 
 //sys	renamexNp(from string, to string, flag uint32) (err error)
 
-func RenamexNp(
-	from string,
-	to string,
-	flag uint32,
-) (err error) {
+func RenamexNp(from string, to string, flag uint32) (err error) {
 	return renamexNp(from, to, flag)
 }
 
 //sys	renameatxNp(fromfd int, from string, tofd int, to string, flag uint32) (err error)
 
-func RenameatxNp(
-	fromfd int,
-	from string,
-	tofd int,
-	to string,
-	flag uint32,
-) (err error) {
-	return renameatxNp(
-		fromfd,
-		from,
-		tofd,
-		to,
-		flag,
-	)
+func RenameatxNp(fromfd int, from string, tofd int, to string, flag uint32) (err error) {
+	return renameatxNp(fromfd, from, tofd, to, flag)
 }
 
 //sys	sysctl(mib []_C_int, old *byte, oldlen *uintptr, new *byte, newlen uintptr) (err error) = SYS_SYSCTL
@@ -660,92 +462,44 @@ func Uname(uname *Utsname) error {
 	return nil
 }
 
-func Sendfile(
-	outfd int,
-	infd int,
-	offset *int64,
-	count int,
-) (written int, err error) {
+func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
 	if raceenabled {
 		raceReleaseMerge(unsafe.Pointer(&ioSync))
 	}
-	length := int64(count)
-	err = sendfile(
-		infd,
-		outfd,
-		*offset,
-		&length,
-		nil,
-		0,
-	)
+	var length = int64(count)
+	err = sendfile(infd, outfd, *offset, &length, nil, 0)
 	written = int(length)
 	return
 }
 
-func GetsockoptIPMreqn(
-	fd, level, opt int,
-) (*IPMreqn, error) {
+func GetsockoptIPMreqn(fd, level, opt int) (*IPMreqn, error) {
 	var value IPMreqn
 	vallen := _Socklen(SizeofIPMreqn)
-	errno := getsockopt(
-		fd,
-		level,
-		opt,
-		unsafe.Pointer(&value),
-		&vallen,
-	)
+	errno := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
 	return &value, errno
 }
 
-func SetsockoptIPMreqn(
-	fd, level, opt int,
-	mreq *IPMreqn,
-) (err error) {
-	return setsockopt(
-		fd,
-		level,
-		opt,
-		unsafe.Pointer(mreq),
-		unsafe.Sizeof(*mreq),
-	)
+func SetsockoptIPMreqn(fd, level, opt int, mreq *IPMreqn) (err error) {
+	return setsockopt(fd, level, opt, unsafe.Pointer(mreq), unsafe.Sizeof(*mreq))
 }
 
 // GetsockoptXucred is a getsockopt wrapper that returns an Xucred struct.
 // The usual level and opt are SOL_LOCAL and LOCAL_PEERCRED, respectively.
-func GetsockoptXucred(
-	fd, level, opt int,
-) (*Xucred, error) {
+func GetsockoptXucred(fd, level, opt int) (*Xucred, error) {
 	x := new(Xucred)
 	vallen := _Socklen(SizeofXucred)
-	err := getsockopt(
-		fd,
-		level,
-		opt,
-		unsafe.Pointer(x),
-		&vallen,
-	)
+	err := getsockopt(fd, level, opt, unsafe.Pointer(x), &vallen)
 	return x, err
 }
 
-func GetsockoptTCPConnectionInfo(
-	fd, level, opt int,
-) (*TCPConnectionInfo, error) {
+func GetsockoptTCPConnectionInfo(fd, level, opt int) (*TCPConnectionInfo, error) {
 	var value TCPConnectionInfo
 	vallen := _Socklen(SizeofTCPConnectionInfo)
-	err := getsockopt(
-		fd,
-		level,
-		opt,
-		unsafe.Pointer(&value),
-		&vallen,
-	)
+	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
 	return &value, err
 }
 
-func SysctlKinfoProc(
-	name string,
-	args ...int,
-) (*KinfoProc, error) {
+func SysctlKinfoProc(name string, args ...int) (*KinfoProc, error) {
 	mib, err := sysctlmib(name, args...)
 	if err != nil {
 		return nil, err
@@ -762,10 +516,7 @@ func SysctlKinfoProc(
 	return &kinfo, nil
 }
 
-func SysctlKinfoProcSlice(
-	name string,
-	args ...int,
-) ([]KinfoProc, error) {
+func SysctlKinfoProcSlice(name string, args ...int) ([]KinfoProc, error) {
 	mib, err := sysctlmib(name, args...)
 	if err != nil {
 		return nil, err
@@ -781,18 +532,11 @@ func SysctlKinfoProcSlice(
 			return nil, nil
 		}
 		if n%SizeofKinfoProc != 0 {
-			return nil, fmt.Errorf(
-				"sysctl() returned a size of %d, which is not a multiple of %d",
-				n,
-				SizeofKinfoProc,
-			)
+			return nil, fmt.Errorf("sysctl() returned a size of %d, which is not a multiple of %d", n, SizeofKinfoProc)
 		}
 
 		// Read into buffer of that size.
-		buf := make(
-			[]KinfoProc,
-			n/SizeofKinfoProc,
-		)
+		buf := make([]KinfoProc, n/SizeofKinfoProc)
 		if err := sysctl(mib, (*byte)(unsafe.Pointer(&buf[0])), &n, nil, 0); err != nil {
 			if err == ENOMEM {
 				// Process table grew. Try again.
@@ -801,11 +545,7 @@ func SysctlKinfoProcSlice(
 			return nil, err
 		}
 		if n%SizeofKinfoProc != 0 {
-			return nil, fmt.Errorf(
-				"sysctl() returned a size of %d, which is not a multiple of %d",
-				n,
-				SizeofKinfoProc,
-			)
+			return nil, fmt.Errorf("sysctl() returned a size of %d, which is not a multiple of %d", n, SizeofKinfoProc)
 		}
 
 		// The actual call may return less than the original reported required
@@ -835,15 +575,7 @@ func PthreadFchdir(fd int) (err error) {
 //   - dstAddr is the destination address.
 //
 // On success, Connectx returns the number of bytes enqueued for transmission.
-func Connectx(
-	fd int,
-	srcIf uint32,
-	srcAddr, dstAddr Sockaddr,
-	associd SaeAssocID,
-	flags uint32,
-	iov []Iovec,
-	connid *SaeConnID,
-) (n uintptr, err error) {
+func Connectx(fd int, srcIf uint32, srcAddr, dstAddr Sockaddr, associd SaeAssocID, flags uint32, iov []Iovec, connid *SaeConnID) (n uintptr, err error) {
 	endpoints := SaEndpoints{
 		Srcif: srcIf,
 	}
@@ -866,24 +598,13 @@ func Connectx(
 		endpoints.Dstaddrlen = uint32(addrlen)
 	}
 
-	err = connectx(
-		fd,
-		&endpoints,
-		associd,
-		flags,
-		iov,
-		&n,
-		connid,
-	)
+	err = connectx(fd, &endpoints, associd, flags, iov, &n, connid)
 	return
 }
 
 const minIovec = 8
 
-func Readv(
-	fd int,
-	iovs [][]byte,
-) (n int, err error) {
+func Readv(fd int, iovs [][]byte) (n int, err error) {
 	iovecs := make([]Iovec, 0, minIovec)
 	iovecs = appendBytes(iovecs, iovs)
 	n, err = readv(fd, iovecs)
@@ -891,11 +612,7 @@ func Readv(
 	return n, err
 }
 
-func Preadv(
-	fd int,
-	iovs [][]byte,
-	offset int64,
-) (n int, err error) {
+func Preadv(fd int, iovs [][]byte, offset int64) (n int, err error) {
 	iovecs := make([]Iovec, 0, minIovec)
 	iovecs = appendBytes(iovecs, iovs)
 	n, err = preadv(fd, iovecs, offset)
@@ -903,10 +620,7 @@ func Preadv(
 	return n, err
 }
 
-func Writev(
-	fd int,
-	iovs [][]byte,
-) (n int, err error) {
+func Writev(fd int, iovs [][]byte) (n int, err error) {
 	iovecs := make([]Iovec, 0, minIovec)
 	iovecs = appendBytes(iovecs, iovs)
 	if raceenabled {
@@ -917,11 +631,7 @@ func Writev(
 	return n, err
 }
 
-func Pwritev(
-	fd int,
-	iovs [][]byte,
-	offset int64,
-) (n int, err error) {
+func Pwritev(fd int, iovs [][]byte, offset int64) (n int, err error) {
 	iovecs := make([]Iovec, 0, minIovec)
 	iovecs = appendBytes(iovecs, iovs)
 	if raceenabled {
@@ -932,10 +642,7 @@ func Pwritev(
 	return n, err
 }
 
-func appendBytes(
-	vecs []Iovec,
-	bs [][]byte,
-) []Iovec {
+func appendBytes(vecs []Iovec, bs [][]byte) []Iovec {
 	for _, b := range bs {
 		var v Iovec
 		v.SetLen(len(b))
@@ -960,19 +667,12 @@ func writevRacedetect(iovecs []Iovec, n int) {
 		}
 		n -= m
 		if m > 0 {
-			raceReadRange(
-				unsafe.Pointer(iovecs[i].Base),
-				m,
-			)
+			raceReadRange(unsafe.Pointer(iovecs[i].Base), m)
 		}
 	}
 }
 
-func readvRacedetect(
-	iovecs []Iovec,
-	n int,
-	err error,
-) {
+func readvRacedetect(iovecs []Iovec, n int, err error) {
 	if !raceenabled {
 		return
 	}
@@ -983,10 +683,7 @@ func readvRacedetect(
 		}
 		n -= m
 		if m > 0 {
-			raceWriteRange(
-				unsafe.Pointer(iovecs[i].Base),
-				m,
-			)
+			raceWriteRange(unsafe.Pointer(iovecs[i].Base), m)
 		}
 	}
 	if err == nil {

@@ -25,9 +25,7 @@ func (o *Output) ColorProfile() Profile {
 		return Ascii
 	}
 
-	if o.environ.Getenv(
-		"GOOGLE_CLOUD_SHELL",
-	) == "true" {
+	if o.environ.Getenv("GOOGLE_CLOUD_SHELL") == "true" {
 		return TrueColor
 	}
 
@@ -40,9 +38,7 @@ func (o *Output) ColorProfile() Profile {
 	case "truecolor":
 		if strings.HasPrefix(term, "screen") {
 			// tmux supports TrueColor, screen only ANSI256
-			if o.environ.Getenv(
-				"TERM_PROGRAM",
-			) != "tmux" {
+			if o.environ.Getenv("TERM_PROGRAM") != "tmux" {
 				return ANSI256
 			}
 		}
@@ -125,22 +121,14 @@ func (o Output) backgroundColor() Color {
 	return ANSIColor(0)
 }
 
-func (o *Output) waitForData(
-	timeout time.Duration,
-) error {
+func (o *Output) waitForData(timeout time.Duration) error {
 	fd := o.TTY().Fd()
 	tv := unix.NsecToTimeval(int64(timeout))
 	var readfds unix.FdSet
 	readfds.Set(int(fd)) //nolint:gosec
 
 	for {
-		n, err := unix.Select(
-			int(fd)+1,
-			&readfds,
-			nil,
-			nil,
-			&tv,
-		) //nolint:gosec
+		n, err := unix.Select(int(fd)+1, &readfds, nil, nil, &tv) //nolint:gosec
 		if err == unix.EINTR {
 			continue
 		}
@@ -224,11 +212,7 @@ func (o *Output) readNextResponse() (response string, isOSC bool, err error) {
 
 		if oscResponse {
 			// OSC can be terminated by BEL (\a) or ST (ESC)
-			if b == BEL ||
-				strings.HasSuffix(
-					response,
-					string(ESC),
-				) {
+			if b == BEL || strings.HasSuffix(response, string(ESC)) {
 				return response, true, nil
 			}
 		} else {
@@ -247,15 +231,11 @@ func (o *Output) readNextResponse() (response string, isOSC bool, err error) {
 	return "", false, ErrStatusReport
 }
 
-func (o Output) termStatusReport(
-	sequence int,
-) (string, error) {
+func (o Output) termStatusReport(sequence int) (string, error) {
 	// screen/tmux can't support OSC, because they can be connected to multiple
 	// terminals concurrently.
 	term := o.environ.Getenv("TERM")
-	if strings.HasPrefix(term, "screen") ||
-		strings.HasPrefix(term, "tmux") ||
-		strings.HasPrefix(term, "dumb") {
+	if strings.HasPrefix(term, "screen") || strings.HasPrefix(term, "tmux") || strings.HasPrefix(term, "dumb") {
 		return "", ErrStatusReport
 	}
 
@@ -271,41 +251,22 @@ func (o Output) termStatusReport(
 			return "", ErrStatusReport
 		}
 
-		t, err := unix.IoctlGetTermios(
-			fd,
-			tcgetattr,
-		)
+		t, err := unix.IoctlGetTermios(fd, tcgetattr)
 		if err != nil {
-			return "", fmt.Errorf(
-				"%s: %s",
-				ErrStatusReport,
-				err,
-			)
+			return "", fmt.Errorf("%s: %s", ErrStatusReport, err)
 		}
-		defer unix.IoctlSetTermios(
-			fd,
-			tcsetattr,
-			t,
-		) //nolint:errcheck
+		defer unix.IoctlSetTermios(fd, tcsetattr, t) //nolint:errcheck
 
 		noecho := *t
 		noecho.Lflag = noecho.Lflag &^ unix.ECHO
 		noecho.Lflag = noecho.Lflag &^ unix.ICANON
 		if err := unix.IoctlSetTermios(fd, tcsetattr, &noecho); err != nil {
-			return "", fmt.Errorf(
-				"%s: %s",
-				ErrStatusReport,
-				err,
-			)
+			return "", fmt.Errorf("%s: %s", ErrStatusReport, err)
 		}
 	}
 
 	// first, send OSC query, which is ignored by terminal which do not support it
-	fmt.Fprintf(
-		tty,
-		OSC+"%d;?"+ST,
-		sequence,
-	) //nolint:errcheck
+	fmt.Fprintf(tty, OSC+"%d;?"+ST, sequence) //nolint:errcheck
 
 	// then, query cursor position, should be supported by all terminals
 	fmt.Fprintf(tty, CSI+"6n") //nolint:errcheck
@@ -313,11 +274,7 @@ func (o Output) termStatusReport(
 	// read the next response
 	res, isOSC, err := o.readNextResponse()
 	if err != nil {
-		return "", fmt.Errorf(
-			"%s: %s",
-			ErrStatusReport,
-			err,
-		)
+		return "", fmt.Errorf("%s: %s", ErrStatusReport, err)
 	}
 
 	// if this is not OSC response, then the terminal does not support it
@@ -339,8 +296,6 @@ func (o Output) termStatusReport(
 // Windows for w and returns a function that restores w to its previous state.
 // On non-Windows platforms, or if w does not refer to a terminal, then it
 // returns a non-nil no-op function and no error.
-func EnableVirtualTerminalProcessing(
-	_ io.Writer,
-) (func() error, error) {
+func EnableVirtualTerminalProcessing(_ io.Writer) (func() error, error) {
 	return func() error { return nil }, nil
 }

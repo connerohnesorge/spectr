@@ -75,11 +75,7 @@ const (
 
 // ToUnified takes a file contents and a sequence of edits, and calculates
 // a unified diff that represents those edits.
-func ToUnified(
-	from, to string,
-	content string,
-	edits []TextEdit,
-) Unified {
+func ToUnified(from, to string, content string, edits []TextEdit) Unified {
 	u := Unified{
 		From: from,
 		To:   to,
@@ -87,10 +83,7 @@ func ToUnified(
 	if len(edits) == 0 {
 		return u
 	}
-	c, edits, partial := prepareEdits(
-		content,
-		edits,
-	)
+	c, edits, partial := prepareEdits(content, edits)
 	if partial {
 		edits = lineEdits(content, c, edits)
 	}
@@ -103,20 +96,15 @@ func ToUnified(
 		end := edit.Span.End().Line() - 1
 		switch {
 		case h != nil && start == last:
-			// direct extension
+			//direct extension
 		case h != nil && start <= last+gap:
-			// within range of previous lines, add the joiners
+			//within range of previous lines, add the joiners
 			addEqualLines(h, lines, last, start)
 		default:
-			// need to start a new hunk
+			//need to start a new hunk
 			if h != nil {
 				// add the edge to the previous hunk
-				addEqualLines(
-					h,
-					lines,
-					last,
-					last+edge,
-				)
+				addEqualLines(h, lines, last, last+edge)
 				u.Hunks = append(u.Hunks, h)
 			}
 			toLine += start - last
@@ -125,35 +113,18 @@ func ToUnified(
 				ToLine:   toLine + 1,
 			}
 			// add the edge to the new hunk
-			delta := addEqualLines(
-				h,
-				lines,
-				start-edge,
-				start,
-			)
+			delta := addEqualLines(h, lines, start-edge, start)
 			h.FromLine -= delta
 			h.ToLine -= delta
 		}
 		last = start
 		for i := start; i < end; i++ {
-			h.Lines = append(
-				h.Lines,
-				Line{
-					Kind:    Delete,
-					Content: lines[i],
-				},
-			)
+			h.Lines = append(h.Lines, Line{Kind: Delete, Content: lines[i]})
 			last++
 		}
 		if edit.NewText != "" {
 			for _, line := range splitLines(edit.NewText) {
-				h.Lines = append(
-					h.Lines,
-					Line{
-						Kind:    Insert,
-						Content: line,
-					},
-				)
+				h.Lines = append(h.Lines, Line{Kind: Insert, Content: line})
 				toLine++
 			}
 		}
@@ -174,11 +145,7 @@ func splitLines(text string) []string {
 	return lines
 }
 
-func addEqualLines(
-	h *Hunk,
-	lines []string,
-	start, end int,
-) int {
+func addEqualLines(h *Hunk, lines []string, start, end int) int {
 	delta := 0
 	for i := start; i < end; i++ {
 		if i < 0 {
@@ -187,10 +154,7 @@ func addEqualLines(
 		if i >= len(lines) {
 			return delta
 		}
-		h.Lines = append(
-			h.Lines,
-			Line{Kind: Equal, Content: lines[i]},
-		)
+		h.Lines = append(h.Lines, Line{Kind: Equal, Content: lines[i]})
 		delta++
 	}
 	return delta
@@ -219,22 +183,12 @@ func (u Unified) Format(f fmt.State, r rune) {
 		}
 		fmt.Fprint(f, "@@")
 		if fromCount > 1 {
-			fmt.Fprintf(
-				f,
-				" -%d,%d",
-				hunk.FromLine,
-				fromCount,
-			)
+			fmt.Fprintf(f, " -%d,%d", hunk.FromLine, fromCount)
 		} else {
 			fmt.Fprintf(f, " -%d", hunk.FromLine)
 		}
 		if toCount > 1 {
-			fmt.Fprintf(
-				f,
-				" +%d,%d",
-				hunk.ToLine,
-				toCount,
-			)
+			fmt.Fprintf(f, " +%d,%d", hunk.ToLine, toCount)
 		} else {
 			fmt.Fprintf(f, " +%d", hunk.ToLine)
 		}
@@ -248,14 +202,8 @@ func (u Unified) Format(f fmt.State, r rune) {
 			default:
 				fmt.Fprintf(f, " %s", l.Content)
 			}
-			if !strings.HasSuffix(
-				l.Content,
-				"\n",
-			) {
-				fmt.Fprintf(
-					f,
-					"\n\\ No newline at end of file\n",
-				)
+			if !strings.HasSuffix(l.Content, "\n") {
+				fmt.Fprintf(f, "\n\\ No newline at end of file\n")
 			}
 		}
 	}

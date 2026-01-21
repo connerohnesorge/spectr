@@ -15,10 +15,7 @@ type state struct {
 
 func isTerminal(fd uintptr) bool {
 	var st uint32
-	err := windows.GetConsoleMode(
-		windows.Handle(fd),
-		&st,
-	)
+	err := windows.GetConsoleMode(windows.Handle(fd), &st)
 	return err == nil
 }
 
@@ -40,10 +37,7 @@ func setState(fd uintptr, state *State) error {
 	if state != nil {
 		mode = state.Mode
 	}
-	return windows.SetConsoleMode(
-		windows.Handle(fd),
-		mode,
-	)
+	return windows.SetConsoleMode(windows.Handle(fd), mode)
 }
 
 func getState(fd uintptr) (*State, error) {
@@ -55,24 +49,15 @@ func getState(fd uintptr) (*State, error) {
 }
 
 func restore(fd uintptr, state *State) error {
-	return windows.SetConsoleMode(
-		windows.Handle(fd),
-		state.Mode,
-	)
+	return windows.SetConsoleMode(windows.Handle(fd), state.Mode)
 }
 
-func getSize(
-	fd uintptr,
-) (width, height int, err error) {
+func getSize(fd uintptr) (width, height int, err error) {
 	var info windows.ConsoleScreenBufferInfo
 	if err := windows.GetConsoleScreenBufferInfo(windows.Handle(fd), &info); err != nil {
 		return 0, 0, err
 	}
-	return int(
-			info.Window.Right - info.Window.Left + 1,
-		), int(
-			info.Window.Bottom - info.Window.Top + 1,
-		), nil
+	return int(info.Window.Right - info.Window.Left + 1), int(info.Window.Bottom - info.Window.Top + 1), nil
 }
 
 func readPassword(fd uintptr) ([]byte, error) {
@@ -88,10 +73,7 @@ func readPassword(fd uintptr) ([]byte, error) {
 		return nil, err
 	}
 
-	defer windows.SetConsoleMode(
-		windows.Handle(fd),
-		old,
-	)
+	defer windows.SetConsoleMode(windows.Handle(fd), old)
 
 	var h windows.Handle
 	p, _ := windows.GetCurrentProcess()

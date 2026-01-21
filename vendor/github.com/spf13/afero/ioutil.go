@@ -30,32 +30,17 @@ import (
 // byName implements sort.Interface.
 type byName []os.FileInfo
 
-func (f byName) Len() int { return len(f) }
-
-func (f byName) Less(
-	i, j int,
-) bool {
-	return f[i].Name() < f[j].Name()
-}
-
-func (f byName) Swap(
-	i, j int,
-) {
-	f[i], f[j] = f[j], f[i]
-}
+func (f byName) Len() int           { return len(f) }
+func (f byName) Less(i, j int) bool { return f[i].Name() < f[j].Name() }
+func (f byName) Swap(i, j int)      { f[i], f[j] = f[j], f[i] }
 
 // ReadDir reads the directory named by dirname and returns
 // a list of sorted directory entries.
-func (a Afero) ReadDir(
-	dirname string,
-) ([]os.FileInfo, error) {
+func (a Afero) ReadDir(dirname string) ([]os.FileInfo, error) {
 	return ReadDir(a.Fs, dirname)
 }
 
-func ReadDir(
-	fs Fs,
-	dirname string,
-) ([]os.FileInfo, error) {
+func ReadDir(fs Fs, dirname string) ([]os.FileInfo, error) {
 	f, err := fs.Open(dirname)
 	if err != nil {
 		return nil, err
@@ -73,16 +58,11 @@ func ReadDir(
 // A successful call returns err == nil, not err == EOF. Because ReadFile
 // reads the whole file, it does not treat an EOF from Read as an error
 // to be reported.
-func (a Afero) ReadFile(
-	filename string,
-) ([]byte, error) {
+func (a Afero) ReadFile(filename string) ([]byte, error) {
 	return ReadFile(a.Fs, filename)
 }
 
-func ReadFile(
-	fs Fs,
-	filename string,
-) ([]byte, error) {
+func ReadFile(fs Fs, filename string) ([]byte, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return nil, err
@@ -108,13 +88,8 @@ func ReadFile(
 
 // readAll reads from r until an error or EOF and returns the data it read
 // from the internal buffer allocated with a specified capacity.
-func readAll(
-	r io.Reader,
-	capacity int64,
-) (b []byte, err error) {
-	buf := bytes.NewBuffer(
-		make([]byte, 0, capacity),
-	)
+func readAll(r io.Reader, capacity int64) (b []byte, err error) {
+	buf := bytes.NewBuffer(make([]byte, 0, capacity))
 	// If the buffer overflows, we will get bytes.ErrTooLarge.
 	// Return that as an error. Any other panic remains.
 	defer func() {
@@ -122,8 +97,7 @@ func readAll(
 		if e == nil {
 			return
 		}
-		if panicErr, ok := e.(error); ok &&
-			panicErr == bytes.ErrTooLarge {
+		if panicErr, ok := e.(error); ok && panicErr == bytes.ErrTooLarge {
 			err = panicErr
 		} else {
 			panic(e)
@@ -144,25 +118,12 @@ func ReadAll(r io.Reader) ([]byte, error) {
 // WriteFile writes data to a file named by filename.
 // If the file does not exist, WriteFile creates it with permissions perm;
 // otherwise WriteFile truncates it before writing.
-func (a Afero) WriteFile(
-	filename string,
-	data []byte,
-	perm os.FileMode,
-) error {
+func (a Afero) WriteFile(filename string, data []byte, perm os.FileMode) error {
 	return WriteFile(a.Fs, filename, data, perm)
 }
 
-func WriteFile(
-	fs Fs,
-	filename string,
-	data []byte,
-	perm os.FileMode,
-) error {
-	f, err := fs.OpenFile(
-		filename,
-		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-		perm,
-	)
+func WriteFile(fs Fs, filename string, data []byte, perm os.FileMode) error {
+	f, err := fs.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
 	if err != nil {
 		return err
 	}
@@ -186,13 +147,7 @@ var (
 )
 
 func reseed() uint32 {
-	return uint32(
-		time.Now().
-			UnixNano() +
-			int64(
-				os.Getpid(),
-			),
-	)
+	return uint32(time.Now().UnixNano() + int64(os.Getpid()))
 }
 
 func nextRandom() string {
@@ -218,16 +173,11 @@ func nextRandom() string {
 // will not choose the same file. The caller can use f.Name()
 // to find the pathname of the file. It is the caller's responsibility
 // to remove the file when no longer needed.
-func (a Afero) TempFile(
-	dir, pattern string,
-) (f File, err error) {
+func (a Afero) TempFile(dir, pattern string) (f File, err error) {
 	return TempFile(a.Fs, dir, pattern)
 }
 
-func TempFile(
-	fs Fs,
-	dir, pattern string,
-) (f File, err error) {
+func TempFile(fs Fs, dir, pattern string) (f File, err error) {
 	if dir == "" {
 		dir = os.TempDir()
 	}
@@ -241,15 +191,8 @@ func TempFile(
 
 	nconflict := 0
 	for i := 0; i < 10000; i++ {
-		name := filepath.Join(
-			dir,
-			prefix+nextRandom()+suffix,
-		)
-		f, err = fs.OpenFile(
-			name,
-			os.O_RDWR|os.O_CREATE|os.O_EXCL,
-			0o600,
-		)
+		name := filepath.Join(dir, prefix+nextRandom()+suffix)
+		f, err = fs.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0o600)
 		if os.IsExist(err) {
 			if nconflict++; nconflict > 10 {
 				randmu.Lock()
@@ -270,26 +213,18 @@ func TempFile(
 // Multiple programs calling TempDir simultaneously
 // will not choose the same directory.  It is the caller's responsibility
 // to remove the directory when no longer needed.
-func (a Afero) TempDir(
-	dir, prefix string,
-) (name string, err error) {
+func (a Afero) TempDir(dir, prefix string) (name string, err error) {
 	return TempDir(a.Fs, dir, prefix)
 }
 
-func TempDir(
-	fs Fs,
-	dir, prefix string,
-) (name string, err error) {
+func TempDir(fs Fs, dir, prefix string) (name string, err error) {
 	if dir == "" {
 		dir = os.TempDir()
 	}
 
 	nconflict := 0
 	for i := 0; i < 10000; i++ {
-		try := filepath.Join(
-			dir,
-			prefix+nextRandom(),
-		)
+		try := filepath.Join(dir, prefix+nextRandom())
 		err = fs.Mkdir(try, 0o700)
 		if os.IsExist(err) {
 			if nconflict++; nconflict > 10 {

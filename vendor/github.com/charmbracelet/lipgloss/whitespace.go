@@ -17,10 +17,7 @@ type whitespace struct {
 // newWhitespace creates a new whitespace renderer. The order of the options
 // matters, if you're using WithWhitespaceRenderer, make sure it comes first as
 // other options might depend on it.
-func newWhitespace(
-	r *Renderer,
-	opts ...WhitespaceOption,
-) *whitespace {
+func newWhitespace(r *Renderer, opts ...WhitespaceOption) *whitespace {
 	w := &whitespace{
 		re:    r,
 		style: r.ColorProfile().String(),
@@ -65,31 +62,21 @@ func (w whitespace) render(width int) string {
 type WhitespaceOption func(*whitespace)
 
 // WithWhitespaceForeground sets the color of the characters in the whitespace.
-func WithWhitespaceForeground(
-	c TerminalColor,
-) WhitespaceOption {
+func WithWhitespaceForeground(c TerminalColor) WhitespaceOption {
 	return func(w *whitespace) {
-		w.style = w.style.Foreground(
-			c.color(w.re),
-		)
+		w.style = w.style.Foreground(c.color(w.re))
 	}
 }
 
 // WithWhitespaceBackground sets the background color of the whitespace.
-func WithWhitespaceBackground(
-	c TerminalColor,
-) WhitespaceOption {
+func WithWhitespaceBackground(c TerminalColor) WhitespaceOption {
 	return func(w *whitespace) {
-		w.style = w.style.Background(
-			c.color(w.re),
-		)
+		w.style = w.style.Background(c.color(w.re))
 	}
 }
 
 // WithWhitespaceChars sets the characters to be rendered in the whitespace.
-func WithWhitespaceChars(
-	s string,
-) WhitespaceOption {
+func WithWhitespaceChars(s string) WhitespaceOption {
 	return func(w *whitespace) {
 		w.chars = s
 	}

@@ -48,13 +48,7 @@ func (c ColorLevel) ChromaFormatterName() string {
 // TERM_PROGRAM, or determined from the TERM environment variable.
 func ColorLevelFromEnv() (ColorLevel, error) {
 	// check for overriding environment variables
-	colorTerm, termProg, forceColor := os.Getenv(
-		"COLORTERM",
-	), os.Getenv(
-		"TERM_PROGRAM",
-	), os.Getenv(
-		"FORCE_COLOR",
-	)
+	colorTerm, termProg, forceColor := os.Getenv("COLORTERM"), os.Getenv("TERM_PROGRAM"), os.Getenv("FORCE_COLOR")
 	switch {
 	case strings.Contains(colorTerm, "truecolor") || strings.Contains(colorTerm, "24bit") || termProg == "Hyper":
 		return ColorLevelMillions, nil
@@ -67,9 +61,7 @@ func ColorLevelFromEnv() (ColorLevel, error) {
 		if ver == "" {
 			return ColorLevelHundreds, nil
 		}
-		i, err := strconv.Atoi(
-			strings.Split(ver, ".")[0],
-		)
+		i, err := strconv.Atoi(strings.Split(ver, ".")[0])
 		if err != nil {
 			return ColorLevelNone, ErrInvalidTermProgramVersion
 		}

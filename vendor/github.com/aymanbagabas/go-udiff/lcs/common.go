@@ -56,18 +56,14 @@ func (l lcs) fix() lcs {
 	if len(l) == 0 {
 		return nil
 	}
-	sort.Slice(
-		l,
-		func(i, j int) bool { return l[i].Len > l[j].Len },
-	)
+	sort.Slice(l, func(i, j int) bool { return l[i].Len > l[j].Len })
 	tmp := make(lcs, 0, len(l))
 	tmp = append(tmp, l[0])
 	for i := 1; i < len(l); i++ {
 		var dir direction
 		nxt := l[i]
 		for _, in := range tmp {
-			if dir, nxt = overlap(in, nxt); dir == empty ||
-				dir == bad {
+			if dir, nxt = overlap(in, nxt); dir == empty || dir == bad {
 				break
 			}
 		}
@@ -94,8 +90,7 @@ const (
 // overlap trims the proposed diag prop  so it doesn't overlap with
 // the existing diag that has already been added to the lcs.
 func overlap(exist, prop diag) (direction, diag) {
-	if prop.X <= exist.X &&
-		exist.X < prop.X+prop.Len {
+	if prop.X <= exist.X && exist.X < prop.X+prop.Len {
 		// remove the end of prop where it overlaps with the X end of exist
 		delta := prop.X + prop.Len - exist.X
 		prop.Len -= delta
@@ -103,8 +98,7 @@ func overlap(exist, prop diag) (direction, diag) {
 			return empty, prop
 		}
 	}
-	if exist.X <= prop.X &&
-		prop.X < exist.X+exist.Len {
+	if exist.X <= prop.X && prop.X < exist.X+exist.Len {
 		// remove the beginning of prop where overlaps with exist
 		delta := exist.X + exist.Len - prop.X
 		prop.Len -= delta
@@ -114,8 +108,7 @@ func overlap(exist, prop diag) (direction, diag) {
 		prop.X += delta
 		prop.Y += delta
 	}
-	if prop.Y <= exist.Y &&
-		exist.Y < prop.Y+prop.Len {
+	if prop.Y <= exist.Y && exist.Y < prop.Y+prop.Len {
 		// remove the end of prop that overlaps (in Y) with exist
 		delta := prop.Y + prop.Len - exist.Y
 		prop.Len -= delta
@@ -123,8 +116,7 @@ func overlap(exist, prop diag) (direction, diag) {
 			return empty, prop
 		}
 	}
-	if exist.Y <= prop.Y &&
-		prop.Y < exist.Y+exist.Len {
+	if exist.Y <= prop.Y && prop.Y < exist.Y+exist.Len {
 		// remove the beginning of peop that overlaps with exist
 		delta := exist.Y + exist.Len - prop.Y
 		prop.Len -= delta
@@ -134,12 +126,10 @@ func overlap(exist, prop diag) (direction, diag) {
 		prop.X += delta // no test reaches this code
 		prop.Y += delta
 	}
-	if prop.X+prop.Len <= exist.X &&
-		prop.Y+prop.Len <= exist.Y {
+	if prop.X+prop.Len <= exist.X && prop.Y+prop.Len <= exist.Y {
 		return leftdown, prop
 	}
-	if exist.X+exist.Len <= prop.X &&
-		exist.Y+exist.Len <= prop.Y {
+	if exist.X+exist.Len <= prop.X && exist.Y+exist.Len <= prop.Y {
 		return rightup, prop
 	}
 	// prop can't be in an lcs that contains exist
@@ -174,8 +164,7 @@ func (lcs lcs) append(x, y int) lcs {
 	if len(lcs) > 0 {
 		last := &lcs[len(lcs)-1]
 		// Expand last element if adjoining.
-		if last.X+last.Len == x &&
-			last.Y+last.Len == y {
+		if last.X+last.Len == x && last.Y+last.Len == y {
 			last.Len++
 			return lcs
 		}

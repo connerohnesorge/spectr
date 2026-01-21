@@ -110,10 +110,7 @@ func GetAll(err error, msg string) []error {
 // GetAllType gets all the errors that are the same type as v.
 //
 // The order of the return value is the same as described in GetAll.
-func GetAllType(
-	err error,
-	v interface{},
-) []error {
+func GetAllType(err error, v interface{}) []error {
 	var result []error
 
 	var search string

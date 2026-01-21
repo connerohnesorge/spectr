@@ -44,70 +44,29 @@ func (ir InputRecord) String() string {
 func (ir InputRecord) Unwrap() EventRecord {
 	switch ir.EventType {
 	case FocusEventType:
-		return FocusEventRecord{
-			SetFocus: ir.Event[0] > 0,
-		}
+		return FocusEventRecord{SetFocus: ir.Event[0] > 0}
 	case KeyEventType:
 		return KeyEventRecord{
-			KeyDown: binary.LittleEndian.Uint32(
-				ir.Event[0:4],
-			) > 0,
-			RepeatCount: binary.LittleEndian.Uint16(
-				ir.Event[4:6],
-			),
-			VirtualKeyCode: VirtualKeyCode(
-				binary.LittleEndian.Uint16(
-					ir.Event[6:8],
-				),
-			),
-			VirtualScanCode: VirtualKeyCode(
-				binary.LittleEndian.Uint16(
-					ir.Event[8:10],
-				),
-			),
-			Char: rune(
-				binary.LittleEndian.Uint16(
-					ir.Event[10:12],
-				),
-			),
-			ControlKeyState: ControlKeyState(
-				binary.LittleEndian.Uint32(
-					ir.Event[12:16],
-				),
-			),
+			KeyDown:         binary.LittleEndian.Uint32(ir.Event[0:4]) > 0,
+			RepeatCount:     binary.LittleEndian.Uint16(ir.Event[4:6]),
+			VirtualKeyCode:  VirtualKeyCode(binary.LittleEndian.Uint16(ir.Event[6:8])),
+			VirtualScanCode: VirtualKeyCode(binary.LittleEndian.Uint16(ir.Event[8:10])),
+			Char:            rune(binary.LittleEndian.Uint16(ir.Event[10:12])),
+			ControlKeyState: ControlKeyState(binary.LittleEndian.Uint32(ir.Event[12:16])),
 		}
 	case MouseEventType:
 		m := MouseEventRecord{
 			MousePositon: Coord{
-				X: binary.LittleEndian.Uint16(
-					ir.Event[0:2],
-				),
-				Y: binary.LittleEndian.Uint16(
-					ir.Event[2:4],
-				),
+				X: binary.LittleEndian.Uint16(ir.Event[0:2]),
+				Y: binary.LittleEndian.Uint16(ir.Event[2:4]),
 			},
-			ButtonState: ButtonState(
-				binary.LittleEndian.Uint32(
-					ir.Event[4:8],
-				),
-			),
-			ControlKeyState: ControlKeyState(
-				binary.LittleEndian.Uint32(
-					ir.Event[8:12],
-				),
-			),
-			EventFlags: EventFlags(
-				binary.LittleEndian.Uint32(
-					ir.Event[12:16],
-				),
-			),
+			ButtonState:     ButtonState(binary.LittleEndian.Uint32(ir.Event[4:8])),
+			ControlKeyState: ControlKeyState(binary.LittleEndian.Uint32(ir.Event[8:12])),
+			EventFlags:      EventFlags(binary.LittleEndian.Uint32(ir.Event[12:16])),
 		}
 
-		if (m.EventFlags&MOUSE_WHEELED > 0) ||
-			(m.EventFlags&MOUSE_HWHEELED > 0) {
-			if int16(
-				highWord(uint32(m.ButtonState)),
-			) > 0 {
+		if (m.EventFlags&MOUSE_WHEELED > 0) || (m.EventFlags&MOUSE_HWHEELED > 0) {
+			if int16(highWord(uint32(m.ButtonState))) > 0 {
 				m.WheelDirection = 1
 			} else {
 				m.WheelDirection = -1
@@ -118,19 +77,13 @@ func (ir InputRecord) Unwrap() EventRecord {
 	case WindowBufferSizeEventType:
 		return WindowBufferSizeEventRecord{
 			Size: Coord{
-				X: binary.LittleEndian.Uint16(
-					ir.Event[0:2],
-				),
-				Y: binary.LittleEndian.Uint16(
-					ir.Event[2:4],
-				),
+				X: binary.LittleEndian.Uint16(ir.Event[0:2]),
+				Y: binary.LittleEndian.Uint16(ir.Event[2:4]),
 			},
 		}
 	case MenuEventType:
 		return MenuEventRecord{
-			CommandID: binary.LittleEndian.Uint32(
-				ir.Event[0:4],
-			),
+			CommandID: binary.LittleEndian.Uint32(ir.Event[0:4]),
 		}
 	default:
 		return &UnknownEvent{InputRecord: ir}
@@ -199,7 +152,7 @@ type KeyEventRecord struct {
 	// zero for some keys.
 	Char rune
 
-	// ControlKeyState holds the state of the control keys.
+	//ControlKeyState holds the state of the control keys.
 	ControlKeyState ControlKeyState
 }
 
@@ -216,15 +169,10 @@ func (e KeyEventRecord) String() string {
 
 	repeat := ""
 	if e.RepeatCount > 1 {
-		repeat = "x" + strconv.Itoa(
-			int(e.RepeatCount),
-		)
+		repeat = "x" + strconv.Itoa(int(e.RepeatCount))
 	}
 
-	infos = append(
-		infos,
-		fmt.Sprintf("%q%s", e.Char, repeat),
-	)
+	infos = append(infos, fmt.Sprintf("%q%s", e.Char, repeat))
 
 	direction := "up"
 	if e.KeyDown {
@@ -234,32 +182,13 @@ func (e KeyEventRecord) String() string {
 	infos = append(infos, direction)
 
 	if e.ControlKeyState != NO_CONTROL_KEY {
-		infos = append(
-			infos,
-			e.ControlKeyState.String(),
-		)
+		infos = append(infos, e.ControlKeyState.String())
 	}
 
-	infos = append(
-		infos,
-		fmt.Sprintf(
-			"KeyCode: %d",
-			e.VirtualKeyCode,
-		),
-	)
-	infos = append(
-		infos,
-		fmt.Sprintf(
-			"ScanCode: %d",
-			e.VirtualScanCode,
-		),
-	)
+	infos = append(infos, fmt.Sprintf("KeyCode: %d", e.VirtualKeyCode))
+	infos = append(infos, fmt.Sprintf("ScanCode: %d", e.VirtualScanCode))
 
-	return fmt.Sprintf(
-		"%s[%s]",
-		e.Type(),
-		strings.Join(infos, ", "),
-	)
+	return fmt.Sprintf("%s[%s]", e.Type(), strings.Join(infos, ", "))
 }
 
 // MenuEventType is the event type for a MenuEventRecord (see
@@ -345,10 +274,7 @@ func (e MouseEventRecord) String() string {
 	infos := []string{e.MousePositon.String()}
 
 	if e.ButtonState&0xFF != 0 {
-		infos = append(
-			infos,
-			e.ButtonState.String(),
-		)
+		infos = append(infos, e.ButtonState.String())
 	}
 
 	eventDescription := e.EventFlags.String()
@@ -361,17 +287,10 @@ func (e MouseEventRecord) String() string {
 	infos = append(infos, eventDescription)
 
 	if e.ControlKeyState != NO_CONTROL_KEY {
-		infos = append(
-			infos,
-			e.ControlKeyState.String(),
-		)
+		infos = append(infos, e.ControlKeyState.String())
 	}
 
-	return fmt.Sprintf(
-		"%s[%s]",
-		e.Type(),
-		strings.Join(infos, ", "),
-	)
+	return fmt.Sprintf("%s[%s]", e.Type(), strings.Join(infos, ", "))
 }
 
 // WindowBufferSizeEventType is the event type for a WindowBufferSizeEventRecord
@@ -395,10 +314,7 @@ func (e WindowBufferSizeEventRecord) Type() string { return "WindowBufferSizeEve
 // String ensures that WindowBufferSizeEventRecord satisfies EventRecord and fmt.Stringer
 // interfaces.
 func (e WindowBufferSizeEventRecord) String() string {
-	return fmt.Sprintf(
-		"WindowBufferSizeEvent[%s]",
-		e.Size,
-	)
+	return fmt.Sprintf("WindowBufferSizeEvent[%s]", e.Size)
 }
 
 // UnknownEvent is generated when the event type does not match one of the
@@ -418,12 +334,7 @@ func (e UnknownEvent) Type() string { return "UnknownEvent" }
 // String ensures that UnknownEvent satisfies EventRecord and fmt.Stringer
 // interfaces.
 func (e UnknownEvent) String() string {
-	return fmt.Sprintf(
-		"%s[Type: %d, Data: %v]",
-		e.Type(),
-		e.InputRecord.EventType,
-		e.InputRecord.Event[:],
-	)
+	return fmt.Sprintf("%s[Type: %d, Data: %v]", e.Type(), e.InputRecord.EventType, e.InputRecord.Event[:])
 }
 
 // Coord represent the COORD structure from the Windows
@@ -444,9 +355,7 @@ func (c Coord) String() string {
 // https://docs.microsoft.com/en-us/windows/console/mouse-event-record-str).
 type ButtonState uint32
 
-func (bs ButtonState) Contains(
-	state ButtonState,
-) bool {
+func (bs ButtonState) Contains(state ButtonState) bool {
 	return bs&state > 0
 }
 
@@ -488,9 +397,7 @@ const (
 // and https://docs.microsoft.com/en-us/windows/console/mouse-event-record-str).
 type ControlKeyState uint32
 
-func (cks ControlKeyState) Contains(
-	state ControlKeyState,
-) bool {
+func (cks ControlKeyState) Contains(state ControlKeyState) bool {
 	return cks&state > 0
 }
 
@@ -514,39 +421,21 @@ func (cks ControlKeyState) String() string {
 
 	switch {
 	case cks&CAPSLOCK_ON > 0:
-		controlKeys = append(
-			controlKeys,
-			"CapsLock",
-		)
+		controlKeys = append(controlKeys, "CapsLock")
 	case cks&ENHANCED_KEY > 0:
-		controlKeys = append(
-			controlKeys,
-			"Enhanced",
-		)
+		controlKeys = append(controlKeys, "Enhanced")
 	case cks&LEFT_ALT_PRESSED > 0:
 		controlKeys = append(controlKeys, "Alt")
 	case cks&LEFT_CTRL_PRESSED > 0:
 		controlKeys = append(controlKeys, "CTRL")
 	case cks&NUMLOCK_ON > 0:
-		controlKeys = append(
-			controlKeys,
-			"NumLock",
-		)
+		controlKeys = append(controlKeys, "NumLock")
 	case cks&RIGHT_ALT_PRESSED > 0:
-		controlKeys = append(
-			controlKeys,
-			"RightAlt",
-		)
+		controlKeys = append(controlKeys, "RightAlt")
 	case cks&RIGHT_CTRL_PRESSED > 0:
-		controlKeys = append(
-			controlKeys,
-			"RightCTRL",
-		)
+		controlKeys = append(controlKeys, "RightCTRL")
 	case cks&SCROLLLOCK_ON > 0:
-		controlKeys = append(
-			controlKeys,
-			"ScrollLock",
-		)
+		controlKeys = append(controlKeys, "ScrollLock")
 	case cks&SHIFT_PRESSED > 0:
 		controlKeys = append(controlKeys, "Shift")
 	case cks == NO_CONTROL_KEY:
@@ -579,9 +468,7 @@ func (ef EventFlags) String() string {
 	}
 }
 
-func (ef EventFlags) Contains(
-	flag EventFlags,
-) bool {
+func (ef EventFlags) Contains(flag EventFlags) bool {
 	return ef&flag > 0
 }
 

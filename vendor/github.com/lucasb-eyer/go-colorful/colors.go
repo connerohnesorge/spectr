@@ -37,11 +37,7 @@ func MakeColor(col color.Color) (Color, bool) {
 	b *= 0xffff
 	b /= a
 
-	return Color{
-		float64(r) / 65535.0,
-		float64(g) / 65535.0,
-		float64(b) / 65535.0,
-	}, true
+	return Color{float64(r) / 65535.0, float64(g) / 65535.0, float64(b) / 65535.0}, true
 }
 
 // Might come in handy sometimes to reduce boilerplate code.
@@ -81,11 +77,7 @@ func clamp01(v float64) float64 {
 // Returns Clamps the color into valid range, clamping each value to [0..1]
 // If the color is valid already, this is a no-op.
 func (c Color) Clamped() Color {
-	return Color{
-		clamp01(c.R),
-		clamp01(c.G),
-		clamp01(c.B),
-	}
+	return Color{clamp01(c.R), clamp01(c.G), clamp01(c.B)}
 }
 
 func sq(v float64) float64 {
@@ -99,28 +91,16 @@ func cub(v float64) float64 {
 // DistanceRgb computes the distance between two colors in RGB space.
 // This is not a good measure! Rather do it in Lab space.
 func (c1 Color) DistanceRgb(c2 Color) float64 {
-	return math.Sqrt(
-		sq(
-			c1.R-c2.R,
-		) + sq(
-			c1.G-c2.G,
-		) + sq(
-			c1.B-c2.B,
-		),
-	)
+	return math.Sqrt(sq(c1.R-c2.R) + sq(c1.G-c2.G) + sq(c1.B-c2.B))
 }
 
 // DistanceLinearRGB computes the distance between two colors in linear RGB
 // space. This is not useful for measuring how humans perceive color, but
 // might be useful for other things, like dithering.
-func (c1 Color) DistanceLinearRGB(
-	c2 Color,
-) float64 {
+func (c1 Color) DistanceLinearRGB(c2 Color) float64 {
 	r1, g1, b1 := c1.LinearRgb()
 	r2, g2, b2 := c2.LinearRgb()
-	return math.Sqrt(
-		sq(r1-r2) + sq(g1-g2) + sq(b1-b2),
-	)
+	return math.Sqrt(sq(r1-r2) + sq(g1-g2) + sq(b1-b2))
 }
 
 // Check for equality between colors within the tolerance Delta (1/255).
@@ -131,25 +111,17 @@ func (c1 Color) AlmostEqualRgb(c2 Color) bool {
 }
 
 // You don't really want to use this, do you? Go for BlendLab, BlendLuv or BlendHcl.
-func (c1 Color) BlendRgb(
-	c2 Color,
-	t float64,
-) Color {
-	return Color{
-		c1.R + t*(c2.R-c1.R),
+func (c1 Color) BlendRgb(c2 Color, t float64) Color {
+	return Color{c1.R + t*(c2.R-c1.R),
 		c1.G + t*(c2.G-c1.G),
-		c1.B + t*(c2.B-c1.B),
-	}
+		c1.B + t*(c2.B-c1.B)}
 }
 
 // Utility used by Hxx color-spaces for interpolating between two angles in [0,360].
 func interp_angle(a0, a1, t float64) float64 {
 	// Based on the answer here: http://stackoverflow.com/a/14498790/2366315
 	// With potential proof that it works here: http://math.stackexchange.com/a/2144499
-	delta := math.Mod(
-		math.Mod(a1-a0, 360.0)+540,
-		360.0,
-	) - 180.0
+	delta := math.Mod(math.Mod(a1-a0, 360.0)+540, 360.0) - 180.0
 	return math.Mod(a0+t*delta+360.0, 360.0)
 }
 
@@ -222,19 +194,12 @@ func Hsv(H, S, V float64) Color {
 }
 
 // You don't really want to use this, do you? Go for BlendLab, BlendLuv or BlendHcl.
-func (c1 Color) BlendHsv(
-	c2 Color,
-	t float64,
-) Color {
+func (c1 Color) BlendHsv(c2 Color, t float64) Color {
 	h1, s1, v1 := c1.Hsv()
 	h2, s2, v2 := c2.Hsv()
 
 	// We know that h are both in [0..360]
-	return Hsv(
-		interp_angle(h1, h2, t),
-		s1+t*(s2-s1),
-		v1+t*(v2-v1),
-	)
+	return Hsv(interp_angle(h1, h2, t), s1+t*(s2-s1), v1+t*(v2-v1))
 }
 
 /// HSL ///
@@ -361,12 +326,7 @@ func Hsl(h, s, l float64) Color {
 // Hex returns the hex "html" representation of the color, as in #ff0080.
 func (col Color) Hex() string {
 	// Add 0.5 for rounding
-	return fmt.Sprintf(
-		"#%02x%02x%02x",
-		uint8(col.R*255.0+0.5),
-		uint8(col.G*255.0+0.5),
-		uint8(col.B*255.0+0.5),
-	)
+	return fmt.Sprintf("#%02x%02x%02x", uint8(col.R*255.0+0.5), uint8(col.G*255.0+0.5), uint8(col.B*255.0+0.5))
 }
 
 // Hex parses a "html" hex color-string, either in the 3 "#f0c" or 6 "#ff1034" digits form.
@@ -384,17 +344,10 @@ func Hex(scol string) (Color, error) {
 		return Color{}, err
 	}
 	if n != 3 {
-		return Color{}, fmt.Errorf(
-			"color: %v is not a hex-color",
-			scol,
-		)
+		return Color{}, fmt.Errorf("color: %v is not a hex-color", scol)
 	}
 
-	return Color{
-		float64(r) * factor,
-		float64(g) * factor,
-		float64(b) * factor,
-	}, nil
+	return Color{float64(r) * factor, float64(g) * factor, float64(b) * factor}, nil
 }
 
 /// Linear ///
@@ -424,7 +377,7 @@ func linearize_fast(v float64) float64 {
 	v2 := v1 * v1
 	v3 := v2 * v1
 	v4 := v2 * v2
-	// v5 := v3*v2
+	//v5 := v3*v2
 	return -0.248750514614486 + 0.925583310193438*v + 1.16740237321695*v2 + 0.280457026598666*v3 - 0.0757991963780179*v4 //+ 0.0437040411548932*v5
 }
 
@@ -446,11 +399,7 @@ func delinearize(v float64) float64 {
 
 // LinearRgb creates an sRGB color out of the given linear RGB color (see http://www.sjbrown.co.uk/2004/05/14/gamma-correct-rendering/).
 func LinearRgb(r, g, b float64) Color {
-	return Color{
-		delinearize(r),
-		delinearize(g),
-		delinearize(b),
-	}
+	return Color{delinearize(r), delinearize(g), delinearize(b)}
 }
 
 func delinearize_fast(v float64) float64 {
@@ -483,26 +432,18 @@ func delinearize_fast(v float64) float64 {
 // FastLinearRgb is much faster than and almost as accurate as LinearRgb.
 // BUT it is important to NOTE that they only produce good results for valid inputs r,g,b in [0,1].
 func FastLinearRgb(r, g, b float64) Color {
-	return Color{
-		delinearize_fast(r),
-		delinearize_fast(g),
-		delinearize_fast(b),
-	}
+	return Color{delinearize_fast(r), delinearize_fast(g), delinearize_fast(b)}
 }
 
 // XyzToLinearRgb converts from CIE XYZ-space to Linear RGB space.
-func XyzToLinearRgb(
-	x, y, z float64,
-) (r, g, b float64) {
+func XyzToLinearRgb(x, y, z float64) (r, g, b float64) {
 	r = 3.2409699419045214*x - 1.5373831775700935*y - 0.49861076029300328*z
 	g = -0.96924363628087983*x + 1.8759675015077207*y + 0.041555057407175613*z
 	b = 0.055630079696993609*x - 0.20397695888897657*y + 1.0569715142428786*z
 	return
 }
 
-func LinearRgbToXyz(
-	r, g, b float64,
-) (x, y, z float64) {
+func LinearRgbToXyz(r, g, b float64) (x, y, z float64) {
 	x = 0.41239079926595948*r + 0.35758433938387796*g + 0.18048078840183429*b
 	y = 0.21263900587151036*r + 0.71516867876775593*g + 0.072192315360733715*b
 	z = 0.019330818715591851*r + 0.11919477979462599*g + 0.95053215224966058*b
@@ -527,16 +468,11 @@ func Xyz(x, y, z float64) Color {
 
 // Well, the name is bad, since it's xyY but Golang needs me to start with a
 // capital letter to make the method public.
-func XyzToXyy(
-	X, Y, Z float64,
-) (x, y, Yout float64) {
+func XyzToXyy(X, Y, Z float64) (x, y, Yout float64) {
 	return XyzToXyyWhiteRef(X, Y, Z, D65)
 }
 
-func XyzToXyyWhiteRef(
-	X, Y, Z float64,
-	wref [3]float64,
-) (x, y, Yout float64) {
+func XyzToXyyWhiteRef(X, Y, Z float64, wref [3]float64) (x, y, Yout float64) {
 	Yout = Y
 	N := X + Y + Z
 	if math.Abs(N) < 1e-14 {
@@ -551,9 +487,7 @@ func XyzToXyyWhiteRef(
 	return
 }
 
-func XyyToXyz(
-	x, y, Y float64,
-) (X, Yout, Z float64) {
+func XyyToXyz(x, y, Y float64) (X, Yout, Z float64) {
 	Yout = Y
 
 	if -1e-14 < y && y < 1e-14 {
@@ -578,9 +512,7 @@ func (col Color) Xyy() (x, y, Y float64) {
 // a given reference white. (i.e. the monitor's white)
 // (Note that the reference white is only used for black input.)
 // x, y and Y are in [0..1]
-func (col Color) XyyWhiteRef(
-	wref [3]float64,
-) (x, y, Y float64) {
+func (col Color) XyyWhiteRef(wref [3]float64) (x, y, Y float64) {
 	X, Y2, Z := col.Xyz()
 	return XyzToXyyWhiteRef(X, Y2, Z, wref)
 }
@@ -610,10 +542,7 @@ func XyzToLab(x, y, z float64) (l, a, b float64) {
 	return XyzToLabWhiteRef(x, y, z, D65)
 }
 
-func XyzToLabWhiteRef(
-	x, y, z float64,
-	wref [3]float64,
-) (l, a, b float64) {
+func XyzToLabWhiteRef(x, y, z float64, wref [3]float64) (l, a, b float64) {
 	fy := lab_f(y / wref[1])
 	l = 1.16*fy - 0.16
 	a = 5.0 * (lab_f(x/wref[0]) - fy)
@@ -633,10 +562,7 @@ func LabToXyz(l, a, b float64) (x, y, z float64) {
 	return LabToXyzWhiteRef(l, a, b, D65)
 }
 
-func LabToXyzWhiteRef(
-	l, a, b float64,
-	wref [3]float64,
-) (x, y, z float64) {
+func LabToXyzWhiteRef(l, a, b float64, wref [3]float64) (x, y, z float64) {
 	l2 := (l + 0.16) / 1.16
 	x = wref[0] * lab_finv(l2+a/5.0)
 	y = wref[1] * lab_finv(l2)
@@ -651,9 +577,7 @@ func (col Color) Lab() (l, a, b float64) {
 
 // Converts the given color to CIE L*a*b* space, taking into account
 // a given reference white. (i.e. the monitor's white)
-func (col Color) LabWhiteRef(
-	wref [3]float64,
-) (l, a, b float64) {
+func (col Color) LabWhiteRef(wref [3]float64) (l, a, b float64) {
 	x, y, z := col.Xyz()
 	return XyzToLabWhiteRef(x, y, z, wref)
 }
@@ -667,10 +591,7 @@ func Lab(l, a, b float64) Color {
 
 // Generates a color by using data given in CIE L*a*b* space, taking
 // into account a given reference white. (i.e. the monitor's white)
-func LabWhiteRef(
-	l, a, b float64,
-	wref [3]float64,
-) Color {
+func LabWhiteRef(l, a, b float64, wref [3]float64) Color {
 	return Xyz(LabToXyzWhiteRef(l, a, b, wref))
 }
 
@@ -680,9 +601,7 @@ func LabWhiteRef(
 func (c1 Color) DistanceLab(c2 Color) float64 {
 	l1, a1, b1 := c1.Lab()
 	l2, a2, b2 := c2.Lab()
-	return math.Sqrt(
-		sq(l1-l2) + sq(a1-a2) + sq(b1-b2),
-	)
+	return math.Sqrt(sq(l1-l2) + sq(a1-a2) + sq(b1-b2))
 }
 
 // DistanceCIE76 is the same as DistanceLab.
@@ -715,13 +634,7 @@ func (cl Color) DistanceCIE94(cr Color) float64 {
 	deltaCab := c1 - c2
 
 	// Not taking Sqrt here for stability, and it's unnecessary.
-	deltaHab2 := sq(
-		a1-a2,
-	) + sq(
-		b1-b2,
-	) - sq(
-		deltaCab,
-	)
+	deltaHab2 := sq(a1-a2) + sq(b1-b2) - sq(deltaCab)
 	sl := 1.0
 	sc := 1.0 + k1*c1
 	sh := 1.0 + k2*c1
@@ -730,31 +643,19 @@ func (cl Color) DistanceCIE94(cr Color) float64 {
 	vC2 := sq(deltaCab / (kc * sc))
 	vH2 := deltaHab2 / sq(kh*sh)
 
-	return math.Sqrt(
-		vL2+vC2+vH2,
-	) * 0.01 // See above.
+	return math.Sqrt(vL2+vC2+vH2) * 0.01 // See above.
 }
 
 // DistanceCIEDE2000 uses the Delta E 2000 formula to calculate color
 // distance. It is more expensive but more accurate than both DistanceLab
 // and DistanceCIE94.
-func (cl Color) DistanceCIEDE2000(
-	cr Color,
-) float64 {
-	return cl.DistanceCIEDE2000klch(
-		cr,
-		1.0,
-		1.0,
-		1.0,
-	)
+func (cl Color) DistanceCIEDE2000(cr Color) float64 {
+	return cl.DistanceCIEDE2000klch(cr, 1.0, 1.0, 1.0)
 }
 
 // DistanceCIEDE2000klch uses the Delta E 2000 formula with custom values
 // for the weighting factors kL, kC, and kH.
-func (cl Color) DistanceCIEDE2000klch(
-	cr Color,
-	kl, kc, kh float64,
-) float64 {
+func (cl Color) DistanceCIEDE2000klch(cr Color, kl, kc, kh float64) float64 {
 	l1, a1, b1 := cl.Lab()
 	l2, a2, b2 := cr.Lab()
 
@@ -802,11 +703,7 @@ func (cl Color) DistanceCIEDE2000klch(
 			dhp += 360
 		}
 	}
-	deltaHp := 2 * math.Sqrt(
-		cpProduct,
-	) * math.Sin(
-		dhp/2*math.Pi/180,
-	)
+	deltaHp := 2 * math.Sqrt(cpProduct) * math.Sin(dhp/2*math.Pi/180)
 
 	lpmean := (l1 + l2) / 2
 	cpmean := (cp1 + cp2) / 2
@@ -822,48 +719,20 @@ func (cl Color) DistanceCIEDE2000klch(
 		}
 	}
 
-	t := 1 - 0.17*math.Cos(
-		(hpmean-30)*math.Pi/180,
-	) + 0.24*math.Cos(
-		2*hpmean*math.Pi/180,
-	) + 0.32*math.Cos(
-		(3*hpmean+6)*math.Pi/180,
-	) - 0.2*math.Cos(
-		(4*hpmean-63)*math.Pi/180,
-	)
-	deltaTheta := 30 * math.Exp(
-		-sq((hpmean-275)/25),
-	)
-	rc := 2 * math.Sqrt(
-		math.Pow(
-			cpmean,
-			7,
-		)/(math.Pow(cpmean, 7)+math.Pow(25, 7)),
-	)
-	sl := 1 + (0.015*sq(lpmean-50))/math.Sqrt(
-		20+sq(lpmean-50),
-	)
+	t := 1 - 0.17*math.Cos((hpmean-30)*math.Pi/180) + 0.24*math.Cos(2*hpmean*math.Pi/180) + 0.32*math.Cos((3*hpmean+6)*math.Pi/180) - 0.2*math.Cos((4*hpmean-63)*math.Pi/180)
+	deltaTheta := 30 * math.Exp(-sq((hpmean-275)/25))
+	rc := 2 * math.Sqrt(math.Pow(cpmean, 7)/(math.Pow(cpmean, 7)+math.Pow(25, 7)))
+	sl := 1 + (0.015*sq(lpmean-50))/math.Sqrt(20+sq(lpmean-50))
 	sc := 1 + 0.045*cpmean
 	sh := 1 + 0.015*cpmean*t
 	rt := -math.Sin(2*deltaTheta*math.Pi/180) * rc
 
-	return math.Sqrt(
-		sq(
-			deltaLp/(kl*sl),
-		)+sq(
-			deltaCp/(kc*sc),
-		)+sq(
-			deltaHp/(kh*sh),
-		)+rt*(deltaCp/(kc*sc))*(deltaHp/(kh*sh)),
-	) * 0.01
+	return math.Sqrt(sq(deltaLp/(kl*sl))+sq(deltaCp/(kc*sc))+sq(deltaHp/(kh*sh))+rt*(deltaCp/(kc*sc))*(deltaHp/(kh*sh))) * 0.01
 }
 
 // BlendLab blends two colors in the L*a*b* color-space, which should result in a smoother blend.
 // t == 0 results in c1, t == 1 results in c2
-func (c1 Color) BlendLab(
-	c2 Color,
-	t float64,
-) Color {
+func (c1 Color) BlendLab(c2 Color, t float64) Color {
 	l1, a1, b1 := c1.Lab()
 	l2, a2, b2 := c2.Lab()
 	return Lab(l1+t*(l2-l1),
@@ -883,10 +752,7 @@ func XyzToLuv(x, y, z float64) (l, a, b float64) {
 	return XyzToLuvWhiteRef(x, y, z, D65)
 }
 
-func XyzToLuvWhiteRef(
-	x, y, z float64,
-	wref [3]float64,
-) (l, u, v float64) {
+func XyzToLuvWhiteRef(x, y, z float64, wref [3]float64) (l, u, v float64) {
 	if y/wref[1] <= 6.0/29.0*6.0/29.0*6.0/29.0 {
 		l = y / wref[1] * (29.0 / 3.0 * 29.0 / 3.0 * 29.0 / 3.0) / 100.0
 	} else {
@@ -917,11 +783,8 @@ func LuvToXyz(l, u, v float64) (x, y, z float64) {
 	return LuvToXyzWhiteRef(l, u, v, D65)
 }
 
-func LuvToXyzWhiteRef(
-	l, u, v float64,
-	wref [3]float64,
-) (x, y, z float64) {
-	// y = wref[1] * lab_finv((l + 0.16) / 1.16)
+func LuvToXyzWhiteRef(l, u, v float64, wref [3]float64) (x, y, z float64) {
+	//y = wref[1] * lab_finv((l + 0.16) / 1.16)
 	if l <= 0.08 {
 		y = wref[1] * l * 100.0 * 3.0 / 29.0 * 3.0 / 29.0 * 3.0 / 29.0
 	} else {
@@ -948,9 +811,7 @@ func (col Color) Luv() (l, u, v float64) {
 // Converts the given color to CIE L*u*v* space, taking into account
 // a given reference white. (i.e. the monitor's white)
 // L* is in [0..1] and both u* and v* are in about [-1..1]
-func (col Color) LuvWhiteRef(
-	wref [3]float64,
-) (l, u, v float64) {
+func (col Color) LuvWhiteRef(wref [3]float64) (l, u, v float64) {
 	x, y, z := col.Xyz()
 	return XyzToLuvWhiteRef(x, y, z, wref)
 }
@@ -966,10 +827,7 @@ func Luv(l, u, v float64) Color {
 // Generates a color by using data given in CIE L*u*v* space, taking
 // into account a given reference white. (i.e. the monitor's white)
 // L* is in [0..1] and both u* and v* are in about [-1..1]
-func LuvWhiteRef(
-	l, u, v float64,
-	wref [3]float64,
-) Color {
+func LuvWhiteRef(l, u, v float64, wref [3]float64) Color {
 	return Xyz(LuvToXyzWhiteRef(l, u, v, wref))
 }
 
@@ -979,17 +837,12 @@ func LuvWhiteRef(
 func (c1 Color) DistanceLuv(c2 Color) float64 {
 	l1, u1, v1 := c1.Luv()
 	l2, u2, v2 := c2.Luv()
-	return math.Sqrt(
-		sq(l1-l2) + sq(u1-u2) + sq(v1-v2),
-	)
+	return math.Sqrt(sq(l1-l2) + sq(u1-u2) + sq(v1-v2))
 }
 
 // BlendLuv blends two colors in the CIE-L*u*v* color-space, which should result in a smoother blend.
 // t == 0 results in c1, t == 1 results in c2
-func (c1 Color) BlendLuv(
-	c2 Color,
-	t float64,
-) Color {
+func (c1 Color) BlendLuv(c2 Color, t float64) Color {
 	l1, u1, v1 := c1.Luv()
 	l2, u2, v2 := c2.Luv()
 	return Luv(l1+t*(l2-l1),
@@ -1012,15 +865,8 @@ func (col Color) Hcl() (h, c, l float64) {
 
 func LabToHcl(L, a, b float64) (h, c, l float64) {
 	// Oops, floating point workaround necessary if a ~= b and both are very small (i.e. almost zero).
-	if math.Abs(b-a) > 1e-4 &&
-		math.Abs(a) > 1e-4 {
-		h = math.Mod(
-			57.29577951308232087721*math.Atan2(
-				b,
-				a,
-			)+360.0,
-			360.0,
-		) // Rad2Deg
+	if math.Abs(b-a) > 1e-4 && math.Abs(a) > 1e-4 {
+		h = math.Mod(57.29577951308232087721*math.Atan2(b, a)+360.0, 360.0) // Rad2Deg
 	} else {
 		h = 0.0
 	}
@@ -1032,9 +878,7 @@ func LabToHcl(L, a, b float64) (h, c, l float64) {
 // Converts the given color to HCL space, taking into account
 // a given reference white. (i.e. the monitor's white)
 // H values are in [0..360], C and L values are in [0..1]
-func (col Color) HclWhiteRef(
-	wref [3]float64,
-) (h, c, l float64) {
+func (col Color) HclWhiteRef(wref [3]float64) (h, c, l float64) {
 	L, a, b := col.LabWhiteRef(wref)
 	return LabToHcl(L, a, b)
 }
@@ -1058,29 +902,19 @@ func HclToLab(h, c, l float64) (L, a, b float64) {
 // Generates a color by using data given in HCL space, taking
 // into account a given reference white. (i.e. the monitor's white)
 // H values are in [0..360], C and L values are in [0..1]
-func HclWhiteRef(
-	h, c, l float64,
-	wref [3]float64,
-) Color {
+func HclWhiteRef(h, c, l float64, wref [3]float64) Color {
 	L, a, b := HclToLab(h, c, l)
 	return LabWhiteRef(L, a, b, wref)
 }
 
 // BlendHcl blends two colors in the CIE-L*C*h° color-space, which should result in a smoother blend.
 // t == 0 results in c1, t == 1 results in c2
-func (col1 Color) BlendHcl(
-	col2 Color,
-	t float64,
-) Color {
+func (col1 Color) BlendHcl(col2 Color, t float64) Color {
 	h1, c1, l1 := col1.Hcl()
 	h2, c2, l2 := col2.Hcl()
 
 	// We know that h are both in [0..360]
-	return Hcl(
-		interp_angle(h1, h2, t),
-		c1+t*(c2-c1),
-		l1+t*(l2-l1),
-	).Clamped()
+	return Hcl(interp_angle(h1, h2, t), c1+t*(c2-c1), l1+t*(l2-l1)).Clamped()
 }
 
 // LuvLch
@@ -1091,19 +925,10 @@ func (col Color) LuvLCh() (l, c, h float64) {
 	return col.LuvLChWhiteRef(D65)
 }
 
-func LuvToLuvLCh(
-	L, u, v float64,
-) (l, c, h float64) {
+func LuvToLuvLCh(L, u, v float64) (l, c, h float64) {
 	// Oops, floating point workaround necessary if u ~= v and both are very small (i.e. almost zero).
-	if math.Abs(v-u) > 1e-4 &&
-		math.Abs(u) > 1e-4 {
-		h = math.Mod(
-			57.29577951308232087721*math.Atan2(
-				v,
-				u,
-			)+360.0,
-			360.0,
-		) // Rad2Deg
+	if math.Abs(v-u) > 1e-4 && math.Abs(u) > 1e-4 {
+		h = math.Mod(57.29577951308232087721*math.Atan2(v, u)+360.0, 360.0) // Rad2Deg
 	} else {
 		h = 0.0
 	}
@@ -1115,9 +940,7 @@ func LuvToLuvLCh(
 // Converts the given color to LuvLCh space, taking into account
 // a given reference white. (i.e. the monitor's white)
 // h values are in [0..360], c and l values are in [0..1]
-func (col Color) LuvLChWhiteRef(
-	wref [3]float64,
-) (l, c, h float64) {
+func (col Color) LuvLChWhiteRef(wref [3]float64) (l, c, h float64) {
 	return LuvToLuvLCh(col.LuvWhiteRef(wref))
 }
 
@@ -1129,9 +952,7 @@ func LuvLCh(l, c, h float64) Color {
 	return LuvLChWhiteRef(l, c, h, D65)
 }
 
-func LuvLChToLuv(
-	l, c, h float64,
-) (L, u, v float64) {
+func LuvLChToLuv(l, c, h float64) (L, u, v float64) {
 	H := 0.01745329251994329576 * h // Deg2Rad
 	u = c * math.Cos(H)
 	v = c * math.Sin(H)
@@ -1142,27 +963,17 @@ func LuvLChToLuv(
 // Generates a color by using data given in LuvLCh space, taking
 // into account a given reference white. (i.e. the monitor's white)
 // h values are in [0..360], C and L values are in [0..1]
-func LuvLChWhiteRef(
-	l, c, h float64,
-	wref [3]float64,
-) Color {
+func LuvLChWhiteRef(l, c, h float64, wref [3]float64) Color {
 	L, u, v := LuvLChToLuv(l, c, h)
 	return LuvWhiteRef(L, u, v, wref)
 }
 
 // BlendLuvLCh blends two colors in the cylindrical CIELUV color space.
 // t == 0 results in c1, t == 1 results in c2
-func (col1 Color) BlendLuvLCh(
-	col2 Color,
-	t float64,
-) Color {
+func (col1 Color) BlendLuvLCh(col2 Color, t float64) Color {
 	l1, c1, h1 := col1.LuvLCh()
 	l2, c2, h2 := col2.LuvLCh()
 
 	// We know that h are both in [0..360]
-	return LuvLCh(
-		l1+t*(l2-l1),
-		c1+t*(c2-c1),
-		interp_angle(h1, h2, t),
-	)
+	return LuvLCh(l1+t*(l2-l1), c1+t*(c2-c1), interp_angle(h1, h2, t))
 }

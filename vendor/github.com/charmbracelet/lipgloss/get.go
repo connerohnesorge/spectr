@@ -137,21 +137,13 @@ func (s Style) GetPaddingLeft() int {
 // GetHorizontalPadding returns the style's left and right padding. Unset
 // values are measured as 0.
 func (s Style) GetHorizontalPadding() int {
-	return s.getAsInt(
-		paddingLeftKey,
-	) + s.getAsInt(
-		paddingRightKey,
-	)
+	return s.getAsInt(paddingLeftKey) + s.getAsInt(paddingRightKey)
 }
 
 // GetVerticalPadding returns the style's top and bottom padding. Unset values
 // are measured as 0.
 func (s Style) GetVerticalPadding() int {
-	return s.getAsInt(
-		paddingTopKey,
-	) + s.getAsInt(
-		paddingBottomKey,
-	)
+	return s.getAsInt(paddingTopKey) + s.getAsInt(paddingBottomKey)
 }
 
 // GetColorWhitespace returns the style's whitespace coloring setting. If no
@@ -196,21 +188,13 @@ func (s Style) GetMarginLeft() int {
 // GetHorizontalMargins returns the style's left and right margins. Unset
 // values are measured as 0.
 func (s Style) GetHorizontalMargins() int {
-	return s.getAsInt(
-		marginLeftKey,
-	) + s.getAsInt(
-		marginRightKey,
-	)
+	return s.getAsInt(marginLeftKey) + s.getAsInt(marginRightKey)
 }
 
 // GetVerticalMargins returns the style's top and bottom margins. Unset values
 // are measured as 0.
 func (s Style) GetVerticalMargins() int {
-	return s.getAsInt(
-		marginTopKey,
-	) + s.getAsInt(
-		marginBottomKey,
-	)
+	return s.getAsInt(marginTopKey) + s.getAsInt(marginBottomKey)
 }
 
 // GetBorder returns the style's border style (type Border) and value for the
@@ -316,8 +300,7 @@ func (s Style) GetBorderTopWidth() int {
 // runes of varying widths, the widest rune is returned. If no border exists on
 // the top edge, 0 is returned.
 func (s Style) GetBorderTopSize() int {
-	if !s.getAsBool(borderTopKey, false) &&
-		!s.implicitBorders() {
+	if !s.getAsBool(borderTopKey, false) && !s.implicitBorders() {
 		return 0
 	}
 	return s.getBorderStyle().GetTopSize()
@@ -327,8 +310,7 @@ func (s Style) GetBorderTopSize() int {
 // runes of varying widths, the widest rune is returned. If no border exists on
 // the left edge, 0 is returned.
 func (s Style) GetBorderLeftSize() int {
-	if !s.getAsBool(borderLeftKey, false) &&
-		!s.implicitBorders() {
+	if !s.getAsBool(borderLeftKey, false) && !s.implicitBorders() {
 		return 0
 	}
 	return s.getBorderStyle().GetLeftSize()
@@ -338,8 +320,7 @@ func (s Style) GetBorderLeftSize() int {
 // contain runes of varying widths, the widest rune is returned. If no border
 // exists on the left edge, 0 is returned.
 func (s Style) GetBorderBottomSize() int {
-	if !s.getAsBool(borderBottomKey, false) &&
-		!s.implicitBorders() {
+	if !s.getAsBool(borderBottomKey, false) && !s.implicitBorders() {
 		return 0
 	}
 	return s.getBorderStyle().GetBottomSize()
@@ -349,8 +330,7 @@ func (s Style) GetBorderBottomSize() int {
 // contain runes of varying widths, the widest rune is returned. If no border
 // exists on the right edge, 0 is returned.
 func (s Style) GetBorderRightSize() int {
-	if !s.getAsBool(borderRightKey, false) &&
-		!s.implicitBorders() {
+	if !s.getAsBool(borderRightKey, false) && !s.implicitBorders() {
 		return 0
 	}
 	return s.getBorderStyle().GetRightSize()
@@ -403,10 +383,7 @@ func (s Style) GetUnderlineSpaces() bool {
 // GetStrikethroughSpaces returns whether or not the style is set to strikethrough
 // spaces. If not value is set false is returned.
 func (s Style) GetStrikethroughSpaces() bool {
-	return s.getAsBool(
-		strikethroughSpacesKey,
-		false,
-	)
+	return s.getAsBool(strikethroughSpacesKey, false)
 }
 
 // GetHorizontalFrameSize returns the sum of the style's horizontal margins, padding
@@ -442,19 +419,14 @@ func (s Style) isSet(k propKey) bool {
 	return s.props.has(k)
 }
 
-func (s Style) getAsBool(
-	k propKey,
-	defaultVal bool,
-) bool {
+func (s Style) getAsBool(k propKey, defaultVal bool) bool {
 	if !s.isSet(k) {
 		return defaultVal
 	}
 	return s.attrs&int(k) != 0
 }
 
-func (s Style) getAsColor(
-	k propKey,
-) TerminalColor {
+func (s Style) getAsColor(k propKey) TerminalColor {
 	if !s.isSet(k) {
 		return noColor
 	}
@@ -558,13 +530,10 @@ func (s Style) implicitBorders() bool {
 		bottomSet   = s.isSet(borderBottomKey)
 		leftSet     = s.isSet(borderLeftKey)
 	)
-	return borderStyle != noBorder &&
-		!(topSet || rightSet || bottomSet || leftSet)
+	return borderStyle != noBorder && !(topSet || rightSet || bottomSet || leftSet)
 }
 
-func (s Style) getAsTransform(
-	propKey,
-) func(string) string {
+func (s Style) getAsTransform(propKey) func(string) string {
 	if !s.isSet(transformKey) {
 		return nil
 	}
@@ -573,9 +542,7 @@ func (s Style) getAsTransform(
 
 // Split a string into lines, additionally returning the size of the widest
 // line.
-func getLines(
-	s string,
-) (lines []string, widest int) {
+func getLines(s string) (lines []string, widest int) {
 	lines = strings.Split(s, "\n")
 
 	for _, l := range lines {

@@ -44,8 +44,7 @@ func (f *UnionFile) Close() error {
 func (f *UnionFile) Read(s []byte) (int, error) {
 	if f.Layer != nil {
 		n, err := f.Layer.Read(s)
-		if (err == nil || err == io.EOF) &&
-			f.Base != nil {
+		if (err == nil || err == io.EOF) && f.Base != nil {
 			// advance the file position also in the base file, the next
 			// call may be a write at this position (or a seek with SEEK_CUR)
 			if _, seekErr := f.Base.Seek(int64(n), io.SeekCurrent); seekErr != nil {
@@ -62,18 +61,11 @@ func (f *UnionFile) Read(s []byte) (int, error) {
 	return 0, BADFD
 }
 
-func (f *UnionFile) ReadAt(
-	s []byte,
-	o int64,
-) (int, error) {
+func (f *UnionFile) ReadAt(s []byte, o int64) (int, error) {
 	if f.Layer != nil {
 		n, err := f.Layer.ReadAt(s, o)
-		if (err == nil || err == io.EOF) &&
-			f.Base != nil {
-			_, err = f.Base.Seek(
-				o+int64(n),
-				io.SeekStart,
-			)
+		if (err == nil || err == io.EOF) && f.Base != nil {
+			_, err = f.Base.Seek(o+int64(n), io.SeekStart)
 		}
 		return n, err
 	}
@@ -83,14 +75,10 @@ func (f *UnionFile) ReadAt(
 	return 0, BADFD
 }
 
-func (f *UnionFile) Seek(
-	o int64,
-	w int,
-) (pos int64, err error) {
+func (f *UnionFile) Seek(o int64, w int) (pos int64, err error) {
 	if f.Layer != nil {
 		pos, err = f.Layer.Seek(o, w)
-		if (err == nil || err == io.EOF) &&
-			f.Base != nil {
+		if (err == nil || err == io.EOF) && f.Base != nil {
 			_, err = f.Base.Seek(o, w)
 		}
 		return pos, err
@@ -101,9 +89,7 @@ func (f *UnionFile) Seek(
 	return 0, BADFD
 }
 
-func (f *UnionFile) Write(
-	s []byte,
-) (n int, err error) {
+func (f *UnionFile) Write(s []byte) (n int, err error) {
 	if f.Layer != nil {
 		n, err = f.Layer.Write(s)
 		if err == nil &&
@@ -118,10 +104,7 @@ func (f *UnionFile) Write(
 	return 0, BADFD
 }
 
-func (f *UnionFile) WriteAt(
-	s []byte,
-	o int64,
-) (n int, err error) {
+func (f *UnionFile) WriteAt(s []byte, o int64) (n int, err error) {
 	if f.Layer != nil {
 		n, err = f.Layer.WriteAt(s, o)
 		if err == nil && f.Base != nil {
@@ -174,9 +157,7 @@ var defaultUnionMergeDirsFn = func(lofi, bofi []os.FileInfo) ([]os.FileInfo, err
 // Readdir will weave the two directories together and
 // return a single view of the overlayed directories.
 // At the end of the directory view, the error is io.EOF if c > 0.
-func (f *UnionFile) Readdir(
-	c int,
-) (ofi []os.FileInfo, err error) {
+func (f *UnionFile) Readdir(c int) (ofi []os.FileInfo, err error) {
 	merge := f.Merger
 	if merge == nil {
 		merge = defaultUnionMergeDirsFn
@@ -223,9 +204,7 @@ func (f *UnionFile) Readdir(
 	return files[:c], nil
 }
 
-func (f *UnionFile) Readdirnames(
-	c int,
-) ([]string, error) {
+func (f *UnionFile) Readdirnames(c int) ([]string, error) {
 	rfi, err := f.Readdir(c)
 	if err != nil {
 		return nil, err
@@ -261,9 +240,7 @@ func (f *UnionFile) Sync() (err error) {
 	return BADFD
 }
 
-func (f *UnionFile) Truncate(
-	s int64,
-) (err error) {
+func (f *UnionFile) Truncate(s int64) (err error) {
 	if f.Layer != nil {
 		err = f.Layer.Truncate(s)
 		if err == nil && f.Base != nil {
@@ -277,9 +254,7 @@ func (f *UnionFile) Truncate(
 	return BADFD
 }
 
-func (f *UnionFile) WriteString(
-	s string,
-) (n int, err error) {
+func (f *UnionFile) WriteString(s string) (n int, err error) {
 	if f.Layer != nil {
 		n, err = f.Layer.WriteString(s)
 		if err == nil && f.Base != nil {
@@ -293,25 +268,14 @@ func (f *UnionFile) WriteString(
 	return 0, BADFD
 }
 
-func copyFile(
-	base Fs,
-	layer Fs,
-	name string,
-	bfh File,
-) error {
+func copyFile(base Fs, layer Fs, name string, bfh File) error {
 	// First make sure the directory exists
-	exists, err := Exists(
-		layer,
-		filepath.Dir(name),
-	)
+	exists, err := Exists(layer, filepath.Dir(name))
 	if err != nil {
 		return err
 	}
 	if !exists {
-		err = layer.MkdirAll(
-			filepath.Dir(name),
-			0o777,
-		) // FIXME?
+		err = layer.MkdirAll(filepath.Dir(name), 0o777) // FIXME?
 		if err != nil {
 			return err
 		}
@@ -343,18 +307,10 @@ func copyFile(
 		lfh.Close()
 		return err
 	}
-	return layer.Chtimes(
-		name,
-		bfi.ModTime(),
-		bfi.ModTime(),
-	)
+	return layer.Chtimes(name, bfi.ModTime(), bfi.ModTime())
 }
 
-func copyToLayer(
-	base Fs,
-	layer Fs,
-	name string,
-) error {
+func copyToLayer(base Fs, layer Fs, name string) error {
 	bfh, err := base.Open(name)
 	if err != nil {
 		return err
@@ -364,13 +320,7 @@ func copyToLayer(
 	return copyFile(base, layer, name, bfh)
 }
 
-func copyFileToLayer(
-	base Fs,
-	layer Fs,
-	name string,
-	flag int,
-	perm os.FileMode,
-) error {
+func copyFileToLayer(base Fs, layer Fs, name string, flag int, perm os.FileMode) error {
 	bfh, err := base.OpenFile(name, flag, perm)
 	if err != nil {
 		return err

@@ -22,14 +22,8 @@ import (
 
 type keyList []reflect.Value
 
-func (l keyList) Len() int { return len(l) }
-
-func (l keyList) Swap(
-	i, j int,
-) {
-	l[i], l[j] = l[j], l[i]
-}
-
+func (l keyList) Len() int      { return len(l) }
+func (l keyList) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 func (l keyList) Less(i, j int) bool {
 	a := l[i]
 	b := l[j]
@@ -54,15 +48,10 @@ func (l keyList) Less(i, j int) bool {
 		}
 		return numLess(a, b)
 	}
-	if ak != reflect.String ||
-		bk != reflect.String {
+	if ak != reflect.String || bk != reflect.String {
 		return ak < bk
 	}
-	ar, br := []rune(
-		a.String(),
-	), []rune(
-		b.String(),
-	)
+	ar, br := []rune(a.String()), []rune(b.String())
 	digits := false
 	for i := 0; i < len(ar) && i < len(br); i++ {
 		if ar[i] == br[i] {
@@ -111,24 +100,13 @@ func (l keyList) Less(i, j int) bool {
 
 // keyFloat returns a float value for v if it is a number/bool
 // and whether it is a number/bool or not.
-func keyFloat(
-	v reflect.Value,
-) (f float64, ok bool) {
+func keyFloat(v reflect.Value) (f float64, ok bool) {
 	switch v.Kind() {
-	case reflect.Int,
-		reflect.Int8,
-		reflect.Int16,
-		reflect.Int32,
-		reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return float64(v.Int()), true
 	case reflect.Float32, reflect.Float64:
 		return v.Float(), true
-	case reflect.Uint,
-		reflect.Uint8,
-		reflect.Uint16,
-		reflect.Uint32,
-		reflect.Uint64,
-		reflect.Uintptr:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		return float64(v.Uint()), true
 	case reflect.Bool:
 		if v.Bool() {
@@ -143,20 +121,11 @@ func keyFloat(
 // a and b must necessarily have the same kind.
 func numLess(a, b reflect.Value) bool {
 	switch a.Kind() {
-	case reflect.Int,
-		reflect.Int8,
-		reflect.Int16,
-		reflect.Int32,
-		reflect.Int64:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return a.Int() < b.Int()
 	case reflect.Float32, reflect.Float64:
 		return a.Float() < b.Float()
-	case reflect.Uint,
-		reflect.Uint8,
-		reflect.Uint16,
-		reflect.Uint32,
-		reflect.Uint64,
-		reflect.Uintptr:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		return a.Uint() < b.Uint()
 	case reflect.Bool:
 		return !a.Bool() && b.Bool()

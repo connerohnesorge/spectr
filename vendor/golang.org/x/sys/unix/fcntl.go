@@ -13,12 +13,7 @@ import "unsafe"
 var fcntl64Syscall uintptr = SYS_FCNTL
 
 func fcntl(fd int, cmd, arg int) (int, error) {
-	valptr, _, errno := Syscall(
-		fcntl64Syscall,
-		uintptr(fd),
-		uintptr(cmd),
-		uintptr(arg),
-	)
+	valptr, _, errno := Syscall(fcntl64Syscall, uintptr(fd), uintptr(cmd), uintptr(arg))
 	var err error
 	if errno != 0 {
 		err = errno
@@ -27,25 +22,13 @@ func fcntl(fd int, cmd, arg int) (int, error) {
 }
 
 // FcntlInt performs a fcntl syscall on fd with the provided command and argument.
-func FcntlInt(
-	fd uintptr,
-	cmd, arg int,
-) (int, error) {
+func FcntlInt(fd uintptr, cmd, arg int) (int, error) {
 	return fcntl(int(fd), cmd, arg)
 }
 
 // FcntlFlock performs a fcntl syscall for the F_GETLK, F_SETLK or F_SETLKW command.
-func FcntlFlock(
-	fd uintptr,
-	cmd int,
-	lk *Flock_t,
-) error {
-	_, _, errno := Syscall(
-		fcntl64Syscall,
-		fd,
-		uintptr(cmd),
-		uintptr(unsafe.Pointer(lk)),
-	)
+func FcntlFlock(fd uintptr, cmd int, lk *Flock_t) error {
+	_, _, errno := Syscall(fcntl64Syscall, fd, uintptr(cmd), uintptr(unsafe.Pointer(lk)))
 	if errno == 0 {
 		return nil
 	}

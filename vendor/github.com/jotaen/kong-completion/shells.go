@@ -25,9 +25,7 @@ var shells = map[string]shell{
 	fish.name: fish,
 }
 
-func newShellFromString(
-	shellName string,
-) (shell, error) {
+func newShellFromString(shellName string) (shell, error) {
 	sh, ok := shells[shellName]
 	if !ok {
 		return shell{}, errors.New("")
@@ -36,41 +34,29 @@ func newShellFromString(
 }
 
 var bash = shell{
-	name: "bash",
-	initCode: tmpl(
-		`complete{{if .UseShellDefault}} -o default -o bashdefault{{ end }} -C {{.BinPath}} {{.BinName}}`,
-	),
-	configFileCode: tmpl(
-		`source <({{.BinName}} {{.SubCmdName}} -c bash)`,
-	),
-	initFilePath: "~/.bashrc",
+	name:           "bash",
+	initCode:       tmpl(`complete{{if .UseShellDefault}} -o default -o bashdefault{{ end }} -C {{.BinPath}} {{.BinName}}`),
+	configFileCode: tmpl(`source <({{.BinName}} {{.SubCmdName}} -c bash)`),
+	initFilePath:   "~/.bashrc",
 }
 
 var zsh = shell{
 	name: "zsh",
-	initCode: tmpl(
-		`autoload -U +X bashcompinit && bashcompinit
-complete{{if .UseShellDefault}} -o default -o bashdefault{{ end }} -C {{.BinPath}} {{.BinName}}`,
-	),
-	configFileCode: tmpl(
-		`source <({{.BinName}} {{.SubCmdName}} -c zsh)`,
-	),
-	initFilePath: "~/.zshrc",
+	initCode: tmpl(`autoload -U +X bashcompinit && bashcompinit
+complete{{if .UseShellDefault}} -o default -o bashdefault{{ end }} -C {{.BinPath}} {{.BinName}}`),
+	configFileCode: tmpl(`source <({{.BinName}} {{.SubCmdName}} -c zsh)`),
+	initFilePath:   "~/.zshrc",
 }
 
 var fish = shell{
 	name: "fish",
-	initCode: tmpl(
-		`function __complete_{{.BinName}}
+	initCode: tmpl(`function __complete_{{.BinName}}
     set -lx COMP_LINE (commandline -cp)
     test -z (commandline -ct)
     and set COMP_LINE "$COMP_LINE "
     {{.BinPath}}
 end
-complete -f -c {{.BinName}} -a "(__complete_{{.BinName}})"`,
-	),
-	configFileCode: tmpl(
-		`{{.BinName}} {{.SubCmdName}} -c fish | source`,
-	),
-	initFilePath: "~/.config/fish/config.fish",
+complete -f -c {{.BinName}} -a "(__complete_{{.BinName}})"`),
+	configFileCode: tmpl(`{{.BinName}} {{.SubCmdName}} -c fish | source`),
+	initFilePath:   "~/.config/fish/config.fish",
 }

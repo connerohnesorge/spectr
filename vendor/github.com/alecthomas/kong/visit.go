@@ -13,10 +13,7 @@ type Next func(err error) error
 type Visitor func(node Visitable, next Next) error
 
 // Visit all nodes.
-func Visit(
-	node Visitable,
-	visitor Visitor,
-) error {
+func Visit(node Visitable, visitor Visitor) error {
 	return visitor(node, func(err error) error {
 		if err != nil {
 			return err
@@ -36,10 +33,7 @@ func Visit(
 	})
 }
 
-func visitNodeChildren(
-	node *Node,
-	visitor Visitor,
-) error {
+func visitNodeChildren(node *Node, visitor Visitor) error {
 	if node.Argument != nil {
 		if err := Visit(node.Argument, visitor); err != nil {
 			return err

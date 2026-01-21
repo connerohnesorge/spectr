@@ -19,10 +19,7 @@ import "unicode/utf8"
 // Given an empty byte slice "b", the function returns nil values.
 //
 // [Unicode Standard Annex #29, Word Boundaries]: http://unicode.org/reports/tr29/#Word_Boundaries
-func FirstWord(
-	b []byte,
-	state int,
-) (word, rest []byte, newState int) {
+func FirstWord(b []byte, state int) (word, rest []byte, newState int) {
 	// An empty byte slice returns nothing.
 	if len(b) == 0 {
 		return
@@ -30,32 +27,20 @@ func FirstWord(
 
 	// Extract the first rune.
 	r, length := utf8.DecodeRune(b)
-	if len(
-		b,
-	) <= length { // If we're already past the end, there is nothing else to parse.
+	if len(b) <= length { // If we're already past the end, there is nothing else to parse.
 		return b, nil, wbAny
 	}
 
 	// If we don't know the state, determine it now.
 	if state < 0 {
-		state, _ = transitionWordBreakState(
-			state,
-			r,
-			b[length:],
-			"",
-		)
+		state, _ = transitionWordBreakState(state, r, b[length:], "")
 	}
 
 	// Transition until we find a boundary.
 	var boundary bool
 	for {
 		r, l := utf8.DecodeRune(b[length:])
-		state, boundary = transitionWordBreakState(
-			state,
-			r,
-			b[length+l:],
-			"",
-		)
+		state, boundary = transitionWordBreakState(state, r, b[length+l:], "")
 
 		if boundary {
 			return b[:length], b[length:], state
@@ -69,10 +54,7 @@ func FirstWord(
 }
 
 // FirstWordInString is like [FirstWord] but its input and outputs are strings.
-func FirstWordInString(
-	str string,
-	state int,
-) (word, rest string, newState int) {
+func FirstWordInString(str string, state int) (word, rest string, newState int) {
 	// An empty byte slice returns nothing.
 	if len(str) == 0 {
 		return
@@ -80,34 +62,20 @@ func FirstWordInString(
 
 	// Extract the first rune.
 	r, length := utf8.DecodeRuneInString(str)
-	if len(
-		str,
-	) <= length { // If we're already past the end, there is nothing else to parse.
+	if len(str) <= length { // If we're already past the end, there is nothing else to parse.
 		return str, "", wbAny
 	}
 
 	// If we don't know the state, determine it now.
 	if state < 0 {
-		state, _ = transitionWordBreakState(
-			state,
-			r,
-			nil,
-			str[length:],
-		)
+		state, _ = transitionWordBreakState(state, r, nil, str[length:])
 	}
 
 	// Transition until we find a boundary.
 	var boundary bool
 	for {
-		r, l := utf8.DecodeRuneInString(
-			str[length:],
-		)
-		state, boundary = transitionWordBreakState(
-			state,
-			r,
-			nil,
-			str[length+l:],
-		)
+		r, l := utf8.DecodeRuneInString(str[length:])
+		state, boundary = transitionWordBreakState(state, r, nil, str[length+l:])
 
 		if boundary {
 			return str[:length], str[length:], state

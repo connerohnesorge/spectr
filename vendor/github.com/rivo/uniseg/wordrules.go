@@ -26,9 +26,7 @@ const (
 // anologous to [grTransitions], see comments there for details.
 //
 // Unicode version 15.0.0.
-func wbTransitions(
-	state, prop int,
-) (newState int, wordBreak bool, rule int) {
+func wbTransitions(state, prop int) (newState int, wordBreak bool, rule int) {
 	switch uint64(state) | uint64(prop)<<32 {
 	// WB3b.
 	case wbAny | prNewline<<32:
@@ -146,23 +144,14 @@ func wbTransitions(
 // word boundary was detected. If more than one code point is needed to
 // determine the new state, the byte slice or the string starting after rune "r"
 // can be used (whichever is not nil or empty) for further lookups.
-func transitionWordBreakState(
-	state int,
-	r rune,
-	b []byte,
-	str string,
-) (newState int, wordBreak bool) {
+func transitionWordBreakState(state int, r rune, b []byte, str string) (newState int, wordBreak bool) {
 	// Determine the property of the next character.
-	nextProperty := property(
-		workBreakCodePoints,
-		r,
-	)
+	nextProperty := property(workBreakCodePoints, r)
 
 	// "Replacing Ignore Rules".
 	if nextProperty == prZWJ {
 		// WB4 (for zero-width joiners).
-		if state == wbNewline || state == wbCR ||
-			state == wbLF {
+		if state == wbNewline || state == wbCR || state == wbLF {
 			return wbAny | wbZWJBit, true // Make sure we don't apply WB4 to WB3a.
 		}
 		if state < 0 {
@@ -191,22 +180,12 @@ func transitionWordBreakState(
 
 	// Find the applicable transition in the table.
 	var rule int
-	newState, wordBreak, rule = wbTransitions(
-		state,
-		nextProperty,
-	)
+	newState, wordBreak, rule = wbTransitions(state, nextProperty)
 	if newState < 0 {
 		// No specific transition found. Try the less specific ones.
-		anyPropState, anyPropWordBreak, anyPropRule := wbTransitions(
-			state,
-			prAny,
-		)
-		anyStateState, anyStateWordBreak, anyStateRule := wbTransitions(
-			wbAny,
-			nextProperty,
-		)
-		if anyPropState >= 0 &&
-			anyStateState >= 0 {
+		anyPropState, anyPropWordBreak, anyPropRule := wbTransitions(state, prAny)
+		anyStateState, anyStateWordBreak, anyStateRule := wbTransitions(wbAny, nextProperty)
+		if anyPropState >= 0 && anyStateState >= 0 {
 			// Both apply. We'll use a mix (see comments for grTransitions).
 			newState, wordBreak, rule = anyStateState, anyStateWordBreak, anyStateRule
 			if anyPropRule < anyStateRule {
@@ -253,13 +232,8 @@ func transitionWordBreakState(
 			if r == utf8.RuneError {
 				break
 			}
-			prop := property(
-				workBreakCodePoints,
-				r,
-			)
-			if prop == prExtend ||
-				prop == prFormat ||
-				prop == prZWJ {
+			prop := property(workBreakCodePoints, r)
+			if prop == prExtend || prop == prFormat || prop == prZWJ {
 				continue
 			}
 			farProperty = prop
@@ -292,10 +266,8 @@ func transitionWordBreakState(
 	}
 
 	// WB15 and WB16.
-	if newState == wbAny &&
-		nextProperty == prRegionalIndicator {
-		if state != wbOddRI &&
-			state != wbEvenRI { // Includes state == -1.
+	if newState == wbAny && nextProperty == prRegionalIndicator {
+		if state != wbOddRI && state != wbEvenRI { // Includes state == -1.
 			// Transition into the first RI.
 			return wbOddRI, true
 		}

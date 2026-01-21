@@ -33,65 +33,27 @@ const (
 
 // Place places a string or text block vertically in an unstyled box of a given
 // width or height.
-func Place(
-	width, height int,
-	hPos, vPos Position,
-	str string,
-	opts ...WhitespaceOption,
-) string {
-	return renderer.Place(
-		width,
-		height,
-		hPos,
-		vPos,
-		str,
-		opts...)
+func Place(width, height int, hPos, vPos Position, str string, opts ...WhitespaceOption) string {
+	return renderer.Place(width, height, hPos, vPos, str, opts...)
 }
 
 // Place places a string or text block vertically in an unstyled box of a given
 // width or height.
-func (r *Renderer) Place(
-	width, height int,
-	hPos, vPos Position,
-	str string,
-	opts ...WhitespaceOption,
-) string {
-	return r.PlaceVertical(
-		height,
-		vPos,
-		r.PlaceHorizontal(
-			width,
-			hPos,
-			str,
-			opts...),
-		opts...)
+func (r *Renderer) Place(width, height int, hPos, vPos Position, str string, opts ...WhitespaceOption) string {
+	return r.PlaceVertical(height, vPos, r.PlaceHorizontal(width, hPos, str, opts...), opts...)
 }
 
 // PlaceHorizontal places a string or text block horizontally in an unstyled
 // block of a given width. If the given width is shorter than the max width of
 // the string (measured by its longest line) this will be a noop.
-func PlaceHorizontal(
-	width int,
-	pos Position,
-	str string,
-	opts ...WhitespaceOption,
-) string {
-	return renderer.PlaceHorizontal(
-		width,
-		pos,
-		str,
-		opts...)
+func PlaceHorizontal(width int, pos Position, str string, opts ...WhitespaceOption) string {
+	return renderer.PlaceHorizontal(width, pos, str, opts...)
 }
 
 // PlaceHorizontal places a string or text block horizontally in an unstyled
 // block of a given width. If the given width is shorter than the max width of
 // the string (measured by its longest line) this will be a noöp.
-func (r *Renderer) PlaceHorizontal(
-	width int,
-	pos Position,
-	str string,
-	opts ...WhitespaceOption,
-) string {
+func (r *Renderer) PlaceHorizontal(width int, pos Position, str string, opts ...WhitespaceOption) string {
 	lines, contentWidth := getLines(str)
 	gap := width - contentWidth
 
@@ -104,10 +66,7 @@ func (r *Renderer) PlaceHorizontal(
 	var b strings.Builder
 	for i, l := range lines {
 		// Is this line shorter than the longest line?
-		short := max(
-			0,
-			contentWidth-ansi.StringWidth(l),
-		)
+		short := max(0, contentWidth-ansi.StringWidth(l))
 
 		switch pos { //nolint:exhaustive
 		case Left:
@@ -121,13 +80,7 @@ func (r *Renderer) PlaceHorizontal(
 		default: // somewhere in the middle
 			totalGap := gap + short
 
-			split := int(
-				math.Round(
-					float64(
-						totalGap,
-					) * pos.value(),
-				),
-			)
+			split := int(math.Round(float64(totalGap) * pos.value()))
 			left := totalGap - split
 			right := totalGap - left
 
@@ -147,28 +100,14 @@ func (r *Renderer) PlaceHorizontal(
 // PlaceVertical places a string or text block vertically in an unstyled block
 // of a given height. If the given height is shorter than the height of the
 // string (measured by its newlines) then this will be a noop.
-func PlaceVertical(
-	height int,
-	pos Position,
-	str string,
-	opts ...WhitespaceOption,
-) string {
-	return renderer.PlaceVertical(
-		height,
-		pos,
-		str,
-		opts...)
+func PlaceVertical(height int, pos Position, str string, opts ...WhitespaceOption) string {
+	return renderer.PlaceVertical(height, pos, str, opts...)
 }
 
 // PlaceVertical places a string or text block vertically in an unstyled block
 // of a given height. If the given height is shorter than the height of the
 // string (measured by its newlines) then this will be a noöp.
-func (r *Renderer) PlaceVertical(
-	height int,
-	pos Position,
-	str string,
-	opts ...WhitespaceOption,
-) string {
+func (r *Renderer) PlaceVertical(height int, pos Position, str string, opts ...WhitespaceOption) string {
 	contentHeight := strings.Count(str, "\n") + 1
 	gap := height - contentHeight
 
@@ -194,23 +133,15 @@ func (r *Renderer) PlaceVertical(
 		}
 
 	case Bottom:
-		b.WriteString(
-			strings.Repeat(emptyLine+"\n", gap),
-		)
+		b.WriteString(strings.Repeat(emptyLine+"\n", gap))
 		b.WriteString(str)
 
 	default: // Somewhere in the middle
-		split := int(
-			math.Round(
-				float64(gap) * pos.value(),
-			),
-		)
+		split := int(math.Round(float64(gap) * pos.value()))
 		top := gap - split
 		bottom := gap - top
 
-		b.WriteString(
-			strings.Repeat(emptyLine+"\n", top),
-		)
+		b.WriteString(strings.Repeat(emptyLine+"\n", top))
 		b.WriteString(str)
 
 		for i := 0; i < bottom; i++ {

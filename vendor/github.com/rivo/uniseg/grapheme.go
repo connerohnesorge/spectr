@@ -58,10 +58,7 @@ func (g *Graphemes) Next() bool {
 		return false
 	}
 	g.offset += len(g.cluster)
-	g.cluster, g.remaining, g.boundaries, g.state = StepString(
-		g.remaining,
-		g.state,
-	)
+	g.cluster, g.remaining, g.boundaries, g.state = StepString(g.remaining, g.state)
 	return true
 }
 
@@ -161,10 +158,7 @@ func (g *Graphemes) Reset() {
 func GraphemeClusterCount(s string) (n int) {
 	state := -1
 	for len(s) > 0 {
-		_, s, _, state = FirstGraphemeClusterInString(
-			s,
-			state,
-		)
+		_, s, _, state = FirstGraphemeClusterInString(s, state)
 		n++
 	}
 	return
@@ -179,10 +173,7 @@ func ReverseString(s string) string {
 	index := len(str)
 	for len(str) > 0 {
 		var cluster []byte
-		cluster, str, _, state = FirstGraphemeCluster(
-			str,
-			state,
-		)
+		cluster, str, _, state = FirstGraphemeCluster(str, state)
 		index -= len(cluster)
 		copy(reversed[index:], cluster)
 		if index <= len(str)/2 {
@@ -221,10 +212,7 @@ const shiftGraphemePropState = 4
 // large byte slices.
 //
 // [Unicode Standard Annex #29, Grapheme Cluster Boundaries]: http://unicode.org/reports/tr29/#Grapheme_Cluster_Boundaries
-func FirstGraphemeCluster(
-	b []byte,
-	state int,
-) (cluster, rest []byte, width, newState int) {
+func FirstGraphemeCluster(b []byte, state int) (cluster, rest []byte, width, newState int) {
 	// An empty byte slice returns nothing.
 	if len(b) == 0 {
 		return
@@ -232,28 +220,20 @@ func FirstGraphemeCluster(
 
 	// Extract the first rune.
 	r, length := utf8.DecodeRune(b)
-	if len(
-		b,
-	) <= length { // If we're already past the end, there is nothing else to parse.
+	if len(b) <= length { // If we're already past the end, there is nothing else to parse.
 		var prop int
 		if state < 0 {
 			prop = propertyGraphemes(r)
 		} else {
 			prop = state >> shiftGraphemePropState
 		}
-		return b, nil, runeWidth(
-			r,
-			prop,
-		), grAny | (prop << shiftGraphemePropState)
+		return b, nil, runeWidth(r, prop), grAny | (prop << shiftGraphemePropState)
 	}
 
 	// If we don't know the state, determine it now.
 	var firstProp int
 	if state < 0 {
-		state, firstProp, _ = transitionGraphemeState(
-			state,
-			r,
-		)
+		state, firstProp, _ = transitionGraphemeState(state, r)
 	} else {
 		firstProp = state >> shiftGraphemePropState
 	}
@@ -267,10 +247,7 @@ func FirstGraphemeCluster(
 		)
 
 		r, l := utf8.DecodeRune(b[length:])
-		state, prop, boundary = transitionGraphemeState(
-			state&maskGraphemeState,
-			r,
-		)
+		state, prop, boundary = transitionGraphemeState(state&maskGraphemeState, r)
 
 		if boundary {
 			return b[:length], b[length:], width, state | (prop << shiftGraphemePropState)
@@ -295,10 +272,7 @@ func FirstGraphemeCluster(
 
 // FirstGraphemeClusterInString is like [FirstGraphemeCluster] but its input and
 // outputs are strings.
-func FirstGraphemeClusterInString(
-	str string,
-	state int,
-) (cluster, rest string, width, newState int) {
+func FirstGraphemeClusterInString(str string, state int) (cluster, rest string, width, newState int) {
 	// An empty string returns nothing.
 	if len(str) == 0 {
 		return
@@ -306,28 +280,20 @@ func FirstGraphemeClusterInString(
 
 	// Extract the first rune.
 	r, length := utf8.DecodeRuneInString(str)
-	if len(
-		str,
-	) <= length { // If we're already past the end, there is nothing else to parse.
+	if len(str) <= length { // If we're already past the end, there is nothing else to parse.
 		var prop int
 		if state < 0 {
 			prop = propertyGraphemes(r)
 		} else {
 			prop = state >> shiftGraphemePropState
 		}
-		return str, "", runeWidth(
-			r,
-			prop,
-		), grAny | (prop << shiftGraphemePropState)
+		return str, "", runeWidth(r, prop), grAny | (prop << shiftGraphemePropState)
 	}
 
 	// If we don't know the state, determine it now.
 	var firstProp int
 	if state < 0 {
-		state, firstProp, _ = transitionGraphemeState(
-			state,
-			r,
-		)
+		state, firstProp, _ = transitionGraphemeState(state, r)
 	} else {
 		firstProp = state >> shiftGraphemePropState
 	}
@@ -340,13 +306,8 @@ func FirstGraphemeClusterInString(
 			boundary bool
 		)
 
-		r, l := utf8.DecodeRuneInString(
-			str[length:],
-		)
-		state, prop, boundary = transitionGraphemeState(
-			state&maskGraphemeState,
-			r,
-		)
+		r, l := utf8.DecodeRuneInString(str[length:])
+		state, prop, boundary = transitionGraphemeState(state&maskGraphemeState, r)
 
 		if boundary {
 			return str[:length], str[length:], width, state | (prop << shiftGraphemePropState)

@@ -5,10 +5,7 @@ import (
 )
 
 // Convert converts a hyperlink to respect the given color profile.
-func ConvertLink(
-	h Link,
-	p colorprofile.Profile,
-) Link {
+func ConvertLink(h Link, p colorprofile.Profile) Link {
 	if p == colorprofile.NoTTY {
 		return Link{}
 	}

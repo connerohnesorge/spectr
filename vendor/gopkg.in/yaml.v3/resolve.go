@@ -29,10 +29,8 @@ type resolveMapItem struct {
 	tag   string
 }
 
-var (
-	resolveTable = make([]byte, 256)
-	resolveMap   = make(map[string]resolveMapItem)
-)
+var resolveTable = make([]byte, 256)
+var resolveMap = make(map[string]resolveMapItem)
 
 func init() {
 	t := resolveTable
@@ -46,62 +44,25 @@ func init() {
 	}
 	t[int('.')] = '.' // Float (potentially in map)
 
-	resolveMapList := []struct {
+	var resolveMapList = []struct {
 		v   interface{}
 		tag string
 		l   []string
 	}{
-		{
-			true,
-			boolTag,
-			[]string{"true", "True", "TRUE"},
-		},
-		{
-			false,
-			boolTag,
-			[]string{"false", "False", "FALSE"},
-		},
-		{
-			nil,
-			nullTag,
-			[]string{
-				"",
-				"~",
-				"null",
-				"Null",
-				"NULL",
-			},
-		},
-		{
-			math.NaN(),
-			floatTag,
-			[]string{".nan", ".NaN", ".NAN"},
-		},
-		{
-			math.Inf(+1),
-			floatTag,
-			[]string{".inf", ".Inf", ".INF"},
-		},
-		{
-			math.Inf(+1),
-			floatTag,
-			[]string{"+.inf", "+.Inf", "+.INF"},
-		},
-		{
-			math.Inf(-1),
-			floatTag,
-			[]string{"-.inf", "-.Inf", "-.INF"},
-		},
+		{true, boolTag, []string{"true", "True", "TRUE"}},
+		{false, boolTag, []string{"false", "False", "FALSE"}},
+		{nil, nullTag, []string{"", "~", "null", "Null", "NULL"}},
+		{math.NaN(), floatTag, []string{".nan", ".NaN", ".NAN"}},
+		{math.Inf(+1), floatTag, []string{".inf", ".Inf", ".INF"}},
+		{math.Inf(+1), floatTag, []string{"+.inf", "+.Inf", "+.INF"}},
+		{math.Inf(-1), floatTag, []string{"-.inf", "-.Inf", "-.INF"}},
 		{"<<", mergeTag, []string{"<<"}},
 	}
 
 	m := resolveMap
 	for _, item := range resolveMapList {
 		for _, s := range item.l {
-			m[s] = resolveMapItem{
-				item.v,
-				item.tag,
-			}
+			m[s] = resolveMapItem{item.v, item.tag}
 		}
 	}
 }
@@ -119,10 +80,8 @@ const (
 	mergeTag     = "!!merge"
 )
 
-var (
-	longTags  = make(map[string]string)
-	shortTags = make(map[string]string)
-)
+var longTags = make(map[string]string)
+var shortTags = make(map[string]string)
 
 func init() {
 	for _, stag := range []string{nullTag, boolTag, strTag, intTag, floatTag, timestampTag, seqTag, mapTag, binaryTag, mergeTag} {
@@ -156,26 +115,15 @@ func longTag(tag string) string {
 
 func resolvableTag(tag string) bool {
 	switch tag {
-	case "",
-		strTag,
-		boolTag,
-		intTag,
-		floatTag,
-		nullTag,
-		timestampTag:
+	case "", strTag, boolTag, intTag, floatTag, nullTag, timestampTag:
 		return true
 	}
 	return false
 }
 
-var yamlStyleFloat = regexp.MustCompile(
-	`^[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?$`,
-)
+var yamlStyleFloat = regexp.MustCompile(`^[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?$`)
 
-func resolve(
-	tag string,
-	in string,
-) (rtag string, out interface{}) {
+func resolve(tag string, in string) (rtag string, out interface{}) {
 	tag = shortTag(tag)
 	if !resolvableTag(tag) {
 		return tag, in
@@ -199,12 +147,7 @@ func resolve(
 				}
 			}
 		}
-		failf(
-			"cannot decode %s `%s` as a %s",
-			shortTag(rtag),
-			in,
-			shortTag(tag),
-		)
+		failf("cannot decode %s `%s` as a %s", shortTag(rtag), in, shortTag(tag))
 	}()
 
 	// Any data is accepted as a !!str or !!binary.
@@ -213,8 +156,7 @@ func resolve(
 	if in != "" {
 		hint = resolveTable[in[0]]
 	}
-	if hint != 0 && tag != strTag &&
-		tag != binaryTag {
+	if hint != 0 && tag != strTag && tag != binaryTag {
 		// Handle things we can lookup in a map.
 		if item, ok := resolveMap[in]; ok {
 			return item.tag, item.value
@@ -230,10 +172,7 @@ func resolve(
 
 		case '.':
 			// Not in the map, so maybe a normal float.
-			floatv, err := strconv.ParseFloat(
-				in,
-				64,
-			)
+			floatv, err := strconv.ParseFloat(in, 64)
 			if err == nil {
 				return floatTag, floatv
 			}
@@ -249,17 +188,8 @@ func resolve(
 				}
 			}
 
-			plain := strings.Replace(
-				in,
-				"_",
-				"",
-				-1,
-			)
-			intv, err := strconv.ParseInt(
-				plain,
-				0,
-				64,
-			)
+			plain := strings.Replace(in, "_", "", -1)
+			intv, err := strconv.ParseInt(plain, 0, 64)
 			if err == nil {
 				if intv == int64(int(intv)) {
 					return intTag, int(intv)
@@ -267,29 +197,18 @@ func resolve(
 					return intTag, intv
 				}
 			}
-			uintv, err := strconv.ParseUint(
-				plain,
-				0,
-				64,
-			)
+			uintv, err := strconv.ParseUint(plain, 0, 64)
 			if err == nil {
 				return intTag, uintv
 			}
 			if yamlStyleFloat.MatchString(plain) {
-				floatv, err := strconv.ParseFloat(
-					plain,
-					64,
-				)
+				floatv, err := strconv.ParseFloat(plain, 64)
 				if err == nil {
 					return floatTag, floatv
 				}
 			}
 			if strings.HasPrefix(plain, "0b") {
-				intv, err := strconv.ParseInt(
-					plain[2:],
-					2,
-					64,
-				)
+				intv, err := strconv.ParseInt(plain[2:], 2, 64)
 				if err == nil {
 					if intv == int64(int(intv)) {
 						return intTag, int(intv)
@@ -297,11 +216,7 @@ func resolve(
 						return intTag, intv
 					}
 				}
-				uintv, err := strconv.ParseUint(
-					plain[2:],
-					2,
-					64,
-				)
+				uintv, err := strconv.ParseUint(plain[2:], 2, 64)
 				if err == nil {
 					return intTag, uintv
 				}
@@ -320,11 +235,7 @@ func resolve(
 			// decoded by default in v3 as well for compatibility.
 			// May be dropped in v4 depending on how usage evolves.
 			if strings.HasPrefix(plain, "0o") {
-				intv, err := strconv.ParseInt(
-					plain[2:],
-					8,
-					64,
-				)
+				intv, err := strconv.ParseInt(plain[2:], 8, 64)
 				if err == nil {
 					if intv == int64(int(intv)) {
 						return intTag, int(intv)
@@ -332,11 +243,7 @@ func resolve(
 						return intTag, intv
 					}
 				}
-				uintv, err := strconv.ParseUint(
-					plain[2:],
-					8,
-					64,
-				)
+				uintv, err := strconv.ParseUint(plain[2:], 8, 64)
 				if err == nil {
 					return intTag, uintv
 				}
@@ -351,11 +258,7 @@ func resolve(
 				}
 			}
 		default:
-			panic(
-				"internal error: missing handler for resolver table: " + string(
-					rune(hint),
-				) + " (with " + in + ")",
-			)
+			panic("internal error: missing handler for resolver table: " + string(rune(hint)) + " (with " + in + ")")
 		}
 	}
 	return strTag, in
@@ -365,9 +268,7 @@ func resolve(
 // as appropriate for the resulting length.
 func encodeBase64(s string) string {
 	const lineLen = 70
-	encLen := base64.StdEncoding.EncodedLen(
-		len(s),
-	)
+	encLen := base64.StdEncoding.EncodedLen(len(s))
 	lines := encLen/lineLen + 1
 	buf := make([]byte, encLen*2+lines)
 	in := buf[0:encLen]

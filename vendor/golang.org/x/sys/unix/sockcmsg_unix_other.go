@@ -33,8 +33,7 @@ func cmsgAlignOf(salen int) int {
 			salign = 8
 		}
 		// NetBSD aarch64 requires 128-bit alignment.
-		if runtime.GOOS == "netbsd" &&
-			runtime.GOARCH == "arm64" {
+		if runtime.GOOS == "netbsd" && runtime.GOARCH == "arm64" {
 			salign = 16
 		}
 	case "zos":

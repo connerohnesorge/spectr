@@ -10,10 +10,7 @@ import "strings"
 //
 // See: https://iterm2.com/documentation-shell-integration.html
 func FinalTerm(pm ...string) string {
-	return "\x1b]133;" + strings.Join(
-		pm,
-		";",
-	) + "\x07"
+	return "\x1b]133;" + strings.Join(pm, ";") + "\x07"
 }
 
 // FinalTermPrompt returns an escape sequence that is used for shell
@@ -25,8 +22,7 @@ func FinalTermPrompt(pm ...string) string {
 	if len(pm) == 0 {
 		return FinalTerm("A")
 	}
-	return FinalTerm(
-		append([]string{"A"}, pm...)...)
+	return FinalTerm(append([]string{"A"}, pm...)...)
 }
 
 // FinalTermCmdStart returns an escape sequence that is used for shell
@@ -38,8 +34,7 @@ func FinalTermCmdStart(pm ...string) string {
 	if len(pm) == 0 {
 		return FinalTerm("B")
 	}
-	return FinalTerm(
-		append([]string{"B"}, pm...)...)
+	return FinalTerm(append([]string{"B"}, pm...)...)
 }
 
 // FinalTermCmdExecuted returns an escape sequence that is used for shell
@@ -51,8 +46,7 @@ func FinalTermCmdExecuted(pm ...string) string {
 	if len(pm) == 0 {
 		return FinalTerm("C")
 	}
-	return FinalTerm(
-		append([]string{"C"}, pm...)...)
+	return FinalTerm(append([]string{"C"}, pm...)...)
 }
 
 // FinalTermCmdFinished returns an escape sequence that is used for shell
@@ -69,6 +63,5 @@ func FinalTermCmdFinished(pm ...string) string {
 	if len(pm) == 0 {
 		return FinalTerm("D")
 	}
-	return FinalTerm(
-		append([]string{"D"}, pm...)...)
+	return FinalTerm(append([]string{"D"}, pm...)...)
 }

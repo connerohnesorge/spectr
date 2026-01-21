@@ -29,11 +29,7 @@ const (
 
 // TranslateAccountName converts a directory service
 // object name from one format to another.
-func TranslateAccountName(
-	username string,
-	from, to uint32,
-	initSize int,
-) (string, error) {
+func TranslateAccountName(username string, from, to uint32, initSize int) (string, error) {
 	u, e := UTF16PtrFromString(username)
 	if e != nil {
 		return "", e
@@ -93,27 +89,13 @@ type SidIdentifierAuthority struct {
 }
 
 var (
-	SECURITY_NULL_SID_AUTHORITY = SidIdentifierAuthority{
-		[6]byte{0, 0, 0, 0, 0, 0},
-	}
-	SECURITY_WORLD_SID_AUTHORITY = SidIdentifierAuthority{
-		[6]byte{0, 0, 0, 0, 0, 1},
-	}
-	SECURITY_LOCAL_SID_AUTHORITY = SidIdentifierAuthority{
-		[6]byte{0, 0, 0, 0, 0, 2},
-	}
-	SECURITY_CREATOR_SID_AUTHORITY = SidIdentifierAuthority{
-		[6]byte{0, 0, 0, 0, 0, 3},
-	}
-	SECURITY_NON_UNIQUE_AUTHORITY = SidIdentifierAuthority{
-		[6]byte{0, 0, 0, 0, 0, 4},
-	}
-	SECURITY_NT_AUTHORITY = SidIdentifierAuthority{
-		[6]byte{0, 0, 0, 0, 0, 5},
-	}
-	SECURITY_MANDATORY_LABEL_AUTHORITY = SidIdentifierAuthority{
-		[6]byte{0, 0, 0, 0, 0, 16},
-	}
+	SECURITY_NULL_SID_AUTHORITY        = SidIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 0}}
+	SECURITY_WORLD_SID_AUTHORITY       = SidIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 1}}
+	SECURITY_LOCAL_SID_AUTHORITY       = SidIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 2}}
+	SECURITY_CREATOR_SID_AUTHORITY     = SidIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 3}}
+	SECURITY_NON_UNIQUE_AUTHORITY      = SidIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 4}}
+	SECURITY_NT_AUTHORITY              = SidIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 5}}
+	SECURITY_MANDATORY_LABEL_AUTHORITY = SidIdentifierAuthority{[6]byte{0, 0, 0, 0, 0, 16}}
 )
 
 const (
@@ -212,9 +194,7 @@ func StringToSid(s string) (*SID, error) {
 // LookupSID retrieves a security identifier SID for the account
 // and the name of the domain on which the account was found.
 // System specify target computer to search.
-func LookupSID(
-	system, account string,
-) (sid *SID, domain string, accType uint32, err error) {
+func LookupSID(system, account string) (sid *SID, domain string, accType uint32, err error) {
 	if len(account) == 0 {
 		return nil, "", 0, syscall.EINVAL
 	}
@@ -235,19 +215,9 @@ func LookupSID(
 		b := make([]byte, n)
 		db := make([]uint16, dn)
 		sid = (*SID)(unsafe.Pointer(&b[0]))
-		e = LookupAccountName(
-			sys,
-			acc,
-			sid,
-			&n,
-			&db[0],
-			&dn,
-			&accType,
-		)
+		e = LookupAccountName(sys, acc, sid, &n, &db[0], &dn, &accType)
 		if e == nil {
-			return sid, UTF16ToString(
-				db,
-			), accType, nil
+			return sid, UTF16ToString(db), accType, nil
 		}
 		if e != ERROR_INSUFFICIENT_BUFFER {
 			return nil, "", 0, e
@@ -266,9 +236,7 @@ func (sid *SID) String() string {
 		return ""
 	}
 	defer LocalFree((Handle)(unsafe.Pointer(s)))
-	return UTF16ToString(
-		(*[256]uint16)(unsafe.Pointer(s))[:],
-	)
+	return UTF16ToString((*[256]uint16)(unsafe.Pointer(s))[:])
 }
 
 // Len returns the length, in bytes, of a valid security identifier SID.
@@ -317,18 +285,14 @@ func (sid *SID) Equals(sid2 *SID) bool {
 }
 
 // IsWellKnown determines whether the SID matches the well-known sidType.
-func (sid *SID) IsWellKnown(
-	sidType WELL_KNOWN_SID_TYPE,
-) bool {
+func (sid *SID) IsWellKnown(sidType WELL_KNOWN_SID_TYPE) bool {
 	return isWellKnownSid(sid, sidType)
 }
 
 // LookupAccount retrieves the name of the account for this SID
 // and the name of the first domain on which this SID is found.
 // System specify target computer to search for.
-func (sid *SID) LookupAccount(
-	system string,
-) (account, domain string, accType uint32, err error) {
+func (sid *SID) LookupAccount(system string) (account, domain string, accType uint32, err error) {
 	var sys *uint16
 	if len(system) > 0 {
 		sys, err = UTF16PtrFromString(system)
@@ -341,21 +305,9 @@ func (sid *SID) LookupAccount(
 	for {
 		b := make([]uint16, n)
 		db := make([]uint16, dn)
-		e := LookupAccountSid(
-			sys,
-			sid,
-			&b[0],
-			&n,
-			&db[0],
-			&dn,
-			&accType,
-		)
+		e := LookupAccountSid(sys, sid, &b[0], &n, &db[0], &dn, &accType)
 		if e == nil {
-			return UTF16ToString(
-					b,
-				), UTF16ToString(
-					db,
-				), accType, nil
+			return UTF16ToString(b), UTF16ToString(db), accType, nil
 		}
 		if e != ERROR_INSUFFICIENT_BUFFER {
 			return "", "", 0, e
@@ -494,28 +446,18 @@ const (
 
 // Creates a SID for a well-known predefined alias, generally using the constants of the form
 // Win*Sid, for the local machine.
-func CreateWellKnownSid(
-	sidType WELL_KNOWN_SID_TYPE,
-) (*SID, error) {
+func CreateWellKnownSid(sidType WELL_KNOWN_SID_TYPE) (*SID, error) {
 	return CreateWellKnownDomainSid(sidType, nil)
 }
 
 // Creates a SID for a well-known predefined alias, generally using the constants of the form
 // Win*Sid, for the domain specified by the domainSid parameter.
-func CreateWellKnownDomainSid(
-	sidType WELL_KNOWN_SID_TYPE,
-	domainSid *SID,
-) (*SID, error) {
+func CreateWellKnownDomainSid(sidType WELL_KNOWN_SID_TYPE, domainSid *SID) (*SID, error) {
 	n := uint32(50)
 	for {
 		b := make([]byte, n)
 		sid := (*SID)(unsafe.Pointer(&b[0]))
-		err := createWellKnownSid(
-			sidType,
-			domainSid,
-			sid,
-			&n,
-		)
+		err := createWellKnownSid(sidType, domainSid, sid, &n)
 		if err == nil {
 			return sid, nil
 		}
@@ -676,11 +618,7 @@ type Tokenmandatorylabel struct {
 }
 
 func (tml *Tokenmandatorylabel) Size() uint32 {
-	return uint32(
-		unsafe.Sizeof(Tokenmandatorylabel{}),
-	) + GetLengthSid(
-		tml.Label.Sid,
-	)
+	return uint32(unsafe.Sizeof(Tokenmandatorylabel{})) + GetLengthSid(tml.Label.Sid)
 }
 
 // Authorization Functions
@@ -719,11 +657,7 @@ type Token Handle
 // TOKEN_QUERY token.
 func OpenCurrentProcessToken() (Token, error) {
 	var token Token
-	err := OpenProcessToken(
-		CurrentProcess(),
-		TOKEN_QUERY,
-		&token,
-	)
+	err := OpenProcessToken(CurrentProcess(), TOKEN_QUERY, &token)
 	return token, err
 }
 
@@ -754,20 +688,11 @@ func (t Token) Close() error {
 }
 
 // getInfo retrieves a specified type of information about an access token.
-func (t Token) getInfo(
-	class uint32,
-	initSize int,
-) (unsafe.Pointer, error) {
+func (t Token) getInfo(class uint32, initSize int) (unsafe.Pointer, error) {
 	n := uint32(initSize)
 	for {
 		b := make([]byte, n)
-		e := GetTokenInformation(
-			t,
-			class,
-			&b[0],
-			uint32(len(b)),
-			&n,
-		)
+		e := GetTokenInformation(t, class, &b[0], uint32(len(b)), &n)
 		if e == nil {
 			return unsafe.Pointer(&b[0]), nil
 		}
@@ -832,33 +757,18 @@ func (t Token) GetUserProfileDirectory() (string, error) {
 func (token Token) IsElevated() bool {
 	var isElevated uint32
 	var outLen uint32
-	err := GetTokenInformation(
-		token,
-		TokenElevation,
-		(*byte)(unsafe.Pointer(&isElevated)),
-		uint32(unsafe.Sizeof(isElevated)),
-		&outLen,
-	)
+	err := GetTokenInformation(token, TokenElevation, (*byte)(unsafe.Pointer(&isElevated)), uint32(unsafe.Sizeof(isElevated)), &outLen)
 	if err != nil {
 		return false
 	}
-	return outLen == uint32(
-		unsafe.Sizeof(isElevated),
-	) &&
-		isElevated != 0
+	return outLen == uint32(unsafe.Sizeof(isElevated)) && isElevated != 0
 }
 
 // GetLinkedToken returns the linked token, which may be an elevated UAC token.
 func (token Token) GetLinkedToken() (Token, error) {
 	var linkedToken Token
 	var outLen uint32
-	err := GetTokenInformation(
-		token,
-		TokenLinkedToken,
-		(*byte)(unsafe.Pointer(&linkedToken)),
-		uint32(unsafe.Sizeof(linkedToken)),
-		&outLen,
-	)
+	err := GetTokenInformation(token, TokenLinkedToken, (*byte)(unsafe.Pointer(&linkedToken)), uint32(unsafe.Sizeof(linkedToken)), &outLen)
 	if err != nil {
 		return Token(0), err
 	}
@@ -907,10 +817,7 @@ func GetSystemWindowsDirectory() (string, error) {
 	n := uint32(MAX_PATH)
 	for {
 		b := make([]uint16, n)
-		l, e := getSystemWindowsDirectory(
-			&b[0],
-			n,
-		)
+		l, e := getSystemWindowsDirectory(&b[0], n)
 		if e != nil {
 			return "", e
 		}
@@ -1204,32 +1111,17 @@ const (
 // This type is the union inside of TRUSTEE and must be created using one of the TrusteeValueFrom* functions.
 type TrusteeValue uintptr
 
-func TrusteeValueFromString(
-	str string,
-) TrusteeValue {
-	return TrusteeValue(
-		unsafe.Pointer(StringToUTF16Ptr(str)),
-	)
+func TrusteeValueFromString(str string) TrusteeValue {
+	return TrusteeValue(unsafe.Pointer(StringToUTF16Ptr(str)))
 }
-
 func TrusteeValueFromSID(sid *SID) TrusteeValue {
 	return TrusteeValue(unsafe.Pointer(sid))
 }
-
-func TrusteeValueFromObjectsAndSid(
-	objectsAndSid *OBJECTS_AND_SID,
-) TrusteeValue {
-	return TrusteeValue(
-		unsafe.Pointer(objectsAndSid),
-	)
+func TrusteeValueFromObjectsAndSid(objectsAndSid *OBJECTS_AND_SID) TrusteeValue {
+	return TrusteeValue(unsafe.Pointer(objectsAndSid))
 }
-
-func TrusteeValueFromObjectsAndName(
-	objectsAndName *OBJECTS_AND_NAME,
-) TrusteeValue {
-	return TrusteeValue(
-		unsafe.Pointer(objectsAndName),
-	)
+func TrusteeValueFromObjectsAndName(objectsAndName *OBJECTS_AND_NAME) TrusteeValue {
+	return TrusteeValue(unsafe.Pointer(objectsAndName))
 }
 
 type TRUSTEE struct {
@@ -1291,39 +1183,23 @@ type OBJECTS_AND_NAME struct {
 
 // Control returns the security descriptor control bits.
 func (sd *SECURITY_DESCRIPTOR) Control() (control SECURITY_DESCRIPTOR_CONTROL, revision uint32, err error) {
-	err = getSecurityDescriptorControl(
-		sd,
-		&control,
-		&revision,
-	)
+	err = getSecurityDescriptorControl(sd, &control, &revision)
 	return
 }
 
 // SetControl sets the security descriptor control bits.
-func (sd *SECURITY_DESCRIPTOR) SetControl(
-	controlBitsOfInterest SECURITY_DESCRIPTOR_CONTROL,
-	controlBitsToSet SECURITY_DESCRIPTOR_CONTROL,
-) error {
-	return setSecurityDescriptorControl(
-		sd,
-		controlBitsOfInterest,
-		controlBitsToSet,
-	)
+func (sd *SECURITY_DESCRIPTOR) SetControl(controlBitsOfInterest SECURITY_DESCRIPTOR_CONTROL, controlBitsToSet SECURITY_DESCRIPTOR_CONTROL) error {
+	return setSecurityDescriptorControl(sd, controlBitsOfInterest, controlBitsToSet)
 }
 
 // RMControl returns the security descriptor resource manager control bits.
 func (sd *SECURITY_DESCRIPTOR) RMControl() (control uint8, err error) {
-	err = getSecurityDescriptorRMControl(
-		sd,
-		&control,
-	)
+	err = getSecurityDescriptorRMControl(sd, &control)
 	return
 }
 
 // SetRMControl sets the security descriptor resource manager control bits.
-func (sd *SECURITY_DESCRIPTOR) SetRMControl(
-	rmControl uint8,
-) {
+func (sd *SECURITY_DESCRIPTOR) SetRMControl(rmControl uint8) {
 	setSecurityDescriptorRMControl(sd, &rmControl)
 }
 
@@ -1332,12 +1208,7 @@ func (sd *SECURITY_DESCRIPTOR) SetRMControl(
 // ERROR_OBJECT_NOT_FOUND.
 func (sd *SECURITY_DESCRIPTOR) DACL() (dacl *ACL, defaulted bool, err error) {
 	var present bool
-	err = getSecurityDescriptorDacl(
-		sd,
-		&present,
-		&dacl,
-		&defaulted,
-	)
+	err = getSecurityDescriptorDacl(sd, &present, &dacl, &defaulted)
 	if !present {
 		err = ERROR_OBJECT_NOT_FOUND
 	}
@@ -1345,16 +1216,8 @@ func (sd *SECURITY_DESCRIPTOR) DACL() (dacl *ACL, defaulted bool, err error) {
 }
 
 // SetDACL sets the absolute security descriptor DACL.
-func (absoluteSD *SECURITY_DESCRIPTOR) SetDACL(
-	dacl *ACL,
-	present, defaulted bool,
-) error {
-	return setSecurityDescriptorDacl(
-		absoluteSD,
-		present,
-		dacl,
-		defaulted,
-	)
+func (absoluteSD *SECURITY_DESCRIPTOR) SetDACL(dacl *ACL, present, defaulted bool) error {
+	return setSecurityDescriptorDacl(absoluteSD, present, dacl, defaulted)
 }
 
 // SACL returns the security descriptor SACL and whether it was defaulted. The sacl return value may be nil
@@ -1362,12 +1225,7 @@ func (absoluteSD *SECURITY_DESCRIPTOR) SetDACL(
 // ERROR_OBJECT_NOT_FOUND.
 func (sd *SECURITY_DESCRIPTOR) SACL() (sacl *ACL, defaulted bool, err error) {
 	var present bool
-	err = getSecurityDescriptorSacl(
-		sd,
-		&present,
-		&sacl,
-		&defaulted,
-	)
+	err = getSecurityDescriptorSacl(sd, &present, &sacl, &defaulted)
 	if !present {
 		err = ERROR_OBJECT_NOT_FOUND
 	}
@@ -1375,60 +1233,30 @@ func (sd *SECURITY_DESCRIPTOR) SACL() (sacl *ACL, defaulted bool, err error) {
 }
 
 // SetSACL sets the absolute security descriptor SACL.
-func (absoluteSD *SECURITY_DESCRIPTOR) SetSACL(
-	sacl *ACL,
-	present, defaulted bool,
-) error {
-	return setSecurityDescriptorSacl(
-		absoluteSD,
-		present,
-		sacl,
-		defaulted,
-	)
+func (absoluteSD *SECURITY_DESCRIPTOR) SetSACL(sacl *ACL, present, defaulted bool) error {
+	return setSecurityDescriptorSacl(absoluteSD, present, sacl, defaulted)
 }
 
 // Owner returns the security descriptor owner and whether it was defaulted.
 func (sd *SECURITY_DESCRIPTOR) Owner() (owner *SID, defaulted bool, err error) {
-	err = getSecurityDescriptorOwner(
-		sd,
-		&owner,
-		&defaulted,
-	)
+	err = getSecurityDescriptorOwner(sd, &owner, &defaulted)
 	return
 }
 
 // SetOwner sets the absolute security descriptor owner.
-func (absoluteSD *SECURITY_DESCRIPTOR) SetOwner(
-	owner *SID,
-	defaulted bool,
-) error {
-	return setSecurityDescriptorOwner(
-		absoluteSD,
-		owner,
-		defaulted,
-	)
+func (absoluteSD *SECURITY_DESCRIPTOR) SetOwner(owner *SID, defaulted bool) error {
+	return setSecurityDescriptorOwner(absoluteSD, owner, defaulted)
 }
 
 // Group returns the security descriptor group and whether it was defaulted.
 func (sd *SECURITY_DESCRIPTOR) Group() (group *SID, defaulted bool, err error) {
-	err = getSecurityDescriptorGroup(
-		sd,
-		&group,
-		&defaulted,
-	)
+	err = getSecurityDescriptorGroup(sd, &group, &defaulted)
 	return
 }
 
 // SetGroup sets the absolute security descriptor owner.
-func (absoluteSD *SECURITY_DESCRIPTOR) SetGroup(
-	group *SID,
-	defaulted bool,
-) error {
-	return setSecurityDescriptorGroup(
-		absoluteSD,
-		group,
-		defaulted,
-	)
+func (absoluteSD *SECURITY_DESCRIPTOR) SetGroup(group *SID, defaulted bool) error {
+	return setSecurityDescriptorGroup(absoluteSD, group, defaulted)
 }
 
 // Length returns the length of the security descriptor.
@@ -1445,13 +1273,7 @@ func (sd *SECURITY_DESCRIPTOR) IsValid() bool {
 // used with %v formatting directives.
 func (sd *SECURITY_DESCRIPTOR) String() string {
 	var sddl *uint16
-	err := convertSecurityDescriptorToStringSecurityDescriptor(
-		sd,
-		1,
-		0xff,
-		&sddl,
-		nil,
-	)
+	err := convertSecurityDescriptorToStringSecurityDescriptor(sd, 1, 0xff, &sddl, nil)
 	if err != nil {
 		return ""
 	}
@@ -1470,19 +1292,8 @@ func (selfRelativeSD *SECURITY_DESCRIPTOR) ToAbsolute() (absoluteSD *SECURITY_DE
 		return
 	}
 	var absoluteSDSize, daclSize, saclSize, ownerSize, groupSize uint32
-	err = makeAbsoluteSD(
-		selfRelativeSD,
-		nil,
-		&absoluteSDSize,
-		nil,
-		&daclSize,
-		nil,
-		&saclSize,
-		nil,
-		&ownerSize,
-		nil,
-		&groupSize,
-	)
+	err = makeAbsoluteSD(selfRelativeSD, nil, &absoluteSDSize,
+		nil, &daclSize, nil, &saclSize, nil, &ownerSize, nil, &groupSize)
 	switch err {
 	case ERROR_INSUFFICIENT_BUFFER:
 	case nil:
@@ -1493,14 +1304,8 @@ func (selfRelativeSD *SECURITY_DESCRIPTOR) ToAbsolute() (absoluteSD *SECURITY_DE
 	}
 	if absoluteSDSize > 0 {
 		absoluteSD = new(SECURITY_DESCRIPTOR)
-		if unsafe.Sizeof(
-			*absoluteSD,
-		) < uintptr(
-			absoluteSDSize,
-		) {
-			panic(
-				"sizeof(SECURITY_DESCRIPTOR) too small",
-			)
+		if unsafe.Sizeof(*absoluteSD) < uintptr(absoluteSDSize) {
+			panic("sizeof(SECURITY_DESCRIPTOR) too small")
 		}
 	}
 	var (
@@ -1510,40 +1315,16 @@ func (selfRelativeSD *SECURITY_DESCRIPTOR) ToAbsolute() (absoluteSD *SECURITY_DE
 		group *SID
 	)
 	if daclSize > 0 {
-		dacl = (*ACL)(
-			unsafe.Pointer(
-				unsafe.SliceData(
-					make([]byte, daclSize),
-				),
-			),
-		)
+		dacl = (*ACL)(unsafe.Pointer(unsafe.SliceData(make([]byte, daclSize))))
 	}
 	if saclSize > 0 {
-		sacl = (*ACL)(
-			unsafe.Pointer(
-				unsafe.SliceData(
-					make([]byte, saclSize),
-				),
-			),
-		)
+		sacl = (*ACL)(unsafe.Pointer(unsafe.SliceData(make([]byte, saclSize))))
 	}
 	if ownerSize > 0 {
-		owner = (*SID)(
-			unsafe.Pointer(
-				unsafe.SliceData(
-					make([]byte, ownerSize),
-				),
-			),
-		)
+		owner = (*SID)(unsafe.Pointer(unsafe.SliceData(make([]byte, ownerSize))))
 	}
 	if groupSize > 0 {
-		group = (*SID)(
-			unsafe.Pointer(
-				unsafe.SliceData(
-					make([]byte, groupSize),
-				),
-			),
-		)
+		group = (*SID)(unsafe.Pointer(unsafe.SliceData(make([]byte, groupSize))))
 	}
 	// We call into Windows via makeAbsoluteSD, which sets up
 	// pointers within absoluteSD that point to other chunks of memory
@@ -1551,19 +1332,8 @@ func (selfRelativeSD *SECURITY_DESCRIPTOR) ToAbsolute() (absoluteSD *SECURITY_DE
 	// We therefore take some care here to then verify the pointers are as we expect
 	// and set them explicitly in view of the GC. See https://go.dev/issue/73199.
 	// TODO: consider weak pointers once Go 1.24 is appropriate. See suggestion in https://go.dev/cl/663575.
-	err = makeAbsoluteSD(
-		selfRelativeSD,
-		absoluteSD,
-		&absoluteSDSize,
-		dacl,
-		&daclSize,
-		sacl,
-		&saclSize,
-		owner,
-		&ownerSize,
-		group,
-		&groupSize,
-	)
+	err = makeAbsoluteSD(selfRelativeSD, absoluteSD, &absoluteSDSize,
+		dacl, &daclSize, sacl, &saclSize, owner, &ownerSize, group, &groupSize)
 	if err != nil {
 		// Don't return absoluteSD, which might be partially initialized.
 		return nil, err
@@ -1608,11 +1378,7 @@ func (absoluteSD *SECURITY_DESCRIPTOR) ToSelfRelative() (selfRelativeSD *SECURIT
 		return
 	}
 	var selfRelativeSDSize uint32
-	err = makeSelfRelativeSD(
-		absoluteSD,
-		nil,
-		&selfRelativeSDSize,
-	)
+	err = makeSelfRelativeSD(absoluteSD, nil, &selfRelativeSDSize)
 	switch err {
 	case ERROR_INSUFFICIENT_BUFFER:
 	case nil:
@@ -1622,17 +1388,9 @@ func (absoluteSD *SECURITY_DESCRIPTOR) ToSelfRelative() (selfRelativeSD *SECURIT
 		return nil, err
 	}
 	if selfRelativeSDSize > 0 {
-		selfRelativeSD = (*SECURITY_DESCRIPTOR)(
-			unsafe.Pointer(
-				&make([]byte, selfRelativeSDSize)[0],
-			),
-		)
+		selfRelativeSD = (*SECURITY_DESCRIPTOR)(unsafe.Pointer(&make([]byte, selfRelativeSDSize)[0]))
 	}
-	err = makeSelfRelativeSD(
-		absoluteSD,
-		selfRelativeSD,
-		&selfRelativeSDSize,
-	)
+	err = makeSelfRelativeSD(absoluteSD, selfRelativeSD, &selfRelativeSDSize)
 	return
 }
 
@@ -1643,114 +1401,58 @@ func (selfRelativeSD *SECURITY_DESCRIPTOR) copySelfRelativeSecurityDescriptor() 
 		sdLen = min
 	}
 
-	src := unsafe.Slice(
-		(*byte)(unsafe.Pointer(selfRelativeSD)),
-		sdLen,
-	)
+	src := unsafe.Slice((*byte)(unsafe.Pointer(selfRelativeSD)), sdLen)
 	// SECURITY_DESCRIPTOR has pointers in it, which means checkptr expects for it to
 	// be aligned properly. When we're copying a Windows-allocated struct to a
 	// Go-allocated one, make sure that the Go allocation is aligned to the
 	// pointer size.
 	const psize = int(unsafe.Sizeof(uintptr(0)))
-	alloc := make(
-		[]uintptr,
-		(sdLen+psize-1)/psize,
-	)
-	dst := unsafe.Slice(
-		(*byte)(unsafe.Pointer(&alloc[0])),
-		sdLen,
-	)
+	alloc := make([]uintptr, (sdLen+psize-1)/psize)
+	dst := unsafe.Slice((*byte)(unsafe.Pointer(&alloc[0])), sdLen)
 	copy(dst, src)
-	return (*SECURITY_DESCRIPTOR)(
-		unsafe.Pointer(&dst[0]),
-	)
+	return (*SECURITY_DESCRIPTOR)(unsafe.Pointer(&dst[0]))
 }
 
 // SecurityDescriptorFromString converts an SDDL string describing a security descriptor into a
 // self-relative security descriptor object allocated on the Go heap.
-func SecurityDescriptorFromString(
-	sddl string,
-) (sd *SECURITY_DESCRIPTOR, err error) {
+func SecurityDescriptorFromString(sddl string) (sd *SECURITY_DESCRIPTOR, err error) {
 	var winHeapSD *SECURITY_DESCRIPTOR
-	err = convertStringSecurityDescriptorToSecurityDescriptor(
-		sddl,
-		1,
-		&winHeapSD,
-		nil,
-	)
+	err = convertStringSecurityDescriptorToSecurityDescriptor(sddl, 1, &winHeapSD, nil)
 	if err != nil {
 		return
 	}
-	defer LocalFree(
-		Handle(unsafe.Pointer(winHeapSD)),
-	)
+	defer LocalFree(Handle(unsafe.Pointer(winHeapSD)))
 	return winHeapSD.copySelfRelativeSecurityDescriptor(), nil
 }
 
 // GetSecurityInfo queries the security information for a given handle and returns the self-relative security
 // descriptor result on the Go heap.
-func GetSecurityInfo(
-	handle Handle,
-	objectType SE_OBJECT_TYPE,
-	securityInformation SECURITY_INFORMATION,
-) (sd *SECURITY_DESCRIPTOR, err error) {
+func GetSecurityInfo(handle Handle, objectType SE_OBJECT_TYPE, securityInformation SECURITY_INFORMATION) (sd *SECURITY_DESCRIPTOR, err error) {
 	var winHeapSD *SECURITY_DESCRIPTOR
-	err = getSecurityInfo(
-		handle,
-		objectType,
-		securityInformation,
-		nil,
-		nil,
-		nil,
-		nil,
-		&winHeapSD,
-	)
+	err = getSecurityInfo(handle, objectType, securityInformation, nil, nil, nil, nil, &winHeapSD)
 	if err != nil {
 		return
 	}
-	defer LocalFree(
-		Handle(unsafe.Pointer(winHeapSD)),
-	)
+	defer LocalFree(Handle(unsafe.Pointer(winHeapSD)))
 	return winHeapSD.copySelfRelativeSecurityDescriptor(), nil
 }
 
 // GetNamedSecurityInfo queries the security information for a given named object and returns the self-relative security
 // descriptor result on the Go heap.
-func GetNamedSecurityInfo(
-	objectName string,
-	objectType SE_OBJECT_TYPE,
-	securityInformation SECURITY_INFORMATION,
-) (sd *SECURITY_DESCRIPTOR, err error) {
+func GetNamedSecurityInfo(objectName string, objectType SE_OBJECT_TYPE, securityInformation SECURITY_INFORMATION) (sd *SECURITY_DESCRIPTOR, err error) {
 	var winHeapSD *SECURITY_DESCRIPTOR
-	err = getNamedSecurityInfo(
-		objectName,
-		objectType,
-		securityInformation,
-		nil,
-		nil,
-		nil,
-		nil,
-		&winHeapSD,
-	)
+	err = getNamedSecurityInfo(objectName, objectType, securityInformation, nil, nil, nil, nil, &winHeapSD)
 	if err != nil {
 		return
 	}
-	defer LocalFree(
-		Handle(unsafe.Pointer(winHeapSD)),
-	)
+	defer LocalFree(Handle(unsafe.Pointer(winHeapSD)))
 	return winHeapSD.copySelfRelativeSecurityDescriptor(), nil
 }
 
 // BuildSecurityDescriptor makes a new security descriptor using the input trustees, explicit access lists, and
 // prior security descriptor to be merged, any of which can be nil, returning the self-relative security descriptor
 // result on the Go heap.
-func BuildSecurityDescriptor(
-	owner *TRUSTEE,
-	group *TRUSTEE,
-	accessEntries []EXPLICIT_ACCESS,
-	auditEntries []EXPLICIT_ACCESS,
-	mergedSecurityDescriptor *SECURITY_DESCRIPTOR,
-) (sd *SECURITY_DESCRIPTOR, err error) {
+func BuildSecurityDescriptor(owner *TRUSTEE, group *TRUSTEE, accessEntries []EXPLICIT_ACCESS, auditEntries []EXPLICIT_ACCESS, mergedSecurityDescriptor *SECURITY_DESCRIPTOR) (sd *SECURITY_DESCRIPTOR, err error) {
 	var winHeapSD *SECURITY_DESCRIPTOR
 	var winHeapSDSize uint32
 	var firstAccessEntry *EXPLICIT_ACCESS
@@ -1761,65 +1463,35 @@ func BuildSecurityDescriptor(
 	if len(auditEntries) > 0 {
 		firstAuditEntry = &auditEntries[0]
 	}
-	err = buildSecurityDescriptor(
-		owner,
-		group,
-		uint32(len(accessEntries)),
-		firstAccessEntry,
-		uint32(len(auditEntries)),
-		firstAuditEntry,
-		mergedSecurityDescriptor,
-		&winHeapSDSize,
-		&winHeapSD,
-	)
+	err = buildSecurityDescriptor(owner, group, uint32(len(accessEntries)), firstAccessEntry, uint32(len(auditEntries)), firstAuditEntry, mergedSecurityDescriptor, &winHeapSDSize, &winHeapSD)
 	if err != nil {
 		return
 	}
-	defer LocalFree(
-		Handle(unsafe.Pointer(winHeapSD)),
-	)
+	defer LocalFree(Handle(unsafe.Pointer(winHeapSD)))
 	return winHeapSD.copySelfRelativeSecurityDescriptor(), nil
 }
 
 // NewSecurityDescriptor creates and initializes a new absolute security descriptor.
 func NewSecurityDescriptor() (absoluteSD *SECURITY_DESCRIPTOR, err error) {
 	absoluteSD = &SECURITY_DESCRIPTOR{}
-	err = initializeSecurityDescriptor(
-		absoluteSD,
-		1,
-	)
+	err = initializeSecurityDescriptor(absoluteSD, 1)
 	return
 }
 
 // ACLFromEntries returns a new ACL on the Go heap containing a list of explicit entries as well as those of another ACL.
 // Both explicitEntries and mergedACL are optional and can be nil.
-func ACLFromEntries(
-	explicitEntries []EXPLICIT_ACCESS,
-	mergedACL *ACL,
-) (acl *ACL, err error) {
+func ACLFromEntries(explicitEntries []EXPLICIT_ACCESS, mergedACL *ACL) (acl *ACL, err error) {
 	var firstExplicitEntry *EXPLICIT_ACCESS
 	if len(explicitEntries) > 0 {
 		firstExplicitEntry = &explicitEntries[0]
 	}
 	var winHeapACL *ACL
-	err = setEntriesInAcl(
-		uint32(len(explicitEntries)),
-		firstExplicitEntry,
-		mergedACL,
-		&winHeapACL,
-	)
+	err = setEntriesInAcl(uint32(len(explicitEntries)), firstExplicitEntry, mergedACL, &winHeapACL)
 	if err != nil {
 		return
 	}
-	defer LocalFree(
-		Handle(unsafe.Pointer(winHeapACL)),
-	)
+	defer LocalFree(Handle(unsafe.Pointer(winHeapACL)))
 	aclBytes := make([]byte, winHeapACL.aclSize)
-	copy(
-		aclBytes,
-		(*[(1 << 31) - 1]byte)(unsafe.Pointer(winHeapACL))[:len(aclBytes):len(aclBytes)],
-	)
-	return (*ACL)(
-		unsafe.Pointer(&aclBytes[0]),
-	), nil
+	copy(aclBytes, (*[(1 << 31) - 1]byte)(unsafe.Pointer(winHeapACL))[:len(aclBytes):len(aclBytes)])
+	return (*ACL)(unsafe.Pointer(&aclBytes[0])), nil
 }

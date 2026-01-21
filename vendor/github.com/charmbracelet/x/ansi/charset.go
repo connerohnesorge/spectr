@@ -30,10 +30,7 @@ package ansi
 //	ESC * A  Select character set G2 = United Kingdom (UK)
 //
 // See: https://vt100.net/docs/vt510-rm/SCS.html
-func SelectCharacterSet(
-	gset byte,
-	charset byte,
-) string {
+func SelectCharacterSet(gset byte, charset byte) string {
 	return "\x1b" + string(gset) + string(charset)
 }
 

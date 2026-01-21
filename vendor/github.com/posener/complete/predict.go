@@ -8,22 +8,16 @@ type Predictor interface {
 
 // PredictOr unions two predicate functions, so that the result predicate
 // returns the union of their predication
-func PredictOr(
-	predictors ...Predictor,
-) Predictor {
-	return PredictFunc(
-		func(a Args) (prediction []string) {
-			for _, p := range predictors {
-				if p == nil {
-					continue
-				}
-				prediction = append(
-					prediction,
-					p.Predict(a)...)
+func PredictOr(predictors ...Predictor) Predictor {
+	return PredictFunc(func(a Args) (prediction []string) {
+		for _, p := range predictors {
+			if p == nil {
+				continue
 			}
-			return
-		},
-	)
+			prediction = append(prediction, p.Predict(a)...)
+		}
+		return
+	})
 }
 
 // PredictFunc determines what terms can follow a command or a flag
@@ -44,6 +38,4 @@ var PredictNothing Predictor
 
 // PredictAnything expects something, but nothing particular, such as a number
 // or arbitrary name.
-var PredictAnything = PredictFunc(
-	func(Args) []string { return nil },
-)
+var PredictAnything = PredictFunc(func(Args) []string { return nil })

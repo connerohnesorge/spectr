@@ -21,10 +21,7 @@ import (
 // size, as far as I can tell.
 //
 // See https://shuford.invisible-island.net/all_about_sixels.txt
-func SixelGraphics(
-	p1, p2, p3 int,
-	payload []byte,
-) string {
+func SixelGraphics(p1, p2, p3 int, payload []byte) string {
 	var buf bytes.Buffer
 
 	buf.WriteString("\x1bP")
@@ -52,10 +49,7 @@ func SixelGraphics(
 //	APC G [comma separated options] ; [base64 encoded payload] ST
 //
 // See https://sw.kovidgoyal.net/kitty/graphics-protocol/
-func KittyGraphics(
-	payload []byte,
-	opts ...string,
-) string {
+func KittyGraphics(payload []byte, opts ...string) string {
 	var buf bytes.Buffer
 	buf.WriteString("\x1b_G")
 	buf.WriteString(strings.Join(opts, ","))

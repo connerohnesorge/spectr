@@ -58,9 +58,7 @@ func PledgePromises(promises string) error {
 // This changes the execpromises and leaves the promises untouched.
 //
 // For more information see pledge(2).
-func PledgeExecpromises(
-	execpromises string,
-) error {
+func PledgeExecpromises(execpromises string) error {
 	if err := pledgeAvailable(); err != nil {
 		return err
 	}
@@ -81,23 +79,15 @@ func majmin() (major int, minor int, err error) {
 		return
 	}
 
-	major, err = strconv.Atoi(
-		string(v.Release[0]),
-	)
+	major, err = strconv.Atoi(string(v.Release[0]))
 	if err != nil {
-		err = errors.New(
-			"cannot parse major version number returned by uname",
-		)
+		err = errors.New("cannot parse major version number returned by uname")
 		return
 	}
 
-	minor, err = strconv.Atoi(
-		string(v.Release[2]),
-	)
+	minor, err = strconv.Atoi(string(v.Release[2]))
 	if err != nil {
-		err = errors.New(
-			"cannot parse minor version number returned by uname",
-		)
+		err = errors.New("cannot parse minor version number returned by uname")
 		return
 	}
 
@@ -114,11 +104,7 @@ func pledgeAvailable() error {
 
 	// Require OpenBSD 6.4 as a minimum.
 	if maj < 6 || (maj == 6 && min <= 3) {
-		return fmt.Errorf(
-			"cannot call Pledge on OpenBSD %d.%d",
-			maj,
-			min,
-		)
+		return fmt.Errorf("cannot call Pledge on OpenBSD %d.%d", maj, min)
 	}
 
 	return nil

@@ -5,10 +5,7 @@ import (
 )
 
 // Convert converts a style to respect the given color profile.
-func ConvertStyle(
-	s Style,
-	p colorprofile.Profile,
-) Style {
+func ConvertStyle(s Style, p colorprofile.Profile) Style {
 	switch p {
 	case colorprofile.TrueColor:
 		return s

@@ -29,10 +29,7 @@ type ComputeEdits func(uri span.URI, before, after string) []TextEdit
 func SortTextEdits(d []TextEdit) {
 	// Use a stable sort to maintain the order of edits inserted at the same position.
 	sort.SliceStable(d, func(i int, j int) bool {
-		return span.Compare(
-			d[i].Span,
-			d[j].Span,
-		) < 0
+		return span.Compare(d[i].Span, d[j].Span) < 0
 	})
 }
 
@@ -40,10 +37,7 @@ func SortTextEdits(d []TextEdit) {
 // content.
 // It may panic or produce garbage if the edits are not valid for the provided
 // before content.
-func ApplyEdits(
-	before string,
-	edits []TextEdit,
-) string {
+func ApplyEdits(before string, edits []TextEdit) string {
 	// Preconditions:
 	//   - all of the edits apply to before
 	//   - and all the spans for each TextEdit have the same URI
@@ -70,17 +64,11 @@ func ApplyEdits(
 
 // LineEdits takes a set of edits and expands and merges them as necessary
 // to ensure that there are only full line edits left when it is done.
-func LineEdits(
-	before string,
-	edits []TextEdit,
-) []TextEdit {
+func LineEdits(before string, edits []TextEdit) []TextEdit {
 	if len(edits) == 0 {
 		return nil
 	}
-	c, edits, partial := prepareEdits(
-		before,
-		edits,
-	)
+	c, edits, partial := prepareEdits(before, edits)
 	if partial {
 		edits = lineEdits(before, c, edits)
 	}
@@ -88,58 +76,34 @@ func LineEdits(
 }
 
 // prepareEdits returns a sorted copy of the edits
-func prepareEdits(
-	before string,
-	edits []TextEdit,
-) (*span.TokenConverter, []TextEdit, bool) {
+func prepareEdits(before string, edits []TextEdit) (*span.TokenConverter, []TextEdit, bool) {
 	partial := false
-	c := span.NewContentConverter(
-		"",
-		[]byte(before),
-	)
+	c := span.NewContentConverter("", []byte(before))
 	copied := make([]TextEdit, len(edits))
 	for i, edit := range edits {
 		edit.Span, _ = edit.Span.WithAll(c)
 		copied[i] = edit
 		partial = partial ||
-			edit.Span.Start().
-				Offset() >=
-				len(
-					before,
-				) ||
-			edit.Span.Start().
-				Column() >
-				1 || edit.Span.End().Column() > 1
+			edit.Span.Start().Offset() >= len(before) ||
+			edit.Span.Start().Column() > 1 || edit.Span.End().Column() > 1
 	}
 	SortTextEdits(copied)
 	return c, copied, partial
 }
 
 // lineEdits rewrites the edits to always be full line edits
-func lineEdits(
-	before string,
-	c *span.TokenConverter,
-	edits []TextEdit,
-) []TextEdit {
+func lineEdits(before string, c *span.TokenConverter, edits []TextEdit) []TextEdit {
 	adjusted := make([]TextEdit, 0, len(edits))
 	current := TextEdit{Span: span.Invalid}
 	for _, edit := range edits {
-		if current.Span.IsValid() &&
-			edit.Span.Start().
-				Line() <=
-				current.Span.End().
-					Line() {
+		if current.Span.IsValid() && edit.Span.Start().Line() <= current.Span.End().Line() {
 			// overlaps with the current edit, need to combine
 			// first get the gap from the previous edit
 			gap := before[current.Span.End().Offset():edit.Span.Start().Offset()]
 			// now add the text of this edit
 			current.NewText += gap + edit.NewText
 			// and then adjust the end position
-			current.Span = span.New(
-				current.Span.URI(),
-				current.Span.Start(),
-				edit.Span.End(),
-			)
+			current.Span = span.New(current.Span.URI(), current.Span.Start(), edit.Span.End())
 		} else {
 			// does not overlap, add previous run (if there is one)
 			adjusted = addEdit(before, adjusted, current)
@@ -151,11 +115,7 @@ func lineEdits(
 	return addEdit(before, adjusted, current)
 }
 
-func addEdit(
-	before string,
-	edits []TextEdit,
-	edit TextEdit,
-) []TextEdit {
+func addEdit(before string, edits []TextEdit, edit TextEdit) []TextEdit {
 	if !edit.Span.IsValid() {
 		return edits
 	}
@@ -165,21 +125,11 @@ func addEdit(
 	if start.Column() > 1 {
 		// prepend the text and adjust to start of line
 		delta := start.Column() - 1
-		start = span.NewPoint(
-			start.Line(),
-			1,
-			start.Offset()-delta,
-		)
-		edit.Span = span.New(
-			edit.Span.URI(),
-			start,
-			end,
-		)
+		start = span.NewPoint(start.Line(), 1, start.Offset()-delta)
+		edit.Span = span.New(edit.Span.URI(), start, end)
 		edit.NewText = before[start.Offset():start.Offset()+delta] + edit.NewText
 	}
-	if start.Offset() >= len(before) &&
-		start.Line() > 1 &&
-		before[len(before)-1] != '\n' {
+	if start.Offset() >= len(before) && start.Line() > 1 && before[len(before)-1] != '\n' {
 		// after end of file that does not end in eol, so join to last line of file
 		// to do this we need to know where the start of the last line was
 		eol := strings.LastIndex(before, "\n")
@@ -188,16 +138,8 @@ func addEdit(
 			eol = 0
 		}
 		delta := len(before) - eol
-		start = span.NewPoint(
-			start.Line()-1,
-			1,
-			start.Offset()-delta,
-		)
-		edit.Span = span.New(
-			edit.Span.URI(),
-			start,
-			end,
-		)
+		start = span.NewPoint(start.Line()-1, 1, start.Offset()-delta)
+		edit.Span = span.New(edit.Span.URI(), start, end)
 		edit.NewText = before[start.Offset():start.Offset()+delta] + edit.NewText
 	}
 	if end.Column() > 1 {
@@ -208,16 +150,8 @@ func addEdit(
 		} else {
 			eol++
 		}
-		end = span.NewPoint(
-			end.Line()+1,
-			1,
-			end.Offset()+eol,
-		)
-		edit.Span = span.New(
-			edit.Span.URI(),
-			start,
-			end,
-		)
+		end = span.NewPoint(end.Line()+1, 1, end.Offset()+eol)
+		edit.Span = span.New(edit.Span.URI(), start, end)
 		edit.NewText = edit.NewText + remains[:eol]
 	}
 	edits = append(edits, edit)

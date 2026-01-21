@@ -14,9 +14,7 @@ type PositionalPredictor struct {
 }
 
 // Predict implements complete.Predict
-func (p *PositionalPredictor) Predict(
-	a complete.Args,
-) []string {
+func (p *PositionalPredictor) Predict(a complete.Args) []string {
 	predictor := p.predictor(a)
 	if predictor == nil {
 		return []string{}
@@ -24,25 +22,17 @@ func (p *PositionalPredictor) Predict(
 	return predictor.Predict(a)
 }
 
-func (p *PositionalPredictor) predictor(
-	a complete.Args,
-) complete.Predictor {
+func (p *PositionalPredictor) predictor(a complete.Args) complete.Predictor {
 	position := p.predictorIndex(a)
-	complete.Log(
-		"predicting positional argument(%d)",
-		position,
-	)
-	if position < 0 ||
-		position > len(p.Predictors)-1 {
+	complete.Log("predicting positional argument(%d)", position)
+	if position < 0 || position > len(p.Predictors)-1 {
 		return nil
 	}
 	return p.Predictors[position]
 }
 
 // predictorIndex returns the index in predictors to use. Returns -1 if no predictor should be used.
-func (p *PositionalPredictor) predictorIndex(
-	a complete.Args,
-) int {
+func (p *PositionalPredictor) predictorIndex(a complete.Args) int {
 	idx := 0
 	for i := 0; i < len(a.Completed); i++ {
 		if !p.nonPredictorPos(a, i) {
@@ -53,10 +43,7 @@ func (p *PositionalPredictor) predictorIndex(
 }
 
 // nonPredictorPos returns true if the value at this position is either a flag or a flag's argument
-func (p *PositionalPredictor) nonPredictorPos(
-	a complete.Args,
-	pos int,
-) bool {
+func (p *PositionalPredictor) nonPredictorPos(a complete.Args, pos int) bool {
 	if pos < 0 || pos > len(a.All)-1 {
 		return false
 	}
@@ -72,9 +59,7 @@ func (p *PositionalPredictor) nonPredictorPos(
 }
 
 // valIsFlag returns true if the value matches a flag from the configuration
-func (p *PositionalPredictor) valIsFlag(
-	val string,
-) bool {
+func (p *PositionalPredictor) valIsFlag(val string) bool {
 	val = strings.Split(val, "=")[0]
 	for _, flag := range p.BoolFlags {
 		if flag == val {
@@ -90,9 +75,7 @@ func (p *PositionalPredictor) valIsFlag(
 }
 
 // nextValueIsFlagArg returns true if the value matches an ArgFlag and doesn't contain an equal sign.
-func (p *PositionalPredictor) nextValueIsFlagArg(
-	val string,
-) bool {
+func (p *PositionalPredictor) nextValueIsFlagArg(val string) bool {
 	if strings.Contains(val, "=") {
 		return false
 	}

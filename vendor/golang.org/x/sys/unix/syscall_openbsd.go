@@ -31,55 +31,32 @@ type SockaddrDatalink struct {
 	raw    RawSockaddrDatalink
 }
 
-func anyToSockaddrGOOS(
-	fd int,
-	rsa *RawSockaddrAny,
-) (Sockaddr, error) {
+func anyToSockaddrGOOS(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
 	return nil, EAFNOSUPPORT
 }
 
-func Syscall9(
-	trap, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr,
-) (r1, r2 uintptr, err syscall.Errno)
+func Syscall9(trap, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr) (r1, r2 uintptr, err syscall.Errno)
 
-func nametomib(
-	name string,
-) (mib []_C_int, err error) {
-	i := sort.Search(
-		len(sysctlMib),
-		func(i int) bool {
-			return sysctlMib[i].ctlname >= name
-		},
-	)
-	if i < len(sysctlMib) &&
-		sysctlMib[i].ctlname == name {
+func nametomib(name string) (mib []_C_int, err error) {
+	i := sort.Search(len(sysctlMib), func(i int) bool {
+		return sysctlMib[i].ctlname >= name
+	})
+	if i < len(sysctlMib) && sysctlMib[i].ctlname == name {
 		return sysctlMib[i].ctloid, nil
 	}
 	return nil, EINVAL
 }
 
 func direntIno(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Fileno),
-		unsafe.Sizeof(Dirent{}.Fileno),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Fileno), unsafe.Sizeof(Dirent{}.Fileno))
 }
 
 func direntReclen(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Reclen),
-		unsafe.Sizeof(Dirent{}.Reclen),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Reclen), unsafe.Sizeof(Dirent{}.Reclen))
 }
 
 func direntNamlen(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Namlen),
-		unsafe.Sizeof(Dirent{}.Namlen),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Namlen), unsafe.Sizeof(Dirent{}.Namlen))
 }
 
 func SysctlUvmexp(name string) (*Uvmexp, error) {
@@ -120,11 +97,7 @@ func Pipe2(p []int, flags int) error {
 
 //sys	Getdents(fd int, buf []byte) (n int, err error)
 
-func Getdirentries(
-	fd int,
-	buf []byte,
-	basep *uintptr,
-) (n int, err error) {
+func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
 	n, err = Getdents(fd, buf)
 	if err != nil || basep == nil {
 		return
@@ -151,12 +124,7 @@ func Getdirentries(
 
 //sys	Getcwd(buf []byte) (n int, err error) = SYS___GETCWD
 
-func Sendfile(
-	outfd int,
-	infd int,
-	offset *int64,
-	count int,
-) (written int, err error) {
+func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
 	if raceenabled {
 		raceReleaseMerge(unsafe.Pointer(&ioSync))
 	}
@@ -164,28 +132,16 @@ func Sendfile(
 }
 
 // TODO
-func sendfile(
-	outfd int,
-	infd int,
-	offset *int64,
-	count int,
-) (written int, err error) {
+func sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
 	return -1, ENOSYS
 }
 
-func Getfsstat(
-	buf []Statfs_t,
-	flags int,
-) (n int, err error) {
+func Getfsstat(buf []Statfs_t, flags int) (n int, err error) {
 	var bufptr *Statfs_t
 	var bufsize uintptr
 	if len(buf) > 0 {
 		bufptr = &buf[0]
-		bufsize = unsafe.Sizeof(
-			Statfs_t{},
-		) * uintptr(
-			len(buf),
-		)
+		bufsize = unsafe.Sizeof(Statfs_t{}) * uintptr(len(buf))
 	}
 	return getfsstat(bufptr, bufsize, flags)
 }
@@ -214,43 +170,23 @@ func Getresgid() (rgid, egid, sgid int) {
 //sys	fcntlPtr(fd int, cmd int, arg unsafe.Pointer) (n int, err error) = SYS_FCNTL
 
 // FcntlInt performs a fcntl syscall on fd with the provided command and argument.
-func FcntlInt(
-	fd uintptr,
-	cmd, arg int,
-) (int, error) {
+func FcntlInt(fd uintptr, cmd, arg int) (int, error) {
 	return fcntl(int(fd), cmd, arg)
 }
 
 // FcntlFlock performs a fcntl syscall for the F_GETLK, F_SETLK or F_SETLKW command.
-func FcntlFlock(
-	fd uintptr,
-	cmd int,
-	lk *Flock_t,
-) error {
-	_, err := fcntlPtr(
-		int(fd),
-		cmd,
-		unsafe.Pointer(lk),
-	)
+func FcntlFlock(fd uintptr, cmd int, lk *Flock_t) error {
+	_, err := fcntlPtr(int(fd), cmd, unsafe.Pointer(lk))
 	return err
 }
 
 //sys	ppoll(fds *PollFd, nfds int, timeout *Timespec, sigmask *Sigset_t) (n int, err error)
 
-func Ppoll(
-	fds []PollFd,
-	timeout *Timespec,
-	sigmask *Sigset_t,
-) (n int, err error) {
+func Ppoll(fds []PollFd, timeout *Timespec, sigmask *Sigset_t) (n int, err error) {
 	if len(fds) == 0 {
 		return ppoll(nil, 0, timeout, sigmask)
 	}
-	return ppoll(
-		&fds[0],
-		len(fds),
-		timeout,
-		sigmask,
-	)
+	return ppoll(&fds[0], len(fds), timeout, sigmask)
 }
 
 func Uname(uname *Utsname) error {

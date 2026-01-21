@@ -9,10 +9,7 @@ import (
 	"path/filepath"
 )
 
-func lineInFile(
-	name string,
-	lookFor string,
-) bool {
+func lineInFile(name string, lookFor string) bool {
 	f, err := os.Open(name)
 	if err != nil {
 		return false
@@ -40,10 +37,7 @@ func lineInFile(
 	}
 }
 
-func createFile(
-	name string,
-	content string,
-) error {
+func createFile(name string, content string) error {
 	// make sure file directory exists
 	if err := os.MkdirAll(filepath.Dir(name), 0775); err != nil {
 		return err
@@ -57,44 +51,27 @@ func createFile(
 	defer f.Close()
 
 	// write file content
-	_, err = f.WriteString(
-		fmt.Sprintf("%s\n", content),
-	)
+	_, err = f.WriteString(fmt.Sprintf("%s\n", content))
 	return err
 }
 
-func appendToFile(
-	name string,
-	content string,
-) error {
-	f, err := os.OpenFile(
-		name,
-		os.O_RDWR|os.O_APPEND,
-		0,
-	)
+func appendToFile(name string, content string) error {
+	f, err := os.OpenFile(name, os.O_RDWR|os.O_APPEND, 0)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	_, err = f.WriteString(
-		fmt.Sprintf("\n%s\n", content),
-	)
+	_, err = f.WriteString(fmt.Sprintf("\n%s\n", content))
 	return err
 }
 
-func removeFromFile(
-	name string,
-	content string,
-) error {
+func removeFromFile(name string, content string) error {
 	backup := name + ".bck"
 	err := copyFile(name, backup)
 	if err != nil {
 		return err
 	}
-	temp, err := removeContentToTempFile(
-		name,
-		content,
-	)
+	temp, err := removeContentToTempFile(name, content)
 	if err != nil {
 		return err
 	}
@@ -107,18 +84,13 @@ func removeFromFile(
 	return os.Remove(backup)
 }
 
-func removeContentToTempFile(
-	name, content string,
-) (string, error) {
+func removeContentToTempFile(name, content string) (string, error) {
 	rf, err := os.Open(name)
 	if err != nil {
 		return "", err
 	}
 	defer rf.Close()
-	wf, err := ioutil.TempFile(
-		"/tmp",
-		"complete-",
-	)
+	wf, err := ioutil.TempFile("/tmp", "complete-")
 	if err != nil {
 		return "", err
 	}

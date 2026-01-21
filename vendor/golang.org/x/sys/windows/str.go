@@ -6,9 +6,7 @@
 
 package windows
 
-func itoa(
-	val int,
-) string { // do it here rather than with fmt to avoid dependency
+func itoa(val int) string { // do it here rather than with fmt to avoid dependency
 	if val < 0 {
 		return "-" + itoa(-val)
 	}

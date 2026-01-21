@@ -67,9 +67,7 @@ func (t Token) IsEOL() bool {
 }
 
 // IsAny returns true if the token's type is any of those provided.
-func (t TokenType) IsAny(
-	types ...TokenType,
-) bool {
+func (t TokenType) IsAny(types ...TokenType) bool {
 	for _, typ := range types {
 		if t == typ {
 			return true
@@ -84,10 +82,7 @@ func (t Token) InferredType() TokenType {
 		return t.Type
 	}
 	if v, ok := t.Value.(string); ok {
-		if strings.HasPrefix(
-			v,
-			"--",
-		) { //nolint: gocritic
+		if strings.HasPrefix(v, "--") { //nolint: gocritic
 			return FlagToken
 		} else if v == "-" {
 			return PositionalArgumentToken
@@ -103,11 +98,7 @@ func (t Token) InferredType() TokenType {
 // A parseable value is either a value typed token, or an untyped token NOT starting with a hyphen.
 func (t Token) IsValue() bool {
 	tt := t.InferredType()
-	return tt.IsAny(
-		FlagValueToken,
-		ShortFlagTailToken,
-		PositionalArgumentToken,
-	) ||
+	return tt.IsAny(FlagValueToken, ShortFlagTailToken, PositionalArgumentToken) ||
 		(tt == UntypedToken && !strings.HasPrefix(t.String(), "-"))
 }
 
@@ -125,16 +116,10 @@ type Scanner struct {
 }
 
 // ScanAsType creates a new Scanner from args with the given type.
-func ScanAsType(
-	ttype TokenType,
-	args ...string,
-) *Scanner {
+func ScanAsType(ttype TokenType, args ...string) *Scanner {
 	s := &Scanner{}
 	for _, arg := range args {
-		s.args = append(
-			s.args,
-			Token{Value: arg, Type: ttype},
-		)
+		s.args = append(s.args, Token{Value: arg, Type: ttype})
 	}
 	return s
 }
@@ -152,9 +137,7 @@ func ScanFromTokens(tokens ...Token) *Scanner {
 // AllowHyphenPrefixedParameters enables or disables hyphen-prefixed flag parameters on this Scanner.
 //
 // Disabled by default.
-func (s *Scanner) AllowHyphenPrefixedParameters(
-	enable bool,
-) *Scanner {
+func (s *Scanner) AllowHyphenPrefixedParameters(enable bool) *Scanner {
 	s.allowHyphenated = enable
 	return s
 }
@@ -180,20 +163,13 @@ type expectedError struct {
 }
 
 func (e *expectedError) Error() string {
-	return fmt.Sprintf(
-		"expected %s value but got %q (%s)",
-		e.context,
-		e.token,
-		e.token.InferredType(),
-	)
+	return fmt.Sprintf("expected %s value but got %q (%s)", e.context, e.token, e.token.InferredType())
 }
 
 // PopValue pops a value token, or returns an error.
 //
 // "context" is used to assist the user if the value can not be popped, eg. "expected <context> value but got <type>"
-func (s *Scanner) PopValue(
-	context string,
-) (Token, error) {
+func (s *Scanner) PopValue(context string) (Token, error) {
 	t := s.Pop()
 	if !s.allowHyphenated && !t.IsValue() {
 		return t, &expectedError{context, t}
@@ -204,10 +180,7 @@ func (s *Scanner) PopValue(
 // PopValueInto pops a value token into target or returns an error.
 //
 // "context" is used to assist the user if the value can not be popped, eg. "expected <context> value but got <type>"
-func (s *Scanner) PopValueInto(
-	context string,
-	target any,
-) error {
+func (s *Scanner) PopValueInto(context string, target any) error {
 	t, err := s.PopValue(context)
 	if err != nil {
 		return err
@@ -216,9 +189,7 @@ func (s *Scanner) PopValueInto(
 }
 
 // PopWhile predicate returns true.
-func (s *Scanner) PopWhile(
-	predicate func(Token) bool,
-) (values []Token) {
+func (s *Scanner) PopWhile(predicate func(Token) bool) (values []Token) {
 	for predicate(s.Peek()) {
 		values = append(values, s.Pop())
 	}
@@ -226,9 +197,7 @@ func (s *Scanner) PopWhile(
 }
 
 // PopUntil predicate returns true.
-func (s *Scanner) PopUntil(
-	predicate func(Token) bool,
-) (values []Token) {
+func (s *Scanner) PopUntil(predicate func(Token) bool) (values []Token) {
 	for !predicate(s.Peek()) {
 		values = append(values, s.Pop())
 	}
@@ -255,18 +224,13 @@ func (s *Scanner) Push(arg any) *Scanner {
 }
 
 // PushTyped pushes a typed token onto the front of the Scanner.
-func (s *Scanner) PushTyped(
-	arg any,
-	typ TokenType,
-) *Scanner {
+func (s *Scanner) PushTyped(arg any, typ TokenType) *Scanner {
 	s.PushToken(Token{Value: arg, Type: typ})
 	return s
 }
 
 // PushToken pushes a preconstructed Token onto the front of the Scanner.
-func (s *Scanner) PushToken(
-	token Token,
-) *Scanner {
+func (s *Scanner) PushToken(token Token) *Scanner {
 	s.args = append([]Token{token}, s.args...)
 	return s
 }

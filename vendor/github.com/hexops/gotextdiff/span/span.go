@@ -37,46 +37,27 @@ type point struct {
 }
 
 // Invalid is a span that reports false from IsValid
-var Invalid = Span{
-	v: span{
-		Start: invalidPoint.v,
-		End:   invalidPoint.v,
-	},
-}
+var Invalid = Span{v: span{Start: invalidPoint.v, End: invalidPoint.v}}
 
-var invalidPoint = Point{
-	v: point{Line: 0, Column: 0, Offset: -1},
-}
+var invalidPoint = Point{v: point{Line: 0, Column: 0, Offset: -1}}
 
 // Converter is the interface to an object that can convert between line:column
 // and offset forms for a single file.
 type Converter interface {
-	// ToPosition converts from an offset to a line:column pair.
+	//ToPosition converts from an offset to a line:column pair.
 	ToPosition(offset int) (int, int, error)
-	// ToOffset converts from a line:column pair to an offset.
+	//ToOffset converts from a line:column pair to an offset.
 	ToOffset(line, col int) (int, error)
 }
 
 func New(uri URI, start Point, end Point) Span {
-	s := Span{
-		v: span{
-			URI:   uri,
-			Start: start.v,
-			End:   end.v,
-		},
-	}
+	s := Span{v: span{URI: uri, Start: start.v, End: end.v}}
 	s.v.clean()
 	return s
 }
 
 func NewPoint(line, col, offset int) Point {
-	p := Point{
-		v: point{
-			Line:   line,
-			Column: col,
-			Offset: offset,
-		},
-	}
+	p := Point{v: point{Line: line, Column: col, Offset: offset}}
 	p.v.clean()
 	return p
 }
@@ -120,90 +101,49 @@ func comparePoint(a, b point) int {
 	return 0
 }
 
-func (s Span) HasPosition() bool { return s.v.Start.hasPosition() }
-
-func (s Span) HasOffset() bool { return s.v.Start.hasOffset() }
-
-func (s Span) IsValid() bool { return s.v.Start.isValid() }
-
-func (s Span) IsPoint() bool { return s.v.Start == s.v.End }
-
-func (s Span) URI() URI { return s.v.URI }
-
-func (s Span) Start() Point { return Point{s.v.Start} }
-
-func (s Span) End() Point { return Point{s.v.End} }
-
+func (s Span) HasPosition() bool             { return s.v.Start.hasPosition() }
+func (s Span) HasOffset() bool               { return s.v.Start.hasOffset() }
+func (s Span) IsValid() bool                 { return s.v.Start.isValid() }
+func (s Span) IsPoint() bool                 { return s.v.Start == s.v.End }
+func (s Span) URI() URI                      { return s.v.URI }
+func (s Span) Start() Point                  { return Point{s.v.Start} }
+func (s Span) End() Point                    { return Point{s.v.End} }
 func (s *Span) MarshalJSON() ([]byte, error) { return json.Marshal(&s.v) }
+func (s *Span) UnmarshalJSON(b []byte) error { return json.Unmarshal(b, &s.v) }
 
-func (s *Span) UnmarshalJSON(
-	b []byte,
-) error {
-	return json.Unmarshal(b, &s.v)
-}
-
-func (p Point) HasPosition() bool { return p.v.hasPosition() }
-
-func (p Point) HasOffset() bool { return p.v.hasOffset() }
-
-func (p Point) IsValid() bool { return p.v.isValid() }
-
+func (p Point) HasPosition() bool             { return p.v.hasPosition() }
+func (p Point) HasOffset() bool               { return p.v.hasOffset() }
+func (p Point) IsValid() bool                 { return p.v.isValid() }
 func (p *Point) MarshalJSON() ([]byte, error) { return json.Marshal(&p.v) }
-
-func (p *Point) UnmarshalJSON(
-	b []byte,
-) error {
-	return json.Unmarshal(b, &p.v)
-}
-
+func (p *Point) UnmarshalJSON(b []byte) error { return json.Unmarshal(b, &p.v) }
 func (p Point) Line() int {
 	if !p.v.hasPosition() {
-		panic(
-			fmt.Errorf(
-				"position not set in %v",
-				p.v,
-			),
-		)
+		panic(fmt.Errorf("position not set in %v", p.v))
 	}
 	return p.v.Line
 }
-
 func (p Point) Column() int {
 	if !p.v.hasPosition() {
-		panic(
-			fmt.Errorf(
-				"position not set in %v",
-				p.v,
-			),
-		)
+		panic(fmt.Errorf("position not set in %v", p.v))
 	}
 	return p.v.Column
 }
-
 func (p Point) Offset() int {
 	if !p.v.hasOffset() {
-		panic(
-			fmt.Errorf(
-				"offset not set in %v",
-				p.v,
-			),
-		)
+		panic(fmt.Errorf("offset not set in %v", p.v))
 	}
 	return p.v.Offset
 }
 
 func (p point) hasPosition() bool { return p.Line > 0 }
-
-func (p point) hasOffset() bool { return p.Offset >= 0 }
-
-func (p point) isValid() bool { return p.hasPosition() || p.hasOffset() }
+func (p point) hasOffset() bool   { return p.Offset >= 0 }
+func (p point) isValid() bool     { return p.hasPosition() || p.hasOffset() }
 func (p point) isZero() bool {
-	return (p.Line == 1 && p.Column == 1) ||
-		(!p.hasPosition() && p.Offset == 0)
+	return (p.Line == 1 && p.Column == 1) || (!p.hasPosition() && p.Offset == 0)
 }
 
 func (s *span) clean() {
-	// this presumes the points are already clean
+	//this presumes the points are already clean
 	if !s.End.isValid() || (s.End == point{}) {
 		s.End = s.Start
 	}
@@ -220,8 +160,7 @@ func (p *point) clean() {
 			p.Column = 0
 		}
 	}
-	if p.Offset == 0 &&
-		(p.Line > 1 || p.Column > 1) {
+	if p.Offset == 0 && (p.Line > 1 || p.Column > 1) {
 		p.Offset = -1
 	}
 }
@@ -232,7 +171,7 @@ func (s Span) Format(f fmt.State, c rune) {
 	fullForm := f.Flag('+')
 	preferOffset := f.Flag('#')
 	// we should always have a uri, simplify if it is file format
-	// TODO: make sure the end of the uri is unambiguous
+	//TODO: make sure the end of the uri is unambiguous
 	uri := string(s.v.URI)
 	if c == 'f' {
 		uri = path.Base(uri)
@@ -240,17 +179,13 @@ func (s Span) Format(f fmt.State, c rune) {
 		uri = s.v.URI.Filename()
 	}
 	fmt.Fprint(f, uri)
-	if !s.IsValid() ||
-		(!fullForm && s.v.Start.isZero() && s.v.End.isZero()) {
+	if !s.IsValid() || (!fullForm && s.v.Start.isZero() && s.v.End.isZero()) {
 		return
 	}
 	// see which bits of start to write
-	printOffset := s.HasOffset() &&
-		(fullForm || preferOffset || !s.HasPosition())
-	printLine := s.HasPosition() &&
-		(fullForm || !printOffset)
-	printColumn := printLine &&
-		(fullForm || (s.v.Start.Column > 1 || s.v.End.Column > 1))
+	printOffset := s.HasOffset() && (fullForm || preferOffset || !s.HasPosition())
+	printLine := s.HasPosition() && (fullForm || !printOffset)
+	printColumn := printLine && (fullForm || (s.v.Start.Column > 1 || s.v.End.Column > 1))
 	fmt.Fprint(f, ":")
 	if printLine {
 		fmt.Fprintf(f, "%d", s.v.Start.Line)
@@ -266,8 +201,7 @@ func (s Span) Format(f fmt.State, c rune) {
 		return
 	}
 	// we don't print the line if it did not change
-	printLine = fullForm ||
-		(printLine && s.v.End.Line > s.v.Start.Line)
+	printLine = fullForm || (printLine && s.v.End.Line > s.v.Start.Line)
 	fmt.Fprint(f, "-")
 	if printLine {
 		fmt.Fprintf(f, "%d", s.v.End.Line)
@@ -283,18 +217,14 @@ func (s Span) Format(f fmt.State, c rune) {
 	}
 }
 
-func (s Span) WithPosition(
-	c Converter,
-) (Span, error) {
+func (s Span) WithPosition(c Converter) (Span, error) {
 	if err := s.update(c, true, false); err != nil {
 		return Span{}, err
 	}
 	return s, nil
 }
 
-func (s Span) WithOffset(
-	c Converter,
-) (Span, error) {
+func (s Span) WithOffset(c Converter) (Span, error) {
 	if err := s.update(c, false, true); err != nil {
 		return Span{}, err
 	}
@@ -308,14 +238,9 @@ func (s Span) WithAll(c Converter) (Span, error) {
 	return s, nil
 }
 
-func (s *Span) update(
-	c Converter,
-	withPos, withOffset bool,
-) error {
+func (s *Span) update(c Converter, withPos, withOffset bool) error {
 	if !s.IsValid() {
-		return fmt.Errorf(
-			"cannot add information to an invalid span",
-		)
+		return fmt.Errorf("cannot add information to an invalid span")
 	}
 	if withPos && !s.HasPosition() {
 		if err := s.v.Start.updatePosition(c); err != nil {
@@ -327,13 +252,11 @@ func (s *Span) update(
 			return err
 		}
 	}
-	if withOffset &&
-		(!s.HasOffset() || (s.v.End.hasPosition() && !s.v.End.hasOffset())) {
+	if withOffset && (!s.HasOffset() || (s.v.End.hasPosition() && !s.v.End.hasOffset())) {
 		if err := s.v.Start.updateOffset(c); err != nil {
 			return err
 		}
-		if s.v.End.Line == s.v.Start.Line &&
-			s.v.End.Column == s.v.Start.Column {
+		if s.v.End.Line == s.v.Start.Line && s.v.End.Column == s.v.Start.Column {
 			s.v.End.Offset = s.v.Start.Offset
 		} else if err := s.v.End.updateOffset(c); err != nil {
 			return err
@@ -342,9 +265,7 @@ func (s *Span) update(
 	return nil
 }
 
-func (p *point) updatePosition(
-	c Converter,
-) error {
+func (p *point) updatePosition(c Converter) error {
 	line, col, err := c.ToPosition(p.Offset)
 	if err != nil {
 		return err

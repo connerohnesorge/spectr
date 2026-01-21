@@ -23,13 +23,7 @@ func checkDK(D, k int) {
 	if k >= -D && k <= D && (D+k)%2 == 0 {
 		return
 	}
-	panic(
-		fmt.Sprintf(
-			"out of range, d=%d,k=%d",
-			D,
-			k,
-		),
-	)
+	panic(fmt.Sprintf("out of range, d=%d,k=%d", D, k))
 }
 
 func (t *label) set(D, k, x int) {

@@ -17,11 +17,7 @@ import (
 // breakpoint.
 //
 // Note: breakpoints must be a string of 1-cell wide rune characters.
-func Wrap(
-	s string,
-	limit int,
-	breakpoints string,
-) string {
+func Wrap(s string, limit int, breakpoints string) string {
 	if len(s) == 0 {
 		return ""
 	}
@@ -73,12 +69,7 @@ func Wrap(
 		}
 		buf.WriteByte('\n')
 		if !curLink.Empty() {
-			buf.WriteString(
-				ansi.SetHyperlink(
-					curLink.URL,
-					curLink.Params,
-				),
-			)
+			buf.WriteString(ansi.SetHyperlink(curLink.URL, curLink.Params))
 		}
 		if !curStyle.Empty() {
 			buf.WriteString(curStyle.Sequence())
@@ -89,11 +80,7 @@ func Wrap(
 
 	var state byte
 	for len(s) > 0 {
-		seq, width, n, newState := ansi.DecodeSequence(
-			s,
-			state,
-			p,
-		)
+		seq, width, n, newState := ansi.DecodeSequence(s, state, p)
 		switch width {
 		case 0:
 			if ansi.Equal(seq, "\t") {
@@ -126,9 +113,7 @@ func Wrap(
 		default:
 			if len(seq) == 1 {
 				// ASCII
-				r, _ := utf8.DecodeRuneInString(
-					seq,
-				)
+				r, _ := utf8.DecodeRuneInString(seq)
 				if unicode.IsSpace(r) {
 					addWord()
 					space.WriteRune(r)
@@ -183,10 +168,7 @@ func Wrap(
 	return buf.String()
 }
 
-func runeContainsAny[T string | []rune](
-	r rune,
-	s T,
-) bool {
+func runeContainsAny[T string | []rune](r rune, s T) bool {
 	for _, c := range []rune(s) {
 		if c == r {
 			return true

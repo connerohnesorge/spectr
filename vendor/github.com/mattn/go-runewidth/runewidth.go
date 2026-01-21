@@ -84,25 +84,14 @@ func inTable(r rune, t table) bool {
 }
 
 var private = table{
-	{
-		0x00E000,
-		0x00F8FF,
-	}, {0x0F0000, 0x0FFFFD}, {0x100000, 0x10FFFD},
+	{0x00E000, 0x00F8FF}, {0x0F0000, 0x0FFFFD}, {0x100000, 0x10FFFD},
 }
 
 var nonprint = table{
-	{0x0000, 0x001F},
-	{0x007F, 0x009F},
-	{0x00AD, 0x00AD},
-	{0x070F, 0x070F},
-	{0x180B, 0x180E},
-	{0x200B, 0x200F},
-	{0x2028, 0x202E},
-	{0x206A, 0x206F},
-	{0xD800, 0xDFFF},
-	{0xFEFF, 0xFEFF},
-	{0xFFF9, 0xFFFB},
-	{0xFFFE, 0xFFFF},
+	{0x0000, 0x001F}, {0x007F, 0x009F}, {0x00AD, 0x00AD},
+	{0x070F, 0x070F}, {0x180B, 0x180E}, {0x200B, 0x200F},
+	{0x2028, 0x202E}, {0x206A, 0x206F}, {0xD800, 0xDFFF},
+	{0xFEFF, 0xFEFF}, {0xFFF9, 0xFFFB}, {0xFFFE, 0xFFFF},
 }
 
 // Condition have flag EastAsianWidth whether the current locale is CJK or not.
@@ -127,9 +116,7 @@ func (c *Condition) RuneWidth(r rune) int {
 		return 0
 	}
 	if len(c.combinedLut) > 0 {
-		return int(
-			c.combinedLut[r>>1]>>(uint(r&1)*4),
-		) & 3
+		return int(c.combinedLut[r>>1]>>(uint(r&1)*4)) & 3
 	}
 	// optimized version, verified by TestRuneWidthChecksums()
 	if !c.EastAsianWidth {
@@ -187,9 +174,7 @@ func (c *Condition) CreateLUT() {
 }
 
 // StringWidth return width as you can see
-func (c *Condition) StringWidth(
-	s string,
-) (width int) {
+func (c *Condition) StringWidth(s string) (width int) {
 	g := uniseg.NewGraphemes(s)
 	for g.Next() {
 		var chWidth int
@@ -205,11 +190,7 @@ func (c *Condition) StringWidth(
 }
 
 // Truncate return string truncated with w cells
-func (c *Condition) Truncate(
-	s string,
-	w int,
-	tail string,
-) string {
+func (c *Condition) Truncate(s string, w int, tail string) string {
 	if c.StringWidth(s) <= w {
 		return s
 	}
@@ -235,11 +216,7 @@ func (c *Condition) Truncate(
 }
 
 // TruncateLeft cuts w cells from the beginning of the `s`.
-func (c *Condition) TruncateLeft(
-	s string,
-	w int,
-	prefix string,
-) string {
+func (c *Condition) TruncateLeft(s string, w int, prefix string) string {
 	if c.StringWidth(s) <= w {
 		return prefix
 	}
@@ -260,10 +237,7 @@ func (c *Condition) TruncateLeft(
 		if width+chWidth > w {
 			if width < w {
 				_, pos = g.Positions()
-				prefix += strings.Repeat(
-					" ",
-					width+chWidth-w,
-				)
+				prefix += strings.Repeat(" ", width+chWidth-w)
 			} else {
 				pos, _ = g.Positions()
 			}
@@ -301,10 +275,7 @@ func (c *Condition) Wrap(s string, w int) string {
 }
 
 // FillLeft return string filled in left by spaces in w cells
-func (c *Condition) FillLeft(
-	s string,
-	w int,
-) string {
+func (c *Condition) FillLeft(s string, w int) string {
 	width := c.StringWidth(s)
 	count := w - width
 	if count > 0 {
@@ -318,10 +289,7 @@ func (c *Condition) FillLeft(
 }
 
 // FillRight return string filled in left by spaces in w cells
-func (c *Condition) FillRight(
-	s string,
-	w int,
-) string {
+func (c *Condition) FillRight(s string, w int) string {
 	width := c.StringWidth(s)
 	count := w - width
 	if count > 0 {
@@ -356,25 +324,13 @@ func StringWidth(s string) (width int) {
 }
 
 // Truncate return string truncated with w cells
-func Truncate(
-	s string,
-	w int,
-	tail string,
-) string {
+func Truncate(s string, w int, tail string) string {
 	return DefaultCondition.Truncate(s, w, tail)
 }
 
 // TruncateLeft cuts w cells from the beginning of the `s`.
-func TruncateLeft(
-	s string,
-	w int,
-	prefix string,
-) string {
-	return DefaultCondition.TruncateLeft(
-		s,
-		w,
-		prefix,
-	)
+func TruncateLeft(s string, w int, prefix string) string {
+	return DefaultCondition.TruncateLeft(s, w, prefix)
 }
 
 // Wrap return string wrapped with w cells

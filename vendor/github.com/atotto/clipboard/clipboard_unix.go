@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build freebsd || linux || netbsd || openbsd || solaris || dragonfly
 // +build freebsd linux netbsd openbsd solaris dragonfly
 
 package clipboard
@@ -31,48 +30,22 @@ var (
 	pasteCmdArgs []string
 	copyCmdArgs  []string
 
-	xselPasteArgs = []string{
-		xsel,
-		"--output",
-		"--clipboard",
-	}
-	xselCopyArgs = []string{
-		xsel,
-		"--input",
-		"--clipboard",
-	}
+	xselPasteArgs = []string{xsel, "--output", "--clipboard"}
+	xselCopyArgs  = []string{xsel, "--input", "--clipboard"}
 
-	xclipPasteArgs = []string{
-		xclip,
-		"-out",
-		"-selection",
-		"clipboard",
-	}
-	xclipCopyArgs = []string{
-		xclip,
-		"-in",
-		"-selection",
-		"clipboard",
-	}
+	xclipPasteArgs = []string{xclip, "-out", "-selection", "clipboard"}
+	xclipCopyArgs  = []string{xclip, "-in", "-selection", "clipboard"}
 
-	powershellExePasteArgs = []string{
-		powershellExe,
-		"Get-Clipboard",
-	}
-	clipExeCopyArgs = []string{clipExe}
+	powershellExePasteArgs = []string{powershellExe, "Get-Clipboard"}
+	clipExeCopyArgs        = []string{clipExe}
 
-	wlpasteArgs = []string{
-		wlpaste,
-		"--no-newline",
-	}
-	wlcopyArgs = []string{wlcopy}
+	wlpasteArgs = []string{wlpaste, "--no-newline"}
+	wlcopyArgs  = []string{wlcopy}
 
 	termuxPasteArgs = []string{termuxClipboardGet}
 	termuxCopyArgs  = []string{termuxClipboardSet}
 
-	missingCommands = errors.New(
-		"No clipboard utilities available. Please install xsel, xclip, wl-clipboard or Termux:API add-on for termux-clipboard-get/set.",
-	)
+	missingCommands = errors.New("No clipboard utilities available. Please install xsel, xclip, wl-clipboard or Termux:API add-on for termux-clipboard-get/set.")
 )
 
 func init() {
@@ -127,18 +100,14 @@ func getPasteCommand() *exec.Cmd {
 	if Primary {
 		pasteCmdArgs = pasteCmdArgs[:1]
 	}
-	return exec.Command(
-		pasteCmdArgs[0],
-		pasteCmdArgs[1:]...)
+	return exec.Command(pasteCmdArgs[0], pasteCmdArgs[1:]...)
 }
 
 func getCopyCommand() *exec.Cmd {
 	if Primary {
 		copyCmdArgs = copyCmdArgs[:1]
 	}
-	return exec.Command(
-		copyCmdArgs[0],
-		copyCmdArgs[1:]...)
+	return exec.Command(copyCmdArgs[0], copyCmdArgs[1:]...)
 }
 
 func readAll() (string, error) {

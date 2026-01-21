@@ -22,14 +22,8 @@ var mapper = &mremapMmapper{
 	mremap: mremap,
 }
 
-func (m *mremapMmapper) Mremap(
-	oldData []byte,
-	newLength int,
-	flags int,
-) (data []byte, err error) {
-	if newLength <= 0 || len(oldData) == 0 ||
-		len(oldData) != cap(oldData) ||
-		flags&mremapFixed != 0 {
+func (m *mremapMmapper) Mremap(oldData []byte, newLength int, flags int) (data []byte, err error) {
+	if newLength <= 0 || len(oldData) == 0 || len(oldData) != cap(oldData) || flags&mremapFixed != 0 {
 		return nil, EINVAL
 	}
 
@@ -40,20 +34,11 @@ func (m *mremapMmapper) Mremap(
 	if bOld == nil || &bOld[0] != &oldData[0] {
 		return nil, EINVAL
 	}
-	newAddr, errno := m.mremap(
-		uintptr(unsafe.Pointer(&bOld[0])),
-		uintptr(len(bOld)),
-		uintptr(newLength),
-		flags,
-		0,
-	)
+	newAddr, errno := m.mremap(uintptr(unsafe.Pointer(&bOld[0])), uintptr(len(bOld)), uintptr(newLength), flags, 0)
 	if errno != nil {
 		return nil, errno
 	}
-	bNew := unsafe.Slice(
-		(*byte)(unsafe.Pointer(newAddr)),
-		newLength,
-	)
+	bNew := unsafe.Slice((*byte)(unsafe.Pointer(newAddr)), newLength)
 	pNew := &bNew[cap(bNew)-1]
 	if flags&mremapDontunmap == 0 {
 		delete(m.active, pOld)
@@ -62,31 +47,11 @@ func (m *mremapMmapper) Mremap(
 	return bNew, nil
 }
 
-func Mremap(
-	oldData []byte,
-	newLength int,
-	flags int,
-) (data []byte, err error) {
-	return mapper.Mremap(
-		oldData,
-		newLength,
-		flags,
-	)
+func Mremap(oldData []byte, newLength int, flags int) (data []byte, err error) {
+	return mapper.Mremap(oldData, newLength, flags)
 }
 
-func MremapPtr(
-	oldAddr unsafe.Pointer,
-	oldSize uintptr,
-	newAddr unsafe.Pointer,
-	newSize uintptr,
-	flags int,
-) (ret unsafe.Pointer, err error) {
-	xaddr, err := mapper.mremap(
-		uintptr(oldAddr),
-		oldSize,
-		newSize,
-		flags,
-		uintptr(newAddr),
-	)
+func MremapPtr(oldAddr unsafe.Pointer, oldSize uintptr, newAddr unsafe.Pointer, newSize uintptr, flags int) (ret unsafe.Pointer, err error) {
+	xaddr, err := mapper.mremap(uintptr(oldAddr), oldSize, newSize, flags, uintptr(newAddr))
 	return unsafe.Pointer(xaddr), err
 }

@@ -20,10 +20,7 @@ type options struct {
 type Option func(*options)
 
 // WithPredictor use the named predictor
-func WithPredictor(
-	name string,
-	predictor complete.Predictor,
-) Option {
+func WithPredictor(name string, predictor complete.Predictor) Option {
 	return func(o *options) {
 		if o.predictors == nil {
 			o.predictors = map[string]complete.Predictor{}
@@ -33,9 +30,7 @@ func WithPredictor(
 }
 
 // WithPredictors use these predictors
-func WithPredictors(
-	predictors map[string]complete.Predictor,
-) Option {
+func WithPredictors(predictors map[string]complete.Predictor) Option {
 	return func(o *options) {
 		for k, v := range predictors {
 			WithPredictor(k, v)(o)
@@ -44,27 +39,21 @@ func WithPredictors(
 }
 
 // WithExitFunc the exit command that is run after completions
-func WithExitFunc(
-	exitFunc func(code int),
-) Option {
+func WithExitFunc(exitFunc func(code int)) Option {
 	return func(o *options) {
 		o.exitFunc = exitFunc
 	}
 }
 
 // WithErrorHandler handle errors with completions
-func WithErrorHandler(
-	handler func(error),
-) Option {
+func WithErrorHandler(handler func(error)) Option {
 	return func(o *options) {
 		o.errorHandler = handler
 	}
 }
 
 // WithFlagOverrides registers overrides for hidden commands / flags
-func WithFlagOverrides(
-	overrides ...map[string]bool,
-) Option {
+func WithFlagOverrides(overrides ...map[string]bool) Option {
 	allOverrides := make(map[string]bool)
 	for _, os := range overrides {
 		for k, v := range os {
@@ -95,18 +84,12 @@ func buildOptions(opt ...Option) *options {
 }
 
 // Command returns a completion Command for a kong parser
-func Command(
-	parser *kong.Kong,
-	opt ...Option,
-) (complete.Command, error) {
+func Command(parser *kong.Kong, opt ...Option) (complete.Command, error) {
 	opts := buildOptions(opt...)
 	if parser == nil || parser.Model == nil {
 		return complete.Command{}, nil
 	}
-	command, err := nodeCommand(
-		parser.Model.Node,
-		opts,
-	)
+	command, err := nodeCommand(parser.Model.Node, opts)
 	if err != nil {
 		return complete.Command{}, err
 	}
@@ -122,10 +105,7 @@ func Register(parser *kong.Kong, opt ...Option) {
 	errHandler := opts.errorHandler
 	if errHandler == nil {
 		errHandler = func(err error) {
-			parser.Errorf(
-				"error running command completion: %v",
-				err,
-			)
+			parser.Errorf("error running command completion: %v", err)
 		}
 	}
 	exitFunc := opts.exitFunc
@@ -146,10 +126,7 @@ func Register(parser *kong.Kong, opt ...Option) {
 	}
 }
 
-func nodeCommand(
-	node *kong.Node,
-	opts *options,
-) (*complete.Command, error) {
+func nodeCommand(node *kong.Node, opts *options) (*complete.Command, error) {
 	if node == nil {
 		return nil, nil
 	}
@@ -176,10 +153,7 @@ func nodeCommand(
 		if flag == nil || opts.Skip(flag) {
 			continue
 		}
-		predictor, err := flagPredictor(
-			flag,
-			opts.predictors,
-		)
+		predictor, err := flagPredictor(flag, opts.predictors)
 		if err != nil {
 			return nil, err
 		}
@@ -188,30 +162,21 @@ func nodeCommand(
 		}
 	}
 
-	boolFlags, nonBoolFlags := boolAndNonBoolFlags(
-		node.Flags,
-	)
-	pps, err := positionalPredictors(
-		node.Positional,
-		opts.predictors,
-	)
+	boolFlags, nonBoolFlags := boolAndNonBoolFlags(node.Flags)
+	pps, err := positionalPredictors(node.Positional, opts.predictors)
 	if err != nil {
 		return nil, err
 	}
 	cmd.Args = &PositionalPredictor{
 		Predictors: pps,
-		ArgFlags: flagNamesWithHyphens(
-			nonBoolFlags...),
-		BoolFlags: flagNamesWithHyphens(
-			boolFlags...),
+		ArgFlags:   flagNamesWithHyphens(nonBoolFlags...),
+		BoolFlags:  flagNamesWithHyphens(boolFlags...),
 	}
 
 	return &cmd, nil
 }
 
-func flagNamesWithHyphens(
-	flags ...*kong.Flag,
-) []string {
+func flagNamesWithHyphens(flags ...*kong.Flag) []string {
 	names := make([]string, 0, len(flags)*2)
 	if flags == nil {
 		return names
@@ -219,34 +184,22 @@ func flagNamesWithHyphens(
 	for _, flag := range flags {
 		names = append(names, "--"+flag.Name)
 		if flag.Short != 0 {
-			names = append(
-				names,
-				"-"+string(flag.Short),
-			)
+			names = append(names, "-"+string(flag.Short))
 		}
 	}
 	return names
 }
 
 // boolAndNonBoolFlags divides a list of flags into boolean and non-boolean flags
-func boolAndNonBoolFlags(
-	flags []*kong.Flag,
-) (boolFlags, nonBoolFlags []*kong.Flag) {
+func boolAndNonBoolFlags(flags []*kong.Flag) (boolFlags, nonBoolFlags []*kong.Flag) {
 	boolFlags = make([]*kong.Flag, 0, len(flags))
-	nonBoolFlags = make(
-		[]*kong.Flag,
-		0,
-		len(flags),
-	)
+	nonBoolFlags = make([]*kong.Flag, 0, len(flags))
 	for _, flag := range flags {
 		switch flag.Value.IsBool() {
 		case true:
 			boolFlags = append(boolFlags, flag)
 		case false:
-			nonBoolFlags = append(
-				nonBoolFlags,
-				flag,
-			)
+			nonBoolFlags = append(nonBoolFlags, flag)
 		}
 	}
 	return boolFlags, nonBoolFlags
@@ -258,10 +211,7 @@ type kongTag interface {
 	Get(string) string
 }
 
-func tagPredictor(
-	tag kongTag,
-	predictors map[string]complete.Predictor,
-) (complete.Predictor, error) {
+func tagPredictor(tag kongTag, predictors map[string]complete.Predictor) (complete.Predictor, error) {
 	if tag == nil {
 		return nil, nil
 	}
@@ -274,25 +224,16 @@ func tagPredictor(
 	predictorName := tag.Get(predictorTag)
 	predictor, ok := predictors[predictorName]
 	if !ok {
-		return nil, fmt.Errorf(
-			"no predictor with name %q",
-			predictorName,
-		)
+		return nil, fmt.Errorf("no predictor with name %q", predictorName)
 	}
 	return predictor, nil
 }
 
-func valuePredictor(
-	value *kong.Value,
-	predictors map[string]complete.Predictor,
-) (complete.Predictor, error) {
+func valuePredictor(value *kong.Value, predictors map[string]complete.Predictor) (complete.Predictor, error) {
 	if value == nil {
 		return nil, nil
 	}
-	predictor, err := tagPredictor(
-		value.Tag,
-		predictors,
-	)
+	predictor, err := tagPredictor(value.Tag, predictors)
 	if err != nil {
 		return nil, err
 	}
@@ -303,32 +244,21 @@ func valuePredictor(
 	case value.IsBool():
 		return complete.PredictNothing, nil
 	case value.Enum != "":
-		enumVals := make(
-			[]string,
-			0,
-			len(value.EnumMap()),
-		)
+		enumVals := make([]string, 0, len(value.EnumMap()))
 		for enumVal := range value.EnumMap() {
 			enumVals = append(enumVals, enumVal)
 		}
-		return complete.PredictSet(
-			enumVals...), nil
+		return complete.PredictSet(enumVals...), nil
 	default:
 		return complete.PredictAnything, nil
 	}
 }
 
-func positionalPredictors(
-	args []*kong.Positional,
-	predictors map[string]complete.Predictor,
-) ([]complete.Predictor, error) {
+func positionalPredictors(args []*kong.Positional, predictors map[string]complete.Predictor) ([]complete.Predictor, error) {
 	res := make([]complete.Predictor, len(args))
 	var err error
 	for i, arg := range args {
-		res[i], err = valuePredictor(
-			arg,
-			predictors,
-		)
+		res[i], err = valuePredictor(arg, predictors)
 		if err != nil {
 			return nil, err
 		}
@@ -336,9 +266,6 @@ func positionalPredictors(
 	return res, nil
 }
 
-func flagPredictor(
-	flag *kong.Flag,
-	predictors map[string]complete.Predictor,
-) (complete.Predictor, error) {
+func flagPredictor(flag *kong.Flag, predictors map[string]complete.Predictor) (complete.Predictor, error) {
 	return valuePredictor(flag.Value, predictors)
 }

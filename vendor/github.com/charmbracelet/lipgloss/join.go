@@ -25,10 +25,7 @@ import (
 //
 //	// Join on the top edge
 //	str := lipgloss.JoinHorizontal(lipgloss.Top, blockA, blockB)
-func JoinHorizontal(
-	pos Position,
-	strs ...string,
-) string {
+func JoinHorizontal(pos Position, strs ...string) string {
 	if len(strs) == 0 {
 		return ""
 	}
@@ -61,38 +58,23 @@ func JoinHorizontal(
 			continue
 		}
 
-		extraLines := make(
-			[]string,
-			maxHeight-len(blocks[i]),
-		)
+		extraLines := make([]string, maxHeight-len(blocks[i]))
 
 		switch pos { //nolint:exhaustive
 		case Top:
-			blocks[i] = append(
-				blocks[i],
-				extraLines...)
+			blocks[i] = append(blocks[i], extraLines...)
 
 		case Bottom:
-			blocks[i] = append(
-				extraLines,
-				blocks[i]...)
+			blocks[i] = append(extraLines, blocks[i]...)
 
 		default: // Somewhere in the middle
 			n := len(extraLines)
-			split := int(
-				math.Round(
-					float64(n) * pos.value(),
-				),
-			)
+			split := int(math.Round(float64(n) * pos.value()))
 			top := n - split
 			bottom := n - top
 
-			blocks[i] = append(
-				extraLines[top:],
-				blocks[i]...)
-			blocks[i] = append(
-				blocks[i],
-				extraLines[bottom:]...)
+			blocks[i] = append(extraLines[top:], blocks[i]...)
+			blocks[i] = append(blocks[i], extraLines[bottom:]...)
 		}
 	}
 
@@ -103,14 +85,7 @@ func JoinHorizontal(
 			b.WriteString(block[i])
 
 			// Also make lines the same length
-			b.WriteString(
-				strings.Repeat(
-					" ",
-					maxWidths[j]-ansi.StringWidth(
-						block[i],
-					),
-				),
-			)
+			b.WriteString(strings.Repeat(" ", maxWidths[j]-ansi.StringWidth(block[i])))
 		}
 		if i < len(blocks[0])-1 {
 			b.WriteRune('\n')
@@ -138,10 +113,7 @@ func JoinHorizontal(
 //
 //	// Join on the right edge
 //	str := lipgloss.JoinVertical(lipgloss.Right, blockA, blockB)
-func JoinVertical(
-	pos Position,
-	strs ...string,
-) string {
+func JoinVertical(pos Position, strs ...string) string {
 	if len(strs) == 0 {
 		return ""
 	}
@@ -170,14 +142,10 @@ func JoinVertical(
 			switch pos { //nolint:exhaustive
 			case Left:
 				b.WriteString(line)
-				b.WriteString(
-					strings.Repeat(" ", w),
-				)
+				b.WriteString(strings.Repeat(" ", w))
 
 			case Right:
-				b.WriteString(
-					strings.Repeat(" ", w),
-				)
+				b.WriteString(strings.Repeat(" ", w))
 				b.WriteString(line)
 
 			default: // Somewhere in the middle
@@ -186,21 +154,13 @@ func JoinVertical(
 					break
 				}
 
-				split := int(
-					math.Round(
-						float64(w) * pos.value(),
-					),
-				)
+				split := int(math.Round(float64(w) * pos.value()))
 				right := w - split
 				left := w - right
 
-				b.WriteString(
-					strings.Repeat(" ", left),
-				)
+				b.WriteString(strings.Repeat(" ", left))
 				b.WriteString(line)
-				b.WriteString(
-					strings.Repeat(" ", right),
-				)
+				b.WriteString(strings.Repeat(" ", right))
 			}
 
 			// Write a newline as long as we're not on the last line of the

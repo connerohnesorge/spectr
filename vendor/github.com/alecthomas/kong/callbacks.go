@@ -26,11 +26,7 @@ type binding struct {
 
 // newValueBinding builds a binding with an already resolved value.
 func newValueBinding(v reflect.Value) *binding {
-	return &binding{
-		val:       v,
-		done:      true,
-		singleton: true,
-	}
+	return &binding{val: v, done: true, singleton: true}
 }
 
 // newFunctionBinding builds a binding with a function
@@ -38,10 +34,7 @@ func newValueBinding(v reflect.Value) *binding {
 //
 // The function signature must be func(...) (T, error) or func(...) T
 // where parameters are recursively resolved.
-func newFunctionBinding(
-	f reflect.Value,
-	singleton bool,
-) *binding {
+func newFunctionBinding(f reflect.Value, singleton bool) *binding {
 	return &binding{fn: f, singleton: singleton}
 }
 
@@ -72,10 +65,7 @@ func (b bindings) String() string {
 	for k := range b {
 		out = append(out, k.String())
 	}
-	return "bindings{" + strings.Join(
-		out,
-		", ",
-	) + "}"
+	return "bindings{" + strings.Join(out, ", ") + "}"
 }
 
 func (b bindings) add(values ...any) bindings {
@@ -88,39 +78,22 @@ func (b bindings) add(values ...any) bindings {
 
 func (b bindings) addTo(impl, iface any) {
 	val := reflect.ValueOf(impl)
-	b[reflect.TypeOf(iface).Elem()] = newValueBinding(
-		val,
-	)
+	b[reflect.TypeOf(iface).Elem()] = newValueBinding(val)
 }
 
-func (b bindings) addProvider(
-	provider any,
-	singleton bool,
-) error {
+func (b bindings) addProvider(provider any, singleton bool) error {
 	pv := reflect.ValueOf(provider)
 	t := pv.Type()
 	if t.Kind() != reflect.Func {
-		return fmt.Errorf(
-			"%T must be a function",
-			provider,
-		)
+		return fmt.Errorf("%T must be a function", provider)
 	}
 
 	if t.NumOut() == 0 {
-		return fmt.Errorf(
-			"%T must be a function with the signature func(...)(T, error) or func(...) T",
-			provider,
-		)
+		return fmt.Errorf("%T must be a function with the signature func(...)(T, error) or func(...) T", provider)
 	}
 	if t.NumOut() == 2 {
-		if t.Out(
-			1,
-		) != reflect.TypeOf((*error)(nil)).
-			Elem() {
-			return fmt.Errorf(
-				"missing error; %T must be a function with the signature func(...)(T, error) or func(...) T",
-				provider,
-			)
+		if t.Out(1) != reflect.TypeOf((*error)(nil)).Elem() {
+			return fmt.Errorf("missing error; %T must be a function with the signature func(...)(T, error) or func(...) T", provider)
 		}
 	}
 	rt := pv.Type().Out(0)
@@ -144,15 +117,11 @@ func (b bindings) merge(other bindings) bindings {
 	return b
 }
 
-func getMethod(
-	value reflect.Value,
-	name string,
-) reflect.Value {
+func getMethod(value reflect.Value, name string) reflect.Value {
 	method := value.MethodByName(name)
 	if !method.IsValid() {
 		if value.CanAddr() {
-			method = value.Addr().
-				MethodByName(name)
+			method = value.Addr().MethodByName(name)
 		}
 	}
 	return method
@@ -162,10 +131,7 @@ func getMethod(
 // and any embedded fields.
 //
 // Returns a slice of bound methods that can be called directly.
-func getMethods(
-	value reflect.Value,
-	name string,
-) (methods []reflect.Value) {
+func getMethods(value reflect.Value, name string) (methods []reflect.Value) {
 	if value.Kind() == reflect.Ptr {
 		value = value.Elem()
 	}
@@ -199,54 +165,34 @@ func getMethods(
 		_, isEmbedded := field.Tag.Lookup("embed")
 		isEmbedded = isEmbedded || field.Anonymous
 		if isEmbedded {
-			methods = append(
-				methods,
-				getMethods(fieldValue, name)...)
+			methods = append(methods, getMethods(fieldValue, name)...)
 		}
 	}
 	return
 }
 
-func callFunction(
-	f reflect.Value,
-	bindings bindings,
-) error {
+func callFunction(f reflect.Value, bindings bindings) error {
 	if f.Kind() != reflect.Func {
-		return fmt.Errorf(
-			"expected function, got %s",
-			f.Type(),
-		)
+		return fmt.Errorf("expected function, got %s", f.Type())
 	}
 	t := f.Type()
-	if t.NumOut() != 1 ||
-		!t.Out(0).
-			Implements(callbackReturnSignature) {
-		return fmt.Errorf(
-			"return value of %s must implement \"error\"",
-			t,
-		)
+	if t.NumOut() != 1 || !t.Out(0).Implements(callbackReturnSignature) {
+		return fmt.Errorf("return value of %s must implement \"error\"", t)
 	}
 	out, err := callAnyFunction(f, bindings)
 	if err != nil {
 		return err
 	}
 	ferr := out[0]
-	if ferrv := reflect.ValueOf(ferr); !ferrv.IsValid() ||
-		((ferrv.Kind() == reflect.Interface || ferrv.Kind() == reflect.Pointer) && ferrv.IsNil()) {
+	if ferrv := reflect.ValueOf(ferr); !ferrv.IsValid() || ((ferrv.Kind() == reflect.Interface || ferrv.Kind() == reflect.Pointer) && ferrv.IsNil()) {
 		return nil
 	}
 	return ferr.(error) //nolint:forcetypeassert
 }
 
-func callAnyFunction(
-	f reflect.Value,
-	bindings bindings,
-) (out []any, err error) {
+func callAnyFunction(f reflect.Value, bindings bindings) (out []any, err error) {
 	if f.Kind() != reflect.Func {
-		return nil, fmt.Errorf(
-			"expected function, got %s",
-			f.Type(),
-		)
+		return nil, fmt.Errorf("expected function, got %s", f.Type())
 	}
 	in := []reflect.Value{}
 	t := f.Type()
@@ -254,13 +200,7 @@ func callAnyFunction(
 		pt := t.In(i)
 		binding, ok := bindings[pt]
 		if !ok {
-			return nil, fmt.Errorf(
-				"couldn't find binding of type %s for parameter %d of %s(), use kong.Bind(%s)",
-				pt,
-				i,
-				t,
-				pt,
-			)
+			return nil, fmt.Errorf("couldn't find binding of type %s for parameter %d of %s(), use kong.Bind(%s)", pt, i, t, pt)
 		}
 
 		// Don't need to call the function if the value is already resolved.
@@ -270,20 +210,11 @@ func callAnyFunction(
 		}
 
 		// Recursively resolve binding functions.
-		argv, err := callAnyFunction(
-			binding.fn,
-			bindings,
-		)
+		argv, err := callAnyFunction(binding.fn, bindings)
 		if err != nil {
-			return nil, fmt.Errorf(
-				"%s: %w",
-				pt,
-				err,
-			)
+			return nil, fmt.Errorf("%s: %w", pt, err)
 		}
-		if ferrv := reflect.ValueOf(argv[len(argv)-1]); ferrv.IsValid() &&
-			ferrv.Type().Implements(callbackReturnSignature) &&
-			!ferrv.IsNil() {
+		if ferrv := reflect.ValueOf(argv[len(argv)-1]); ferrv.IsValid() && ferrv.Type().Implements(callbackReturnSignature) && !ferrv.IsNil() {
 			return nil, ferrv.Interface().(error) //nolint:forcetypeassert
 		}
 

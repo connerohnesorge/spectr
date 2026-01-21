@@ -383,22 +383,10 @@ var sequences = map[string]Key{
 	"\x1b[1;5B": {Type: KeyCtrlDown},
 	"\x1b[1;5C": {Type: KeyCtrlRight},
 	"\x1b[1;5D": {Type: KeyCtrlLeft},
-	"\x1b[Oa": {
-		Type: KeyCtrlUp,
-		Alt:  true,
-	}, // urxvt
-	"\x1b[Ob": {
-		Type: KeyCtrlDown,
-		Alt:  true,
-	}, // urxvt
-	"\x1b[Oc": {
-		Type: KeyCtrlRight,
-		Alt:  true,
-	}, // urxvt
-	"\x1b[Od": {
-		Type: KeyCtrlLeft,
-		Alt:  true,
-	}, // urxvt
+	"\x1b[Oa":   {Type: KeyCtrlUp, Alt: true},    // urxvt
+	"\x1b[Ob":   {Type: KeyCtrlDown, Alt: true},  // urxvt
+	"\x1b[Oc":   {Type: KeyCtrlRight, Alt: true}, // urxvt
+	"\x1b[Od":   {Type: KeyCtrlLeft, Alt: true},  // urxvt
 	"\x1b[1;6A": {Type: KeyCtrlShiftUp},
 	"\x1b[1;6B": {Type: KeyCtrlShiftDown},
 	"\x1b[1;6C": {Type: KeyCtrlShiftRight},
@@ -407,22 +395,10 @@ var sequences = map[string]Key{
 	"\x1b[1;7B": {Type: KeyCtrlDown, Alt: true},
 	"\x1b[1;7C": {Type: KeyCtrlRight, Alt: true},
 	"\x1b[1;7D": {Type: KeyCtrlLeft, Alt: true},
-	"\x1b[1;8A": {
-		Type: KeyCtrlShiftUp,
-		Alt:  true,
-	},
-	"\x1b[1;8B": {
-		Type: KeyCtrlShiftDown,
-		Alt:  true,
-	},
-	"\x1b[1;8C": {
-		Type: KeyCtrlShiftRight,
-		Alt:  true,
-	},
-	"\x1b[1;8D": {
-		Type: KeyCtrlShiftLeft,
-		Alt:  true,
-	},
+	"\x1b[1;8A": {Type: KeyCtrlShiftUp, Alt: true},
+	"\x1b[1;8B": {Type: KeyCtrlShiftDown, Alt: true},
+	"\x1b[1;8C": {Type: KeyCtrlShiftRight, Alt: true},
+	"\x1b[1;8D": {Type: KeyCtrlShiftLeft, Alt: true},
 
 	// Miscellaneous keys
 	"\x1b[Z": {Type: KeyShiftTab},
@@ -445,65 +421,25 @@ var sequences = map[string]Key{
 	"\x1b[6^":   {Type: KeyCtrlPgDown}, // urxvt
 	"\x1b[6;7~": {Type: KeyCtrlPgDown, Alt: true},
 
-	"\x1b[1~": {Type: KeyHome},
-	"\x1b[H": {
-		Type: KeyHome,
-	}, // xterm, lxterm
-	"\x1b[1;3H": {
-		Type: KeyHome,
-		Alt:  true,
-	}, // xterm, lxterm
-	"\x1b[1;5H": {
-		Type: KeyCtrlHome,
-	}, // xterm, lxterm
-	"\x1b[1;7H": {
-		Type: KeyCtrlHome,
-		Alt:  true,
-	}, // xterm, lxterm
-	"\x1b[1;2H": {
-		Type: KeyShiftHome,
-	}, // xterm, lxterm
-	"\x1b[1;4H": {
-		Type: KeyShiftHome,
-		Alt:  true,
-	}, // xterm, lxterm
-	"\x1b[1;6H": {
-		Type: KeyCtrlShiftHome,
-	}, // xterm, lxterm
-	"\x1b[1;8H": {
-		Type: KeyCtrlShiftHome,
-		Alt:  true,
-	}, // xterm, lxterm
+	"\x1b[1~":   {Type: KeyHome},
+	"\x1b[H":    {Type: KeyHome},                     // xterm, lxterm
+	"\x1b[1;3H": {Type: KeyHome, Alt: true},          // xterm, lxterm
+	"\x1b[1;5H": {Type: KeyCtrlHome},                 // xterm, lxterm
+	"\x1b[1;7H": {Type: KeyCtrlHome, Alt: true},      // xterm, lxterm
+	"\x1b[1;2H": {Type: KeyShiftHome},                // xterm, lxterm
+	"\x1b[1;4H": {Type: KeyShiftHome, Alt: true},     // xterm, lxterm
+	"\x1b[1;6H": {Type: KeyCtrlShiftHome},            // xterm, lxterm
+	"\x1b[1;8H": {Type: KeyCtrlShiftHome, Alt: true}, // xterm, lxterm
 
-	"\x1b[4~": {Type: KeyEnd},
-	"\x1b[F": {
-		Type: KeyEnd,
-	}, // xterm, lxterm
-	"\x1b[1;3F": {
-		Type: KeyEnd,
-		Alt:  true,
-	}, // xterm, lxterm
-	"\x1b[1;5F": {
-		Type: KeyCtrlEnd,
-	}, // xterm, lxterm
-	"\x1b[1;7F": {
-		Type: KeyCtrlEnd,
-		Alt:  true,
-	}, // xterm, lxterm
-	"\x1b[1;2F": {
-		Type: KeyShiftEnd,
-	}, // xterm, lxterm
-	"\x1b[1;4F": {
-		Type: KeyShiftEnd,
-		Alt:  true,
-	}, // xterm, lxterm
-	"\x1b[1;6F": {
-		Type: KeyCtrlShiftEnd,
-	}, // xterm, lxterm
-	"\x1b[1;8F": {
-		Type: KeyCtrlShiftEnd,
-		Alt:  true,
-	}, // xterm, lxterm
+	"\x1b[4~":   {Type: KeyEnd},
+	"\x1b[F":    {Type: KeyEnd},                     // xterm, lxterm
+	"\x1b[1;3F": {Type: KeyEnd, Alt: true},          // xterm, lxterm
+	"\x1b[1;5F": {Type: KeyCtrlEnd},                 // xterm, lxterm
+	"\x1b[1;7F": {Type: KeyCtrlEnd, Alt: true},      // xterm, lxterm
+	"\x1b[1;2F": {Type: KeyShiftEnd},                // xterm, lxterm
+	"\x1b[1;4F": {Type: KeyShiftEnd, Alt: true},     // xterm, lxterm
+	"\x1b[1;6F": {Type: KeyCtrlShiftEnd},            // xterm, lxterm
+	"\x1b[1;8F": {Type: KeyCtrlShiftEnd, Alt: true}, // xterm, lxterm
 
 	"\x1b[7~": {Type: KeyHome},          // urxvt
 	"\x1b[7^": {Type: KeyCtrlHome},      // urxvt
@@ -528,127 +464,55 @@ var sequences = map[string]Key{
 	"\x1bOR": {Type: KeyF3}, // vt100, xterm
 	"\x1bOS": {Type: KeyF4}, // vt100, xterm
 
-	"\x1b[1;3P": {
-		Type: KeyF1,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[1;3Q": {
-		Type: KeyF2,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[1;3R": {
-		Type: KeyF3,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[1;3S": {
-		Type: KeyF4,
-		Alt:  true,
-	}, // vt100, xterm
+	"\x1b[1;3P": {Type: KeyF1, Alt: true}, // vt100, xterm
+	"\x1b[1;3Q": {Type: KeyF2, Alt: true}, // vt100, xterm
+	"\x1b[1;3R": {Type: KeyF3, Alt: true}, // vt100, xterm
+	"\x1b[1;3S": {Type: KeyF4, Alt: true}, // vt100, xterm
 
 	"\x1b[11~": {Type: KeyF1}, // urxvt
 	"\x1b[12~": {Type: KeyF2}, // urxvt
 	"\x1b[13~": {Type: KeyF3}, // urxvt
 	"\x1b[14~": {Type: KeyF4}, // urxvt
 
-	"\x1b[15~": {
-		Type: KeyF5,
-	}, // vt100, xterm, also urxvt
+	"\x1b[15~": {Type: KeyF5}, // vt100, xterm, also urxvt
 
-	"\x1b[15;3~": {
-		Type: KeyF5,
-		Alt:  true,
-	}, // vt100, xterm, also urxvt
+	"\x1b[15;3~": {Type: KeyF5, Alt: true}, // vt100, xterm, also urxvt
 
-	"\x1b[17~": {
-		Type: KeyF6,
-	}, // vt100, xterm, also urxvt
-	"\x1b[18~": {
-		Type: KeyF7,
-	}, // vt100, xterm, also urxvt
-	"\x1b[19~": {
-		Type: KeyF8,
-	}, // vt100, xterm, also urxvt
-	"\x1b[20~": {
-		Type: KeyF9,
-	}, // vt100, xterm, also urxvt
-	"\x1b[21~": {
-		Type: KeyF10,
-	}, // vt100, xterm, also urxvt
+	"\x1b[17~": {Type: KeyF6},  // vt100, xterm, also urxvt
+	"\x1b[18~": {Type: KeyF7},  // vt100, xterm, also urxvt
+	"\x1b[19~": {Type: KeyF8},  // vt100, xterm, also urxvt
+	"\x1b[20~": {Type: KeyF9},  // vt100, xterm, also urxvt
+	"\x1b[21~": {Type: KeyF10}, // vt100, xterm, also urxvt
 
-	"\x1b[17;3~": {
-		Type: KeyF6,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[18;3~": {
-		Type: KeyF7,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[19;3~": {
-		Type: KeyF8,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[20;3~": {
-		Type: KeyF9,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[21;3~": {
-		Type: KeyF10,
-		Alt:  true,
-	}, // vt100, xterm
+	"\x1b[17;3~": {Type: KeyF6, Alt: true},  // vt100, xterm
+	"\x1b[18;3~": {Type: KeyF7, Alt: true},  // vt100, xterm
+	"\x1b[19;3~": {Type: KeyF8, Alt: true},  // vt100, xterm
+	"\x1b[20;3~": {Type: KeyF9, Alt: true},  // vt100, xterm
+	"\x1b[21;3~": {Type: KeyF10, Alt: true}, // vt100, xterm
 
-	"\x1b[23~": {
-		Type: KeyF11,
-	}, // vt100, xterm, also urxvt
-	"\x1b[24~": {
-		Type: KeyF12,
-	}, // vt100, xterm, also urxvt
+	"\x1b[23~": {Type: KeyF11}, // vt100, xterm, also urxvt
+	"\x1b[24~": {Type: KeyF12}, // vt100, xterm, also urxvt
 
-	"\x1b[23;3~": {
-		Type: KeyF11,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[24;3~": {
-		Type: KeyF12,
-		Alt:  true,
-	}, // vt100, xterm
+	"\x1b[23;3~": {Type: KeyF11, Alt: true}, // vt100, xterm
+	"\x1b[24;3~": {Type: KeyF12, Alt: true}, // vt100, xterm
 
 	"\x1b[1;2P": {Type: KeyF13},
 	"\x1b[1;2Q": {Type: KeyF14},
 
-	"\x1b[25~": {
-		Type: KeyF13,
-	}, // vt100, xterm, also urxvt
-	"\x1b[26~": {
-		Type: KeyF14,
-	}, // vt100, xterm, also urxvt
+	"\x1b[25~": {Type: KeyF13}, // vt100, xterm, also urxvt
+	"\x1b[26~": {Type: KeyF14}, // vt100, xterm, also urxvt
 
-	"\x1b[25;3~": {
-		Type: KeyF13,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[26;3~": {
-		Type: KeyF14,
-		Alt:  true,
-	}, // vt100, xterm
+	"\x1b[25;3~": {Type: KeyF13, Alt: true}, // vt100, xterm
+	"\x1b[26;3~": {Type: KeyF14, Alt: true}, // vt100, xterm
 
 	"\x1b[1;2R": {Type: KeyF15},
 	"\x1b[1;2S": {Type: KeyF16},
 
-	"\x1b[28~": {
-		Type: KeyF15,
-	}, // vt100, xterm, also urxvt
-	"\x1b[29~": {
-		Type: KeyF16,
-	}, // vt100, xterm, also urxvt
+	"\x1b[28~": {Type: KeyF15}, // vt100, xterm, also urxvt
+	"\x1b[29~": {Type: KeyF16}, // vt100, xterm, also urxvt
 
-	"\x1b[28;3~": {
-		Type: KeyF15,
-		Alt:  true,
-	}, // vt100, xterm
-	"\x1b[29;3~": {
-		Type: KeyF16,
-		Alt:  true,
-	}, // vt100, xterm
+	"\x1b[28;3~": {Type: KeyF15, Alt: true}, // vt100, xterm
+	"\x1b[29;3~": {Type: KeyF16, Alt: true}, // vt100, xterm
 
 	"\x1b[15;2~": {Type: KeyF17},
 	"\x1b[17;2~": {Type: KeyF18},
@@ -691,11 +555,7 @@ var spaceRunes = []rune{' '}
 
 // readAnsiInputs reads keypress and mouse inputs from a TTY and produces messages
 // containing information about the key or mouse events accordingly.
-func readAnsiInputs(
-	ctx context.Context,
-	msgs chan<- Msg,
-	input io.Reader,
-) error {
+func readAnsiInputs(ctx context.Context, msgs chan<- Msg, input io.Reader) error {
 	var buf [256]byte
 
 	var leftOverFromPrevIteration []byte
@@ -747,36 +607,23 @@ loop:
 }
 
 var (
-	unknownCSIRe = regexp.MustCompile(
-		`^\x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]`,
-	)
-	mouseSGRRegex = regexp.MustCompile(
-		`(\d+);(\d+);(\d+)([Mm])`,
-	)
+	unknownCSIRe  = regexp.MustCompile(`^\x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]`)
+	mouseSGRRegex = regexp.MustCompile(`(\d+);(\d+);(\d+)([Mm])`)
 )
 
-func detectOneMsg(
-	b []byte,
-	canHaveMoreData bool,
-) (w int, msg Msg) {
+func detectOneMsg(b []byte, canHaveMoreData bool) (w int, msg Msg) {
 	// Detect mouse events.
 	// X10 mouse events have a length of 6 bytes
 	const mouseEventX10Len = 6
-	if len(b) >= mouseEventX10Len &&
-		b[0] == '\x1b' &&
-		b[1] == '[' {
+	if len(b) >= mouseEventX10Len && b[0] == '\x1b' && b[1] == '[' {
 		switch b[2] {
 		case 'M':
-			return mouseEventX10Len, MouseMsg(
-				parseX10MouseEvent(b),
-			)
+			return mouseEventX10Len, MouseMsg(parseX10MouseEvent(b))
 		case '<':
 			if matchIndices := mouseSGRRegex.FindSubmatchIndex(b[3:]); matchIndices != nil {
 				// SGR mouse events length is the length of the match plus the length of the escape sequence
 				mouseEventSGRLen := matchIndices[1] + 3 //nolint:mnd
-				return mouseEventSGRLen, MouseMsg(
-					parseSGRMouseEvent(b),
-				)
+				return mouseEventSGRLen, MouseMsg(parseSGRMouseEvent(b))
 			}
 		}
 	}
@@ -815,10 +662,7 @@ func detectOneMsg(
 
 	// Are we seeing a standalone NUL? This is not handled by detectSequence().
 	if i < len(b) && b[i] == 0 {
-		return i + 1, KeyMsg{
-			Type: keyNUL,
-			Alt:  alt,
-		}
+		return i + 1, KeyMsg{Type: keyNUL, Alt: alt}
 	}
 
 	// Find the longest sequence of runes that are not control
@@ -827,10 +671,7 @@ func detectOneMsg(
 	for rw := 0; i < len(b); i += rw {
 		var r rune
 		r, rw = utf8.DecodeRune(b[i:])
-		if r == utf8.RuneError ||
-			r <= rune(keyUS) ||
-			r == rune(keyDEL) ||
-			r == ' ' {
+		if r == utf8.RuneError || r <= rune(keyUS) || r == rune(keyDEL) || r == ' ' {
 			// Rune errors are handled below; control characters and spaces will
 			// be handled by detectSequence in the next call to detectOneMsg.
 			break
@@ -854,11 +695,7 @@ func detectOneMsg(
 	// If we found at least one rune, we report the bunch of them as
 	// a single KeyRunes or KeySpace event.
 	if len(runes) > 0 {
-		k := Key{
-			Type:  KeyRunes,
-			Runes: runes,
-			Alt:   alt,
-		}
+		k := Key{Type: KeyRunes, Runes: runes, Alt: alt}
 		if len(runes) == 1 && runes[0] == ' ' {
 			k.Type = KeySpace
 		}

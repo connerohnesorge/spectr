@@ -133,9 +133,7 @@ type ifreqData struct {
 
 // withData produces an ifreqData with the pointer p set for ioctls which require
 // arbitrary pointer data.
-func (ifr Ifreq) withData(
-	p unsafe.Pointer,
-) ifreqData {
+func (ifr Ifreq) withData(p unsafe.Pointer) ifreqData {
 	return ifreqData{
 		name: ifr.raw.Ifrn,
 		data: p,

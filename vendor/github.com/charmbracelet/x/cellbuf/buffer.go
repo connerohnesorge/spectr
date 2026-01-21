@@ -23,9 +23,7 @@ func NewCell(r rune, comb ...rune) (c *Cell) {
 		c.Comb = append(c.Comb, r)
 	}
 	c.Comb = comb
-	c.Width = runewidth.StringWidth(
-		string(append([]rune{r}, comb...)),
-	)
+	c.Width = runewidth.StringWidth(string(append([]rune{r}, comb...)))
 	return
 }
 
@@ -59,10 +57,7 @@ func NewCellString(s string) (c *Cell) {
 // This will only return the first grapheme cluster in the string. If the
 // string is empty, it will return an empty cell with a width of 0.
 func NewGraphemeCell(s string) (c *Cell) {
-	g, _, w, _ := uniseg.FirstGraphemeClusterInString(
-		s,
-		-1,
-	)
+	g, _, w, _ := uniseg.FirstGraphemeClusterInString(s, -1)
 	return newGraphemeCell(g, w)
 }
 
@@ -135,11 +130,7 @@ func (l Line) Set(x int, c *Cell) bool {
 	return l.set(x, c, true)
 }
 
-func (l Line) set(
-	x int,
-	c *Cell,
-	clone bool,
-) bool {
+func (l Line) set(x int, c *Cell, clone bool) bool {
 	width := l.Width()
 	if x < 0 || x >= width {
 		return false
@@ -245,11 +236,7 @@ func (b *Buffer) SetCell(x, y int, c *Cell) bool {
 
 // setCell sets the cell at the given x, y position. This will always clone and
 // allocates a new cell if c is not nil.
-func (b *Buffer) setCell(
-	x, y int,
-	c *Cell,
-	clone bool,
-) bool {
+func (b *Buffer) setCell(x, y int, c *Cell, clone bool) bool {
 	if y < 0 || y >= len(b.Lines) {
 		return false
 	}
@@ -284,9 +271,7 @@ func (b *Buffer) Resize(width int, height int) {
 	if width > b.Width() {
 		line := make(Line, width-b.Width())
 		for i := range b.Lines {
-			b.Lines[i] = append(
-				b.Lines[i],
-				line...)
+			b.Lines[i] = append(b.Lines[i], line...)
 		}
 	} else if width < b.Width() {
 		for i := range b.Lines {
@@ -296,10 +281,7 @@ func (b *Buffer) Resize(width int, height int) {
 
 	if height > len(b.Lines) {
 		for i := len(b.Lines); i < height; i++ {
-			b.Lines = append(
-				b.Lines,
-				make(Line, width),
-			)
+			b.Lines = append(b.Lines, make(Line, width))
 		}
 	} else if height < len(b.Lines) {
 		b.Lines = b.Lines[:height]
@@ -307,22 +289,14 @@ func (b *Buffer) Resize(width int, height int) {
 }
 
 // FillRect fills the buffer with the given cell and rectangle.
-func (b *Buffer) FillRect(
-	c *Cell,
-	rect Rectangle,
-) {
+func (b *Buffer) FillRect(c *Cell, rect Rectangle) {
 	cellWidth := 1
 	if c != nil && c.Width > 1 {
 		cellWidth = c.Width
 	}
 	for y := rect.Min.Y; y < rect.Max.Y; y++ {
 		for x := rect.Min.X; x < rect.Max.X; x += cellWidth {
-			b.setCell(
-				x,
-				y,
-				c,
-				false,
-			) //nolint:errcheck
+			b.setCell(x, y, c, false) //nolint:errcheck
 		}
 	}
 }
@@ -357,14 +331,8 @@ func (b *Buffer) InsertLine(y, n int, c *Cell) {
 // given optional cell, within the rectangle bounds. Only cells within the
 // rectangle's horizontal bounds are affected. Lines are pushed out of the
 // rectangle bounds and lost. This follows terminal [ansi.IL] behavior.
-func (b *Buffer) InsertLineRect(
-	y, n int,
-	c *Cell,
-	rect Rectangle,
-) {
-	if n <= 0 || y < rect.Min.Y ||
-		y >= rect.Max.Y ||
-		y >= b.Height() {
+func (b *Buffer) InsertLineRect(y, n int, c *Cell, rect Rectangle) {
+	if n <= 0 || y < rect.Min.Y || y >= rect.Max.Y || y >= b.Height() {
 		return
 	}
 
@@ -377,12 +345,7 @@ func (b *Buffer) InsertLineRect(
 	for i := rect.Max.Y - 1; i >= y+n; i-- {
 		for x := rect.Min.X; x < rect.Max.X; x++ {
 			// We don't need to clone c here because we're just moving lines down.
-			b.setCell(
-				x,
-				i,
-				b.Lines[i-n][x],
-				false,
-			)
+			b.setCell(x, i, b.Lines[i-n][x], false)
 		}
 	}
 
@@ -399,14 +362,8 @@ func (b *Buffer) InsertLineRect(
 // rectangle's bounds are affected. Lines are shifted up within the bounds and
 // new blank lines are created at the bottom. This follows terminal [ansi.DL]
 // behavior.
-func (b *Buffer) DeleteLineRect(
-	y, n int,
-	c *Cell,
-	rect Rectangle,
-) {
-	if n <= 0 || y < rect.Min.Y ||
-		y >= rect.Max.Y ||
-		y >= b.Height() {
+func (b *Buffer) DeleteLineRect(y, n int, c *Cell, rect Rectangle) {
+	if n <= 0 || y < rect.Min.Y || y >= rect.Max.Y || y >= b.Height() {
 		return
 	}
 
@@ -421,12 +378,7 @@ func (b *Buffer) DeleteLineRect(
 		for x := rect.Min.X; x < rect.Max.X; x++ {
 			// We don't need to clone c here because we're just moving cells up.
 			// b.lines[dst][x] = b.lines[src][x]
-			b.setCell(
-				x,
-				dst,
-				b.Lines[src][x],
-				false,
-			)
+			b.setCell(x, dst, b.Lines[src][x], false)
 		}
 	}
 
@@ -449,25 +401,16 @@ func (b *Buffer) DeleteLine(y, n int, c *Cell) {
 // cell, within the specified rectangles. If no rectangles are specified, it
 // inserts cells in the entire buffer. This follows terminal [ansi.ICH]
 // behavior.
-func (b *Buffer) InsertCell(
-	x, y, n int,
-	c *Cell,
-) {
+func (b *Buffer) InsertCell(x, y, n int, c *Cell) {
 	b.InsertCellRect(x, y, n, c, b.Bounds())
 }
 
 // InsertCellRect inserts new cells at the given position, with the given
 // optional cell, within the rectangle bounds. Only cells within the
 // rectangle's bounds are affected, following terminal [ansi.ICH] behavior.
-func (b *Buffer) InsertCellRect(
-	x, y, n int,
-	c *Cell,
-	rect Rectangle,
-) {
+func (b *Buffer) InsertCellRect(x, y, n int, c *Cell, rect Rectangle) {
 	if n <= 0 || y < rect.Min.Y || y >= rect.Max.Y || y >= b.Height() ||
-		x < rect.Min.X ||
-		x >= rect.Max.X ||
-		x >= b.Width() {
+		x < rect.Min.X || x >= rect.Max.X || x >= b.Width() {
 		return
 	}
 
@@ -494,25 +437,16 @@ func (b *Buffer) InsertCellRect(
 // cell, within the specified rectangles. If no rectangles are specified, it
 // deletes cells in the entire buffer. This follows terminal [ansi.DCH]
 // behavior.
-func (b *Buffer) DeleteCell(
-	x, y, n int,
-	c *Cell,
-) {
+func (b *Buffer) DeleteCell(x, y, n int, c *Cell) {
 	b.DeleteCellRect(x, y, n, c, b.Bounds())
 }
 
 // DeleteCellRect deletes cells at the given position, with the given
 // optional cell, within the rectangle bounds. Only cells within the
 // rectangle's bounds are affected, following terminal [ansi.DCH] behavior.
-func (b *Buffer) DeleteCellRect(
-	x, y, n int,
-	c *Cell,
-	rect Rectangle,
-) {
+func (b *Buffer) DeleteCellRect(x, y, n int, c *Cell, rect Rectangle) {
 	if n <= 0 || y < rect.Min.Y || y >= rect.Max.Y || y >= b.Height() ||
-		x < rect.Min.X ||
-		x >= rect.Max.X ||
-		x >= b.Width() {
+		x < rect.Min.X || x >= rect.Max.X || x >= b.Width() {
 		return
 	}
 
@@ -528,12 +462,7 @@ func (b *Buffer) DeleteCellRect(
 			// We don't need to clone c here because we're just moving cells to
 			// the left.
 			// b.lines[y][i] = b.lines[y][i+n]
-			b.setCell(
-				i,
-				y,
-				b.Lines[y][i+n],
-				false,
-			)
+			b.setCell(i, y, b.Lines[y][i+n], false)
 		}
 	}
 

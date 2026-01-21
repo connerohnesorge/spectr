@@ -452,9 +452,7 @@ func VPR(n int) string {
 // This has the same effect as [CursorPosition].
 //
 // See: https://vt100.net/docs/vt510-rm/HVP.html
-func HorizontalVerticalPosition(
-	col, row int,
-) string {
+func HorizontalVerticalPosition(col, row int) string {
 	var r, c string
 	if row > 0 {
 		r = strconv.Itoa(row)

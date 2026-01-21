@@ -30,20 +30,13 @@ type SockaddrDatalink struct {
 	raw    RawSockaddrDatalink
 }
 
-func anyToSockaddrGOOS(
-	fd int,
-	rsa *RawSockaddrAny,
-) (Sockaddr, error) {
+func anyToSockaddrGOOS(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
 	return nil, EAFNOSUPPORT
 }
 
-func Syscall9(
-	trap, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr,
-) (r1, r2 uintptr, err syscall.Errno)
+func Syscall9(trap, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr) (r1, r2 uintptr, err syscall.Errno)
 
-func sysctlNodes(
-	mib []_C_int,
-) (nodes []Sysctlnode, err error) {
+func sysctlNodes(mib []_C_int) (nodes []Sysctlnode, err error) {
 	var olen uintptr
 
 	// Get a list of all sysctl nodes below the given MIB by performing
@@ -66,9 +59,7 @@ func sysctlNodes(
 	return nodes, nil
 }
 
-func nametomib(
-	name string,
-) (mib []_C_int, err error) {
+func nametomib(name string) (mib []_C_int, err error) {
 	// Split name into components.
 	var parts []string
 	last := 0
@@ -90,17 +81,11 @@ func nametomib(
 			n := make([]byte, 0)
 			for i := range node.Name {
 				if node.Name[i] != 0 {
-					n = append(
-						n,
-						byte(node.Name[i]),
-					)
+					n = append(n, byte(node.Name[i]))
 				}
 			}
 			if string(n) == part {
-				mib = append(
-					mib,
-					_C_int(node.Num),
-				)
+				mib = append(mib, _C_int(node.Num))
 				break
 			}
 		}
@@ -113,27 +98,15 @@ func nametomib(
 }
 
 func direntIno(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Fileno),
-		unsafe.Sizeof(Dirent{}.Fileno),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Fileno), unsafe.Sizeof(Dirent{}.Fileno))
 }
 
 func direntReclen(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Reclen),
-		unsafe.Sizeof(Dirent{}.Reclen),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Reclen), unsafe.Sizeof(Dirent{}.Reclen))
 }
 
 func direntNamlen(buf []byte) (uint64, bool) {
-	return readInt(
-		buf,
-		unsafe.Offsetof(Dirent{}.Namlen),
-		unsafe.Sizeof(Dirent{}.Namlen),
-	)
+	return readInt(buf, unsafe.Offsetof(Dirent{}.Namlen), unsafe.Sizeof(Dirent{}.Namlen))
 }
 
 func SysctlUvmexp(name string) (*Uvmexp, error) {
@@ -171,11 +144,7 @@ func Pipe2(p []int, flags int) error {
 
 //sys	Getdents(fd int, buf []byte) (n int, err error)
 
-func Getdirentries(
-	fd int,
-	buf []byte,
-	basep *uintptr,
-) (n int, err error) {
+func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
 	n, err = Getdents(fd, buf)
 	if err != nil || basep == nil {
 		return
@@ -203,12 +172,7 @@ func Getdirentries(
 //sys	Getcwd(buf []byte) (n int, err error) = SYS___GETCWD
 
 // TODO
-func sendfile(
-	outfd int,
-	infd int,
-	offset *int64,
-	count int,
-) (written int, err error) {
+func sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
 	return -1, ENOSYS
 }
 
@@ -217,16 +181,9 @@ func sendfile(
 
 //sys	sysctl(mib []_C_int, old *byte, oldlen *uintptr, new *byte, newlen uintptr) (err error) = SYS___SYSCTL
 
-func IoctlGetPtmget(
-	fd int,
-	req uint,
-) (*Ptmget, error) {
+func IoctlGetPtmget(fd int, req uint) (*Ptmget, error) {
 	var value Ptmget
-	err := ioctlPtr(
-		fd,
-		req,
-		unsafe.Pointer(&value),
-	)
+	err := ioctlPtr(fd, req, unsafe.Pointer(&value))
 	return &value, err
 }
 
@@ -276,29 +233,18 @@ func Uname(uname *Utsname) error {
 	return nil
 }
 
-func Sendfile(
-	outfd int,
-	infd int,
-	offset *int64,
-	count int,
-) (written int, err error) {
+func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
 	if raceenabled {
 		raceReleaseMerge(unsafe.Pointer(&ioSync))
 	}
 	return sendfile(outfd, infd, offset, count)
 }
 
-func Fstatvfs(
-	fd int,
-	buf *Statvfs_t,
-) (err error) {
+func Fstatvfs(fd int, buf *Statvfs_t) (err error) {
 	return Fstatvfs1(fd, buf, ST_WAIT)
 }
 
-func Statvfs(
-	path string,
-	buf *Statvfs_t,
-) (err error) {
+func Statvfs(path string, buf *Statvfs_t) (err error) {
 	return Statvfs1(path, buf, ST_WAIT)
 }
 
@@ -420,18 +366,6 @@ const (
 
 //sys	mremapNetBSD(oldp uintptr, oldsize uintptr, newp uintptr, newsize uintptr, flags int) (xaddr uintptr, err error) = SYS_MREMAP
 
-func mremap(
-	oldaddr uintptr,
-	oldlength uintptr,
-	newlength uintptr,
-	flags int,
-	newaddr uintptr,
-) (uintptr, error) {
-	return mremapNetBSD(
-		oldaddr,
-		oldlength,
-		newaddr,
-		newlength,
-		flags,
-	)
+func mremap(oldaddr uintptr, oldlength uintptr, newlength uintptr, flags int, newaddr uintptr) (uintptr, error) {
+	return mremapNetBSD(oldaddr, oldlength, newaddr, newlength, flags)
 }

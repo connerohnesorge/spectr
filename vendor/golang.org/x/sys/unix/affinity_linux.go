@@ -16,17 +16,8 @@ const cpuSetSize = _CPU_SETSIZE / _NCPUBITS
 // CPUSet represents a CPU affinity mask.
 type CPUSet [cpuSetSize]cpuMask
 
-func schedAffinity(
-	trap uintptr,
-	pid int,
-	set *CPUSet,
-) error {
-	_, _, e := RawSyscall(
-		trap,
-		uintptr(pid),
-		uintptr(unsafe.Sizeof(*set)),
-		uintptr(unsafe.Pointer(set)),
-	)
+func schedAffinity(trap uintptr, pid int, set *CPUSet) error {
+	_, _, e := RawSyscall(trap, uintptr(pid), uintptr(unsafe.Sizeof(*set)), uintptr(unsafe.Pointer(set)))
 	if e != 0 {
 		return errnoErr(e)
 	}
@@ -35,28 +26,14 @@ func schedAffinity(
 
 // SchedGetaffinity gets the CPU affinity mask of the thread specified by pid.
 // If pid is 0 the calling thread is used.
-func SchedGetaffinity(
-	pid int,
-	set *CPUSet,
-) error {
-	return schedAffinity(
-		SYS_SCHED_GETAFFINITY,
-		pid,
-		set,
-	)
+func SchedGetaffinity(pid int, set *CPUSet) error {
+	return schedAffinity(SYS_SCHED_GETAFFINITY, pid, set)
 }
 
 // SchedSetaffinity sets the CPU affinity mask of the thread specified by pid.
 // If pid is 0 the calling thread is used.
-func SchedSetaffinity(
-	pid int,
-	set *CPUSet,
-) error {
-	return schedAffinity(
-		SYS_SCHED_SETAFFINITY,
-		pid,
-		set,
-	)
+func SchedSetaffinity(pid int, set *CPUSet) error {
+	return schedAffinity(SYS_SCHED_SETAFFINITY, pid, set)
 }
 
 // Zero clears the set s, so that it contains no CPUs.

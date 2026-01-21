@@ -21,10 +21,7 @@ type Dir interface {
 	Remove(*FileData)
 }
 
-func RemoveFromMemDir(
-	dir *FileData,
-	f *FileData,
-) {
+func RemoveFromMemDir(dir *FileData, f *FileData) {
 	dir.memDir.Remove(f)
 }
 

@@ -16,10 +16,7 @@ import (
 //
 // See: https://www.gnu.org/software/screen/manual/screen.html#String-Escapes
 // See: https://git.savannah.gnu.org/cgit/screen.git/tree/src/screen.h?id=c184c6ec27683ff1a860c45be5cf520d896fd2ef#n44
-func ScreenPassthrough(
-	seq string,
-	limit int,
-) string {
+func ScreenPassthrough(seq string, limit int) string {
 	var b bytes.Buffer
 	b.WriteString("\x1bP")
 	if limit > 0 {

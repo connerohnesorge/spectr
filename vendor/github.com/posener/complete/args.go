@@ -31,13 +31,11 @@ type Args struct {
 //
 // Deprecated.
 func (a Args) Directory() string {
-	if info, err := os.Stat(a.Last); err == nil &&
-		info.IsDir() {
+	if info, err := os.Stat(a.Last); err == nil && info.IsDir() {
 		return fixPathForm(a.Last, a.Last)
 	}
 	dir := filepath.Dir(a.Last)
-	if info, err := os.Stat(dir); err != nil ||
-		!info.IsDir() {
+	if info, err := os.Stat(dir); err != nil || !info.IsDir() {
 		return "./"
 	}
 	return fixPathForm(a.Last, dir)
@@ -70,8 +68,7 @@ func splitFields(line string) []string {
 	parts := strings.Fields(line)
 
 	// Add empty field if the last field was completed.
-	if len(line) > 0 &&
-		unicode.IsSpace(rune(line[len(line)-1])) {
+	if len(line) > 0 && unicode.IsSpace(rune(line[len(line)-1])) {
 		parts = append(parts, "")
 	}
 

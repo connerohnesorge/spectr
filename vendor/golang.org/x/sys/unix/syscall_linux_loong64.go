@@ -22,19 +22,10 @@ import "unsafe"
 //sys	pwrite(fd int, p []byte, offset int64) (n int, err error) = SYS_PWRITE64
 //sys	Seek(fd int, offset int64, whence int) (off int64, err error) = SYS_LSEEK
 
-func Select(
-	nfd int,
-	r *FdSet,
-	w *FdSet,
-	e *FdSet,
-	timeout *Timeval,
-) (n int, err error) {
+func Select(nfd int, r *FdSet, w *FdSet, e *FdSet, timeout *Timeval) (n int, err error) {
 	var ts *Timespec
 	if timeout != nil {
-		ts = &Timespec{
-			Sec:  timeout.Sec,
-			Nsec: timeout.Usec * 1000,
-		}
+		ts = &Timespec{Sec: timeout.Sec, Nsec: timeout.Usec * 1000}
 	}
 	return pselect6(nfd, r, w, e, ts, nil)
 }
@@ -45,21 +36,14 @@ func Select(
 //sys	Shutdown(fd int, how int) (err error)
 //sys	Splice(rfd int, roff *int64, wfd int, woff *int64, len int, flags int) (n int64, err error)
 
-func timespecFromStatxTimestamp(
-	x StatxTimestamp,
-) Timespec {
+func timespecFromStatxTimestamp(x StatxTimestamp) Timespec {
 	return Timespec{
 		Sec:  x.Sec,
 		Nsec: int64(x.Nsec),
 	}
 }
 
-func Fstatat(
-	fd int,
-	path string,
-	stat *Stat_t,
-	flags int,
-) error {
+func Fstatat(fd int, path string, stat *Stat_t, flags int) error {
 	var r Statx_t
 	// Do it the glibc way, add AT_NO_AUTOMOUNT.
 	if err := Statx(fd, path, AT_NO_AUTOMOUNT|flags, STATX_BASIC_STATS, &r); err != nil {
@@ -78,15 +62,9 @@ func Fstatat(
 	stat.Size = int64(r.Size)
 	stat.Blksize = int32(r.Blksize)
 	stat.Blocks = int64(r.Blocks)
-	stat.Atim = timespecFromStatxTimestamp(
-		r.Atime,
-	)
-	stat.Mtim = timespecFromStatxTimestamp(
-		r.Mtime,
-	)
-	stat.Ctim = timespecFromStatxTimestamp(
-		r.Ctime,
-	)
+	stat.Atim = timespecFromStatxTimestamp(r.Atime)
+	stat.Mtim = timespecFromStatxTimestamp(r.Mtime)
+	stat.Ctim = timespecFromStatxTimestamp(r.Ctime)
 
 	return nil
 }
@@ -99,30 +77,12 @@ func Stat(path string, stat *Stat_t) (err error) {
 	return Fstatat(AT_FDCWD, path, stat, 0)
 }
 
-func Lchown(
-	path string,
-	uid int,
-	gid int,
-) (err error) {
-	return Fchownat(
-		AT_FDCWD,
-		path,
-		uid,
-		gid,
-		AT_SYMLINK_NOFOLLOW,
-	)
+func Lchown(path string, uid int, gid int) (err error) {
+	return Fchownat(AT_FDCWD, path, uid, gid, AT_SYMLINK_NOFOLLOW)
 }
 
-func Lstat(
-	path string,
-	stat *Stat_t,
-) (err error) {
-	return Fstatat(
-		AT_FDCWD,
-		path,
-		stat,
-		AT_SYMLINK_NOFOLLOW,
-	)
+func Lstat(path string, stat *Stat_t) (err error) {
+	return Fstatat(AT_FDCWD, path, stat, AT_SYMLINK_NOFOLLOW)
 }
 
 //sys	Statfs(path string, buf *Statfs_t) (err error)
@@ -160,19 +120,12 @@ func setTimeval(sec, usec int64) Timeval {
 	return Timeval{Sec: sec, Usec: usec}
 }
 
-func Getrlimit(
-	resource int,
-	rlim *Rlimit,
-) (err error) {
+func Getrlimit(resource int, rlim *Rlimit) (err error) {
 	err = Prlimit(0, resource, nil, rlim)
 	return
 }
 
-func futimesat(
-	dirfd int,
-	path string,
-	tv *[2]Timeval,
-) (err error) {
+func futimesat(dirfd int, path string, tv *[2]Timeval) (err error) {
 	if tv == nil {
 		return utimensat(dirfd, path, nil, 0)
 	}
@@ -181,12 +134,7 @@ func futimesat(
 		NsecToTimespec(TimevalToNsec(tv[0])),
 		NsecToTimespec(TimevalToNsec(tv[1])),
 	}
-	return utimensat(
-		dirfd,
-		path,
-		(*[2]Timespec)(unsafe.Pointer(&ts[0])),
-		0,
-	)
+	return utimensat(dirfd, path, (*[2]Timespec)(unsafe.Pointer(&ts[0])), 0)
 }
 
 func Time(t *Time_t) (Time_t, error) {
@@ -209,10 +157,7 @@ func Utime(path string, buf *Utimbuf) error {
 	return Utimes(path, tv)
 }
 
-func utimes(
-	path string,
-	tv *[2]Timeval,
-) (err error) {
+func utimes(path string, tv *[2]Timeval) (err error) {
 	if tv == nil {
 		return utimensat(AT_FDCWD, path, nil, 0)
 	}
@@ -221,21 +166,12 @@ func utimes(
 		NsecToTimespec(TimevalToNsec(tv[0])),
 		NsecToTimespec(TimevalToNsec(tv[1])),
 	}
-	return utimensat(
-		AT_FDCWD,
-		path,
-		(*[2]Timespec)(unsafe.Pointer(&ts[0])),
-		0,
-	)
+	return utimensat(AT_FDCWD, path, (*[2]Timespec)(unsafe.Pointer(&ts[0])), 0)
 }
 
 func (r *PtraceRegs) PC() uint64 { return r.Era }
 
-func (r *PtraceRegs) SetPC(
-	era uint64,
-) {
-	r.Era = era
-}
+func (r *PtraceRegs) SetPC(era uint64) { r.Era = era }
 
 func (iov *Iovec) SetLen(length int) {
 	iov.Len = uint64(length)
@@ -253,9 +189,7 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 	cmsg.Len = uint64(length)
 }
 
-func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(
-	length int,
-) {
+func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(length int) {
 	rsa.Service_name_len = uint64(length)
 }
 
@@ -264,29 +198,13 @@ func Pause() error {
 	return err
 }
 
-func Renameat(
-	olddirfd int,
-	oldpath string,
-	newdirfd int,
-	newpath string,
-) (err error) {
-	return Renameat2(
-		olddirfd,
-		oldpath,
-		newdirfd,
-		newpath,
-		0,
-	)
+func Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) (err error) {
+	return Renameat2(olddirfd, oldpath, newdirfd, newpath, 0)
 }
 
 //sys	kexecFileLoad(kernelFd int, initrdFd int, cmdlineLen int, cmdline string, flags int) (err error)
 
-func KexecFileLoad(
-	kernelFd int,
-	initrdFd int,
-	cmdline string,
-	flags int,
-) error {
+func KexecFileLoad(kernelFd int, initrdFd int, cmdline string, flags int) error {
 	cmdlineLen := len(cmdline)
 	if cmdlineLen > 0 {
 		// Account for the additional NULL byte added by
@@ -294,13 +212,7 @@ func KexecFileLoad(
 		// syscall expects a NULL-terminated string.
 		cmdlineLen++
 	}
-	return kexecFileLoad(
-		kernelFd,
-		initrdFd,
-		cmdlineLen,
-		cmdline,
-		flags,
-	)
+	return kexecFileLoad(kernelFd, initrdFd, cmdlineLen, cmdline, flags)
 }
 
 const SYS_FSTATAT = SYS_NEWFSTATAT

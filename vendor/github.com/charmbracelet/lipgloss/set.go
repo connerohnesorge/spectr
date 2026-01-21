@@ -1,10 +1,7 @@
 package lipgloss
 
 // Set a value on the underlying rules map.
-func (s *Style) set(
-	key propKey,
-	value interface{},
-) {
+func (s *Style) set(key propKey, value interface{}) {
 	// We don't allow negative integers on any of our other values, so just keep
 	// them at zero or above. We could use uints instead, but the
 	// conversions are a little tedious, so we're sticking with ints for
@@ -101,10 +98,7 @@ func (s *Style) setFrom(key propKey, i Style) {
 	case heightKey:
 		s.set(heightKey, i.height)
 	case alignHorizontalKey:
-		s.set(
-			alignHorizontalKey,
-			i.alignHorizontal,
-		)
+		s.set(alignHorizontalKey, i.alignHorizontal)
 	case alignVerticalKey:
 		s.set(alignVerticalKey, i.alignVertical)
 	case paddingTopKey:
@@ -124,52 +118,25 @@ func (s *Style) setFrom(key propKey, i Style) {
 	case marginLeftKey:
 		s.set(marginLeftKey, i.marginLeft)
 	case marginBackgroundKey:
-		s.set(
-			marginBackgroundKey,
-			i.marginBgColor,
-		)
+		s.set(marginBackgroundKey, i.marginBgColor)
 	case borderStyleKey:
 		s.set(borderStyleKey, i.borderStyle)
 	case borderTopForegroundKey:
-		s.set(
-			borderTopForegroundKey,
-			i.borderTopFgColor,
-		)
+		s.set(borderTopForegroundKey, i.borderTopFgColor)
 	case borderRightForegroundKey:
-		s.set(
-			borderRightForegroundKey,
-			i.borderRightFgColor,
-		)
+		s.set(borderRightForegroundKey, i.borderRightFgColor)
 	case borderBottomForegroundKey:
-		s.set(
-			borderBottomForegroundKey,
-			i.borderBottomFgColor,
-		)
+		s.set(borderBottomForegroundKey, i.borderBottomFgColor)
 	case borderLeftForegroundKey:
-		s.set(
-			borderLeftForegroundKey,
-			i.borderLeftFgColor,
-		)
+		s.set(borderLeftForegroundKey, i.borderLeftFgColor)
 	case borderTopBackgroundKey:
-		s.set(
-			borderTopBackgroundKey,
-			i.borderTopBgColor,
-		)
+		s.set(borderTopBackgroundKey, i.borderTopBgColor)
 	case borderRightBackgroundKey:
-		s.set(
-			borderRightBackgroundKey,
-			i.borderRightBgColor,
-		)
+		s.set(borderRightBackgroundKey, i.borderRightBgColor)
 	case borderBottomBackgroundKey:
-		s.set(
-			borderBottomBackgroundKey,
-			i.borderBottomBgColor,
-		)
+		s.set(borderBottomBackgroundKey, i.borderBottomBgColor)
 	case borderLeftBackgroundKey:
-		s.set(
-			borderLeftBackgroundKey,
-			i.borderLeftBgColor,
-		)
+		s.set(borderLeftBackgroundKey, i.borderLeftBgColor)
 	case maxWidthKey:
 		s.set(maxWidthKey, i.maxWidth)
 	case maxHeightKey:
@@ -314,8 +281,7 @@ func (s Style) AlignVertical(p Position) Style {
 //
 // With more than four arguments no padding will be added.
 func (s Style) Padding(i ...int) Style {
-	top, right, bottom, left, ok := whichSidesInt(
-		i...)
+	top, right, bottom, left, ok := whichSidesInt(i...)
 	if !ok {
 		return s
 	}
@@ -377,8 +343,7 @@ func (s Style) ColorWhitespace(v bool) Style {
 //
 // With more than four arguments no margin will be added.
 func (s Style) Margin(i ...int) Style {
-	top, right, bottom, left, ok := whichSidesInt(
-		i...)
+	top, right, bottom, left, ok := whichSidesInt(i...)
 	if !ok {
 		return s
 	}
@@ -417,9 +382,7 @@ func (s Style) MarginBottom(i int) Style {
 // MarginBackground sets the background color of the margin. Note that this is
 // also set when inheriting from a style with a background color. In that case
 // the background color on that style will set the margin color on this style.
-func (s Style) MarginBackground(
-	c TerminalColor,
-) Style {
+func (s Style) MarginBackground(c TerminalColor) Style {
 	s.set(marginBackgroundKey, c)
 	return s
 }
@@ -447,14 +410,10 @@ func (s Style) MarginBackground(
 //
 //	// Applies rounded borders to the right and bottom only
 //	lipgloss.NewStyle().Border(lipgloss.RoundedBorder(), false, true, true, false)
-func (s Style) Border(
-	b Border,
-	sides ...bool,
-) Style {
+func (s Style) Border(b Border, sides ...bool) Style {
 	s.set(borderStyleKey, b)
 
-	top, right, bottom, left, ok := whichSidesBool(
-		sides...)
+	top, right, bottom, left, ok := whichSidesBool(sides...)
 	if !ok {
 		top = true
 		right = true
@@ -528,15 +487,12 @@ func (s Style) BorderLeft(v bool) Style {
 // top side, followed by the right side, then the bottom, and finally the left.
 //
 // With more than four arguments nothing will be set.
-func (s Style) BorderForeground(
-	c ...TerminalColor,
-) Style {
+func (s Style) BorderForeground(c ...TerminalColor) Style {
 	if len(c) == 0 {
 		return s
 	}
 
-	top, right, bottom, left, ok := whichSidesColor(
-		c...)
+	top, right, bottom, left, ok := whichSidesColor(c...)
 	if !ok {
 		return s
 	}
@@ -550,36 +506,28 @@ func (s Style) BorderForeground(
 }
 
 // BorderTopForeground set the foreground color for the top of the border.
-func (s Style) BorderTopForeground(
-	c TerminalColor,
-) Style {
+func (s Style) BorderTopForeground(c TerminalColor) Style {
 	s.set(borderTopForegroundKey, c)
 	return s
 }
 
 // BorderRightForeground sets the foreground color for the right side of the
 // border.
-func (s Style) BorderRightForeground(
-	c TerminalColor,
-) Style {
+func (s Style) BorderRightForeground(c TerminalColor) Style {
 	s.set(borderRightForegroundKey, c)
 	return s
 }
 
 // BorderBottomForeground sets the foreground color for the bottom of the
 // border.
-func (s Style) BorderBottomForeground(
-	c TerminalColor,
-) Style {
+func (s Style) BorderBottomForeground(c TerminalColor) Style {
 	s.set(borderBottomForegroundKey, c)
 	return s
 }
 
 // BorderLeftForeground sets the foreground color for the left side of the
 // border.
-func (s Style) BorderLeftForeground(
-	c TerminalColor,
-) Style {
+func (s Style) BorderLeftForeground(c TerminalColor) Style {
 	s.set(borderLeftForegroundKey, c)
 	return s
 }
@@ -599,15 +547,12 @@ func (s Style) BorderLeftForeground(
 // top side, followed by the right side, then the bottom, and finally the left.
 //
 // With more than four arguments nothing will be set.
-func (s Style) BorderBackground(
-	c ...TerminalColor,
-) Style {
+func (s Style) BorderBackground(c ...TerminalColor) Style {
 	if len(c) == 0 {
 		return s
 	}
 
-	top, right, bottom, left, ok := whichSidesColor(
-		c...)
+	top, right, bottom, left, ok := whichSidesColor(c...)
 	if !ok {
 		return s
 	}
@@ -621,35 +566,27 @@ func (s Style) BorderBackground(
 }
 
 // BorderTopBackground sets the background color of the top of the border.
-func (s Style) BorderTopBackground(
-	c TerminalColor,
-) Style {
+func (s Style) BorderTopBackground(c TerminalColor) Style {
 	s.set(borderTopBackgroundKey, c)
 	return s
 }
 
 // BorderRightBackground sets the background color of right side the border.
-func (s Style) BorderRightBackground(
-	c TerminalColor,
-) Style {
+func (s Style) BorderRightBackground(c TerminalColor) Style {
 	s.set(borderRightBackgroundKey, c)
 	return s
 }
 
 // BorderBottomBackground sets the background color of the bottom of the
 // border.
-func (s Style) BorderBottomBackground(
-	c TerminalColor,
-) Style {
+func (s Style) BorderBottomBackground(c TerminalColor) Style {
 	s.set(borderBottomBackgroundKey, c)
 	return s
 }
 
 // BorderLeftBackground set the background color of the left side of the
 // border.
-func (s Style) BorderLeftBackground(
-	c TerminalColor,
-) Style {
+func (s Style) BorderLeftBackground(c TerminalColor) Style {
 	s.set(borderLeftBackgroundKey, c)
 	return s
 }
@@ -743,9 +680,7 @@ func (s Style) StrikethroughSpaces(v bool) Style {
 //
 //	s := NewStyle().Transform(strings.ToUpper)
 //	fmt.Println(s.Render("raow!") // "RAOW!"
-func (s Style) Transform(
-	fn func(string) string,
-) Style {
+func (s Style) Transform(fn func(string) string) Style {
 	s.set(transformKey, fn)
 	return s
 }
@@ -767,9 +702,7 @@ func (s Style) Renderer(r *Renderer) Style {
 // 3 args:  top -> horizontal -> bottom
 // 4 args:  top -> right -> bottom -> left
 // 5+ args: do nothing.
-func whichSidesInt(
-	i ...int,
-) (top, right, bottom, left int, ok bool) {
+func whichSidesInt(i ...int) (top, right, bottom, left int, ok bool) {
 	switch len(i) {
 	case 1:
 		top = i[0]
@@ -802,9 +735,7 @@ func whichSidesInt(
 // whichSidesBool is like whichSidesInt, except it operates on a series of
 // boolean values. See the comment on whichSidesInt for details on how this
 // works.
-func whichSidesBool(
-	i ...bool,
-) (top, right, bottom, left bool, ok bool) {
+func whichSidesBool(i ...bool) (top, right, bottom, left bool, ok bool) {
 	switch len(i) {
 	case 1:
 		top = i[0]
@@ -837,9 +768,7 @@ func whichSidesBool(
 // whichSidesColor is like whichSides, except it operates on a series of
 // boolean values. See the comment on whichSidesInt for details on how this
 // works.
-func whichSidesColor(
-	i ...TerminalColor,
-) (top, right, bottom, left TerminalColor, ok bool) {
+func whichSidesColor(i ...TerminalColor) (top, right, bottom, left TerminalColor, ok bool) {
 	switch len(i) {
 	case 1:
 		top = i[0]

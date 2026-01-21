@@ -27,40 +27,24 @@ func ReadStyle(params ansi.Params, pen *Style) {
 		case 3: // Italic
 			pen.Italic(true)
 		case 4: // Underline
-			nextParam, _, ok := params.Param(
-				i+1,
-				0,
-			)
-			if hasMore &&
-				ok { // Only accept subparameters i.e. separated by ":"
+			nextParam, _, ok := params.Param(i+1, 0)
+			if hasMore && ok { // Only accept subparameters i.e. separated by ":"
 				switch nextParam {
 				case 0, 1, 2, 3, 4, 5:
 					i++
 					switch nextParam {
 					case 0: // No Underline
-						pen.UnderlineStyle(
-							NoUnderline,
-						)
+						pen.UnderlineStyle(NoUnderline)
 					case 1: // Single Underline
-						pen.UnderlineStyle(
-							SingleUnderline,
-						)
+						pen.UnderlineStyle(SingleUnderline)
 					case 2: // Double Underline
-						pen.UnderlineStyle(
-							DoubleUnderline,
-						)
+						pen.UnderlineStyle(DoubleUnderline)
 					case 3: // Curly Underline
-						pen.UnderlineStyle(
-							CurlyUnderline,
-						)
+						pen.UnderlineStyle(CurlyUnderline)
 					case 4: // Dotted Underline
-						pen.UnderlineStyle(
-							DottedUnderline,
-						)
+						pen.UnderlineStyle(DottedUnderline)
 					case 5: // Dashed Underline
-						pen.UnderlineStyle(
-							DashedUnderline,
-						)
+						pen.UnderlineStyle(DashedUnderline)
 					}
 				}
 			} else {
@@ -91,19 +75,8 @@ func ReadStyle(params ansi.Params, pen *Style) {
 			pen.Conceal(false)
 		case 29: // Not crossed out
 			pen.Strikethrough(false)
-		case 30,
-			31,
-			32,
-			33,
-			34,
-			35,
-			36,
-			37: // Set foreground
-			pen.Foreground(
-				ansi.Black + ansi.BasicColor(
-					param-30,
-				),
-			) //nolint:gosec
+		case 30, 31, 32, 33, 34, 35, 36, 37: // Set foreground
+			pen.Foreground(ansi.Black + ansi.BasicColor(param-30)) //nolint:gosec
 		case 38: // Set foreground 256 or truecolor
 			var c color.Color
 			n := ReadStyleColor(params[i:], &c)
@@ -113,19 +86,8 @@ func ReadStyle(params ansi.Params, pen *Style) {
 			}
 		case 39: // Default foreground
 			pen.Foreground(nil)
-		case 40,
-			41,
-			42,
-			43,
-			44,
-			45,
-			46,
-			47: // Set background
-			pen.Background(
-				ansi.Black + ansi.BasicColor(
-					param-40,
-				),
-			) //nolint:gosec
+		case 40, 41, 42, 43, 44, 45, 46, 47: // Set background
+			pen.Background(ansi.Black + ansi.BasicColor(param-40)) //nolint:gosec
 		case 48: // Set background 256 or truecolor
 			var c color.Color
 			n := ReadStyleColor(params[i:], &c)
@@ -144,32 +106,10 @@ func ReadStyle(params ansi.Params, pen *Style) {
 			}
 		case 59: // Default underline color
 			pen.UnderlineColor(nil)
-		case 90,
-			91,
-			92,
-			93,
-			94,
-			95,
-			96,
-			97: // Set bright foreground
-			pen.Foreground(
-				ansi.BrightBlack + ansi.BasicColor(
-					param-90,
-				),
-			) //nolint:gosec
-		case 100,
-			101,
-			102,
-			103,
-			104,
-			105,
-			106,
-			107: // Set bright background
-			pen.Background(
-				ansi.BrightBlack + ansi.BasicColor(
-					param-100,
-				),
-			) //nolint:gosec
+		case 90, 91, 92, 93, 94, 95, 96, 97: // Set bright foreground
+			pen.Foreground(ansi.BrightBlack + ansi.BasicColor(param-90)) //nolint:gosec
+		case 100, 101, 102, 103, 104, 105, 106, 107: // Set bright background
+			pen.Background(ansi.BrightBlack + ansi.BasicColor(param-100)) //nolint:gosec
 		}
 	}
 }
@@ -186,9 +126,6 @@ func ReadLink(p []byte, link *Link) {
 
 // ReadStyleColor reads a color from a list of parameters.
 // See [ansi.ReadStyleColor] for more information.
-func ReadStyleColor(
-	params ansi.Params,
-	c *color.Color,
-) int {
+func ReadStyleColor(params ansi.Params, c *color.Color) int {
 	return ansi.ReadStyleColor(params, c)
 }

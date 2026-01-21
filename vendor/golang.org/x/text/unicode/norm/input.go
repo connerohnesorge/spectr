@@ -47,9 +47,7 @@ func (in *input) skipASCII(p, max int) int {
 	return p
 }
 
-func (in *input) skipContinuationBytes(
-	p int,
-) int {
+func (in *input) skipContinuationBytes(p int) int {
 	if in.bytes == nil {
 		for ; p < len(in.str) && !utf8.RuneStart(in.str[p]); p++ {
 		}
@@ -60,10 +58,7 @@ func (in *input) skipContinuationBytes(
 	return p
 }
 
-func (in *input) appendSlice(
-	buf []byte,
-	b, e int,
-) []byte {
+func (in *input) appendSlice(buf []byte, b, e int) []byte {
 	if in.bytes != nil {
 		return append(buf, in.bytes[b:e]...)
 	}
@@ -73,28 +68,21 @@ func (in *input) appendSlice(
 	return buf
 }
 
-func (in *input) copySlice(
-	buf []byte,
-	b, e int,
-) int {
+func (in *input) copySlice(buf []byte, b, e int) int {
 	if in.bytes == nil {
 		return copy(buf, in.str[b:e])
 	}
 	return copy(buf, in.bytes[b:e])
 }
 
-func (in *input) charinfoNFC(
-	p int,
-) (uint16, int) {
+func (in *input) charinfoNFC(p int) (uint16, int) {
 	if in.bytes == nil {
 		return nfcData.lookupString(in.str[p:])
 	}
 	return nfcData.lookup(in.bytes[p:])
 }
 
-func (in *input) charinfoNFKC(
-	p int,
-) (uint16, int) {
+func (in *input) charinfoNFKC(p int) (uint16, int) {
 	if in.bytes == nil {
 		return nfkcData.lookupString(in.str[p:])
 	}
@@ -107,9 +95,7 @@ func (in *input) hangul(p int) (r rune) {
 		if !isHangulString(in.str[p:]) {
 			return 0
 		}
-		r, size = utf8.DecodeRuneInString(
-			in.str[p:],
-		)
+		r, size = utf8.DecodeRuneInString(in.str[p:])
 	} else {
 		if !isHangul(in.bytes[p:]) {
 			return 0

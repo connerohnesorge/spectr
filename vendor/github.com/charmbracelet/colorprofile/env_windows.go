@@ -9,9 +9,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func windowsColorProfile(
-	env map[string]string,
-) (Profile, bool) {
+func windowsColorProfile(env map[string]string) (Profile, bool) {
 	if env["ConEmuANSI"] == "ON" {
 		return TrueColor, true
 	}

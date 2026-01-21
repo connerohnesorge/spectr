@@ -29,8 +29,7 @@ func (m ModeSetting) IsSet() bool {
 
 // IsReset returns true if the mode is reset or permanently reset.
 func (m ModeSetting) IsReset() bool {
-	return m == ModeReset ||
-		m == ModePermanentlyReset
+	return m == ModeReset || m == ModePermanentlyReset
 }
 
 // IsPermanentlySet returns true if the mode is permanently set.
@@ -107,10 +106,7 @@ func DECRST(modes ...Mode) string {
 	return ResetMode(modes...)
 }
 
-func setMode(
-	reset bool,
-	modes ...Mode,
-) (s string) {
+func setMode(reset bool, modes ...Mode) (s string) {
 	if len(modes) == 0 {
 		return //nolint:nakedret
 	}
@@ -126,9 +122,7 @@ func setMode(
 		case DECMode:
 			seq += "?"
 		}
-		return seq + strconv.Itoa(
-			modes[0].Mode(),
-		) + cmd
+		return seq + strconv.Itoa(modes[0].Mode()) + cmd
 	}
 
 	dec := make([]string, 0, len(modes)/2)
@@ -146,10 +140,7 @@ func setMode(
 		s += seq + strings.Join(ansi, ";") + cmd
 	}
 	if len(dec) > 0 {
-		s += seq + "?" + strings.Join(
-			dec,
-			";",
-		) + cmd
+		s += seq + "?" + strings.Join(dec, ";") + cmd
 	}
 	return //nolint:nakedret
 }
@@ -200,10 +191,7 @@ func DECRQM(m Mode) string {
 //	4: Permanent reset
 //
 // See: https://vt100.net/docs/vt510-rm/DECRPM.html
-func ReportMode(
-	mode Mode,
-	value ModeSetting,
-) string {
+func ReportMode(mode Mode, value ModeSetting) string {
 	if value > 4 {
 		value = 0
 	}
@@ -211,11 +199,7 @@ func ReportMode(
 	case DECMode:
 		return "\x1b[?" + strconv.Itoa(mode.Mode()) + ";" + strconv.Itoa(int(value)) + "$y"
 	}
-	return "\x1b[" + strconv.Itoa(
-		mode.Mode(),
-	) + ";" + strconv.Itoa(
-		int(value),
-	) + "$y"
+	return "\x1b[" + strconv.Itoa(mode.Mode()) + ";" + strconv.Itoa(int(value)) + "$y"
 }
 
 // DECRPM is an alias for [ReportMode].
@@ -591,9 +575,7 @@ const (
 // [RequestFocusEventMode] instead.
 // Focus reporting mode constants.
 const (
-	ReportFocusMode = DECMode(
-		1004,
-	) //nolint:revive // grouped constants
+	ReportFocusMode = DECMode(1004) //nolint:revive // grouped constants
 
 	EnableReportFocus  = "\x1b[?1004h"
 	DisableReportFocus = "\x1b[?1004l"
@@ -621,9 +603,7 @@ const (
 // Deprecated: use [SgrExtMouseMode] [SetSgrExtMouseMode],
 // [ResetSgrExtMouseMode], and [RequestSgrExtMouseMode] instead.
 const (
-	MouseSgrExtMode = DECMode(
-		1006,
-	) //nolint:revive // grouped constants
+	MouseSgrExtMode    = DECMode(1006) //nolint:revive // grouped constants
 	EnableMouseSgrExt  = "\x1b[?1006h"
 	DisableMouseSgrExt = "\x1b[?1006l"
 	RequestMouseSgrExt = "\x1b[?1006$p"

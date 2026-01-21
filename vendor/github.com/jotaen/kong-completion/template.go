@@ -25,9 +25,7 @@ func tmpl(tmpl string) *template {
 
 func (bi templateData) fill(t *template) string {
 	result := &bytes.Buffer{}
-	err := (*gotemplate.Template)(
-		t,
-	).Execute(result, bi)
+	err := (*gotemplate.Template)(t).Execute(result, bi)
 	if err != nil {
 		panic(err)
 	}

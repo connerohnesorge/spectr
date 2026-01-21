@@ -25,10 +25,7 @@ func runeWidth(r rune, graphemeProperty int) int {
 	case prRegionalIndicator:
 		return 2
 	case prExtendedPictographic:
-		if property(
-			emojiPresentation,
-			r,
-		) == prEmojiPresentation {
+		if property(emojiPresentation, r) == prEmojiPresentation {
 			return 2
 		}
 		return 1
@@ -57,10 +54,7 @@ func StringWidth(s string) (width int) {
 	state := -1
 	for len(s) > 0 {
 		var w int
-		_, s, w, state = FirstGraphemeClusterInString(
-			s,
-			state,
-		)
+		_, s, w, state = FirstGraphemeClusterInString(s, state)
 		width += w
 	}
 	return

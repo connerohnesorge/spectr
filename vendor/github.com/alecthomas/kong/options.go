@@ -20,11 +20,7 @@ type Option interface {
 // OptionFunc is function that adheres to the Option interface.
 type OptionFunc func(k *Kong) error
 
-func (o OptionFunc) Apply(
-	k *Kong,
-) error {
-	return o(k)
-} //nolint: revive
+func (o OptionFunc) Apply(k *Kong) error { return o(k) } //nolint: revive
 
 // Vars sets the variables to use for interpolation into help strings and default values.
 //
@@ -62,9 +58,7 @@ func Exit(exit func(int)) Option {
 // WithHyphenPrefixedParameters enables or disables hyphen-prefixed parameters.
 //
 // These are disabled by default.
-func WithHyphenPrefixedParameters(
-	enable bool,
-) Option {
+func WithHyphenPrefixedParameters(enable bool) Option {
 	return OptionFunc(func(k *Kong) error {
 		k.allowHyphenated = enable
 		return nil
@@ -81,17 +75,11 @@ type embedded struct {
 // "strct" must be a pointer to a structure.
 func Embed(strct any, tags ...string) Option {
 	t := reflect.TypeOf(strct)
-	if t.Kind() != reflect.Ptr ||
-		t.Elem().Kind() != reflect.Struct {
-		panic(
-			"kong: Embed() must be called with a pointer to a struct",
-		)
+	if t.Kind() != reflect.Ptr || t.Elem().Kind() != reflect.Struct {
+		panic("kong: Embed() must be called with a pointer to a struct")
 	}
 	return OptionFunc(func(k *Kong) error {
-		k.embedded = append(
-			k.embedded,
-			embedded{strct, tags},
-		)
+		k.embedded = append(k.embedded, embedded{strct, tags})
 		return nil
 	})
 }
@@ -109,22 +97,15 @@ type dynamicCommand struct {
 // This is useful for command-line structures that are extensible via user-provided plugins.
 //
 // "tags" is a list of extra tag strings to parse, in the form <key>:"<value>".
-func DynamicCommand(
-	name, help, group string,
-	cmd any,
-	tags ...string,
-) Option {
+func DynamicCommand(name, help, group string, cmd any, tags ...string) Option {
 	return OptionFunc(func(k *Kong) error {
-		k.dynamicCommands = append(
-			k.dynamicCommands,
-			&dynamicCommand{
-				name:  name,
-				help:  help,
-				group: group,
-				cmd:   cmd,
-				tags:  tags,
-			},
-		)
+		k.dynamicCommands = append(k.dynamicCommands, &dynamicCommand{
+			name:  name,
+			help:  help,
+			group: group,
+			cmd:   cmd,
+			tags:  tags,
+		})
 		return nil
 	})
 }
@@ -143,10 +124,7 @@ func NoDefaultHelp() Option {
 // This is useful for, e.g., adding short options to flags, updating help, etc.
 func PostBuild(fn func(*Kong) error) Option {
 	return OptionFunc(func(k *Kong) error {
-		k.postBuildOptions = append(
-			k.postBuildOptions,
-			OptionFunc(fn),
-		)
+		k.postBuildOptions = append(k.postBuildOptions, OptionFunc(fn))
 		return nil
 	})
 }
@@ -176,19 +154,11 @@ func WithAfterApply(fn any) Option {
 func withHook(name string, fn any) Option {
 	value := reflect.ValueOf(fn)
 	if value.Kind() != reflect.Func {
-		panic(
-			fmt.Errorf(
-				"expected function, got %s",
-				value.Type(),
-			),
-		)
+		panic(fmt.Errorf("expected function, got %s", value.Type()))
 	}
 
 	return OptionFunc(func(k *Kong) error {
-		k.hooks[name] = append(
-			k.hooks[name],
-			value,
-		)
+		k.hooks[name] = append(k.hooks[name], value)
 		return nil
 	})
 }
@@ -210,10 +180,7 @@ func Description(description string) Option {
 }
 
 // TypeMapper registers a mapper to a type.
-func TypeMapper(
-	typ reflect.Type,
-	mapper Mapper,
-) Option {
+func TypeMapper(typ reflect.Type, mapper Mapper) Option {
 	return OptionFunc(func(k *Kong) error {
 		k.registry.RegisterType(typ, mapper)
 		return nil
@@ -221,10 +188,7 @@ func TypeMapper(
 }
 
 // KindMapper registers a mapper to a kind.
-func KindMapper(
-	kind reflect.Kind,
-	mapper Mapper,
-) Option {
+func KindMapper(kind reflect.Kind, mapper Mapper) Option {
 	return OptionFunc(func(k *Kong) error {
 		k.registry.RegisterKind(kind, mapper)
 		return nil
@@ -240,10 +204,7 @@ func ValueMapper(ptr any, mapper Mapper) Option {
 }
 
 // NamedMapper registers a mapper to a name.
-func NamedMapper(
-	name string,
-	mapper Mapper,
-) Option {
+func NamedMapper(name string, mapper Mapper) Option {
 	return OptionFunc(func(k *Kong) error {
 		k.registry.RegisterName(name, mapper)
 		return nil
@@ -300,10 +261,7 @@ func BindTo(impl, iface any) Option {
 // not all be initialisable from the main() function.
 func BindToProvider(provider any) Option {
 	return OptionFunc(func(k *Kong) error {
-		return k.bindings.addProvider(
-			provider,
-			false, /* singleton */
-		)
+		return k.bindings.addProvider(provider, false /* singleton */)
 	})
 }
 
@@ -318,10 +276,7 @@ func BindToProvider(provider any) Option {
 // across multiple recipients of the injected value.
 func BindSingletonProvider(provider any) Option {
 	return OptionFunc(func(k *Kong) error {
-		return k.bindings.addProvider(
-			provider,
-			true, /* singleton */
-		)
+		return k.bindings.addProvider(provider, true /* singleton */)
 	})
 }
 
@@ -347,9 +302,7 @@ func ShortHelp(shortHelp HelpPrinter) Option {
 // HelpFormatter configures how the help text is formatted.
 //
 // Deprecated: Use ValueFormatter() instead.
-func HelpFormatter(
-	helpFormatter HelpValueFormatter,
-) Option {
+func HelpFormatter(helpFormatter HelpValueFormatter) Option {
 	return OptionFunc(func(k *Kong) error {
 		k.helpFormatter = helpFormatter
 		return nil
@@ -357,9 +310,7 @@ func HelpFormatter(
 }
 
 // ValueFormatter configures how the help text is formatted.
-func ValueFormatter(
-	helpFormatter HelpValueFormatter,
-) Option {
+func ValueFormatter(helpFormatter HelpValueFormatter) Option {
 	return OptionFunc(func(k *Kong) error {
 		k.helpFormatter = helpFormatter
 		return nil
@@ -375,26 +326,17 @@ func ConfigureHelp(options HelpOptions) Option {
 }
 
 // AutoGroup automatically assigns groups to flags.
-func AutoGroup(
-	format func(parent Visitable, flag *Flag) *Group,
-) Option {
+func AutoGroup(format func(parent Visitable, flag *Flag) *Group) Option {
 	return PostBuild(func(kong *Kong) error {
 		parents := []Visitable{kong.Model}
-		return Visit(
-			kong.Model,
-			func(node Visitable, next Next) error {
-				if flag, ok := node.(*Flag); ok &&
-					flag.Group == nil {
-					flag.Group = format(
-						parents[len(parents)-1],
-						flag,
-					)
-				}
-				parents = append(parents, node)
-				defer func() { parents = parents[:len(parents)-1] }()
-				return next(nil)
-			},
-		)
+		return Visit(kong.Model, func(node Visitable, next Next) error {
+			if flag, ok := node.(*Flag); ok && flag.Group == nil {
+				flag.Group = format(parents[len(parents)-1], flag)
+			}
+			parents = append(parents, node)
+			defer func() { parents = parents[:len(parents)-1] }()
+			return next(nil)
+		})
 	})
 }
 
@@ -411,17 +353,13 @@ func AutoGroup(
 // See also ExplicitGroups for a more structured alternative.
 type Groups map[string]string
 
-func (g Groups) Apply(
-	k *Kong,
-) error { //nolint: revive
+func (g Groups) Apply(k *Kong) error { //nolint: revive
 	for key, info := range g {
 		lines := strings.Split(info, "\n")
 		title := strings.TrimSpace(lines[0])
 		description := ""
 		if len(lines) > 1 {
-			description = strings.TrimSpace(
-				strings.Join(lines[1:], "\n"),
-			)
+			description = strings.TrimSpace(strings.Join(lines[1:], "\n"))
 		}
 		k.groups = append(k.groups, Group{
 			Key:         key,
@@ -471,9 +409,7 @@ func ClearResolvers() Option {
 // Resolvers registers flag resolvers.
 func Resolvers(resolvers ...Resolver) Option {
 	return OptionFunc(func(k *Kong) error {
-		k.resolvers = append(
-			k.resolvers,
-			resolvers...)
+		k.resolvers = append(k.resolvers, resolvers...)
 		return nil
 	})
 }
@@ -488,23 +424,15 @@ func IgnoreFields(regexes ...string) Option {
 	return OptionFunc(func(k *Kong) error {
 		for _, r := range regexes {
 			if r == "" {
-				return errors.New(
-					"regex input cannot be empty",
-				)
+				return errors.New("regex input cannot be empty")
 			}
 
 			re, err := regexp.Compile(r)
 			if err != nil {
-				return fmt.Errorf(
-					"unable to compile regex: %v",
-					err,
-				)
+				return fmt.Errorf("unable to compile regex: %v", err)
 			}
 
-			k.ignoreFields = append(
-				k.ignoreFields,
-				re,
-			)
+			k.ignoreFields = append(k.ignoreFields, re)
 		}
 
 		return nil
@@ -521,17 +449,13 @@ type ConfigurationLoader func(r io.Reader) (Resolver, error)
 // Note: The JSON function is a ConfigurationLoader.
 //
 // ~ and variable expansion will occur on the provided paths.
-func Configuration(
-	loader ConfigurationLoader,
-	paths ...string,
-) Option {
+func Configuration(loader ConfigurationLoader, paths ...string) Option {
 	return OptionFunc(func(k *Kong) error {
 		k.loader = loader
 		for _, path := range paths {
 			f, err := os.Open(ExpandPath(path))
 			if err != nil {
-				if os.IsNotExist(err) ||
-					os.IsPermission(err) {
+				if os.IsNotExist(err) || os.IsPermission(err) {
 					continue
 				}
 
@@ -541,17 +465,10 @@ func Configuration(
 
 			resolver, err := k.LoadConfig(path)
 			if err != nil {
-				return fmt.Errorf(
-					"%s: %v",
-					path,
-					err,
-				)
+				return fmt.Errorf("%s: %v", path, err)
 			}
 			if resolver != nil {
-				k.resolvers = append(
-					k.resolvers,
-					resolver,
-				)
+				k.resolvers = append(k.resolvers, resolver)
 			}
 		}
 		return nil
@@ -570,10 +487,7 @@ func ExpandPath(path string) string {
 		if err != nil {
 			return path
 		}
-		return filepath.Join(
-			user.HomeDir,
-			path[2:],
-		)
+		return filepath.Join(user.HomeDir, path[2:])
 	}
 	abspath, err := filepath.Abs(path)
 	if err != nil {
@@ -582,10 +496,7 @@ func ExpandPath(path string) string {
 	return abspath
 }
 
-func siftStrings(
-	ss []string,
-	filter func(s string) bool,
-) []string {
+func siftStrings(ss []string, filter func(s string) bool) []string {
 	i := 0
 	ss = append([]string(nil), ss...)
 	for _, s := range ss {
@@ -615,29 +526,12 @@ func DefaultEnvars(prefix string) Option {
 		case len(env) > 0:
 			return
 		}
-		replacer := strings.NewReplacer(
-			"-",
-			"_",
-			".",
-			"_",
-		)
-		names := append(
-			[]string{prefix},
-			camelCase(
-				replacer.Replace(flag.Name),
-			)...)
-		names = siftStrings(
-			names,
-			func(s string) bool { return !(s == "_" || strings.TrimSpace(s) == "") },
-		)
-		name := strings.ToUpper(
-			strings.Join(names, "_"),
-		)
+		replacer := strings.NewReplacer("-", "_", ".", "_")
+		names := append([]string{prefix}, camelCase(replacer.Replace(flag.Name))...)
+		names = siftStrings(names, func(s string) bool { return !(s == "_" || strings.TrimSpace(s) == "") })
+		name := strings.ToUpper(strings.Join(names, "_"))
 		flag.Envs = append(flag.Envs, name)
-		flag.Value.Tag.Envs = append(
-			flag.Value.Tag.Envs,
-			name,
-		)
+		flag.Value.Tag.Envs = append(flag.Value.Tag.Envs, name)
 	}
 
 	var processNode func(node *Node)
@@ -657,9 +551,7 @@ func DefaultEnvars(prefix string) Option {
 }
 
 // FlagNamer allows you to override the default kebab-case automated flag name generation.
-func FlagNamer(
-	namer func(fieldName string) string,
-) Option {
+func FlagNamer(namer func(fieldName string) string) Option {
 	return OptionFunc(func(k *Kong) error {
 		k.flagNamer = namer
 		return nil

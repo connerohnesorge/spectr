@@ -37,21 +37,15 @@ const (
 
 func main() {
 	if len(os.Args) < 5 {
-		fmt.Println(
-			"Not enough arguments, see code for details",
-		)
+		fmt.Println("Not enough arguments, see code for details")
 		os.Exit(1)
 	}
 
-	log.SetPrefix(
-		"gen_breaktest (" + os.Args[4] + "): ",
-	)
+	log.SetPrefix("gen_breaktest (" + os.Args[4] + "): ")
 	log.SetFlags(0)
 
 	// Read text of testcases and parse into Go source code.
-	src, err := parse(
-		fmt.Sprintf(testCaseURL, os.Args[1]),
-	)
+	src, err := parse(fmt.Sprintf(testCaseURL, os.Args[1]))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -82,20 +76,16 @@ func parse(url string) ([]byte, error) {
 
 	buf := new(bytes.Buffer)
 	buf.Grow(120 << 10)
-	buf.WriteString(
-		`// Code generated via go generate from gen_breaktest.go. DO NOT EDIT.
+	buf.WriteString(`// Code generated via go generate from gen_breaktest.go. DO NOT EDIT.
 
 package uniseg
 
 // ` + os.Args[3] + ` are Grapheme testcases taken from
 // ` + url + `
-// on ` + time.Now().
-			Format("January 2, 2006") +
-			`. See
+// on ` + time.Now().Format("January 2, 2006") + `. See
 // https://www.unicode.org/license.html for the Unicode license agreement.
 var ` + os.Args[3] + ` = []testCase {
-`,
-	)
+`)
 
 	sc := bufio.NewScanner(body)
 	num := 1
@@ -113,26 +103,11 @@ var ` + os.Args[3] + ` = []testCase {
 			comment = bytes.TrimSpace(line[i+1:])
 			line = bytes.TrimSpace(line[:i])
 		}
-		original, expected, err := parseRuneSequence(
-			line,
-			original[:0],
-			expected[:0],
-		)
+		original, expected, err := parseRuneSequence(line, original[:0], expected[:0])
 		if err != nil {
-			return nil, fmt.Errorf(
-				`line %d: %v: %q`,
-				num,
-				err,
-				line,
-			)
+			return nil, fmt.Errorf(`line %d: %v: %q`, num, err, line)
 		}
-		fmt.Fprintf(
-			buf,
-			"\t{original: \"%s\", expected: %s}, // %s\n",
-			original,
-			expected,
-			comment,
-		)
+		fmt.Fprintf(buf, "\t{original: \"%s\", expected: %s}, // %s\n", original, expected, comment)
 	}
 	if err := sc.Err(); err != nil {
 		return nil, err
@@ -140,11 +115,7 @@ var ` + os.Args[3] + ` = []testCase {
 
 	// Check for final "# EOF", useful check if we're streaming via HTTP
 	if !bytes.Equal(line, []byte("# EOF")) {
-		return nil, fmt.Errorf(
-			`line %d: exected "# EOF" as final line, got %q`,
-			num,
-			line,
-		)
+		return nil, fmt.Errorf(`line %d: exected "# EOF" as final line, got %q`, num, line)
 	}
 	buf.WriteString("}\n")
 	return buf.Bytes(), nil
@@ -174,15 +145,10 @@ var (
 // The formatting of exp is expected to be cleaned up by gofmt or format.Source.
 // Note we explicitly require the sequence to start with ÷ and we implicitly
 // require it to end with ÷.
-func parseRuneSequence(
-	b, orig, exp []byte,
-) ([]byte, []byte, error) {
+func parseRuneSequence(b, orig, exp []byte) ([]byte, []byte, error) {
 	// Check for and remove first ÷ or ×.
-	if !bytes.HasPrefix(b, prefixBreak) &&
-		!bytes.HasPrefix(b, prefixDontBreak) {
-		return nil, nil, errors.New(
-			"expected ÷ or × as first character",
-		)
+	if !bytes.HasPrefix(b, prefixBreak) && !bytes.HasPrefix(b, prefixDontBreak) {
+		return nil, nil, errors.New("expected ÷ or × as first character")
 	}
 	if bytes.HasPrefix(b, prefixBreak) {
 		b = b[len(prefixBreak):]
@@ -205,9 +171,7 @@ func parseRuneSequence(
 				('a' <= d || d <= 'f') {
 				continue
 			}
-			return nil, nil, errors.New(
-				"bad hex digit",
-			)
+			return nil, nil, errors.New("bad hex digit")
 		}
 		switch i {
 		case 4:
@@ -215,9 +179,7 @@ func parseRuneSequence(
 		case 5:
 			orig = append(orig, "\\U000"...)
 		default:
-			return nil, nil, errors.New(
-				"unsupport code point hex length",
-			)
+			return nil, nil, errors.New("unsupport code point hex length")
 		}
 		orig = append(orig, b[:i]...)
 		exp = append(exp, b[:i]...)
@@ -225,9 +187,7 @@ func parseRuneSequence(
 
 		// Check for space between hex and ÷ or ×.
 		if len(b) < 1 || b[0] != ' ' {
-			return nil, nil, errors.New(
-				"bad input",
-			)
+			return nil, nil, errors.New("bad input")
 		}
 		b = b[1:]
 
@@ -240,9 +200,7 @@ func parseRuneSequence(
 			boundary = false
 			b = b[len(breakNo):]
 		default:
-			return nil, nil, errors.New(
-				"missing ÷ or ×",
-			)
+			return nil, nil, errors.New("missing ÷ or ×")
 		}
 		if boundary {
 			exp = append(exp, '}')

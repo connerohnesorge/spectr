@@ -66,10 +66,7 @@ func camelCase(src string) (entries []string) {
 			class = 4
 		}
 		if class == lastClass {
-			runes[len(runes)-1] = append(
-				runes[len(runes)-1],
-				r,
-			)
+			runes[len(runes)-1] = append(runes[len(runes)-1], r)
 		} else {
 			runes = append(runes, []rune{r})
 		}
@@ -78,11 +75,8 @@ func camelCase(src string) (entries []string) {
 	// handle upper case -> lower case sequences, e.g.
 	// "PDFL", "oader" -> "PDF", "Loader"
 	for i := 0; i < len(runes)-1; i++ {
-		if unicode.IsUpper(runes[i][0]) &&
-			unicode.IsLower(runes[i+1][0]) {
-			runes[i+1] = append(
-				[]rune{runes[i][len(runes[i])-1]},
-				runes[i+1]...)
+		if unicode.IsUpper(runes[i][0]) && unicode.IsLower(runes[i+1][0]) {
+			runes[i+1] = append([]rune{runes[i][len(runes[i])-1]}, runes[i+1]...)
 			runes[i] = runes[i][:len(runes[i])-1]
 		}
 	}

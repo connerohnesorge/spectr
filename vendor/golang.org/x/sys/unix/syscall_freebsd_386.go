@@ -12,17 +12,11 @@ import (
 )
 
 func setTimespec(sec, nsec int64) Timespec {
-	return Timespec{
-		Sec:  int32(sec),
-		Nsec: int32(nsec),
-	}
+	return Timespec{Sec: int32(sec), Nsec: int32(nsec)}
 }
 
 func setTimeval(sec, usec int64) Timeval {
-	return Timeval{
-		Sec:  int32(sec),
-		Usec: int32(usec),
-	}
+	return Timeval{Sec: int32(sec), Usec: int32(usec)}
 }
 
 func SetKevent(k *Kevent_t, fd, mode, flags int) {
@@ -51,25 +45,9 @@ func (d *PtraceIoDesc) SetLen(length int) {
 	d.Len = uint32(length)
 }
 
-func sendfile(
-	outfd int,
-	infd int,
-	offset *int64,
-	count int,
-) (written int, err error) {
+func sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
 	var writtenOut uint64 = 0
-	_, _, e1 := Syscall9(
-		SYS_SENDFILE,
-		uintptr(infd),
-		uintptr(outfd),
-		uintptr(*offset),
-		uintptr((*offset)>>32),
-		uintptr(count),
-		0,
-		uintptr(unsafe.Pointer(&writtenOut)),
-		0,
-		0,
-	)
+	_, _, e1 := Syscall9(SYS_SENDFILE, uintptr(infd), uintptr(outfd), uintptr(*offset), uintptr((*offset)>>32), uintptr(count), 0, uintptr(unsafe.Pointer(&writtenOut)), 0, 0)
 
 	written = int(writtenOut)
 
@@ -79,18 +57,8 @@ func sendfile(
 	return
 }
 
-func Syscall9(
-	num, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr,
-) (r1, r2 uintptr, err syscall.Errno)
+func Syscall9(num, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr) (r1, r2 uintptr, err syscall.Errno)
 
-func PtraceGetFsBase(
-	pid int,
-	fsbase *int64,
-) (err error) {
-	return ptracePtr(
-		PT_GETFSBASE,
-		pid,
-		unsafe.Pointer(fsbase),
-		0,
-	)
+func PtraceGetFsBase(pid int, fsbase *int64) (err error) {
+	return ptracePtr(PT_GETFSBASE, pid, unsafe.Pointer(fsbase), 0)
 }

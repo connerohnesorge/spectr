@@ -38,9 +38,7 @@ const (
 //  6. Assume grAny and grBoundary.
 //
 // Unicode version 15.0.0.
-func grTransitions(
-	state, prop int,
-) (newState int, newProp int, boundary int) {
+func grTransitions(state, prop int) (newState int, newProp int, boundary int) {
 	// It turns out that using a big switch statement is much faster than using
 	// a map.
 
@@ -135,32 +133,20 @@ func grTransitions(
 // parser given the current state and the next code point. It also returns the
 // code point's grapheme property (the value mapped by the [graphemeCodePoints]
 // table) and whether a cluster boundary was detected.
-func transitionGraphemeState(
-	state int,
-	r rune,
-) (newState, prop int, boundary bool) {
+func transitionGraphemeState(state int, r rune) (newState, prop int, boundary bool) {
 	// Determine the property of the next character.
 	prop = propertyGraphemes(r)
 
 	// Find the applicable transition.
-	nextState, nextProp, _ := grTransitions(
-		state,
-		prop,
-	)
+	nextState, nextProp, _ := grTransitions(state, prop)
 	if nextState >= 0 {
 		// We have a specific transition. We'll use it.
 		return nextState, prop, nextProp == grBoundary
 	}
 
 	// No specific transition found. Try the less specific ones.
-	anyPropState, anyPropProp, anyPropRule := grTransitions(
-		state,
-		prAny,
-	)
-	anyStateState, anyStateProp, anyStateRule := grTransitions(
-		grAny,
-		prop,
-	)
+	anyPropState, anyPropProp, anyPropRule := grTransitions(state, prAny)
+	anyStateState, anyStateProp, anyStateRule := grTransitions(grAny, prop)
 	if anyPropState >= 0 && anyStateState >= 0 {
 		// Both apply. We'll use a mix (see comments for grTransitions).
 		newState = anyStateState

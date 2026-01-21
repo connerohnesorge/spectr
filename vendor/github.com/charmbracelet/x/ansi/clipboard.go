@@ -19,13 +19,9 @@ const (
 // See: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Operating-System-Commands
 func SetClipboard(c byte, d string) string {
 	if d != "" {
-		d = base64.StdEncoding.EncodeToString(
-			[]byte(d),
-		)
+		d = base64.StdEncoding.EncodeToString([]byte(d))
 	}
-	return "\x1b]52;" + string(
-		c,
-	) + ";" + d + "\x07"
+	return "\x1b]52;" + string(c) + ";" + d + "\x07"
 }
 
 // SetSystemClipboard returns a sequence for setting the system clipboard.

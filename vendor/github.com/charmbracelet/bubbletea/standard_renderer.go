@@ -62,23 +62,17 @@ type standardRenderer struct {
 
 // newRenderer creates a new renderer. Normally you'll want to initialize it
 // with os.Stdout as the first argument.
-func newRenderer(
-	out io.Writer,
-	useANSICompressor bool,
-	fps int,
-) renderer {
+func newRenderer(out io.Writer, useANSICompressor bool, fps int) renderer {
 	if fps < 1 {
 		fps = defaultFPS
 	} else if fps > maxFPS {
 		fps = maxFPS
 	}
 	r := &standardRenderer{
-		out:  out,
-		mtx:  &sync.Mutex{},
-		done: make(chan struct{}),
-		framerate: time.Second / time.Duration(
-			fps,
-		),
+		out:                out,
+		mtx:                &sync.Mutex{},
+		done:               make(chan struct{}),
+		framerate:          time.Second / time.Duration(fps),
 		useANSICompressor:  useANSICompressor,
 		queuedMessageLines: []string{},
 	}
@@ -168,8 +162,7 @@ func (r *standardRenderer) flush() {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
-	if r.buf.Len() == 0 ||
-		r.buf.String() == r.lastRender {
+	if r.buf.Len() == 0 || r.buf.String() == r.lastRender {
 		// Nothing to do.
 		return
 	}
@@ -184,10 +177,7 @@ func (r *standardRenderer) flush() {
 		buf.WriteString(ansi.CursorUp(r.linesRendered - 1))
 	}
 
-	newLines := strings.Split(
-		r.buf.String(),
-		"\n",
-	)
+	newLines := strings.Split(r.buf.String(), "\n")
 
 	// If we know the output's height, we can use it to determine how many
 	// lines we can render. We drop lines from the top of the render buffer if
@@ -197,10 +187,7 @@ func (r *standardRenderer) flush() {
 		newLines = newLines[len(newLines)-r.height:]
 	}
 
-	flushQueuedMessages := len(
-		r.queuedMessageLines,
-	) > 0 &&
-		!r.altScreenActive
+	flushQueuedMessages := len(r.queuedMessageLines) > 0 && !r.altScreenActive
 
 	if flushQueuedMessages {
 		// Dump the lines we've queued up for printing.
@@ -225,11 +212,9 @@ func (r *standardRenderer) flush() {
 	// Paint new lines.
 	for i := 0; i < len(newLines); i++ {
 		canSkip := !flushQueuedMessages && // Queuing messages triggers repaint -> we don't have access to previous frame content.
-			len(r.lastRenderedLines) > i &&
-			r.lastRenderedLines[i] == newLines[i] // Previously rendered line is the same.
+			len(r.lastRenderedLines) > i && r.lastRenderedLines[i] == newLines[i] // Previously rendered line is the same.
 
-		if _, ignore := r.ignoreLines[i]; ignore ||
-			canSkip {
+		if _, ignore := r.ignoreLines[i]; ignore || canSkip {
 			// Unless this is the last line, move the cursor down.
 			if i < len(newLines)-1 {
 				buf.WriteByte('\n')
@@ -253,11 +238,7 @@ func (r *standardRenderer) flush() {
 		// program initialization, so after a resize this won't perform
 		// correctly (signal SIGWINCH is not supported on Windows).
 		if r.width > 0 {
-			line = ansi.Truncate(
-				line,
-				r.width,
-				"",
-			)
+			line = ansi.Truncate(line, r.width, "")
 		}
 
 		if ansi.StringWidth(line) < r.width {
@@ -294,9 +275,7 @@ func (r *standardRenderer) flush() {
 		// This case fixes a bug in macOS terminal. In other terminals the
 		// other case seems to do the job regardless of whether or not we're
 		// using the full terminal window.
-		buf.WriteString(
-			ansi.CursorPosition(0, len(newLines)),
-		)
+		buf.WriteString(ansi.CursorPosition(0, len(newLines)))
 	} else {
 		buf.WriteByte('\r')
 	}
@@ -522,18 +501,13 @@ func (r *standardRenderer) reportFocus() bool {
 }
 
 // setWindowTitle sets the terminal window title.
-func (r *standardRenderer) setWindowTitle(
-	title string,
-) {
+func (r *standardRenderer) setWindowTitle(title string) {
 	r.execute(ansi.SetWindowTitle(title))
 }
 
 // setIgnoredLines specifies lines not to be touched by the standard Bubble Tea
 // renderer.
-func (r *standardRenderer) setIgnoredLines(
-	from int,
-	to int,
-) {
+func (r *standardRenderer) setIgnoredLines(from int, to int) {
 	// Lock if we're going to be clearing some lines since we don't want
 	// anything jacking our cursor.
 	if r.lastLinesRendered() > 0 {
@@ -555,18 +529,11 @@ func (r *standardRenderer) setIgnoredLines(
 
 		for i := lastLinesRendered - 1; i >= 0; i-- {
 			if _, exists := r.ignoreLines[i]; exists {
-				buf.WriteString(
-					ansi.EraseEntireLine,
-				)
+				buf.WriteString(ansi.EraseEntireLine)
 			}
 			buf.WriteString(ansi.CUU1)
 		}
-		buf.WriteString(
-			ansi.CursorPosition(
-				0,
-				lastLinesRendered,
-			),
-		) // put cursor back
+		buf.WriteString(ansi.CursorPosition(0, lastLinesRendered)) // put cursor back
 		_, _ = r.out.Write(buf.Bytes())
 	}
 }
@@ -603,39 +570,20 @@ func (r *standardRenderer) resetLinesRendered() {
 //
 // Deprecated: This option is deprecated and will be removed in a future
 // version of this package.
-func (r *standardRenderer) insertTop(
-	lines []string,
-	topBoundary, bottomBoundary int,
-) {
+func (r *standardRenderer) insertTop(lines []string, topBoundary, bottomBoundary int) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	buf := &bytes.Buffer{}
 
-	buf.WriteString(
-		ansi.SetTopBottomMargins(
-			topBoundary,
-			bottomBoundary,
-		),
-	)
-	buf.WriteString(
-		ansi.CursorPosition(0, topBoundary),
-	)
+	buf.WriteString(ansi.SetTopBottomMargins(topBoundary, bottomBoundary))
+	buf.WriteString(ansi.CursorPosition(0, topBoundary))
 	buf.WriteString(ansi.InsertLine(len(lines)))
-	_, _ = buf.WriteString(
-		strings.Join(lines, "\r\n"),
-	)
-	buf.WriteString(
-		ansi.SetTopBottomMargins(0, r.height),
-	)
+	_, _ = buf.WriteString(strings.Join(lines, "\r\n"))
+	buf.WriteString(ansi.SetTopBottomMargins(0, r.height))
 
 	// Move cursor back to where the main rendering routine expects it to be
-	buf.WriteString(
-		ansi.CursorPosition(
-			0,
-			r.lastLinesRendered(),
-		),
-	)
+	buf.WriteString(ansi.CursorPosition(0, r.lastLinesRendered()))
 
 	_, _ = r.out.Write(buf.Bytes())
 }
@@ -652,46 +600,25 @@ func (r *standardRenderer) insertTop(
 //
 // Deprecated: This option is deprecated and will be removed in a future
 // version of this package.
-func (r *standardRenderer) insertBottom(
-	lines []string,
-	topBoundary, bottomBoundary int,
-) {
+func (r *standardRenderer) insertBottom(lines []string, topBoundary, bottomBoundary int) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 
 	buf := &bytes.Buffer{}
 
-	buf.WriteString(
-		ansi.SetTopBottomMargins(
-			topBoundary,
-			bottomBoundary,
-		),
-	)
-	buf.WriteString(
-		ansi.CursorPosition(0, bottomBoundary),
-	)
-	_, _ = buf.WriteString(
-		"\r\n" + strings.Join(lines, "\r\n"),
-	)
-	buf.WriteString(
-		ansi.SetTopBottomMargins(0, r.height),
-	)
+	buf.WriteString(ansi.SetTopBottomMargins(topBoundary, bottomBoundary))
+	buf.WriteString(ansi.CursorPosition(0, bottomBoundary))
+	_, _ = buf.WriteString("\r\n" + strings.Join(lines, "\r\n"))
+	buf.WriteString(ansi.SetTopBottomMargins(0, r.height))
 
 	// Move cursor back to where the main rendering routine expects it to be
-	buf.WriteString(
-		ansi.CursorPosition(
-			0,
-			r.lastLinesRendered(),
-		),
-	)
+	buf.WriteString(ansi.CursorPosition(0, r.lastLinesRendered()))
 
 	_, _ = r.out.Write(buf.Bytes())
 }
 
 // handleMessages handles internal messages for the renderer.
-func (r *standardRenderer) handleMessages(
-	msg Msg,
-) {
+func (r *standardRenderer) handleMessages(msg Msg) {
 	switch msg := msg.(type) {
 	case repaintMsg:
 		// Force a repaint by clearing the render cache as we slide into a
@@ -759,11 +686,7 @@ type syncScrollAreaMsg struct {
 // For high-performance, scroll-based rendering only.
 //
 // Deprecated: This option will be removed in a future version of this package.
-func SyncScrollArea(
-	lines []string,
-	topBoundary int,
-	bottomBoundary int,
-) Cmd {
+func SyncScrollArea(lines []string, topBoundary int, bottomBoundary int) Cmd {
 	return func() Msg {
 		return syncScrollAreaMsg{
 			lines:          lines,
@@ -798,10 +721,7 @@ type scrollUpMsg struct {
 // For high-performance, scroll-based rendering only.
 //
 // Deprecated: This option will be removed in a future version of this package.
-func ScrollUp(
-	newLines []string,
-	topBoundary, bottomBoundary int,
-) Cmd {
+func ScrollUp(newLines []string, topBoundary, bottomBoundary int) Cmd {
 	return func() Msg {
 		return scrollUpMsg{
 			lines:          newLines,
@@ -824,10 +744,7 @@ type scrollDownMsg struct {
 // For high-performance, scroll-based rendering only.
 //
 // Deprecated: This option will be removed in a future version of this package.
-func ScrollDown(
-	newLines []string,
-	topBoundary, bottomBoundary int,
-) Cmd {
+func ScrollDown(newLines []string, topBoundary, bottomBoundary int) Cmd {
 	return func() Msg {
 		return scrollDownMsg{
 			lines:          newLines,
@@ -864,15 +781,10 @@ func Println(args ...interface{}) Cmd {
 // its own line.
 //
 // If the altscreen is active no output will be printed.
-func Printf(
-	template string,
-	args ...interface{},
-) Cmd {
+func Printf(template string, args ...interface{}) Cmd {
 	return func() Msg {
 		return printLineMessage{
-			messageBody: fmt.Sprintf(
-				template,
-				args...),
+			messageBody: fmt.Sprintf(template, args...),
 		}
 	}
 }

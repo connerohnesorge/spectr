@@ -2,11 +2,11 @@
 
 ## 1. Core Infrastructure
 
-- [ ] 1.1 Create `internal/ralph/` package directory structure
-- [ ] 1.2 Define Task and TaskGraph types in `internal/ralph/graph.go`
-- [ ] 1.3 Implement task graph parsing from tasks.jsonc files
-- [ ] 1.4 Implement topological sort for dependency-aware execution order
-- [ ] 1.5 Add parallel task detection (tasks with different prefixes)
+- [x] 1.1 Create `internal/ralph/` package directory structure
+- [x] 1.2 Define Task and TaskGraph types in `internal/ralph/graph.go`
+- [x] 1.3 Implement task graph parsing from tasks.jsonc files
+- [x] 1.4 Implement topological sort for dependency-aware execution order
+- [x] 1.5 Add parallel task detection (tasks with different prefixes)
 
 ## 2. Ralpher Interface
 
@@ -41,43 +41,43 @@
 ## 6. Session Persistence
 
 - [ ] 6.1 Define SessionState struct in `internal/ralph/session.go`
-- [ ] 6.2 Implement session save on interruption/quit
-- [ ] 6.3 Implement session load and resume prompt
-- [ ] 6.4 Implement session cleanup on completion
-- [ ] 6.5 Write tests for session persistence round-trip
+- [x] 6.2 Implement session save on interruption/quit
+- [x] 6.3 Implement session load and resume prompt
+- [x] 6.4 Implement session cleanup on completion
+- [x] 6.5 Write tests for session persistence round-trip
 
 ## 7. Orchestration Engine
 
-- [ ] 7.1 Implement main orchestration loop in `internal/ralph/orchestrator.go`
-- [ ] 7.2 Integrate task graph, prompt generation, PTY, and watcher
-- [ ] 7.3 Implement retry logic with configurable maxRetries
-- [ ] 7.4 Implement parallel execution for independent tasks
-- [ ] 7.5 Handle user actions (retry, skip, abort, pause)
-- [ ] 7.6 Write integration tests for orchestration scenarios
+- [x] 7.1 Implement main orchestration loop in `internal/ralph/orchestrator.go`
+- [x] 7.2 Integrate task graph, prompt generation, PTY, and watcher
+- [x] 7.3 Implement retry logic with configurable maxRetries
+- [x] 7.4 Implement parallel execution for independent tasks
+- [x] 7.5 Handle user actions (retry, skip, abort, pause)
+- [x] 7.6 Write integration tests for orchestration scenarios
 
 ## 8. TUI Implementation
 
-- [ ] 8.1 Create TUI model in `internal/ralph/tui.go` using Bubble Tea
-- [ ] 8.2 Implement task list view with status indicators
-- [ ] 8.3 Implement agent output pane with ANSI rendering
-- [ ] 8.4 Implement keyboard controls (q, r, s, p)
-- [ ] 8.5 Implement interactive task selection mode (--interactive)
-- [ ] 8.6 Add help bar with available commands
-- [ ] 8.7 Write TUI tests using teatest
+- [x] 8.1 Create TUI model in `internal/ralph/tui.go` using Bubble Tea
+- [x] 8.2 Implement task list view with status indicators
+- [x] 8.3 Implement agent output pane with ANSI rendering
+- [x] 8.4 Implement keyboard controls (q, r, s, p)
+- [x] 8.5 Implement interactive task selection mode (--interactive)
+- [x] 8.6 Add help bar with available commands
+- [x] 8.7 Write TUI tests using teatest
 
 ## 9. CLI Command
 
-- [ ] 9.1 Create `cmd/ralph.go` with Kong command struct
-- [ ] 9.2 Implement change-id argument parsing and validation
-- [ ] 9.3 Add --interactive flag for task selection mode
-- [ ] 9.4 Add --max-retries flag (default 3)
-- [ ] 9.5 Implement provider detection and Ralpher lookup
-- [ ] 9.6 Wire up TUI and orchestrator
-- [ ] 9.7 Write CLI integration tests
+- [x] 9.1 Create `cmd/ralph.go` with Kong command struct
+- [x] 9.2 Implement change-id argument parsing and validation
+- [x] 9.3 Add --interactive flag for task selection mode
+- [x] 9.4 Add --max-retries flag (default 3)
+- [x] 9.5 Implement provider detection and Ralpher lookup
+- [x] 9.6 Wire up TUI and orchestrator
+- [x] 9.7 Write CLI integration tests
 
 ## 10. Documentation and Polish
 
-- [ ] 10.1 Add ralph command to spectr help output
-- [ ] 10.2 Update AGENTS.md with ralph usage instructions
-- [ ] 10.3 Add error messages for common failure modes
-- [ ] 10.4 Run full test suite and fix any failures
+- [x] 10.1 Add ralph command to spectr help output
+- [x] 10.2 Update AGENTS.md with ralph usage instructions
+- [x] 10.3 Add error messages for common failure modes
+- [x] 10.4 Run full test suite and fix any failures

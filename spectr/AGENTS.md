@@ -560,3 +560,200 @@ Reading Details (for AI agents):
 - Read `spectr/changes/<change-id>/proposal.md` for change details
 
 Remember: Specs are truth. Changes are proposals. Keep them in sync.
+
+## Ralph Orchestration
+
+Ralph automates the execution of tasks from `tasks.jsonc` files by coordinating
+with AI agent CLIs (like Claude Code or Gemini). It provides dependency-aware
+task scheduling, parallel execution, and resumable sessions.
+
+### When to Use Ralph
+
+Use `spectr ralph` when:
+
+- You have an accepted change proposal with `tasks.jsonc` generated
+- You want to automate task execution with AI assistance
+- Tasks have dependencies that should be executed in order
+- You need parallel execution of independent tasks
+- You want session persistence to resume after interruptions
+
+Don't use ralph for:
+
+- Initial proposal creation (use manual spec-driven workflow)
+- Bug fixes without a change proposal
+- Simple single-step changes
+- Tasks that require human judgment at each step
+
+### Prerequisites
+
+1. **Provider Setup**: Ralph requires an AI agent CLI that implements the
+   Ralpher interface. Currently supported:
+   - Claude Code (recommended): `https://claude.ai/code`
+   - Gemini CLI: `https://ai.google.dev/gemini-api/docs/cli`
+
+2. **Accepted Proposal**: The change must have been accepted with
+   `spectr accept <change-id>` to generate `tasks.jsonc` from `tasks.md`.
+
+3. **Binary in PATH**: The agent CLI binary must be installed and available
+   in your system PATH.
+
+### Usage
+
+```bash
+# Basic usage - orchestrate all pending tasks
+spectr ralph <change-id>
+
+# Interactive mode - select tasks to run
+spectr ralph <change-id> --interactive
+
+# Custom retry limit
+spectr ralph <change-id> --max-retries 5
+
+# Resume a previous session
+spectr ralph <change-id>  # Automatically detects saved sessions
+```
+
+### Flags
+
+- `--interactive` (`-i`): Enable interactive task selection mode. Presents
+  a TUI to choose which tasks to execute instead of running all pending tasks.
+- `--max-retries N`: Maximum number of retry attempts per task (default: 3).
+  When a task fails, ralph will retry up to N times before asking for user
+  action.
+- `--no-interactive`: Disable interactive prompts (for CI/automation).
+
+### How It Works
+
+1. **Task Graph**: Ralph parses `tasks.jsonc` to build a dependency graph
+   based on task ID prefixes (e.g., `1.1`, `1.2`, `2.1`).
+
+2. **Execution Order**: Tasks are executed in topological order, respecting
+   dependencies. Tasks with different prefixes can run in parallel.
+
+3. **Agent Invocation**: For each task, Ralph:
+   - Generates a prompt with task context from `proposal.md`, `design.md`,
+     and delta specs
+   - Spawns the agent CLI in a PTY for full interactivity
+   - Monitors `tasks.jsonc` for status changes (`in_progress` → `completed`)
+
+4. **Failure Handling**: If a task fails (non-zero exit, timeout, or status
+   not updated):
+   - Ralph retries up to `--max-retries` times
+   - After retries exhausted, presents TUI with options: Retry, Skip, Abort
+   - User decision determines next action
+
+5. **Session Persistence**: Ralph saves session state on interruption (Ctrl+C)
+   or quit. On next invocation, offers to resume from the last checkpoint.
+
+### TUI Keyboard Controls
+
+During orchestration, the TUI provides these controls:
+
+- `q`: Quit orchestration (saves session for resume)
+- `r`: Retry current task immediately (resets retry counter)
+- `s`: Skip current task and continue to next
+- `p`: Pause orchestration (same as quit, saves session)
+- `Ctrl+C`: Interrupt and save session
+
+### Session Management
+
+Ralph automatically manages sessions in `.spectr/ralph-sessions/<change-id>.json`:
+
+- **Auto-resume**: When starting ralph with a saved session, prompts to resume
+  or start fresh.
+- **Progress tracking**: Tracks completed tasks, current task, and retry counts.
+- **Cleanup**: Session file is removed on successful completion or when starting
+  a new session.
+
+### Example Workflow
+
+```bash
+# 1. Create and accept a proposal
+mkdir -p spectr/changes/add-feature
+# ... create proposal.md, tasks.md, delta specs ...
+spectr validate add-feature
+spectr accept add-feature
+
+# 2. Start orchestration
+spectr ralph add-feature
+
+# 3. TUI appears showing task list and agent output
+# Tasks execute automatically with status updates
+
+# 4. If interrupted (Ctrl+C), session is saved
+# Resume later:
+spectr ralph add-feature
+# Prompt: "Resume session from task 3.2? [Y/n]"
+
+# 5. On completion, all tasks marked completed in tasks.jsonc
+```
+
+### Ralph Troubleshooting
+
+#### "No suitable provider found for ralph orchestration"
+
+- Install Claude Code or Gemini CLI
+- Ensure the binary is in your PATH
+- Check provider registration in `internal/initialize/providers/`
+
+#### "Change directory not found"
+
+- Verify the change ID exists in `spectr/changes/<change-id>`
+- Use `spectr list` to see available changes
+
+#### "Failed to parse task graph"
+
+- Ensure `tasks.jsonc` exists (run `spectr accept <change-id>`)
+- Validate JSON syntax with `cat tasks.jsonc | jq`
+- Check that task IDs follow the expected format (`X.Y`)
+
+#### Tasks not updating status
+
+- Verify the agent has write access to `tasks.jsonc`
+- Check that the agent is marking tasks as `"completed"` after work
+- Monitor file changes: `watch -n 1 cat tasks.jsonc`
+
+#### PTY/terminal issues
+
+- Ensure your terminal supports PTY (most Unix terminals do)
+- Try running with `TERM=xterm-256color` if display is garbled
+- Check that the agent CLI supports non-interactive mode
+
+### For AI Agents Using Ralph
+
+When invoked by ralph, you receive:
+
+1. **Task Context**: The specific task from `tasks.jsonc` with ID, section,
+   and description.
+2. **Change Context**: Contents of `proposal.md`, `design.md` (if exists),
+   and relevant delta specs.
+3. **Prompt Template**: Structured prompt explaining your role and the task
+   to complete.
+
+Your responsibilities:
+
+- Mark the task as `"in_progress"` in `tasks.jsonc` before starting work.
+- Complete the implementation according to the task description.
+- Verify your work is correct and complete.
+- Mark the task as `"completed"` in `tasks.jsonc` immediately after verification.
+- Output clear status messages so ralph can track progress.
+
+Do not:
+
+- Skip tasks or mark them complete without implementation.
+- Modify task IDs or structure in `tasks.jsonc`.
+- Remove comments or formatting from `tasks.jsonc`.
+- Work on multiple tasks simultaneously (ralph coordinates parallelism).
+
+### Integration with Spectr Workflow
+
+Ralph fits into the spec-driven workflow as follows:
+
+1. **Propose**: Create change proposal with `proposal.md`, `tasks.md`, delta specs
+2. **Validate**: Run `spectr validate <change-id>` to check spec correctness
+3. **Accept**: Run `spectr accept <change-id>` to generate `tasks.jsonc`
+4. **Orchestrate**: Run `spectr ralph <change-id>` to automate task execution ← NEW
+5. **Archive**: Run `spectr pr archive <change-id>` to merge changes and create PR
+
+Ralph automates step 4, allowing AI agents to systematically work through
+implementation tasks with proper context and dependency management.

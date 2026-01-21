@@ -41,7 +41,10 @@ func SetDefaultRenderer(r *Renderer) {
 // NewRenderer creates a new Renderer.
 //
 // w will be used to determine the terminal's color capabilities.
-func NewRenderer(w io.Writer, opts ...termenv.OutputOption) *Renderer {
+func NewRenderer(
+	w io.Writer,
+	opts ...termenv.OutputOption,
+) *Renderer {
 	r := &Renderer{
 		output: termenv.NewOutput(w, opts...),
 	}
@@ -99,7 +102,9 @@ func ColorProfile() termenv.Profile {
 //	termenv.TrueColor // 16,777,216 colors, 24-bit
 //
 // This function is thread-safe.
-func (r *Renderer) SetColorProfile(p termenv.Profile) {
+func (r *Renderer) SetColorProfile(
+	p termenv.Profile,
+) {
 	r.mtx.Lock()
 	defer r.mtx.Unlock()
 

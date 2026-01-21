@@ -47,7 +47,10 @@ func Exec(c ExecCommand, fn ExecCallback) Cmd {
 //	cmd := ExecProcess(exec.Command("vim", "file.txt"), nil)
 //
 // For non-interactive i/o you should use a Cmd (that is, a tea.Cmd).
-func ExecProcess(c *exec.Cmd, fn ExecCallback) Cmd {
+func ExecProcess(
+	c *exec.Cmd,
+	fn ExecCallback,
+) Cmd {
 	return Exec(wrapExecCommand(c), fn)
 }
 
@@ -99,7 +102,10 @@ func (c *osExecCommand) SetStderr(w io.Writer) {
 }
 
 // exec runs an ExecCommand and delivers the results to the program as a Msg.
-func (p *Program) exec(c ExecCommand, fn ExecCallback) {
+func (p *Program) exec(
+	c ExecCommand,
+	fn ExecCallback,
+) {
 	if err := p.ReleaseTerminal(); err != nil {
 		// If we can't release input, abort.
 		if fn != nil {

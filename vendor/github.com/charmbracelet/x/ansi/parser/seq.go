@@ -47,7 +47,8 @@ func Command(cmd int) int {
 // Param returns the parameter at the given index.
 // It returns -1 if the parameter does not exist.
 func Param(params []int, i int) int {
-	if len(params) == 0 || i < 0 || i >= len(params) {
+	if len(params) == 0 || i < 0 ||
+		i >= len(params) {
 		return -1
 	}
 
@@ -71,7 +72,8 @@ func HasMore(params []int, i int) bool {
 // Subparams returns the sub-parameters of the given parameter.
 // It returns nil if the parameter does not exist.
 func Subparams(params []int, i int) []int {
-	if len(params) == 0 || i < 0 || i >= len(params) {
+	if len(params) == 0 || i < 0 ||
+		i >= len(params) {
 		return nil
 	}
 
@@ -127,9 +129,16 @@ func Len(params []int) int {
 // Range iterates over the parameters of the sequence and calls the given
 // function for each parameter.
 // The function should return false to stop the iteration.
-func Range(params []int, fn func(i int, param int, hasMore bool) bool) {
+func Range(
+	params []int,
+	fn func(i int, param int, hasMore bool) bool,
+) {
 	for i := range params {
-		if !fn(i, Param(params, i), HasMore(params, i)) {
+		if !fn(
+			i,
+			Param(params, i),
+			HasMore(params, i),
+		) {
 			break
 		}
 	}

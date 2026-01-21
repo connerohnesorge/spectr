@@ -62,7 +62,10 @@ func SetDefaultOutput(o *Output) {
 }
 
 // NewOutput returns a new Output for the given writer.
-func NewOutput(w io.Writer, opts ...OutputOption) *Output {
+func NewOutput(
+	w io.Writer,
+	opts ...OutputOption,
+) *Output {
 	o := &Output{
 		w:       w,
 		environ: &osEnviron{},
@@ -87,7 +90,9 @@ func NewOutput(w io.Writer, opts ...OutputOption) *Output {
 }
 
 // WithEnvironment returns a new OutputOption for the given environment.
-func WithEnvironment(environ Environ) OutputOption {
+func WithEnvironment(
+	environ Environ,
+) OutputOption {
 	return func(o *Output) {
 		o.environ = environ
 	}
@@ -200,6 +205,8 @@ func (o Output) Write(p []byte) (int, error) {
 }
 
 // WriteString writes the given string to the output.
-func (o Output) WriteString(s string) (int, error) {
+func (o Output) WriteString(
+	s string,
+) (int, error) {
 	return o.Write([]byte(s))
 }

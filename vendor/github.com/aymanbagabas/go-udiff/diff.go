@@ -19,7 +19,12 @@ type Edit struct {
 }
 
 func (e Edit) String() string {
-	return fmt.Sprintf("{Start:%d,End:%d,New:%q}", e.Start, e.End, e.New)
+	return fmt.Sprintf(
+		"{Start:%d,End:%d,New:%q}",
+		e.Start,
+		e.End,
+		e.New,
+	)
 }
 
 // Apply applies a sequence of edits to the src buffer and returns the
@@ -28,7 +33,10 @@ func (e Edit) String() string {
 //
 // Apply returns an error if any edit is out of bounds,
 // or if any pair of edits is overlapping.
-func Apply(src string, edits []Edit) (string, error) {
+func Apply(
+	src string,
+	edits []Edit,
+) (string, error) {
 	edits, size, err := validate(src, edits)
 	if err != nil {
 		return "", err
@@ -39,7 +47,9 @@ func Apply(src string, edits []Edit) (string, error) {
 	lastEnd := 0
 	for _, edit := range edits {
 		if lastEnd < edit.Start {
-			out = append(out, src[lastEnd:edit.Start]...)
+			out = append(
+				out,
+				src[lastEnd:edit.Start]...)
 		}
 		out = append(out, edit.New...)
 		lastEnd = edit.End
@@ -55,7 +65,10 @@ func Apply(src string, edits []Edit) (string, error) {
 
 // ApplyBytes is like Apply, but it accepts a byte slice.
 // The result is always a new array.
-func ApplyBytes(src []byte, edits []Edit) ([]byte, error) {
+func ApplyBytes(
+	src []byte,
+	edits []Edit,
+) ([]byte, error) {
 	res, err := Apply(string(src), edits)
 	return []byte(res), err
 }
@@ -63,7 +76,10 @@ func ApplyBytes(src []byte, edits []Edit) ([]byte, error) {
 // validate checks that edits are consistent with src,
 // and returns the size of the patched output.
 // It may return a different slice.
-func validate(src string, edits []Edit) ([]Edit, int, error) {
+func validate(
+	src string,
+	edits []Edit,
+) ([]Edit, int, error) {
 	if !sort.IsSorted(editsSort(edits)) {
 		edits = slices.Clone(edits)
 		SortEdits(edits)
@@ -74,12 +90,18 @@ func validate(src string, edits []Edit) ([]Edit, int, error) {
 	lastEnd := 0
 	for _, edit := range edits {
 		if !(0 <= edit.Start && edit.Start <= edit.End && edit.End <= len(src)) {
-			return nil, 0, fmt.Errorf("diff has out-of-bounds edits")
+			return nil, 0, fmt.Errorf(
+				"diff has out-of-bounds edits",
+			)
 		}
 		if edit.Start < lastEnd {
-			return nil, 0, fmt.Errorf("diff has overlapping edits")
+			return nil, 0, fmt.Errorf(
+				"diff has overlapping edits",
+			)
 		}
-		size += len(edit.New) + edit.Start - edit.End
+		size += len(
+			edit.New,
+		) + edit.Start - edit.End
 		lastEnd = edit.End
 	}
 
@@ -104,12 +126,20 @@ func (a editsSort) Less(i, j int) bool {
 	}
 	return a[i].End < a[j].End
 }
-func (a editsSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+func (a editsSort) Swap(
+	i, j int,
+) {
+	a[i], a[j] = a[j], a[i]
+}
 
 // lineEdits expands and merges a sequence of edits so that each
 // resulting edit replaces one or more complete lines.
 // See ApplyEdits for preconditions.
-func lineEdits(src string, edits []Edit) ([]Edit, error) {
+func lineEdits(
+	src string,
+	edits []Edit,
+) ([]Edit, error) {
 	edits, _, err := validate(src, edits)
 	if err != nil {
 		return nil, err
@@ -119,7 +149,9 @@ func lineEdits(src string, edits []Edit) ([]Edit, error) {
 	// and all insertions end with a newline?
 	// (This is merely a fast path.)
 	for _, edit := range edits {
-		if edit.Start >= len(src) || // insertion at EOF
+		if edit.Start >= len(
+			src,
+		) || // insertion at EOF
 			edit.Start > 0 && src[edit.Start-1] != '\n' || // not at line start
 			edit.End > 0 && src[edit.End-1] != '\n' || // not at line start
 			edit.New != "" && edit.New[len(edit.New)-1] != '\n' { // partial insert
@@ -132,7 +164,11 @@ expand:
 	if len(edits) == 0 {
 		return edits, nil // no edits (unreachable due to fast path)
 	}
-	expanded := make([]Edit, 0, len(edits)) // a guess
+	expanded := make(
+		[]Edit,
+		0,
+		len(edits),
+	) // a guess
 	prev := edits[0]
 	// TODO(adonovan): opt: start from the first misaligned edit.
 	// TODO(adonovan): opt: avoid quadratic cost of string += string.
@@ -148,7 +184,10 @@ expand:
 			prev = edit
 		}
 	}
-	return append(expanded, expandEdit(prev, src)), nil // flush final edit
+	return append(
+		expanded,
+		expandEdit(prev, src),
+	), nil // flush final edit
 }
 
 // expandEdit returns edit expanded to complete whole lines.
@@ -164,7 +203,8 @@ func expandEdit(edit Edit, src string) Edit {
 	// Expand end right to end of line.
 	end := edit.End
 	if end > 0 && src[end-1] != '\n' ||
-		edit.New != "" && edit.New[len(edit.New)-1] != '\n' {
+		edit.New != "" &&
+			edit.New[len(edit.New)-1] != '\n' {
 		if nl := strings.IndexByte(src[end:], '\n'); nl < 0 {
 			edit.End = len(src) // extend to EOF
 		} else {

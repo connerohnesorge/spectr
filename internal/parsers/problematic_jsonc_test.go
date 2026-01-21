@@ -5,7 +5,9 @@ import (
 	"testing"
 )
 
-func TestStripJSONCommentsProblematicInputs(t *testing.T) {
+func TestStripJSONCommentsProblematicInputs(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		input    string
@@ -96,21 +98,33 @@ func TestStripJSONCommentsProblematicInputs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test that StripJSONComments preserves the content
-			result := StripJSONComments([]byte(tt.input))
+			result := StripJSONComments(
+				[]byte(tt.input),
+			)
 			if string(result) != tt.expected {
-				t.Errorf("StripJSONComments() = %v, want %v", string(result), tt.expected)
+				t.Errorf(
+					"StripJSONComments() = %v, want %v",
+					string(result),
+					tt.expected,
+				)
 			}
 
 			// Test that the result is valid JSON
 			var parsed map[string]any
 			if err := json.Unmarshal(result, &parsed); err != nil {
-				t.Errorf("Result is not valid JSON: %v\nResult: %s", err, string(result))
+				t.Errorf(
+					"Result is not valid JSON: %v\nResult: %s",
+					err,
+					string(result),
+				)
 			}
 		})
 	}
 }
 
-func TestStripJSONCommentsWithCommentsAndEdgeCases(t *testing.T) {
+func TestStripJSONCommentsWithCommentsAndEdgeCases(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		input    string
@@ -158,15 +172,25 @@ func TestStripJSONCommentsWithCommentsAndEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := StripJSONComments([]byte(tt.input))
+			result := StripJSONComments(
+				[]byte(tt.input),
+			)
 			if string(result) != tt.expected {
-				t.Errorf("StripJSONComments() = %v, want %v", string(result), tt.expected)
+				t.Errorf(
+					"StripJSONComments() = %v, want %v",
+					string(result),
+					tt.expected,
+				)
 			}
 
 			// Verify the result is valid JSON
 			var parsed map[string]any
 			if err := json.Unmarshal(result, &parsed); err != nil {
-				t.Errorf("Result is not valid JSON: %v\nResult: %s", err, string(result))
+				t.Errorf(
+					"Result is not valid JSON: %v\nResult: %s",
+					err,
+					string(result),
+				)
 			}
 		})
 	}
@@ -212,25 +236,45 @@ func TestRoundTripJSONCMarshaling(t *testing.T) {
 			}
 
 			// Marshal to JSON
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("Failed to marshal tasks: %v", err)
+				t.Fatalf(
+					"Failed to marshal tasks: %v",
+					err,
+				)
 			}
 
 			// Strip comments (should be no-op for freshly marshaled JSON)
-			stripped := StripJSONComments(jsonData)
+			stripped := StripJSONComments(
+				jsonData,
+			)
 
 			// Parse back
 			var parsed TasksFile
 			if err := json.Unmarshal(stripped, &parsed); err != nil {
-				t.Fatalf("Failed to unmarshal after stripping comments: %v", err)
+				t.Fatalf(
+					"Failed to unmarshal after stripping comments: %v",
+					err,
+				)
 			}
 
 			// Verify round-trip integrity
 			if parsed.Version != tasksFile.Version {
-				t.Errorf("Version mismatch: got %d, want %d", parsed.Version, tasksFile.Version)
+				t.Errorf(
+					"Version mismatch: got %d, want %d",
+					parsed.Version,
+					tasksFile.Version,
+				)
 			}
-			if len(parsed.Tasks) != len(tasksFile.Tasks) {
+			if len(
+				parsed.Tasks,
+			) != len(
+				tasksFile.Tasks,
+			) {
 				t.Errorf(
 					"Task count mismatch: got %d, want %d",
 					len(parsed.Tasks),

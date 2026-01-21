@@ -19,7 +19,10 @@ import "unsafe"
  * Wrapped
  */
 
-func Access(path string, mode uint32) (err error) {
+func Access(
+	path string,
+	mode uint32,
+) (err error) {
 	return Faccessat(AT_FDCWD, path, mode, 0)
 }
 
@@ -27,12 +30,23 @@ func Chmod(path string, mode uint32) (err error) {
 	return Fchmodat(AT_FDCWD, path, mode, 0)
 }
 
-func Chown(path string, uid int, gid int) (err error) {
+func Chown(
+	path string,
+	uid int,
+	gid int,
+) (err error) {
 	return Fchownat(AT_FDCWD, path, uid, gid, 0)
 }
 
-func Creat(path string, mode uint32) (fd int, err error) {
-	return Open(path, O_CREAT|O_WRONLY|O_TRUNC, mode)
+func Creat(
+	path string,
+	mode uint32,
+) (fd int, err error) {
+	return Open(
+		path,
+		O_CREAT|O_WRONLY|O_TRUNC,
+		mode,
+	)
 }
 
 //sys	utimes(path string, times *[2]Timeval) (err error)
@@ -41,26 +55,47 @@ func Utimes(path string, tv []Timeval) error {
 	if len(tv) != 2 {
 		return EINVAL
 	}
-	return utimes(path, (*[2]Timeval)(unsafe.Pointer(&tv[0])))
+	return utimes(
+		path,
+		(*[2]Timeval)(unsafe.Pointer(&tv[0])),
+	)
 }
 
 //sys	utimensat(dirfd int, path string, times *[2]Timespec, flag int) (err error)
 
-func UtimesNano(path string, ts []Timespec) error {
+func UtimesNano(
+	path string,
+	ts []Timespec,
+) error {
 	if len(ts) != 2 {
 		return EINVAL
 	}
-	return utimensat(AT_FDCWD, path, (*[2]Timespec)(unsafe.Pointer(&ts[0])), 0)
+	return utimensat(
+		AT_FDCWD,
+		path,
+		(*[2]Timespec)(unsafe.Pointer(&ts[0])),
+		0,
+	)
 }
 
-func UtimesNanoAt(dirfd int, path string, ts []Timespec, flags int) error {
+func UtimesNanoAt(
+	dirfd int,
+	path string,
+	ts []Timespec,
+	flags int,
+) error {
 	if ts == nil {
 		return utimensat(dirfd, path, nil, flags)
 	}
 	if len(ts) != 2 {
 		return EINVAL
 	}
-	return utimensat(dirfd, path, (*[2]Timespec)(unsafe.Pointer(&ts[0])), flags)
+	return utimensat(
+		dirfd,
+		path,
+		(*[2]Timespec)(unsafe.Pointer(&ts[0])),
+		flags,
+	)
 }
 
 func (sa *SockaddrInet4) sockaddr() (unsafe.Pointer, _Socklen, error) {
@@ -72,7 +107,9 @@ func (sa *SockaddrInet4) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	p[0] = byte(sa.Port >> 8)
 	p[1] = byte(sa.Port)
 	sa.raw.Addr = sa.Addr
-	return unsafe.Pointer(&sa.raw), SizeofSockaddrInet4, nil
+	return unsafe.Pointer(
+		&sa.raw,
+	), SizeofSockaddrInet4, nil
 }
 
 func (sa *SockaddrInet6) sockaddr() (unsafe.Pointer, _Socklen, error) {
@@ -85,7 +122,9 @@ func (sa *SockaddrInet6) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	p[1] = byte(sa.Port)
 	sa.raw.Scope_id = sa.ZoneId
 	sa.raw.Addr = sa.Addr
-	return unsafe.Pointer(&sa.raw), SizeofSockaddrInet6, nil
+	return unsafe.Pointer(
+		&sa.raw,
+	), SizeofSockaddrInet6, nil
 }
 
 func (sa *SockaddrUnix) sockaddr() (unsafe.Pointer, _Socklen, error) {
@@ -106,7 +145,8 @@ func (sa *SockaddrUnix) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	if n > 0 {
 		sl += _Socklen(n) + 1
 	}
-	if sa.raw.Path[0] == '@' || (sa.raw.Path[0] == 0 && sl > 3) {
+	if sa.raw.Path[0] == '@' ||
+		(sa.raw.Path[0] == 0 && sl > 3) {
 		// Check sl > 3 so we don't change unnamed socket behavior.
 		sa.raw.Path[0] = 0
 		// Don't count trailing NUL for abstract address.
@@ -116,7 +156,9 @@ func (sa *SockaddrUnix) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	return unsafe.Pointer(&sa.raw), sl, nil
 }
 
-func Getsockname(fd int) (sa Sockaddr, err error) {
+func Getsockname(
+	fd int,
+) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	if err = getsockname(fd, &rsa, &len); err != nil {
@@ -202,7 +244,9 @@ func Setgroups(gids []int) (err error) {
 
 //sys	accept(s int, rsa *RawSockaddrAny, addrlen *_Socklen) (fd int, err error)
 
-func Accept(fd int) (nfd int, sa Sockaddr, err error) {
+func Accept(
+	fd int,
+) (nfd int, sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	nfd, err = accept(fd, &rsa, &len)
@@ -217,7 +261,13 @@ func Accept(fd int) (nfd int, sa Sockaddr, err error) {
 	return
 }
 
-func recvmsgRaw(fd int, iov []Iovec, oob []byte, flags int, rsa *RawSockaddrAny) (n, oobn int, recvflags int, err error) {
+func recvmsgRaw(
+	fd int,
+	iov []Iovec,
+	oob []byte,
+	flags int,
+	rsa *RawSockaddrAny,
+) (n, oobn int, recvflags int, err error) {
 	var msg Msghdr
 	msg.Name = (*byte)(unsafe.Pointer(rsa))
 	msg.Namelen = uint32(SizeofSockaddrAny)
@@ -230,7 +280,9 @@ func recvmsgRaw(fd int, iov []Iovec, oob []byte, flags int, rsa *RawSockaddrAny)
 			iova[0].SetLen(1)
 			iov = iova[:]
 		}
-		msg.Control = (*byte)(unsafe.Pointer(&oob[0]))
+		msg.Control = (*byte)(
+			unsafe.Pointer(&oob[0]),
+		)
 		msg.SetControllen(len(oob))
 	}
 	if len(iov) > 0 {
@@ -245,7 +297,14 @@ func recvmsgRaw(fd int, iov []Iovec, oob []byte, flags int, rsa *RawSockaddrAny)
 	return
 }
 
-func sendmsgN(fd int, iov []Iovec, oob []byte, ptr unsafe.Pointer, salen _Socklen, flags int) (n int, err error) {
+func sendmsgN(
+	fd int,
+	iov []Iovec,
+	oob []byte,
+	ptr unsafe.Pointer,
+	salen _Socklen,
+	flags int,
+) (n int, err error) {
 	var msg Msghdr
 	msg.Name = (*byte)(unsafe.Pointer(ptr))
 	msg.Namelen = uint32(salen)
@@ -260,7 +319,9 @@ func sendmsgN(fd int, iov []Iovec, oob []byte, ptr unsafe.Pointer, salen _Sockle
 			iova[0].SetLen(1)
 			iov = iova[:]
 		}
-		msg.Control = (*byte)(unsafe.Pointer(&oob[0]))
+		msg.Control = (*byte)(
+			unsafe.Pointer(&oob[0]),
+		)
 		msg.SetControllen(len(oob))
 	}
 	if len(iov) > 0 {
@@ -276,11 +337,16 @@ func sendmsgN(fd int, iov []Iovec, oob []byte, ptr unsafe.Pointer, salen _Sockle
 	return n, nil
 }
 
-func anyToSockaddr(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
+func anyToSockaddr(
+	fd int,
+	rsa *RawSockaddrAny,
+) (Sockaddr, error) {
 	switch rsa.Addr.Family {
 
 	case AF_UNIX:
-		pp := (*RawSockaddrUnix)(unsafe.Pointer(rsa))
+		pp := (*RawSockaddrUnix)(
+			unsafe.Pointer(rsa),
+		)
 		sa := new(SockaddrUnix)
 
 		// Some versions of AIX have a bug in getsockname (see IV78655).
@@ -292,11 +358,20 @@ func anyToSockaddr(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
 				break
 			}
 		}
-		sa.Name = string(unsafe.Slice((*byte)(unsafe.Pointer(&pp.Path[0])), n))
+		sa.Name = string(
+			unsafe.Slice(
+				(*byte)(
+					unsafe.Pointer(&pp.Path[0]),
+				),
+				n,
+			),
+		)
 		return sa, nil
 
 	case AF_INET:
-		pp := (*RawSockaddrInet4)(unsafe.Pointer(rsa))
+		pp := (*RawSockaddrInet4)(
+			unsafe.Pointer(rsa),
+		)
 		sa := new(SockaddrInet4)
 		p := (*[2]byte)(unsafe.Pointer(&pp.Port))
 		sa.Port = int(p[0])<<8 + int(p[1])
@@ -304,7 +379,9 @@ func anyToSockaddr(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
 		return sa, nil
 
 	case AF_INET6:
-		pp := (*RawSockaddrInet6)(unsafe.Pointer(rsa))
+		pp := (*RawSockaddrInet6)(
+			unsafe.Pointer(rsa),
+		)
 		sa := new(SockaddrInet6)
 		p := (*[2]byte)(unsafe.Pointer(&pp.Port))
 		sa.Port = int(p[0])<<8 + int(p[1])
@@ -320,7 +397,12 @@ func Gettimeofday(tv *Timeval) (err error) {
 	return
 }
 
-func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
+func Sendfile(
+	outfd int,
+	infd int,
+	offset *int64,
+	count int,
+) (written int, err error) {
 	if raceenabled {
 		raceReleaseMerge(unsafe.Pointer(&ioSync))
 	}
@@ -328,16 +410,29 @@ func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err e
 }
 
 // TODO
-func sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
+func sendfile(
+	outfd int,
+	infd int,
+	offset *int64,
+	count int,
+) (written int, err error) {
 	return -1, ENOSYS
 }
 
 func direntIno(buf []byte) (uint64, bool) {
-	return readInt(buf, unsafe.Offsetof(Dirent{}.Ino), unsafe.Sizeof(Dirent{}.Ino))
+	return readInt(
+		buf,
+		unsafe.Offsetof(Dirent{}.Ino),
+		unsafe.Sizeof(Dirent{}.Ino),
+	)
 }
 
 func direntReclen(buf []byte) (uint64, bool) {
-	return readInt(buf, unsafe.Offsetof(Dirent{}.Reclen), unsafe.Sizeof(Dirent{}.Reclen))
+	return readInt(
+		buf,
+		unsafe.Offsetof(Dirent{}.Reclen),
+		unsafe.Sizeof(Dirent{}.Reclen),
+	)
 }
 
 func direntNamlen(buf []byte) (uint64, bool) {
@@ -345,25 +440,40 @@ func direntNamlen(buf []byte) (uint64, bool) {
 	if !ok {
 		return 0, false
 	}
-	return reclen - uint64(unsafe.Offsetof(Dirent{}.Name)), true
+	return reclen - uint64(
+		unsafe.Offsetof(Dirent{}.Name),
+	), true
 }
 
 //sys	getdirent(fd int, buf []byte) (n int, err error)
 
-func Getdents(fd int, buf []byte) (n int, err error) {
+func Getdents(
+	fd int,
+	buf []byte,
+) (n int, err error) {
 	return getdirent(fd, buf)
 }
 
 //sys	wait4(pid Pid_t, status *_C_int, options int, rusage *Rusage) (wpid Pid_t, err error)
 
-func Wait4(pid int, wstatus *WaitStatus, options int, rusage *Rusage) (wpid int, err error) {
+func Wait4(
+	pid int,
+	wstatus *WaitStatus,
+	options int,
+	rusage *Rusage,
+) (wpid int, err error) {
 	var status _C_int
 	var r Pid_t
 	err = ERESTART
 	// AIX wait4 may return with ERESTART errno, while the process is still
 	// active.
 	for err == ERESTART {
-		r, err = wait4(Pid_t(pid), &status, options, rusage)
+		r, err = wait4(
+			Pid_t(pid),
+			&status,
+			options,
+			rusage,
+		)
 	}
 	wpid = int(r)
 	if wstatus != nil {
@@ -558,7 +668,10 @@ func Pipe(p []int) (err error) {
 
 //sys	poll(fds *PollFd, nfds int, timeout int) (n int, err error)
 
-func Poll(fds []PollFd, timeout int) (n int, err error) {
+func Poll(
+	fds []PollFd,
+	timeout int,
+) (n int, err error) {
 	if len(fds) == 0 {
 		return poll(nil, 0, timeout)
 	}
@@ -573,7 +686,10 @@ func Poll(fds []PollFd, timeout int) (n int, err error) {
 
 //sys	umount(target string) (err error)
 
-func Unmount(target string, flags int) (err error) {
+func Unmount(
+	target string,
+	flags int,
+) (err error) {
 	if flags != 0 {
 		// AIX doesn't have any flags for umount.
 		return ENOSYS

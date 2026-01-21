@@ -10,7 +10,11 @@ import "unsafe"
 
 // SysvShmAttach attaches the Sysv shared memory segment associated with the
 // shared memory identifier id.
-func SysvShmAttach(id int, addr uintptr, flag int) ([]byte, error) {
+func SysvShmAttach(
+	id int,
+	addr uintptr,
+	flag int,
+) ([]byte, error) {
 	addr, errno := shmat(id, addr, flag)
 	if errno != nil {
 		return nil, errno
@@ -29,7 +33,10 @@ func SysvShmAttach(id int, addr uintptr, flag int) ([]byte, error) {
 	}
 
 	// Use unsafe to convert addr into a []byte.
-	b := unsafe.Slice((*byte)(unsafe.Pointer(addr)), int(info.Segsz))
+	b := unsafe.Slice(
+		(*byte)(unsafe.Pointer(addr)),
+		int(info.Segsz),
+	)
 	return b, nil
 }
 
@@ -41,11 +48,15 @@ func SysvShmDetach(data []byte) error {
 		return EINVAL
 	}
 
-	return shmdt(uintptr(unsafe.Pointer(&data[0])))
+	return shmdt(
+		uintptr(unsafe.Pointer(&data[0])),
+	)
 }
 
 // SysvShmGet returns the Sysv shared memory identifier associated with key.
 // If the IPC_CREAT flag is specified a new segment is created.
-func SysvShmGet(key, size, flag int) (id int, err error) {
+func SysvShmGet(
+	key, size, flag int,
+) (id int, err error) {
 	return shmget(key, size, flag)
 }

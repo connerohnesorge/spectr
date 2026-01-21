@@ -27,7 +27,10 @@ func bytes2iovec(bs [][]byte) []Iovec {
 
 //sys	readv(fd int, iovs []Iovec) (n int, err error)
 
-func Readv(fd int, iovs [][]byte) (n int, err error) {
+func Readv(
+	fd int,
+	iovs [][]byte,
+) (n int, err error) {
 	iovecs := bytes2iovec(iovs)
 	n, err = readv(fd, iovecs)
 	return n, err
@@ -35,7 +38,11 @@ func Readv(fd int, iovs [][]byte) (n int, err error) {
 
 //sys	preadv(fd int, iovs []Iovec, off int64) (n int, err error)
 
-func Preadv(fd int, iovs [][]byte, off int64) (n int, err error) {
+func Preadv(
+	fd int,
+	iovs [][]byte,
+	off int64,
+) (n int, err error) {
 	iovecs := bytes2iovec(iovs)
 	n, err = preadv(fd, iovecs, off)
 	return n, err
@@ -43,7 +50,10 @@ func Preadv(fd int, iovs [][]byte, off int64) (n int, err error) {
 
 //sys	writev(fd int, iovs []Iovec) (n int, err error)
 
-func Writev(fd int, iovs [][]byte) (n int, err error) {
+func Writev(
+	fd int,
+	iovs [][]byte,
+) (n int, err error) {
 	iovecs := bytes2iovec(iovs)
 	n, err = writev(fd, iovecs)
 	return n, err
@@ -51,7 +61,11 @@ func Writev(fd int, iovs [][]byte) (n int, err error) {
 
 //sys	pwritev(fd int, iovs []Iovec, off int64) (n int, err error)
 
-func Pwritev(fd int, iovs [][]byte, off int64) (n int, err error) {
+func Pwritev(
+	fd int,
+	iovs [][]byte,
+	off int64,
+) (n int, err error) {
 	iovecs := bytes2iovec(iovs)
 	n, err = pwritev(fd, iovecs, off)
 	return n, err
@@ -59,7 +73,10 @@ func Pwritev(fd int, iovs [][]byte, off int64) (n int, err error) {
 
 //sys	accept4(s int, rsa *RawSockaddrAny, addrlen *_Socklen, flags int) (fd int, err error) = libsocket.accept4
 
-func Accept4(fd int, flags int) (nfd int, sa Sockaddr, err error) {
+func Accept4(
+	fd int,
+	flags int,
+) (nfd int, sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	nfd, err = accept4(fd, &rsa, &len, flags)

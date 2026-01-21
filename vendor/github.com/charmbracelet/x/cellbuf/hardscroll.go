@@ -38,7 +38,12 @@ func (s *Screen) scrollOptimize() {
 		}
 		end := i - 1 + shift
 
-		if !s.scrolln(shift, start, end, height-1) {
+		if !s.scrolln(
+			shift,
+			start,
+			end,
+			height-1,
+		) {
 			continue
 		}
 	}
@@ -61,14 +66,21 @@ func (s *Screen) scrollOptimize() {
 		}
 
 		start := i + 1 - (-shift)
-		if !s.scrolln(shift, start, end, height-1) {
+		if !s.scrolln(
+			shift,
+			start,
+			end,
+			height-1,
+		) {
 			continue
 		}
 	}
 }
 
 // scrolln scrolls the screen up by n lines.
-func (s *Screen) scrolln(n, top, bot, maxY int) (v bool) { //nolint:unparam
+func (s *Screen) scrolln(
+	n, top, bot, maxY int,
+) (v bool) { //nolint:unparam
 	const (
 		nonDestScrollRegion = false
 		memoryBelow         = false
@@ -77,19 +89,48 @@ func (s *Screen) scrolln(n, top, bot, maxY int) (v bool) { //nolint:unparam
 	blank := s.clearBlank()
 	if n > 0 {
 		// Scroll up (forward)
-		v = s.scrollUp(n, top, bot, 0, maxY, blank)
+		v = s.scrollUp(
+			n,
+			top,
+			bot,
+			0,
+			maxY,
+			blank,
+		)
 		if !v {
-			s.buf.WriteString(ansi.SetTopBottomMargins(top+1, bot+1))
+			s.buf.WriteString(
+				ansi.SetTopBottomMargins(
+					top+1,
+					bot+1,
+				),
+			)
 
 			// XXX: How should we handle this in inline mode when not using alternate screen?
 			s.cur.X, s.cur.Y = -1, -1
-			v = s.scrollUp(n, top, bot, top, bot, blank)
-			s.buf.WriteString(ansi.SetTopBottomMargins(1, maxY+1))
+			v = s.scrollUp(
+				n,
+				top,
+				bot,
+				top,
+				bot,
+				blank,
+			)
+			s.buf.WriteString(
+				ansi.SetTopBottomMargins(
+					1,
+					maxY+1,
+				),
+			)
 			s.cur.X, s.cur.Y = -1, -1
 		}
 
 		if !v {
-			v = s.scrollIdl(n, top, bot-n+1, blank)
+			v = s.scrollIdl(
+				n,
+				top,
+				bot-n+1,
+				blank,
+			)
 		}
 
 		// Clear newly shifted-in lines.
@@ -145,7 +186,11 @@ func (s *Screen) scrolln(n, top, bot, maxY int) (v bool) { //nolint:unparam
 }
 
 // scrollBuffer scrolls the buffer by n lines.
-func (s *Screen) scrollBuffer(b *Buffer, n, top, bot int, blank *Cell) {
+func (s *Screen) scrollBuffer(
+	b *Buffer,
+	n, top, bot int,
+	blank *Cell,
+) {
 	if top < 0 || bot < top || bot >= b.Height() {
 		// Nothing to scroll
 		return
@@ -158,7 +203,10 @@ func (s *Screen) scrollBuffer(b *Buffer, n, top, bot int, blank *Cell) {
 			copy(b.Lines[line], b.Lines[line+n])
 		}
 		for line := top; line < limit && line <= b.Height()-1 && line <= bot; line++ {
-			b.FillRect(blank, Rect(0, line, b.Width(), 1))
+			b.FillRect(
+				blank,
+				Rect(0, line, b.Width(), 1),
+			)
 		}
 	}
 
@@ -169,22 +217,37 @@ func (s *Screen) scrollBuffer(b *Buffer, n, top, bot int, blank *Cell) {
 			copy(b.Lines[line], b.Lines[line+n])
 		}
 		for line := bot; line > limit && line >= 0 && line >= top; line-- {
-			b.FillRect(blank, Rect(0, line, b.Width(), 1))
+			b.FillRect(
+				blank,
+				Rect(0, line, b.Width(), 1),
+			)
 		}
 	}
 
-	s.touchLine(b.Width(), b.Height(), top, bot-top+1, true)
+	s.touchLine(
+		b.Width(),
+		b.Height(),
+		top,
+		bot-top+1,
+		true,
+	)
 }
 
 // touchLine marks the line as touched.
-func (s *Screen) touchLine(width, height, y, n int, changed bool) {
+func (s *Screen) touchLine(
+	width, height, y, n int,
+	changed bool,
+) {
 	if n < 0 || y < 0 || y >= height {
 		return // Nothing to touch
 	}
 
 	for i := y; i < y+n && i < height; i++ {
 		if changed {
-			s.touch[i] = lineData{firstCell: 0, lastCell: width - 1}
+			s.touch[i] = lineData{
+				firstCell: 0,
+				lastCell:  width - 1,
+			}
 		} else {
 			delete(s.touch, i)
 		}
@@ -192,7 +255,10 @@ func (s *Screen) touchLine(width, height, y, n int, changed bool) {
 }
 
 // scrollUp scrolls the screen up by n lines.
-func (s *Screen) scrollUp(n, top, bot, minY, maxY int, blank *Cell) bool {
+func (s *Screen) scrollUp(
+	n, top, bot, minY, maxY int,
+	blank *Cell,
+) bool {
 	if n == 1 && top == minY && bot == maxY {
 		s.move(0, bot)
 		s.updatePen(blank)
@@ -224,7 +290,10 @@ func (s *Screen) scrollUp(n, top, bot, minY, maxY int, blank *Cell) bool {
 }
 
 // scrollDown scrolls the screen down by n lines.
-func (s *Screen) scrollDown(n, top, bot, minY, maxY int, blank *Cell) bool {
+func (s *Screen) scrollDown(
+	n, top, bot, minY, maxY int,
+	blank *Cell,
+) bool {
 	if n == 1 && top == minY && bot == maxY {
 		s.move(0, top)
 		s.updatePen(blank)
@@ -253,7 +322,10 @@ func (s *Screen) scrollDown(n, top, bot, minY, maxY int, blank *Cell) bool {
 
 // scrollIdl scrolls the screen n lines by using [ansi.DL] at del and using
 // [ansi.IL] at ins.
-func (s *Screen) scrollIdl(n, del, ins int, blank *Cell) bool {
+func (s *Screen) scrollIdl(
+	n, del, ins int,
+	blank *Cell,
+) bool {
 	if n < 0 {
 		return false
 	}

@@ -9,7 +9,9 @@ type Params []Param
 // sub-parameters. It falls back to the default value if the parameter is
 // missing. If the index is out of bounds, it returns the default value and
 // false.
-func (p Params) Param(i, def int) (int, bool, bool) {
+func (p Params) Param(
+	i, def int,
+) (int, bool, bool) {
 	if i < 0 || i >= len(p) {
 		return def, false, false
 	}
@@ -20,7 +22,10 @@ func (p Params) Param(i, def int) (int, bool, bool) {
 // parameter. If a parameter is part of a sub-parameter, it will be called with
 // hasMore set to true.
 // Use def to set a default value for missing parameters.
-func (p Params) ForEach(def int, f func(i, param int, hasMore bool)) {
+func (p Params) ForEach(
+	def int,
+	f func(i, param int, hasMore bool),
+) {
 	for i := range p {
 		f(i, p[i].Param(def), p[i].HasMore())
 	}
@@ -28,7 +33,10 @@ func (p Params) ForEach(def int, f func(i, param int, hasMore bool)) {
 
 // ToParams converts a list of integers to a list of parameters.
 func ToParams(params []int) Params {
-	return unsafe.Slice((*Param)(unsafe.Pointer(&params[0])), len(params))
+	return unsafe.Slice(
+		(*Param)(unsafe.Pointer(&params[0])),
+		len(params),
+	)
 }
 
 // Handler handles actions performed by the parser.

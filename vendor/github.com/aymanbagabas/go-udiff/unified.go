@@ -17,12 +17,23 @@ const DefaultContextLines = 3
 // Unified returns a unified diff of the old and new strings.
 // The old and new labels are the names of the old and new files.
 // If the strings are equal, it returns the empty string.
-func Unified(oldLabel, newLabel, old, new string) string {
+func Unified(
+	oldLabel, newLabel, old, new string,
+) string {
 	edits := Strings(old, new)
-	unified, err := ToUnified(oldLabel, newLabel, old, edits, DefaultContextLines)
+	unified, err := ToUnified(
+		oldLabel,
+		newLabel,
+		old,
+		edits,
+		DefaultContextLines,
+	)
 	if err != nil {
 		// Can't happen: edits are consistent.
-		log.Fatalf("internal error in diff.Unified: %v", err)
+		log.Fatalf(
+			"internal error in diff.Unified: %v",
+			err,
+		)
 	}
 	return unified
 }
@@ -31,8 +42,18 @@ func Unified(oldLabel, newLabel, old, new string) string {
 // with contextLines lines of (unchanged) context around each diff hunk.
 // The old and new labels are the names of the content and result files.
 // It returns an error if the edits are inconsistent; see ApplyEdits.
-func ToUnified(oldLabel, newLabel, content string, edits []Edit, contextLines int) (string, error) {
-	u, err := toUnified(oldLabel, newLabel, content, edits, contextLines)
+func ToUnified(
+	oldLabel, newLabel, content string,
+	edits []Edit,
+	contextLines int,
+) (string, error) {
+	u, err := toUnified(
+		oldLabel,
+		newLabel,
+		content,
+		edits,
+		contextLines,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -100,7 +121,12 @@ func (k OpKind) String() string {
 
 // toUnified takes a file contents and a sequence of edits, and calculates
 // a unified diff that represents those edits.
-func toUnified(fromName, toName string, content string, edits []Edit, contextLines int) (unified, error) {
+func toUnified(
+	fromName, toName string,
+	content string,
+	edits []Edit,
+	contextLines int,
+) (unified, error) {
 	gap := contextLines * 2
 	u := unified{
 		From: fromName,
@@ -110,7 +136,10 @@ func toUnified(fromName, toName string, content string, edits []Edit, contextLin
 		return u, nil
 	}
 	var err error
-	edits, err = lineEdits(content, edits) // expand to whole lines
+	edits, err = lineEdits(
+		content,
+		edits,
+	) // expand to whole lines
 	if err != nil {
 		return u, err
 	}
@@ -121,9 +150,17 @@ func toUnified(fromName, toName string, content string, edits []Edit, contextLin
 	for _, edit := range edits {
 		// Compute the zero-based line numbers of the edit start and end.
 		// TODO(adonovan): opt: compute incrementally, avoid O(n^2).
-		start := strings.Count(content[:edit.Start], "\n")
-		end := strings.Count(content[:edit.End], "\n")
-		if edit.End == len(content) && len(content) > 0 && content[len(content)-1] != '\n' {
+		start := strings.Count(
+			content[:edit.Start],
+			"\n",
+		)
+		end := strings.Count(
+			content[:edit.End],
+			"\n",
+		)
+		if edit.End == len(content) &&
+			len(content) > 0 &&
+			content[len(content)-1] != '\n' {
 			end++ // EOF counts as an implicit newline
 		}
 
@@ -137,7 +174,12 @@ func toUnified(fromName, toName string, content string, edits []Edit, contextLin
 			// need to start a new hunk
 			if h != nil {
 				// add the edge to the previous hunk
-				addEqualLines(h, lines, last, last+contextLines)
+				addEqualLines(
+					h,
+					lines,
+					last,
+					last+contextLines,
+				)
 				u.Hunks = append(u.Hunks, h)
 			}
 			toLine += start - last
@@ -146,25 +188,47 @@ func toUnified(fromName, toName string, content string, edits []Edit, contextLin
 				ToLine:   toLine + 1,
 			}
 			// add the edge to the new hunk
-			delta := addEqualLines(h, lines, start-contextLines, start)
+			delta := addEqualLines(
+				h,
+				lines,
+				start-contextLines,
+				start,
+			)
 			h.FromLine -= delta
 			h.ToLine -= delta
 		}
 		last = start
 		for i := start; i < end; i++ {
-			h.Lines = append(h.Lines, line{Kind: Delete, Content: lines[i]})
+			h.Lines = append(
+				h.Lines,
+				line{
+					Kind:    Delete,
+					Content: lines[i],
+				},
+			)
 			last++
 		}
 		if edit.New != "" {
 			for _, content := range splitLines(edit.New) {
-				h.Lines = append(h.Lines, line{Kind: Insert, Content: content})
+				h.Lines = append(
+					h.Lines,
+					line{
+						Kind:    Insert,
+						Content: content,
+					},
+				)
 				toLine++
 			}
 		}
 	}
 	if h != nil {
 		// add the edge to the final hunk
-		addEqualLines(h, lines, last, last+contextLines)
+		addEqualLines(
+			h,
+			lines,
+			last,
+			last+contextLines,
+		)
 		u.Hunks = append(u.Hunks, h)
 	}
 	return u, nil
@@ -178,7 +242,11 @@ func splitLines(text string) []string {
 	return lines
 }
 
-func addEqualLines(h *hunk, lines []string, start, end int) int {
+func addEqualLines(
+	h *hunk,
+	lines []string,
+	start, end int,
+) int {
 	delta := 0
 	for i := start; i < end; i++ {
 		if i < 0 {
@@ -187,7 +255,10 @@ func addEqualLines(h *hunk, lines []string, start, end int) int {
 		if i >= len(lines) {
 			return delta
 		}
-		h.Lines = append(h.Lines, line{Kind: Equal, Content: lines[i]})
+		h.Lines = append(
+			h.Lines,
+			line{Kind: Equal, Content: lines[i]},
+		)
 		delta++
 	}
 	return delta
@@ -217,7 +288,12 @@ func (u unified) String() string {
 		}
 		fmt.Fprint(b, "@@")
 		if fromCount > 1 {
-			fmt.Fprintf(b, " -%d,%d", hunk.FromLine, fromCount)
+			fmt.Fprintf(
+				b,
+				" -%d,%d",
+				hunk.FromLine,
+				fromCount,
+			)
 		} else if hunk.FromLine == 1 && fromCount == 0 {
 			// Match odd GNU diff -u behavior adding to empty file.
 			fmt.Fprintf(b, " -0,0")
@@ -225,7 +301,12 @@ func (u unified) String() string {
 			fmt.Fprintf(b, " -%d", hunk.FromLine)
 		}
 		if toCount > 1 {
-			fmt.Fprintf(b, " +%d,%d", hunk.ToLine, toCount)
+			fmt.Fprintf(
+				b,
+				" +%d,%d",
+				hunk.ToLine,
+				toCount,
+			)
 		} else if hunk.ToLine == 1 && toCount == 0 {
 			// Match odd GNU diff -u behavior adding to empty file.
 			fmt.Fprintf(b, " +0,0")
@@ -242,8 +323,14 @@ func (u unified) String() string {
 			default:
 				fmt.Fprintf(b, " %s", l.Content)
 			}
-			if !strings.HasSuffix(l.Content, "\n") {
-				fmt.Fprintf(b, "\n\\ No newline at end of file\n")
+			if !strings.HasSuffix(
+				l.Content,
+				"\n",
+			) {
+				fmt.Fprintf(
+					b,
+					"\n\\ No newline at end of file\n",
+				)
 			}
 		}
 	}

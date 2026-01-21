@@ -86,11 +86,17 @@ func getEnv() (line string, point int, ok bool) {
 	if line == "" {
 		return
 	}
-	point, err := strconv.Atoi(os.Getenv(envPoint))
+	point, err := strconv.Atoi(
+		os.Getenv(envPoint),
+	)
 	if err != nil {
 		// If failed parsing point for some reason, set it to point
 		// on the end of the line.
-		Log("Failed parsing point %s: %v", os.Getenv(envPoint), err)
+		Log(
+			"Failed parsing point %s: %v",
+			os.Getenv(envPoint),
+			err,
+		)
 		point = len(line)
 	}
 	return line, point, true

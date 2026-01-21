@@ -41,11 +41,15 @@ type fallbackCancelReader struct {
 // newFallbackCancelReader is a fallback for NewReader that cannot actually
 // cancel an ongoing read but will immediately return on future reads if it has
 // been canceled.
-func newFallbackCancelReader(reader io.Reader) (CancelReader, error) {
+func newFallbackCancelReader(
+	reader io.Reader,
+) (CancelReader, error) {
 	return &fallbackCancelReader{r: reader}, nil
 }
 
-func (r *fallbackCancelReader) Read(data []byte) (int, error) {
+func (r *fallbackCancelReader) Read(
+	data []byte,
+) (int, error) {
 	if r.isCanceled() {
 		return 0, ErrCanceled
 	}

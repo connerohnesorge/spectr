@@ -24,7 +24,9 @@ func XTGETTCAP(caps ...string) string {
 		if i > 0 {
 			s += ";"
 		}
-		s += strings.ToUpper(hex.EncodeToString([]byte(c)))
+		s += strings.ToUpper(
+			hex.EncodeToString([]byte(c)),
+		)
 	}
 
 	return s + "\x1b\\"

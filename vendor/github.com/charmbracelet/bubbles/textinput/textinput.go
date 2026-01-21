@@ -66,22 +66,62 @@ type KeyMap struct {
 // DefaultKeyMap is the default set of key bindings for navigating and acting
 // upon the textinput.
 var DefaultKeyMap = KeyMap{
-	CharacterForward:        key.NewBinding(key.WithKeys("right", "ctrl+f")),
-	CharacterBackward:       key.NewBinding(key.WithKeys("left", "ctrl+b")),
-	WordForward:             key.NewBinding(key.WithKeys("alt+right", "ctrl+right", "alt+f")),
-	WordBackward:            key.NewBinding(key.WithKeys("alt+left", "ctrl+left", "alt+b")),
-	DeleteWordBackward:      key.NewBinding(key.WithKeys("alt+backspace", "ctrl+w")),
-	DeleteWordForward:       key.NewBinding(key.WithKeys("alt+delete", "alt+d")),
-	DeleteAfterCursor:       key.NewBinding(key.WithKeys("ctrl+k")),
-	DeleteBeforeCursor:      key.NewBinding(key.WithKeys("ctrl+u")),
-	DeleteCharacterBackward: key.NewBinding(key.WithKeys("backspace", "ctrl+h")),
-	DeleteCharacterForward:  key.NewBinding(key.WithKeys("delete", "ctrl+d")),
-	LineStart:               key.NewBinding(key.WithKeys("home", "ctrl+a")),
-	LineEnd:                 key.NewBinding(key.WithKeys("end", "ctrl+e")),
-	Paste:                   key.NewBinding(key.WithKeys("ctrl+v")),
-	AcceptSuggestion:        key.NewBinding(key.WithKeys("tab")),
-	NextSuggestion:          key.NewBinding(key.WithKeys("down", "ctrl+n")),
-	PrevSuggestion:          key.NewBinding(key.WithKeys("up", "ctrl+p")),
+	CharacterForward: key.NewBinding(
+		key.WithKeys("right", "ctrl+f"),
+	),
+	CharacterBackward: key.NewBinding(
+		key.WithKeys("left", "ctrl+b"),
+	),
+	WordForward: key.NewBinding(
+		key.WithKeys(
+			"alt+right",
+			"ctrl+right",
+			"alt+f",
+		),
+	),
+	WordBackward: key.NewBinding(
+		key.WithKeys(
+			"alt+left",
+			"ctrl+left",
+			"alt+b",
+		),
+	),
+	DeleteWordBackward: key.NewBinding(
+		key.WithKeys("alt+backspace", "ctrl+w"),
+	),
+	DeleteWordForward: key.NewBinding(
+		key.WithKeys("alt+delete", "alt+d"),
+	),
+	DeleteAfterCursor: key.NewBinding(
+		key.WithKeys("ctrl+k"),
+	),
+	DeleteBeforeCursor: key.NewBinding(
+		key.WithKeys("ctrl+u"),
+	),
+	DeleteCharacterBackward: key.NewBinding(
+		key.WithKeys("backspace", "ctrl+h"),
+	),
+	DeleteCharacterForward: key.NewBinding(
+		key.WithKeys("delete", "ctrl+d"),
+	),
+	LineStart: key.NewBinding(
+		key.WithKeys("home", "ctrl+a"),
+	),
+	LineEnd: key.NewBinding(
+		key.WithKeys("end", "ctrl+e"),
+	),
+	Paste: key.NewBinding(
+		key.WithKeys("ctrl+v"),
+	),
+	AcceptSuggestion: key.NewBinding(
+		key.WithKeys("tab"),
+	),
+	NextSuggestion: key.NewBinding(
+		key.WithKeys("down", "ctrl+n"),
+	),
+	PrevSuggestion: key.NewBinding(
+		key.WithKeys("up", "ctrl+p"),
+	),
 }
 
 // Model is the Bubble Tea model for this text input element.
@@ -159,14 +199,16 @@ type Model struct {
 // New creates a new model with default settings.
 func New() Model {
 	return Model{
-		Prompt:           "> ",
-		EchoCharacter:    '*',
-		CharLimit:        0,
-		PlaceholderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("240")),
-		ShowSuggestions:  false,
-		CompletionStyle:  lipgloss.NewStyle().Foreground(lipgloss.Color("240")),
-		Cursor:           cursor.New(),
-		KeyMap:           DefaultKeyMap,
+		Prompt:        "> ",
+		EchoCharacter: '*',
+		CharLimit:     0,
+		PlaceholderStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("240")),
+		ShowSuggestions: false,
+		CompletionStyle: lipgloss.NewStyle().
+			Foreground(lipgloss.Color("240")),
+		Cursor: cursor.New(),
+		KeyMap: DefaultKeyMap,
 
 		suggestions: [][]rune{},
 		value:       nil,
@@ -189,17 +231,22 @@ func (m *Model) SetValue(s string) {
 	m.setValueInternal(runes, err)
 }
 
-func (m *Model) setValueInternal(runes []rune, err error) {
+func (m *Model) setValueInternal(
+	runes []rune,
+	err error,
+) {
 	m.Err = err
 
 	empty := len(m.value) == 0
 
-	if m.CharLimit > 0 && len(runes) > m.CharLimit {
+	if m.CharLimit > 0 &&
+		len(runes) > m.CharLimit {
 		m.value = runes[:m.CharLimit]
 	} else {
 		m.value = runes
 	}
-	if (m.pos == 0 && empty) || m.pos > len(m.value) {
+	if (m.pos == 0 && empty) ||
+		m.pos > len(m.value) {
 		m.SetCursor(len(m.value))
 	}
 	m.handleOverflow()
@@ -258,8 +305,13 @@ func (m *Model) Reset() {
 }
 
 // SetSuggestions sets the suggestions for the input.
-func (m *Model) SetSuggestions(suggestions []string) {
-	m.suggestions = make([][]rune, len(suggestions))
+func (m *Model) SetSuggestions(
+	suggestions []string,
+) {
+	m.suggestions = make(
+		[][]rune,
+		len(suggestions),
+	)
 	for i, s := range suggestions {
 		m.suggestions[i] = []rune(s)
 	}
@@ -273,12 +325,18 @@ func (m *Model) san() runeutil.Sanitizer {
 		// Textinput has all its input on a single line so collapse
 		// newlines/tabs to single spaces.
 		m.rsan = runeutil.NewSanitizer(
-			runeutil.ReplaceTabs(" "), runeutil.ReplaceNewlines(" "))
+			runeutil.ReplaceTabs(
+				" ",
+			),
+			runeutil.ReplaceNewlines(" "),
+		)
 	}
 	return m.rsan
 }
 
-func (m *Model) insertRunesFromUserInput(v []rune) {
+func (m *Model) insertRunesFromUserInput(
+	v []rune,
+) {
 	// Clean up any special characters in the input provided by the
 	// clipboard. This avoids bugs due to e.g. tab characters and
 	// whatnot.
@@ -327,14 +385,20 @@ func (m *Model) insertRunesFromUserInput(v []rune) {
 // If a max width is defined, perform some logic to treat the visible area
 // as a horizontally scrolling viewport.
 func (m *Model) handleOverflow() {
-	if m.Width <= 0 || uniseg.StringWidth(string(m.value)) <= m.Width {
+	if m.Width <= 0 ||
+		uniseg.StringWidth(
+			string(m.value),
+		) <= m.Width {
 		m.offset = 0
 		m.offsetRight = len(m.value)
 		return
 	}
 
 	// Correct right offset if we've deleted characters
-	m.offsetRight = min(m.offsetRight, len(m.value))
+	m.offsetRight = min(
+		m.offsetRight,
+		len(m.value),
+	)
 
 	if m.pos < m.offset {
 		m.offset = m.pos
@@ -435,7 +499,8 @@ func (m *Model) deleteWordBackward() {
 // delete everything after the cursor so as not to reveal word breaks in the
 // masked input.
 func (m *Model) deleteWordForward() {
-	if m.pos >= len(m.value) || len(m.value) == 0 {
+	if m.pos >= len(m.value) ||
+		len(m.value) == 0 {
 		return
 	}
 
@@ -508,7 +573,8 @@ func (m *Model) wordBackward() {
 // wordForward moves the cursor one word to the right. If the input is masked,
 // move input to the end so as not to reveal word breaks in the masked input.
 func (m *Model) wordForward() {
-	if m.pos >= len(m.value) || len(m.value) == 0 {
+	if m.pos >= len(m.value) ||
+		len(m.value) == 0 {
 		return
 	}
 
@@ -540,7 +606,10 @@ func (m *Model) wordForward() {
 func (m Model) echoTransform(v string) string {
 	switch m.EchoMode {
 	case EchoPassword:
-		return strings.Repeat(string(m.EchoCharacter), uniseg.StringWidth(v))
+		return strings.Repeat(
+			string(m.EchoCharacter),
+			uniseg.StringWidth(v),
+		)
 	case EchoNone:
 		return ""
 	case EchoNormal:
@@ -551,16 +620,24 @@ func (m Model) echoTransform(v string) string {
 }
 
 // Update is the Bubble Tea update loop.
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(
+	msg tea.Msg,
+) (Model, tea.Cmd) {
 	if !m.focus {
 		return m, nil
 	}
 
 	// Need to check for completion before, because key is configurable and might be double assigned
 	keyMsg, ok := msg.(tea.KeyMsg)
-	if ok && key.Matches(keyMsg, m.KeyMap.AcceptSuggestion) {
+	if ok &&
+		key.Matches(
+			keyMsg,
+			m.KeyMap.AcceptSuggestion,
+		) {
 		if m.canAcceptSuggestion() {
-			m.value = append(m.value, m.matchedSuggestions[m.currentSuggestionIndex][len(m.value):]...)
+			m.value = append(
+				m.value,
+				m.matchedSuggestions[m.currentSuggestionIndex][len(m.value):]...)
 			m.CursorEnd()
 		}
 	}
@@ -638,7 +715,8 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	m.Cursor, cmd = m.Cursor.Update(msg)
 	cmds = append(cmds, cmd)
 
-	if oldPos != m.pos && m.Cursor.Mode() == cursor.CursorBlink {
+	if oldPos != m.pos &&
+		m.Cursor.Mode() == cursor.CursorBlink {
 		m.Cursor.Blink = false
 		cmds = append(cmds, m.Cursor.BlinkCmd())
 	}
@@ -658,14 +736,24 @@ func (m Model) View() string {
 
 	value := m.value[m.offset:m.offsetRight]
 	pos := max(0, m.pos-m.offset)
-	v := styleText(m.echoTransform(string(value[:pos])))
+	v := styleText(
+		m.echoTransform(string(value[:pos])),
+	)
 
 	if pos < len(value) { //nolint:nestif
-		char := m.echoTransform(string(value[pos]))
+		char := m.echoTransform(
+			string(value[pos]),
+		)
 		m.Cursor.SetChar(char)
-		v += m.Cursor.View()                                   // cursor and text under it
-		v += styleText(m.echoTransform(string(value[pos+1:]))) // text after cursor
-		v += m.completionView(0)                               // suggested completion
+		v += m.Cursor.View() // cursor and text under it
+		v += styleText(
+			m.echoTransform(
+				string(value[pos+1:]),
+			),
+		) // text after cursor
+		v += m.completionView(
+			0,
+		) // suggested completion
 	} else {
 		if m.focus && m.canAcceptSuggestion() {
 			suggestion := m.matchedSuggestions[m.currentSuggestionIndex]
@@ -689,10 +777,13 @@ func (m Model) View() string {
 	valWidth := uniseg.StringWidth(string(value))
 	if m.Width > 0 && valWidth <= m.Width {
 		padding := max(0, m.Width-valWidth)
-		if valWidth+padding <= m.Width && pos < len(value) {
+		if valWidth+padding <= m.Width &&
+			pos < len(value) {
 			padding++
 		}
-		v += styleText(strings.Repeat(" ", padding))
+		v += styleText(
+			strings.Repeat(" ", padding),
+		)
 	}
 
 	return m.PromptStyle.Render(m.Prompt) + v
@@ -702,7 +793,9 @@ func (m Model) View() string {
 func (m Model) placeholderView() string {
 	var (
 		v     string
-		style = m.PlaceholderStyle.Inline(true).Render
+		style = m.PlaceholderStyle.Inline(
+			true,
+		).Render
 	)
 
 	p := make([]rune, m.Width+1)
@@ -730,7 +823,9 @@ func (m Model) placeholderView() string {
 		}
 		// append placeholder[len] - cursor, append padding
 		v += style(string(p[1:minWidth]))
-		v += style(strings.Repeat(" ", availWidth))
+		v += style(
+			strings.Repeat(" ", availWidth),
+		)
 	} else {
 		// if there is no width, the placeholder can be any length
 		v += style(string(p[1:]))
@@ -791,26 +886,36 @@ func (m Model) CursorMode() CursorMode {
 // Deprecated: use cursor.SetMode().
 //
 //nolint:revive
-func (m *Model) SetCursorMode(mode CursorMode) tea.Cmd {
+func (m *Model) SetCursorMode(
+	mode CursorMode,
+) tea.Cmd {
 	return m.Cursor.SetMode(cursor.Mode(mode))
 }
 
 func (m Model) completionView(offset int) string {
 	var (
 		value = m.value
-		style = m.PlaceholderStyle.Inline(true).Render
+		style = m.PlaceholderStyle.Inline(
+			true,
+		).Render
 	)
 
 	if m.canAcceptSuggestion() {
 		suggestion := m.matchedSuggestions[m.currentSuggestionIndex]
 		if len(value) < len(suggestion) {
-			return style(string(suggestion[len(value)+offset:]))
+			return style(
+				string(
+					suggestion[len(value)+offset:],
+				),
+			)
 		}
 	}
 	return ""
 }
 
-func (m *Model) getSuggestions(sugs [][]rune) []string {
+func (m *Model) getSuggestions(
+	sugs [][]rune,
+) []string {
 	suggestions := make([]string, len(sugs))
 	for i, s := range sugs {
 		suggestions[i] = string(s)
@@ -835,11 +940,15 @@ func (m *Model) CurrentSuggestionIndex() int {
 
 // CurrentSuggestion returns the currently selected suggestion.
 func (m *Model) CurrentSuggestion() string {
-	if m.currentSuggestionIndex >= len(m.matchedSuggestions) {
+	if m.currentSuggestionIndex >= len(
+		m.matchedSuggestions,
+	) {
 		return ""
 	}
 
-	return string(m.matchedSuggestions[m.currentSuggestionIndex])
+	return string(
+		m.matchedSuggestions[m.currentSuggestionIndex],
+	)
 }
 
 // canAcceptSuggestion returns whether there is an acceptable suggestion to
@@ -854,7 +963,8 @@ func (m *Model) updateSuggestions() {
 		return
 	}
 
-	if len(m.value) <= 0 || len(m.suggestions) <= 0 {
+	if len(m.value) <= 0 ||
+		len(m.suggestions) <= 0 {
 		m.matchedSuggestions = [][]rune{}
 		return
 	}
@@ -863,11 +973,20 @@ func (m *Model) updateSuggestions() {
 	for _, s := range m.suggestions {
 		suggestion := string(s)
 
-		if strings.HasPrefix(strings.ToLower(suggestion), strings.ToLower(string(m.value))) {
-			matches = append(matches, []rune(suggestion))
+		if strings.HasPrefix(
+			strings.ToLower(suggestion),
+			strings.ToLower(string(m.value)),
+		) {
+			matches = append(
+				matches,
+				[]rune(suggestion),
+			)
 		}
 	}
-	if !reflect.DeepEqual(matches, m.matchedSuggestions) {
+	if !reflect.DeepEqual(
+		matches,
+		m.matchedSuggestions,
+	) {
 		m.currentSuggestionIndex = 0
 	}
 
@@ -877,7 +996,9 @@ func (m *Model) updateSuggestions() {
 // nextSuggestion selects the next suggestion.
 func (m *Model) nextSuggestion() {
 	m.currentSuggestionIndex = (m.currentSuggestionIndex + 1)
-	if m.currentSuggestionIndex >= len(m.matchedSuggestions) {
+	if m.currentSuggestionIndex >= len(
+		m.matchedSuggestions,
+	) {
 		m.currentSuggestionIndex = 0
 	}
 }
@@ -886,7 +1007,9 @@ func (m *Model) nextSuggestion() {
 func (m *Model) previousSuggestion() {
 	m.currentSuggestionIndex = (m.currentSuggestionIndex - 1)
 	if m.currentSuggestionIndex < 0 {
-		m.currentSuggestionIndex = len(m.matchedSuggestions) - 1
+		m.currentSuggestionIndex = len(
+			m.matchedSuggestions,
+		) - 1
 	}
 }
 

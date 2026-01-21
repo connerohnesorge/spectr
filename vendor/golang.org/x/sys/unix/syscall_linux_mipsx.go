@@ -11,7 +11,9 @@ import (
 	"unsafe"
 )
 
-func Syscall9(trap, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr) (r1, r2 uintptr, err syscall.Errno)
+func Syscall9(
+	trap, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr,
+) (r1, r2 uintptr, err syscall.Errno)
 
 //sys	EpollWait(epfd int, events []EpollEvent, msec int) (n int, err error)
 //sys	Fadvise(fd int, offset int64, length int64, advice int) (err error) = SYS_FADVISE64
@@ -68,27 +70,52 @@ func Syscall9(trap, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr) (r1, r2 uintptr,
 //sys	Pause() (err error)
 
 func Fstatfs(fd int, buf *Statfs_t) (err error) {
-	_, _, e := Syscall(SYS_FSTATFS64, uintptr(fd), unsafe.Sizeof(*buf), uintptr(unsafe.Pointer(buf)))
+	_, _, e := Syscall(
+		SYS_FSTATFS64,
+		uintptr(fd),
+		unsafe.Sizeof(*buf),
+		uintptr(unsafe.Pointer(buf)),
+	)
 	if e != 0 {
 		err = errnoErr(e)
 	}
 	return
 }
 
-func Statfs(path string, buf *Statfs_t) (err error) {
+func Statfs(
+	path string,
+	buf *Statfs_t,
+) (err error) {
 	p, err := BytePtrFromString(path)
 	if err != nil {
 		return err
 	}
-	_, _, e := Syscall(SYS_STATFS64, uintptr(unsafe.Pointer(p)), unsafe.Sizeof(*buf), uintptr(unsafe.Pointer(buf)))
+	_, _, e := Syscall(
+		SYS_STATFS64,
+		uintptr(unsafe.Pointer(p)),
+		unsafe.Sizeof(*buf),
+		uintptr(unsafe.Pointer(buf)),
+	)
 	if e != 0 {
 		err = errnoErr(e)
 	}
 	return
 }
 
-func Seek(fd int, offset int64, whence int) (off int64, err error) {
-	_, _, e := Syscall6(SYS__LLSEEK, uintptr(fd), uintptr(offset>>32), uintptr(offset), uintptr(unsafe.Pointer(&off)), uintptr(whence), 0)
+func Seek(
+	fd int,
+	offset int64,
+	whence int,
+) (off int64, err error) {
+	_, _, e := Syscall6(
+		SYS__LLSEEK,
+		uintptr(fd),
+		uintptr(offset>>32),
+		uintptr(offset),
+		uintptr(unsafe.Pointer(&off)),
+		uintptr(whence),
+		0,
+	)
 	if e != 0 {
 		err = errnoErr(e)
 	}
@@ -96,25 +123,47 @@ func Seek(fd int, offset int64, whence int) (off int64, err error) {
 }
 
 func setTimespec(sec, nsec int64) Timespec {
-	return Timespec{Sec: int32(sec), Nsec: int32(nsec)}
+	return Timespec{
+		Sec:  int32(sec),
+		Nsec: int32(nsec),
+	}
 }
 
 func setTimeval(sec, usec int64) Timeval {
-	return Timeval{Sec: int32(sec), Usec: int32(usec)}
+	return Timeval{
+		Sec:  int32(sec),
+		Usec: int32(usec),
+	}
 }
 
 //sys	mmap2(addr uintptr, length uintptr, prot int, flags int, fd int, pageOffset uintptr) (xaddr uintptr, err error)
 
-func mmap(addr uintptr, length uintptr, prot int, flags int, fd int, offset int64) (xaddr uintptr, err error) {
+func mmap(
+	addr uintptr,
+	length uintptr,
+	prot int,
+	flags int,
+	fd int,
+	offset int64,
+) (xaddr uintptr, err error) {
 	page := uintptr(offset / 4096)
 	if offset != int64(page)*4096 {
 		return 0, EINVAL
 	}
-	return mmap2(addr, length, prot, flags, fd, page)
+	return mmap2(
+		addr,
+		length,
+		prot,
+		flags,
+		fd,
+		page,
+	)
 }
 
-const rlimInf32 = ^uint32(0)
-const rlimInf64 = ^uint64(0)
+const (
+	rlimInf32 = ^uint32(0)
+	rlimInf64 = ^uint64(0)
+)
 
 type rlimit32 struct {
 	Cur uint32
@@ -123,7 +172,10 @@ type rlimit32 struct {
 
 //sysnb	getrlimit(resource int, rlim *rlimit32) (err error) = SYS_GETRLIMIT
 
-func Getrlimit(resource int, rlim *Rlimit) (err error) {
+func Getrlimit(
+	resource int,
+	rlim *Rlimit,
+) (err error) {
 	err = Prlimit(0, resource, nil, rlim)
 	if err != ENOSYS {
 		return err
@@ -151,7 +203,11 @@ func Getrlimit(resource int, rlim *Rlimit) (err error) {
 
 func (r *PtraceRegs) PC() uint64 { return r.Epc }
 
-func (r *PtraceRegs) SetPC(pc uint64) { r.Epc = pc }
+func (r *PtraceRegs) SetPC(
+	pc uint64,
+) {
+	r.Epc = pc
+}
 
 func (iov *Iovec) SetLen(length int) {
 	iov.Len = uint32(length)
@@ -169,6 +225,8 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 	cmsg.Len = uint32(length)
 }
 
-func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(length int) {
+func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(
+	length int,
+) {
 	rsa.Service_name_len = uint32(length)
 }

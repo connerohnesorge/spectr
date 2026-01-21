@@ -15,7 +15,9 @@ import (
 // successfully round-tripped through the validation process.
 //
 // This corresponds to task 1.14 in the test-extreme-jsonc change proposal.
-func TestJSONCValidation_RegexCharacters(t *testing.T) {
+func TestJSONCValidation_RegexCharacters(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -114,25 +116,44 @@ func TestJSONCValidation_RegexCharacters(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSON can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip: unmarshal and check that description is preserved
 			var roundTrip parsers.TasksFile
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			if len(roundTrip.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(roundTrip.Tasks),
+				)
 			}
 
 			if roundTrip.Tasks[0].Description != tt.description {
@@ -145,15 +166,25 @@ func TestJSONCValidation_RegexCharacters(t *testing.T) {
 
 			// Verify all other fields are preserved
 			if roundTrip.Tasks[0].ID != "1.14" {
-				t.Errorf("Task ID mismatch: got %q, want %q", roundTrip.Tasks[0].ID, "1.14")
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					roundTrip.Tasks[0].ID,
+					"1.14",
+				)
 			}
 			if roundTrip.Tasks[0].Section != testSectionExtremeEdgeCases {
-				t.Errorf("Task Section mismatch: got %q, want %q",
-					roundTrip.Tasks[0].Section, testSectionExtremeEdgeCases)
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Section,
+					testSectionExtremeEdgeCases,
+				)
 			}
 			if roundTrip.Tasks[0].Status != parsers.TaskStatusPending {
-				t.Errorf("Task Status mismatch: got %q, want %q",
-					roundTrip.Tasks[0].Status, parsers.TaskStatusPending)
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Status,
+					parsers.TaskStatusPending,
+				)
 			}
 		})
 	}

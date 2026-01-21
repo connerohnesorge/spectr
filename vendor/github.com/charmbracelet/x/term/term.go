@@ -37,7 +37,9 @@ func Restore(fd uintptr, oldState *State) error {
 // GetSize returns the visible dimensions of the given terminal.
 //
 // These dimensions don't include any scrollback buffer height.
-func GetSize(fd uintptr) (width, height int, err error) {
+func GetSize(
+	fd uintptr,
+) (width, height int, err error) {
 	return getSize(fd)
 }
 

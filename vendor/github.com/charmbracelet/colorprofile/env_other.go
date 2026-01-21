@@ -3,6 +3,8 @@
 
 package colorprofile
 
-func windowsColorProfile(map[string]string) (Profile, bool) {
+func windowsColorProfile(
+	map[string]string,
+) (Profile, bool) {
 	return 0, false
 }

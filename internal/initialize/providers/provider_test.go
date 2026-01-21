@@ -245,7 +245,8 @@ func TestGeminiProvider_Initializers(
 
 	// Check second DirectoryInitializer - should be skills dir
 	dirInit2 := inits[1].(*DirectoryInitializer)
-	if len(dirInit2.paths) != 1 || dirInit2.paths[0] != ".gemini/skills" {
+	if len(dirInit2.paths) != 1 ||
+		dirInit2.paths[0] != ".gemini/skills" {
 		t.Errorf(
 			"GeminiProvider DirectoryInitializer[1] paths = %v, want [\".gemini/skills\"]",
 			dirInit2.paths,

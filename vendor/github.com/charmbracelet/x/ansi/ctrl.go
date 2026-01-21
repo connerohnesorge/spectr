@@ -58,7 +58,9 @@ const RequestXTVersion = RequestNameVersion
 //   - 46	ASCII emulation
 //
 // See https://vt100.net/docs/vt510-rm/DA1.html
-func PrimaryDeviceAttributes(attrs ...int) string {
+func PrimaryDeviceAttributes(
+	attrs ...int,
+) string {
 	if len(attrs) == 0 {
 		return RequestPrimaryDeviceAttributes
 	} else if len(attrs) == 1 && attrs[0] == 0 {
@@ -93,7 +95,9 @@ const RequestPrimaryDeviceAttributes = "\x1b[c"
 //	CSI > Ps ; ... c
 //
 // See https://vt100.net/docs/vt510-rm/DA2.html
-func SecondaryDeviceAttributes(attrs ...int) string {
+func SecondaryDeviceAttributes(
+	attrs ...int,
+) string {
 	if len(attrs) == 0 {
 		return RequestSecondaryDeviceAttributes
 	}
@@ -131,7 +135,9 @@ const RequestSecondaryDeviceAttributes = "\x1b[>c"
 // request sequence. Otherwise, it returns the response sequence.
 //
 // See https://vt100.net/docs/vt510-rm/DA3.html
-func TertiaryDeviceAttributes(unitID string) string {
+func TertiaryDeviceAttributes(
+	unitID string,
+) string {
 	switch unitID {
 	case "":
 		return RequestTertiaryDeviceAttributes

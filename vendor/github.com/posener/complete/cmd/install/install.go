@@ -21,7 +21,9 @@ type installer interface {
 func Install(cmd string) error {
 	is := installers()
 	if len(is) == 0 {
-		return errors.New("Did not find any shells to install")
+		return errors.New(
+			"Did not find any shells to install",
+		)
 	}
 	bin, err := getBinaryPath()
 	if err != nil {
@@ -61,7 +63,9 @@ func IsInstalled(cmd string) bool {
 func Uninstall(cmd string) error {
 	is := installers()
 	if len(is) == 0 {
-		return errors.New("Did not find any shells to uninstall")
+		return errors.New(
+			"Did not find any shells to uninstall",
+		)
 	}
 	bin, err := getBinaryPath()
 	if err != nil {
@@ -86,7 +90,12 @@ func installers() (i []installer) {
 	case "darwin":
 		bashConfFiles = []string{".bash_profile"}
 	default:
-		bashConfFiles = []string{".bashrc", ".bash_profile", ".bash_login", ".profile"}
+		bashConfFiles = []string{
+			".bashrc",
+			".bash_profile",
+			".bash_login",
+			".profile",
+		}
 	}
 	for _, rc := range bashConfFiles {
 		if f := rcFile(rc); f != "" {
@@ -104,11 +113,15 @@ func installers() (i []installer) {
 }
 
 func fishConfigDir() string {
-	configDir := filepath.Join(getConfigHomePath(), "fish")
+	configDir := filepath.Join(
+		getConfigHomePath(),
+		"fish",
+	)
 	if configDir == "" {
 		return ""
 	}
-	if info, err := os.Stat(configDir); err != nil || !info.IsDir() {
+	if info, err := os.Stat(configDir); err != nil ||
+		!info.IsDir() {
 		return ""
 	}
 	return configDir

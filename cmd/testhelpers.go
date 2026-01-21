@@ -11,7 +11,10 @@ import (
 func FindProjectRoot(t *testing.T) string {
 	dir, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("Failed to get working directory: %v", err)
+		t.Fatalf(
+			"Failed to get working directory: %v",
+			err,
+		)
 	}
 
 	for {
@@ -24,7 +27,10 @@ func FindProjectRoot(t *testing.T) string {
 		parent := filepath.Dir(dir)
 		if parent == dir {
 			// Reached filesystem root without finding go.mod
-			t.Fatalf("Could not find project root (go.mod) from %s", dir)
+			t.Fatalf(
+				"Could not find project root (go.mod) from %s",
+				dir,
+			)
 		}
 		dir = parent
 	}
@@ -33,9 +39,15 @@ func FindProjectRoot(t *testing.T) string {
 // GetSpectrDir returns the path to the spectr directory relative to project root
 func GetSpectrDir(t *testing.T) string {
 	projectRoot := FindProjectRoot(t)
-	spectrDir := filepath.Join(projectRoot, "spectr")
+	spectrDir := filepath.Join(
+		projectRoot,
+		"spectr",
+	)
 	if _, err := os.Stat(spectrDir); err != nil {
-		t.Skipf("spectr directory not found at %s", spectrDir)
+		t.Skipf(
+			"spectr directory not found at %s",
+			spectrDir,
+		)
 	}
 
 	return spectrDir

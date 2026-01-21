@@ -28,7 +28,9 @@ import (
 	"github.com/spf13/afero/internal/common"
 )
 
-const FilePathSeparator = string(filepath.Separator)
+const FilePathSeparator = string(
+	filepath.Separator,
+)
 
 var _ fs.ReadDirFile = &File{}
 
@@ -72,11 +74,20 @@ func (d *FileData) Name() string {
 }
 
 func CreateFile(name string) *FileData {
-	return &FileData{name: name, mode: os.ModeTemporary, modtime: time.Now()}
+	return &FileData{
+		name:    name,
+		mode:    os.ModeTemporary,
+		modtime: time.Now(),
+	}
 }
 
 func CreateDir(name string) *FileData {
-	return &FileData{name: name, memDir: &DirMap{}, dir: true, modtime: time.Now()}
+	return &FileData{
+		name:    name,
+		memDir:  &DirMap{},
+		dir:     true,
+		modtime: time.Now(),
+	}
 }
 
 func ChangeFileName(f *FileData, newname string) {
@@ -148,7 +159,9 @@ func (f *File) Sync() error {
 	return nil
 }
 
-func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
+func (f *File) Readdir(
+	count int,
+) (res []os.FileInfo, err error) {
 	if !f.fileData.dir {
 		return nil, &os.PathError{
 			Op:   "readdir",
@@ -183,7 +196,9 @@ func (f *File) Readdir(count int) (res []os.FileInfo, err error) {
 	return res, err
 }
 
-func (f *File) Readdirnames(n int) (names []string, err error) {
+func (f *File) Readdirnames(
+	n int,
+) (names []string, err error) {
 	fi, err := f.Readdir(n)
 	names = make([]string, len(fi))
 	for i, f := range fi {
@@ -193,14 +208,18 @@ func (f *File) Readdirnames(n int) (names []string, err error) {
 }
 
 // Implements fs.ReadDirFile
-func (f *File) ReadDir(n int) ([]fs.DirEntry, error) {
+func (f *File) ReadDir(
+	n int,
+) ([]fs.DirEntry, error) {
 	fi, err := f.Readdir(n)
 	if err != nil {
 		return nil, err
 	}
 	di := make([]fs.DirEntry, len(fi))
 	for i, f := range fi {
-		di[i] = common.FileInfoDirEntry{FileInfo: f}
+		di[i] = common.FileInfoDirEntry{
+			FileInfo: f,
+		}
 	}
 	return di, nil
 }
@@ -211,7 +230,8 @@ func (f *File) Read(b []byte) (n int, err error) {
 	if f.closed {
 		return 0, ErrFileClosed
 	}
-	if len(b) > 0 && int(f.at) == len(f.fileData.data) {
+	if len(b) > 0 &&
+		int(f.at) == len(f.fileData.data) {
 		return 0, io.EOF
 	}
 	if int(f.at) > len(f.fileData.data) {
@@ -227,7 +247,10 @@ func (f *File) Read(b []byte) (n int, err error) {
 	return
 }
 
-func (f *File) ReadAt(b []byte, off int64) (n int, err error) {
+func (f *File) ReadAt(
+	b []byte,
+	off int64,
+) (n int, err error) {
 	prev := atomic.LoadInt64(&f.at)
 	atomic.StoreInt64(&f.at, off)
 	n, err = f.Read(b)
@@ -243,7 +266,9 @@ func (f *File) Truncate(size int64) error {
 		return &os.PathError{
 			Op:   "truncate",
 			Path: f.fileData.name,
-			Err:  errors.New("file handle is read only"),
+			Err: errors.New(
+				"file handle is read only",
+			),
 		}
 	}
 	if size < 0 {
@@ -253,7 +278,12 @@ func (f *File) Truncate(size int64) error {
 	defer f.fileData.Unlock()
 	if size > int64(len(f.fileData.data)) {
 		diff := size - int64(len(f.fileData.data))
-		f.fileData.data = append(f.fileData.data, bytes.Repeat([]byte{0o0}, int(diff))...)
+		f.fileData.data = append(
+			f.fileData.data,
+			bytes.Repeat(
+				[]byte{0o0},
+				int(diff),
+			)...)
 	} else {
 		f.fileData.data = f.fileData.data[0:size]
 	}
@@ -261,7 +291,10 @@ func (f *File) Truncate(size int64) error {
 	return nil
 }
 
-func (f *File) Seek(offset int64, whence int) (int64, error) {
+func (f *File) Seek(
+	offset int64,
+	whence int,
+) (int64, error) {
 	if f.closed {
 		return 0, ErrFileClosed
 	}
@@ -271,12 +304,17 @@ func (f *File) Seek(offset int64, whence int) (int64, error) {
 	case io.SeekCurrent:
 		atomic.AddInt64(&f.at, offset)
 	case io.SeekEnd:
-		atomic.StoreInt64(&f.at, int64(len(f.fileData.data))+offset)
+		atomic.StoreInt64(
+			&f.at,
+			int64(len(f.fileData.data))+offset,
+		)
 	}
 	return f.at, nil
 }
 
-func (f *File) Write(b []byte) (n int, err error) {
+func (f *File) Write(
+	b []byte,
+) (n int, err error) {
 	if f.closed {
 		return 0, ErrFileClosed
 	}
@@ -284,7 +322,9 @@ func (f *File) Write(b []byte) (n int, err error) {
 		return 0, &os.PathError{
 			Op:   "write",
 			Path: f.fileData.name,
-			Err:  errors.New("file handle is read only"),
+			Err: errors.New(
+				"file handle is read only",
+			),
 		}
 	}
 	n = len(b)
@@ -299,8 +339,15 @@ func (f *File) Write(b []byte) (n int, err error) {
 	if diff > 0 {
 		f.fileData.data = append(
 			f.fileData.data,
-			append(bytes.Repeat([]byte{0o0}, int(diff)), b...)...)
-		f.fileData.data = append(f.fileData.data, tail...)
+			append(
+				bytes.Repeat(
+					[]byte{0o0},
+					int(diff),
+				),
+				b...)...)
+		f.fileData.data = append(
+			f.fileData.data,
+			tail...)
 	} else {
 		f.fileData.data = append(f.fileData.data[:cur], b...)
 		f.fileData.data = append(f.fileData.data, tail...)
@@ -311,12 +358,17 @@ func (f *File) Write(b []byte) (n int, err error) {
 	return
 }
 
-func (f *File) WriteAt(b []byte, off int64) (n int, err error) {
+func (f *File) WriteAt(
+	b []byte,
+	off int64,
+) (n int, err error) {
 	atomic.StoreInt64(&f.at, off)
 	return f.Write(b)
 }
 
-func (f *File) WriteString(s string) (ret int, err error) {
+func (f *File) WriteString(
+	s string,
+) (ret int, err error) {
 	return f.Write([]byte(s))
 }
 
@@ -353,6 +405,7 @@ func (s *FileInfo) IsDir() bool {
 	defer s.Unlock()
 	return s.dir
 }
+
 func (s *FileInfo) Sys() interface{} { return nil }
 func (s *FileInfo) Size() int64 {
 	if s.IsDir() {
@@ -364,8 +417,12 @@ func (s *FileInfo) Size() int64 {
 }
 
 var (
-	ErrFileClosed        = errors.New("File is closed")
-	ErrOutOfRange        = errors.New("out of range")
+	ErrFileClosed = errors.New(
+		"File is closed",
+	)
+	ErrOutOfRange = errors.New(
+		"out of range",
+	)
 	ErrTooLarge          = errors.New("too large")
 	ErrFileNotFound      = os.ErrNotExist
 	ErrFileExists        = os.ErrExist

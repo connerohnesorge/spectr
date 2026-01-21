@@ -38,7 +38,9 @@ var staticVars = struct {
 var parametizerPool = sync.Pool{
 	New: func() interface{} {
 		p := new(parametizer)
-		p.buf = bytes.NewBuffer(make([]byte, 0, 45))
+		p.buf = bytes.NewBuffer(
+			make([]byte, 0, 45),
+		)
 		return p
 	},
 }
@@ -121,16 +123,47 @@ func (p *parametizer) scanCodeFn() stateFn {
 			return nil
 		}
 		return p.scanFormatFn
-	case '#', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.':
+	case '#',
+		' ',
+		'0',
+		'1',
+		'2',
+		'3',
+		'4',
+		'5',
+		'6',
+		'7',
+		'8',
+		'9',
+		'.':
 		return p.scanFormatFn
 	case 'o':
-		p.buf.WriteString(strconv.FormatInt(int64(p.s.popInt()), 8))
+		p.buf.WriteString(
+			strconv.FormatInt(
+				int64(p.s.popInt()),
+				8,
+			),
+		)
 	case 'd':
-		p.buf.WriteString(strconv.Itoa(p.s.popInt()))
+		p.buf.WriteString(
+			strconv.Itoa(p.s.popInt()),
+		)
 	case 'x':
-		p.buf.WriteString(strconv.FormatInt(int64(p.s.popInt()), 16))
+		p.buf.WriteString(
+			strconv.FormatInt(
+				int64(p.s.popInt()),
+				16,
+			),
+		)
 	case 'X':
-		p.buf.WriteString(strings.ToUpper(strconv.FormatInt(int64(p.s.popInt()), 16)))
+		p.buf.WriteString(
+			strings.ToUpper(
+				strconv.FormatInt(
+					int64(p.s.popInt()),
+					16,
+				),
+			),
+		)
 	case 's':
 		p.buf.WriteString(p.s.popString())
 	case 'c':
@@ -241,13 +274,25 @@ func (p *parametizer) scanFormatFn() stateFn {
 		f = append(f, ch)
 		switch ch {
 		case 'o', 'd', 'x', 'X':
-			fmt.Fprintf(p.buf, string(f), p.s.popInt())
+			fmt.Fprintf(
+				p.buf,
+				string(f),
+				p.s.popInt(),
+			)
 			break
 		case 's':
-			fmt.Fprintf(p.buf, string(f), p.s.popString())
+			fmt.Fprintf(
+				p.buf,
+				string(f),
+				p.s.popString(),
+			)
 			break
 		case 'c':
-			fmt.Fprintf(p.buf, string(f), p.s.popByte())
+			fmt.Fprintf(
+				p.buf,
+				string(f),
+				p.s.popByte(),
+			)
 			break
 		}
 	}
@@ -260,7 +305,8 @@ func (p *parametizer) pushParamFn() stateFn {
 	if err != nil {
 		return nil
 	}
-	if ai := int(ch - '1'); ai >= 0 && ai < len(p.params) {
+	if ai := int(ch - '1'); ai >= 0 &&
+		ai < len(p.params) {
 		p.s.push(p.params[ai])
 	} else {
 		p.s.push(0)
@@ -387,7 +433,10 @@ func (p *parametizer) skipElseFn() stateFn {
 }
 
 // Printf evaluates a parameterized terminfo value z, interpolating params.
-func Printf(z []byte, params ...interface{}) string {
+func Printf(
+	z []byte,
+	params ...interface{},
+) string {
 	p := newParametizer(z)
 	defer p.reset()
 	// make sure we always have 9 parameters -- makes it easier
@@ -400,6 +449,10 @@ func Printf(z []byte, params ...interface{}) string {
 
 // Fprintf evaluates a parameterized terminfo value z, interpolating params and
 // writing to w.
-func Fprintf(w io.Writer, z []byte, params ...interface{}) {
+func Fprintf(
+	w io.Writer,
+	z []byte,
+	params ...interface{},
+) {
 	w.Write([]byte(Printf(z, params...)))
 }

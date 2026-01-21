@@ -8,6 +8,10 @@ import (
 	"io"
 )
 
-func readInputs(ctx context.Context, msgs chan<- Msg, input io.Reader) error {
+func readInputs(
+	ctx context.Context,
+	msgs chan<- Msg,
+	input io.Reader,
+) error {
 	return readAnsiInputs(ctx, msgs, input)
 }

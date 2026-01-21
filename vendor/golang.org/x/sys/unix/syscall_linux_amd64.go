@@ -23,8 +23,16 @@ package unix
 //sys	Lchown(path string, uid int, gid int) (err error)
 //sys	Listen(s int, n int) (err error)
 
-func Lstat(path string, stat *Stat_t) (err error) {
-	return Fstatat(AT_FDCWD, path, stat, AT_SYMLINK_NOFOLLOW)
+func Lstat(
+	path string,
+	stat *Stat_t,
+) (err error) {
+	return Fstatat(
+		AT_FDCWD,
+		path,
+		stat,
+		AT_SYMLINK_NOFOLLOW,
+	)
 }
 
 //sys	MemfdSecret(flags int) (fd int, err error)
@@ -34,10 +42,19 @@ func Lstat(path string, stat *Stat_t) (err error) {
 //sys	Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) (err error)
 //sys	Seek(fd int, offset int64, whence int) (off int64, err error) = SYS_LSEEK
 
-func Select(nfd int, r *FdSet, w *FdSet, e *FdSet, timeout *Timeval) (n int, err error) {
+func Select(
+	nfd int,
+	r *FdSet,
+	w *FdSet,
+	e *FdSet,
+	timeout *Timeval,
+) (n int, err error) {
 	var ts *Timespec
 	if timeout != nil {
-		ts = &Timespec{Sec: timeout.Sec, Nsec: timeout.Usec * 1000}
+		ts = &Timespec{
+			Sec:  timeout.Sec,
+			Nsec: timeout.Usec * 1000,
+		}
 	}
 	return pselect6(nfd, r, w, e, ts, nil)
 }
@@ -109,7 +126,11 @@ func setTimeval(sec, usec int64) Timeval {
 
 func (r *PtraceRegs) PC() uint64 { return r.Rip }
 
-func (r *PtraceRegs) SetPC(pc uint64) { r.Rip = pc }
+func (r *PtraceRegs) SetPC(
+	pc uint64,
+) {
+	r.Rip = pc
+}
 
 func (iov *Iovec) SetLen(length int) {
 	iov.Len = uint64(length)
@@ -127,13 +148,20 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 	cmsg.Len = uint64(length)
 }
 
-func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(length int) {
+func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(
+	length int,
+) {
 	rsa.Service_name_len = uint64(length)
 }
 
 //sys	kexecFileLoad(kernelFd int, initrdFd int, cmdlineLen int, cmdline string, flags int) (err error)
 
-func KexecFileLoad(kernelFd int, initrdFd int, cmdline string, flags int) error {
+func KexecFileLoad(
+	kernelFd int,
+	initrdFd int,
+	cmdline string,
+	flags int,
+) error {
 	cmdlineLen := len(cmdline)
 	if cmdlineLen > 0 {
 		// Account for the additional NULL byte added by
@@ -141,5 +169,11 @@ func KexecFileLoad(kernelFd int, initrdFd int, cmdline string, flags int) error 
 		// syscall expects a NULL-terminated string.
 		cmdlineLen++
 	}
-	return kexecFileLoad(kernelFd, initrdFd, cmdlineLen, cmdline, flags)
+	return kexecFileLoad(
+		kernelFd,
+		initrdFd,
+		cmdlineLen,
+		cmdline,
+		flags,
+	)
 }

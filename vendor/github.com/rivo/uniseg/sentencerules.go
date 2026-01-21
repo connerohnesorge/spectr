@@ -22,7 +22,9 @@ const (
 // anologous to [grTransitions], see comments there for details.
 //
 // Unicode version 15.0.0.
-func sbTransitions(state, prop int) (newState int, sentenceBreak bool, rule int) {
+func sbTransitions(
+	state, prop int,
+) (newState int, sentenceBreak bool, rule int) {
 	switch uint64(state) | uint64(prop)<<32 {
 	// SB3.
 	case sbAny | prCR<<32:
@@ -198,12 +200,21 @@ func sbTransitions(state, prop int) (newState int, sentenceBreak bool, rule int)
 // needed to determine the new state, the byte slice or the string starting
 // after rune "r" can be used (whichever is not nil or empty) for further
 // lookups.
-func transitionSentenceBreakState(state int, r rune, b []byte, str string) (newState int, sentenceBreak bool) {
+func transitionSentenceBreakState(
+	state int,
+	r rune,
+	b []byte,
+	str string,
+) (newState int, sentenceBreak bool) {
 	// Determine the property of the next character.
-	nextProperty := property(sentenceBreakCodePoints, r)
+	nextProperty := property(
+		sentenceBreakCodePoints,
+		r,
+	)
 
 	// SB5 (Replacing Ignore Rules).
-	if nextProperty == prExtend || nextProperty == prFormat {
+	if nextProperty == prExtend ||
+		nextProperty == prFormat {
 		if state == sbParaSep || state == sbCR {
 			return sbAny, true // Make sure we don't apply SB5 to SB3 or SB4.
 		}
@@ -215,12 +226,22 @@ func transitionSentenceBreakState(state int, r rune, b []byte, str string) (newS
 
 	// Find the applicable transition in the table.
 	var rule int
-	newState, sentenceBreak, rule = sbTransitions(state, nextProperty)
+	newState, sentenceBreak, rule = sbTransitions(
+		state,
+		nextProperty,
+	)
 	if newState < 0 {
 		// No specific transition found. Try the less specific ones.
-		anyPropState, anyPropProp, anyPropRule := sbTransitions(state, prAny)
-		anyStateState, anyStateProp, anyStateRule := sbTransitions(sbAny, nextProperty)
-		if anyPropState >= 0 && anyStateState >= 0 {
+		anyPropState, anyPropProp, anyPropRule := sbTransitions(
+			state,
+			prAny,
+		)
+		anyStateState, anyStateProp, anyStateRule := sbTransitions(
+			sbAny,
+			nextProperty,
+		)
+		if anyPropState >= 0 &&
+			anyStateState >= 0 {
 			// Both apply. We'll use a mix (see comments for grTransitions).
 			newState, sentenceBreak, rule = anyStateState, anyStateProp, anyStateRule
 			if anyPropRule < anyStateRule {
@@ -243,7 +264,8 @@ func transitionSentenceBreakState(state int, r rune, b []byte, str string) (newS
 	}
 
 	// SB8.
-	if rule > 80 && (state == sbATerm || state == sbSB8Close || state == sbSB8Sp || state == sbSB7) {
+	if rule > 80 &&
+		(state == sbATerm || state == sbSB8Close || state == sbSB8Sp || state == sbSB7) {
 		// Check the right side of the rule.
 		var length int
 		for nextProperty != prOLetter &&
@@ -265,7 +287,10 @@ func transitionSentenceBreakState(state int, r rune, b []byte, str string) (newS
 			if r == utf8.RuneError {
 				break
 			}
-			nextProperty = property(sentenceBreakCodePoints, r)
+			nextProperty = property(
+				sentenceBreakCodePoints,
+				r,
+			)
 		}
 		if nextProperty == prLower {
 			return sbLower, false

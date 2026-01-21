@@ -10,7 +10,9 @@ package unix
 
 import "syscall"
 
-func Getenv(key string) (value string, found bool) {
+func Getenv(
+	key string,
+) (value string, found bool) {
 	return syscall.Getenv(key)
 }
 

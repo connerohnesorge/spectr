@@ -14,5 +14,7 @@ import "fmt"
 // See https://iterm2.com/documentation-escape-codes.html
 // See https://iterm2.com/documentation-images.html
 func ITerm2(data any) string {
-	return "\x1b]1337;" + fmt.Sprint(data) + "\x07"
+	return "\x1b]1337;" + fmt.Sprint(
+		data,
+	) + "\x07"
 }

@@ -9,7 +9,9 @@ import (
 	"strings"
 )
 
-var reLoc = regexp.MustCompile(`^[a-z][a-z][a-z]?(?:_[A-Z][A-Z])?\.(.+)`)
+var reLoc = regexp.MustCompile(
+	`^[a-z][a-z][a-z]?(?:_[A-Z][A-Z])?\.(.+)`,
+)
 
 var mblenTable = map[string]int{
 	"utf-8":   6,
@@ -73,7 +75,8 @@ func IsEastAsian() bool {
 	if locale == "POSIX" || locale == "C" {
 		return false
 	}
-	if len(locale) > 1 && locale[0] == 'C' && (locale[1] == '.' || locale[1] == '-') {
+	if len(locale) > 1 && locale[0] == 'C' &&
+		(locale[1] == '.' || locale[1] == '-') {
 		return false
 	}
 

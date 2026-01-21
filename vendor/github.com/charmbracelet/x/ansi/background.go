@@ -68,7 +68,12 @@ func (x XRGBColor) String() string {
 	}
 	r, g, b, _ := x.Color.RGBA()
 	// Get the lower 8 bits
-	return fmt.Sprintf("rgb:%04x/%04x/%04x", r, g, b)
+	return fmt.Sprintf(
+		"rgb:%04x/%04x/%04x",
+		r,
+		g,
+		b,
+	)
 }
 
 // XRGBAColor is a [color.Color] that can be formatted as an XParseColor
@@ -95,7 +100,13 @@ func (x XRGBAColor) String() string {
 	}
 	r, g, b, a := x.RGBA()
 	// Get the lower 8 bits
-	return fmt.Sprintf("rgba:%04x/%04x/%04x/%04x", r, g, b, a)
+	return fmt.Sprintf(
+		"rgba:%04x/%04x/%04x/%04x",
+		r,
+		g,
+		b,
+		a,
+	)
 }
 
 // SetForegroundColor returns a sequence that sets the default terminal

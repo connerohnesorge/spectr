@@ -23,18 +23,24 @@ type CopyOnWriteFs struct {
 }
 
 func NewCopyOnWriteFs(base Fs, layer Fs) Fs {
-	return &CopyOnWriteFs{base: base, layer: layer}
+	return &CopyOnWriteFs{
+		base:  base,
+		layer: layer,
+	}
 }
 
 // Returns true if the file is not in the overlay
-func (u *CopyOnWriteFs) isBaseFile(name string) (bool, error) {
+func (u *CopyOnWriteFs) isBaseFile(
+	name string,
+) (bool, error) {
 	if _, err := u.layer.Stat(name); err == nil {
 		return false, nil
 	}
 	_, err := u.base.Stat(name)
 	if err != nil {
 		if oerr, ok := err.(*os.PathError); ok {
-			if oerr.Err == os.ErrNotExist || oerr.Err == syscall.ENOENT ||
+			if oerr.Err == os.ErrNotExist ||
+				oerr.Err == syscall.ENOENT ||
 				oerr.Err == syscall.ENOTDIR {
 				return false, nil
 			}
@@ -46,11 +52,16 @@ func (u *CopyOnWriteFs) isBaseFile(name string) (bool, error) {
 	return true, err
 }
 
-func (u *CopyOnWriteFs) copyToLayer(name string) error {
+func (u *CopyOnWriteFs) copyToLayer(
+	name string,
+) error {
 	return copyToLayer(u.base, u.layer, name)
 }
 
-func (u *CopyOnWriteFs) Chtimes(name string, atime, mtime time.Time) error {
+func (u *CopyOnWriteFs) Chtimes(
+	name string,
+	atime, mtime time.Time,
+) error {
 	b, err := u.isBaseFile(name)
 	if err != nil {
 		return err
@@ -63,7 +74,10 @@ func (u *CopyOnWriteFs) Chtimes(name string, atime, mtime time.Time) error {
 	return u.layer.Chtimes(name, atime, mtime)
 }
 
-func (u *CopyOnWriteFs) Chmod(name string, mode os.FileMode) error {
+func (u *CopyOnWriteFs) Chmod(
+	name string,
+	mode os.FileMode,
+) error {
 	b, err := u.isBaseFile(name)
 	if err != nil {
 		return err
@@ -76,7 +90,10 @@ func (u *CopyOnWriteFs) Chmod(name string, mode os.FileMode) error {
 	return u.layer.Chmod(name, mode)
 }
 
-func (u *CopyOnWriteFs) Chown(name string, uid, gid int) error {
+func (u *CopyOnWriteFs) Chown(
+	name string,
+	uid, gid int,
+) error {
 	b, err := u.isBaseFile(name)
 	if err != nil {
 		return err
@@ -89,7 +106,9 @@ func (u *CopyOnWriteFs) Chown(name string, uid, gid int) error {
 	return u.layer.Chown(name, uid, gid)
 }
 
-func (u *CopyOnWriteFs) Stat(name string) (os.FileInfo, error) {
+func (u *CopyOnWriteFs) Stat(
+	name string,
+) (os.FileInfo, error) {
 	fi, err := u.layer.Stat(name)
 	if err != nil {
 		isNotExist := u.isNotExist(err)
@@ -101,7 +120,9 @@ func (u *CopyOnWriteFs) Stat(name string) (os.FileInfo, error) {
 	return fi, nil
 }
 
-func (u *CopyOnWriteFs) LstatIfPossible(name string) (os.FileInfo, bool, error) {
+func (u *CopyOnWriteFs) LstatIfPossible(
+	name string,
+) (os.FileInfo, bool, error) {
 	llayer, ok1 := u.layer.(Lstater)
 	lbase, ok2 := u.base.(Lstater)
 
@@ -131,15 +152,27 @@ func (u *CopyOnWriteFs) LstatIfPossible(name string) (os.FileInfo, bool, error) 
 	return fi, false, err
 }
 
-func (u *CopyOnWriteFs) SymlinkIfPossible(oldname, newname string) error {
+func (u *CopyOnWriteFs) SymlinkIfPossible(
+	oldname, newname string,
+) error {
 	if slayer, ok := u.layer.(Linker); ok {
-		return slayer.SymlinkIfPossible(oldname, newname)
+		return slayer.SymlinkIfPossible(
+			oldname,
+			newname,
+		)
 	}
 
-	return &os.LinkError{Op: "symlink", Old: oldname, New: newname, Err: ErrNoSymlink}
+	return &os.LinkError{
+		Op:  "symlink",
+		Old: oldname,
+		New: newname,
+		Err: ErrNoSymlink,
+	}
 }
 
-func (u *CopyOnWriteFs) ReadlinkIfPossible(name string) (string, error) {
+func (u *CopyOnWriteFs) ReadlinkIfPossible(
+	name string,
+) (string, error) {
 	if rlayer, ok := u.layer.(LinkReader); ok {
 		return rlayer.ReadlinkIfPossible(name)
 	}
@@ -148,21 +181,31 @@ func (u *CopyOnWriteFs) ReadlinkIfPossible(name string) (string, error) {
 		return rbase.ReadlinkIfPossible(name)
 	}
 
-	return "", &os.PathError{Op: "readlink", Path: name, Err: ErrNoReadlink}
+	return "", &os.PathError{
+		Op:   "readlink",
+		Path: name,
+		Err:  ErrNoReadlink,
+	}
 }
 
-func (u *CopyOnWriteFs) isNotExist(err error) bool {
+func (u *CopyOnWriteFs) isNotExist(
+	err error,
+) bool {
 	if e, ok := err.(*os.PathError); ok {
 		err = e.Err
 	}
-	if err == os.ErrNotExist || err == syscall.ENOENT || err == syscall.ENOTDIR {
+	if err == os.ErrNotExist ||
+		err == syscall.ENOENT ||
+		err == syscall.ENOTDIR {
 		return true
 	}
 	return false
 }
 
 // Renaming files present only in the base layer is not permitted
-func (u *CopyOnWriteFs) Rename(oldname, newname string) error {
+func (u *CopyOnWriteFs) Rename(
+	oldname, newname string,
+) error {
 	b, err := u.isBaseFile(oldname)
 	if err != nil {
 		return err
@@ -176,7 +219,9 @@ func (u *CopyOnWriteFs) Rename(oldname, newname string) error {
 // Removing files present only in the base layer is not permitted. If
 // a file is present in the base layer and the overlay, only the overlay
 // will be removed.
-func (u *CopyOnWriteFs) Remove(name string) error {
+func (u *CopyOnWriteFs) Remove(
+	name string,
+) error {
 	err := u.layer.Remove(name)
 	switch err {
 	case syscall.ENOENT:
@@ -190,7 +235,9 @@ func (u *CopyOnWriteFs) Remove(name string) error {
 	}
 }
 
-func (u *CopyOnWriteFs) RemoveAll(name string) error {
+func (u *CopyOnWriteFs) RemoveAll(
+	name string,
+) error {
 	err := u.layer.RemoveAll(name)
 	switch err {
 	case syscall.ENOENT:
@@ -204,7 +251,11 @@ func (u *CopyOnWriteFs) RemoveAll(name string) error {
 	}
 }
 
-func (u *CopyOnWriteFs) OpenFile(name string, flag int, perm os.FileMode) (File, error) {
+func (u *CopyOnWriteFs) OpenFile(
+	name string,
+	flag int,
+	perm os.FileMode,
+) (File, error) {
 	b, err := u.isBaseFile(name)
 	if err != nil {
 		return nil, err
@@ -215,7 +266,11 @@ func (u *CopyOnWriteFs) OpenFile(name string, flag int, perm os.FileMode) (File,
 			if err = u.copyToLayer(name); err != nil {
 				return nil, err
 			}
-			return u.layer.OpenFile(name, flag, perm)
+			return u.layer.OpenFile(
+				name,
+				flag,
+				perm,
+			)
 		}
 
 		dir := filepath.Dir(name)
@@ -227,7 +282,11 @@ func (u *CopyOnWriteFs) OpenFile(name string, flag int, perm os.FileMode) (File,
 			if err = u.layer.MkdirAll(dir, 0o777); err != nil {
 				return nil, err
 			}
-			return u.layer.OpenFile(name, flag, perm)
+			return u.layer.OpenFile(
+				name,
+				flag,
+				perm,
+			)
 		}
 
 		isaDir, err = IsDir(u.layer, dir)
@@ -235,7 +294,11 @@ func (u *CopyOnWriteFs) OpenFile(name string, flag int, perm os.FileMode) (File,
 			return nil, err
 		}
 		if isaDir {
-			return u.layer.OpenFile(name, flag, perm)
+			return u.layer.OpenFile(
+				name,
+				flag,
+				perm,
+			)
 		}
 
 		return nil, &os.PathError{
@@ -255,7 +318,9 @@ func (u *CopyOnWriteFs) OpenFile(name string, flag int, perm os.FileMode) (File,
 //
 //	layer: doesn't exist, exists as a file, and exists as a directory
 //	base:  doesn't exist, exists as a file, and exists as a directory
-func (u *CopyOnWriteFs) Open(name string) (File, error) {
+func (u *CopyOnWriteFs) Open(
+	name string,
+) (File, error) {
 	// Since the overlay overrides the base we check that first
 	b, err := u.isBaseFile(name)
 	if err != nil {
@@ -294,13 +359,23 @@ func (u *CopyOnWriteFs) Open(name string) (File, error) {
 
 	// If either have errors at this point something is very wrong. Return nil and the errors
 	if bErr != nil || lErr != nil {
-		return nil, fmt.Errorf("BaseErr: %v\nOverlayErr: %v", bErr, lErr)
+		return nil, fmt.Errorf(
+			"BaseErr: %v\nOverlayErr: %v",
+			bErr,
+			lErr,
+		)
 	}
 
-	return &UnionFile{Base: bfile, Layer: lfile}, nil
+	return &UnionFile{
+		Base:  bfile,
+		Layer: lfile,
+	}, nil
 }
 
-func (u *CopyOnWriteFs) Mkdir(name string, perm os.FileMode) error {
+func (u *CopyOnWriteFs) Mkdir(
+	name string,
+	perm os.FileMode,
+) error {
 	dir, err := IsDir(u.base, name)
 	if err != nil {
 		return u.layer.MkdirAll(name, perm)
@@ -315,7 +390,10 @@ func (u *CopyOnWriteFs) Name() string {
 	return "CopyOnWriteFs"
 }
 
-func (u *CopyOnWriteFs) MkdirAll(name string, perm os.FileMode) error {
+func (u *CopyOnWriteFs) MkdirAll(
+	name string,
+	perm os.FileMode,
+) error {
 	dir, err := IsDir(u.base, name)
 	if err != nil {
 		return u.layer.MkdirAll(name, perm)
@@ -327,6 +405,12 @@ func (u *CopyOnWriteFs) MkdirAll(name string, perm os.FileMode) error {
 	return u.layer.MkdirAll(name, perm)
 }
 
-func (u *CopyOnWriteFs) Create(name string) (File, error) {
-	return u.OpenFile(name, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
+func (u *CopyOnWriteFs) Create(
+	name string,
+) (File, error) {
+	return u.OpenFile(
+		name,
+		os.O_CREATE|os.O_TRUNC|os.O_RDWR,
+		0o666,
+	)
 }

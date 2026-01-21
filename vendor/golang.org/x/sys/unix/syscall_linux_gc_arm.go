@@ -10,4 +10,8 @@ import "syscall"
 
 // Underlying system call writes to newoffset via pointer.
 // Implemented in assembly to avoid allocation.
-func seek(fd int, offset int64, whence int) (newoffset int64, err syscall.Errno)
+func seek(
+	fd int,
+	offset int64,
+	whence int,
+) (newoffset int64, err syscall.Errno)

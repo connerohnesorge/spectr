@@ -14,12 +14,19 @@ import (
 // supplied file contents.
 // This is used to convert from the native (always in bytes) column
 // representation and the utf16 counts used by some editors.
-func ToUTF16Column(p Point, content []byte) (int, error) {
+func ToUTF16Column(
+	p Point,
+	content []byte,
+) (int, error) {
 	if !p.HasPosition() {
-		return -1, fmt.Errorf("ToUTF16Column: point is missing position")
+		return -1, fmt.Errorf(
+			"ToUTF16Column: point is missing position",
+		)
 	}
 	if !p.HasOffset() {
-		return -1, fmt.Errorf("ToUTF16Column: point is missing offset")
+		return -1, fmt.Errorf(
+			"ToUTF16Column: point is missing offset",
+		)
 	}
 	offset := p.Offset()      // 0-based
 	colZero := p.Column() - 1 // 0-based
@@ -32,7 +39,12 @@ func ToUTF16Column(p Point, content []byte) (int, error) {
 	// work out the offset at the start of the line using the column
 	lineOffset := offset - colZero
 	if lineOffset < 0 || offset > len(content) {
-		return -1, fmt.Errorf("ToUTF16Column: offsets %v-%v outside file contents (%v)", lineOffset, offset, len(content))
+		return -1, fmt.Errorf(
+			"ToUTF16Column: offsets %v-%v outside file contents (%v)",
+			lineOffset,
+			offset,
+			len(content),
+		)
 	}
 	// Use the offset to pick out the line start.
 	// This cannot panic: offset > len(content) and lineOffset < offset.
@@ -43,29 +55,43 @@ func ToUTF16Column(p Point, content []byte) (int, error) {
 
 	// and count the number of utf16 characters
 	// in theory we could do this by hand more efficiently...
-	return len(utf16.Encode([]rune(string(start)))) + 1, nil
+	return len(
+		utf16.Encode([]rune(string(start))),
+	) + 1, nil
 }
 
 // FromUTF16Column advances the point by the utf16 character offset given the
 // supplied line contents.
 // This is used to convert from the utf16 counts used by some editors to the
 // native (always in bytes) column representation.
-func FromUTF16Column(p Point, chr int, content []byte) (Point, error) {
+func FromUTF16Column(
+	p Point,
+	chr int,
+	content []byte,
+) (Point, error) {
 	if !p.HasOffset() {
-		return Point{}, fmt.Errorf("FromUTF16Column: point is missing offset")
+		return Point{}, fmt.Errorf(
+			"FromUTF16Column: point is missing offset",
+		)
 	}
 	// if chr is 1 then no adjustment needed
 	if chr <= 1 {
 		return p, nil
 	}
 	if p.Offset() >= len(content) {
-		return p, fmt.Errorf("FromUTF16Column: offset (%v) greater than length of content (%v)", p.Offset(), len(content))
+		return p, fmt.Errorf(
+			"FromUTF16Column: offset (%v) greater than length of content (%v)",
+			p.Offset(),
+			len(content),
+		)
 	}
 	remains := content[p.Offset():]
 	// scan forward the specified number of characters
 	for count := 1; count < chr; count++ {
 		if len(remains) <= 0 {
-			return Point{}, fmt.Errorf("FromUTF16Column: chr goes beyond the content")
+			return Point{}, fmt.Errorf(
+				"FromUTF16Column: chr goes beyond the content",
+			)
 		}
 		r, w := utf8.DecodeRune(remains)
 		if r == '\n' {

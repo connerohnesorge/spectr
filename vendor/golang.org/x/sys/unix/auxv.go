@@ -32,5 +32,8 @@ func Auxv() ([][2]uintptr, error) {
 
 	result := make([]uintptr, vecLen)
 	copy(result, vec)
-	return unsafe.Slice((*[2]uintptr)(unsafe.Pointer(&result[0])), vecLen/2), nil
+	return unsafe.Slice(
+		(*[2]uintptr)(unsafe.Pointer(&result[0])),
+		vecLen/2,
+	), nil
 }

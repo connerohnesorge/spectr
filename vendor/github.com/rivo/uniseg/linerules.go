@@ -68,7 +68,9 @@ const (
 // anologous to [grTransitions], see comments there for details.
 //
 // Unicode version 15.0.0.
-func lbTransitions(state, prop int) (newState, lineBreak, rule int) {
+func lbTransitions(
+	state, prop int,
+) (newState, lineBreak, rule int) {
 	switch uint64(state) | uint64(prop)<<32 {
 	// LB4.
 	case lbBK | prAny<<32:
@@ -447,9 +449,16 @@ func lbTransitions(state, prop int) (newState, lineBreak, rule int) {
 // code point is needed to determine the new state, the byte slice or the string
 // starting after rune "r" can be used (whichever is not nil or empty) for
 // further lookups.
-func transitionLineBreakState(state int, r rune, b []byte, str string) (newState int, lineBreak int) {
+func transitionLineBreakState(
+	state int,
+	r rune,
+	b []byte,
+	str string,
+) (newState int, lineBreak int) {
 	// Determine the property of the next character.
-	nextProperty, generalCategory := propertyLineBreak(r)
+	nextProperty, generalCategory := propertyLineBreak(
+		r,
+	)
 
 	// Prepare.
 	var forceNoBreak, isCPeaFWH bool
@@ -464,9 +473,11 @@ func transitionLineBreakState(state int, r rune, b []byte, str string) (newState
 
 	defer func() {
 		// Transition into LB30.
-		if newState == lbCP || newState == lbNUCP {
+		if newState == lbCP ||
+			newState == lbNUCP {
 			ea := propertyEastAsianWidth(r)
-			if ea != prF && ea != prW && ea != prH {
+			if ea != prF && ea != prW &&
+				ea != prH {
 				newState |= lbCPeaFWHBit
 			}
 		}
@@ -478,7 +489,9 @@ func transitionLineBreakState(state int, r rune, b []byte, str string) (newState
 	}()
 
 	// LB1.
-	if nextProperty == prAI || nextProperty == prSG || nextProperty == prXX {
+	if nextProperty == prAI ||
+		nextProperty == prSG ||
+		nextProperty == prXX {
 		nextProperty = prAL
 	} else if nextProperty == prSA {
 		if generalCategory == gcMn || generalCategory == gcMc {
@@ -491,13 +504,22 @@ func transitionLineBreakState(state int, r rune, b []byte, str string) (newState
 	}
 
 	// Combining marks.
-	if nextProperty == prZWJ || nextProperty == prCM {
+	if nextProperty == prZWJ ||
+		nextProperty == prCM {
 		var bit int
 		if nextProperty == prZWJ {
 			bit = lbZWJBit
 		}
-		mustBreakState := state < 0 || state == lbBK || state == lbCR || state == lbLF || state == lbNL
-		if !mustBreakState && state != lbSP && state != lbZW && state != lbQUSP && state != lbCLCPSP && state != lbB2SP {
+		mustBreakState := state < 0 ||
+			state == lbBK ||
+			state == lbCR ||
+			state == lbLF ||
+			state == lbNL
+		if !mustBreakState && state != lbSP &&
+			state != lbZW &&
+			state != lbQUSP &&
+			state != lbCLCPSP &&
+			state != lbB2SP {
 			// LB9.
 			return state | bit, LineDontBreak
 		} else {
@@ -511,11 +533,20 @@ func transitionLineBreakState(state int, r rune, b []byte, str string) (newState
 
 	// Find the applicable transition in the table.
 	var rule int
-	newState, lineBreak, rule = lbTransitions(state, nextProperty)
+	newState, lineBreak, rule = lbTransitions(
+		state,
+		nextProperty,
+	)
 	if newState < 0 {
 		// No specific transition found. Try the less specific ones.
-		anyPropProp, anyPropLineBreak, anyPropRule := lbTransitions(state, prAny)
-		anyStateProp, anyStateLineBreak, anyStateRule := lbTransitions(lbAny, nextProperty)
+		anyPropProp, anyPropLineBreak, anyPropRule := lbTransitions(
+			state,
+			prAny,
+		)
+		anyStateProp, anyStateLineBreak, anyStateRule := lbTransitions(
+			lbAny,
+			nextProperty,
+		)
 		if anyPropProp >= 0 && anyStateProp >= 0 {
 			// Both apply. We'll use a mix (see comments for grTransitions).
 			newState, lineBreak, rule = anyStateProp, anyStateLineBreak, anyStateRule
@@ -546,7 +577,8 @@ func transitionLineBreakState(state int, r rune, b []byte, str string) (newState
 	}
 
 	// LB13.
-	if rule > 130 && state != lbNU && state != lbNUNU {
+	if rule > 130 && state != lbNU &&
+		state != lbNUNU {
 		switch nextProperty {
 		case prCL:
 			return lbCL, LineDontBreak
@@ -579,9 +611,11 @@ func transitionLineBreakState(state int, r rune, b []byte, str string) (newState
 
 	// LB30 (part one).
 	if rule > 300 {
-		if (state == lbAL || state == lbHL || state == lbNU || state == lbNUNU) && nextProperty == prOP {
+		if (state == lbAL || state == lbHL || state == lbNU || state == lbNUNU) &&
+			nextProperty == prOP {
 			ea := propertyEastAsianWidth(r)
-			if ea != prF && ea != prW && ea != prH {
+			if ea != prF && ea != prW &&
+				ea != prH {
 				return lbOP, LineDontBreak
 			}
 		} else if isCPeaFWH {
@@ -598,7 +632,8 @@ func transitionLineBreakState(state int, r rune, b []byte, str string) (newState
 
 	// LB30a.
 	if newState == lbAny && nextProperty == prRI {
-		if state != lbOddRI && state != lbEvenRI { // Includes state == -1.
+		if state != lbOddRI &&
+			state != lbEvenRI { // Includes state == -1.
 			// Transition into the first RI.
 			return lbOddRI, lineBreak
 		}
@@ -612,12 +647,14 @@ func transitionLineBreakState(state int, r rune, b []byte, str string) (newState
 	// LB30b.
 	if rule > 302 {
 		if nextProperty == prEM {
-			if state == lbEB || state == lbExtPicCn {
+			if state == lbEB ||
+				state == lbExtPicCn {
 				return prAny, LineDontBreak
 			}
 		}
 		graphemeProperty := propertyGraphemes(r)
-		if graphemeProperty == prExtendedPictographic && generalCategory == gcCn {
+		if graphemeProperty == prExtendedPictographic &&
+			generalCategory == gcCn {
 			return lbExtPicCn, LineCanBreak
 		}
 	}

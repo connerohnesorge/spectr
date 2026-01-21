@@ -83,7 +83,10 @@ func (p *Parser) SetDataSize(size int) {
 
 // Params returns the list of parsed packed parameters.
 func (p *Parser) Params() Params {
-	return unsafe.Slice((*Param)(unsafe.Pointer(&p.params[0])), p.paramsLen)
+	return unsafe.Slice(
+		(*Param)(unsafe.Pointer(&p.params[0])),
+		p.paramsLen,
+	)
 }
 
 // Param returns the parameter at the given index and falls back to the default
@@ -108,7 +111,9 @@ func (p *Parser) Rune() rune {
 	if rw == -1 {
 		return utf8.RuneError
 	}
-	r, _ := utf8.DecodeRune((*[utf8.UTFMax]byte)(unsafe.Pointer(&p.cmd))[:rw])
+	r, _ := utf8.DecodeRune(
+		(*[utf8.UTFMax]byte)(unsafe.Pointer(&p.cmd))[:rw],
+	)
 	return r
 }
 
@@ -178,7 +183,9 @@ func (p *Parser) collectRune(b byte) {
 	p.paramsLen++
 }
 
-func (p *Parser) advanceUtf8(b byte) parser.Action {
+func (p *Parser) advanceUtf8(
+	b byte,
+) parser.Action {
 	// Collect UTF-8 rune bytes.
 	p.collectRune(b)
 	rw := utf8ByteLen(byte(p.cmd & 0xff))
@@ -204,7 +211,10 @@ func (p *Parser) advanceUtf8(b byte) parser.Action {
 }
 
 func (p *Parser) advance(b byte) parser.Action {
-	state, action := parser.Table.Transition(p.state, b)
+	state, action := parser.Table.Transition(
+		p.state,
+		b,
+	)
 
 	// We need to clear the parser state if the state changes from EscapeState.
 	// This is because when we enter the EscapeState, we don't get a chance to
@@ -214,14 +224,22 @@ func (p *Parser) advance(b byte) parser.Action {
 	// we need to clear it here before dispatching the esc sequence.
 	if p.state != state {
 		if p.state == parser.EscapeState {
-			p.performAction(parser.ClearAction, state, b)
+			p.performAction(
+				parser.ClearAction,
+				state,
+				b,
+			)
 		}
 		if action == parser.PutAction &&
 			p.state == parser.DcsEntryState && state == parser.DcsStringState {
 			// XXX: This is a special case where we need to start collecting
 			// non-string parameterized data i.e. doesn't follow the ECMA-48 §
 			// 5.4.1 string parameters format.
-			p.performAction(parser.StartAction, state, 0)
+			p.performAction(
+				parser.StartAction,
+				state,
+				0,
+			)
 		}
 	}
 
@@ -229,7 +247,11 @@ func (p *Parser) advance(b byte) parser.Action {
 	switch {
 	case b == ESC && p.state == parser.EscapeState:
 		// Two ESCs in a row
-		p.performAction(parser.ExecuteAction, state, b)
+		p.performAction(
+			parser.ExecuteAction,
+			state,
+			b,
+		)
 	default:
 		p.performAction(action, state, b)
 	}
@@ -258,7 +280,11 @@ func (p *Parser) parseStringCmd() {
 	}
 }
 
-func (p *Parser) performAction(action parser.Action, state parser.State, b byte) {
+func (p *Parser) performAction(
+	action parser.Action,
+	state parser.State,
+	b byte,
+) {
 	switch action {
 	case parser.IgnoreAction:
 		break
@@ -328,7 +354,8 @@ func (p *Parser) performAction(action parser.Action, state parser.State, b byte)
 		} else {
 			p.dataLen = 0
 		}
-		if p.state >= parser.DcsEntryState && p.state <= parser.DcsStringState {
+		if p.state >= parser.DcsEntryState &&
+			p.state <= parser.DcsStringState {
 			// Collect the command byte for DCS
 			p.cmd |= int(b)
 		} else {
@@ -338,7 +365,8 @@ func (p *Parser) performAction(action parser.Action, state parser.State, b byte)
 	case parser.PutAction:
 		switch p.state {
 		case parser.OscStringState:
-			if b == ';' && p.cmd == parser.MissingCommand {
+			if b == ';' &&
+				p.cmd == parser.MissingCommand {
 				p.parseStringCmd()
 			}
 		}
@@ -354,12 +382,15 @@ func (p *Parser) performAction(action parser.Action, state parser.State, b byte)
 
 	case parser.DispatchAction:
 		// Increment the last parameter
-		if p.paramsLen > 0 && p.paramsLen < len(p.params)-1 ||
-			p.paramsLen == 0 && len(p.params) > 0 && p.params[0] != parser.MissingParam {
+		if p.paramsLen > 0 &&
+			p.paramsLen < len(p.params)-1 ||
+			p.paramsLen == 0 && len(p.params) > 0 &&
+				p.params[0] != parser.MissingParam {
 			p.paramsLen++
 		}
 
-		if p.state == parser.OscStringState && p.cmd == parser.MissingCommand {
+		if p.state == parser.OscStringState &&
+			p.cmd == parser.MissingCommand {
 			// Ensure we have a command for OSC
 			p.parseStringCmd()
 		}
@@ -369,19 +400,32 @@ func (p *Parser) performAction(action parser.Action, state parser.State, b byte)
 			data = data[:p.dataLen]
 		}
 		switch p.state {
-		case parser.CsiEntryState, parser.CsiParamState, parser.CsiIntermediateState:
+		case parser.CsiEntryState,
+			parser.CsiParamState,
+			parser.CsiIntermediateState:
 			p.cmd |= int(b)
 			if p.handler.HandleCsi != nil {
-				p.handler.HandleCsi(Cmd(p.cmd), p.Params())
+				p.handler.HandleCsi(
+					Cmd(p.cmd),
+					p.Params(),
+				)
 			}
-		case parser.EscapeState, parser.EscapeIntermediateState:
+		case parser.EscapeState,
+			parser.EscapeIntermediateState:
 			p.cmd |= int(b)
 			if p.handler.HandleEsc != nil {
 				p.handler.HandleEsc(Cmd(p.cmd))
 			}
-		case parser.DcsEntryState, parser.DcsParamState, parser.DcsIntermediateState, parser.DcsStringState:
+		case parser.DcsEntryState,
+			parser.DcsParamState,
+			parser.DcsIntermediateState,
+			parser.DcsStringState:
 			if p.handler.HandleDcs != nil {
-				p.handler.HandleDcs(Cmd(p.cmd), p.Params(), data)
+				p.handler.HandleDcs(
+					Cmd(p.cmd),
+					p.Params(),
+					data,
+				)
 			}
 		case parser.OscStringState:
 			if p.handler.HandleOsc != nil {

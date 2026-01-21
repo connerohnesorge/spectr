@@ -31,7 +31,10 @@ import (
 // substitute a nil value passed to tIn or tNotIn. Invalid UTF-8 is translated
 // to RuneError to determine which transformer to apply, but is passed as is to
 // the respective transformer.
-func If(s Set, tIn, tNotIn transform.Transformer) Transformer {
+func If(
+	s Set,
+	tIn, tNotIn transform.Transformer,
+) Transformer {
 	if tIn == nil && tNotIn == nil {
 		return Transformer{transform.Nop}
 	}
@@ -61,7 +64,10 @@ func If(s Set, tIn, tNotIn transform.Transformer) Transformer {
 
 type dummySpan struct{ transform.Transformer }
 
-func (d dummySpan) Span(src []byte, atEOF bool) (n int, err error) {
+func (d dummySpan) Span(
+	src []byte,
+	atEOF bool,
+) (n int, err error) {
 	return 0, transform.ErrEndOfSpan
 }
 
@@ -104,7 +110,10 @@ func (t *cond) isNot(r rune) bool {
 // TODO: there are certainly room for improvements, though. For example, if
 // t.t == transform.Nop (which will a common occurrence) it will save a bundle
 // to special-case that loop.
-func (t *cond) Span(src []byte, atEOF bool) (n int, err error) {
+func (t *cond) Span(
+	src []byte,
+	atEOF bool,
+) (n int, err error) {
 	p := 0
 	for n < len(src) && err == nil {
 		// Don't process too much at a time as the Spanner that will be
@@ -133,7 +142,10 @@ func (t *cond) Span(src []byte, atEOF bool) (n int, err error) {
 				break
 			}
 		}
-		n2, err2 := current.Span(src[n:p], atEnd || (atEOF && p == len(src)))
+		n2, err2 := current.Span(
+			src[n:p],
+			atEnd || (atEOF && p == len(src)),
+		)
 		n += n2
 		if err2 != nil {
 			return n, err2
@@ -144,7 +156,10 @@ func (t *cond) Span(src []byte, atEOF bool) (n int, err error) {
 	return n, err
 }
 
-func (t *cond) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+func (t *cond) Transform(
+	dst, src []byte,
+	atEOF bool,
+) (nDst, nSrc int, err error) {
 	p := 0
 	for nSrc < len(src) && err == nil {
 		// Don't process too much at a time, as the work might be wasted if the
@@ -174,7 +189,11 @@ func (t *cond) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error
 				break
 			}
 		}
-		nDst2, nSrc2, err2 := current.Transform(dst[nDst:], src[nSrc:p], atEnd || (atEOF && p == len(src)))
+		nDst2, nSrc2, err2 := current.Transform(
+			dst[nDst:],
+			src[nSrc:p],
+			atEnd || (atEOF && p == len(src)),
+		)
 		nDst += nDst2
 		nSrc += nSrc2
 		if err2 != nil {

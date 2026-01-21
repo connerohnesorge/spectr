@@ -53,7 +53,11 @@ package unix
 //sys	sendmsg(s int, msg *Msghdr, flags int) (n int, err error)
 //sys	mmap(addr uintptr, length uintptr, prot int, flags int, fd int, offset int64) (xaddr uintptr, err error)
 
-func Ioperm(from int, num int, on int) (err error) {
+func Ioperm(
+	from int,
+	num int,
+	on int,
+) (err error) {
 	return ENOSYS
 }
 
@@ -89,7 +93,11 @@ func setTimeval(sec, usec int64) Timeval {
 
 func (r *PtraceRegs) PC() uint64 { return r.Tpc }
 
-func (r *PtraceRegs) SetPC(pc uint64) { r.Tpc = pc }
+func (r *PtraceRegs) SetPC(
+	pc uint64,
+) {
+	r.Tpc = pc
+}
 
 func (iov *Iovec) SetLen(length int) {
 	iov.Len = uint64(length)
@@ -107,6 +115,8 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 	cmsg.Len = uint64(length)
 }
 
-func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(length int) {
+func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(
+	length int,
+) {
 	rsa.Service_name_len = uint64(length)
 }

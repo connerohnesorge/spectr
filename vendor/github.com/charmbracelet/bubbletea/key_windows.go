@@ -14,15 +14,31 @@ import (
 	"github.com/muesli/cancelreader"
 )
 
-func readInputs(ctx context.Context, msgs chan<- Msg, input io.Reader) error {
+func readInputs(
+	ctx context.Context,
+	msgs chan<- Msg,
+	input io.Reader,
+) error {
 	if coninReader, ok := input.(*conInputReader); ok {
-		return readConInputs(ctx, msgs, coninReader)
+		return readConInputs(
+			ctx,
+			msgs,
+			coninReader,
+		)
 	}
 
-	return readAnsiInputs(ctx, msgs, localereader.NewReader(input))
+	return readAnsiInputs(
+		ctx,
+		msgs,
+		localereader.NewReader(input),
+	)
 }
 
-func readConInputs(ctx context.Context, msgsch chan<- Msg, con *conInputReader) error {
+func readConInputs(
+	ctx context.Context,
+	msgsch chan<- Msg,
+	con *conInputReader,
+) error {
 	var ps coninput.ButtonState                 // keep track of previous mouse state
 	var ws coninput.WindowBufferSizeEventRecord // keep track of the last window size event
 	for {
@@ -82,7 +98,10 @@ func readConInputs(ctx context.Context, msgsch chan<- Msg, con *conInputReader) 
 				case <-ctx.Done():
 					err := ctx.Err()
 					if err != nil {
-						return fmt.Errorf("coninput context error: %w", err)
+						return fmt.Errorf(
+							"coninput context error: %w",
+							err,
+						)
 					}
 					return nil
 				}
@@ -94,17 +113,25 @@ func readConInputs(ctx context.Context, msgsch chan<- Msg, con *conInputReader) 
 // Peek for new input in a tight loop and then read the input.
 // windows.CancelIo* does not work reliably so peek first and only use the data if
 // the console input is not cancelled.
-func peekAndReadConsInput(con *conInputReader) ([]coninput.InputRecord, error) {
+func peekAndReadConsInput(
+	con *conInputReader,
+) ([]coninput.InputRecord, error) {
 	events, err := peekConsInput(con)
 	if err != nil {
 		return events, err
 	}
-	events, err = coninput.ReadNConsoleInputs(con.conin, intToUint32OrDie(len(events)))
+	events, err = coninput.ReadNConsoleInputs(
+		con.conin,
+		intToUint32OrDie(len(events)),
+	)
 	if con.isCanceled() {
 		return events, cancelreader.ErrCanceled
 	}
 	if err != nil {
-		return events, fmt.Errorf("read coninput events: %w", err)
+		return events, fmt.Errorf(
+			"read coninput events: %w",
+			err,
+		)
 	}
 	return events, nil
 }
@@ -112,20 +139,32 @@ func peekAndReadConsInput(con *conInputReader) ([]coninput.InputRecord, error) {
 // Convert i to unit32 or panic if it cannot be converted. Check satisfies lint G115.
 func intToUint32OrDie(i int) uint32 {
 	if i < 0 {
-		panic("cannot convert numEvents " + fmt.Sprint(i) + " to uint32")
+		panic(
+			"cannot convert numEvents " + fmt.Sprint(
+				i,
+			) + " to uint32",
+		)
 	}
 	return uint32(i) //nolint:gosec
 }
 
 // Keeps peeking until there is data or the input is cancelled.
-func peekConsInput(con *conInputReader) ([]coninput.InputRecord, error) {
+func peekConsInput(
+	con *conInputReader,
+) ([]coninput.InputRecord, error) {
 	for {
-		events, err := coninput.PeekNConsoleInputs(con.conin, 16)
+		events, err := coninput.PeekNConsoleInputs(
+			con.conin,
+			16,
+		)
 		if con.isCanceled() {
 			return events, cancelreader.ErrCanceled
 		}
 		if err != nil {
-			return events, fmt.Errorf("peek coninput events: %w", err)
+			return events, fmt.Errorf(
+				"peek coninput events: %w",
+				err,
+			)
 		}
 		if len(events) > 0 {
 			return events, nil
@@ -135,7 +174,9 @@ func peekConsInput(con *conInputReader) ([]coninput.InputRecord, error) {
 	}
 }
 
-func mouseEventButton(p, s coninput.ButtonState) (button MouseButton, action MouseAction) {
+func mouseEventButton(
+	p, s coninput.ButtonState,
+) (button MouseButton, action MouseAction) {
 	btn := p ^ s
 	action = MouseActionPress
 	if btn&s == 0 {
@@ -174,17 +215,29 @@ func mouseEventButton(p, s coninput.ButtonState) (button MouseButton, action Mou
 	return button, action
 }
 
-func mouseEvent(p coninput.ButtonState, e coninput.MouseEventRecord) MouseMsg {
+func mouseEvent(
+	p coninput.ButtonState,
+	e coninput.MouseEventRecord,
+) MouseMsg {
 	ev := MouseMsg{
-		X:     int(e.MousePositon.X),
-		Y:     int(e.MousePositon.Y),
-		Alt:   e.ControlKeyState.Contains(coninput.LEFT_ALT_PRESSED | coninput.RIGHT_ALT_PRESSED),
-		Ctrl:  e.ControlKeyState.Contains(coninput.LEFT_CTRL_PRESSED | coninput.RIGHT_CTRL_PRESSED),
-		Shift: e.ControlKeyState.Contains(coninput.SHIFT_PRESSED),
+		X: int(e.MousePositon.X),
+		Y: int(e.MousePositon.Y),
+		Alt: e.ControlKeyState.Contains(
+			coninput.LEFT_ALT_PRESSED | coninput.RIGHT_ALT_PRESSED,
+		),
+		Ctrl: e.ControlKeyState.Contains(
+			coninput.LEFT_CTRL_PRESSED | coninput.RIGHT_CTRL_PRESSED,
+		),
+		Shift: e.ControlKeyState.Contains(
+			coninput.SHIFT_PRESSED,
+		),
 	}
 	switch e.EventFlags {
 	case coninput.CLICK, coninput.DOUBLE_CLICK:
-		ev.Button, ev.Action = mouseEventButton(p, e.ButtonState)
+		ev.Button, ev.Action = mouseEventButton(
+			p,
+			e.ButtonState,
+		)
 		if ev.Action == MouseActionRelease {
 			ev.Type = MouseRelease
 		}
@@ -217,7 +270,10 @@ func mouseEvent(p coninput.ButtonState, e coninput.MouseEventRecord) MouseMsg {
 			ev.Type = MouseWheelLeft
 		}
 	case coninput.MOUSE_MOVED:
-		ev.Button, _ = mouseEventButton(p, e.ButtonState)
+		ev.Button, _ = mouseEventButton(
+			p,
+			e.ButtonState,
+		)
 		ev.Action = MouseActionMotion
 		ev.Type = MouseMotion
 	}
@@ -228,8 +284,12 @@ func mouseEvent(p coninput.ButtonState, e coninput.MouseEventRecord) MouseMsg {
 func keyType(e coninput.KeyEventRecord) KeyType {
 	code := e.VirtualKeyCode
 
-	shiftPressed := e.ControlKeyState.Contains(coninput.SHIFT_PRESSED)
-	ctrlPressed := e.ControlKeyState.Contains(coninput.LEFT_CTRL_PRESSED | coninput.RIGHT_CTRL_PRESSED)
+	shiftPressed := e.ControlKeyState.Contains(
+		coninput.SHIFT_PRESSED,
+	)
+	ctrlPressed := e.ControlKeyState.Contains(
+		coninput.LEFT_CTRL_PRESSED | coninput.RIGHT_CTRL_PRESSED,
+	)
 
 	switch code { //nolint:exhaustive
 	case coninput.VK_RETURN:

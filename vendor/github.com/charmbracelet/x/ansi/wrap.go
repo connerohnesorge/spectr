@@ -19,8 +19,17 @@ const nbsp = 0xA0
 // When preserveSpace is true, spaces at the beginning of a line will be
 // preserved.
 // This treats the text as a sequence of graphemes.
-func Hardwrap(s string, limit int, preserveSpace bool) string {
-	return hardwrap(GraphemeWidth, s, limit, preserveSpace)
+func Hardwrap(
+	s string,
+	limit int,
+	preserveSpace bool,
+) string {
+	return hardwrap(
+		GraphemeWidth,
+		s,
+		limit,
+		preserveSpace,
+	)
 }
 
 // HardwrapWc wraps a string or a block of text to a given line length, breaking
@@ -29,11 +38,25 @@ func Hardwrap(s string, limit int, preserveSpace bool) string {
 // When preserveSpace is true, spaces at the beginning of a line will be
 // preserved.
 // This treats the text as a sequence of wide characters and runes.
-func HardwrapWc(s string, limit int, preserveSpace bool) string {
-	return hardwrap(WcWidth, s, limit, preserveSpace)
+func HardwrapWc(
+	s string,
+	limit int,
+	preserveSpace bool,
+) string {
+	return hardwrap(
+		WcWidth,
+		s,
+		limit,
+		preserveSpace,
+	)
 }
 
-func hardwrap(m Method, s string, limit int, preserveSpace bool) string {
+func hardwrap(
+	m Method,
+	s string,
+	limit int,
+	preserveSpace bool,
+) string {
 	if limit < 1 {
 		return s
 	}
@@ -54,21 +77,31 @@ func hardwrap(m Method, s string, limit int, preserveSpace bool) string {
 
 	i := 0
 	for i < len(b) {
-		state, action := parser.Table.Transition(pstate, b[i])
+		state, action := parser.Table.Transition(
+			pstate,
+			b[i],
+		)
 		if state == parser.Utf8State { //nolint:nestif
 			var width int
-			cluster, _, width, _ = uniseg.FirstGraphemeCluster(b[i:], -1)
+			cluster, _, width, _ = uniseg.FirstGraphemeCluster(
+				b[i:],
+				-1,
+			)
 			if m == WcWidth {
-				width = runewidth.StringWidth(string(cluster))
+				width = runewidth.StringWidth(
+					string(cluster),
+				)
 			}
 			i += len(cluster)
 
 			if curWidth+width > limit {
 				addNewline()
 			}
-			if !preserveSpace && curWidth == 0 && len(cluster) <= 4 {
+			if !preserveSpace && curWidth == 0 &&
+				len(cluster) <= 4 {
 				// Skip spaces at the beginning of a line
-				if r, _ := utf8.DecodeRune(cluster); r != utf8.RuneError && unicode.IsSpace(r) {
+				if r, _ := utf8.DecodeRune(cluster); r != utf8.RuneError &&
+					unicode.IsSpace(r) {
 					pstate = parser.GroundState
 					continue
 				}
@@ -81,7 +114,8 @@ func hardwrap(m Method, s string, limit int, preserveSpace bool) string {
 		}
 
 		switch action {
-		case parser.PrintAction, parser.ExecuteAction:
+		case parser.PrintAction,
+			parser.ExecuteAction:
 			if b[i] == '\n' {
 				addNewline()
 				forceNewline = false
@@ -95,7 +129,9 @@ func hardwrap(m Method, s string, limit int, preserveSpace bool) string {
 
 			// Skip spaces at the beginning of a line
 			if curWidth == 0 {
-				if !preserveSpace && forceNewline && unicode.IsSpace(rune(b[i])) {
+				if !preserveSpace &&
+					forceNewline &&
+					unicode.IsSpace(rune(b[i])) {
 					break
 				}
 				forceNewline = false
@@ -129,8 +165,17 @@ func hardwrap(m Method, s string, limit int, preserveSpace bool) string {
 // Note: breakpoints must be a string of 1-cell wide rune characters.
 //
 // This treats the text as a sequence of graphemes.
-func Wordwrap(s string, limit int, breakpoints string) string {
-	return wordwrap(GraphemeWidth, s, limit, breakpoints)
+func Wordwrap(
+	s string,
+	limit int,
+	breakpoints string,
+) string {
+	return wordwrap(
+		GraphemeWidth,
+		s,
+		limit,
+		breakpoints,
+	)
 }
 
 // WordwrapWc wraps a string or a block of text to a given line length, not
@@ -143,11 +188,25 @@ func Wordwrap(s string, limit int, breakpoints string) string {
 // Note: breakpoints must be a string of 1-cell wide rune characters.
 //
 // This treats the text as a sequence of wide characters and runes.
-func WordwrapWc(s string, limit int, breakpoints string) string {
-	return wordwrap(WcWidth, s, limit, breakpoints)
+func WordwrapWc(
+	s string,
+	limit int,
+	breakpoints string,
+) string {
+	return wordwrap(
+		WcWidth,
+		s,
+		limit,
+		breakpoints,
+	)
 }
 
-func wordwrap(m Method, s string, limit int, breakpoints string) string {
+func wordwrap(
+	m Method,
+	s string,
+	limit int,
+	breakpoints string,
+) string {
 	if limit < 1 {
 		return s
 	}
@@ -189,17 +248,27 @@ func wordwrap(m Method, s string, limit int, breakpoints string) string {
 
 	i := 0
 	for i < len(b) {
-		state, action := parser.Table.Transition(pstate, b[i])
+		state, action := parser.Table.Transition(
+			pstate,
+			b[i],
+		)
 		if state == parser.Utf8State { //nolint:nestif
 			var width int
-			cluster, _, width, _ = uniseg.FirstGraphemeCluster(b[i:], -1)
+			cluster, _, width, _ = uniseg.FirstGraphemeCluster(
+				b[i:],
+				-1,
+			)
 			if m == WcWidth {
-				width = runewidth.StringWidth(string(cluster))
+				width = runewidth.StringWidth(
+					string(cluster),
+				)
 			}
 			i += len(cluster)
 
 			r, _ := utf8.DecodeRune(cluster)
-			if r != utf8.RuneError && unicode.IsSpace(r) && r != nbsp {
+			if r != utf8.RuneError &&
+				unicode.IsSpace(r) &&
+				r != nbsp {
 				addWord()
 				space.WriteRune(r)
 			} else if bytes.ContainsAny(cluster, breakpoints) {
@@ -221,7 +290,8 @@ func wordwrap(m Method, s string, limit int, breakpoints string) string {
 		}
 
 		switch action {
-		case parser.PrintAction, parser.ExecuteAction:
+		case parser.PrintAction,
+			parser.ExecuteAction:
 			r := rune(b[i])
 			switch {
 			case r == '\n':
@@ -280,8 +350,17 @@ func wordwrap(m Method, s string, limit int, breakpoints string) string {
 // Note: breakpoints must be a string of 1-cell wide rune characters.
 //
 // This treats the text as a sequence of graphemes.
-func Wrap(s string, limit int, breakpoints string) string {
-	return wrap(GraphemeWidth, s, limit, breakpoints)
+func Wrap(
+	s string,
+	limit int,
+	breakpoints string,
+) string {
+	return wrap(
+		GraphemeWidth,
+		s,
+		limit,
+		breakpoints,
+	)
 }
 
 // WrapWc wraps a string or a block of text to a given line length, breaking word
@@ -293,11 +372,20 @@ func Wrap(s string, limit int, breakpoints string) string {
 // Note: breakpoints must be a string of 1-cell wide rune characters.
 //
 // This treats the text as a sequence of wide characters and runes.
-func WrapWc(s string, limit int, breakpoints string) string {
+func WrapWc(
+	s string,
+	limit int,
+	breakpoints string,
+) string {
 	return wrap(WcWidth, s, limit, breakpoints)
 }
 
-func wrap(m Method, s string, limit int, breakpoints string) string {
+func wrap(
+	m Method,
+	s string,
+	limit int,
+	breakpoints string,
+) string {
 	if limit < 1 {
 		return s
 	}
@@ -342,12 +430,20 @@ func wrap(m Method, s string, limit int, breakpoints string) string {
 
 	i := 0
 	for i < len(b) {
-		state, action := parser.Table.Transition(pstate, b[i])
+		state, action := parser.Table.Transition(
+			pstate,
+			b[i],
+		)
 		if state == parser.Utf8State { //nolint:nestif
 			var width int
-			cluster, _, width, _ = uniseg.FirstGraphemeCluster(b[i:], -1)
+			cluster, _, width, _ = uniseg.FirstGraphemeCluster(
+				b[i:],
+				-1,
+			)
 			if m == WcWidth {
-				width = runewidth.StringWidth(string(cluster))
+				width = runewidth.StringWidth(
+					string(cluster),
+				)
 			}
 			i += len(cluster)
 
@@ -386,7 +482,8 @@ func wrap(m Method, s string, limit int, breakpoints string) string {
 		}
 
 		switch action {
-		case parser.PrintAction, parser.ExecuteAction:
+		case parser.PrintAction,
+			parser.ExecuteAction:
 			switch r := rune(b[i]); {
 			case r == '\n':
 				if wordLen == 0 {

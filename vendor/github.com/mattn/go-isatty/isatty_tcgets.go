@@ -9,7 +9,10 @@ import "golang.org/x/sys/unix"
 
 // IsTerminal return true if the file descriptor is terminal.
 func IsTerminal(fd uintptr) bool {
-	_, err := unix.IoctlGetTermios(int(fd), unix.TCGETS)
+	_, err := unix.IoctlGetTermios(
+		int(fd),
+		unix.TCGETS,
+	)
 	return err == nil
 }
 

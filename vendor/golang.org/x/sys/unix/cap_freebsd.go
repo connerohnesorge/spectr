@@ -20,12 +20,10 @@ const (
 	capArSizeMax       = capRightsGoVersion + 2
 )
 
-var (
-	bit2idx = []int{
-		-1, 0, 1, -1, 2, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, -1,
-		4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-	}
-)
+var bit2idx = []int{
+	-1, 0, 1, -1, 2, -1, -1, -1, 3, -1, -1, -1, -1, -1, -1, -1,
+	4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+}
 
 func capidxbit(right uint64) int {
 	return int((right >> 57) & 0x1f)
@@ -34,7 +32,10 @@ func capidxbit(right uint64) int {
 func rightToIndex(right uint64) (int, error) {
 	idx := capidxbit(right)
 	if idx < 0 || idx >= len(bit2idx) {
-		return -2, fmt.Errorf("index for right 0x%x out of range", right)
+		return -2, fmt.Errorf(
+			"index for right 0x%x out of range",
+			right,
+		)
 	}
 	return bit2idx[idx], nil
 }
@@ -52,10 +53,16 @@ func caparsize(rights *CapRights) int {
 }
 
 // CapRightsSet sets the permissions in setrights in rights.
-func CapRightsSet(rights *CapRights, setrights []uint64) error {
+func CapRightsSet(
+	rights *CapRights,
+	setrights []uint64,
+) error {
 	// This is essentially a copy of cap_rights_vset()
 	if capver(rights) != CAP_RIGHTS_VERSION_00 {
-		return fmt.Errorf("bad rights version %d", capver(rights))
+		return fmt.Errorf(
+			"bad rights version %d",
+			capver(rights),
+		)
 	}
 
 	n := caparsize(rights)
@@ -64,7 +71,9 @@ func CapRightsSet(rights *CapRights, setrights []uint64) error {
 	}
 
 	for _, right := range setrights {
-		if caprver(right) != CAP_RIGHTS_VERSION_00 {
+		if caprver(
+			right,
+		) != CAP_RIGHTS_VERSION_00 {
 			return errors.New("bad right version")
 		}
 		i, err := rightToIndex(right)
@@ -74,12 +83,22 @@ func CapRightsSet(rights *CapRights, setrights []uint64) error {
 		if i >= n {
 			return errors.New("index overflow")
 		}
-		if capidxbit(rights.Rights[i]) != capidxbit(right) {
+		if capidxbit(
+			rights.Rights[i],
+		) != capidxbit(
+			right,
+		) {
 			return errors.New("index mismatch")
 		}
 		rights.Rights[i] |= right
-		if capidxbit(rights.Rights[i]) != capidxbit(right) {
-			return errors.New("index mismatch (after assign)")
+		if capidxbit(
+			rights.Rights[i],
+		) != capidxbit(
+			right,
+		) {
+			return errors.New(
+				"index mismatch (after assign)",
+			)
 		}
 	}
 
@@ -87,10 +106,16 @@ func CapRightsSet(rights *CapRights, setrights []uint64) error {
 }
 
 // CapRightsClear clears the permissions in clearrights from rights.
-func CapRightsClear(rights *CapRights, clearrights []uint64) error {
+func CapRightsClear(
+	rights *CapRights,
+	clearrights []uint64,
+) error {
 	// This is essentially a copy of cap_rights_vclear()
 	if capver(rights) != CAP_RIGHTS_VERSION_00 {
-		return fmt.Errorf("bad rights version %d", capver(rights))
+		return fmt.Errorf(
+			"bad rights version %d",
+			capver(rights),
+		)
 	}
 
 	n := caparsize(rights)
@@ -99,7 +124,9 @@ func CapRightsClear(rights *CapRights, clearrights []uint64) error {
 	}
 
 	for _, right := range clearrights {
-		if caprver(right) != CAP_RIGHTS_VERSION_00 {
+		if caprver(
+			right,
+		) != CAP_RIGHTS_VERSION_00 {
 			return errors.New("bad right version")
 		}
 		i, err := rightToIndex(right)
@@ -109,12 +136,22 @@ func CapRightsClear(rights *CapRights, clearrights []uint64) error {
 		if i >= n {
 			return errors.New("index overflow")
 		}
-		if capidxbit(rights.Rights[i]) != capidxbit(right) {
+		if capidxbit(
+			rights.Rights[i],
+		) != capidxbit(
+			right,
+		) {
 			return errors.New("index mismatch")
 		}
 		rights.Rights[i] &= ^(right & 0x01FFFFFFFFFFFFFF)
-		if capidxbit(rights.Rights[i]) != capidxbit(right) {
-			return errors.New("index mismatch (after assign)")
+		if capidxbit(
+			rights.Rights[i],
+		) != capidxbit(
+			right,
+		) {
+			return errors.New(
+				"index mismatch (after assign)",
+			)
 		}
 	}
 
@@ -122,30 +159,50 @@ func CapRightsClear(rights *CapRights, clearrights []uint64) error {
 }
 
 // CapRightsIsSet checks whether all the permissions in setrights are present in rights.
-func CapRightsIsSet(rights *CapRights, setrights []uint64) (bool, error) {
+func CapRightsIsSet(
+	rights *CapRights,
+	setrights []uint64,
+) (bool, error) {
 	// This is essentially a copy of cap_rights_is_vset()
 	if capver(rights) != CAP_RIGHTS_VERSION_00 {
-		return false, fmt.Errorf("bad rights version %d", capver(rights))
+		return false, fmt.Errorf(
+			"bad rights version %d",
+			capver(rights),
+		)
 	}
 
 	n := caparsize(rights)
 	if n < capArSizeMin || n > capArSizeMax {
-		return false, errors.New("bad rights size")
+		return false, errors.New(
+			"bad rights size",
+		)
 	}
 
 	for _, right := range setrights {
-		if caprver(right) != CAP_RIGHTS_VERSION_00 {
-			return false, errors.New("bad right version")
+		if caprver(
+			right,
+		) != CAP_RIGHTS_VERSION_00 {
+			return false, errors.New(
+				"bad right version",
+			)
 		}
 		i, err := rightToIndex(right)
 		if err != nil {
 			return false, err
 		}
 		if i >= n {
-			return false, errors.New("index overflow")
+			return false, errors.New(
+				"index overflow",
+			)
 		}
-		if capidxbit(rights.Rights[i]) != capidxbit(right) {
-			return false, errors.New("index mismatch")
+		if capidxbit(
+			rights.Rights[i],
+		) != capidxbit(
+			right,
+		) {
+			return false, errors.New(
+				"index mismatch",
+			)
 		}
 		if (rights.Rights[i] & right) != right {
 			return false, nil
@@ -161,9 +218,14 @@ func capright(idx uint64, bit uint64) uint64 {
 
 // CapRightsInit returns a pointer to an initialised CapRights structure filled with rights.
 // See man cap_rights_init(3) and rights(4).
-func CapRightsInit(rights []uint64) (*CapRights, error) {
+func CapRightsInit(
+	rights []uint64,
+) (*CapRights, error) {
 	var r CapRights
-	r.Rights[0] = (capRightsGoVersion << 62) | capright(0, 0)
+	r.Rights[0] = (capRightsGoVersion << 62) | capright(
+		0,
+		0,
+	)
 	r.Rights[1] = capright(1, 0)
 
 	err := CapRightsSet(&r, rights)
@@ -176,18 +238,27 @@ func CapRightsInit(rights []uint64) (*CapRights, error) {
 // CapRightsLimit reduces the operations permitted on fd to at most those contained in rights.
 // The capability rights on fd can never be increased by CapRightsLimit.
 // See man cap_rights_limit(2) and rights(4).
-func CapRightsLimit(fd uintptr, rights *CapRights) error {
+func CapRightsLimit(
+	fd uintptr,
+	rights *CapRights,
+) error {
 	return capRightsLimit(int(fd), rights)
 }
 
 // CapRightsGet returns a CapRights structure containing the operations permitted on fd.
 // See man cap_rights_get(3) and rights(4).
-func CapRightsGet(fd uintptr) (*CapRights, error) {
+func CapRightsGet(
+	fd uintptr,
+) (*CapRights, error) {
 	r, err := CapRightsInit(nil)
 	if err != nil {
 		return nil, err
 	}
-	err = capRightsGet(capRightsGoVersion, int(fd), r)
+	err = capRightsGet(
+		capRightsGoVersion,
+		int(fd),
+		r,
+	)
 	if err != nil {
 		return nil, err
 	}

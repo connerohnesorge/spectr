@@ -49,7 +49,9 @@ var (
 )
 
 // Convert transforms a given Color to a Color supported within the Profile.
-func (p Profile) Convert(c color.Color) (cc color.Color) {
+func (p Profile) Convert(
+	c color.Color,
+) (cc color.Color) {
 	if p <= Ascii {
 		return nil
 	}

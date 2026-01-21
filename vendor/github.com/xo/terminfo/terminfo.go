@@ -122,22 +122,33 @@ func Decode(buf []byte) (*Terminfo, error) {
 	}
 	names = names[:i]
 	// read bool caps
-	bools, boolsM, err := d.readBools(h[fieldBoolCount])
+	bools, boolsM, err := d.readBools(
+		h[fieldBoolCount],
+	)
 	if err != nil {
 		return nil, err
 	}
 	// read num caps
-	nums, numsM, err := d.readNums(h[fieldNumCount], numWidth)
+	nums, numsM, err := d.readNums(
+		h[fieldNumCount],
+		numWidth,
+	)
 	if err != nil {
 		return nil, err
 	}
 	// read string caps
-	strs, strsM, err := d.readStrings(h[fieldStringCount], h[fieldTableSize])
+	strs, strsM, err := d.readStrings(
+		h[fieldStringCount],
+		h[fieldTableSize],
+	)
 	if err != nil {
 		return nil, err
 	}
 	ti := &Terminfo{
-		Names:    strings.Split(string(names), "|"),
+		Names: strings.Split(
+			string(names),
+			"|",
+		),
 		Bools:    bools,
 		BoolsM:   boolsM,
 		Nums:     nums,
@@ -163,22 +174,32 @@ func Decode(buf []byte) (*Terminfo, error) {
 		return nil, ErrInvalidExtendedHeader
 	}
 	// read extended bool caps
-	ti.ExtBools, _, err = d.readBools(eh[fieldExtBoolCount])
+	ti.ExtBools, _, err = d.readBools(
+		eh[fieldExtBoolCount],
+	)
 	if err != nil {
 		return nil, err
 	}
 	// read extended num caps
-	ti.ExtNums, _, err = d.readNums(eh[fieldExtNumCount], numWidth)
+	ti.ExtNums, _, err = d.readNums(
+		eh[fieldExtNumCount],
+		numWidth,
+	)
 	if err != nil {
 		return nil, err
 	}
 	// read extended string data table indexes
-	extIndexes, err := d.readInts(eh[fieldExtOffsetCount], 16)
+	extIndexes, err := d.readInts(
+		eh[fieldExtOffsetCount],
+		16,
+	)
 	if err != nil {
 		return nil, err
 	}
 	// read string data table
-	extData, err := d.readBytes(eh[fieldExtTableSize])
+	extData, err := d.readBytes(
+		eh[fieldExtTableSize],
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -188,25 +209,41 @@ func Decode(buf []byte) (*Terminfo, error) {
 	}
 	var last int
 	// read extended string caps
-	ti.ExtStrings, last, err = readStrings(extIndexes, extData, eh[fieldExtStringCount])
+	ti.ExtStrings, last, err = readStrings(
+		extIndexes,
+		extData,
+		eh[fieldExtStringCount],
+	)
 	if err != nil {
 		return nil, err
 	}
 	extIndexes, extData = extIndexes[eh[fieldExtStringCount]:], extData[last:]
 	// read extended bool names
-	ti.ExtBoolNames, _, err = readStrings(extIndexes, extData, eh[fieldExtBoolCount])
+	ti.ExtBoolNames, _, err = readStrings(
+		extIndexes,
+		extData,
+		eh[fieldExtBoolCount],
+	)
 	if err != nil {
 		return nil, err
 	}
 	extIndexes = extIndexes[eh[fieldExtBoolCount]:]
 	// read extended num names
-	ti.ExtNumNames, _, err = readStrings(extIndexes, extData, eh[fieldExtNumCount])
+	ti.ExtNumNames, _, err = readStrings(
+		extIndexes,
+		extData,
+		eh[fieldExtNumCount],
+	)
 	if err != nil {
 		return nil, err
 	}
 	extIndexes = extIndexes[eh[fieldExtNumCount]:]
 	// read extended string names
-	ti.ExtStringNames, _, err = readStrings(extIndexes, extData, eh[fieldExtStringCount])
+	ti.ExtStringNames, _, err = readStrings(
+		extIndexes,
+		extData,
+		eh[fieldExtStringCount],
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -250,8 +287,14 @@ func Open(dir, name string) (*Terminfo, error) {
 
 // boolCaps returns all bool and extended capabilities using f to format the
 // index key.
-func (ti *Terminfo) boolCaps(f func(int) string, extended bool) map[string]bool {
-	m := make(map[string]bool, len(ti.Bools)+len(ti.ExtBools))
+func (ti *Terminfo) boolCaps(
+	f func(int) string,
+	extended bool,
+) map[string]bool {
+	m := make(
+		map[string]bool,
+		len(ti.Bools)+len(ti.ExtBools),
+	)
 	if !extended {
 		for k, v := range ti.Bools {
 			m[f(k)] = v
@@ -288,8 +331,14 @@ func (ti *Terminfo) ExtBoolCapsShort() map[string]bool {
 
 // numCaps returns all num and extended capabilities using f to format the
 // index key.
-func (ti *Terminfo) numCaps(f func(int) string, extended bool) map[string]int {
-	m := make(map[string]int, len(ti.Nums)+len(ti.ExtNums))
+func (ti *Terminfo) numCaps(
+	f func(int) string,
+	extended bool,
+) map[string]int {
+	m := make(
+		map[string]int,
+		len(ti.Nums)+len(ti.ExtNums),
+	)
 	if !extended {
 		for k, v := range ti.Nums {
 			m[f(k)] = v
@@ -326,8 +375,14 @@ func (ti *Terminfo) ExtNumCapsShort() map[string]int {
 
 // stringCaps returns all string and extended capabilities using f to format the
 // index key.
-func (ti *Terminfo) stringCaps(f func(int) string, extended bool) map[string][]byte {
-	m := make(map[string][]byte, len(ti.Strings)+len(ti.ExtStrings))
+func (ti *Terminfo) stringCaps(
+	f func(int) string,
+	extended bool,
+) map[string][]byte {
+	m := make(
+		map[string][]byte,
+		len(ti.Strings)+len(ti.ExtStrings),
+	)
 	if !extended {
 		for k, v := range ti.Strings {
 			m[f(k)] = v
@@ -348,7 +403,10 @@ func (ti *Terminfo) StringCaps() map[string][]byte {
 // StringCapsShort returns all string capabilities, using the short name as the
 // index.
 func (ti *Terminfo) StringCapsShort() map[string][]byte {
-	return ti.stringCaps(StringCapNameShort, false)
+	return ti.stringCaps(
+		StringCapNameShort,
+		false,
+	)
 }
 
 // ExtStringCaps returns all extended string capabilities.
@@ -377,18 +435,28 @@ func (ti *Terminfo) Num(i int) int {
 }
 
 // Printf formats the string cap i, interpolating parameters v.
-func (ti *Terminfo) Printf(i int, v ...interface{}) string {
+func (ti *Terminfo) Printf(
+	i int,
+	v ...interface{},
+) string {
 	return Printf(ti.Strings[i], v...)
 }
 
 // Fprintf prints the string cap i to writer w, interpolating parameters v.
-func (ti *Terminfo) Fprintf(w io.Writer, i int, v ...interface{}) {
+func (ti *Terminfo) Fprintf(
+	w io.Writer,
+	i int,
+	v ...interface{},
+) {
 	Fprintf(w, ti.Strings[i], v...)
 }
 
 // Color takes a foreground and background color and returns string that sets
 // them for this terminal.
-func (ti *Terminfo) Colorf(fg, bg int, str string) string {
+func (ti *Terminfo) Colorf(
+	fg, bg int,
+	str string,
+) string {
 	maxColors := int(ti.Nums[MaxColors])
 	// map bright colors to lower versions if the color table only holds 8.
 	if maxColors == 8 {
@@ -412,7 +480,11 @@ func (ti *Terminfo) Colorf(fg, bg int, str string) string {
 // Goto returns a string suitable for addressing the cursor at the given
 // row and column. The origin 0, 0 is in the upper left corner of the screen.
 func (ti *Terminfo) Goto(row, col int) string {
-	return Printf(ti.Strings[CursorAddress], row, col)
+	return Printf(
+		ti.Strings[CursorAddress],
+		row,
+		col,
+	)
 }
 
 // Puts emits the string to the writer, but expands inline padding indications

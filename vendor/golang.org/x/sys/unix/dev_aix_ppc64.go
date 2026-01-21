@@ -11,7 +11,9 @@ package unix
 
 // Major returns the major component of a Linux device number.
 func Major(dev uint64) uint32 {
-	return uint32((dev & 0x3fffffff00000000) >> 32)
+	return uint32(
+		(dev & 0x3fffffff00000000) >> 32,
+	)
 }
 
 // Minor returns the minor component of a Linux device number.

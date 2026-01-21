@@ -434,7 +434,8 @@ func parseTasksMd(
 		}
 
 		// If we're in continuation mode and line is indented, add to last task's description
-		if continuingTask != nil && isContinuationLine(line) {
+		if continuingTask != nil &&
+			isContinuationLine(line) {
 			continuingTask.Description += "\n" + line
 
 			continue

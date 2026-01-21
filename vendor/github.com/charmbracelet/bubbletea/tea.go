@@ -27,14 +27,20 @@ import (
 )
 
 // ErrProgramPanic is returned by [Program.Run] when the program recovers from a panic.
-var ErrProgramPanic = errors.New("program experienced a panic")
+var ErrProgramPanic = errors.New(
+	"program experienced a panic",
+)
 
 // ErrProgramKilled is returned by [Program.Run] when the program gets killed.
-var ErrProgramKilled = errors.New("program was killed")
+var ErrProgramKilled = errors.New(
+	"program was killed",
+)
 
 // ErrInterrupted is returned by [Program.Run] when the program get a SIGINT
 // signal, or when it receives a [InterruptMsg].
-var ErrInterrupted = errors.New("program was interrupted")
+var ErrInterrupted = errors.New(
+	"program was interrupted",
+)
 
 // Msg contain data from the result of a IO operation. Msgs trigger the update
 // function and, henceforth, the UI.
@@ -88,7 +94,9 @@ func (i inputType) String() string {
 // The options here are treated as bits.
 type startupOptions int16
 
-func (s startupOptions) has(option startupOptions) bool {
+func (s startupOptions) has(
+	option startupOptions,
+) bool {
 	return s&option != 0
 }
 
@@ -238,7 +246,10 @@ func Interrupt() Msg {
 }
 
 // NewProgram creates a new Program.
-func NewProgram(model Model, opts ...ProgramOption) *Program {
+func NewProgram(
+	model Model,
+	opts ...ProgramOption,
+) *Program {
 	p := &Program{
 		initialModel: model,
 		msgs:         make(chan Msg),
@@ -255,7 +266,9 @@ func NewProgram(model Model, opts ...ProgramOption) *Program {
 		p.externalCtx = context.Background()
 	}
 	// Initialize context and teardown channel.
-	p.ctx, p.cancel = context.WithCancel(p.externalCtx)
+	p.ctx, p.cancel = context.WithCancel(
+		p.externalCtx,
+	)
 
 	// if no output was set, set it to stdout
 	if p.output == nil {
@@ -283,7 +296,11 @@ func (p *Program) handleSignals() chan struct{} {
 	// SIGTERM is sent by unix utilities (like kill) to terminate a process.
 	go func() {
 		sig := make(chan os.Signal, 1)
-		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(
+			sig,
+			syscall.SIGINT,
+			syscall.SIGTERM,
+		)
 		defer func() {
 			signal.Stop(sig)
 			close(ch)
@@ -295,7 +312,9 @@ func (p *Program) handleSignals() chan struct{} {
 				return
 
 			case s := <-sig:
-				if atomic.LoadUint32(&p.ignoreSignals) == 0 {
+				if atomic.LoadUint32(
+					&p.ignoreSignals,
+				) == 0 {
 					switch s {
 					case syscall.SIGINT:
 						p.msgs <- InterruptMsg{}
@@ -330,7 +349,9 @@ func (p *Program) handleResize() chan struct{} {
 
 // handleCommands runs commands in a goroutine and sends the result to the
 // program's message channel.
-func (p *Program) handleCommands(cmds chan Cmd) chan struct{} {
+func (p *Program) handleCommands(
+	cmds chan Cmd,
+) chan struct{} {
 	ch := make(chan struct{})
 
 	go func() {
@@ -353,10 +374,14 @@ func (p *Program) handleCommands(cmds chan Cmd) chan struct{} {
 				// until Cmd returns.
 				go func() {
 					// Recover from panics.
-					if !p.startupOptions.has(withoutCatchPanics) {
+					if !p.startupOptions.has(
+						withoutCatchPanics,
+					) {
 						defer func() {
 							if r := recover(); r != nil {
-								p.recoverFromGoPanic(r)
+								p.recoverFromGoPanic(
+									r,
+								)
 							}
 						}()
 					}
@@ -379,7 +404,10 @@ func (p *Program) disableMouse() {
 
 // eventLoop is the central message loop. It receives and handles the default
 // Bubble Tea messages, update the model and triggers redraws.
-func (p *Program) eventLoop(model Model, cmds chan Cmd) (Model, error) {
+func (p *Program) eventLoop(
+	model Model,
+	cmds chan Cmd,
+) (Model, error) {
 	for {
 		select {
 		case <-p.ctx.Done():
@@ -491,7 +519,9 @@ func (p *Program) eventLoop(model Model, cmds chan Cmd) (Model, error) {
 			}
 
 			var cmd Cmd
-			model, cmd = model.Update(msg) // run update
+			model, cmd = model.Update(
+				msg,
+			) // run update
 
 			select {
 			case <-p.ctx.Done():
@@ -499,12 +529,16 @@ func (p *Program) eventLoop(model Model, cmds chan Cmd) (Model, error) {
 			case cmds <- cmd: // process command (if any)
 			}
 
-			p.renderer.write(model.View()) // send view to renderer
+			p.renderer.write(
+				model.View(),
+			) // send view to renderer
 		}
 	}
 }
 
-func (p *Program) execSequenceMsg(msg sequenceMsg) {
+func (p *Program) execSequenceMsg(
+	msg sequenceMsg,
+) {
 	if !p.startupOptions.has(withoutCatchPanics) {
 		defer func() {
 			if r := recover(); r != nil {
@@ -549,7 +583,9 @@ func (p *Program) execBatchMsg(msg BatchMsg) {
 		go func() {
 			defer wg.Done()
 
-			if !p.startupOptions.has(withoutCatchPanics) {
+			if !p.startupOptions.has(
+				withoutCatchPanics,
+			) {
 				defer func() {
 					if r := recover(); r != nil {
 						p.recoverFromGoPanic(r)
@@ -626,7 +662,9 @@ func (p *Program) Run() (returnModel Model, returnErr error) {
 	}
 
 	// Handle signals.
-	if !p.startupOptions.has(withoutSignalHandler) {
+	if !p.startupOptions.has(
+		withoutSignalHandler,
+	) {
 		p.handlers.add(p.handleSignals())
 	}
 
@@ -634,7 +672,11 @@ func (p *Program) Run() (returnModel Model, returnErr error) {
 	if !p.startupOptions.has(withoutCatchPanics) {
 		defer func() {
 			if r := recover(); r != nil {
-				returnErr = fmt.Errorf("%w: %w", ErrProgramKilled, ErrProgramPanic)
+				returnErr = fmt.Errorf(
+					"%w: %w",
+					ErrProgramKilled,
+					ErrProgramPanic,
+				)
 				p.recoverFromPanic(r)
 			}
 		}()
@@ -642,7 +684,13 @@ func (p *Program) Run() (returnModel Model, returnErr error) {
 
 	// If no renderer is set use the standard one.
 	if p.renderer == nil {
-		p.renderer = newRenderer(p.output, p.startupOptions.has(withANSICompressor), p.fps)
+		p.renderer = newRenderer(
+			p.output,
+			p.startupOptions.has(
+				withANSICompressor,
+			),
+			p.fps,
+		)
 	}
 
 	// Check if output is a TTY before entering raw mode, hiding the cursor and
@@ -671,7 +719,8 @@ func (p *Program) Run() (returnModel Model, returnErr error) {
 
 	// XXX: Should we enable mouse mode on Windows?
 	// This needs to happen before initializing the cancel and input reader.
-	p.mouseMode = p.startupOptions&withMouseCellMotion != 0 || p.startupOptions&withMouseAllMotion != 0
+	p.mouseMode = p.startupOptions&withMouseCellMotion != 0 ||
+		p.startupOptions&withMouseAllMotion != 0
 
 	if p.startupOptions&withReportFocus != 0 {
 		p.renderer.enableReportFocus()
@@ -719,12 +768,19 @@ func (p *Program) Run() (returnModel Model, returnErr error) {
 		err = <-p.errs // Drain a leftover error in case eventLoop crashed
 	}
 
-	killed := p.externalCtx.Err() != nil || p.ctx.Err() != nil || err != nil
+	killed := p.externalCtx.Err() != nil ||
+		p.ctx.Err() != nil ||
+		err != nil
 	if killed {
-		if err == nil && p.externalCtx.Err() != nil {
+		if err == nil &&
+			p.externalCtx.Err() != nil {
 			// Return also as context error the cancellation of an external context.
 			// This is the context the user knows about and should be able to act on.
-			err = fmt.Errorf("%w: %w", ErrProgramKilled, p.externalCtx.Err())
+			err = fmt.Errorf(
+				"%w: %w",
+				ErrProgramKilled,
+				p.externalCtx.Err(),
+			)
 		} else if err == nil && p.ctx.Err() != nil {
 			// Return only that the program was killed (not the internal mechanism).
 			// The user does not know or need to care about the internal program context.
@@ -837,25 +893,37 @@ func (p *Program) shutdown(kill bool) {
 
 // recoverFromPanic recovers from a panic, prints the stack trace, and restores
 // the terminal to a usable state.
-func (p *Program) recoverFromPanic(r interface{}) {
+func (p *Program) recoverFromPanic(
+	r interface{},
+) {
 	select {
 	case p.errs <- ErrProgramPanic:
 	default:
 	}
-	p.shutdown(true) // Ok to call here, p.Run() cannot do it anymore.
-	fmt.Printf("Caught panic:\n\n%s\n\nRestoring terminal...\n\n", r)
+	p.shutdown(
+		true,
+	) // Ok to call here, p.Run() cannot do it anymore.
+	fmt.Printf(
+		"Caught panic:\n\n%s\n\nRestoring terminal...\n\n",
+		r,
+	)
 	debug.PrintStack()
 }
 
 // recoverFromGoPanic recovers from a goroutine panic, prints a stack trace and
 // signals for the program to be killed and terminal restored to a usable state.
-func (p *Program) recoverFromGoPanic(r interface{}) {
+func (p *Program) recoverFromGoPanic(
+	r interface{},
+) {
 	select {
 	case p.errs <- ErrProgramPanic:
 	default:
 	}
 	p.cancel()
-	fmt.Printf("Caught goroutine panic:\n\n%s\n\nRestoring terminal...\n\n", r)
+	fmt.Printf(
+		"Caught goroutine panic:\n\n%s\n\nRestoring terminal...\n\n",
+		r,
+	)
 	debug.PrintStack()
 }
 
@@ -934,7 +1002,10 @@ func (p *Program) Println(args ...interface{}) {
 // its own line.
 //
 // If the altscreen is active no output will be printed.
-func (p *Program) Printf(template string, args ...interface{}) {
+func (p *Program) Printf(
+	template string,
+	args ...interface{},
+) {
 	p.msgs <- printLineMessage{
 		messageBody: fmt.Sprintf(template, args...),
 	}

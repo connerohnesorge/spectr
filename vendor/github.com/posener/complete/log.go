@@ -14,9 +14,13 @@ import (
 var Log = getLogger()
 
 func getLogger() func(format string, args ...interface{}) {
-	var logfile = ioutil.Discard
+	logfile := ioutil.Discard
 	if os.Getenv(envDebug) != "" {
 		logfile = os.Stderr
 	}
-	return log.New(logfile, "complete ", log.Flags()).Printf
+	return log.New(
+		logfile,
+		"complete ",
+		log.Flags(),
+	).Printf
 }

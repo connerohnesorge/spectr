@@ -11,7 +11,10 @@ func NewReader(r io.Reader) io.Reader {
 
 func UTF8(b []byte) ([]byte, error) {
 	var buf bytes.Buffer
-	n, err := io.Copy(&buf, newReader(bytes.NewReader(b)))
+	n, err := io.Copy(
+		&buf,
+		newReader(bytes.NewReader(b)),
+	)
 	if err != nil {
 		return nil, err
 	}

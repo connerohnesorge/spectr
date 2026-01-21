@@ -1040,7 +1040,9 @@ func TestCountTasksFromJson_AllScenarios(
 	}
 }
 
-func TestReadTasksJsonWithTrailingCommas(t *testing.T) {
+func TestReadTasksJsonWithTrailingCommas(
+	t *testing.T,
+) {
 	tests := []struct {
 		name              string
 		content           string
@@ -1109,27 +1111,47 @@ func TestReadTasksJsonWithTrailingCommas(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			filePath := filepath.Join(tmpDir, "tasks.jsonc")
+			filePath := filepath.Join(
+				tmpDir,
+				"tasks.jsonc",
+			)
 			if err := os.WriteFile(filePath, []byte(tt.content), 0o644); err != nil {
 				t.Fatal(err)
 			}
 
-			tasksFile, err := ReadTasksJson(filePath)
+			tasksFile, err := ReadTasksJson(
+				filePath,
+			)
 			if tt.wantError && err == nil {
-				t.Error("Expected error but got none")
+				t.Error(
+					"Expected error but got none",
+				)
 			}
 			if !tt.wantError && err != nil {
-				t.Fatalf("ReadTasksJson failed: %v", err)
+				t.Fatalf(
+					"ReadTasksJson failed: %v",
+					err,
+				)
 			}
 			if tt.wantError {
 				return
 			}
 
 			if tasksFile.Version != tt.expectedVersion {
-				t.Errorf("Expected version %d, got %d", tt.expectedVersion, tasksFile.Version)
+				t.Errorf(
+					"Expected version %d, got %d",
+					tt.expectedVersion,
+					tasksFile.Version,
+				)
 			}
-			if len(tasksFile.Tasks) != tt.expectedTaskCount {
-				t.Errorf("Expected %d tasks, got %d", tt.expectedTaskCount, len(tasksFile.Tasks))
+			if len(
+				tasksFile.Tasks,
+			) != tt.expectedTaskCount {
+				t.Errorf(
+					"Expected %d tasks, got %d",
+					tt.expectedTaskCount,
+					len(tasksFile.Tasks),
+				)
 			}
 		})
 	}

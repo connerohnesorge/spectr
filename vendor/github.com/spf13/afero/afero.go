@@ -71,7 +71,11 @@ type Fs interface {
 	Open(name string) (File, error)
 
 	// OpenFile opens a file using the given flags and the given mode.
-	OpenFile(name string, flag int, perm os.FileMode) (File, error)
+	OpenFile(
+		name string,
+		flag int,
+		perm os.FileMode,
+	) (File, error)
 
 	// Remove removes a file identified by name, returning an error, if any
 	// happens.
@@ -98,12 +102,20 @@ type Fs interface {
 	Chown(name string, uid, gid int) error
 
 	// Chtimes changes the access and modification times of the named file
-	Chtimes(name string, atime time.Time, mtime time.Time) error
+	Chtimes(
+		name string,
+		atime time.Time,
+		mtime time.Time,
+	) error
 }
 
 var (
-	ErrFileClosed        = errors.New("File is closed")
-	ErrOutOfRange        = errors.New("out of range")
+	ErrFileClosed = errors.New(
+		"File is closed",
+	)
+	ErrOutOfRange = errors.New(
+		"out of range",
+	)
 	ErrTooLarge          = errors.New("too large")
 	ErrFileNotFound      = os.ErrNotExist
 	ErrFileExists        = os.ErrExist

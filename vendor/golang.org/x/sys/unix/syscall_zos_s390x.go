@@ -35,13 +35,33 @@ func GetZosLibVec() uintptr
 
 func init() {
 	initZosLibVec()
-	r0, _, _ := CallLeFuncWithPtrReturn(GetZosLibVec()+SYS_____GETENV_A<<4, uintptr(unsafe.Pointer(&([]byte("__ZOS_XSYSTRACE\x00"))[0])))
+	r0, _, _ := CallLeFuncWithPtrReturn(
+		GetZosLibVec()+SYS_____GETENV_A<<4,
+		uintptr(
+			unsafe.Pointer(
+				&([]byte("__ZOS_XSYSTRACE\x00"))[0],
+			),
+		),
+	)
 	if r0 != 0 {
-		n, _, _ := CallLeFuncWithPtrReturn(GetZosLibVec()+SYS___ATOI_A<<4, r0)
+		n, _, _ := CallLeFuncWithPtrReturn(
+			GetZosLibVec()+SYS___ATOI_A<<4,
+			r0,
+		)
 		ZosTraceLevel = int(n)
-		r0, _, _ := CallLeFuncWithPtrReturn(GetZosLibVec()+SYS_____GETENV_A<<4, uintptr(unsafe.Pointer(&([]byte("__ZOS_XSYSTRACEFD\x00"))[0])))
+		r0, _, _ := CallLeFuncWithPtrReturn(
+			GetZosLibVec()+SYS_____GETENV_A<<4,
+			uintptr(
+				unsafe.Pointer(
+					&([]byte("__ZOS_XSYSTRACEFD\x00"))[0],
+				),
+			),
+		)
 		if r0 != 0 {
-			fd, _, _ := CallLeFuncWithPtrReturn(GetZosLibVec()+SYS___ATOI_A<<4, r0)
+			fd, _, _ := CallLeFuncWithPtrReturn(
+				GetZosLibVec()+SYS___ATOI_A<<4,
+				r0,
+			)
 			f := os.NewFile(fd, "zostracefile")
 			if f != nil {
 				ZosTracefile = f
@@ -51,11 +71,19 @@ func init() {
 	}
 }
 
+//
 //go:noescape
-func CallLeFuncWithErr(funcdesc uintptr, parms ...uintptr) (ret, errno2 uintptr, err Errno)
+func CallLeFuncWithErr(
+	funcdesc uintptr,
+	parms ...uintptr,
+) (ret, errno2 uintptr, err Errno)
 
+//
 //go:noescape
-func CallLeFuncWithPtrReturn(funcdesc uintptr, parms ...uintptr) (ret, errno2 uintptr, err Errno)
+func CallLeFuncWithPtrReturn(
+	funcdesc uintptr,
+	parms ...uintptr,
+) (ret, errno2 uintptr, err Errno)
 
 // -------------------------------
 // pointer validity test
@@ -68,7 +96,9 @@ func ptrtest(uintptr) uint64
 // Load memory at ptr location with error handling if the location is invalid
 //
 //go:noescape
-func safeload(ptr uintptr) (value uintptr, error uintptr)
+func safeload(
+	ptr uintptr,
+) (value uintptr, error uintptr)
 
 const (
 	entrypointLocationOffset = 8 // From function descriptor
@@ -82,13 +112,17 @@ const (
 )
 
 func getPpaOffset(funcptr uintptr) int64 {
-	entrypoint, err := safeload(funcptr + entrypointLocationOffset)
+	entrypoint, err := safeload(
+		funcptr + entrypointLocationOffset,
+	)
 	if err != 0 {
 		return -1
 	}
 
 	// XPLink functions have ".C.E.E.1" as the first 8 bytes (EBCDIC)
-	val, err := safeload(entrypoint - eyecatcherOffset)
+	val, err := safeload(
+		entrypoint - eyecatcherOffset,
+	)
 	if err != 0 {
 		return -1
 	}
@@ -96,7 +130,9 @@ func getPpaOffset(funcptr uintptr) int64 {
 		return -1
 	}
 
-	ppaoff, err := safeload(entrypoint - ppa1LocationOffset)
+	ppaoff, err := safeload(
+		entrypoint - ppa1LocationOffset,
+	)
 	if err != 0 {
 		return -1
 	}
@@ -112,8 +148,13 @@ func getPpaOffset(funcptr uintptr) int64 {
 
 // TODO: currently mksyscall_zos_s390x.go generate empty string for funcName
 // have correct funcName pass to the funcptrtest function
-func funcptrtest(funcptr uintptr, funcName string) uint64 {
-	entrypoint, err := safeload(funcptr + entrypointLocationOffset)
+func funcptrtest(
+	funcptr uintptr,
+	funcName string,
+) uint64 {
+	entrypoint, err := safeload(
+		funcptr + entrypointLocationOffset,
+	)
 	if err != 0 {
 		return 1
 	}
@@ -124,7 +165,9 @@ func funcptrtest(funcptr uintptr, funcName string) uint64 {
 	}
 
 	// PPA1 offset value is from the start of the entire function block, not the entrypoint
-	ppa1 := (entrypoint - eyecatcherOffset) + uintptr(ppaoff)
+	ppa1 := (entrypoint - eyecatcherOffset) + uintptr(
+		ppaoff,
+	)
 
 	nameLen, err := safeload(ppa1 + nameLenOffset)
 	if err != 0 {
@@ -143,7 +186,9 @@ func funcptrtest(funcptr uintptr, funcName string) uint64 {
 
 	var funcname [128]byte
 	for i := 0; i < int(nameLen); i += 8 {
-		v, err := safeload(ppa1 + nameOffset + uintptr(i))
+		v, err := safeload(
+			ppa1 + nameOffset + uintptr(i),
+		)
 		if err != 0 {
 			return 1
 		}
@@ -157,8 +202,13 @@ func funcptrtest(funcptr uintptr, funcName string) uint64 {
 		funcname[i+7] = byte(v)
 	}
 
-	runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___E2A_L<<4, // __e2a_l
-		[]uintptr{uintptr(unsafe.Pointer(&funcname[0])), nameLen})
+	runtime.CallLeFuncByPtr(
+		runtime.XplinkLibvec+SYS___E2A_L<<4, // __e2a_l
+		[]uintptr{
+			uintptr(unsafe.Pointer(&funcname[0])),
+			nameLen,
+		},
+	)
 
 	name := string(funcname[:nameLen])
 	if name != funcName {
@@ -173,7 +223,9 @@ func funcptrtest(funcptr uintptr, funcName string) uint64 {
 func isValidLeFunc(f uintptr) error {
 	ret := funcptrtest(f, "")
 	if ret != 0 {
-		return fmt.Errorf("Bad pointer, not an LE function ")
+		return fmt.Errorf(
+			"Bad pointer, not an LE function ",
+		)
 	}
 	return nil
 }
@@ -186,26 +238,45 @@ func getLeFuncName(f uintptr) (string, error) {
 
 	offsetPpa1 := preamp[2]
 	if offsetPpa1 > 0x0ffff {
-		return "", fmt.Errorf("PPA1 offset seems too big 0x%x\n", offsetPpa1)
+		return "", fmt.Errorf(
+			"PPA1 offset seems too big 0x%x\n",
+			offsetPpa1,
+		)
 	}
 
-	ppa1 := uintptr(unsafe.Pointer(preamp)) + uintptr(offsetPpa1)
+	ppa1 := uintptr(
+		unsafe.Pointer(preamp),
+	) + uintptr(
+		offsetPpa1,
+	)
 	res := ptrtest(ppa1)
 	if res != 0 {
-		return "", fmt.Errorf("PPA1 address not valid")
+		return "", fmt.Errorf(
+			"PPA1 address not valid",
+		)
 	}
 
 	size := *(*uint16)(unsafe.Pointer(ppa1 + nameLenOffset))
 	if size > 128 {
-		return "", fmt.Errorf("Function name seems too long, length=%d\n", size)
+		return "", fmt.Errorf(
+			"Function name seems too long, length=%d\n",
+			size,
+		)
 	}
 
 	var name [128]byte
-	funcname := (*[128]byte)(unsafe.Pointer(ppa1 + nameOffset))
+	funcname := (*[128]byte)(
+		unsafe.Pointer(ppa1 + nameOffset),
+	)
 	copy(name[0:size], funcname[0:size])
 
-	runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___E2A_L<<4, // __e2a_l
-		[]uintptr{uintptr(unsafe.Pointer(&name[0])), uintptr(size)})
+	runtime.CallLeFuncByPtr(
+		runtime.XplinkLibvec+SYS___E2A_L<<4, // __e2a_l
+		[]uintptr{
+			uintptr(unsafe.Pointer(&name[0])),
+			uintptr(size),
+		},
+	)
 
 	return string(name[:size]), nil
 }
@@ -224,7 +295,9 @@ func zosLeVersion() (version, release uint32) {
 
 // returns a zos C FILE * for stdio fd 0, 1, 2
 func ZosStdioFilep(fd int32) uintptr {
-	return uintptr(*(*uint64)(unsafe.Pointer(uintptr(*(*uint64)(unsafe.Pointer(uintptr(*(*uint64)(unsafe.Pointer(uintptr(uint64(*(*uint32)(unsafe.Pointer(uintptr(1208)))) + 80))) + uint64((fd+2)<<3))))))))
+	return uintptr(
+		*(*uint64)(unsafe.Pointer(uintptr(*(*uint64)(unsafe.Pointer(uintptr(*(*uint64)(unsafe.Pointer(uintptr(uint64(*(*uint32)(unsafe.Pointer(uintptr(1208)))) + 80))) + uint64((fd+2)<<3))))))),
+	)
 }
 
 func copyStat(stat *Stat_t, statLE *Stat_LE_t) {
@@ -237,18 +310,26 @@ func copyStat(stat *Stat_t, statLE *Stat_LE_t) {
 	stat.Rdev = uint64(statLE.Rdev)
 	stat.Size = statLE.Size
 	stat.Atim.Sec = int64(statLE.Atim)
-	stat.Atim.Nsec = 0 //zos doesn't return nanoseconds
+	stat.Atim.Nsec = 0 // zos doesn't return nanoseconds
 	stat.Mtim.Sec = int64(statLE.Mtim)
-	stat.Mtim.Nsec = 0 //zos doesn't return nanoseconds
+	stat.Mtim.Nsec = 0 // zos doesn't return nanoseconds
 	stat.Ctim.Sec = int64(statLE.Ctim)
-	stat.Ctim.Nsec = 0 //zos doesn't return nanoseconds
+	stat.Ctim.Nsec = 0 // zos doesn't return nanoseconds
 	stat.Blksize = int64(statLE.Blksize)
 	stat.Blocks = statLE.Blocks
 }
 
-func svcCall(fnptr unsafe.Pointer, argv *unsafe.Pointer, dsa *uint64)
+func svcCall(
+	fnptr unsafe.Pointer,
+	argv *unsafe.Pointer,
+	dsa *uint64,
+)
 func svcLoad(name *byte) unsafe.Pointer
-func svcUnload(name *byte, fnptr unsafe.Pointer) int64
+
+func svcUnload(
+	name *byte,
+	fnptr unsafe.Pointer,
+) int64
 
 func (d *Dirent) NameString() string {
 	if d == nil {
@@ -265,7 +346,9 @@ func (d *Dirent) NameString() string {
 
 func DecodeData(dest []byte, sz int, val uint64) {
 	for i := 0; i < sz; i++ {
-		dest[sz-1-i] = byte((val >> (uint64(i * 8))) & 0xff)
+		dest[sz-1-i] = byte(
+			(val >> (uint64(i * 8))) & 0xff,
+		)
 	}
 }
 
@@ -273,7 +356,11 @@ func EncodeData(data []byte) uint64 {
 	var value uint64
 	sz := len(data)
 	for i := 0; i < sz; i++ {
-		value |= uint64(data[i]) << uint64(((sz - i - 1) * 8))
+		value |= uint64(
+			data[i],
+		) << uint64(
+			((sz - i - 1) * 8),
+		)
 	}
 	return value
 }
@@ -290,7 +377,11 @@ func (sa *SockaddrInet4) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	for i := 0; i < len(sa.Addr); i++ {
 		sa.raw.Addr[i] = sa.Addr[i]
 	}
-	return unsafe.Pointer(&sa.raw), _Socklen(sa.raw.Len), nil
+	return unsafe.Pointer(
+			&sa.raw,
+		), _Socklen(
+			sa.raw.Len,
+		), nil
 }
 
 func (sa *SockaddrInet6) sockaddr() (unsafe.Pointer, _Socklen, error) {
@@ -306,7 +397,11 @@ func (sa *SockaddrInet6) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	for i := 0; i < len(sa.Addr); i++ {
 		sa.raw.Addr[i] = sa.Addr[i]
 	}
-	return unsafe.Pointer(&sa.raw), _Socklen(sa.raw.Len), nil
+	return unsafe.Pointer(
+			&sa.raw,
+		), _Socklen(
+			sa.raw.Len,
+		), nil
 }
 
 func (sa *SockaddrUnix) sockaddr() (unsafe.Pointer, _Socklen, error) {
@@ -315,19 +410,30 @@ func (sa *SockaddrUnix) sockaddr() (unsafe.Pointer, _Socklen, error) {
 	if n >= len(sa.raw.Path) || n == 0 {
 		return nil, 0, EINVAL
 	}
-	sa.raw.Len = byte(3 + n) // 2 for Family, Len; 1 for NUL
+	sa.raw.Len = byte(
+		3 + n,
+	) // 2 for Family, Len; 1 for NUL
 	sa.raw.Family = AF_UNIX
 	for i := 0; i < n; i++ {
 		sa.raw.Path[i] = int8(name[i])
 	}
-	return unsafe.Pointer(&sa.raw), _Socklen(sa.raw.Len), nil
+	return unsafe.Pointer(
+			&sa.raw,
+		), _Socklen(
+			sa.raw.Len,
+		), nil
 }
 
-func anyToSockaddr(_ int, rsa *RawSockaddrAny) (Sockaddr, error) {
+func anyToSockaddr(
+	_ int,
+	rsa *RawSockaddrAny,
+) (Sockaddr, error) {
 	// TODO(neeilan): Implement use of first param (fd)
 	switch rsa.Addr.Family {
 	case AF_UNIX:
-		pp := (*RawSockaddrUnix)(unsafe.Pointer(rsa))
+		pp := (*RawSockaddrUnix)(
+			unsafe.Pointer(rsa),
+		)
 		sa := new(SockaddrUnix)
 		// For z/OS, only replace NUL with @ when the
 		// length is not zero.
@@ -355,11 +461,20 @@ func anyToSockaddr(_ int, rsa *RawSockaddrAny) (Sockaddr, error) {
 		for n < int(pp.Len) && pp.Path[n] != 0 {
 			n++
 		}
-		sa.Name = string(unsafe.Slice((*byte)(unsafe.Pointer(&pp.Path[0])), n))
+		sa.Name = string(
+			unsafe.Slice(
+				(*byte)(
+					unsafe.Pointer(&pp.Path[0]),
+				),
+				n,
+			),
+		)
 		return sa, nil
 
 	case AF_INET:
-		pp := (*RawSockaddrInet4)(unsafe.Pointer(rsa))
+		pp := (*RawSockaddrInet4)(
+			unsafe.Pointer(rsa),
+		)
 		sa := new(SockaddrInet4)
 		p := (*[2]byte)(unsafe.Pointer(&pp.Port))
 		sa.Port = int(p[0])<<8 + int(p[1])
@@ -369,7 +484,9 @@ func anyToSockaddr(_ int, rsa *RawSockaddrAny) (Sockaddr, error) {
 		return sa, nil
 
 	case AF_INET6:
-		pp := (*RawSockaddrInet6)(unsafe.Pointer(rsa))
+		pp := (*RawSockaddrInet6)(
+			unsafe.Pointer(rsa),
+		)
 		sa := new(SockaddrInet6)
 		p := (*[2]byte)(unsafe.Pointer(&pp.Port))
 		sa.Port = int(p[0])<<8 + int(p[1])
@@ -382,7 +499,9 @@ func anyToSockaddr(_ int, rsa *RawSockaddrAny) (Sockaddr, error) {
 	return nil, EAFNOSUPPORT
 }
 
-func Accept(fd int) (nfd int, sa Sockaddr, err error) {
+func Accept(
+	fd int,
+) (nfd int, sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	nfd, err = accept(fd, &rsa, &len)
@@ -398,7 +517,10 @@ func Accept(fd int) (nfd int, sa Sockaddr, err error) {
 	return
 }
 
-func Accept4(fd int, flags int) (nfd int, sa Sockaddr, err error) {
+func Accept4(
+	fd int,
+	flags int,
+) (nfd int, sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	nfd, err = accept4(fd, &rsa, &len, flags)
@@ -420,10 +542,17 @@ func Accept4(fd int, flags int) (nfd int, sa Sockaddr, err error) {
 func Ctermid() (tty string, err error) {
 	var termdev [1025]byte
 	runtime.EnterSyscall()
-	r0, err2, err1 := CallLeFuncWithPtrReturn(GetZosLibVec()+SYS___CTERMID_A<<4, uintptr(unsafe.Pointer(&termdev[0])))
+	r0, err2, err1 := CallLeFuncWithPtrReturn(
+		GetZosLibVec()+SYS___CTERMID_A<<4,
+		uintptr(unsafe.Pointer(&termdev[0])),
+	)
 	runtime.ExitSyscall()
 	if r0 == 0 {
-		return "", fmt.Errorf("%s (errno2=0x%x)\n", err1.Error(), err2)
+		return "", fmt.Errorf(
+			"%s (errno2=0x%x)\n",
+			err1.Error(),
+			err2,
+		)
 	}
 	s := string(termdev[:])
 	idx := strings.Index(s, string(rune(0)))
@@ -501,7 +630,12 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 //sys	Exit(code int)
 //sys	Faccessat(dirfd int, path string, mode uint32, flags int) (err error) = SYS___FACCESSAT_A
 
-func Faccessat2(dirfd int, path string, mode uint32, flags int) (err error) {
+func Faccessat2(
+	dirfd int,
+	path string,
+	mode uint32,
+	flags int,
+) (err error) {
 	return Faccessat(dirfd, path, mode, flags)
 }
 
@@ -522,14 +656,23 @@ func Fstat(fd int, stat *Stat_t) (err error) {
 	return
 }
 
-func Fstatat(dirfd int, path string, stat *Stat_t, flags int) (err error) {
+func Fstatat(
+	dirfd int,
+	path string,
+	stat *Stat_t,
+	flags int,
+) (err error) {
 	var statLE Stat_LE_t
 	err = fstatat(dirfd, path, &statLE, flags)
 	copyStat(stat, &statLE)
 	return
 }
 
-func impl_Getxattr(path string, attr string, dest []byte) (sz int, err error) {
+func impl_Getxattr(
+	path string,
+	attr string,
+	dest []byte,
+) (sz int, err error) {
 	var _p0 *byte
 	_p0, err = BytePtrFromString(path)
 	if err != nil {
@@ -546,7 +689,13 @@ func impl_Getxattr(path string, attr string, dest []byte) (sz int, err error) {
 	} else {
 		_p2 = unsafe.Pointer(&_zero)
 	}
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___GETXATTR_A<<4, uintptr(unsafe.Pointer(_p0)), uintptr(unsafe.Pointer(_p1)), uintptr(_p2), uintptr(len(dest)))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___GETXATTR_A<<4,
+		uintptr(unsafe.Pointer(_p0)),
+		uintptr(unsafe.Pointer(_p1)),
+		uintptr(_p2),
+		uintptr(len(dest)),
+	)
 	sz = int(r0)
 	if int64(r0) == -1 {
 		err = errnoErr2(e1, e2)
@@ -554,12 +703,17 @@ func impl_Getxattr(path string, attr string, dest []byte) (sz int, err error) {
 	return
 }
 
+//
 //go:nosplit
 func get_GetxattrAddr() *(func(path string, attr string, dest []byte) (sz int, err error))
 
 var Getxattr = enter_Getxattr
 
-func enter_Getxattr(path string, attr string, dest []byte) (sz int, err error) {
+func enter_Getxattr(
+	path string,
+	attr string,
+	dest []byte,
+) (sz int, err error) {
 	funcref := get_GetxattrAddr()
 	if validGetxattr() {
 		*funcref = impl_Getxattr
@@ -569,12 +723,19 @@ func enter_Getxattr(path string, attr string, dest []byte) (sz int, err error) {
 	return (*funcref)(path, attr, dest)
 }
 
-func error_Getxattr(path string, attr string, dest []byte) (sz int, err error) {
+func error_Getxattr(
+	path string,
+	attr string,
+	dest []byte,
+) (sz int, err error) {
 	return -1, ENOSYS
 }
 
 func validGetxattr() bool {
-	if funcptrtest(GetZosLibVec()+SYS___GETXATTR_A<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS___GETXATTR_A<<4,
+		"",
+	) == 0 {
 		if name, err := getLeFuncName(GetZosLibVec() + SYS___GETXATTR_A<<4); err == nil {
 			return name == "__getxattr_a"
 		}
@@ -585,7 +746,12 @@ func validGetxattr() bool {
 //sys   Lgetxattr(link string, attr string, dest []byte) (sz int, err error) = SYS___LGETXATTR_A
 //sys   Lsetxattr(path string, attr string, data []byte, flags int) (err error) = SYS___LSETXATTR_A
 
-func impl_Setxattr(path string, attr string, data []byte, flags int) (err error) {
+func impl_Setxattr(
+	path string,
+	attr string,
+	data []byte,
+	flags int,
+) (err error) {
 	var _p0 *byte
 	_p0, err = BytePtrFromString(path)
 	if err != nil {
@@ -602,19 +768,32 @@ func impl_Setxattr(path string, attr string, data []byte, flags int) (err error)
 	} else {
 		_p2 = unsafe.Pointer(&_zero)
 	}
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___SETXATTR_A<<4, uintptr(unsafe.Pointer(_p0)), uintptr(unsafe.Pointer(_p1)), uintptr(_p2), uintptr(len(data)), uintptr(flags))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___SETXATTR_A<<4,
+		uintptr(unsafe.Pointer(_p0)),
+		uintptr(unsafe.Pointer(_p1)),
+		uintptr(_p2),
+		uintptr(len(data)),
+		uintptr(flags),
+	)
 	if int64(r0) == -1 {
 		err = errnoErr2(e1, e2)
 	}
 	return
 }
 
+//
 //go:nosplit
 func get_SetxattrAddr() *(func(path string, attr string, data []byte, flags int) (err error))
 
 var Setxattr = enter_Setxattr
 
-func enter_Setxattr(path string, attr string, data []byte, flags int) (err error) {
+func enter_Setxattr(
+	path string,
+	attr string,
+	data []byte,
+	flags int,
+) (err error) {
 	funcref := get_SetxattrAddr()
 	if validSetxattr() {
 		*funcref = impl_Setxattr
@@ -624,12 +803,20 @@ func enter_Setxattr(path string, attr string, data []byte, flags int) (err error
 	return (*funcref)(path, attr, data, flags)
 }
 
-func error_Setxattr(path string, attr string, data []byte, flags int) (err error) {
+func error_Setxattr(
+	path string,
+	attr string,
+	data []byte,
+	flags int,
+) (err error) {
 	return ENOSYS
 }
 
 func validSetxattr() bool {
-	if funcptrtest(GetZosLibVec()+SYS___SETXATTR_A<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS___SETXATTR_A<<4,
+		"",
+	) == 0 {
 		if name, err := getLeFuncName(GetZosLibVec() + SYS___SETXATTR_A<<4); err == nil {
 			return name == "__setxattr_a"
 		}
@@ -664,7 +851,10 @@ func getPipe2Addr() *(func([]int, int) error)
 var Pipe2 = pipe2Enter
 
 func pipe2Enter(p []int, flags int) (err error) {
-	if funcptrtest(GetZosLibVec()+SYS_PIPE2<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS_PIPE2<<4,
+		"",
+	) == 0 {
 		*getPipe2Addr() = pipe2Impl
 	} else {
 		*getPipe2Addr() = pipe2Error
@@ -674,7 +864,11 @@ func pipe2Enter(p []int, flags int) (err error) {
 
 func pipe2Impl(p []int, flags int) (err error) {
 	var pp [2]_C_int
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_PIPE2<<4, uintptr(unsafe.Pointer(&pp[0])), uintptr(flags))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_PIPE2<<4,
+		uintptr(unsafe.Pointer(&pp[0])),
+		uintptr(flags),
+	)
 	if int64(r0) == -1 {
 		err = errnoErr2(e1, e2)
 	} else {
@@ -683,17 +877,25 @@ func pipe2Impl(p []int, flags int) (err error) {
 	}
 	return
 }
+
 func pipe2Error(p []int, flags int) (err error) {
-	return fmt.Errorf("Pipe2 is not available on this system")
+	return fmt.Errorf(
+		"Pipe2 is not available on this system",
+	)
 }
 
 // Pipe2 end
 
 //sys   Poll(fds []PollFd, timeout int) (n int, err error) = SYS_POLL
 
-func Readdir(dir uintptr) (dirent *Dirent, err error) {
+func Readdir(
+	dir uintptr,
+) (dirent *Dirent, err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___READDIR_A<<4, uintptr(dir))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___READDIR_A<<4,
+		uintptr(dir),
+	)
 	runtime.ExitSyscall()
 	dirent = (*Dirent)(unsafe.Pointer(r0))
 	if int64(r0) == -1 {
@@ -718,7 +920,10 @@ func Readdir(dir uintptr) (dirent *Dirent, err error) {
 
 func Ptsname(fd int) (name string, err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithPtrReturn(GetZosLibVec()+SYS___PTSNAME_A<<4, uintptr(fd))
+	r0, e2, e1 := CallLeFuncWithPtrReturn(
+		GetZosLibVec()+SYS___PTSNAME_A<<4,
+		uintptr(fd),
+	)
 	runtime.ExitSyscall()
 	if r0 == 0 {
 		err = errnoErr2(e1, e2)
@@ -739,14 +944,23 @@ func u2s(cstr unsafe.Pointer) string {
 
 func Close(fd int) (err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_CLOSE<<4, uintptr(fd))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_CLOSE<<4,
+		uintptr(fd),
+	)
 	runtime.ExitSyscall()
 	for i := 0; e1 == EAGAIN && i < 10; i++ {
 		runtime.EnterSyscall()
-		CallLeFuncWithErr(GetZosLibVec()+SYS_USLEEP<<4, uintptr(10))
+		CallLeFuncWithErr(
+			GetZosLibVec()+SYS_USLEEP<<4,
+			uintptr(10),
+		)
 		runtime.ExitSyscall()
 		runtime.EnterSyscall()
-		r0, e2, e1 = CallLeFuncWithErr(GetZosLibVec()+SYS_CLOSE<<4, uintptr(fd))
+		r0, e2, e1 = CallLeFuncWithErr(
+			GetZosLibVec()+SYS_CLOSE<<4,
+			uintptr(fd),
+		)
 		runtime.ExitSyscall()
 	}
 	if r0 != 0 {
@@ -760,20 +974,49 @@ func Madvise(b []byte, advice int) (err error) {
 	return
 }
 
-func Mmap(fd int, offset int64, length int, prot int, flags int) (data []byte, err error) {
-	return mapper.Mmap(fd, offset, length, prot, flags)
+func Mmap(
+	fd int,
+	offset int64,
+	length int,
+	prot int,
+	flags int,
+) (data []byte, err error) {
+	return mapper.Mmap(
+		fd,
+		offset,
+		length,
+		prot,
+		flags,
+	)
 }
 
 func Munmap(b []byte) (err error) {
 	return mapper.Munmap(b)
 }
 
-func MmapPtr(fd int, offset int64, addr unsafe.Pointer, length uintptr, prot int, flags int) (ret unsafe.Pointer, err error) {
-	xaddr, err := mapper.mmap(uintptr(addr), length, prot, flags, fd, offset)
+func MmapPtr(
+	fd int,
+	offset int64,
+	addr unsafe.Pointer,
+	length uintptr,
+	prot int,
+	flags int,
+) (ret unsafe.Pointer, err error) {
+	xaddr, err := mapper.mmap(
+		uintptr(addr),
+		length,
+		prot,
+		flags,
+		fd,
+		offset,
+	)
 	return unsafe.Pointer(xaddr), err
 }
 
-func MunmapPtr(addr unsafe.Pointer, length uintptr) (err error) {
+func MunmapPtr(
+	addr unsafe.Pointer,
+	length uintptr,
+) (err error) {
 	return mapper.munmap(uintptr(addr), length)
 }
 
@@ -793,10 +1036,13 @@ func Getpgrp() (pid int) {
 
 //sysnb getrusage(who int, rusage *rusage_zos) (err error) = SYS_GETRUSAGE
 
-func Getrusage(who int, rusage *Rusage) (err error) {
+func Getrusage(
+	who int,
+	rusage *Rusage,
+) (err error) {
 	var ruz rusage_zos
 	err = getrusage(who, &ruz)
-	//Only the first two fields of Rusage are set
+	// Only the first two fields of Rusage are set
 	rusage.Utime.Sec = ruz.Utime.Sec
 	rusage.Utime.Usec = int64(ruz.Utime.Usec)
 	rusage.Stime.Sec = ruz.Stime.Sec
@@ -815,7 +1061,10 @@ func Getrusage(who int, rusage *Rusage) (err error) {
 //sys	Listen(s int, n int) (err error)
 //sys	lstat(path string, stat *Stat_LE_t) (err error) = SYS___LSTAT_A
 
-func Lstat(path string, stat *Stat_t) (err error) {
+func Lstat(
+	path string,
+	stat *Stat_t,
+) (err error) {
 	var statLE Stat_LE_t
 	err = lstat(path, &statLE)
 	copyStat(stat, &statLE)
@@ -824,11 +1073,12 @@ func Lstat(path string, stat *Stat_t) (err error) {
 
 // for checking symlinks begins with $VERSION/ $SYSNAME/ $SYSSYMR/ $SYSSYMA/
 func isSpecialPath(path []byte) (v bool) {
-	var special = [4][8]byte{
+	special := [4][8]byte{
 		{'V', 'E', 'R', 'S', 'I', 'O', 'N', '/'},
 		{'S', 'Y', 'S', 'N', 'A', 'M', 'E', '/'},
 		{'S', 'Y', 'S', 'S', 'Y', 'M', 'R', '/'},
-		{'S', 'Y', 'S', 'S', 'Y', 'M', 'A', '/'}}
+		{'S', 'Y', 'S', 'S', 'Y', 'M', 'A', '/'},
+	}
 
 	var i, j int
 	for i = 0; i < len(special); i++ {
@@ -844,15 +1094,25 @@ func isSpecialPath(path []byte) (v bool) {
 	return false
 }
 
-func realpath(srcpath string, abspath []byte) (pathlen int, errno int) {
+func realpath(
+	srcpath string,
+	abspath []byte,
+) (pathlen int, errno int) {
 	var source [1024]byte
 	copy(source[:], srcpath)
 	source[len(srcpath)] = 0
-	ret := runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___REALPATH_A<<4, //__realpath_a()
-		[]uintptr{uintptr(unsafe.Pointer(&source[0])),
-			uintptr(unsafe.Pointer(&abspath[0]))})
+	ret := runtime.CallLeFuncByPtr(
+		runtime.XplinkLibvec+SYS___REALPATH_A<<4, //__realpath_a()
+		[]uintptr{
+			uintptr(unsafe.Pointer(&source[0])),
+			uintptr(unsafe.Pointer(&abspath[0])),
+		},
+	)
 	if ret != 0 {
-		index := bytes.IndexByte(abspath[:], byte(0))
+		index := bytes.IndexByte(
+			abspath[:],
+			byte(0),
+		)
 		if index != -1 {
 			return index, 0
 		}
@@ -863,7 +1123,10 @@ func realpath(srcpath string, abspath []byte) (pathlen int, errno int) {
 	return 0, 245 // EBADDATA   245
 }
 
-func Readlink(path string, buf []byte) (n int, err error) {
+func Readlink(
+	path string,
+	buf []byte,
+) (n int, err error) {
 	var _p0 *byte
 	_p0, err = BytePtrFromString(path)
 	if err != nil {
@@ -875,8 +1138,16 @@ func Readlink(path string, buf []byte) (n int, err error) {
 	} else {
 		_p1 = unsafe.Pointer(&_zero)
 	}
-	n = int(runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___READLINK_A<<4,
-		[]uintptr{uintptr(unsafe.Pointer(_p0)), uintptr(_p1), uintptr(len(buf))}))
+	n = int(
+		runtime.CallLeFuncByPtr(
+			runtime.XplinkLibvec+SYS___READLINK_A<<4,
+			[]uintptr{
+				uintptr(unsafe.Pointer(_p0)),
+				uintptr(_p1),
+				uintptr(len(buf)),
+			},
+		),
+	)
 	runtime.KeepAlive(unsafe.Pointer(_p0))
 	if n == -1 {
 		value := *(*int32)(unsafe.Pointer(runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___ERRNO<<4, []uintptr{})))
@@ -894,7 +1165,11 @@ func Readlink(path string, buf []byte) (n int, err error) {
 	return
 }
 
-func impl_Readlinkat(dirfd int, path string, buf []byte) (n int, err error) {
+func impl_Readlinkat(
+	dirfd int,
+	path string,
+	buf []byte,
+) (n int, err error) {
 	var _p0 *byte
 	_p0, err = BytePtrFromString(path)
 	if err != nil {
@@ -907,7 +1182,13 @@ func impl_Readlinkat(dirfd int, path string, buf []byte) (n int, err error) {
 		_p1 = unsafe.Pointer(&_zero)
 	}
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___READLINKAT_A<<4, uintptr(dirfd), uintptr(unsafe.Pointer(_p0)), uintptr(_p1), uintptr(len(buf)))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___READLINKAT_A<<4,
+		uintptr(dirfd),
+		uintptr(unsafe.Pointer(_p0)),
+		uintptr(_p1),
+		uintptr(len(buf)),
+	)
 	runtime.ExitSyscall()
 	n = int(r0)
 	if int64(r0) == -1 {
@@ -926,14 +1207,22 @@ func impl_Readlinkat(dirfd int, path string, buf []byte) (n int, err error) {
 	return
 }
 
+//
 //go:nosplit
 func get_ReadlinkatAddr() *(func(dirfd int, path string, buf []byte) (n int, err error))
 
 var Readlinkat = enter_Readlinkat
 
-func enter_Readlinkat(dirfd int, path string, buf []byte) (n int, err error) {
+func enter_Readlinkat(
+	dirfd int,
+	path string,
+	buf []byte,
+) (n int, err error) {
 	funcref := get_ReadlinkatAddr()
-	if funcptrtest(GetZosLibVec()+SYS___READLINKAT_A<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS___READLINKAT_A<<4,
+		"",
+	) == 0 {
 		*funcref = impl_Readlinkat
 	} else {
 		*funcref = error_Readlinkat
@@ -941,7 +1230,11 @@ func enter_Readlinkat(dirfd int, path string, buf []byte) (n int, err error) {
 	return (*funcref)(dirfd, path, buf)
 }
 
-func error_Readlinkat(dirfd int, path string, buf []byte) (n int, err error) {
+func error_Readlinkat(
+	dirfd int,
+	path string,
+	buf []byte,
+) (n int, err error) {
 	n = -1
 	err = ENOSYS
 	return
@@ -997,7 +1290,11 @@ func Stat(path string, sta *Stat_t) (err error) {
 
 //sys	open(path string, mode int, perm uint32) (fd int, err error) = SYS___OPEN_A
 
-func Open(path string, mode int, perm uint32) (fd int, err error) {
+func Open(
+	path string,
+	mode int,
+	perm uint32,
+) (fd int, err error) {
 	if mode&O_ACCMODE == 0 {
 		mode |= O_RDONLY
 	}
@@ -1006,7 +1303,12 @@ func Open(path string, mode int, perm uint32) (fd int, err error) {
 
 //sys	openat(dirfd int, path string, flags int, mode uint32) (fd int, err error) = SYS___OPENAT_A
 
-func Openat(dirfd int, path string, flags int, mode uint32) (fd int, err error) {
+func Openat(
+	dirfd int,
+	path string,
+	flags int,
+	mode uint32,
+) (fd int, err error) {
 	if flags&O_ACCMODE == 0 {
 		flags |= O_RDONLY
 	}
@@ -1015,24 +1317,45 @@ func Openat(dirfd int, path string, flags int, mode uint32) (fd int, err error) 
 
 //sys	openat2(dirfd int, path string, open_how *OpenHow, size int) (fd int, err error) = SYS___OPENAT2_A
 
-func Openat2(dirfd int, path string, how *OpenHow) (fd int, err error) {
+func Openat2(
+	dirfd int,
+	path string,
+	how *OpenHow,
+) (fd int, err error) {
 	if how.Flags&O_ACCMODE == 0 {
 		how.Flags |= O_RDONLY
 	}
-	return openat2(dirfd, path, how, SizeofOpenHow)
+	return openat2(
+		dirfd,
+		path,
+		how,
+		SizeofOpenHow,
+	)
 }
 
-func ZosFdToPath(dirfd int) (path string, err error) {
+func ZosFdToPath(
+	dirfd int,
+) (path string, err error) {
 	var buffer [1024]byte
 	runtime.EnterSyscall()
-	ret, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_W_IOCTL<<4, uintptr(dirfd), 17, 1024, uintptr(unsafe.Pointer(&buffer[0])))
+	ret, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_W_IOCTL<<4,
+		uintptr(dirfd),
+		17,
+		1024,
+		uintptr(unsafe.Pointer(&buffer[0])),
+	)
 	runtime.ExitSyscall()
 	if ret == 0 {
 		zb := bytes.IndexByte(buffer[:], 0)
 		if zb == -1 {
 			zb = len(buffer)
 		}
-		CallLeFuncWithErr(GetZosLibVec()+SYS___E2A_L<<4, uintptr(unsafe.Pointer(&buffer[0])), uintptr(zb))
+		CallLeFuncWithErr(
+			GetZosLibVec()+SYS___E2A_L<<4,
+			uintptr(unsafe.Pointer(&buffer[0])),
+			uintptr(zb),
+		)
 		return string(buffer[:zb]), nil
 	}
 	return "", errnoErr2(e1, e2)
@@ -1054,7 +1377,11 @@ func Getcwd(buf []byte) (n int, err error) {
 		p = unsafe.Pointer(&_zero)
 	}
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithPtrReturn(GetZosLibVec()+SYS___GETCWD_A<<4, uintptr(p), uintptr(len(buf)))
+	r0, e2, e1 := CallLeFuncWithPtrReturn(
+		GetZosLibVec()+SYS___GETCWD_A<<4,
+		uintptr(p),
+		uintptr(len(buf)),
+	)
 	runtime.ExitSyscall()
 	n = clen(buf) + 1
 	if r0 == 0 {
@@ -1174,15 +1501,32 @@ func (w WaitStatus) TrapCause() int { return -1 }
 
 //sys	waitid(idType int, id int, info *Siginfo, options int) (err error)
 
-func Waitid(idType int, id int, info *Siginfo, options int, rusage *Rusage) (err error) {
+func Waitid(
+	idType int,
+	id int,
+	info *Siginfo,
+	options int,
+	rusage *Rusage,
+) (err error) {
 	return waitid(idType, id, info, options)
 }
 
 //sys	waitpid(pid int, wstatus *_C_int, options int) (wpid int, err error)
 
-func impl_Wait4(pid int, wstatus *WaitStatus, options int, rusage *Rusage) (wpid int, err error) {
+func impl_Wait4(
+	pid int,
+	wstatus *WaitStatus,
+	options int,
+	rusage *Rusage,
+) (wpid int, err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_WAIT4<<4, uintptr(pid), uintptr(unsafe.Pointer(wstatus)), uintptr(options), uintptr(unsafe.Pointer(rusage)))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_WAIT4<<4,
+		uintptr(pid),
+		uintptr(unsafe.Pointer(wstatus)),
+		uintptr(options),
+		uintptr(unsafe.Pointer(rusage)),
+	)
 	runtime.ExitSyscall()
 	wpid = int(r0)
 	if int64(r0) == -1 {
@@ -1191,22 +1535,41 @@ func impl_Wait4(pid int, wstatus *WaitStatus, options int, rusage *Rusage) (wpid
 	return
 }
 
+//
 //go:nosplit
 func get_Wait4Addr() *(func(pid int, wstatus *WaitStatus, options int, rusage *Rusage) (wpid int, err error))
 
 var Wait4 = enter_Wait4
 
-func enter_Wait4(pid int, wstatus *WaitStatus, options int, rusage *Rusage) (wpid int, err error) {
+func enter_Wait4(
+	pid int,
+	wstatus *WaitStatus,
+	options int,
+	rusage *Rusage,
+) (wpid int, err error) {
 	funcref := get_Wait4Addr()
-	if funcptrtest(GetZosLibVec()+SYS_WAIT4<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS_WAIT4<<4,
+		"",
+	) == 0 {
 		*funcref = impl_Wait4
 	} else {
 		*funcref = legacyWait4
 	}
-	return (*funcref)(pid, wstatus, options, rusage)
+	return (*funcref)(
+		pid,
+		wstatus,
+		options,
+		rusage,
+	)
 }
 
-func legacyWait4(pid int, wstatus *WaitStatus, options int, rusage *Rusage) (wpid int, err error) {
+func legacyWait4(
+	pid int,
+	wstatus *WaitStatus,
+	options int,
+	rusage *Rusage,
+) (wpid int, err error) {
 	// TODO(mundaym): z/OS doesn't have wait4. I don't think getrusage does what we want.
 	// At the moment rusage will not be touched.
 	var status _C_int
@@ -1243,7 +1606,7 @@ func setTimespec(sec, nsec int64) Timespec {
 	return Timespec{Sec: sec, Nsec: nsec}
 }
 
-func setTimeval(sec, usec int64) Timeval { //fix
+func setTimeval(sec, usec int64) Timeval { // fix
 	return Timeval{Sec: sec, Usec: usec}
 }
 
@@ -1262,20 +1625,29 @@ func Pipe(p []int) (err error) {
 
 //sys	utimes(path string, timeval *[2]Timeval) (err error) = SYS___UTIMES_A
 
-func Utimes(path string, tv []Timeval) (err error) {
+func Utimes(
+	path string,
+	tv []Timeval,
+) (err error) {
 	if tv == nil {
 		return utimes(path, nil)
 	}
 	if len(tv) != 2 {
 		return EINVAL
 	}
-	return utimes(path, (*[2]Timeval)(unsafe.Pointer(&tv[0])))
+	return utimes(
+		path,
+		(*[2]Timeval)(unsafe.Pointer(&tv[0])),
+	)
 }
 
 //sys	utimensat(dirfd int, path string, ts *[2]Timespec, flags int) (err error) = SYS___UTIMENSAT_A
 
 func validUtimensat() bool {
-	if funcptrtest(GetZosLibVec()+SYS___UTIMENSAT_A<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS___UTIMENSAT_A<<4,
+		"",
+	) == 0 {
 		if name, err := getLeFuncName(GetZosLibVec() + SYS___UTIMENSAT_A<<4); err == nil {
 			return name == "__utimensat_a"
 		}
@@ -1285,12 +1657,16 @@ func validUtimensat() bool {
 
 // Begin UtimesNano
 
+//
 //go:nosplit
 func get_UtimesNanoAddr() *(func(path string, ts []Timespec) (err error))
 
 var UtimesNano = enter_UtimesNano
 
-func enter_UtimesNano(path string, ts []Timespec) (err error) {
+func enter_UtimesNano(
+	path string,
+	ts []Timespec,
+) (err error) {
 	funcref := get_UtimesNanoAddr()
 	if validUtimensat() {
 		*funcref = utimesNanoImpl
@@ -1300,17 +1676,28 @@ func enter_UtimesNano(path string, ts []Timespec) (err error) {
 	return (*funcref)(path, ts)
 }
 
-func utimesNanoImpl(path string, ts []Timespec) (err error) {
+func utimesNanoImpl(
+	path string,
+	ts []Timespec,
+) (err error) {
 	if ts == nil {
 		return utimensat(AT_FDCWD, path, nil, 0)
 	}
 	if len(ts) != 2 {
 		return EINVAL
 	}
-	return utimensat(AT_FDCWD, path, (*[2]Timespec)(unsafe.Pointer(&ts[0])), 0)
+	return utimensat(
+		AT_FDCWD,
+		path,
+		(*[2]Timespec)(unsafe.Pointer(&ts[0])),
+		0,
+	)
 }
 
-func legacyUtimesNano(path string, ts []Timespec) (err error) {
+func legacyUtimesNano(
+	path string,
+	ts []Timespec,
+) (err error) {
 	if len(ts) != 2 {
 		return EINVAL
 	}
@@ -1320,19 +1707,28 @@ func legacyUtimesNano(path string, ts []Timespec) (err error) {
 		NsecToTimeval(TimespecToNsec(ts[0])),
 		NsecToTimeval(TimespecToNsec(ts[1])),
 	}
-	return utimes(path, (*[2]Timeval)(unsafe.Pointer(&tv[0])))
+	return utimes(
+		path,
+		(*[2]Timeval)(unsafe.Pointer(&tv[0])),
+	)
 }
 
 // End UtimesNano
 
 // Begin UtimesNanoAt
 
+//
 //go:nosplit
 func get_UtimesNanoAtAddr() *(func(dirfd int, path string, ts []Timespec, flags int) (err error))
 
 var UtimesNanoAt = enter_UtimesNanoAt
 
-func enter_UtimesNanoAt(dirfd int, path string, ts []Timespec, flags int) (err error) {
+func enter_UtimesNanoAt(
+	dirfd int,
+	path string,
+	ts []Timespec,
+	flags int,
+) (err error) {
 	funcref := get_UtimesNanoAtAddr()
 	if validUtimensat() {
 		*funcref = utimesNanoAtImpl
@@ -1342,17 +1738,32 @@ func enter_UtimesNanoAt(dirfd int, path string, ts []Timespec, flags int) (err e
 	return (*funcref)(dirfd, path, ts, flags)
 }
 
-func utimesNanoAtImpl(dirfd int, path string, ts []Timespec, flags int) (err error) {
+func utimesNanoAtImpl(
+	dirfd int,
+	path string,
+	ts []Timespec,
+	flags int,
+) (err error) {
 	if ts == nil {
 		return utimensat(dirfd, path, nil, flags)
 	}
 	if len(ts) != 2 {
 		return EINVAL
 	}
-	return utimensat(dirfd, path, (*[2]Timespec)(unsafe.Pointer(&ts[0])), flags)
+	return utimensat(
+		dirfd,
+		path,
+		(*[2]Timespec)(unsafe.Pointer(&ts[0])),
+		flags,
+	)
 }
 
-func legacyUtimesNanoAt(dirfd int, path string, ts []Timespec, flags int) (err error) {
+func legacyUtimesNanoAt(
+	dirfd int,
+	path string,
+	ts []Timespec,
+	flags int,
+) (err error) {
 	if path[0] != '/' {
 		dirPath, err := ZosFdToPath(dirfd)
 		if err != nil {
@@ -1387,7 +1798,9 @@ func legacyUtimesNanoAt(dirfd int, path string, ts []Timespec, flags int) (err e
 
 // End UtimesNanoAt
 
-func Getsockname(fd int) (sa Sockaddr, err error) {
+func Getsockname(
+	fd int,
+) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	if err = getsockname(fd, &rsa, &len); err != nil {
@@ -1675,15 +2088,21 @@ type nwmConnEntry struct {
 }
 
 var svcNameTable [][]byte = [][]byte{
-	[]byte("\xc5\xe9\xc2\xd5\xd4\xc9\xc6\xf4"), // svc_EZBNMIF4
+	[]byte(
+		"\xc5\xe9\xc2\xd5\xd4\xc9\xc6\xf4",
+	), // svc_EZBNMIF4
 }
 
 const (
 	svc_EZBNMIF4 = 0
 )
 
-func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
-	jobname := []byte("\x5c\x40\x40\x40\x40\x40\x40\x40") // "*"
+func GetsockoptTCPInfo(
+	fd, level, opt int,
+) (*TCPInfo, error) {
+	jobname := []byte(
+		"\x5c\x40\x40\x40\x40\x40\x40\x40",
+	) // "*"
 	responseBuffer := [4096]byte{0}
 	var bufferAlet, reasonCode uint32 = 0, 0
 	var bufferLen, returnValue, returnCode int32 = 4096, 0, 0
@@ -1703,14 +2122,18 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 		filter nwmFilter
 	})(unsafe.Pointer(&responseBuffer[0]))
 
-	EZBNMIF4 := svcLoad(&svcNameTable[svc_EZBNMIF4][0])
+	EZBNMIF4 := svcLoad(
+		&svcNameTable[svc_EZBNMIF4][0],
+	)
 	if EZBNMIF4 == nil {
 		return nil, errnoErr(EINVAL)
 	}
 
 	// GetGlobalStats EZBNMIF4 call
 	request.header.ident = nwmHeaderIdentifier
-	request.header.length = uint32(unsafe.Sizeof(request.header))
+	request.header.length = uint32(
+		unsafe.Sizeof(request.header),
+	)
 	request.header.version = nwmCurrentVer
 	request.header.nwmType = nwmGlobalStatsType
 	request.header.options = 0x80000000
@@ -1718,12 +2141,17 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 	svcCall(EZBNMIF4, &argv[0], &dsa[0])
 
 	// outputDesc field is filled by EZBNMIF4 on success
-	if returnCode != 0 || request.header.outputDesc.offset == 0 {
+	if returnCode != 0 ||
+		request.header.outputDesc.offset == 0 {
 		return nil, errnoErr(EINVAL)
 	}
 
 	// Check that EZBNMIF4 returned a nwmRecHeader
-	recHeader := (*nwmRecHeader)(unsafe.Pointer(&responseBuffer[request.header.outputDesc.offset]))
+	recHeader := (*nwmRecHeader)(
+		unsafe.Pointer(
+			&responseBuffer[request.header.outputDesc.offset],
+		),
+	)
 	if recHeader.ident != nwmRecHeaderIdentifier {
 		return nil, errnoErr(EINVAL)
 	}
@@ -1732,11 +2160,26 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 	var sections []*uint64
 	var sectionDesc *nwmTriplet = (*nwmTriplet)(unsafe.Pointer(&responseBuffer[0]))
 	for i := uint32(0); i < uint32(recHeader.number); i++ {
-		offset := request.header.outputDesc.offset + uint32(unsafe.Sizeof(*recHeader)) + i*uint32(unsafe.Sizeof(*sectionDesc))
-		sectionDesc = (*nwmTriplet)(unsafe.Pointer(&responseBuffer[offset]))
+		offset := request.header.outputDesc.offset + uint32(
+			unsafe.Sizeof(*recHeader),
+		) + i*uint32(
+			unsafe.Sizeof(*sectionDesc),
+		)
+		sectionDesc = (*nwmTriplet)(
+			unsafe.Pointer(
+				&responseBuffer[offset],
+			),
+		)
 		for j := uint32(0); j < sectionDesc.number; j++ {
 			offset = request.header.outputDesc.offset + sectionDesc.offset + j*sectionDesc.length
-			sections = append(sections, (*uint64)(unsafe.Pointer(&responseBuffer[offset])))
+			sections = append(
+				sections,
+				(*uint64)(
+					unsafe.Pointer(
+						&responseBuffer[offset],
+					),
+				),
+			)
 		}
 	}
 
@@ -1748,7 +2191,9 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 			if tcpStats != nil {
 				return nil, errnoErr(EINVAL)
 			}
-			tcpStats = (*nwmTCPStatsEntry)(unsafe.Pointer(ptr))
+			tcpStats = (*nwmTCPStatsEntry)(
+				unsafe.Pointer(ptr),
+			)
 		case nwmIPStatsIdentifier:
 		case nwmIPGStatsIdentifier:
 		case nwmUDPStatsIdentifier:
@@ -1767,12 +2212,18 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 	dsa = [18]uint64{0}
 	bufferAlet, reasonCode = 0, 0
 	bufferLen, returnValue, returnCode = 4096, 0, 0
-	nameptr := (*uint32)(unsafe.Pointer(uintptr(0x21c))) // Get jobname of current process
-	nameptr = (*uint32)(unsafe.Pointer(uintptr(*nameptr + 12)))
+	nameptr := (*uint32)(
+		unsafe.Pointer(uintptr(0x21c)),
+	) // Get jobname of current process
+	nameptr = (*uint32)(
+		unsafe.Pointer(uintptr(*nameptr + 12)),
+	)
 	argv[0] = unsafe.Pointer(uintptr(*nameptr))
 
 	request.header.ident = nwmHeaderIdentifier
-	request.header.length = uint32(unsafe.Sizeof(request.header))
+	request.header.length = uint32(
+		unsafe.Sizeof(request.header),
+	)
 	request.header.version = nwmCurrentVer
 	request.header.nwmType = nwmTCPConnType
 	request.header.options = 0x80000000
@@ -1781,13 +2232,23 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 
 	var localSockaddr RawSockaddrAny
 	socklen := _Socklen(SizeofSockaddrAny)
-	err := getsockname(fd, &localSockaddr, &socklen)
+	err := getsockname(
+		fd,
+		&localSockaddr,
+		&socklen,
+	)
 	if err != nil {
 		return nil, errnoErr(EINVAL)
 	}
 	if localSockaddr.Addr.Family == AF_INET {
-		localSockaddr := (*RawSockaddrInet4)(unsafe.Pointer(&localSockaddr.Addr))
-		localSockFilter := (*RawSockaddrInet4)(unsafe.Pointer(&request.filter.local[0]))
+		localSockaddr := (*RawSockaddrInet4)(
+			unsafe.Pointer(&localSockaddr.Addr),
+		)
+		localSockFilter := (*RawSockaddrInet4)(
+			unsafe.Pointer(
+				&request.filter.local[0],
+			),
+		)
 		localSockFilter.Family = AF_INET
 		var i int
 		for i = 0; i < 4; i++ {
@@ -1830,12 +2291,17 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 	svcCall(EZBNMIF4, &argv[0], &dsa[0])
 
 	// outputDesc field is filled by EZBNMIF4 on success
-	if returnCode != 0 || request.header.outputDesc.offset == 0 {
+	if returnCode != 0 ||
+		request.header.outputDesc.offset == 0 {
 		return nil, errnoErr(EINVAL)
 	}
 
 	// Check that EZBNMIF4 returned a nwmConnEntry
-	conn := (*nwmConnEntry)(unsafe.Pointer(&responseBuffer[request.header.outputDesc.offset]))
+	conn := (*nwmConnEntry)(
+		unsafe.Pointer(
+			&responseBuffer[request.header.outputDesc.offset],
+		),
+	)
 	if conn.ident != nwmTCPConnIdentifier {
 		return nil, errnoErr(EINVAL)
 	}
@@ -1847,7 +2313,9 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 	var tcpinfo TCPInfo
 	tcpinfo.State = uint8(conn.state)
 	tcpinfo.Ca_state = 0 // dummy
-	tcpinfo.Retransmits = uint8(tcpStats.retransSegs)
+	tcpinfo.Retransmits = uint8(
+		tcpStats.retransSegs,
+	)
 	tcpinfo.Probes = uint8(tcpStats.outWinProbes)
 	tcpinfo.Backoff = 0 // dummy
 	tcpinfo.Options = 0 // dummy
@@ -1860,10 +2328,18 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 	tcpinfo.Lost = 0               // dummy
 	tcpinfo.Retrans = conn.reXmtCount
 	tcpinfo.Fackets = 0 // dummy
-	tcpinfo.Last_data_sent = uint32(*(*uint64)(unsafe.Pointer(&conn.lastActivity[0])))
-	tcpinfo.Last_ack_sent = uint32(*(*uint64)(unsafe.Pointer(&conn.outOldestTime[0])))
-	tcpinfo.Last_data_recv = uint32(*(*uint64)(unsafe.Pointer(&conn.inOldestTime[0])))
-	tcpinfo.Last_ack_recv = uint32(*(*uint64)(unsafe.Pointer(&conn.inOldestTime[0])))
+	tcpinfo.Last_data_sent = uint32(
+		*(*uint64)(unsafe.Pointer(&conn.lastActivity[0])),
+	)
+	tcpinfo.Last_ack_sent = uint32(
+		*(*uint64)(unsafe.Pointer(&conn.outOldestTime[0])),
+	)
+	tcpinfo.Last_data_recv = uint32(
+		*(*uint64)(unsafe.Pointer(&conn.inOldestTime[0])),
+	)
+	tcpinfo.Last_ack_recv = uint32(
+		*(*uint64)(unsafe.Pointer(&conn.inOldestTime[0])),
+	)
 	tcpinfo.Pmtu = conn.sendMSS // dummy, NWMIfRouteMtu is a candidate
 	tcpinfo.Rcv_ssthresh = conn.ssThresh
 	tcpinfo.Rtt = conn.roundTripTime
@@ -1876,17 +2352,28 @@ func GetsockoptTCPInfo(fd, level, opt int) (*TCPInfo, error) {
 	tcpinfo.Rcv_space = conn.sendMSS     // dummy
 	tcpinfo.Total_retrans = conn.reXmtCount
 
-	svcUnload(&svcNameTable[svc_EZBNMIF4][0], EZBNMIF4)
+	svcUnload(
+		&svcNameTable[svc_EZBNMIF4][0],
+		EZBNMIF4,
+	)
 
 	return &tcpinfo, nil
 }
 
 // GetsockoptString returns the string value of the socket option opt for the
 // socket associated with fd at the given socket level.
-func GetsockoptString(fd, level, opt int) (string, error) {
+func GetsockoptString(
+	fd, level, opt int,
+) (string, error) {
 	buf := make([]byte, 256)
 	vallen := _Socklen(len(buf))
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&buf[0]), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&buf[0]),
+		&vallen,
+	)
 	if err != nil {
 		return "", err
 	}
@@ -1894,7 +2381,11 @@ func GetsockoptString(fd, level, opt int) (string, error) {
 	return ByteSliceToString(buf[:vallen]), nil
 }
 
-func Recvmsg(fd int, p, oob []byte, flags int) (n, oobn int, recvflags int, from Sockaddr, err error) {
+func Recvmsg(
+	fd int,
+	p, oob []byte,
+	flags int,
+) (n, oobn int, recvflags int, from Sockaddr, err error) {
 	var msg Msghdr
 	var rsa RawSockaddrAny
 	msg.Name = (*byte)(unsafe.Pointer(&rsa))
@@ -1911,7 +2402,9 @@ func Recvmsg(fd int, p, oob []byte, flags int) (n, oobn int, recvflags int, from
 			iov.Base = &dummy
 			iov.SetLen(1)
 		}
-		msg.Control = (*byte)(unsafe.Pointer(&oob[0]))
+		msg.Control = (*byte)(
+			unsafe.Pointer(&oob[0]),
+		)
 		msg.SetControllen(len(oob))
 	}
 	msg.Iov = &iov
@@ -1929,12 +2422,22 @@ func Recvmsg(fd int, p, oob []byte, flags int) (n, oobn int, recvflags int, from
 	return
 }
 
-func Sendmsg(fd int, p, oob []byte, to Sockaddr, flags int) (err error) {
+func Sendmsg(
+	fd int,
+	p, oob []byte,
+	to Sockaddr,
+	flags int,
+) (err error) {
 	_, err = SendmsgN(fd, p, oob, to, flags)
 	return
 }
 
-func SendmsgN(fd int, p, oob []byte, to Sockaddr, flags int) (n int, err error) {
+func SendmsgN(
+	fd int,
+	p, oob []byte,
+	to Sockaddr,
+	flags int,
+) (n int, err error) {
 	var ptr unsafe.Pointer
 	var salen _Socklen
 	if to != nil {
@@ -1959,7 +2462,9 @@ func SendmsgN(fd int, p, oob []byte, to Sockaddr, flags int) (n int, err error) 
 			iov.Base = &dummy
 			iov.SetLen(1)
 		}
-		msg.Control = (*byte)(unsafe.Pointer(&oob[0]))
+		msg.Control = (*byte)(
+			unsafe.Pointer(&oob[0]),
+		)
 		msg.SetControllen(len(oob))
 	}
 	msg.Iov = &iov
@@ -1980,7 +2485,10 @@ func Opendir(name string) (uintptr, error) {
 	}
 	err = nil
 	runtime.EnterSyscall()
-	dir, e2, e1 := CallLeFuncWithPtrReturn(GetZosLibVec()+SYS___OPENDIR_A<<4, uintptr(unsafe.Pointer(p)))
+	dir, e2, e1 := CallLeFuncWithPtrReturn(
+		GetZosLibVec()+SYS___OPENDIR_A<<4,
+		uintptr(unsafe.Pointer(p)),
+	)
 	runtime.ExitSyscall()
 	runtime.KeepAlive(unsafe.Pointer(p))
 	if dir == 0 {
@@ -1994,7 +2502,10 @@ func clearErrno()
 
 func Closedir(dir uintptr) error {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_CLOSEDIR<<4, dir)
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_CLOSEDIR<<4,
+		dir,
+	)
 	runtime.ExitSyscall()
 	if r0 != 0 {
 		return errnoErr2(e1, e2)
@@ -2004,12 +2515,19 @@ func Closedir(dir uintptr) error {
 
 func Seekdir(dir uintptr, pos int) {
 	runtime.EnterSyscall()
-	CallLeFuncWithErr(GetZosLibVec()+SYS_SEEKDIR<<4, dir, uintptr(pos))
+	CallLeFuncWithErr(
+		GetZosLibVec()+SYS_SEEKDIR<<4,
+		dir,
+		uintptr(pos),
+	)
 	runtime.ExitSyscall()
 }
 
 func Telldir(dir uintptr) (int, error) {
-	p, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_TELLDIR<<4, dir)
+	p, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_TELLDIR<<4,
+		dir,
+	)
 	pos := int(p)
 	if int64(p) == -1 {
 		return pos, errnoErr2(e1, e2)
@@ -2018,7 +2536,11 @@ func Telldir(dir uintptr) (int, error) {
 }
 
 // FcntlFlock performs a fcntl syscall for the F_GETLK, F_SETLK or F_SETLKW command.
-func FcntlFlock(fd uintptr, cmd int, lk *Flock_t) error {
+func FcntlFlock(
+	fd uintptr,
+	cmd int,
+	lk *Flock_t,
+) error {
 	// struct flock is packed on z/OS. We can't emulate that in Go so
 	// instead we pack it here.
 	var flock [24]byte
@@ -2028,7 +2550,12 @@ func FcntlFlock(fd uintptr, cmd int, lk *Flock_t) error {
 	*(*int64)(unsafe.Pointer(&flock[12])) = lk.Len
 	*(*int32)(unsafe.Pointer(&flock[20])) = lk.Pid
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_FCNTL<<4, fd, uintptr(cmd), uintptr(unsafe.Pointer(&flock)))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_FCNTL<<4,
+		fd,
+		uintptr(cmd),
+		uintptr(unsafe.Pointer(&flock)),
+	)
 	runtime.ExitSyscall()
 	lk.Type = *(*int16)(unsafe.Pointer(&flock[0]))
 	lk.Whence = *(*int16)(unsafe.Pointer(&flock[2]))
@@ -2043,7 +2570,11 @@ func FcntlFlock(fd uintptr, cmd int, lk *Flock_t) error {
 
 func impl_Flock(fd int, how int) (err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_FLOCK<<4, uintptr(fd), uintptr(how))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_FLOCK<<4,
+		uintptr(fd),
+		uintptr(how),
+	)
 	runtime.ExitSyscall()
 	if int64(r0) == -1 {
 		err = errnoErr2(e1, e2)
@@ -2051,13 +2582,17 @@ func impl_Flock(fd int, how int) (err error) {
 	return
 }
 
+//
 //go:nosplit
 func get_FlockAddr() *(func(fd int, how int) (err error))
 
 var Flock = enter_Flock
 
 func validFlock(fp uintptr) bool {
-	if funcptrtest(GetZosLibVec()+SYS_FLOCK<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS_FLOCK<<4,
+		"",
+	) == 0 {
 		if name, err := getLeFuncName(GetZosLibVec() + SYS_FLOCK<<4); err == nil {
 			return name == "flock"
 		}
@@ -2076,7 +2611,6 @@ func enter_Flock(fd int, how int) (err error) {
 }
 
 func legacyFlock(fd int, how int) error {
-
 	var flock_type int16
 	var fcntl_cmd int
 
@@ -2104,13 +2638,20 @@ func legacyFlock(fd int, how int) error {
 		Pid:    int32(Getppid()),
 	}
 
-	err := FcntlFlock(uintptr(fd), fcntl_cmd, &flock)
+	err := FcntlFlock(
+		uintptr(fd),
+		fcntl_cmd,
+		&flock,
+	)
 	return err
 }
 
 func Mlock(b []byte) (err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___MLOCKALL<<4, _BPX_NONSWAP)
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___MLOCKALL<<4,
+		_BPX_NONSWAP,
+	)
 	runtime.ExitSyscall()
 	if r0 != 0 {
 		err = errnoErr2(e1, e2)
@@ -2120,7 +2661,10 @@ func Mlock(b []byte) (err error) {
 
 func Mlock2(b []byte, flags int) (err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___MLOCKALL<<4, _BPX_NONSWAP)
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___MLOCKALL<<4,
+		_BPX_NONSWAP,
+	)
 	runtime.ExitSyscall()
 	if r0 != 0 {
 		err = errnoErr2(e1, e2)
@@ -2130,7 +2674,10 @@ func Mlock2(b []byte, flags int) (err error) {
 
 func Mlockall(flags int) (err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___MLOCKALL<<4, _BPX_NONSWAP)
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___MLOCKALL<<4,
+		_BPX_NONSWAP,
+	)
 	runtime.ExitSyscall()
 	if r0 != 0 {
 		err = errnoErr2(e1, e2)
@@ -2140,7 +2687,10 @@ func Mlockall(flags int) (err error) {
 
 func Munlock(b []byte) (err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___MLOCKALL<<4, _BPX_SWAP)
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___MLOCKALL<<4,
+		_BPX_SWAP,
+	)
 	runtime.ExitSyscall()
 	if r0 != 0 {
 		err = errnoErr2(e1, e2)
@@ -2150,7 +2700,10 @@ func Munlock(b []byte) (err error) {
 
 func Munlockall() (err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___MLOCKALL<<4, _BPX_SWAP)
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___MLOCKALL<<4,
+		_BPX_SWAP,
+	)
 	runtime.ExitSyscall()
 	if r0 != 0 {
 		err = errnoErr2(e1, e2)
@@ -2158,15 +2711,18 @@ func Munlockall() (err error) {
 	return
 }
 
-func ClockGettime(clockid int32, ts *Timespec) error {
-
-	var ticks_per_sec uint32 = 100 //TODO(kenan): value is currently hardcoded; need sysconf() call otherwise
+func ClockGettime(
+	clockid int32,
+	ts *Timespec,
+) error {
+	var ticks_per_sec uint32 = 100 // TODO(kenan): value is currently hardcoded; need sysconf() call otherwise
 	var nsec_per_sec int64 = 1000000000
 
 	if ts == nil {
 		return EFAULT
 	}
-	if clockid == CLOCK_REALTIME || clockid == CLOCK_MONOTONIC {
+	if clockid == CLOCK_REALTIME ||
+		clockid == CLOCK_MONOTONIC {
 		var nanotime int64 = runtime.Nanotime1()
 		ts.Sec = nanotime / nsec_per_sec
 		ts.Nsec = nanotime % nsec_per_sec
@@ -2186,12 +2742,17 @@ func ClockGettime(clockid int32, ts *Timespec) error {
 
 // Chtag
 
+//
 //go:nosplit
 func get_ChtagAddr() *(func(path string, ccsid uint64, textbit uint64) error)
 
 var Chtag = enter_Chtag
 
-func enter_Chtag(path string, ccsid uint64, textbit uint64) error {
+func enter_Chtag(
+	path string,
+	ccsid uint64,
+	textbit uint64,
+) error {
 	funcref := get_ChtagAddr()
 	if validSetxattr() {
 		*funcref = impl_Chtag
@@ -2201,32 +2762,57 @@ func enter_Chtag(path string, ccsid uint64, textbit uint64) error {
 	return (*funcref)(path, ccsid, textbit)
 }
 
-func legacy_Chtag(path string, ccsid uint64, textbit uint64) error {
+func legacy_Chtag(
+	path string,
+	ccsid uint64,
+	textbit uint64,
+) error {
 	tag := ccsid<<16 | textbit<<15
 	var tag_buff [8]byte
 	DecodeData(tag_buff[:], 8, tag)
-	return Setxattr(path, "filetag", tag_buff[:], XATTR_REPLACE)
+	return Setxattr(
+		path,
+		"filetag",
+		tag_buff[:],
+		XATTR_REPLACE,
+	)
 }
 
-func impl_Chtag(path string, ccsid uint64, textbit uint64) error {
+func impl_Chtag(
+	path string,
+	ccsid uint64,
+	textbit uint64,
+) error {
 	tag := ccsid<<16 | textbit<<15
 	var tag_buff [4]byte
 	DecodeData(tag_buff[:], 4, tag)
-	return Setxattr(path, "system.filetag", tag_buff[:], XATTR_REPLACE)
+	return Setxattr(
+		path,
+		"system.filetag",
+		tag_buff[:],
+		XATTR_REPLACE,
+	)
 }
 
 // End of Chtag
 
 // Nanosleep
 
+//
 //go:nosplit
 func get_NanosleepAddr() *(func(time *Timespec, leftover *Timespec) error)
 
 var Nanosleep = enter_Nanosleep
 
-func enter_Nanosleep(time *Timespec, leftover *Timespec) error {
+func enter_Nanosleep(
+	time *Timespec,
+	leftover *Timespec,
+) error {
 	funcref := get_NanosleepAddr()
-	if funcptrtest(GetZosLibVec()+SYS_NANOSLEEP<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS_NANOSLEEP<<4,
+		"",
+	) == 0 {
 		*funcref = impl_Nanosleep
 	} else {
 		*funcref = legacyNanosleep
@@ -2234,9 +2820,16 @@ func enter_Nanosleep(time *Timespec, leftover *Timespec) error {
 	return (*funcref)(time, leftover)
 }
 
-func impl_Nanosleep(time *Timespec, leftover *Timespec) error {
+func impl_Nanosleep(
+	time *Timespec,
+	leftover *Timespec,
+) error {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_NANOSLEEP<<4, uintptr(unsafe.Pointer(time)), uintptr(unsafe.Pointer(leftover)))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_NANOSLEEP<<4,
+		uintptr(unsafe.Pointer(time)),
+		uintptr(unsafe.Pointer(leftover)),
+	)
 	runtime.ExitSyscall()
 	if int64(r0) == -1 {
 		return errnoErr2(e1, e2)
@@ -2244,7 +2837,10 @@ func impl_Nanosleep(time *Timespec, leftover *Timespec) error {
 	return nil
 }
 
-func legacyNanosleep(time *Timespec, leftover *Timespec) error {
+func legacyNanosleep(
+	time *Timespec,
+	leftover *Timespec,
+) error {
 	t0 := runtime.Nanotime1()
 	var secrem uint32
 	var nsecrem uint32
@@ -2255,9 +2851,16 @@ func legacyNanosleep(time *Timespec, leftover *Timespec) error {
 	var err error
 	// repeatedly sleep for 1 second until less than 1 second left
 	for total-elapsed > 1000000000 {
-		rv, rc, _ = BpxCondTimedWait(uint32(1), uint32(0), uint32(CW_CONDVAR), &secrem, &nsecrem)
+		rv, rc, _ = BpxCondTimedWait(
+			uint32(1),
+			uint32(0),
+			uint32(CW_CONDVAR),
+			&secrem,
+			&nsecrem,
+		)
 		if rv != 0 && rc != 112 { // 112 is EAGAIN
-			if leftover != nil && rc == 120 { // 120 is EINTR
+			if leftover != nil &&
+				rc == 120 { // 120 is EINTR
 				leftover.Sec = int64(secrem)
 				leftover.Nsec = int64(nsecrem)
 			}
@@ -2268,7 +2871,13 @@ func legacyNanosleep(time *Timespec, leftover *Timespec) error {
 	}
 	// sleep the remainder
 	if total > elapsed {
-		rv, rc, _ = BpxCondTimedWait(uint32(0), uint32(total-elapsed), uint32(CW_CONDVAR), &secrem, &nsecrem)
+		rv, rc, _ = BpxCondTimedWait(
+			uint32(0),
+			uint32(total-elapsed),
+			uint32(CW_CONDVAR),
+			&secrem,
+			&nsecrem,
+		)
 	}
 	if leftover != nil && rc == 120 {
 		leftover.Sec = int64(secrem)
@@ -2296,8 +2905,10 @@ var (
 	errENOENT error = syscall.ENOENT
 )
 
-var ZosTraceLevel int
-var ZosTracefile *os.File
+var (
+	ZosTraceLevel int
+	ZosTracefile  *os.File
+)
 
 var (
 	signalNameMapOnce sync.Once
@@ -2340,7 +2951,9 @@ func errnoErr2(e Errno, e2 uintptr) error {
 	if ZosTraceLevel > 0 {
 		var name string
 		if reg == nil {
-			reg = regexp.MustCompile("(^unix\\.[^/]+$|.*\\/unix\\.[^/]+$)")
+			reg = regexp.MustCompile(
+				"(^unix\\.[^/]+$|.*\\/unix\\.[^/]+$)",
+			)
 		}
 		i := 1
 		pc, file, line, ok := runtime.Caller(i)
@@ -2353,8 +2966,17 @@ func errnoErr2(e Errno, e2 uintptr) error {
 		}
 		if ok {
 			if ZosTracefile == nil {
-				ZosConsolePrintf("From %s:%d\n", file, line)
-				ZosConsolePrintf("%s: %s (errno2=0x%x)\n", name, e.Error(), e2)
+				ZosConsolePrintf(
+					"From %s:%d\n",
+					file,
+					line,
+				)
+				ZosConsolePrintf(
+					"%s: %s (errno2=0x%x)\n",
+					name,
+					e.Error(),
+					e2,
+				)
 			} else {
 				fmt.Fprintf(ZosTracefile, "From %s:%d\n", file, line)
 				fmt.Fprintf(ZosTracefile, "%s: %s (errno2=0x%x)\n", name, e.Error(), e2)
@@ -2372,10 +2994,14 @@ func errnoErr2(e Errno, e2 uintptr) error {
 
 // ErrnoName returns the error name for error number e.
 func ErrnoName(e Errno) string {
-	i := sort.Search(len(errorList), func(i int) bool {
-		return errorList[i].num >= e
-	})
-	if i < len(errorList) && errorList[i].num == e {
+	i := sort.Search(
+		len(errorList),
+		func(i int) bool {
+			return errorList[i].num >= e
+		},
+	)
+	if i < len(errorList) &&
+		errorList[i].num == e {
 		return errorList[i].name
 	}
 	return ""
@@ -2383,10 +3009,14 @@ func ErrnoName(e Errno) string {
 
 // SignalName returns the signal name for signal number s.
 func SignalName(s syscall.Signal) string {
-	i := sort.Search(len(signalList), func(i int) bool {
-		return signalList[i].num >= s
-	})
-	if i < len(signalList) && signalList[i].num == s {
+	i := sort.Search(
+		len(signalList),
+		func(i int) bool {
+			return signalList[i].num >= s
+		},
+	)
+	if i < len(signalList) &&
+		signalList[i].num == s {
 		return signalList[i].name
 	}
 	return ""
@@ -2397,7 +3027,10 @@ func SignalName(s syscall.Signal) string {
 // The signal name should start with "SIG".
 func SignalNum(s string) syscall.Signal {
 	signalNameMapOnce.Do(func() {
-		signalNameMap = make(map[string]syscall.Signal, len(signalList))
+		signalNameMap = make(
+			map[string]syscall.Signal,
+			len(signalList),
+		)
 		for _, signal := range signalList {
 			signalNameMap[signal.name] = signal.num
 		}
@@ -2423,7 +3056,13 @@ type mmapper struct {
 	munmap func(addr uintptr, length uintptr) error
 }
 
-func (m *mmapper) Mmap(fd int, offset int64, length int, prot int, flags int) (data []byte, err error) {
+func (m *mmapper) Mmap(
+	fd int,
+	offset int64,
+	length int,
+	prot int,
+	flags int,
+) (data []byte, err error) {
 	if length <= 0 {
 		return nil, EINVAL
 	}
@@ -2432,13 +3071,20 @@ func (m *mmapper) Mmap(fd int, offset int64, length int, prot int, flags int) (d
 	flags |= __MAP_64
 
 	// Map the requested memory.
-	addr, errno := m.mmap(0, uintptr(length), prot, flags, fd, offset)
+	addr, errno := m.mmap(
+		0,
+		uintptr(length),
+		prot,
+		flags,
+		fd,
+		offset,
+	)
 	if errno != nil {
 		return nil, errno
 	}
 
 	// Slice memory layout
-	var sl = struct {
+	sl := struct {
 		addr uintptr
 		len  int
 		cap  int
@@ -2455,7 +3101,9 @@ func (m *mmapper) Mmap(fd int, offset int64, length int, prot int, flags int) (d
 	return b, nil
 }
 
-func (m *mmapper) Munmap(data []byte) (err error) {
+func (m *mmapper) Munmap(
+	data []byte,
+) (err error) {
 	if len(data) == 0 || len(data) != cap(data) {
 		return EINVAL
 	}
@@ -2481,7 +3129,10 @@ func Read(fd int, p []byte) (n int, err error) {
 	n, err = read(fd, p)
 	if raceenabled {
 		if n > 0 {
-			raceWriteRange(unsafe.Pointer(&p[0]), n)
+			raceWriteRange(
+				unsafe.Pointer(&p[0]),
+				n,
+			)
 		}
 		if err == nil {
 			raceAcquire(unsafe.Pointer(&ioSync))
@@ -2547,7 +3198,9 @@ func Connect(fd int, sa Sockaddr) (err error) {
 	return connect(fd, ptr, n)
 }
 
-func Getpeername(fd int) (sa Sockaddr, err error) {
+func Getpeername(
+	fd int,
+) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	if err = getpeername(fd, &rsa, &len); err != nil {
@@ -2556,76 +3209,160 @@ func Getpeername(fd int) (sa Sockaddr, err error) {
 	return anyToSockaddr(fd, &rsa)
 }
 
-func GetsockoptByte(fd, level, opt int) (value byte, err error) {
+func GetsockoptByte(
+	fd, level, opt int,
+) (value byte, err error) {
 	var n byte
 	vallen := _Socklen(1)
-	err = getsockopt(fd, level, opt, unsafe.Pointer(&n), &vallen)
+	err = getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&n),
+		&vallen,
+	)
 	return n, err
 }
 
-func GetsockoptInt(fd, level, opt int) (value int, err error) {
+func GetsockoptInt(
+	fd, level, opt int,
+) (value int, err error) {
 	var n int32
 	vallen := _Socklen(4)
-	err = getsockopt(fd, level, opt, unsafe.Pointer(&n), &vallen)
+	err = getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&n),
+		&vallen,
+	)
 	return int(n), err
 }
 
-func GetsockoptInet4Addr(fd, level, opt int) (value [4]byte, err error) {
+func GetsockoptInet4Addr(
+	fd, level, opt int,
+) (value [4]byte, err error) {
 	vallen := _Socklen(4)
-	err = getsockopt(fd, level, opt, unsafe.Pointer(&value[0]), &vallen)
+	err = getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value[0]),
+		&vallen,
+	)
 	return value, err
 }
 
-func GetsockoptIPMreq(fd, level, opt int) (*IPMreq, error) {
+func GetsockoptIPMreq(
+	fd, level, opt int,
+) (*IPMreq, error) {
 	var value IPMreq
 	vallen := _Socklen(SizeofIPMreq)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, err
 }
 
-func GetsockoptIPv6Mreq(fd, level, opt int) (*IPv6Mreq, error) {
+func GetsockoptIPv6Mreq(
+	fd, level, opt int,
+) (*IPv6Mreq, error) {
 	var value IPv6Mreq
 	vallen := _Socklen(SizeofIPv6Mreq)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, err
 }
 
-func GetsockoptIPv6MTUInfo(fd, level, opt int) (*IPv6MTUInfo, error) {
+func GetsockoptIPv6MTUInfo(
+	fd, level, opt int,
+) (*IPv6MTUInfo, error) {
 	var value IPv6MTUInfo
 	vallen := _Socklen(SizeofIPv6MTUInfo)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, err
 }
 
-func GetsockoptICMPv6Filter(fd, level, opt int) (*ICMPv6Filter, error) {
+func GetsockoptICMPv6Filter(
+	fd, level, opt int,
+) (*ICMPv6Filter, error) {
 	var value ICMPv6Filter
 	vallen := _Socklen(SizeofICMPv6Filter)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, err
 }
 
-func GetsockoptLinger(fd, level, opt int) (*Linger, error) {
+func GetsockoptLinger(
+	fd, level, opt int,
+) (*Linger, error) {
 	var linger Linger
 	vallen := _Socklen(SizeofLinger)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&linger), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&linger),
+		&vallen,
+	)
 	return &linger, err
 }
 
-func GetsockoptTimeval(fd, level, opt int) (*Timeval, error) {
+func GetsockoptTimeval(
+	fd, level, opt int,
+) (*Timeval, error) {
 	var tv Timeval
 	vallen := _Socklen(unsafe.Sizeof(tv))
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&tv), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&tv),
+		&vallen,
+	)
 	return &tv, err
 }
 
-func GetsockoptUint64(fd, level, opt int) (value uint64, err error) {
+func GetsockoptUint64(
+	fd, level, opt int,
+) (value uint64, err error) {
 	var n uint64
 	vallen := _Socklen(8)
-	err = getsockopt(fd, level, opt, unsafe.Pointer(&n), &vallen)
+	err = getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&n),
+		&vallen,
+	)
 	return n, err
 }
 
-func Recvfrom(fd int, p []byte, flags int) (n int, from Sockaddr, err error) {
+func Recvfrom(
+	fd int,
+	p []byte,
+	flags int,
+) (n int, from Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	if n, err = recvfrom(fd, p, flags, &rsa, &len); err != nil {
@@ -2637,7 +3374,12 @@ func Recvfrom(fd int, p []byte, flags int) (n int, from Sockaddr, err error) {
 	return
 }
 
-func Sendto(fd int, p []byte, flags int, to Sockaddr) (err error) {
+func Sendto(
+	fd int,
+	p []byte,
+	flags int,
+	to Sockaddr,
+) (err error) {
 	ptr, n, err := to.sockaddr()
 	if err != nil {
 		return err
@@ -2645,52 +3387,144 @@ func Sendto(fd int, p []byte, flags int, to Sockaddr) (err error) {
 	return sendto(fd, p, flags, ptr, n)
 }
 
-func SetsockoptByte(fd, level, opt int, value byte) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(&value), 1)
+func SetsockoptByte(
+	fd, level, opt int,
+	value byte,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		1,
+	)
 }
 
-func SetsockoptInt(fd, level, opt int, value int) (err error) {
-	var n = int32(value)
-	return setsockopt(fd, level, opt, unsafe.Pointer(&n), 4)
+func SetsockoptInt(
+	fd, level, opt int,
+	value int,
+) (err error) {
+	n := int32(value)
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&n),
+		4,
+	)
 }
 
-func SetsockoptInet4Addr(fd, level, opt int, value [4]byte) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(&value[0]), 4)
+func SetsockoptInet4Addr(
+	fd, level, opt int,
+	value [4]byte,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value[0]),
+		4,
+	)
 }
 
-func SetsockoptIPMreq(fd, level, opt int, mreq *IPMreq) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(mreq), SizeofIPMreq)
+func SetsockoptIPMreq(
+	fd, level, opt int,
+	mreq *IPMreq,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(mreq),
+		SizeofIPMreq,
+	)
 }
 
-func SetsockoptIPv6Mreq(fd, level, opt int, mreq *IPv6Mreq) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(mreq), SizeofIPv6Mreq)
+func SetsockoptIPv6Mreq(
+	fd, level, opt int,
+	mreq *IPv6Mreq,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(mreq),
+		SizeofIPv6Mreq,
+	)
 }
 
-func SetsockoptICMPv6Filter(fd, level, opt int, filter *ICMPv6Filter) error {
-	return setsockopt(fd, level, opt, unsafe.Pointer(filter), SizeofICMPv6Filter)
+func SetsockoptICMPv6Filter(
+	fd, level, opt int,
+	filter *ICMPv6Filter,
+) error {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(filter),
+		SizeofICMPv6Filter,
+	)
 }
 
-func SetsockoptLinger(fd, level, opt int, l *Linger) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(l), SizeofLinger)
+func SetsockoptLinger(
+	fd, level, opt int,
+	l *Linger,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(l),
+		SizeofLinger,
+	)
 }
 
-func SetsockoptString(fd, level, opt int, s string) (err error) {
+func SetsockoptString(
+	fd, level, opt int,
+	s string,
+) (err error) {
 	var p unsafe.Pointer
 	if len(s) > 0 {
 		p = unsafe.Pointer(&[]byte(s)[0])
 	}
-	return setsockopt(fd, level, opt, p, uintptr(len(s)))
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		p,
+		uintptr(len(s)),
+	)
 }
 
-func SetsockoptTimeval(fd, level, opt int, tv *Timeval) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(tv), unsafe.Sizeof(*tv))
+func SetsockoptTimeval(
+	fd, level, opt int,
+	tv *Timeval,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(tv),
+		unsafe.Sizeof(*tv),
+	)
 }
 
-func SetsockoptUint64(fd, level, opt int, value uint64) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(&value), 8)
+func SetsockoptUint64(
+	fd, level, opt int,
+	value uint64,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		8,
+	)
 }
 
-func Socket(domain, typ, proto int) (fd int, err error) {
+func Socket(
+	domain, typ, proto int,
+) (fd int, err error) {
 	if domain == AF_INET6 && SocketDisableIPv6 {
 		return -1, EAFNOSUPPORT
 	}
@@ -2698,7 +3532,9 @@ func Socket(domain, typ, proto int) (fd int, err error) {
 	return
 }
 
-func Socketpair(domain, typ, proto int) (fd [2]int, err error) {
+func Socketpair(
+	domain, typ, proto int,
+) (fd [2]int, err error) {
 	var fdx [2]int32
 	err = socketpair(domain, typ, proto, &fdx)
 	if err == nil {
@@ -2710,9 +3546,16 @@ func Socketpair(domain, typ, proto int) (fd [2]int, err error) {
 
 var ioSync int64
 
-func CloseOnExec(fd int) { fcntl(fd, F_SETFD, FD_CLOEXEC) }
+func CloseOnExec(
+	fd int,
+) {
+	fcntl(fd, F_SETFD, FD_CLOEXEC)
+}
 
-func SetNonblock(fd int, nonblocking bool) (err error) {
+func SetNonblock(
+	fd int,
+	nonblocking bool,
+) (err error) {
 	flag, err := fcntl(fd, F_GETFL, 0)
 	if err != nil {
 		return err
@@ -2731,11 +3574,17 @@ func SetNonblock(fd int, nonblocking bool) (err error) {
 // executable name should also be the first argument in argv (["ls", "-l"]).
 // envv are the environment variables that should be passed to the new
 // process (["USER=go", "PWD=/tmp"]).
-func Exec(argv0 string, argv []string, envv []string) error {
+func Exec(
+	argv0 string,
+	argv []string,
+	envv []string,
+) error {
 	return syscall.Exec(argv0, argv, envv)
 }
 
-func Getag(path string) (ccsid uint16, flag uint16, err error) {
+func Getag(
+	path string,
+) (ccsid uint16, flag uint16, err error) {
 	var val [8]byte
 	sz, err := Getxattr(path, "ccsid", val[:])
 	if err != nil {
@@ -2751,7 +3600,13 @@ func Getag(path string) (ccsid uint16, flag uint16, err error) {
 }
 
 // Mount begin
-func impl_Mount(source string, target string, fstype string, flags uintptr, data string) (err error) {
+func impl_Mount(
+	source string,
+	target string,
+	fstype string,
+	flags uintptr,
+	data string,
+) (err error) {
 	var _p0 *byte
 	_p0, err = BytePtrFromString(source)
 	if err != nil {
@@ -2773,7 +3628,14 @@ func impl_Mount(source string, target string, fstype string, flags uintptr, data
 		return
 	}
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___MOUNT1_A<<4, uintptr(unsafe.Pointer(_p0)), uintptr(unsafe.Pointer(_p1)), uintptr(unsafe.Pointer(_p2)), uintptr(flags), uintptr(unsafe.Pointer(_p3)))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___MOUNT1_A<<4,
+		uintptr(unsafe.Pointer(_p0)),
+		uintptr(unsafe.Pointer(_p1)),
+		uintptr(unsafe.Pointer(_p2)),
+		uintptr(flags),
+		uintptr(unsafe.Pointer(_p3)),
+	)
 	runtime.ExitSyscall()
 	if int64(r0) == -1 {
 		err = errnoErr2(e1, e2)
@@ -2781,32 +3643,61 @@ func impl_Mount(source string, target string, fstype string, flags uintptr, data
 	return
 }
 
+//
 //go:nosplit
 func get_MountAddr() *(func(source string, target string, fstype string, flags uintptr, data string) (err error))
 
 var Mount = enter_Mount
 
-func enter_Mount(source string, target string, fstype string, flags uintptr, data string) (err error) {
+func enter_Mount(
+	source string,
+	target string,
+	fstype string,
+	flags uintptr,
+	data string,
+) (err error) {
 	funcref := get_MountAddr()
 	if validMount() {
 		*funcref = impl_Mount
 	} else {
 		*funcref = legacyMount
 	}
-	return (*funcref)(source, target, fstype, flags, data)
+	return (*funcref)(
+		source,
+		target,
+		fstype,
+		flags,
+		data,
+	)
 }
 
-func legacyMount(source string, target string, fstype string, flags uintptr, data string) (err error) {
+func legacyMount(
+	source string,
+	target string,
+	fstype string,
+	flags uintptr,
+	data string,
+) (err error) {
 	if needspace := 8 - len(fstype); needspace <= 0 {
 		fstype = fstype[0:8]
 	} else {
 		fstype += "        "[0:needspace]
 	}
-	return mount_LE(target, source, fstype, uint32(flags), int32(len(data)), data)
+	return mount_LE(
+		target,
+		source,
+		fstype,
+		uint32(flags),
+		int32(len(data)),
+		data,
+	)
 }
 
 func validMount() bool {
-	if funcptrtest(GetZosLibVec()+SYS___MOUNT1_A<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS___MOUNT1_A<<4,
+		"",
+	) == 0 {
 		if name, err := getLeFuncName(GetZosLibVec() + SYS___MOUNT1_A<<4); err == nil {
 			return name == "__mount1_a"
 		}
@@ -2817,14 +3708,21 @@ func validMount() bool {
 // Mount end
 
 // Unmount begin
-func impl_Unmount(target string, flags int) (err error) {
+func impl_Unmount(
+	target string,
+	flags int,
+) (err error) {
 	var _p0 *byte
 	_p0, err = BytePtrFromString(target)
 	if err != nil {
 		return
 	}
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___UMOUNT2_A<<4, uintptr(unsafe.Pointer(_p0)), uintptr(flags))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___UMOUNT2_A<<4,
+		uintptr(unsafe.Pointer(_p0)),
+		uintptr(flags),
+	)
 	runtime.ExitSyscall()
 	if int64(r0) == -1 {
 		err = errnoErr2(e1, e2)
@@ -2832,14 +3730,21 @@ func impl_Unmount(target string, flags int) (err error) {
 	return
 }
 
+//
 //go:nosplit
 func get_UnmountAddr() *(func(target string, flags int) (err error))
 
 var Unmount = enter_Unmount
 
-func enter_Unmount(target string, flags int) (err error) {
+func enter_Unmount(
+	target string,
+	flags int,
+) (err error) {
 	funcref := get_UnmountAddr()
-	if funcptrtest(GetZosLibVec()+SYS___UMOUNT2_A<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS___UMOUNT2_A<<4,
+		"",
+	) == 0 {
 		*funcref = impl_Unmount
 	} else {
 		*funcref = legacyUnmount
@@ -2847,7 +3752,10 @@ func enter_Unmount(target string, flags int) (err error) {
 	return (*funcref)(target, flags)
 }
 
-func legacyUnmount(name string, mtm int) (err error) {
+func legacyUnmount(
+	name string,
+	mtm int,
+) (err error) {
 	// mountpoint is always a full path and starts with a '/'
 	// check if input string is not a mountpoint but a filesystem name
 	if name[0] != '/' {
@@ -2868,12 +3776,22 @@ func legacyUnmount(name string, mtm int) (err error) {
 		header W_Mnth
 		fsinfo [64]W_Mntent
 	}
-	fs_count, err := W_Getmntent_A((*byte)(unsafe.Pointer(&buffer)), int(unsafe.Sizeof(buffer)))
+	fs_count, err := W_Getmntent_A(
+		(*byte)(unsafe.Pointer(&buffer)),
+		int(unsafe.Sizeof(buffer)),
+	)
 	if err == nil {
 		err = EINVAL
 		for i := 0; i < fs_count; i++ {
-			if b2s(buffer.fsinfo[i].Mountpoint[:]) == name {
-				err = unmount_LE(b2s(buffer.fsinfo[i].Fsname[:]), mtm)
+			if b2s(
+				buffer.fsinfo[i].Mountpoint[:],
+			) == name {
+				err = unmount_LE(
+					b2s(
+						buffer.fsinfo[i].Fsname[:],
+					),
+					mtm,
+				)
 				break
 			}
 		}
@@ -2886,11 +3804,19 @@ func legacyUnmount(name string, mtm int) (err error) {
 // Unmount end
 
 func direntIno(buf []byte) (uint64, bool) {
-	return readInt(buf, unsafe.Offsetof(Dirent{}.Ino), unsafe.Sizeof(Dirent{}.Ino))
+	return readInt(
+		buf,
+		unsafe.Offsetof(Dirent{}.Ino),
+		unsafe.Sizeof(Dirent{}.Ino),
+	)
 }
 
 func direntReclen(buf []byte) (uint64, bool) {
-	return readInt(buf, unsafe.Offsetof(Dirent{}.Reclen), unsafe.Sizeof(Dirent{}.Reclen))
+	return readInt(
+		buf,
+		unsafe.Offsetof(Dirent{}.Reclen),
+		unsafe.Sizeof(Dirent{}.Reclen),
+	)
 }
 
 func direntNamlen(buf []byte) (uint64, bool) {
@@ -2898,10 +3824,16 @@ func direntNamlen(buf []byte) (uint64, bool) {
 	if !ok {
 		return 0, false
 	}
-	return reclen - uint64(unsafe.Offsetof(Dirent{}.Name)), true
+	return reclen - uint64(
+		unsafe.Offsetof(Dirent{}.Name),
+	), true
 }
 
-func direntLeToDirentUnix(dirent *direntLE, dir uintptr, path string) (Dirent, error) {
+func direntLeToDirentUnix(
+	dirent *direntLE,
+	dir uintptr,
+	path string,
+) (Dirent, error) {
 	var d Dirent
 
 	d.Ino = uint64(dirent.Ino)
@@ -2911,7 +3843,9 @@ func direntLeToDirentUnix(dirent *direntLE, dir uintptr, path string) (Dirent, e
 	}
 
 	d.Off = int64(offset)
-	s := string(bytes.Split(dirent.Name[:], []byte{0})[0])
+	s := string(
+		bytes.Split(dirent.Name[:], []byte{0})[0],
+	)
 	copy(d.Name[:], s)
 
 	d.Reclen = uint16(24 + len(d.NameString()))
@@ -2926,7 +3860,11 @@ func direntLeToDirentUnix(dirent *direntLE, dir uintptr, path string) (Dirent, e
 	return d, err
 }
 
-func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
+func Getdirentries(
+	fd int,
+	buf []byte,
+	basep *uintptr,
+) (n int, err error) {
 	// Simulation of Getdirentries port from the Darwin implementation.
 	// COMMENTS FROM DARWIN:
 	// It's not the full required semantics, but should handle the case
@@ -2968,7 +3906,11 @@ func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
 		}
 
 		// Dirent on zos has a different structure
-		entry, e := direntLeToDirentUnix(&entryLE, d, path)
+		entry, e := direntLeToDirentUnix(
+			&entryLE,
+			d,
+			path,
+		)
 		if e != nil {
 			return n, e
 		}
@@ -2983,7 +3925,10 @@ func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
 		}
 
 		// Copy entry into return buffer.
-		s := unsafe.Slice((*byte)(unsafe.Pointer(&entry)), reclen)
+		s := unsafe.Slice(
+			(*byte)(unsafe.Pointer(&entry)),
+			reclen,
+		)
 		copy(buf, s)
 
 		buf = buf[reclen:]
@@ -3001,12 +3946,17 @@ func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
 }
 
 func Err2ad() (eadd *int) {
-	r0, _, _ := CallLeFuncWithErr(GetZosLibVec() + SYS___ERR2AD<<4)
+	r0, _, _ := CallLeFuncWithErr(
+		GetZosLibVec() + SYS___ERR2AD<<4,
+	)
 	eadd = (*int)(unsafe.Pointer(r0))
 	return
 }
 
-func ZosConsolePrintf(format string, v ...interface{}) (int, error) {
+func ZosConsolePrintf(
+	format string,
+	v ...interface{},
+) (int, error) {
 	type __cmsg struct {
 		_            uint16
 		_            [2]uint8
@@ -3015,19 +3965,41 @@ func ZosConsolePrintf(format string, v ...interface{}) (int, error) {
 		_            [4]uint8
 	}
 	msg := fmt.Sprintf(format, v...)
-	strptr := unsafe.Pointer((*reflect.StringHeader)(unsafe.Pointer(&msg)).Data)
-	len := (*reflect.StringHeader)(unsafe.Pointer(&msg)).Len
-	cmsg := __cmsg{__msg_length: uint32(len), __msg: uintptr(strptr)}
+	strptr := unsafe.Pointer(
+		(*reflect.StringHeader)(
+			unsafe.Pointer(&msg),
+		).Data,
+	)
+	len := (*reflect.StringHeader)(
+		unsafe.Pointer(&msg),
+	).Len
+	cmsg := __cmsg{
+		__msg_length: uint32(len),
+		__msg:        uintptr(strptr),
+	}
 	cmd := uint32(0)
 	runtime.EnterSyscall()
-	rc, err2, err1 := CallLeFuncWithErr(GetZosLibVec()+SYS_____CONSOLE_A<<4, uintptr(unsafe.Pointer(&cmsg)), 0, uintptr(unsafe.Pointer(&cmd)))
+	rc, err2, err1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_____CONSOLE_A<<4,
+		uintptr(unsafe.Pointer(&cmsg)),
+		0,
+		uintptr(unsafe.Pointer(&cmd)),
+	)
 	runtime.ExitSyscall()
 	if rc != 0 {
-		return 0, fmt.Errorf("%s (errno2=0x%x)\n", err1.Error(), err2)
+		return 0, fmt.Errorf(
+			"%s (errno2=0x%x)\n",
+			err1.Error(),
+			err2,
+		)
 	}
 	return 0, nil
 }
-func ZosStringToEbcdicBytes(str string, nullterm bool) (ebcdicBytes []byte) {
+
+func ZosStringToEbcdicBytes(
+	str string,
+	nullterm bool,
+) (ebcdicBytes []byte) {
 	if nullterm {
 		ebcdicBytes = []byte(str + "\x00")
 	} else {
@@ -3036,61 +4008,108 @@ func ZosStringToEbcdicBytes(str string, nullterm bool) (ebcdicBytes []byte) {
 	A2e(ebcdicBytes)
 	return
 }
-func ZosEbcdicBytesToString(b []byte, trimRight bool) (str string) {
+
+func ZosEbcdicBytesToString(
+	b []byte,
+	trimRight bool,
+) (str string) {
 	res := make([]byte, len(b))
 	copy(res, b)
 	E2a(res)
 	if trimRight {
-		str = string(bytes.TrimRight(res, " \x00"))
+		str = string(
+			bytes.TrimRight(res, " \x00"),
+		)
 	} else {
 		str = string(res)
 	}
 	return
 }
 
-func fdToPath(dirfd int) (path string, err error) {
+func fdToPath(
+	dirfd int,
+) (path string, err error) {
 	var buffer [1024]byte
 	// w_ctrl()
-	ret := runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS_W_IOCTL<<4,
-		[]uintptr{uintptr(dirfd), 17, 1024, uintptr(unsafe.Pointer(&buffer[0]))})
+	ret := runtime.CallLeFuncByPtr(
+		runtime.XplinkLibvec+SYS_W_IOCTL<<4,
+		[]uintptr{
+			uintptr(dirfd),
+			17,
+			1024,
+			uintptr(unsafe.Pointer(&buffer[0])),
+		},
+	)
 	if ret == 0 {
 		zb := bytes.IndexByte(buffer[:], 0)
 		if zb == -1 {
 			zb = len(buffer)
 		}
 		// __e2a_l()
-		runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___E2A_L<<4,
-			[]uintptr{uintptr(unsafe.Pointer(&buffer[0])), uintptr(zb)})
+		runtime.CallLeFuncByPtr(
+			runtime.XplinkLibvec+SYS___E2A_L<<4,
+			[]uintptr{
+				uintptr(
+					unsafe.Pointer(&buffer[0]),
+				),
+				uintptr(zb),
+			},
+		)
 		return string(buffer[:zb]), nil
 	}
 	// __errno()
-	errno := int(*(*int32)(unsafe.Pointer(runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___ERRNO<<4,
-		[]uintptr{}))))
+	errno := int(
+		*(*int32)(unsafe.Pointer(runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___ERRNO<<4,
+			[]uintptr{}))),
+	)
 	// __errno2()
-	errno2 := int(runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS___ERRNO2<<4,
-		[]uintptr{}))
+	errno2 := int(
+		runtime.CallLeFuncByPtr(
+			runtime.XplinkLibvec+SYS___ERRNO2<<4,
+			[]uintptr{},
+		),
+	)
 	// strerror_r()
-	ret = runtime.CallLeFuncByPtr(runtime.XplinkLibvec+SYS_STRERROR_R<<4,
-		[]uintptr{uintptr(errno), uintptr(unsafe.Pointer(&buffer[0])), 1024})
+	ret = runtime.CallLeFuncByPtr(
+		runtime.XplinkLibvec+SYS_STRERROR_R<<4,
+		[]uintptr{
+			uintptr(errno),
+			uintptr(unsafe.Pointer(&buffer[0])),
+			1024,
+		},
+	)
 	if ret == 0 {
 		zb := bytes.IndexByte(buffer[:], 0)
 		if zb == -1 {
 			zb = len(buffer)
 		}
-		return "", fmt.Errorf("%s (errno2=0x%x)", buffer[:zb], errno2)
+		return "", fmt.Errorf(
+			"%s (errno2=0x%x)",
+			buffer[:zb],
+			errno2,
+		)
 	} else {
 		return "", fmt.Errorf("fdToPath errno %d (errno2=0x%x)", errno, errno2)
 	}
 }
 
-func impl_Mkfifoat(dirfd int, path string, mode uint32) (err error) {
+func impl_Mkfifoat(
+	dirfd int,
+	path string,
+	mode uint32,
+) (err error) {
 	var _p0 *byte
 	_p0, err = BytePtrFromString(path)
 	if err != nil {
 		return
 	}
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS___MKFIFOAT_A<<4, uintptr(dirfd), uintptr(unsafe.Pointer(_p0)), uintptr(mode))
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS___MKFIFOAT_A<<4,
+		uintptr(dirfd),
+		uintptr(unsafe.Pointer(_p0)),
+		uintptr(mode),
+	)
 	runtime.ExitSyscall()
 	if int64(r0) == -1 {
 		err = errnoErr2(e1, e2)
@@ -3098,14 +4117,22 @@ func impl_Mkfifoat(dirfd int, path string, mode uint32) (err error) {
 	return
 }
 
+//
 //go:nosplit
 func get_MkfifoatAddr() *(func(dirfd int, path string, mode uint32) (err error))
 
 var Mkfifoat = enter_Mkfifoat
 
-func enter_Mkfifoat(dirfd int, path string, mode uint32) (err error) {
+func enter_Mkfifoat(
+	dirfd int,
+	path string,
+	mode uint32,
+) (err error) {
 	funcref := get_MkfifoatAddr()
-	if funcptrtest(GetZosLibVec()+SYS___MKFIFOAT_A<<4, "") == 0 {
+	if funcptrtest(
+		GetZosLibVec()+SYS___MKFIFOAT_A<<4,
+		"",
+	) == 0 {
 		*funcref = impl_Mkfifoat
 	} else {
 		*funcref = legacy_Mkfifoat
@@ -3113,7 +4140,11 @@ func enter_Mkfifoat(dirfd int, path string, mode uint32) (err error) {
 	return (*funcref)(dirfd, path, mode)
 }
 
-func legacy_Mkfifoat(dirfd int, path string, mode uint32) (err error) {
+func legacy_Mkfifoat(
+	dirfd int,
+	path string,
+	mode uint32,
+) (err error) {
 	dirname, err := ZosFdToPath(dirfd)
 	if err != nil {
 		return err
@@ -3125,9 +4156,18 @@ func legacy_Mkfifoat(dirfd int, path string, mode uint32) (err error) {
 //sys	Grantpt(fildes int) (rc int, err error) = SYS_GRANTPT
 //sys	Unlockpt(fildes int) (rc int, err error) = SYS_UNLOCKPT
 
-func fcntlAsIs(fd uintptr, cmd int, arg uintptr) (val int, err error) {
+func fcntlAsIs(
+	fd uintptr,
+	cmd int,
+	arg uintptr,
+) (val int, err error) {
 	runtime.EnterSyscall()
-	r0, e2, e1 := CallLeFuncWithErr(GetZosLibVec()+SYS_FCNTL<<4, uintptr(fd), uintptr(cmd), arg)
+	r0, e2, e1 := CallLeFuncWithErr(
+		GetZosLibVec()+SYS_FCNTL<<4,
+		uintptr(fd),
+		uintptr(cmd),
+		arg,
+	)
 	runtime.ExitSyscall()
 	val = int(r0)
 	if int64(r0) == -1 {
@@ -3136,7 +4176,11 @@ func fcntlAsIs(fd uintptr, cmd int, arg uintptr) (val int, err error) {
 	return
 }
 
-func Fcntl(fd uintptr, cmd int, op interface{}) (ret int, err error) {
+func Fcntl(
+	fd uintptr,
+	cmd int,
+	op interface{},
+) (ret int, err error) {
 	switch op.(type) {
 	case *Flock_t:
 		err = FcntlFlock(fd, cmd, op.(*Flock_t))
@@ -3156,20 +4200,30 @@ func Fcntl(fd uintptr, cmd int, op interface{}) (ret int, err error) {
 	return
 }
 
-func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
+func Sendfile(
+	outfd int,
+	infd int,
+	offset *int64,
+	count int,
+) (written int, err error) {
 	if raceenabled {
 		raceReleaseMerge(unsafe.Pointer(&ioSync))
 	}
 	return sendfile(outfd, infd, offset, count)
 }
 
-func sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
+func sendfile(
+	outfd int,
+	infd int,
+	offset *int64,
+	count int,
+) (written int, err error) {
 	// TODO: use LE call instead if the call is implemented
 	originalOffset, err := Seek(infd, 0, SEEK_CUR)
 	if err != nil {
 		return -1, err
 	}
-	//start reading data from in_fd
+	// start reading data from in_fd
 	if offset != nil {
 		_, err := Seek(infd, *offset, SEEK_SET)
 		if err != nil {
@@ -3198,13 +4252,17 @@ func sendfile(outfd int, infd int, offset *int64, count int) (written int, err e
 		return -1, err
 	}
 
-	//When sendfile() returns, this variable will be set to the
+	// When sendfile() returns, this variable will be set to the
 	// offset of the byte following the last byte that was read.
 	if offset != nil {
 		*offset = *offset + int64(n)
 		// If offset is not NULL, then sendfile() does not modify the file
 		// offset of in_fd
-		_, err := Seek(infd, originalOffset, SEEK_SET)
+		_, err := Seek(
+			infd,
+			originalOffset,
+			SEEK_SET,
+		)
 		if err != nil {
 			return -1, err
 		}

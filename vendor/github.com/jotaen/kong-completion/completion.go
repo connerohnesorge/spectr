@@ -3,7 +3,6 @@ package kongcompletion
 import (
 	"errors"
 	"fmt"
-
 	"os"
 	"path/filepath"
 
@@ -16,7 +15,7 @@ import (
 // user what to do with the printed code.
 type Completion struct {
 	Shell string `arg:"" help:"The name of the shell you are using" enum:"bash,zsh,fish," default:""`
-	Code  bool   `short:"c" help:"Generate the initialization code"`
+	Code  bool   `       help:"Generate the initialization code"                                     short:"c"`
 }
 
 // Help is a predefined kong method for printing the help text.
@@ -31,7 +30,9 @@ If no shell is specified, it tries to detect your current login shell automatica
 }
 
 // Run is a predefined kong method that contains the command’s main procedure.
-func (c *Completion) Run(ctx *kong.Context) error {
+func (c *Completion) Run(
+	ctx *kong.Context,
+) error {
 	binInfo, err := determineBinaryInfo(ctx)
 	if err != nil {
 		return err
@@ -75,28 +76,42 @@ func (c *Completion) Run(ctx *kong.Context) error {
 func detectShell() (shell, error) {
 	shellName, err := loginshell.Shell()
 	if err != nil {
-		return shell{}, errors.New("couldn't determine user's shell")
+		return shell{}, errors.New(
+			"couldn't determine user's shell",
+		)
 	}
 	sh, ok := shells[filepath.Base(shellName)]
 	if !ok {
-		return shell{}, errors.New("this shell is not supported (" + shellName + ")")
+		return shell{}, errors.New(
+			"this shell is not supported (" + shellName + ")",
+		)
 	}
 	return sh, nil
 }
 
 // determineBinaryInfo tries to determine information about the current command.
-func determineBinaryInfo(ctx *kong.Context) (templateData, error) {
+func determineBinaryInfo(
+	ctx *kong.Context,
+) (templateData, error) {
 	bin, err := os.Executable()
 	if err != nil {
-		return templateData{}, fmt.Errorf("couldn't determine absolute path to binary: %w", err)
+		return templateData{}, fmt.Errorf(
+			"couldn't determine absolute path to binary: %w",
+			err,
+		)
 	}
 	bin, err = filepath.Abs(bin)
 	if err != nil {
-		return templateData{}, fmt.Errorf("couldn't determine absolute path to binary: %w", err)
+		return templateData{}, fmt.Errorf(
+			"couldn't determine absolute path to binary: %w",
+			err,
+		)
 	}
 
 	useDefaultShellComp := func() bool {
-		if ctx.Selected().Tag.Get("completion-shell-default") == "false" {
+		if ctx.Selected().Tag.Get(
+			"completion-shell-default",
+		) == "false" {
 			return false
 		}
 		return true

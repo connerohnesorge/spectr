@@ -89,7 +89,10 @@ const (
 // [HasTrailingLineBreak] or [HasTrailingLineBreakInString] on the last rune.
 //
 // [UAX #14 LB3]: https://www.unicode.org/reports/tr14/#Algorithm
-func Step(b []byte, state int) (cluster, rest []byte, boundaries int, newState int) {
+func Step(
+	b []byte,
+	state int,
+) (cluster, rest []byte, boundaries int, newState int) {
 	// An empty byte slice returns nothing.
 	if len(b) == 0 {
 		return
@@ -97,7 +100,9 @@ func Step(b []byte, state int) (cluster, rest []byte, boundaries int, newState i
 
 	// Extract the first rune.
 	r, length := utf8.DecodeRune(b)
-	if len(b) <= length { // If we're already past the end, there is nothing else to parse.
+	if len(
+		b,
+	) <= length { // If we're already past the end, there is nothing else to parse.
 		var prop int
 		if state < 0 {
 			prop = propertyGraphemes(r)
@@ -111,10 +116,28 @@ func Step(b []byte, state int) (cluster, rest []byte, boundaries int, newState i
 	var graphemeState, wordState, sentenceState, lineState, firstProp int
 	remainder := b[length:]
 	if state < 0 {
-		graphemeState, firstProp, _ = transitionGraphemeState(state, r)
-		wordState, _ = transitionWordBreakState(state, r, remainder, "")
-		sentenceState, _ = transitionSentenceBreakState(state, r, remainder, "")
-		lineState, _ = transitionLineBreakState(state, r, remainder, "")
+		graphemeState, firstProp, _ = transitionGraphemeState(
+			state,
+			r,
+		)
+		wordState, _ = transitionWordBreakState(
+			state,
+			r,
+			remainder,
+			"",
+		)
+		sentenceState, _ = transitionSentenceBreakState(
+			state,
+			r,
+			remainder,
+			"",
+		)
+		lineState, _ = transitionLineBreakState(
+			state,
+			r,
+			remainder,
+			"",
+		)
 	} else {
 		graphemeState = state & maskGraphemeState
 		wordState = (state >> shiftWordState) & maskWordState
@@ -134,10 +157,28 @@ func Step(b []byte, state int) (cluster, rest []byte, boundaries int, newState i
 		r, l := utf8.DecodeRune(remainder)
 		remainder = b[length+l:]
 
-		graphemeState, prop, graphemeBoundary = transitionGraphemeState(graphemeState, r)
-		wordState, wordBoundary = transitionWordBreakState(wordState, r, remainder, "")
-		sentenceState, sentenceBoundary = transitionSentenceBreakState(sentenceState, r, remainder, "")
-		lineState, lineBreak = transitionLineBreakState(lineState, r, remainder, "")
+		graphemeState, prop, graphemeBoundary = transitionGraphemeState(
+			graphemeState,
+			r,
+		)
+		wordState, wordBoundary = transitionWordBreakState(
+			wordState,
+			r,
+			remainder,
+			"",
+		)
+		sentenceState, sentenceBoundary = transitionSentenceBreakState(
+			sentenceState,
+			r,
+			remainder,
+			"",
+		)
+		lineState, lineBreak = transitionLineBreakState(
+			lineState,
+			r,
+			remainder,
+			"",
+		)
 
 		if graphemeBoundary {
 			boundary := lineBreak | (width << ShiftWidth)
@@ -168,7 +209,10 @@ func Step(b []byte, state int) (cluster, rest []byte, boundaries int, newState i
 }
 
 // StepString is like [Step] but its input and outputs are strings.
-func StepString(str string, state int) (cluster, rest string, boundaries int, newState int) {
+func StepString(
+	str string,
+	state int,
+) (cluster, rest string, boundaries int, newState int) {
 	// An empty byte slice returns nothing.
 	if len(str) == 0 {
 		return
@@ -176,7 +220,9 @@ func StepString(str string, state int) (cluster, rest string, boundaries int, ne
 
 	// Extract the first rune.
 	r, length := utf8.DecodeRuneInString(str)
-	if len(str) <= length { // If we're already past the end, there is nothing else to parse.
+	if len(
+		str,
+	) <= length { // If we're already past the end, there is nothing else to parse.
 		prop := propertyGraphemes(r)
 		return str, "", LineMustBreak | (1 << shiftWord) | (1 << shiftSentence) | (runeWidth(r, prop) << ShiftWidth), grAny | (wbAny << shiftWordState) | (sbAny << shiftSentenceState) | (lbAny << shiftLineState)
 	}
@@ -185,10 +231,28 @@ func StepString(str string, state int) (cluster, rest string, boundaries int, ne
 	var graphemeState, wordState, sentenceState, lineState, firstProp int
 	remainder := str[length:]
 	if state < 0 {
-		graphemeState, firstProp, _ = transitionGraphemeState(state, r)
-		wordState, _ = transitionWordBreakState(state, r, nil, remainder)
-		sentenceState, _ = transitionSentenceBreakState(state, r, nil, remainder)
-		lineState, _ = transitionLineBreakState(state, r, nil, remainder)
+		graphemeState, firstProp, _ = transitionGraphemeState(
+			state,
+			r,
+		)
+		wordState, _ = transitionWordBreakState(
+			state,
+			r,
+			nil,
+			remainder,
+		)
+		sentenceState, _ = transitionSentenceBreakState(
+			state,
+			r,
+			nil,
+			remainder,
+		)
+		lineState, _ = transitionLineBreakState(
+			state,
+			r,
+			nil,
+			remainder,
+		)
 	} else {
 		graphemeState = state & maskGraphemeState
 		wordState = (state >> shiftWordState) & maskWordState
@@ -208,10 +272,28 @@ func StepString(str string, state int) (cluster, rest string, boundaries int, ne
 		r, l := utf8.DecodeRuneInString(remainder)
 		remainder = str[length+l:]
 
-		graphemeState, prop, graphemeBoundary = transitionGraphemeState(graphemeState, r)
-		wordState, wordBoundary = transitionWordBreakState(wordState, r, nil, remainder)
-		sentenceState, sentenceBoundary = transitionSentenceBreakState(sentenceState, r, nil, remainder)
-		lineState, lineBreak = transitionLineBreakState(lineState, r, nil, remainder)
+		graphemeState, prop, graphemeBoundary = transitionGraphemeState(
+			graphemeState,
+			r,
+		)
+		wordState, wordBoundary = transitionWordBreakState(
+			wordState,
+			r,
+			nil,
+			remainder,
+		)
+		sentenceState, sentenceBoundary = transitionSentenceBreakState(
+			sentenceState,
+			r,
+			nil,
+			remainder,
+		)
+		lineState, lineBreak = transitionLineBreakState(
+			lineState,
+			r,
+			nil,
+			remainder,
+		)
 
 		if graphemeBoundary {
 			boundary := lineBreak | (width << ShiftWidth)

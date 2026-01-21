@@ -23,23 +23,38 @@ var fileShareValidFlags uint32 = 0x00000007
 // not a File with the same file descriptor as os.Stdin, the cancel
 // function does nothing and always returns false. The Windows implementation
 // is based on WaitForMultipleObject with overlapping reads from CONIN$.
-func NewReader(reader io.Reader) (CancelReader, error) {
-	if f, ok := reader.(File); !ok || f.Fd() != os.Stdin.Fd() {
+func NewReader(
+	reader io.Reader,
+) (CancelReader, error) {
+	if f, ok := reader.(File); !ok ||
+		f.Fd() != os.Stdin.Fd() {
 		return newFallbackCancelReader(reader)
 	}
 
 	// it is necessary to open CONIN$ (NOT windows.STD_INPUT_HANDLE) in
 	// overlapped mode to be able to use it with WaitForMultipleObjects.
 	conin, err := windows.CreateFile(
-		&(utf16.Encode([]rune("CONIN$\x00"))[0]), windows.GENERIC_READ|windows.GENERIC_WRITE,
-		fileShareValidFlags, nil, windows.OPEN_EXISTING, windows.FILE_FLAG_OVERLAPPED, 0)
+		&(utf16.Encode([]rune("CONIN$\x00"))[0]),
+		windows.GENERIC_READ|windows.GENERIC_WRITE,
+		fileShareValidFlags,
+		nil,
+		windows.OPEN_EXISTING,
+		windows.FILE_FLAG_OVERLAPPED,
+		0,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("open CONIN$ in overlapping mode: %w", err)
+		return nil, fmt.Errorf(
+			"open CONIN$ in overlapping mode: %w",
+			err,
+		)
 	}
 
 	resetConsole, err := prepareConsole(conin)
 	if err != nil {
-		return nil, fmt.Errorf("prepare console: %w", err)
+		return nil, fmt.Errorf(
+			"prepare console: %w",
+			err,
+		)
 	}
 
 	// flush input, otherwise it can contain events which trigger
@@ -47,19 +62,33 @@ func NewReader(reader io.Reader) (CancelReader, error) {
 	// un-cancelable read
 	err = flushConsoleInputBuffer(conin)
 	if err != nil {
-		return nil, fmt.Errorf("flush console input buffer: %w", err)
+		return nil, fmt.Errorf(
+			"flush console input buffer: %w",
+			err,
+		)
 	}
 
-	cancelEvent, err := windows.CreateEvent(nil, 0, 0, nil)
+	cancelEvent, err := windows.CreateEvent(
+		nil,
+		0,
+		0,
+		nil,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("create stop event: %w", err)
+		return nil, fmt.Errorf(
+			"create stop event: %w",
+			err,
+		)
 	}
 
 	return &winCancelReader{
-		conin:              conin,
-		cancelEvent:        cancelEvent,
-		resetConsole:       resetConsole,
-		blockingReadSignal: make(chan struct{}, 1),
+		conin:        conin,
+		cancelEvent:  cancelEvent,
+		resetConsole: resetConsole,
+		blockingReadSignal: make(
+			chan struct{},
+			1,
+		),
 	}, nil
 }
 
@@ -72,7 +101,9 @@ type winCancelReader struct {
 	blockingReadSignal chan struct{}
 }
 
-func (r *winCancelReader) Read(data []byte) (int, error) {
+func (r *winCancelReader) Read(
+	data []byte,
+) (int, error) {
 	if r.isCanceled() {
 		return 0, ErrCanceled
 	}
@@ -118,7 +149,10 @@ func (r *winCancelReader) Cancel() bool {
 func (r *winCancelReader) Close() error {
 	err := windows.CloseHandle(r.cancelEvent)
 	if err != nil {
-		return fmt.Errorf("closing cancel event handle: %w", err)
+		return fmt.Errorf(
+			"closing cancel event handle: %w",
+			err,
+		)
 	}
 
 	err = r.resetConsole()
@@ -135,7 +169,11 @@ func (r *winCancelReader) Close() error {
 }
 
 func (r *winCancelReader) wait() error {
-	event, err := windows.WaitForMultipleObjects([]windows.Handle{r.conin, r.cancelEvent}, false, windows.INFINITE)
+	event, err := windows.WaitForMultipleObjects(
+		[]windows.Handle{r.conin, r.cancelEvent},
+		false,
+		windows.INFINITE,
+	)
 	switch {
 	case windows.WAIT_OBJECT_0 <= event && event < windows.WAIT_OBJECT_0+2:
 		if event == windows.WAIT_OBJECT_0+1 {
@@ -146,7 +184,10 @@ func (r *winCancelReader) wait() error {
 			return nil
 		}
 
-		return fmt.Errorf("unexpected wait object is ready: %d", event-windows.WAIT_OBJECT_0)
+		return fmt.Errorf(
+			"unexpected wait object is ready: %d",
+			event-windows.WAIT_OBJECT_0,
+		)
 	case windows.WAIT_ABANDONED <= event && event < windows.WAIT_ABANDONED+2:
 		return fmt.Errorf("abandoned")
 	case event == uint32(windows.WAIT_TIMEOUT):
@@ -154,15 +195,28 @@ func (r *winCancelReader) wait() error {
 	case event == windows.WAIT_FAILED:
 		return fmt.Errorf("failed")
 	default:
-		return fmt.Errorf("unexpected error: %w", error(err))
+		return fmt.Errorf(
+			"unexpected error: %w",
+			error(err),
+		)
 	}
 }
 
 // readAsync is necessary to read from a windows.Handle in overlapping mode.
-func (r *winCancelReader) readAsync(data []byte) (int, error) {
-	hevent, err := windows.CreateEvent(nil, 0, 0, nil)
+func (r *winCancelReader) readAsync(
+	data []byte,
+) (int, error) {
+	hevent, err := windows.CreateEvent(
+		nil,
+		0,
+		0,
+		nil,
+	)
 	if err != nil {
-		return 0, fmt.Errorf("create event: %w", err)
+		return 0, fmt.Errorf(
+			"create event: %w",
+			err,
+		)
 	}
 
 	overlapped := windows.Overlapped{
@@ -171,13 +225,24 @@ func (r *winCancelReader) readAsync(data []byte) (int, error) {
 
 	var n uint32
 
-	err = windows.ReadFile(r.conin, data, &n, &overlapped)
-	if err != nil && err != windows.ERROR_IO_PENDING {
+	err = windows.ReadFile(
+		r.conin,
+		data,
+		&n,
+		&overlapped,
+	)
+	if err != nil &&
+		err != windows.ERROR_IO_PENDING {
 		return int(n), err
 	}
 
 	r.blockingReadSignal <- struct{}{}
-	err = windows.GetOverlappedResult(r.conin, &overlapped, &n, true)
+	err = windows.GetOverlappedResult(
+		r.conin,
+		&overlapped,
+		&n,
+		true,
+	)
 	if err != nil {
 		return int(n), nil
 	}
@@ -186,12 +251,20 @@ func (r *winCancelReader) readAsync(data []byte) (int, error) {
 	return int(n), nil
 }
 
-func prepareConsole(input windows.Handle) (reset func() error, err error) {
+func prepareConsole(
+	input windows.Handle,
+) (reset func() error, err error) {
 	var originalMode uint32
 
-	err = windows.GetConsoleMode(input, &originalMode)
+	err = windows.GetConsoleMode(
+		input,
+		&originalMode,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("get console mode: %w", err)
+		return nil, fmt.Errorf(
+			"get console mode: %w",
+			err,
+		)
 	}
 
 	var newMode uint32
@@ -215,13 +288,22 @@ func prepareConsole(input windows.Handle) (reset func() error, err error) {
 
 	err = windows.SetConsoleMode(input, newMode)
 	if err != nil {
-		return nil, fmt.Errorf("set console mode: %w", err)
+		return nil, fmt.Errorf(
+			"set console mode: %w",
+			err,
+		)
 	}
 
 	return func() error {
-		err := windows.SetConsoleMode(input, originalMode)
+		err := windows.SetConsoleMode(
+			input,
+			originalMode,
+		)
 		if err != nil {
-			return fmt.Errorf("reset console mode: %w", err)
+			return fmt.Errorf(
+				"reset console mode: %w",
+				err,
+			)
 		}
 
 		return nil
@@ -229,13 +311,24 @@ func prepareConsole(input windows.Handle) (reset func() error, err error) {
 }
 
 var (
-	modkernel32                 = windows.NewLazySystemDLL("kernel32.dll")
-	procFlushConsoleInputBuffer = modkernel32.NewProc("FlushConsoleInputBuffer")
+	modkernel32 = windows.NewLazySystemDLL(
+		"kernel32.dll",
+	)
+	procFlushConsoleInputBuffer = modkernel32.NewProc(
+		"FlushConsoleInputBuffer",
+	)
 )
 
-func flushConsoleInputBuffer(consoleInput windows.Handle) error {
-	r, _, e := syscall.Syscall(procFlushConsoleInputBuffer.Addr(), 1,
-		uintptr(consoleInput), 0, 0)
+func flushConsoleInputBuffer(
+	consoleInput windows.Handle,
+) error {
+	r, _, e := syscall.Syscall(
+		procFlushConsoleInputBuffer.Addr(),
+		1,
+		uintptr(consoleInput),
+		0,
+		0,
+	)
 	if r == 0 {
 		return error(e)
 	}

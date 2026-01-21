@@ -11,11 +11,18 @@ import (
 // Each element in the Plugins list *must* be a pointer to a structure.
 type Plugins []any
 
-func build(k *Kong, ast any) (app *Application, err error) {
+func build(
+	k *Kong,
+	ast any,
+) (app *Application, err error) {
 	v := reflect.ValueOf(ast)
 	iv := reflect.Indirect(v)
-	if v.Kind() != reflect.Ptr || iv.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("expected a pointer to a struct but got %T", ast)
+	if v.Kind() != reflect.Ptr ||
+		iv.Kind() != reflect.Struct {
+		return nil, fmt.Errorf(
+			"expected a pointer to a struct but got %T",
+			ast,
+		)
 	}
 
 	app = &Application{}
@@ -25,15 +32,27 @@ func build(k *Kong, ast any) (app *Application, err error) {
 		seenFlags[flag.Name] = true
 	}
 
-	node, err := buildNode(k, iv, ApplicationNode, newEmptyTag(), seenFlags)
+	node, err := buildNode(
+		k,
+		iv,
+		ApplicationNode,
+		newEmptyTag(),
+		seenFlags,
+	)
 	if err != nil {
 		return nil, err
 	}
-	if len(node.Positional) > 0 && len(node.Children) > 0 {
-		return nil, fmt.Errorf("can't mix positional arguments and branching arguments on %T", ast)
+	if len(node.Positional) > 0 &&
+		len(node.Children) > 0 {
+		return nil, fmt.Errorf(
+			"can't mix positional arguments and branching arguments on %T",
+			ast,
+		)
 	}
 	app.Node = node
-	app.Node.Flags = append(extraFlags, app.Node.Flags...)
+	app.Node.Flags = append(
+		extraFlags,
+		app.Node.Flags...)
 	app.Tag = newEmptyTag()
 	app.Tag.Vars = k.vars
 	return app, nil
@@ -49,7 +68,10 @@ type flattenedField struct {
 	tag   *Tag
 }
 
-func flattenedFields(v reflect.Value, ptag *Tag) (out []flattenedField, err error) {
+func flattenedFields(
+	v reflect.Value,
+	ptag *Tag,
+) (out []flattenedField, err error) {
 	v = reflect.Indirect(v)
 	if v.Kind() != reflect.Struct {
 		return out, nil
@@ -77,13 +99,20 @@ func flattenedFields(v reflect.Value, ptag *Tag) (out []flattenedField, err erro
 		// Combine parent vars.
 		tag.Vars = ptag.Vars.CloneWith(tag.Vars)
 		// Command and embedded structs can be pointers, so we hydrate them now.
-		if (tag.Cmd || tag.Embed) && ft.Type.Kind() == reflect.Ptr {
-			fv = reflect.New(ft.Type.Elem()).Elem()
-			v.FieldByIndex(ft.Index).Set(fv.Addr())
+		if (tag.Cmd || tag.Embed) &&
+			ft.Type.Kind() == reflect.Ptr {
+			fv = reflect.New(ft.Type.Elem()).
+				Elem()
+			v.FieldByIndex(ft.Index).
+				Set(fv.Addr())
 		}
 		if !ft.Anonymous && !tag.Embed {
 			if fv.CanSet() {
-				field := flattenedField{field: ft, value: fv, tag: tag}
+				field := flattenedField{
+					field: ft,
+					value: fv,
+					tag:   tag,
+				}
 				out = append(out, field)
 			}
 			continue
@@ -112,7 +141,10 @@ func flattenedFields(v reflect.Value, ptag *Tag) (out []flattenedField, err erro
 	return out, nil
 }
 
-func removeIgnored(fields []flattenedField, ignored map[string]bool) []flattenedField {
+func removeIgnored(
+	fields []flattenedField,
+	ignored map[string]bool,
+) []flattenedField {
 	j := 0
 	for i := 0; i < len(fields); i++ {
 		if ignored[fields[i].field.Name] {
@@ -132,7 +164,13 @@ func removeIgnored(fields []flattenedField, ignored map[string]bool) []flattened
 // Build a Node in the Kong data model.
 //
 // "v" is the value to create the node from, "typ" is the output Node type.
-func buildNode(k *Kong, v reflect.Value, typ NodeType, tag *Tag, seenFlags map[string]bool) (*Node, error) { //nolint:gocyclo
+func buildNode(
+	k *Kong,
+	v reflect.Value,
+	typ NodeType,
+	tag *Tag,
+	seenFlags map[string]bool,
+) (*Node, error) { //nolint:gocyclo
 	node := &Node{
 		Type:   typ,
 		Target: v,
@@ -204,7 +242,10 @@ MAIN:
 	for _, flag := range node.Flags {
 		delete(seenFlags, "--"+flag.Name)
 		if flag.Short != 0 {
-			delete(seenFlags, "-"+string(flag.Short))
+			delete(
+				seenFlags,
+				"-"+string(flag.Short),
+			)
 		}
 		if negFlag := negatableFlagName(flag.Name, flag.Tag.Negatable); negFlag != "" {
 			delete(seenFlags, negFlag)
@@ -221,18 +262,30 @@ MAIN:
 	return node, nil
 }
 
-func validatePositionalArguments(node *Node) error {
+func validatePositionalArguments(
+	node *Node,
+) error {
 	var last *Value
 	for i, curr := range node.Positional {
 		if last != nil {
 			// Scan through argument positionals to ensure optional is never before a required.
 			if !last.Required && curr.Required {
-				return fmt.Errorf("%s: required %q cannot come after optional %q", node.FullPath(), curr.Name, last.Name)
+				return fmt.Errorf(
+					"%s: required %q cannot come after optional %q",
+					node.FullPath(),
+					curr.Name,
+					last.Name,
+				)
 			}
 
 			// Cumulative argument needs to be last.
 			if last.IsCumulative() {
-				return fmt.Errorf("%s: argument %q cannot come after cumulative %q", node.FullPath(), curr.Name, last.Name)
+				return fmt.Errorf(
+					"%s: argument %q cannot come after cumulative %q",
+					node.FullPath(),
+					curr.Name,
+					last.Name,
+				)
 			}
 		}
 
@@ -243,8 +296,24 @@ func validatePositionalArguments(node *Node) error {
 	return nil
 }
 
-func buildChild(k *Kong, node *Node, typ NodeType, v reflect.Value, ft reflect.StructField, fv reflect.Value, tag *Tag, name string, seenFlags map[string]bool) error {
-	child, err := buildNode(k, fv, typ, newEmptyTag(), seenFlags)
+func buildChild(
+	k *Kong,
+	node *Node,
+	typ NodeType,
+	v reflect.Value,
+	ft reflect.StructField,
+	fv reflect.Value,
+	tag *Tag,
+	name string,
+	seenFlags map[string]bool,
+) error {
+	child, err := buildNode(
+		k,
+		fv,
+		typ,
+		newEmptyTag(),
+		seenFlags,
+	)
 	if err != nil {
 		return err
 	}
@@ -264,10 +333,20 @@ func buildChild(k *Kong, node *Node, typ NodeType, v reflect.Value, ft reflect.S
 	// a positional argument is provided to the child, and move it to the branching argument field.
 	if tag.Arg {
 		if len(child.Positional) == 0 {
-			return failField(v, ft, "positional branch must have at least one child positional argument named %q", name)
+			return failField(
+				v,
+				ft,
+				"positional branch must have at least one child positional argument named %q",
+				name,
+			)
 		}
 		if child.Positional[0].Name != name {
-			return failField(v, ft, "first field in positional branch must have the same name as the parent field (%s).", child.Name)
+			return failField(
+				v,
+				ft,
+				"first field in positional branch must have the same name as the parent field (%s).",
+				child.Name,
+			)
 		}
 
 		child.Argument = child.Positional[0]
@@ -300,26 +379,49 @@ func buildChild(k *Kong, node *Node, typ NodeType, v reflect.Value, ft reflect.S
 	}
 	node.Children = append(node.Children, child)
 
-	if len(child.Positional) > 0 && len(child.Children) > 0 {
-		return failField(v, ft, "can't mix positional arguments and branching arguments")
+	if len(child.Positional) > 0 &&
+		len(child.Children) > 0 {
+		return failField(
+			v,
+			ft,
+			"can't mix positional arguments and branching arguments",
+		)
 	}
 
 	return nil
 }
 
-func buildField(k *Kong, node *Node, v reflect.Value, ft reflect.StructField, fv reflect.Value, tag *Tag, name string, seenFlags map[string]bool) error {
-	mapper := k.registry.ForNamedValue(tag.Type, fv)
+func buildField(
+	k *Kong,
+	node *Node,
+	v reflect.Value,
+	ft reflect.StructField,
+	fv reflect.Value,
+	tag *Tag,
+	name string,
+	seenFlags map[string]bool,
+) error {
+	mapper := k.registry.ForNamedValue(
+		tag.Type,
+		fv,
+	)
 	if mapper == nil {
-		return failField(v, ft, "unsupported field type %s, perhaps missing a cmd:\"\" tag?", ft.Type)
+		return failField(
+			v,
+			ft,
+			"unsupported field type %s, perhaps missing a cmd:\"\" tag?",
+			ft.Type,
+		)
 	}
 
 	value := &Value{
-		Name:            name,
-		Help:            tag.Help,
-		OrigHelp:        tag.Help,
-		HasDefault:      tag.HasDefault,
-		Default:         tag.Default,
-		DefaultValue:    reflect.New(fv.Type()).Elem(),
+		Name:       name,
+		Help:       tag.Help,
+		OrigHelp:   tag.Help,
+		HasDefault: tag.HasDefault,
+		Default:    tag.Default,
+		DefaultValue: reflect.New(fv.Type()).
+			Elem(),
 		Mapper:          mapper,
 		Tag:             tag,
 		Target:          fv,
@@ -328,12 +430,16 @@ func buildField(k *Kong, node *Node, v reflect.Value, ft reflect.StructField, fv
 		PassthroughMode: tag.PassthroughMode,
 
 		// Flags are optional by default, and args are required by default.
-		Required: (!tag.Arg && tag.Required) || (tag.Arg && !tag.Optional),
-		Format:   tag.Format,
+		Required: (!tag.Arg && tag.Required) ||
+			(tag.Arg && !tag.Optional),
+		Format: tag.Format,
 	}
 
 	if tag.Arg {
-		node.Positional = append(node.Positional, value)
+		node.Positional = append(
+			node.Positional,
+			value,
+		)
 	} else {
 		if seenFlags["--"+value.Name] {
 			return failField(v, ft, "duplicate flag --%s", value.Name)
@@ -376,7 +482,10 @@ func buildField(k *Kong, node *Node, v reflect.Value, ft reflect.StructField, fv
 	return nil
 }
 
-func buildGroupForKey(k *Kong, key string) *Group {
+func buildGroupForKey(
+	k *Kong,
+	key string,
+) *Group {
 	if key == "" {
 		return nil
 	}
@@ -393,7 +502,10 @@ func buildGroupForKey(k *Kong, key string) *Group {
 	}
 }
 
-func checkDuplicateNames(node *Node, v reflect.Value) error {
+func checkDuplicateNames(
+	node *Node,
+	v reflect.Value,
+) error {
 	seenNames := make(map[string]struct{})
 	for _, node := range node.Children {
 		if _, ok := seenNames[node.Name]; ok {
@@ -401,7 +513,11 @@ func checkDuplicateNames(node *Node, v reflect.Value) error {
 			if name == "" {
 				name = "<anonymous struct>"
 			}
-			return fmt.Errorf("duplicate command name %q in command %q", node.Name, name)
+			return fmt.Errorf(
+				"duplicate command name %q in command %q",
+				node.Name,
+				name,
+			)
 		}
 
 		seenNames[node.Name] = struct{}{}

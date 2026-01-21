@@ -8,7 +8,10 @@ import (
 )
 
 func isForeground(fd int) bool {
-	pgrp, err := unix.IoctlGetInt(fd, unix.TIOCGPGRP)
+	pgrp, err := unix.IoctlGetInt(
+		fd,
+		unix.TIOCGPGRP,
+	)
 	if err != nil {
 		return false
 	}

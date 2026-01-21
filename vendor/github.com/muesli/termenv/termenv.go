@@ -7,9 +7,9 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-var (
-	// ErrStatusReport gets returned when the terminal can't be queried.
-	ErrStatusReport = errors.New("unable to retrieve status report")
+// ErrStatusReport gets returned when the terminal can't be queried.
+var ErrStatusReport = errors.New(
+	"unable to retrieve status report",
 )
 
 const (
@@ -66,7 +66,8 @@ func HasDarkBackground() bool {
 // If NO_COLOR is set, this will return true, ignoring CLICOLOR/CLICOLOR_FORCE
 // If CLICOLOR=="0", it will be true only if CLICOLOR_FORCE is also "0" or is unset.
 func (o *Output) EnvNoColor() bool {
-	return o.environ.Getenv("NO_COLOR") != "" || (o.environ.Getenv("CLICOLOR") == "0" && !o.cliColorForced())
+	return o.environ.Getenv("NO_COLOR") != "" ||
+		(o.environ.Getenv("CLICOLOR") == "0" && !o.cliColorForced())
 }
 
 // EnvNoColor returns true if the environment variables explicitly disable color output

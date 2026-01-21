@@ -17,10 +17,15 @@ type errUnsupportedType struct {
 	want reflect.Type
 }
 
-func (hc *HexColor) Scan(value interface{}) error {
+func (hc *HexColor) Scan(
+	value interface{},
+) error {
 	s, ok := value.(string)
 	if !ok {
-		return errUnsupportedType{got: reflect.TypeOf(value), want: reflect.TypeOf("")}
+		return errUnsupportedType{
+			got:  reflect.TypeOf(value),
+			want: reflect.TypeOf(""),
+		}
 	}
 	c, err := Hex(s)
 	if err != nil {
@@ -35,16 +40,22 @@ func (hc *HexColor) Value() (driver.Value, error) {
 }
 
 func (e errUnsupportedType) Error() string {
-	return fmt.Sprintf("unsupported type: got %v, want a %s", e.got, e.want)
+	return fmt.Sprintf(
+		"unsupported type: got %v, want a %s",
+		e.got,
+		e.want,
+	)
 }
 
-func (hc *HexColor) UnmarshalJSON(data []byte) error {
+func (hc *HexColor) UnmarshalJSON(
+	data []byte,
+) error {
 	var hexCode string
 	if err := json.Unmarshal(data, &hexCode); err != nil {
 		return err
 	}
 
-	var col, err = Hex(hexCode)
+	col, err := Hex(hexCode)
 	if err != nil {
 		return err
 	}
@@ -58,7 +69,7 @@ func (hc HexColor) MarshalJSON() ([]byte, error) {
 
 // Decode - deserialize function for https://github.com/kelseyhightower/envconfig
 func (hc *HexColor) Decode(hexCode string) error {
-	var col, err = Hex(hexCode)
+	col, err := Hex(hexCode)
 	if err != nil {
 		return err
 	}

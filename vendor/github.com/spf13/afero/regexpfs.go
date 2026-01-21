@@ -15,7 +15,10 @@ type RegexpFs struct {
 	source Fs
 }
 
-func NewRegexpFs(source Fs, re *regexp.Regexp) Fs {
+func NewRegexpFs(
+	source Fs,
+	re *regexp.Regexp,
+) Fs {
 	return &RegexpFs{source: source, re: re}
 }
 
@@ -24,7 +27,9 @@ type RegexpFile struct {
 	re *regexp.Regexp
 }
 
-func (r *RegexpFs) matchesName(name string) error {
+func (r *RegexpFs) matchesName(
+	name string,
+) error {
 	if r.re == nil {
 		return nil
 	}
@@ -34,7 +39,9 @@ func (r *RegexpFs) matchesName(name string) error {
 	return syscall.ENOENT
 }
 
-func (r *RegexpFs) dirOrMatches(name string) error {
+func (r *RegexpFs) dirOrMatches(
+	name string,
+) error {
 	dir, err := IsDir(r.source, name)
 	if err != nil {
 		return err
@@ -45,21 +52,30 @@ func (r *RegexpFs) dirOrMatches(name string) error {
 	return r.matchesName(name)
 }
 
-func (r *RegexpFs) Chtimes(name string, a, m time.Time) error {
+func (r *RegexpFs) Chtimes(
+	name string,
+	a, m time.Time,
+) error {
 	if err := r.dirOrMatches(name); err != nil {
 		return err
 	}
 	return r.source.Chtimes(name, a, m)
 }
 
-func (r *RegexpFs) Chmod(name string, mode os.FileMode) error {
+func (r *RegexpFs) Chmod(
+	name string,
+	mode os.FileMode,
+) error {
 	if err := r.dirOrMatches(name); err != nil {
 		return err
 	}
 	return r.source.Chmod(name, mode)
 }
 
-func (r *RegexpFs) Chown(name string, uid, gid int) error {
+func (r *RegexpFs) Chown(
+	name string,
+	uid, gid int,
+) error {
 	if err := r.dirOrMatches(name); err != nil {
 		return err
 	}
@@ -70,14 +86,18 @@ func (r *RegexpFs) Name() string {
 	return "RegexpFs"
 }
 
-func (r *RegexpFs) Stat(name string) (os.FileInfo, error) {
+func (r *RegexpFs) Stat(
+	name string,
+) (os.FileInfo, error) {
 	if err := r.dirOrMatches(name); err != nil {
 		return nil, err
 	}
 	return r.source.Stat(name)
 }
 
-func (r *RegexpFs) Rename(oldname, newname string) error {
+func (r *RegexpFs) Rename(
+	oldname, newname string,
+) error {
 	dir, err := IsDir(r.source, oldname)
 	if err != nil {
 		return err
@@ -114,14 +134,20 @@ func (r *RegexpFs) Remove(name string) error {
 	return r.source.Remove(name)
 }
 
-func (r *RegexpFs) OpenFile(name string, flag int, perm os.FileMode) (File, error) {
+func (r *RegexpFs) OpenFile(
+	name string,
+	flag int,
+	perm os.FileMode,
+) (File, error) {
 	if err := r.dirOrMatches(name); err != nil {
 		return nil, err
 	}
 	return r.source.OpenFile(name, flag, perm)
 }
 
-func (r *RegexpFs) Open(name string) (File, error) {
+func (r *RegexpFs) Open(
+	name string,
+) (File, error) {
 	dir, err := IsDir(r.source, name)
 	if err != nil {
 		return nil, err
@@ -138,15 +164,23 @@ func (r *RegexpFs) Open(name string) (File, error) {
 	return &RegexpFile{f: f, re: r.re}, nil
 }
 
-func (r *RegexpFs) Mkdir(n string, p os.FileMode) error {
+func (r *RegexpFs) Mkdir(
+	n string,
+	p os.FileMode,
+) error {
 	return r.source.Mkdir(n, p)
 }
 
-func (r *RegexpFs) MkdirAll(n string, p os.FileMode) error {
+func (r *RegexpFs) MkdirAll(
+	n string,
+	p os.FileMode,
+) error {
 	return r.source.MkdirAll(n, p)
 }
 
-func (r *RegexpFs) Create(name string) (File, error) {
+func (r *RegexpFs) Create(
+	name string,
+) (File, error) {
 	if err := r.matchesName(name); err != nil {
 		return nil, err
 	}
@@ -161,19 +195,30 @@ func (f *RegexpFile) Read(s []byte) (int, error) {
 	return f.f.Read(s)
 }
 
-func (f *RegexpFile) ReadAt(s []byte, o int64) (int, error) {
+func (f *RegexpFile) ReadAt(
+	s []byte,
+	o int64,
+) (int, error) {
 	return f.f.ReadAt(s, o)
 }
 
-func (f *RegexpFile) Seek(o int64, w int) (int64, error) {
+func (f *RegexpFile) Seek(
+	o int64,
+	w int,
+) (int64, error) {
 	return f.f.Seek(o, w)
 }
 
-func (f *RegexpFile) Write(s []byte) (int, error) {
+func (f *RegexpFile) Write(
+	s []byte,
+) (int, error) {
 	return f.f.Write(s)
 }
 
-func (f *RegexpFile) WriteAt(s []byte, o int64) (int, error) {
+func (f *RegexpFile) WriteAt(
+	s []byte,
+	o int64,
+) (int, error) {
 	return f.f.WriteAt(s, o)
 }
 
@@ -181,21 +226,26 @@ func (f *RegexpFile) Name() string {
 	return f.f.Name()
 }
 
-func (f *RegexpFile) Readdir(c int) (fi []os.FileInfo, err error) {
+func (f *RegexpFile) Readdir(
+	c int,
+) (fi []os.FileInfo, err error) {
 	var rfi []os.FileInfo
 	rfi, err = f.f.Readdir(c)
 	if err != nil {
 		return nil, err
 	}
 	for _, i := range rfi {
-		if i.IsDir() || f.re.MatchString(i.Name()) {
+		if i.IsDir() ||
+			f.re.MatchString(i.Name()) {
 			fi = append(fi, i)
 		}
 	}
 	return fi, nil
 }
 
-func (f *RegexpFile) Readdirnames(c int) (n []string, err error) {
+func (f *RegexpFile) Readdirnames(
+	c int,
+) (n []string, err error) {
 	fi, err := f.Readdir(c)
 	if err != nil {
 		return nil, err
@@ -218,6 +268,8 @@ func (f *RegexpFile) Truncate(s int64) error {
 	return f.f.Truncate(s)
 }
 
-func (f *RegexpFile) WriteString(s string) (int, error) {
+func (f *RegexpFile) WriteString(
+	s string,
+) (int, error) {
 	return f.f.WriteString(s)
 }

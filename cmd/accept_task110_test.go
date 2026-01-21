@@ -19,7 +19,9 @@ import (
 //  2. JSON marshaling properly escapes these strings
 //  3. JSONC parsing with StripJSONComments does NOT remove comment syntax inside strings
 //  4. Round-trip conversion (marshal → strip comments → unmarshal) is lossless
-func TestTask110_JSONCCommentInjection(t *testing.T) {
+func TestTask110_JSONCCommentInjection(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -90,27 +92,47 @@ func TestTask110_JSONCCommentInjection(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSON is syntactically correct
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip: strip comments and unmarshal
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			var roundTrip parsers.TasksFile
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v\nOriginal JSON:\n%s\nStripped JSON:\n%s",
-					err, string(jsonData), string(stripped))
+				t.Fatalf(
+					"round-trip unmarshal failed: %v\nOriginal JSON:\n%s\nStripped JSON:\n%s",
+					err,
+					string(jsonData),
+					string(stripped),
+				)
 			}
 
 			// Verify we got exactly one task back
 			if len(roundTrip.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(roundTrip.Tasks),
+				)
 			}
 
 			// CRITICAL: Verify the description is EXACTLY preserved
@@ -127,20 +149,32 @@ func TestTask110_JSONCCommentInjection(t *testing.T) {
 
 			// Verify all other fields match
 			if roundTrip.Tasks[0].ID != "1.10" {
-				t.Errorf("Task ID mismatch: got %q, want %q",
-					roundTrip.Tasks[0].ID, "1.10")
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					roundTrip.Tasks[0].ID,
+					"1.10",
+				)
 			}
 			if roundTrip.Tasks[0].Section != testSectionExtremeEdgeCases {
-				t.Errorf("Task Section mismatch: got %q, want %q",
-					roundTrip.Tasks[0].Section, testSectionExtremeEdgeCases)
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Section,
+					testSectionExtremeEdgeCases,
+				)
 			}
 			if roundTrip.Tasks[0].Status != parsers.TaskStatusPending {
-				t.Errorf("Task Status mismatch: got %q, want %q",
-					roundTrip.Tasks[0].Status, parsers.TaskStatusPending)
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Status,
+					parsers.TaskStatusPending,
+				)
 			}
 			if roundTrip.Version != 1 {
-				t.Errorf("Version mismatch: got %d, want %d",
-					roundTrip.Version, 1)
+				t.Errorf(
+					"Version mismatch: got %d, want %d",
+					roundTrip.Version,
+					1,
+				)
 			}
 		})
 	}

@@ -92,9 +92,13 @@ func (n *Node) findNode(key reflect.Value) *Node {
 // AllFlags returns flags from all ancestor branches encountered.
 //
 // If "hide" is true hidden flags will be omitted.
-func (n *Node) AllFlags(hide bool) (out [][]*Flag) {
+func (n *Node) AllFlags(
+	hide bool,
+) (out [][]*Flag) {
 	if n.Parent != nil {
-		out = append(out, n.Parent.AllFlags(hide)...)
+		out = append(
+			out,
+			n.Parent.AllFlags(hide)...)
 	}
 	group := []*Flag{}
 	for _, flag := range n.Flags {
@@ -113,20 +117,24 @@ func (n *Node) AllFlags(hide bool) (out [][]*Flag) {
 //
 // If "hidden" is true hidden leaves will be omitted.
 func (n *Node) Leaves(hide bool) (out []*Node) {
-	_ = Visit(n, func(nd Visitable, next Next) error {
-		if nd == n {
+	_ = Visit(
+		n,
+		func(nd Visitable, next Next) error {
+			if nd == n {
+				return next(nil)
+			}
+			if node, ok := nd.(*Node); ok {
+				if hide && node.Hidden {
+					return nil
+				}
+				if len(node.Children) == 0 &&
+					node.Type != ApplicationNode {
+					out = append(out, node)
+				}
+			}
 			return next(nil)
-		}
-		if node, ok := nd.(*Node); ok {
-			if hide && node.Hidden {
-				return nil
-			}
-			if len(node.Children) == 0 && node.Type != ApplicationNode {
-				out = append(out, node)
-			}
-		}
-		return next(nil)
-	})
+		},
+	)
 	return
 }
 
@@ -153,18 +161,29 @@ func (n *Node) Summary() string {
 		argSummary := arg.Summary()
 		if arg.Tag.Optional {
 			optional++
-			argSummary = strings.TrimRight(argSummary, "]")
+			argSummary = strings.TrimRight(
+				argSummary,
+				"]",
+			)
 		}
 		args = append(args, argSummary)
 	}
 	if len(args) != 0 {
-		summary += " " + strings.Join(args, " ") + strings.Repeat("]", optional)
+		summary += " " + strings.Join(
+			args,
+			" ",
+		) + strings.Repeat(
+			"]",
+			optional,
+		)
 	} else if len(n.Children) > 0 {
 		summary += " <command>"
 	}
 	allFlags := n.Flags
 	if n.Parent != nil {
-		allFlags = append(allFlags, n.Parent.Flags...)
+		allFlags = append(
+			allFlags,
+			n.Parent.Flags...)
 	}
 	for _, flag := range allFlags {
 		if _, ok := flag.Target.Interface().(helpFlag); ok {
@@ -186,7 +205,10 @@ func (n *Node) FlagSummary(hide bool) string {
 		for _, flag := range group {
 			count++
 			if flag.Required {
-				required = append(required, flag.Summary())
+				required = append(
+					required,
+					flag.Summary(),
+				)
 			}
 		}
 	}
@@ -199,7 +221,9 @@ func (n *Node) FullPath() string {
 	for root.Parent != nil {
 		root = root.Parent
 	}
-	return strings.TrimSpace(root.Name + " " + n.Path())
+	return strings.TrimSpace(
+		root.Name + " " + n.Path(),
+	)
 }
 
 // Vars returns the combined Vars defined by all ancestors of this Node.
@@ -219,7 +243,10 @@ func (n *Node) Path() (out string) {
 	case CommandNode:
 		out += " " + n.Name
 		if len(n.Aliases) > 0 {
-			out += fmt.Sprintf(" (%s)", strings.Join(n.Aliases, ","))
+			out += fmt.Sprintf(
+				" (%s)",
+				strings.Join(n.Aliases, ","),
+			)
 		}
 	case ArgumentNode:
 		out += " " + "<" + n.Name + ">"
@@ -303,7 +330,11 @@ func (v *Value) Summary() string {
 		if v.IsBool() {
 			return fmt.Sprintf("--%s", v.Name)
 		}
-		return fmt.Sprintf("--%s=%s", v.Name, v.Flag.FormatPlaceHolder())
+		return fmt.Sprintf(
+			"--%s=%s",
+			v.Name,
+			v.Flag.FormatPlaceHolder(),
+		)
 	}
 	argText := "<" + v.Name + ">"
 	if v.IsCumulative() {
@@ -322,7 +353,8 @@ func (v *Value) IsCumulative() bool {
 
 // IsSlice returns true if the value is a slice.
 func (v *Value) IsSlice() bool {
-	return v.Target.Type().Name() == "" && v.Target.Kind() == reflect.Slice
+	return v.Target.Type().Name() == "" &&
+		v.Target.Kind() == reflect.Slice
 }
 
 // IsMap returns true if the value is a map.
@@ -332,10 +364,12 @@ func (v *Value) IsMap() bool {
 
 // IsBool returns true if the underlying value is a boolean.
 func (v *Value) IsBool() bool {
-	if m, ok := v.Mapper.(BoolMapperExt); ok && m.IsBoolFromValue(v.Target) {
+	if m, ok := v.Mapper.(BoolMapperExt); ok &&
+		m.IsBoolFromValue(v.Target) {
 		return true
 	}
-	if m, ok := v.Mapper.(BoolMapper); ok && m.IsBool() {
+	if m, ok := v.Mapper.(BoolMapper); ok &&
+		m.IsBool() {
 		return true
 	}
 	return v.Target.Kind() == reflect.Bool
@@ -347,13 +381,26 @@ func (v *Value) IsCounter() bool {
 }
 
 // Parse tokens into value, parse, and validate, but do not write to the field.
-func (v *Value) Parse(scan *Scanner, target reflect.Value) (err error) {
-	if target.Kind() == reflect.Ptr && target.IsNil() {
-		target.Set(reflect.New(target.Type().Elem()))
+func (v *Value) Parse(
+	scan *Scanner,
+	target reflect.Value,
+) (err error) {
+	if target.Kind() == reflect.Ptr &&
+		target.IsNil() {
+		target.Set(
+			reflect.New(target.Type().Elem()),
+		)
 	}
-	err = v.Mapper.Decode(&DecodeContext{Value: v, Scan: scan}, target)
+	err = v.Mapper.Decode(
+		&DecodeContext{Value: v, Scan: scan},
+		target,
+	)
 	if err != nil {
-		return fmt.Errorf("%s: %w", v.ShortSummary(), err)
+		return fmt.Errorf(
+			"%s: %w",
+			v.ShortSummary(),
+			err,
+		)
 	}
 	v.Set = true
 	return nil
@@ -385,16 +432,37 @@ func (v *Value) Reset() error {
 			envar, ok := os.LookupEnv(env)
 			// Parse the first non-empty ENV in the list
 			if ok {
-				err := v.Parse(ScanFromTokens(Token{Type: FlagValueToken, Value: envar}), v.Target)
+				err := v.Parse(
+					ScanFromTokens(
+						Token{
+							Type:  FlagValueToken,
+							Value: envar,
+						},
+					),
+					v.Target,
+				)
 				if err != nil {
-					return fmt.Errorf("%s (from envar %s=%q)", err, env, envar)
+					return fmt.Errorf(
+						"%s (from envar %s=%q)",
+						err,
+						env,
+						envar,
+					)
 				}
 				return nil
 			}
 		}
 	}
 	if v.HasDefault {
-		return v.Parse(ScanFromTokens(Token{Type: FlagValueToken, Value: v.Default}), v.Target)
+		return v.Parse(
+			ScanFromTokens(
+				Token{
+					Type:  FlagValueToken,
+					Value: v.Default,
+				},
+			),
+			v.Target,
+		)
 	}
 	return nil
 }
@@ -436,7 +504,9 @@ func (f *Flag) FormatPlaceHolder() string {
 		return placeholderHelper.PlaceHolder(f)
 	}
 	tail := ""
-	if f.Value.IsSlice() && f.Value.Tag.Sep != -1 && f.Tag.Type == "" {
+	if f.Value.IsSlice() &&
+		f.Value.Tag.Sep != -1 &&
+		f.Tag.Type == "" {
 		tail += string(f.Value.Tag.Sep) + "..."
 	}
 	if f.PlaceHolder != "" {
@@ -449,13 +519,18 @@ func (f *Flag) FormatPlaceHolder() string {
 		return f.Default + tail
 	}
 	if f.Value.IsMap() {
-		if f.Value.Tag.MapSep != -1 && f.Tag.Type == "" {
-			tail = string(f.Value.Tag.MapSep) + "..."
+		if f.Value.Tag.MapSep != -1 &&
+			f.Tag.Type == "" {
+			tail = string(
+				f.Value.Tag.MapSep,
+			) + "..."
 		}
 		return "KEY=VALUE" + tail
 	}
 	if f.Tag != nil && f.Tag.TypeName != "" {
-		return strings.ToUpper(dashedString(f.Tag.TypeName)) + tail
+		return strings.ToUpper(
+			dashedString(f.Tag.TypeName),
+		) + tail
 	}
 	return strings.ToUpper(f.Name) + tail
 }
@@ -476,15 +551,25 @@ func reflectValueIsZero(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Bool:
 		return !v.Bool()
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64:
 		return v.Int() == 0
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+	case reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64,
+		reflect.Uintptr:
 		return v.Uint() == 0
 	case reflect.Float32, reflect.Float64:
 		return math.Float64bits(v.Float()) == 0
 	case reflect.Complex64, reflect.Complex128:
 		c := v.Complex()
-		return math.Float64bits(real(c)) == 0 && math.Float64bits(imag(c)) == 0
+		return math.Float64bits(real(c)) == 0 &&
+			math.Float64bits(imag(c)) == 0
 	case reflect.Array:
 		for i := 0; i < v.Len(); i++ {
 			if !reflectValueIsZero(v.Index(i)) {
@@ -492,7 +577,13 @@ func reflectValueIsZero(v reflect.Value) bool {
 			}
 		}
 		return true
-	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice, reflect.UnsafePointer:
+	case reflect.Chan,
+		reflect.Func,
+		reflect.Interface,
+		reflect.Map,
+		reflect.Ptr,
+		reflect.Slice,
+		reflect.UnsafePointer:
 		return v.IsNil()
 	case reflect.String:
 		return v.Len() == 0

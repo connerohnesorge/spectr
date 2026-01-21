@@ -12,7 +12,11 @@ import (
 	"github.com/aymanbagabas/go-udiff"
 )
 
-var update = flag.Bool("update", false, "update .golden files")
+var update = flag.Bool(
+	"update",
+	false,
+	"update .golden files",
+)
 
 // RequireEqual is a helper function to assert the given output is
 // the expected from the golden files, printing its diff in case it is not.
@@ -24,12 +28,19 @@ func RequireEqual(tb testing.TB, out []byte) {
 
 // RequireEqualEscape is a helper function to assert the given output is
 // the expected from the golden files, printing its diff in case it is not.
-func RequireEqualEscape(tb testing.TB, out []byte, escapes bool) {
+func RequireEqualEscape(
+	tb testing.TB,
+	out []byte,
+	escapes bool,
+) {
 	tb.Helper()
 
 	out = fixLineEndings(out)
 
-	golden := filepath.Join("testdata", tb.Name()+".golden")
+	golden := filepath.Join(
+		"testdata",
+		tb.Name()+".golden",
+	)
 	if *update {
 		if err := os.MkdirAll(filepath.Dir(golden), 0o755); err != nil { //nolint: gomnd
 			tb.Fatal(err)
@@ -52,14 +63,28 @@ func RequireEqualEscape(tb testing.TB, out []byte, escapes bool) {
 		outStr = escapesSeqs(outStr)
 	}
 
-	diff := udiff.Unified("golden", "run", goldenStr, outStr)
+	diff := udiff.Unified(
+		"golden",
+		"run",
+		goldenStr,
+		outStr,
+	)
 	if diff != "" {
-		tb.Fatalf("output does not match, expected:\n\n%s\n\ngot:\n\n%s\n\ndiff:\n\n%s", goldenStr, outStr, diff)
+		tb.Fatalf(
+			"output does not match, expected:\n\n%s\n\ngot:\n\n%s\n\ndiff:\n\n%s",
+			goldenStr,
+			outStr,
+			diff,
+		)
 	}
 }
 
 func fixLineEndings(in []byte) []byte {
-	return bytes.ReplaceAll(in, []byte("\r\n"), []byte{'\n'})
+	return bytes.ReplaceAll(
+		in,
+		[]byte("\r\n"),
+		[]byte{'\n'},
+	)
 }
 
 func escapesSeqs(in string) string {

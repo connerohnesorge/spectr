@@ -30,13 +30,17 @@ func (s setFunc) Contains(r rune) bool {
 // In creates a Set with a Contains method that returns true for all runes in
 // the given RangeTable.
 func In(rt *unicode.RangeTable) Set {
-	return setFunc(func(r rune) bool { return unicode.Is(rt, r) })
+	return setFunc(
+		func(r rune) bool { return unicode.Is(rt, r) },
+	)
 }
 
 // NotIn creates a Set with a Contains method that returns true for all runes not
 // in the given RangeTable.
 func NotIn(rt *unicode.RangeTable) Set {
-	return setFunc(func(r rune) bool { return !unicode.Is(rt, r) })
+	return setFunc(
+		func(r rune) bool { return !unicode.Is(rt, r) },
+	)
 }
 
 // Predicate creates a Set with a Contains method that returns f(r).
@@ -49,11 +53,17 @@ type Transformer struct {
 	t transform.SpanningTransformer
 }
 
-func (t Transformer) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+func (t Transformer) Transform(
+	dst, src []byte,
+	atEOF bool,
+) (nDst, nSrc int, err error) {
 	return t.t.Transform(dst, src, atEOF)
 }
 
-func (t Transformer) Span(b []byte, atEOF bool) (n int, err error) {
+func (t Transformer) Span(
+	b []byte,
+	atEOF bool,
+) (n int, err error) {
 	return t.t.Span(b, atEOF)
 }
 
@@ -107,7 +117,10 @@ type remove func(r rune) bool
 func (remove) Reset() {}
 
 // Span implements transform.Spanner.
-func (t remove) Span(src []byte, atEOF bool) (n int, err error) {
+func (t remove) Span(
+	src []byte,
+	atEOF bool,
+) (n int, err error) {
 	for r, size := rune(0), 0; n < len(src); {
 		if r = rune(src[n]); r < utf8.RuneSelf {
 			size = 1
@@ -130,7 +143,10 @@ func (t remove) Span(src []byte, atEOF bool) (n int, err error) {
 }
 
 // Transform implements transform.Transformer.
-func (t remove) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+func (t remove) Transform(
+	dst, src []byte,
+	atEOF bool,
+) (nDst, nSrc int, err error) {
 	for r, size := rune(0), 0; nSrc < len(src); {
 		if r = rune(src[nSrc]); r < utf8.RuneSelf {
 			size = 1
@@ -186,7 +202,10 @@ type mapper func(rune) rune
 func (mapper) Reset() {}
 
 // Span implements transform.Spanner.
-func (t mapper) Span(src []byte, atEOF bool) (n int, err error) {
+func (t mapper) Span(
+	src []byte,
+	atEOF bool,
+) (n int, err error) {
 	for r, size := rune(0), 0; n < len(src); n += size {
 		if r = rune(src[n]); r < utf8.RuneSelf {
 			size = 1
@@ -208,7 +227,10 @@ func (t mapper) Span(src []byte, atEOF bool) (n int, err error) {
 }
 
 // Transform implements transform.Transformer.
-func (t mapper) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+func (t mapper) Transform(
+	dst, src []byte,
+	atEOF bool,
+) (nDst, nSrc int, err error) {
 	var replacement rune
 	var b [utf8.UTFMax]byte
 
@@ -280,7 +302,10 @@ func ReplaceIllFormed() Transformer {
 
 type replaceIllFormed struct{ transform.NopResetter }
 
-func (t replaceIllFormed) Span(src []byte, atEOF bool) (n int, err error) {
+func (t replaceIllFormed) Span(
+	src []byte,
+	atEOF bool,
+) (n int, err error) {
 	for n < len(src) {
 		// ASCII fast path.
 		if src[n] < utf8.RuneSelf {
@@ -309,7 +334,10 @@ func (t replaceIllFormed) Span(src []byte, atEOF bool) (n int, err error) {
 	return n, err
 }
 
-func (t replaceIllFormed) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int, err error) {
+func (t replaceIllFormed) Transform(
+	dst, src []byte,
+	atEOF bool,
+) (nDst, nSrc int, err error) {
 	for nSrc < len(src) {
 		// ASCII fast path.
 		if r := src[nSrc]; r < utf8.RuneSelf {
@@ -325,7 +353,10 @@ func (t replaceIllFormed) Transform(dst, src []byte, atEOF bool) (nDst, nSrc int
 
 		// Look for a valid non-ASCII rune.
 		if _, size := utf8.DecodeRune(src[nSrc:]); size != 1 {
-			if size != copy(dst[nDst:], src[nSrc:nSrc+size]) {
+			if size != copy(
+				dst[nDst:],
+				src[nSrc:nSrc+size],
+			) {
 				err = transform.ErrShortDst
 				break
 			}

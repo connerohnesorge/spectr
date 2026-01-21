@@ -25,13 +25,21 @@ func toJSON(src, dst []byte) []byte {
 	for i := 0; i < len(src); i++ {
 		if src[i] == '/' && i < len(src)-1 {
 			if src[i+1] == '/' {
-				out, i = skipSingleLineComment(src, out, i)
+				out, i = skipSingleLineComment(
+					src,
+					out,
+					i,
+				)
 
 				continue
 			}
 
 			if src[i+1] == '*' {
-				out, i = skipMultiLineComment(src, out, i)
+				out, i = skipMultiLineComment(
+					src,
+					out,
+					i,
+				)
 
 				continue
 			}
@@ -41,7 +49,11 @@ func toJSON(src, dst []byte) []byte {
 
 		switch src[i] {
 		case '"':
-			out, i = copyStringLiteral(src, out, i)
+			out, i = copyStringLiteral(
+				src,
+				out,
+				i,
+			)
 		case '}', ']':
 			out = removeTrailingComma(out)
 		}
@@ -52,7 +64,10 @@ func toJSON(src, dst []byte) []byte {
 
 // skipSingleLineComment processes a single-line comment (//) starting at pos
 // and returns the updated destination buffer and final index.
-func skipSingleLineComment(src, dst []byte, pos int) ([]byte, int) {
+func skipSingleLineComment(
+	src, dst []byte,
+	pos int,
+) ([]byte, int) {
 	out := dst
 	out = append(out, ' ', ' ')
 	idx := pos + 2
@@ -76,7 +91,10 @@ func skipSingleLineComment(src, dst []byte, pos int) ([]byte, int) {
 
 // skipMultiLineComment processes a multi-line comment (/* */) starting at pos
 // and returns the updated destination buffer and final index.
-func skipMultiLineComment(src, dst []byte, pos int) ([]byte, int) {
+func skipMultiLineComment(
+	src, dst []byte,
+	pos int,
+) ([]byte, int) {
 	out := dst
 	out = append(out, ' ', ' ')
 	idx := pos + 2
@@ -89,7 +107,8 @@ func skipMultiLineComment(src, dst []byte, pos int) ([]byte, int) {
 			break
 		}
 
-		if src[idx] == '\n' || src[idx] == '\t' || src[idx] == '\r' {
+		if src[idx] == '\n' || src[idx] == '\t' ||
+			src[idx] == '\r' {
 			out = append(out, src[idx])
 		} else {
 			out = append(out, ' ')
@@ -101,14 +120,18 @@ func skipMultiLineComment(src, dst []byte, pos int) ([]byte, int) {
 
 // copyStringLiteral copies a string literal (including escape sequences)
 // starting at pos and returns the updated destination buffer and final index.
-func copyStringLiteral(src, dst []byte, pos int) ([]byte, int) {
+func copyStringLiteral(
+	src, dst []byte,
+	pos int,
+) ([]byte, int) {
 	out := dst
 	idx := pos + 1
 
 	for ; idx < len(src); idx++ {
 		out = append(out, src[idx])
 
-		if src[idx] == '"' && !isEscapedQuote(src, idx) {
+		if src[idx] == '"' &&
+			!isEscapedQuote(src, idx) {
 			break
 		}
 	}

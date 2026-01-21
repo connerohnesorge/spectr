@@ -41,7 +41,11 @@ const RequestKittyKeyboard = "\x1b[?u"
 //
 // See https://sw.kovidgoyal.net/kitty/keyboard-protocol/#progressive-enhancement
 func KittyKeyboard(flags, mode int) string {
-	return "\x1b[=" + strconv.Itoa(flags) + ";" + strconv.Itoa(mode) + "u"
+	return "\x1b[=" + strconv.Itoa(
+		flags,
+	) + ";" + strconv.Itoa(
+		mode,
+	) + "u"
 }
 
 // PushKittyKeyboard returns a sequence to push the given flags to the terminal

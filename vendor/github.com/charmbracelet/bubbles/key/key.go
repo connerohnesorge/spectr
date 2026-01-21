@@ -127,7 +127,10 @@ type Help struct {
 }
 
 // Matches checks if the given key matches the given bindings.
-func Matches[Key fmt.Stringer](k Key, b ...Binding) bool {
+func Matches[Key fmt.Stringer](
+	k Key,
+	b ...Binding,
+) bool {
 	keys := k.String()
 	for _, binding := range b {
 		for _, v := range binding.keys {

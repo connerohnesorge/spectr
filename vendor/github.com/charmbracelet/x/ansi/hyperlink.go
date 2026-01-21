@@ -10,7 +10,10 @@ import "strings"
 // To reset the hyperlink, omit the URI.
 //
 // See: https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
-func SetHyperlink(uri string, params ...string) string {
+func SetHyperlink(
+	uri string,
+	params ...string,
+) string {
 	var p string
 	if len(params) > 0 {
 		p = strings.Join(params, ":")

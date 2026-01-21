@@ -16,7 +16,10 @@ func NewTabStops(width, interval int) *TabStops {
 	ts := new(TabStops)
 	ts.interval = interval
 	ts.width = width
-	ts.stops = make([]int, (width+(interval-1))/interval)
+	ts.stops = make(
+		[]int,
+		(width+(interval-1))/interval,
+	)
 	ts.init(0, width)
 	return ts
 }

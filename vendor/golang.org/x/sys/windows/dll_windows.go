@@ -17,11 +17,18 @@ import (
 // return syscall.Handle and syscall.Errno, but these are the same, in fact,
 // as windows.Handle and windows.Errno, and we intend to keep these the same.
 
+//
 //go:linkname syscall_loadlibrary syscall.loadlibrary
-func syscall_loadlibrary(filename *uint16) (handle Handle, err Errno)
+func syscall_loadlibrary(
+	filename *uint16,
+) (handle Handle, err Errno)
 
+//
 //go:linkname syscall_getprocaddress syscall.getprocaddress
-func syscall_getprocaddress(handle Handle, procname *uint8) (proc uintptr, err Errno)
+func syscall_getprocaddress(
+	handle Handle,
+	procname *uint8,
+) (proc uintptr, err Errno)
 
 // DLLError describes reasons for DLL load failures.
 type DLLError struct {
@@ -76,12 +83,17 @@ func MustLoadDLL(name string) *DLL {
 
 // FindProc searches DLL d for procedure named name and returns *Proc
 // if found. It returns an error if search fails.
-func (d *DLL) FindProc(name string) (proc *Proc, err error) {
+func (d *DLL) FindProc(
+	name string,
+) (proc *Proc, err error) {
 	namep, err := BytePtrFromString(name)
 	if err != nil {
 		return nil, err
 	}
-	a, e := syscall_getprocaddress(d.Handle, namep)
+	a, e := syscall_getprocaddress(
+		d.Handle,
+		namep,
+	)
 	if e != 0 {
 		return nil, &DLLError{
 			Err:     e,
@@ -108,8 +120,13 @@ func (d *DLL) MustFindProc(name string) *Proc {
 
 // FindProcByOrdinal searches DLL d for procedure by ordinal and returns *Proc
 // if found. It returns an error if search fails.
-func (d *DLL) FindProcByOrdinal(ordinal uintptr) (proc *Proc, err error) {
-	a, e := GetProcAddressByOrdinal(d.Handle, ordinal)
+func (d *DLL) FindProcByOrdinal(
+	ordinal uintptr,
+) (proc *Proc, err error) {
+	a, e := GetProcAddressByOrdinal(
+		d.Handle,
+		ordinal,
+	)
 	name := "#" + itoa(int(ordinal))
 	if e != nil {
 		return nil, &DLLError{
@@ -127,7 +144,9 @@ func (d *DLL) FindProcByOrdinal(ordinal uintptr) (proc *Proc, err error) {
 }
 
 // MustFindProcByOrdinal is like FindProcByOrdinal but panics if search fails.
-func (d *DLL) MustFindProcByOrdinal(ordinal uintptr) *Proc {
+func (d *DLL) MustFindProcByOrdinal(
+	ordinal uintptr,
+) *Proc {
 	p, e := d.FindProcByOrdinal(ordinal)
 	if e != nil {
 		panic(e)
@@ -162,42 +181,234 @@ func (p *Proc) Addr() uintptr {
 // Callers must inspect the primary return value to decide whether an error occurred
 // (according to the semantics of the specific function being called) before consulting
 // the error. The error will be guaranteed to contain windows.Errno.
-func (p *Proc) Call(a ...uintptr) (r1, r2 uintptr, lastErr error) {
+func (p *Proc) Call(
+	a ...uintptr,
+) (r1, r2 uintptr, lastErr error) {
 	switch len(a) {
 	case 0:
-		return syscall.Syscall(p.Addr(), uintptr(len(a)), 0, 0, 0)
+		return syscall.Syscall(
+			p.Addr(),
+			uintptr(len(a)),
+			0,
+			0,
+			0,
+		)
 	case 1:
-		return syscall.Syscall(p.Addr(), uintptr(len(a)), a[0], 0, 0)
+		return syscall.Syscall(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			0,
+			0,
+		)
 	case 2:
-		return syscall.Syscall(p.Addr(), uintptr(len(a)), a[0], a[1], 0)
+		return syscall.Syscall(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			0,
+		)
 	case 3:
-		return syscall.Syscall(p.Addr(), uintptr(len(a)), a[0], a[1], a[2])
+		return syscall.Syscall(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+		)
 	case 4:
-		return syscall.Syscall6(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], 0, 0)
+		return syscall.Syscall6(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			0,
+			0,
+		)
 	case 5:
-		return syscall.Syscall6(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], 0)
+		return syscall.Syscall6(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			0,
+		)
 	case 6:
-		return syscall.Syscall6(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5])
+		return syscall.Syscall6(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+		)
 	case 7:
-		return syscall.Syscall9(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], 0, 0)
+		return syscall.Syscall9(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			0,
+			0,
+		)
 	case 8:
-		return syscall.Syscall9(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], 0)
+		return syscall.Syscall9(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			a[7],
+			0,
+		)
 	case 9:
-		return syscall.Syscall9(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8])
+		return syscall.Syscall9(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			a[7],
+			a[8],
+		)
 	case 10:
-		return syscall.Syscall12(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], 0, 0)
+		return syscall.Syscall12(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			a[7],
+			a[8],
+			a[9],
+			0,
+			0,
+		)
 	case 11:
-		return syscall.Syscall12(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], 0)
+		return syscall.Syscall12(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			a[7],
+			a[8],
+			a[9],
+			a[10],
+			0,
+		)
 	case 12:
-		return syscall.Syscall12(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11])
+		return syscall.Syscall12(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			a[7],
+			a[8],
+			a[9],
+			a[10],
+			a[11],
+		)
 	case 13:
-		return syscall.Syscall15(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], 0, 0)
+		return syscall.Syscall15(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			a[7],
+			a[8],
+			a[9],
+			a[10],
+			a[11],
+			a[12],
+			0,
+			0,
+		)
 	case 14:
-		return syscall.Syscall15(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], 0)
+		return syscall.Syscall15(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			a[7],
+			a[8],
+			a[9],
+			a[10],
+			a[11],
+			a[12],
+			a[13],
+			0,
+		)
 	case 15:
-		return syscall.Syscall15(p.Addr(), uintptr(len(a)), a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14])
+		return syscall.Syscall15(
+			p.Addr(),
+			uintptr(len(a)),
+			a[0],
+			a[1],
+			a[2],
+			a[3],
+			a[4],
+			a[5],
+			a[6],
+			a[7],
+			a[8],
+			a[9],
+			a[10],
+			a[11],
+			a[12],
+			a[13],
+			a[14],
+		)
 	default:
-		panic("Call " + p.Name + " with too many arguments " + itoa(len(a)) + ".")
+		panic(
+			"Call " + p.Name + " with too many arguments " + itoa(
+				len(a),
+			) + ".",
+		)
 	}
 }
 
@@ -222,7 +433,9 @@ type LazyDLL struct {
 func (d *LazyDLL) Load() error {
 	// Non-racy version of:
 	// if d.dll != nil {
-	if atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&d.dll))) != nil {
+	if atomic.LoadPointer(
+		(*unsafe.Pointer)(unsafe.Pointer(&d.dll)),
+	) != nil {
 		return nil
 	}
 	d.mu.Lock()
@@ -247,7 +460,10 @@ func (d *LazyDLL) Load() error {
 
 	// Non-racy version of:
 	// d.dll = dll
-	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&d.dll)), unsafe.Pointer(dll))
+	atomic.StorePointer(
+		(*unsafe.Pointer)(unsafe.Pointer(&d.dll)),
+		unsafe.Pointer(dll),
+	)
 	return nil
 }
 
@@ -301,7 +517,11 @@ type LazyProc struct {
 func (p *LazyProc) Find() error {
 	// Non-racy version of:
 	// if p.proc == nil {
-	if atomic.LoadPointer((*unsafe.Pointer)(unsafe.Pointer(&p.proc))) == nil {
+	if atomic.LoadPointer(
+		(*unsafe.Pointer)(
+			unsafe.Pointer(&p.proc),
+		),
+	) == nil {
 		p.mu.Lock()
 		defer p.mu.Unlock()
 		if p.proc == nil {
@@ -315,7 +535,12 @@ func (p *LazyProc) Find() error {
 			}
 			// Non-racy version of:
 			// p.proc = proc
-			atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(&p.proc)), unsafe.Pointer(proc))
+			atomic.StorePointer(
+				(*unsafe.Pointer)(
+					unsafe.Pointer(&p.proc),
+				),
+				unsafe.Pointer(proc),
+			)
 		}
 	}
 	return nil
@@ -346,7 +571,9 @@ func (p *LazyProc) Addr() uintptr {
 // Callers must inspect the primary return value to decide whether an error occurred
 // (according to the semantics of the specific function being called) before consulting
 // the error. The error will be guaranteed to contain windows.Errno.
-func (p *LazyProc) Call(a ...uintptr) (r1, r2 uintptr, lastErr error) {
+func (p *LazyProc) Call(
+	a ...uintptr,
+) (r1, r2 uintptr, lastErr error) {
 	p.mustFind()
 	return p.proc.Call(a...)
 }
@@ -369,7 +596,9 @@ func initCanDoSearchSystem32() {
 }
 
 func canDoSearchSystem32() bool {
-	canDoSearchSystem32Once.Do(initCanDoSearchSystem32)
+	canDoSearchSystem32Once.Do(
+		initCanDoSearchSystem32,
+	)
 	return canDoSearchSystem32Once.v
 }
 
@@ -389,7 +618,10 @@ func isBaseName(name string) bool {
 // If name is not an absolute path, LoadLibraryEx searches for the DLL
 // in a variety of automatic locations unless constrained by flags.
 // See: https://msdn.microsoft.com/en-us/library/ff919712%28VS.85%29.aspx
-func loadLibraryEx(name string, system bool) (*DLL, error) {
+func loadLibraryEx(
+	name string,
+	system bool,
+) (*DLL, error) {
 	loadDLL := name
 	var flags uintptr
 	if system {

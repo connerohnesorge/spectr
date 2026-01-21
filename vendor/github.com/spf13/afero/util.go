@@ -31,19 +31,31 @@ import (
 )
 
 // Filepath separator defined by os.Separator.
-const FilePathSeparator = string(filepath.Separator)
+const FilePathSeparator = string(
+	filepath.Separator,
+)
 
 // Takes a reader and a path and writes the content
-func (a Afero) WriteReader(path string, r io.Reader) (err error) {
+func (a Afero) WriteReader(
+	path string,
+	r io.Reader,
+) (err error) {
 	return WriteReader(a.Fs, path, r)
 }
 
-func WriteReader(fs Fs, path string, r io.Reader) (err error) {
+func WriteReader(
+	fs Fs,
+	path string,
+	r io.Reader,
+) (err error) {
 	dir, _ := filepath.Split(path)
 	ospath := filepath.FromSlash(dir)
 
 	if ospath != "" {
-		err = fs.MkdirAll(ospath, 0o777) // rwx, rw, r
+		err = fs.MkdirAll(
+			ospath,
+			0o777,
+		) // rwx, rw, r
 		if err != nil {
 			if err != os.ErrExist {
 				return err
@@ -62,16 +74,26 @@ func WriteReader(fs Fs, path string, r io.Reader) (err error) {
 }
 
 // Same as WriteReader but checks to see if file/directory already exists.
-func (a Afero) SafeWriteReader(path string, r io.Reader) (err error) {
+func (a Afero) SafeWriteReader(
+	path string,
+	r io.Reader,
+) (err error) {
 	return SafeWriteReader(a.Fs, path, r)
 }
 
-func SafeWriteReader(fs Fs, path string, r io.Reader) (err error) {
+func SafeWriteReader(
+	fs Fs,
+	path string,
+	r io.Reader,
+) (err error) {
 	dir, _ := filepath.Split(path)
 	ospath := filepath.FromSlash(dir)
 
 	if ospath != "" {
-		err = fs.MkdirAll(ospath, 0o777) // rwx, rw, r
+		err = fs.MkdirAll(
+			ospath,
+			0o777,
+		) // rwx, rw, r
 		if err != nil {
 			return
 		}
@@ -82,7 +104,10 @@ func SafeWriteReader(fs Fs, path string, r io.Reader) (err error) {
 		return
 	}
 	if exists {
-		return fmt.Errorf("%v already exists", path)
+		return fmt.Errorf(
+			"%v already exists",
+			path,
+		)
 	}
 
 	file, err := fs.Create(path)
@@ -113,11 +138,19 @@ func GetTempDir(fs Fs, subPath string) string {
 	if subPath != "" {
 		// preserve windows backslash :-(
 		if FilePathSeparator == "\\" {
-			subPath = strings.ReplaceAll(subPath, "\\", "____")
+			subPath = strings.ReplaceAll(
+				subPath,
+				"\\",
+				"____",
+			)
 		}
 		dir = dir + UnicodeSanitize((subPath))
 		if FilePathSeparator == "\\" {
-			dir = strings.ReplaceAll(dir, "____", "\\")
+			dir = strings.ReplaceAll(
+				dir,
+				"____",
+				"\\",
+			)
 		}
 
 		if exists, _ := Exists(fs, dir); exists {
@@ -159,18 +192,33 @@ func UnicodeSanitize(s string) string {
 
 // Transform characters with accents into plain forms.
 func NeuterAccents(s string) string {
-	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	t := transform.Chain(
+		norm.NFD,
+		runes.Remove(runes.In(unicode.Mn)),
+		norm.NFC,
+	)
 	result, _, _ := transform.String(t, string(s))
 
 	return result
 }
 
-func (a Afero) FileContainsBytes(filename string, subslice []byte) (bool, error) {
-	return FileContainsBytes(a.Fs, filename, subslice)
+func (a Afero) FileContainsBytes(
+	filename string,
+	subslice []byte,
+) (bool, error) {
+	return FileContainsBytes(
+		a.Fs,
+		filename,
+		subslice,
+	)
 }
 
 // Check if a file contains a specified byte slice.
-func FileContainsBytes(fs Fs, filename string, subslice []byte) (bool, error) {
+func FileContainsBytes(
+	fs Fs,
+	filename string,
+	subslice []byte,
+) (bool, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return false, err
@@ -180,12 +228,23 @@ func FileContainsBytes(fs Fs, filename string, subslice []byte) (bool, error) {
 	return readerContainsAny(f, subslice), nil
 }
 
-func (a Afero) FileContainsAnyBytes(filename string, subslices [][]byte) (bool, error) {
-	return FileContainsAnyBytes(a.Fs, filename, subslices)
+func (a Afero) FileContainsAnyBytes(
+	filename string,
+	subslices [][]byte,
+) (bool, error) {
+	return FileContainsAnyBytes(
+		a.Fs,
+		filename,
+		subslices,
+	)
 }
 
 // Check if a file contains any of the specified byte slices.
-func FileContainsAnyBytes(fs Fs, filename string, subslices [][]byte) (bool, error) {
+func FileContainsAnyBytes(
+	fs Fs,
+	filename string,
+	subslices [][]byte,
+) (bool, error) {
 	f, err := fs.Open(filename)
 	if err != nil {
 		return false, err
@@ -196,7 +255,10 @@ func FileContainsAnyBytes(fs Fs, filename string, subslices [][]byte) (bool, err
 }
 
 // readerContains reports whether any of the subslices is within r.
-func readerContainsAny(r io.Reader, subslices ...[]byte) bool {
+func readerContainsAny(
+	r io.Reader,
+	subslices ...[]byte,
+) bool {
 	if r == nil || len(subslices) == 0 {
 		return false
 	}
@@ -222,7 +284,11 @@ func readerContainsAny(r io.Reader, subslices ...[]byte) bool {
 	for {
 		i++
 		if i == 1 {
-			n, err = io.ReadAtLeast(r, buff[:halflen], halflen)
+			n, err = io.ReadAtLeast(
+				r,
+				buff[:halflen],
+				halflen,
+			)
 		} else {
 			if i != 2 {
 				// shift left to catch overlapping matches
@@ -246,7 +312,9 @@ func readerContainsAny(r io.Reader, subslices ...[]byte) bool {
 	return false
 }
 
-func (a Afero) DirExists(path string) (bool, error) {
+func (a Afero) DirExists(
+	path string,
+) (bool, error) {
 	return DirExists(a.Fs, path)
 }
 
@@ -275,14 +343,19 @@ func IsDir(fs Fs, path string) (bool, error) {
 	return fi.IsDir(), nil
 }
 
-func (a Afero) IsEmpty(path string) (bool, error) {
+func (a Afero) IsEmpty(
+	path string,
+) (bool, error) {
 	return IsEmpty(a.Fs, path)
 }
 
 // IsEmpty checks if a given file or directory is empty.
 func IsEmpty(fs Fs, path string) (bool, error) {
 	if b, _ := Exists(fs, path); !b {
-		return false, fmt.Errorf("%q path does not exist", path)
+		return false, fmt.Errorf(
+			"%q path does not exist",
+			path,
+		)
 	}
 	fi, err := fs.Stat(path)
 	if err != nil {
@@ -319,10 +392,19 @@ func Exists(fs Fs, path string) (bool, error) {
 	return false, err
 }
 
-func FullBaseFsPath(basePathFs *BasePathFs, relativePath string) string {
-	combinedPath := filepath.Join(basePathFs.path, relativePath)
+func FullBaseFsPath(
+	basePathFs *BasePathFs,
+	relativePath string,
+) string {
+	combinedPath := filepath.Join(
+		basePathFs.path,
+		relativePath,
+	)
 	if parent, ok := basePathFs.source.(*BasePathFs); ok {
-		return FullBaseFsPath(parent, combinedPath)
+		return FullBaseFsPath(
+			parent,
+			combinedPath,
+		)
 	}
 
 	return combinedPath

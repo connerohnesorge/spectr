@@ -208,16 +208,26 @@ func (s Style) Inherit(i Style) Style {
 		}
 
 		switch k { //nolint:exhaustive
-		case marginTopKey, marginRightKey, marginBottomKey, marginLeftKey:
+		case marginTopKey,
+			marginRightKey,
+			marginBottomKey,
+			marginLeftKey:
 			// Margins are not inherited
 			continue
-		case paddingTopKey, paddingRightKey, paddingBottomKey, paddingLeftKey:
+		case paddingTopKey,
+			paddingRightKey,
+			paddingBottomKey,
+			paddingLeftKey:
 			// Padding is not inherited
 			continue
 		case backgroundKey:
 			// The margins also inherit the background color
-			if !s.isSet(marginBackgroundKey) && !i.isSet(marginBackgroundKey) {
-				s.set(marginBackgroundKey, i.bgColor)
+			if !s.isSet(marginBackgroundKey) &&
+				!i.isSet(marginBackgroundKey) {
+				s.set(
+					marginBackgroundKey,
+					i.bgColor,
+				)
 			}
 		}
 
@@ -247,41 +257,87 @@ func (s Style) Render(strs ...string) string {
 		teSpace      = p.String()
 		teWhitespace = p.String()
 
-		bold          = s.getAsBool(boldKey, false)
-		italic        = s.getAsBool(italicKey, false)
-		underline     = s.getAsBool(underlineKey, false)
-		strikethrough = s.getAsBool(strikethroughKey, false)
-		reverse       = s.getAsBool(reverseKey, false)
-		blink         = s.getAsBool(blinkKey, false)
-		faint         = s.getAsBool(faintKey, false)
+		bold = s.getAsBool(
+			boldKey,
+			false,
+		)
+		italic = s.getAsBool(
+			italicKey,
+			false,
+		)
+		underline = s.getAsBool(
+			underlineKey,
+			false,
+		)
+		strikethrough = s.getAsBool(
+			strikethroughKey,
+			false,
+		)
+		reverse = s.getAsBool(
+			reverseKey,
+			false,
+		)
+		blink = s.getAsBool(
+			blinkKey,
+			false,
+		)
+		faint = s.getAsBool(
+			faintKey,
+			false,
+		)
 
 		fg = s.getAsColor(foregroundKey)
 		bg = s.getAsColor(backgroundKey)
 
 		width           = s.getAsInt(widthKey)
 		height          = s.getAsInt(heightKey)
-		horizontalAlign = s.getAsPosition(alignHorizontalKey)
-		verticalAlign   = s.getAsPosition(alignVerticalKey)
+		horizontalAlign = s.getAsPosition(
+			alignHorizontalKey,
+		)
+		verticalAlign = s.getAsPosition(
+			alignVerticalKey,
+		)
 
-		topPadding    = s.getAsInt(paddingTopKey)
-		rightPadding  = s.getAsInt(paddingRightKey)
-		bottomPadding = s.getAsInt(paddingBottomKey)
-		leftPadding   = s.getAsInt(paddingLeftKey)
+		topPadding   = s.getAsInt(paddingTopKey)
+		rightPadding = s.getAsInt(
+			paddingRightKey,
+		)
+		bottomPadding = s.getAsInt(
+			paddingBottomKey,
+		)
+		leftPadding = s.getAsInt(paddingLeftKey)
 
-		colorWhitespace = s.getAsBool(colorWhitespaceKey, true)
-		inline          = s.getAsBool(inlineKey, false)
-		maxWidth        = s.getAsInt(maxWidthKey)
-		maxHeight       = s.getAsInt(maxHeightKey)
+		colorWhitespace = s.getAsBool(
+			colorWhitespaceKey,
+			true,
+		)
+		inline = s.getAsBool(
+			inlineKey,
+			false,
+		)
+		maxWidth  = s.getAsInt(maxWidthKey)
+		maxHeight = s.getAsInt(maxHeightKey)
 
-		underlineSpaces     = s.getAsBool(underlineSpacesKey, false) || (underline && s.getAsBool(underlineSpacesKey, true))
-		strikethroughSpaces = s.getAsBool(strikethroughSpacesKey, false) || (strikethrough && s.getAsBool(strikethroughSpacesKey, true))
+		underlineSpaces = s.getAsBool(
+			underlineSpacesKey,
+			false,
+		) ||
+			(underline && s.getAsBool(underlineSpacesKey, true))
+		strikethroughSpaces = s.getAsBool(
+			strikethroughSpacesKey,
+			false,
+		) ||
+			(strikethrough && s.getAsBool(strikethroughSpacesKey, true))
 
 		// Do we need to style whitespace (padding and space outside
 		// paragraphs) separately?
 		styleWhitespace = reverse
 
 		// Do we need to style spaces separately?
-		useSpaceStyler = (underline && !underlineSpaces) || (strikethrough && !strikethroughSpaces) || underlineSpaces || strikethroughSpaces
+		useSpaceStyler = (underline && !underlineSpaces) ||
+			(strikethrough && !strikethroughSpaces) ||
+			underlineSpaces ||
+			strikethroughSpaces
 
 		transform = s.getAsTransform(transformKey)
 	)
@@ -321,20 +377,28 @@ func (s Style) Render(strs ...string) string {
 	if fg != noColor {
 		te = te.Foreground(fg.color(s.r))
 		if styleWhitespace {
-			teWhitespace = teWhitespace.Foreground(fg.color(s.r))
+			teWhitespace = teWhitespace.Foreground(
+				fg.color(s.r),
+			)
 		}
 		if useSpaceStyler {
-			teSpace = teSpace.Foreground(fg.color(s.r))
+			teSpace = teSpace.Foreground(
+				fg.color(s.r),
+			)
 		}
 	}
 
 	if bg != noColor {
 		te = te.Background(bg.color(s.r))
 		if colorWhitespace {
-			teWhitespace = teWhitespace.Background(bg.color(s.r))
+			teWhitespace = teWhitespace.Background(
+				bg.color(s.r),
+			)
 		}
 		if useSpaceStyler {
-			teSpace = teSpace.Background(bg.color(s.r))
+			teSpace = teSpace.Background(
+				bg.color(s.r),
+			)
 		}
 	}
 
@@ -378,10 +442,16 @@ func (s Style) Render(strs ...string) string {
 				// Look for spaces and apply a different styler
 				for _, r := range l[i] {
 					if unicode.IsSpace(r) {
-						b.WriteString(teSpace.Styled(string(r)))
+						b.WriteString(
+							teSpace.Styled(
+								string(r),
+							),
+						)
 						continue
 					}
-					b.WriteString(te.Styled(string(r)))
+					b.WriteString(
+						te.Styled(string(r)),
+					)
 				}
 			} else {
 				b.WriteString(te.Styled(l[i]))
@@ -398,7 +468,8 @@ func (s Style) Render(strs ...string) string {
 	if !inline { //nolint:nestif
 		if leftPadding > 0 {
 			var st *termenv.Style
-			if colorWhitespace || styleWhitespace {
+			if colorWhitespace ||
+				styleWhitespace {
 				st = &teWhitespace
 			}
 			str = padLeft(str, leftPadding, st)
@@ -406,24 +477,36 @@ func (s Style) Render(strs ...string) string {
 
 		if rightPadding > 0 {
 			var st *termenv.Style
-			if colorWhitespace || styleWhitespace {
+			if colorWhitespace ||
+				styleWhitespace {
 				st = &teWhitespace
 			}
 			str = padRight(str, rightPadding, st)
 		}
 
 		if topPadding > 0 {
-			str = strings.Repeat("\n", topPadding) + str
+			str = strings.Repeat(
+				"\n",
+				topPadding,
+			) + str
 		}
 
 		if bottomPadding > 0 {
-			str += strings.Repeat("\n", bottomPadding)
+			str += strings.Repeat(
+				"\n",
+				bottomPadding,
+			)
 		}
 	}
 
 	// Height
 	if height > 0 {
-		str = alignTextVertical(str, verticalAlign, height, nil)
+		str = alignTextVertical(
+			str,
+			verticalAlign,
+			height,
+			nil,
+		)
 	}
 
 	// Set alignment. This will also pad short lines with spaces so that all
@@ -434,10 +517,16 @@ func (s Style) Render(strs ...string) string {
 
 		if numLines != 0 || width != 0 {
 			var st *termenv.Style
-			if colorWhitespace || styleWhitespace {
+			if colorWhitespace ||
+				styleWhitespace {
 				st = &teWhitespace
 			}
-			str = alignTextHorizontal(str, horizontalAlign, width, st)
+			str = alignTextHorizontal(
+				str,
+				horizontalAlign,
+				width,
+				st,
+			)
 		}
 	}
 
@@ -451,7 +540,11 @@ func (s Style) Render(strs ...string) string {
 		lines := strings.Split(str, "\n")
 
 		for i := range lines {
-			lines[i] = ansi.Truncate(lines[i], maxWidth, "")
+			lines[i] = ansi.Truncate(
+				lines[i],
+				maxWidth,
+				"",
+			)
 		}
 
 		str = strings.Join(lines, "\n")
@@ -462,14 +555,19 @@ func (s Style) Render(strs ...string) string {
 		lines := strings.Split(str, "\n")
 		height := min(maxHeight, len(lines))
 		if len(lines) > 0 {
-			str = strings.Join(lines[:height], "\n")
+			str = strings.Join(
+				lines[:height],
+				"\n",
+			)
 		}
 	}
 
 	return str
 }
 
-func (s Style) maybeConvertTabs(str string) string {
+func (s Style) maybeConvertTabs(
+	str string,
+) string {
 	tw := tabWidthDefault
 	if s.isSet(tabWidthKey) {
 		tw = s.getAsInt(tabWidthKey)
@@ -480,11 +578,18 @@ func (s Style) maybeConvertTabs(str string) string {
 	case 0:
 		return strings.ReplaceAll(str, "\t", "")
 	default:
-		return strings.ReplaceAll(str, "\t", strings.Repeat(" ", tw))
+		return strings.ReplaceAll(
+			str,
+			"\t",
+			strings.Repeat(" ", tw),
+		)
 	}
 }
 
-func (s Style) applyMargins(str string, inline bool) string {
+func (s Style) applyMargins(
+	str string,
+	inline bool,
+) string {
 	var (
 		topMargin    = s.getAsInt(marginTopKey)
 		rightMargin  = s.getAsInt(marginRightKey)
@@ -509,10 +614,20 @@ func (s Style) applyMargins(str string, inline bool) string {
 		spaces := strings.Repeat(" ", width)
 
 		if topMargin > 0 {
-			str = styler.Styled(strings.Repeat(spaces+"\n", topMargin)) + str
+			str = styler.Styled(
+				strings.Repeat(
+					spaces+"\n",
+					topMargin,
+				),
+			) + str
 		}
 		if bottomMargin > 0 {
-			str += styler.Styled(strings.Repeat("\n"+spaces, bottomMargin))
+			str += styler.Styled(
+				strings.Repeat(
+					"\n"+spaces,
+					bottomMargin,
+				),
+			)
 		}
 	}
 
@@ -520,19 +635,31 @@ func (s Style) applyMargins(str string, inline bool) string {
 }
 
 // Apply left padding.
-func padLeft(str string, n int, style *termenv.Style) string {
+func padLeft(
+	str string,
+	n int,
+	style *termenv.Style,
+) string {
 	return pad(str, -n, style)
 }
 
 // Apply right padding.
-func padRight(str string, n int, style *termenv.Style) string {
+func padRight(
+	str string,
+	n int,
+	style *termenv.Style,
+) string {
 	return pad(str, n, style)
 }
 
 // pad adds padding to either the left or right side of a string.
 // Positive values add to the right side while negative values
 // add to the left side.
-func pad(str string, n int, style *termenv.Style) string {
+func pad(
+	str string,
+	n int,
+	style *termenv.Style,
+) string {
 	if n == 0 {
 		return str
 	}
@@ -565,7 +692,9 @@ func pad(str string, n int, style *termenv.Style) string {
 	return b.String()
 }
 
-func max(a, b int) int { //nolint:unparam,predeclared
+func max(
+	a, b int,
+) int { //nolint:unparam,predeclared
 	if a > b {
 		return a
 	}

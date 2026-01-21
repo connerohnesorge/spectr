@@ -83,9 +83,15 @@ func (c ANSIColor) Sequence(bg bool) string {
 	}
 
 	if col < 8 {
-		return fmt.Sprintf("%d", bgMod(col)+30) //nolint:mnd
+		return fmt.Sprintf(
+			"%d",
+			bgMod(col)+30,
+		) //nolint:mnd
 	}
-	return fmt.Sprintf("%d", bgMod(col-8)+90) //nolint:mnd
+	return fmt.Sprintf(
+		"%d",
+		bgMod(col-8)+90,
+	) //nolint:mnd
 }
 
 // Sequence returns the ANSI Sequence for the color.
@@ -108,7 +114,13 @@ func (c RGBColor) Sequence(bg bool) string {
 	if bg {
 		prefix = Background
 	}
-	return fmt.Sprintf("%s;2;%d;%d;%d", prefix, uint8(f.R*255), uint8(f.G*255), uint8(f.B*255)) //nolint:mnd
+	return fmt.Sprintf(
+		"%s;2;%d;%d;%d",
+		prefix,
+		uint8(f.R*255),
+		uint8(f.G*255),
+		uint8(f.B*255),
+	) //nolint:mnd
 }
 
 func xTermColor(s string) (RGBColor, error) {
@@ -136,11 +148,18 @@ func xTermColor(s string) (RGBColor, error) {
 	s = strings.TrimPrefix(s, prefix)
 
 	h := strings.Split(s, "/")
-	hex := fmt.Sprintf("#%s%s%s", h[0][:2], h[1][:2], h[2][:2])
+	hex := fmt.Sprintf(
+		"#%s%s%s",
+		h[0][:2],
+		h[1][:2],
+		h[2][:2],
+	)
 	return RGBColor(hex), nil
 }
 
-func ansi256ToANSIColor(c ANSI256Color) ANSIColor {
+func ansi256ToANSIColor(
+	c ANSI256Color,
+) ANSIColor {
 	var r int
 	md := math.MaxFloat64
 
@@ -158,8 +177,11 @@ func ansi256ToANSIColor(c ANSI256Color) ANSIColor {
 	return ANSIColor(r)
 }
 
+//
 //nolint:mnd
-func hexToANSI256Color(c colorful.Color) ANSI256Color {
+func hexToANSI256Color(
+	c colorful.Color,
+) ANSI256Color {
 	v2ci := func(v float64) int {
 		if v < 48 {
 			return 0
@@ -177,7 +199,14 @@ func hexToANSI256Color(c colorful.Color) ANSI256Color {
 	ci := 36*r + 6*g + b /* 0..215 */
 
 	// Calculate the represented colors back from the index
-	i2cv := [6]int{0, 0x5f, 0x87, 0xaf, 0xd7, 0xff}
+	i2cv := [6]int{
+		0,
+		0x5f,
+		0x87,
+		0xaf,
+		0xd7,
+		0xff,
+	}
 	cr := i2cv[r] // r/g/b, 0..255 each
 	cg := i2cv[g]
 	cb := i2cv[b]
@@ -193,8 +222,16 @@ func hexToANSI256Color(c colorful.Color) ANSI256Color {
 	gv := 8 + 10*grayIdx // same value for r/g/b, 0..255
 
 	// Return the one which is nearer to the original input rgb value
-	c2 := colorful.Color{R: float64(cr) / 255.0, G: float64(cg) / 255.0, B: float64(cb) / 255.0}
-	g2 := colorful.Color{R: float64(gv) / 255.0, G: float64(gv) / 255.0, B: float64(gv) / 255.0}
+	c2 := colorful.Color{
+		R: float64(cr) / 255.0,
+		G: float64(cg) / 255.0,
+		B: float64(cb) / 255.0,
+	}
+	g2 := colorful.Color{
+		R: float64(gv) / 255.0,
+		G: float64(gv) / 255.0,
+		B: float64(gv) / 255.0,
+	}
 	colorDist := c.DistanceHSLuv(c2)
 	grayDist := c.DistanceHSLuv(g2)
 

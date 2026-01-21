@@ -5,7 +5,9 @@ import (
 	"testing"
 )
 
-func TestTask_SerializationWithChildren(t *testing.T) {
+func TestTask_SerializationWithChildren(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		task     Task
@@ -49,16 +51,25 @@ func TestTask_SerializationWithChildren(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.Marshal(tt.task)
 			if err != nil {
-				t.Fatalf("json.Marshal() error = %v", err)
+				t.Fatalf(
+					"json.Marshal() error = %v",
+					err,
+				)
 			}
 			if string(got) != tt.wantJSON {
-				t.Errorf("json.Marshal() = %s, want %s", got, tt.wantJSON)
+				t.Errorf(
+					"json.Marshal() = %s, want %s",
+					got,
+					tt.wantJSON,
+				)
 			}
 		})
 	}
 }
 
-func TestTask_DeserializationWithChildren(t *testing.T) {
+func TestTask_DeserializationWithChildren(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		jsonData string
@@ -90,18 +101,30 @@ func TestTask_DeserializationWithChildren(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got Task
-			err := json.Unmarshal([]byte(tt.jsonData), &got)
+			err := json.Unmarshal(
+				[]byte(tt.jsonData),
+				&got,
+			)
 			if err != nil {
-				t.Fatalf("json.Unmarshal() error = %v", err)
+				t.Fatalf(
+					"json.Unmarshal() error = %v",
+					err,
+				)
 			}
 			if got != tt.want {
-				t.Errorf("json.Unmarshal() = %+v, want %+v", got, tt.want)
+				t.Errorf(
+					"json.Unmarshal() = %+v, want %+v",
+					got,
+					tt.want,
+				)
 			}
 		})
 	}
 }
 
-func TestTasksFile_SerializationWithParentAndIncludes(t *testing.T) {
+func TestTasksFile_SerializationWithParentAndIncludes(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		file     TasksFile
@@ -135,7 +158,9 @@ func TestTasksFile_SerializationWithParentAndIncludes(t *testing.T) {
 						Children:    "$ref:tasks-1.jsonc",
 					},
 				},
-				Includes: []string{"tasks-*.jsonc"},
+				Includes: []string{
+					"tasks-*.jsonc",
+				},
 			},
 			wantJSON: `{"version":2,"tasks":[{"id":"1","section":"Implementation","description":"Implement feature","status":"pending","children":"$ref:tasks-1.jsonc"}],"includes":["tasks-*.jsonc"]}`,
 		},
@@ -178,16 +203,25 @@ func TestTasksFile_SerializationWithParentAndIncludes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.Marshal(tt.file)
 			if err != nil {
-				t.Fatalf("json.Marshal() error = %v", err)
+				t.Fatalf(
+					"json.Marshal() error = %v",
+					err,
+				)
 			}
 			if string(got) != tt.wantJSON {
-				t.Errorf("json.Marshal() = %s, want %s", got, tt.wantJSON)
+				t.Errorf(
+					"json.Marshal() = %s, want %s",
+					got,
+					tt.wantJSON,
+				)
 			}
 		})
 	}
 }
 
-func TestTasksFile_DeserializationWithParentAndIncludes(t *testing.T) {
+func TestTasksFile_DeserializationWithParentAndIncludes(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		jsonData string
@@ -222,7 +256,9 @@ func TestTasksFile_DeserializationWithParentAndIncludes(t *testing.T) {
 						Children:    "$ref:tasks-1.jsonc",
 					},
 				},
-				Includes: []string{"tasks-*.jsonc"},
+				Includes: []string{
+					"tasks-*.jsonc",
+				},
 			},
 		},
 		{
@@ -246,20 +282,42 @@ func TestTasksFile_DeserializationWithParentAndIncludes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var got TasksFile
-			err := json.Unmarshal([]byte(tt.jsonData), &got)
+			err := json.Unmarshal(
+				[]byte(tt.jsonData),
+				&got,
+			)
 			if err != nil {
-				t.Fatalf("json.Unmarshal() error = %v", err)
+				t.Fatalf(
+					"json.Unmarshal() error = %v",
+					err,
+				)
 			}
 
 			// Compare fields individually for better error messages
 			if got.Version != tt.want.Version {
-				t.Errorf("Version = %d, want %d", got.Version, tt.want.Version)
+				t.Errorf(
+					"Version = %d, want %d",
+					got.Version,
+					tt.want.Version,
+				)
 			}
 			if got.Parent != tt.want.Parent {
-				t.Errorf("Parent = %s, want %s", got.Parent, tt.want.Parent)
+				t.Errorf(
+					"Parent = %s, want %s",
+					got.Parent,
+					tt.want.Parent,
+				)
 			}
-			if len(got.Tasks) != len(tt.want.Tasks) {
-				t.Errorf("Tasks length = %d, want %d", len(got.Tasks), len(tt.want.Tasks))
+			if len(
+				got.Tasks,
+			) != len(
+				tt.want.Tasks,
+			) {
+				t.Errorf(
+					"Tasks length = %d, want %d",
+					len(got.Tasks),
+					len(tt.want.Tasks),
+				)
 			} else {
 				for i := range got.Tasks {
 					if got.Tasks[i] != tt.want.Tasks[i] {
@@ -267,8 +325,16 @@ func TestTasksFile_DeserializationWithParentAndIncludes(t *testing.T) {
 					}
 				}
 			}
-			if len(got.Includes) != len(tt.want.Includes) {
-				t.Errorf("Includes length = %d, want %d", len(got.Includes), len(tt.want.Includes))
+			if len(
+				got.Includes,
+			) != len(
+				tt.want.Includes,
+			) {
+				t.Errorf(
+					"Includes length = %d, want %d",
+					len(got.Includes),
+					len(tt.want.Includes),
+				)
 			} else {
 				for i := range got.Includes {
 					if got.Includes[i] != tt.want.Includes[i] {

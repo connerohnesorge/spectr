@@ -21,11 +21,23 @@ func CmsgLen(datalen int) int {
 // CmsgSpace returns the number of bytes an ancillary element with
 // payload of the passed data length occupies.
 func CmsgSpace(datalen int) int {
-	return cmsgAlignOf(SizeofCmsghdr) + cmsgAlignOf(datalen)
+	return cmsgAlignOf(
+		SizeofCmsghdr,
+	) + cmsgAlignOf(
+		datalen,
+	)
 }
 
-func (h *Cmsghdr) data(offset uintptr) unsafe.Pointer {
-	return unsafe.Pointer(uintptr(unsafe.Pointer(h)) + uintptr(cmsgAlignOf(SizeofCmsghdr)) + offset)
+func (h *Cmsghdr) data(
+	offset uintptr,
+) unsafe.Pointer {
+	return unsafe.Pointer(
+		uintptr(
+			unsafe.Pointer(h),
+		) + uintptr(
+			cmsgAlignOf(SizeofCmsghdr),
+		) + offset,
+	)
 }
 
 // SocketControlMessage represents a socket control message.
@@ -36,15 +48,22 @@ type SocketControlMessage struct {
 
 // ParseSocketControlMessage parses b as an array of socket control
 // messages.
-func ParseSocketControlMessage(b []byte) ([]SocketControlMessage, error) {
+func ParseSocketControlMessage(
+	b []byte,
+) ([]SocketControlMessage, error) {
 	var msgs []SocketControlMessage
 	i := 0
 	for i+CmsgLen(0) <= len(b) {
-		h, dbuf, err := socketControlMessageHeaderAndData(b[i:])
+		h, dbuf, err := socketControlMessageHeaderAndData(
+			b[i:],
+		)
 		if err != nil {
 			return nil, err
 		}
-		m := SocketControlMessage{Header: *h, Data: dbuf}
+		m := SocketControlMessage{
+			Header: *h,
+			Data:   dbuf,
+		}
 		msgs = append(msgs, m)
 		i += cmsgAlignOf(int(h.Len))
 	}
@@ -54,8 +73,12 @@ func ParseSocketControlMessage(b []byte) ([]SocketControlMessage, error) {
 // ParseOneSocketControlMessage parses a single socket control message from b, returning the message header,
 // message data (a slice of b), and the remainder of b after that single message.
 // When there are no remaining messages, len(remainder) == 0.
-func ParseOneSocketControlMessage(b []byte) (hdr Cmsghdr, data []byte, remainder []byte, err error) {
-	h, dbuf, err := socketControlMessageHeaderAndData(b)
+func ParseOneSocketControlMessage(
+	b []byte,
+) (hdr Cmsghdr, data []byte, remainder []byte, err error) {
+	h, dbuf, err := socketControlMessageHeaderAndData(
+		b,
+	)
 	if err != nil {
 		return Cmsghdr{}, nil, nil, err
 	}
@@ -65,9 +88,12 @@ func ParseOneSocketControlMessage(b []byte) (hdr Cmsghdr, data []byte, remainder
 	return *h, dbuf, remainder, nil
 }
 
-func socketControlMessageHeaderAndData(b []byte) (*Cmsghdr, []byte, error) {
+func socketControlMessageHeaderAndData(
+	b []byte,
+) (*Cmsghdr, []byte, error) {
 	h := (*Cmsghdr)(unsafe.Pointer(&b[0]))
-	if h.Len < SizeofCmsghdr || uint64(h.Len) > uint64(len(b)) {
+	if h.Len < SizeofCmsghdr ||
+		uint64(h.Len) > uint64(len(b)) {
 		return nil, nil, EINVAL
 	}
 	return h, b[cmsgAlignOf(SizeofCmsghdr):h.Len], nil
@@ -83,14 +109,18 @@ func UnixRights(fds ...int) []byte {
 	h.Type = SCM_RIGHTS
 	h.SetLen(CmsgLen(datalen))
 	for i, fd := range fds {
-		*(*int32)(h.data(4 * uintptr(i))) = int32(fd)
+		*(*int32)(h.data(4 * uintptr(i))) = int32(
+			fd,
+		)
 	}
 	return b
 }
 
 // ParseUnixRights decodes a socket control message that contains an
 // integer array of open file descriptors from another process.
-func ParseUnixRights(m *SocketControlMessage) ([]int, error) {
+func ParseUnixRights(
+	m *SocketControlMessage,
+) ([]int, error) {
 	if m.Header.Level != SOL_SOCKET {
 		return nil, EINVAL
 	}
@@ -99,7 +129,9 @@ func ParseUnixRights(m *SocketControlMessage) ([]int, error) {
 	}
 	fds := make([]int, len(m.Data)>>2)
 	for i, j := 0, 0; i < len(m.Data); i += 4 {
-		fds[j] = int(*(*int32)(unsafe.Pointer(&m.Data[i])))
+		fds[j] = int(
+			*(*int32)(unsafe.Pointer(&m.Data[i])),
+		)
 		j++
 	}
 	return fds, nil

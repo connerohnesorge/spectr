@@ -134,7 +134,10 @@ const (
 // propertySearch performs a binary search on a property slice and returns the
 // entry whose range (start = first array element, end = second array element)
 // includes r, or an array of 0's if no such entry was found.
-func propertySearch[E interface{ [3]int | [4]int }](dictionary []E, r rune) (result E) {
+func propertySearch[E interface{ [3]int | [4]int }](
+	dictionary []E,
+	r rune,
+) (result E) {
 	// Run a binary search.
 	from := 0
 	to := len(dictionary)
@@ -163,7 +166,9 @@ func property(dictionary [][3]int, r rune) int {
 // propertyLineBreak returns the Unicode property value and General Category
 // (see constants above) of the given code point, as listed in the line break
 // code points table, while fast tracking ASCII digits and letters.
-func propertyLineBreak(r rune) (property, generalCategory int) {
+func propertyLineBreak(
+	r rune,
+) (property, generalCategory int) {
 	if r >= 'a' && r <= 'z' {
 		return prAL, gcLl
 	}
@@ -173,7 +178,10 @@ func propertyLineBreak(r rune) (property, generalCategory int) {
 	if r >= '0' && r <= '9' {
 		return prNU, gcNd
 	}
-	entry := propertySearch(lineBreakCodePoints, r)
+	entry := propertySearch(
+		lineBreakCodePoints,
+		r,
+	)
 	return entry[2], entry[3]
 }
 

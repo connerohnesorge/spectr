@@ -17,8 +17,7 @@
 //
 // Source code and other details for the project are available at GitHub:
 //
-//   https://github.com/go-yaml/yaml
-//
+//	https://github.com/go-yaml/yaml
 package yaml
 
 import (
@@ -38,7 +37,9 @@ type Unmarshaler interface {
 }
 
 type obsoleteUnmarshaler interface {
-	UnmarshalYAML(unmarshal func(interface{}) error) error
+	UnmarshalYAML(
+		unmarshal func(interface{}) error,
+	) error
 }
 
 // The Marshaler interface may be implemented by types to customize their
@@ -75,17 +76,19 @@ type Marshaler interface {
 //
 // For example:
 //
-//     type T struct {
-//         F int `yaml:"a,omitempty"`
-//         B int
-//     }
-//     var t T
-//     yaml.Unmarshal([]byte("a: 1\nb: 2"), &t)
+//	type T struct {
+//	    F int `yaml:"a,omitempty"`
+//	    B int
+//	}
+//	var t T
+//	yaml.Unmarshal([]byte("a: 1\nb: 2"), &t)
 //
 // See the documentation of Marshal for the format of tags and a list of
 // supported tag options.
-//
-func Unmarshal(in []byte, out interface{}) (err error) {
+func Unmarshal(
+	in []byte,
+	out interface{},
+) (err error) {
 	return unmarshal(in, out, false)
 }
 
@@ -116,7 +119,9 @@ func (dec *Decoder) KnownFields(enable bool) {
 //
 // See the documentation for Unmarshal for details about the
 // conversion of YAML into a Go value.
-func (dec *Decoder) Decode(v interface{}) (err error) {
+func (dec *Decoder) Decode(
+	v interface{},
+) (err error) {
 	d := newDecoder()
 	d.knownFields = dec.knownFields
 	defer handleErr(&err)
@@ -153,7 +158,11 @@ func (n *Node) Decode(v interface{}) (err error) {
 	return nil
 }
 
-func unmarshal(in []byte, out interface{}, strict bool) (err error) {
+func unmarshal(
+	in []byte,
+	out interface{},
+	strict bool,
+) (err error) {
 	defer handleErr(&err)
 	d := newDecoder()
 	p := newParser(in)
@@ -185,37 +194,38 @@ func unmarshal(in []byte, out interface{}, strict bool) (err error) {
 //
 // The field tag format accepted is:
 //
-//     `(...) yaml:"[<key>][,<flag1>[,<flag2>]]" (...)`
+//	`(...) yaml:"[<key>][,<flag1>[,<flag2>]]" (...)`
 //
 // The following flags are currently supported:
 //
-//     omitempty    Only include the field if it's not set to the zero
-//                  value for the type or to empty slices or maps.
-//                  Zero valued structs will be omitted if all their public
-//                  fields are zero, unless they implement an IsZero
-//                  method (see the IsZeroer interface type), in which
-//                  case the field will be excluded if IsZero returns true.
+//	omitempty    Only include the field if it's not set to the zero
+//	             value for the type or to empty slices or maps.
+//	             Zero valued structs will be omitted if all their public
+//	             fields are zero, unless they implement an IsZero
+//	             method (see the IsZeroer interface type), in which
+//	             case the field will be excluded if IsZero returns true.
 //
-//     flow         Marshal using a flow style (useful for structs,
-//                  sequences and maps).
+//	flow         Marshal using a flow style (useful for structs,
+//	             sequences and maps).
 //
-//     inline       Inline the field, which must be a struct or a map,
-//                  causing all of its fields or keys to be processed as if
-//                  they were part of the outer struct. For maps, keys must
-//                  not conflict with the yaml keys of other struct fields.
+//	inline       Inline the field, which must be a struct or a map,
+//	             causing all of its fields or keys to be processed as if
+//	             they were part of the outer struct. For maps, keys must
+//	             not conflict with the yaml keys of other struct fields.
 //
 // In addition, if the key is "-", the field is ignored.
 //
 // For example:
 //
-//     type T struct {
-//         F int `yaml:"a,omitempty"`
-//         B int
-//     }
-//     yaml.Marshal(&T{B: 2}) // Returns "b: 2\n"
-//     yaml.Marshal(&T{F: 1}} // Returns "a: 1\nb: 0\n"
-//
-func Marshal(in interface{}) (out []byte, err error) {
+//	type T struct {
+//	    F int `yaml:"a,omitempty"`
+//	    B int
+//	}
+//	yaml.Marshal(&T{B: 2}) // Returns "b: 2\n"
+//	yaml.Marshal(&T{F: 1}} // Returns "a: 1\nb: 0\n"
+func Marshal(
+	in interface{},
+) (out []byte, err error) {
 	defer handleErr(&err)
 	e := newEncoder()
 	defer e.destroy()
@@ -246,7 +256,9 @@ func NewEncoder(w io.Writer) *Encoder {
 //
 // See the documentation for Marshal for details about the conversion of Go
 // values to YAML.
-func (e *Encoder) Encode(v interface{}) (err error) {
+func (e *Encoder) Encode(
+	v interface{},
+) (err error) {
 	defer handleErr(&err)
 	e.encoder.marshalDoc("", reflect.ValueOf(v))
 	return nil
@@ -273,7 +285,9 @@ func (n *Node) Encode(v interface{}) (err error) {
 // SetIndent changes the used indentation used when encoding.
 func (e *Encoder) SetIndent(spaces int) {
 	if spaces < 0 {
-		panic("yaml: cannot indent to a negative number of spaces")
+		panic(
+			"yaml: cannot indent to a negative number of spaces",
+		)
 	}
 	e.encoder.indent = spaces
 }
@@ -305,7 +319,11 @@ func fail(err error) {
 }
 
 func failf(format string, args ...interface{}) {
-	panic(yamlError{fmt.Errorf("yaml: "+format, args...)})
+	panic(
+		yamlError{
+			fmt.Errorf("yaml: "+format, args...),
+		},
+	)
 }
 
 // A TypeError is returned by Unmarshal when one or more fields in
@@ -317,7 +335,10 @@ type TypeError struct {
 }
 
 func (e *TypeError) Error() string {
-	return fmt.Sprintf("yaml: unmarshal errors:\n  %s", strings.Join(e.Errors, "\n  "))
+	return fmt.Sprintf(
+		"yaml: unmarshal errors:\n  %s",
+		strings.Join(e.Errors, "\n  "),
+	)
 }
 
 type Kind uint32
@@ -358,22 +379,21 @@ const (
 //
 // For example:
 //
-//     var person struct {
-//             Name    string
-//             Address yaml.Node
-//     }
-//     err := yaml.Unmarshal(data, &person)
-// 
+//	var person struct {
+//	        Name    string
+//	        Address yaml.Node
+//	}
+//	err := yaml.Unmarshal(data, &person)
+//
 // Or by itself:
 //
-//     var person Node
-//     err := yaml.Unmarshal(data, &person)
-//
+//	var person Node
+//	err := yaml.Unmarshal(data, &person)
 type Node struct {
 	// Kind defines whether the node is a document, a mapping, a sequence,
 	// a scalar value, or an alias to another node. The specific data type of
 	// scalar nodes may be obtained via the ShortTag and LongTag methods.
-	Kind  Kind
+	Kind Kind
 
 	// Style allows customizing the apperance of the node in the tree.
 	Style Style
@@ -418,9 +438,12 @@ type Node struct {
 // IsZero returns whether the node has all of its fields unset.
 func (n *Node) IsZero() bool {
 	return n.Kind == 0 && n.Style == 0 && n.Tag == "" && n.Value == "" && n.Anchor == "" && n.Alias == nil && n.Content == nil &&
-		n.HeadComment == "" && n.LineComment == "" && n.FootComment == "" && n.Line == 0 && n.Column == 0
+		n.HeadComment == "" &&
+		n.LineComment == "" &&
+		n.FootComment == "" &&
+		n.Line == 0 &&
+		n.Column == 0
 }
-
 
 // LongTag returns the long form of the tag that indicates the data type for
 // the node. If the Tag field isn't explicitly defined, one will be computed
@@ -515,16 +538,24 @@ type fieldInfo struct {
 	Inline []int
 }
 
-var structMap = make(map[reflect.Type]*structInfo)
-var fieldMapMutex sync.RWMutex
-var unmarshalerType reflect.Type
+var (
+	structMap = make(
+		map[reflect.Type]*structInfo,
+	)
+	fieldMapMutex   sync.RWMutex
+	unmarshalerType reflect.Type
+)
 
 func init() {
 	var v Unmarshaler
-	unmarshalerType = reflect.ValueOf(&v).Elem().Type()
+	unmarshalerType = reflect.ValueOf(&v).
+		Elem().
+		Type()
 }
 
-func getStructInfo(st reflect.Type) (*structInfo, error) {
+func getStructInfo(
+	st reflect.Type,
+) (*structInfo, error) {
 	fieldMapMutex.RLock()
 	sinfo, found := structMap[st]
 	fieldMapMutex.RUnlock()
@@ -539,14 +570,19 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 	inlineUnmarshalers := [][]int(nil)
 	for i := 0; i != n; i++ {
 		field := st.Field(i)
-		if field.PkgPath != "" && !field.Anonymous {
+		if field.PkgPath != "" &&
+			!field.Anonymous {
 			continue // Private field
 		}
 
 		info := fieldInfo{Num: i}
 
 		tag := field.Tag.Get("yaml")
-		if tag == "" && strings.Index(string(field.Tag), ":") < 0 {
+		if tag == "" &&
+			strings.Index(
+				string(field.Tag),
+				":",
+			) < 0 {
 			tag = string(field.Tag)
 		}
 		if tag == "-" {
@@ -565,7 +601,14 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 				case "inline":
 					inline = true
 				default:
-					return nil, errors.New(fmt.Sprintf("unsupported flag %q in tag %q of type %s", flag, tag, st))
+					return nil, errors.New(
+						fmt.Sprintf(
+							"unsupported flag %q in tag %q of type %s",
+							flag,
+							tag,
+							st,
+						),
+					)
 				}
 			}
 			tag = fields[0]
@@ -575,10 +618,16 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 			switch field.Type.Kind() {
 			case reflect.Map:
 				if inlineMap >= 0 {
-					return nil, errors.New("multiple ,inline maps in struct " + st.String())
+					return nil, errors.New(
+						"multiple ,inline maps in struct " + st.String(),
+					)
 				}
-				if field.Type.Key() != reflect.TypeOf("") {
-					return nil, errors.New("option ,inline needs a map with string keys in struct " + st.String())
+				if field.Type.Key() != reflect.TypeOf(
+					"",
+				) {
+					return nil, errors.New(
+						"option ,inline needs a map with string keys in struct " + st.String(),
+					)
 				}
 				inlineMap = info.Num
 			case reflect.Struct, reflect.Ptr:
@@ -587,10 +636,16 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 					ftype = ftype.Elem()
 				}
 				if ftype.Kind() != reflect.Struct {
-					return nil, errors.New("option ,inline may only be used on a struct or map field")
+					return nil, errors.New(
+						"option ,inline may only be used on a struct or map field",
+					)
 				}
-				if reflect.PtrTo(ftype).Implements(unmarshalerType) {
-					inlineUnmarshalers = append(inlineUnmarshalers, []int{i})
+				if reflect.PtrTo(ftype).
+					Implements(unmarshalerType) {
+					inlineUnmarshalers = append(
+						inlineUnmarshalers,
+						[]int{i},
+					)
 				} else {
 					sinfo, err := getStructInfo(ftype)
 					if err != nil {
@@ -615,7 +670,9 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 					}
 				}
 			default:
-				return nil, errors.New("option ,inline may only be used on a struct or map field")
+				return nil, errors.New(
+					"option ,inline may only be used on a struct or map field",
+				)
 			}
 			continue
 		}
@@ -660,7 +717,8 @@ type IsZeroer interface {
 func isZero(v reflect.Value) bool {
 	kind := v.Kind()
 	if z, ok := v.Interface().(IsZeroer); ok {
-		if (kind == reflect.Ptr || kind == reflect.Interface) && v.IsNil() {
+		if (kind == reflect.Ptr || kind == reflect.Interface) &&
+			v.IsNil() {
 			return true
 		}
 		return z.IsZero()
@@ -674,11 +732,20 @@ func isZero(v reflect.Value) bool {
 		return v.Len() == 0
 	case reflect.Map:
 		return v.Len() == 0
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case reflect.Int,
+		reflect.Int8,
+		reflect.Int16,
+		reflect.Int32,
+		reflect.Int64:
 		return v.Int() == 0
 	case reflect.Float32, reflect.Float64:
 		return v.Float() == 0
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+	case reflect.Uint,
+		reflect.Uint8,
+		reflect.Uint16,
+		reflect.Uint32,
+		reflect.Uint64,
+		reflect.Uintptr:
 		return v.Uint() == 0
 	case reflect.Bool:
 		return !v.Bool()

@@ -22,13 +22,19 @@ func PredictFiles(pattern string) Predictor {
 	return files(pattern, true)
 }
 
-func files(pattern string, allowFiles bool) PredictFunc {
-
+func files(
+	pattern string,
+	allowFiles bool,
+) PredictFunc {
 	// search for files according to arguments,
 	// if only one directory has matched the result, search recursively into
 	// this directory to give more results.
 	return func(a Args) (prediction []string) {
-		prediction = predictFiles(a, pattern, allowFiles)
+		prediction = predictFiles(
+			a,
+			pattern,
+			allowFiles,
+		)
 
 		// if the number of prediction is not 1, we either have many results or
 		// have no results, so we return it.
@@ -37,16 +43,25 @@ func files(pattern string, allowFiles bool) PredictFunc {
 		}
 
 		// only try deeper, if the one item is a directory
-		if stat, err := os.Stat(prediction[0]); err != nil || !stat.IsDir() {
+		if stat, err := os.Stat(prediction[0]); err != nil ||
+			!stat.IsDir() {
 			return
 		}
 
 		a.Last = prediction[0]
-		return predictFiles(a, pattern, allowFiles)
+		return predictFiles(
+			a,
+			pattern,
+			allowFiles,
+		)
 	}
 }
 
-func predictFiles(a Args, pattern string, allowFiles bool) []string {
+func predictFiles(
+	a Args,
+	pattern string,
+	allowFiles bool,
+) []string {
 	if strings.HasSuffix(a.Last, "/..") {
 		return nil
 	}
@@ -63,11 +78,13 @@ func predictFiles(a Args, pattern string, allowFiles bool) []string {
 // directory gives the directory of the given partial path
 // in case that it is not, we fall back to the current directory.
 func directory(path string) string {
-	if info, err := os.Stat(path); err == nil && info.IsDir() {
+	if info, err := os.Stat(path); err == nil &&
+		info.IsDir() {
 		return fixPathForm(path, path)
 	}
 	dir := filepath.Dir(path)
-	if info, err := os.Stat(dir); err == nil && info.IsDir() {
+	if info, err := os.Stat(dir); err == nil &&
+		info.IsDir() {
 		return fixPathForm(path, dir)
 	}
 	return "./"
@@ -89,14 +106,19 @@ func PredictFilesSet(files []string) PredictFunc {
 	}
 }
 
-func listFiles(dir, pattern string, allowFiles bool) []string {
+func listFiles(
+	dir, pattern string,
+	allowFiles bool,
+) []string {
 	// set of all file names
 	m := map[string]bool{}
 
 	// list files
 	if files, err := filepath.Glob(filepath.Join(dir, pattern)); err == nil {
 		for _, f := range files {
-			if stat, err := os.Stat(f); err != nil || stat.IsDir() || allowFiles {
+			if stat, err := os.Stat(f); err != nil ||
+				stat.IsDir() ||
+				allowFiles {
 				m[f] = true
 			}
 		}
@@ -121,10 +143,12 @@ func listFiles(dir, pattern string, allowFiles bool) []string {
 // MatchFile returns true if prefix can match the file
 func matchFile(file, prefix string) bool {
 	// special case for current directory completion
-	if file == "./" && (prefix == "." || prefix == "") {
+	if file == "./" &&
+		(prefix == "." || prefix == "") {
 		return true
 	}
-	if prefix == "." && strings.HasPrefix(file, ".") {
+	if prefix == "." &&
+		strings.HasPrefix(file, ".") {
 		return true
 	}
 
@@ -135,7 +159,10 @@ func matchFile(file, prefix string) bool {
 }
 
 // fixPathForm changes a file name to a relative name
-func fixPathForm(last string, file string) string {
+func fixPathForm(
+	last string,
+	file string,
+) string {
 	// get wording directory for relative name
 	workDir, err := os.Getwd()
 	if err != nil {
@@ -158,7 +185,8 @@ func fixPathForm(last string, file string) string {
 	}
 
 	// fix ./ prefix of path
-	if rel != "." && strings.HasPrefix(last, ".") {
+	if rel != "." &&
+		strings.HasPrefix(last, ".") {
 		rel = "./" + rel
 	}
 
@@ -167,7 +195,8 @@ func fixPathForm(last string, file string) string {
 
 func fixDirPath(path string) string {
 	info, err := os.Stat(path)
-	if err == nil && info.IsDir() && !strings.HasSuffix(path, "/") {
+	if err == nil && info.IsDir() &&
+		!strings.HasSuffix(path, "/") {
 		path += "/"
 	}
 	return path

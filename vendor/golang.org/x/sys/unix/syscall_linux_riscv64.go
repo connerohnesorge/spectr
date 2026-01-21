@@ -26,10 +26,19 @@ import "unsafe"
 //sys	pwrite(fd int, p []byte, offset int64) (n int, err error) = SYS_PWRITE64
 //sys	Seek(fd int, offset int64, whence int) (off int64, err error) = SYS_LSEEK
 
-func Select(nfd int, r *FdSet, w *FdSet, e *FdSet, timeout *Timeval) (n int, err error) {
+func Select(
+	nfd int,
+	r *FdSet,
+	w *FdSet,
+	e *FdSet,
+	timeout *Timeval,
+) (n int, err error) {
 	var ts *Timespec
 	if timeout != nil {
-		ts = &Timespec{Sec: timeout.Sec, Nsec: timeout.Usec * 1000}
+		ts = &Timespec{
+			Sec:  timeout.Sec,
+			Nsec: timeout.Usec * 1000,
+		}
 	}
 	return pselect6(nfd, r, w, e, ts, nil)
 }
@@ -44,12 +53,30 @@ func Stat(path string, stat *Stat_t) (err error) {
 	return Fstatat(AT_FDCWD, path, stat, 0)
 }
 
-func Lchown(path string, uid int, gid int) (err error) {
-	return Fchownat(AT_FDCWD, path, uid, gid, AT_SYMLINK_NOFOLLOW)
+func Lchown(
+	path string,
+	uid int,
+	gid int,
+) (err error) {
+	return Fchownat(
+		AT_FDCWD,
+		path,
+		uid,
+		gid,
+		AT_SYMLINK_NOFOLLOW,
+	)
 }
 
-func Lstat(path string, stat *Stat_t) (err error) {
-	return Fstatat(AT_FDCWD, path, stat, AT_SYMLINK_NOFOLLOW)
+func Lstat(
+	path string,
+	stat *Stat_t,
+) (err error) {
+	return Fstatat(
+		AT_FDCWD,
+		path,
+		stat,
+		AT_SYMLINK_NOFOLLOW,
+	)
 }
 
 //sys	Statfs(path string, buf *Statfs_t) (err error)
@@ -87,7 +114,11 @@ func setTimeval(sec, usec int64) Timeval {
 	return Timeval{Sec: sec, Usec: usec}
 }
 
-func futimesat(dirfd int, path string, tv *[2]Timeval) (err error) {
+func futimesat(
+	dirfd int,
+	path string,
+	tv *[2]Timeval,
+) (err error) {
 	if tv == nil {
 		return utimensat(dirfd, path, nil, 0)
 	}
@@ -96,7 +127,12 @@ func futimesat(dirfd int, path string, tv *[2]Timeval) (err error) {
 		NsecToTimespec(TimevalToNsec(tv[0])),
 		NsecToTimespec(TimevalToNsec(tv[1])),
 	}
-	return utimensat(dirfd, path, (*[2]Timespec)(unsafe.Pointer(&ts[0])), 0)
+	return utimensat(
+		dirfd,
+		path,
+		(*[2]Timespec)(unsafe.Pointer(&ts[0])),
+		0,
+	)
 }
 
 func Time(t *Time_t) (Time_t, error) {
@@ -119,7 +155,10 @@ func Utime(path string, buf *Utimbuf) error {
 	return Utimes(path, tv)
 }
 
-func utimes(path string, tv *[2]Timeval) (err error) {
+func utimes(
+	path string,
+	tv *[2]Timeval,
+) (err error) {
 	if tv == nil {
 		return utimensat(AT_FDCWD, path, nil, 0)
 	}
@@ -128,12 +167,21 @@ func utimes(path string, tv *[2]Timeval) (err error) {
 		NsecToTimespec(TimevalToNsec(tv[0])),
 		NsecToTimespec(TimevalToNsec(tv[1])),
 	}
-	return utimensat(AT_FDCWD, path, (*[2]Timespec)(unsafe.Pointer(&ts[0])), 0)
+	return utimensat(
+		AT_FDCWD,
+		path,
+		(*[2]Timespec)(unsafe.Pointer(&ts[0])),
+		0,
+	)
 }
 
 func (r *PtraceRegs) PC() uint64 { return r.Pc }
 
-func (r *PtraceRegs) SetPC(pc uint64) { r.Pc = pc }
+func (r *PtraceRegs) SetPC(
+	pc uint64,
+) {
+	r.Pc = pc
+}
 
 func (iov *Iovec) SetLen(length int) {
 	iov.Len = uint64(length)
@@ -151,7 +199,9 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 	cmsg.Len = uint64(length)
 }
 
-func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(length int) {
+func (rsa *RawSockaddrNFCLLCP) SetServiceNameLen(
+	length int,
+) {
 	rsa.Service_name_len = uint64(length)
 }
 
@@ -160,13 +210,29 @@ func Pause() error {
 	return err
 }
 
-func Renameat(olddirfd int, oldpath string, newdirfd int, newpath string) (err error) {
-	return Renameat2(olddirfd, oldpath, newdirfd, newpath, 0)
+func Renameat(
+	olddirfd int,
+	oldpath string,
+	newdirfd int,
+	newpath string,
+) (err error) {
+	return Renameat2(
+		olddirfd,
+		oldpath,
+		newdirfd,
+		newpath,
+		0,
+	)
 }
 
 //sys	kexecFileLoad(kernelFd int, initrdFd int, cmdlineLen int, cmdline string, flags int) (err error)
 
-func KexecFileLoad(kernelFd int, initrdFd int, cmdline string, flags int) error {
+func KexecFileLoad(
+	kernelFd int,
+	initrdFd int,
+	cmdline string,
+	flags int,
+) error {
 	cmdlineLen := len(cmdline)
 	if cmdlineLen > 0 {
 		// Account for the additional NULL byte added by
@@ -174,18 +240,33 @@ func KexecFileLoad(kernelFd int, initrdFd int, cmdline string, flags int) error 
 		// syscall expects a NULL-terminated string.
 		cmdlineLen++
 	}
-	return kexecFileLoad(kernelFd, initrdFd, cmdlineLen, cmdline, flags)
+	return kexecFileLoad(
+		kernelFd,
+		initrdFd,
+		cmdlineLen,
+		cmdline,
+		flags,
+	)
 }
 
 //sys	riscvHWProbe(pairs []RISCVHWProbePairs, cpuCount uintptr, cpus *CPUSet, flags uint) (err error)
 
-func RISCVHWProbe(pairs []RISCVHWProbePairs, set *CPUSet, flags uint) (err error) {
+func RISCVHWProbe(
+	pairs []RISCVHWProbePairs,
+	set *CPUSet,
+	flags uint,
+) (err error) {
 	var setSize uintptr
 
 	if set != nil {
 		setSize = uintptr(unsafe.Sizeof(*set))
 	}
-	return riscvHWProbe(pairs, setSize, set, flags)
+	return riscvHWProbe(
+		pairs,
+		setSize,
+		set,
+		flags,
+	)
 }
 
 const SYS_FSTATAT = SYS_NEWFSTATAT

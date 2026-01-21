@@ -25,11 +25,15 @@ type conInputReader struct {
 
 var _ cancelreader.CancelReader = &conInputReader{}
 
-func newInputReader(r io.Reader, enableMouse bool) (cancelreader.CancelReader, error) {
+func newInputReader(
+	r io.Reader,
+	enableMouse bool,
+) (cancelreader.CancelReader, error) {
 	fallback := func(io.Reader) (cancelreader.CancelReader, error) {
 		return cancelreader.NewReader(r)
 	}
-	if f, ok := r.(term.File); !ok || f.Fd() != os.Stdin.Fd() {
+	if f, ok := r.(term.File); !ok ||
+		f.Fd() != os.Stdin.Fd() {
 		return fallback(r)
 	}
 
@@ -49,12 +53,20 @@ func newInputReader(r io.Reader, enableMouse bool) (cancelreader.CancelReader, e
 	// has enabled mouse events and add the appropriate mode accordingly.
 	// Otherwise, mouse events will be enabled all the time.
 	if enableMouse {
-		modes = append(modes, windows.ENABLE_MOUSE_INPUT)
+		modes = append(
+			modes,
+			windows.ENABLE_MOUSE_INPUT,
+		)
 	}
 
-	originalMode, err := prepareConsole(conin, modes...)
+	originalMode, err := prepareConsole(
+		conin,
+		modes...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to prepare console input: %w", err)
+		return nil, fmt.Errorf(
+			"failed to prepare console input: %w",
+			err,
+		)
 	}
 
 	return &conInputReader{
@@ -69,15 +81,25 @@ func (r *conInputReader) Cancel() bool {
 
 	// Warning: These cancel methods do not reliably work on console input
 	// 			and should not be counted on.
-	return windows.CancelIoEx(r.conin, nil) == nil || windows.CancelIo(r.conin) == nil
+	return windows.CancelIoEx(
+		r.conin,
+		nil,
+	) == nil ||
+		windows.CancelIo(r.conin) == nil
 }
 
 // Close implements cancelreader.CancelReader.
 func (r *conInputReader) Close() error {
 	if r.originalMode != 0 {
-		err := windows.SetConsoleMode(r.conin, r.originalMode)
+		err := windows.SetConsoleMode(
+			r.conin,
+			r.originalMode,
+		)
 		if err != nil {
-			return fmt.Errorf("reset console mode: %w", err)
+			return fmt.Errorf(
+				"reset console mode: %w",
+				err,
+			)
 		}
 	}
 
@@ -85,24 +107,38 @@ func (r *conInputReader) Close() error {
 }
 
 // Read implements cancelreader.CancelReader.
-func (r *conInputReader) Read(_ []byte) (n int, err error) {
+func (r *conInputReader) Read(
+	_ []byte,
+) (n int, err error) {
 	if r.isCanceled() {
 		err = cancelreader.ErrCanceled
 	}
 	return
 }
 
-func prepareConsole(input windows.Handle, modes ...uint32) (originalMode uint32, err error) {
-	err = windows.GetConsoleMode(input, &originalMode)
+func prepareConsole(
+	input windows.Handle,
+	modes ...uint32,
+) (originalMode uint32, err error) {
+	err = windows.GetConsoleMode(
+		input,
+		&originalMode,
+	)
 	if err != nil {
-		return 0, fmt.Errorf("get console mode: %w", err)
+		return 0, fmt.Errorf(
+			"get console mode: %w",
+			err,
+		)
 	}
 
 	newMode := coninput.AddInputModes(0, modes...)
 
 	err = windows.SetConsoleMode(input, newMode)
 	if err != nil {
-		return 0, fmt.Errorf("set console mode: %w", err)
+		return 0, fmt.Errorf(
+			"set console mode: %w",
+			err,
+		)
 	}
 
 	return originalMode, nil

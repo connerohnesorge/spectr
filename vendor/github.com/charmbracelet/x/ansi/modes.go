@@ -60,6 +60,8 @@ func (m Modes) IsReset(mode Mode) bool {
 }
 
 // IsPermanentlyReset returns true if the mode is set to [ModePermanentlyReset].
-func (m Modes) IsPermanentlyReset(mode Mode) bool {
+func (m Modes) IsPermanentlyReset(
+	mode Mode,
+) bool {
 	return m[mode].IsPermanentlyReset()
 }

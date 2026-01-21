@@ -58,8 +58,18 @@ func (km KeyMap) ShortHelp() []key.Binding {
 // FullHelp implements the KeyMap interface.
 func (km KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{km.LineUp, km.LineDown, km.GotoTop, km.GotoBottom},
-		{km.PageUp, km.PageDown, km.HalfPageUp, km.HalfPageDown},
+		{
+			km.LineUp,
+			km.LineDown,
+			km.GotoTop,
+			km.GotoBottom,
+		},
+		{
+			km.PageUp,
+			km.PageDown,
+			km.HalfPageUp,
+			km.HalfPageDown,
+		},
 	}
 }
 
@@ -113,9 +123,14 @@ type Styles struct {
 // DefaultStyles returns a set of default style definitions for this table.
 func DefaultStyles() Styles {
 	return Styles{
-		Selected: lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("212")),
-		Header:   lipgloss.NewStyle().Bold(true).Padding(0, 1),
-		Cell:     lipgloss.NewStyle().Padding(0, 1),
+		Selected: lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("212")),
+		Header: lipgloss.NewStyle().
+			Bold(true).
+			Padding(0, 1),
+		Cell: lipgloss.NewStyle().
+			Padding(0, 1),
 	}
 }
 
@@ -133,8 +148,11 @@ type Option func(*Model)
 // New creates a new model for the table widget.
 func New(opts ...Option) Model {
 	m := Model{
-		cursor:   0,
-		viewport: viewport.New(0, 20), //nolint:mnd
+		cursor: 0,
+		viewport: viewport.New(
+			0,
+			20,
+		), //nolint:mnd
 
 		KeyMap: DefaultKeyMap(),
 		Help:   help.New(),
@@ -167,7 +185,9 @@ func WithRows(rows []Row) Option {
 // WithHeight sets the height of the table.
 func WithHeight(h int) Option {
 	return func(m *Model) {
-		m.viewport.Height = h - lipgloss.Height(m.headersView())
+		m.viewport.Height = h - lipgloss.Height(
+			m.headersView(),
+		)
 	}
 }
 
@@ -200,7 +220,9 @@ func WithKeyMap(km KeyMap) Option {
 }
 
 // Update is the Bubble Tea update loop.
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(
+	msg tea.Msg,
+) (Model, tea.Cmd) {
 	if !m.focus {
 		return m, nil
 	}
@@ -269,17 +291,30 @@ func (m *Model) UpdateViewport() {
 	// Constant runtime, independent of number of rows in a table.
 	// Limits the number of renderedRows to a maximum of 2*m.viewport.Height
 	if m.cursor >= 0 {
-		m.start = clamp(m.cursor-m.viewport.Height, 0, m.cursor)
+		m.start = clamp(
+			m.cursor-m.viewport.Height,
+			0,
+			m.cursor,
+		)
 	} else {
 		m.start = 0
 	}
-	m.end = clamp(m.cursor+m.viewport.Height, m.cursor, len(m.rows))
+	m.end = clamp(
+		m.cursor+m.viewport.Height,
+		m.cursor,
+		len(m.rows),
+	)
 	for i := m.start; i < m.end; i++ {
-		renderedRows = append(renderedRows, m.renderRow(i))
+		renderedRows = append(
+			renderedRows,
+			m.renderRow(i),
+		)
 	}
 
 	m.viewport.SetContent(
-		lipgloss.JoinVertical(lipgloss.Left, renderedRows...),
+		lipgloss.JoinVertical(
+			lipgloss.Left,
+			renderedRows...),
 	)
 }
 
@@ -323,7 +358,9 @@ func (m *Model) SetWidth(w int) {
 
 // SetHeight sets the height of the viewport of the table.
 func (m *Model) SetHeight(h int) {
-	m.viewport.Height = h - lipgloss.Height(m.headersView())
+	m.viewport.Height = h - lipgloss.Height(
+		m.headersView(),
+	)
 	m.UpdateViewport()
 }
 
@@ -354,11 +391,21 @@ func (m *Model) MoveUp(n int) {
 	m.cursor = clamp(m.cursor-n, 0, len(m.rows)-1)
 	switch {
 	case m.start == 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset, 0, m.cursor))
+		m.viewport.SetYOffset(
+			clamp(
+				m.viewport.YOffset,
+				0,
+				m.cursor,
+			),
+		)
 	case m.start < m.viewport.Height:
 		m.viewport.YOffset = (clamp(clamp(m.viewport.YOffset+n, 0, m.cursor), 0, m.viewport.Height))
 	case m.viewport.YOffset >= 1:
-		m.viewport.YOffset = clamp(m.viewport.YOffset+n, 1, m.viewport.Height)
+		m.viewport.YOffset = clamp(
+			m.viewport.YOffset+n,
+			1,
+			m.viewport.Height,
+		)
 	}
 	m.UpdateViewport()
 }
@@ -371,12 +418,26 @@ func (m *Model) MoveDown(n int) {
 
 	switch {
 	case m.end == len(m.rows) && m.viewport.YOffset > 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset-n, 1, m.viewport.Height))
+		m.viewport.SetYOffset(
+			clamp(
+				m.viewport.YOffset-n,
+				1,
+				m.viewport.Height,
+			),
+		)
 	case m.cursor > (m.end-m.start)/2 && m.viewport.YOffset > 0:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset-n, 1, m.cursor))
+		m.viewport.SetYOffset(
+			clamp(
+				m.viewport.YOffset-n,
+				1,
+				m.cursor,
+			),
+		)
 	case m.viewport.YOffset > 1:
 	case m.cursor > m.viewport.YOffset+m.viewport.Height-1:
-		m.viewport.SetYOffset(clamp(m.viewport.YOffset+1, 0, 1))
+		m.viewport.SetYOffset(
+			clamp(m.viewport.YOffset+1, 0, 1),
+		)
 	}
 }
 
@@ -393,7 +454,9 @@ func (m *Model) GotoBottom() {
 // FromValues create the table rows from a simple string. It uses `\n` by
 // default for getting all the rows and the given separator for the fields on
 // each row.
-func (m *Model) FromValues(value, separator string) {
+func (m *Model) FromValues(
+	value, separator string,
+) {
 	rows := []Row{}
 	for _, line := range strings.Split(value, "\n") {
 		r := Row{}
@@ -412,11 +475,25 @@ func (m Model) headersView() string {
 		if col.Width <= 0 {
 			continue
 		}
-		style := lipgloss.NewStyle().Width(col.Width).MaxWidth(col.Width).Inline(true)
-		renderedCell := style.Render(runewidth.Truncate(col.Title, col.Width, "…"))
-		s = append(s, m.styles.Header.Render(renderedCell))
+		style := lipgloss.NewStyle().
+			Width(col.Width).
+			MaxWidth(col.Width).
+			Inline(true)
+		renderedCell := style.Render(
+			runewidth.Truncate(
+				col.Title,
+				col.Width,
+				"…",
+			),
+		)
+		s = append(
+			s,
+			m.styles.Header.Render(renderedCell),
+		)
 	}
-	return lipgloss.JoinHorizontal(lipgloss.Top, s...)
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		s...)
 }
 
 func (m *Model) renderRow(r int) string {
@@ -425,12 +502,25 @@ func (m *Model) renderRow(r int) string {
 		if m.cols[i].Width <= 0 {
 			continue
 		}
-		style := lipgloss.NewStyle().Width(m.cols[i].Width).MaxWidth(m.cols[i].Width).Inline(true)
-		renderedCell := m.styles.Cell.Render(style.Render(runewidth.Truncate(value, m.cols[i].Width, "…")))
+		style := lipgloss.NewStyle().
+			Width(m.cols[i].Width).
+			MaxWidth(m.cols[i].Width).
+			Inline(true)
+		renderedCell := m.styles.Cell.Render(
+			style.Render(
+				runewidth.Truncate(
+					value,
+					m.cols[i].Width,
+					"…",
+				),
+			),
+		)
 		s = append(s, renderedCell)
 	}
 
-	row := lipgloss.JoinHorizontal(lipgloss.Top, s...)
+	row := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		s...)
 
 	if r == m.cursor {
 		return m.styles.Selected.Render(row)

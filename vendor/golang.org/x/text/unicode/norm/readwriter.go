@@ -15,7 +15,9 @@ type normWriter struct {
 // Write implements the standard write interface.  If the last characters are
 // not at a normalization boundary, the bytes will be buffered for the next
 // write. The remaining bytes will be written on close.
-func (w *normWriter) Write(data []byte) (n int, err error) {
+func (w *normWriter) Write(
+	data []byte,
+) (n int, err error) {
 	// Process data in pieces to keep w.buf size bounded.
 	const chunk = 4000
 
@@ -83,7 +85,10 @@ type normReader struct {
 func (r *normReader) Read(p []byte) (int, error) {
 	for {
 		if r.lastBoundary-r.bufStart > 0 {
-			n := copy(p, r.outbuf[r.bufStart:r.lastBoundary])
+			n := copy(
+				p,
+				r.outbuf[r.bufStart:r.lastBoundary],
+			)
 			r.bufStart += n
 			if r.lastBoundary-r.bufStart > 0 {
 				return n, nil
@@ -93,7 +98,10 @@ func (r *normReader) Read(p []byte) (int, error) {
 		if r.err != nil {
 			return 0, r.err
 		}
-		outn := copy(r.outbuf, r.outbuf[r.lastBoundary:])
+		outn := copy(
+			r.outbuf,
+			r.outbuf[r.lastBoundary:],
+		)
 		r.outbuf = r.outbuf[0:outn]
 		r.bufStart = 0
 
@@ -101,7 +109,11 @@ func (r *normReader) Read(p []byte) (int, error) {
 		r.rb.src = inputBytes(r.inbuf[0:n])
 		r.rb.nsrc, r.err = n, err
 		if n > 0 {
-			r.outbuf = doAppend(&r.rb, r.outbuf, 0)
+			r.outbuf = doAppend(
+				&r.rb,
+				r.outbuf,
+				0,
+			)
 		}
 		if err == io.EOF {
 			r.lastBoundary = len(r.outbuf)
@@ -119,7 +131,11 @@ func (r *normReader) Read(p []byte) (int, error) {
 func (f Form) Reader(r io.Reader) io.Reader {
 	const chunk = 4000
 	buf := make([]byte, chunk)
-	rr := &normReader{rb: reorderBuffer{}, r: r, inbuf: buf}
+	rr := &normReader{
+		rb:    reorderBuffer{},
+		r:     r,
+		inbuf: buf,
+	}
 	rr.rb.init(f, buf)
 	return rr
 }

@@ -29,7 +29,9 @@ func Shell() (string, error) {
 		return WindowsShell()
 	}
 
-	return "", errors.New("Undefined GOOS: " + runtime.GOOS)
+	return "", errors.New(
+		"Undefined GOOS: " + runtime.GOOS,
+	)
 }
 
 func Plan9Shell() (string, error) {
@@ -50,35 +52,51 @@ func NixShell() (string, error) {
 		return "", err
 	}
 
-	out, err := exec.Command("getent", "passwd", user.Uid).Output()
+	out, err := exec.Command("getent", "passwd", user.Uid).
+		Output()
 	if err != nil {
 		return "", err
 	}
 
-	ent := strings.Split(strings.TrimSuffix(string(out), "\n"), ":")
+	ent := strings.Split(
+		strings.TrimSuffix(string(out), "\n"),
+		":",
+	)
 	return ent[6], nil
 }
 
 func AndroidShell() (string, error) {
-	shell := os.Getenv("SHELL");
+	shell := os.Getenv("SHELL")
 	if shell == "" {
-		return "", errors.New("SHELL not defined in android.")
+		return "", errors.New(
+			"SHELL not defined in android.",
+		)
 	}
 	return shell, nil
 }
 
 func DarwinShell() (string, error) {
-	dir := "Local/Default/Users/" + os.Getenv("USER")
-	out, err := exec.Command("dscl", "localhost", "-read", dir, "UserShell").Output()
+	dir := "Local/Default/Users/" + os.Getenv(
+		"USER",
+	)
+	out, err := exec.Command("dscl", "localhost", "-read", dir, "UserShell").
+		Output()
 	if err != nil {
 		return "", err
 	}
 
-	re := regexp.MustCompile("UserShell: (/[^ ]+)\n")
+	re := regexp.MustCompile(
+		"UserShell: (/[^ ]+)\n",
+	)
 	matched := re.FindStringSubmatch(string(out))
 	shell := matched[1]
 	if shell == "" {
-		return "", errors.New(fmt.Sprintf("Invalid output: %s", string(out)))
+		return "", errors.New(
+			fmt.Sprintf(
+				"Invalid output: %s",
+				string(out),
+			),
+		)
 	}
 
 	return shell, nil

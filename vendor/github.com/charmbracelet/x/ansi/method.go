@@ -22,7 +22,11 @@ func (m Method) StringWidth(s string) int {
 // the string is longer than the given length. This function is aware of ANSI
 // escape codes and will not break them, and accounts for wide-characters (such
 // as East-Asian characters and emojis).
-func (m Method) Truncate(s string, length int, tail string) string {
+func (m Method) Truncate(
+	s string,
+	length int,
+	tail string,
+) string {
 	return truncate(m, s, length, tail)
 }
 
@@ -30,7 +34,11 @@ func (m Method) Truncate(s string, length int, tail string) string {
 // beginning if the string is longer than the given length. This function is
 // aware of ANSI escape codes and will not break them, and accounts for
 // wide-characters (such as East-Asian characters and emojis).
-func (m Method) TruncateLeft(s string, length int, prefix string) string {
+func (m Method) TruncateLeft(
+	s string,
+	length int,
+	prefix string,
+) string {
 	return truncateLeft(m, s, length, prefix)
 }
 
@@ -38,7 +46,10 @@ func (m Method) TruncateLeft(s string, length int, prefix string) string {
 // aware of ANSI escape codes and will not break them, and accounts for
 // wide-characters (such as East-Asian characters and emojis). Note that the
 // [left] parameter is inclusive, while [right] isn't.
-func (m Method) Cut(s string, left, right int) string {
+func (m Method) Cut(
+	s string,
+	left, right int,
+) string {
 	return cut(m, s, left, right)
 }
 
@@ -48,7 +59,11 @@ func (m Method) Cut(s string, left, right int) string {
 // When preserveSpace is true, spaces at the beginning of a line will be
 // preserved.
 // This treats the text as a sequence of graphemes.
-func (m Method) Hardwrap(s string, length int, preserveSpace bool) string {
+func (m Method) Hardwrap(
+	s string,
+	length int,
+	preserveSpace bool,
+) string {
 	return hardwrap(m, s, length, preserveSpace)
 }
 
@@ -60,7 +75,11 @@ func (m Method) Hardwrap(s string, length int, preserveSpace bool) string {
 // breakpoint.
 //
 // Note: breakpoints must be a string of 1-cell wide rune characters.
-func (m Method) Wordwrap(s string, length int, breakpoints string) string {
+func (m Method) Wordwrap(
+	s string,
+	length int,
+	breakpoints string,
+) string {
 	return wordwrap(m, s, length, breakpoints)
 }
 
@@ -71,7 +90,11 @@ func (m Method) Wordwrap(s string, length int, breakpoints string) string {
 // (-) is always considered a breakpoint.
 //
 // Note: breakpoints must be a string of 1-cell wide rune characters.
-func (m Method) Wrap(s string, length int, breakpoints string) string {
+func (m Method) Wrap(
+	s string,
+	length int,
+	breakpoints string,
+) string {
 	return wrap(m, s, length, breakpoints)
 }
 
@@ -119,7 +142,11 @@ func (m Method) Wrap(s string, length int, breakpoints string) string {
 //		state = newState
 //		input = input[n:]
 //	}
-func (m Method) DecodeSequence(data []byte, state byte, p *Parser) (seq []byte, width, n int, newState byte) {
+func (m Method) DecodeSequence(
+	data []byte,
+	state byte,
+	p *Parser,
+) (seq []byte, width, n int, newState byte) {
 	return decodeSequence(m, data, state, p)
 }
 
@@ -167,6 +194,10 @@ func (m Method) DecodeSequence(data []byte, state byte, p *Parser) (seq []byte, 
 //		state = newState
 //		input = input[n:]
 //	}
-func (m Method) DecodeSequenceInString(data string, state byte, p *Parser) (seq string, width, n int, newState byte) {
+func (m Method) DecodeSequenceInString(
+	data string,
+	state byte,
+	p *Parser,
+) (seq string, width, n int, newState byte) {
 	return decodeSequence(m, data, state, p)
 }

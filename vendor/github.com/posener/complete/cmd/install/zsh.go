@@ -18,7 +18,10 @@ func (z zsh) IsInstalled(cmd, bin string) bool {
 
 func (z zsh) Install(cmd, bin string) error {
 	if z.IsInstalled(cmd, bin) {
-		return fmt.Errorf("already installed in %s", z.rc)
+		return fmt.Errorf(
+			"already installed in %s",
+			z.rc,
+		)
 	}
 
 	completeCmd := z.cmd(cmd, bin)
@@ -32,7 +35,10 @@ func (z zsh) Install(cmd, bin string) error {
 
 func (z zsh) Uninstall(cmd, bin string) error {
 	if !z.IsInstalled(cmd, bin) {
-		return fmt.Errorf("does not installed in %s", z.rc)
+		return fmt.Errorf(
+			"does not installed in %s",
+			z.rc,
+		)
 	}
 
 	completeCmd := z.cmd(cmd, bin)
@@ -40,5 +46,9 @@ func (z zsh) Uninstall(cmd, bin string) error {
 }
 
 func (zsh) cmd(cmd, bin string) string {
-	return fmt.Sprintf("complete -o nospace -C %s %s", bin, cmd)
+	return fmt.Sprintf(
+		"complete -o nospace -C %s %s",
+		bin,
+		cmd,
+	)
 }

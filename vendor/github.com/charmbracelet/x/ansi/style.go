@@ -80,7 +80,9 @@ func (s Style) Underline() Style {
 }
 
 // UnderlineStyle appends the underline style attribute to the style.
-func (s Style) UnderlineStyle(u UnderlineStyle) Style {
+func (s Style) UnderlineStyle(
+	u UnderlineStyle,
+) Style {
 	switch u {
 	case NoUnderlineStyle:
 		return s.NoUnderline()
@@ -526,8 +528,13 @@ func underlineColorString(c Color) string {
 //  2. Support ignoring and omitting the color space id (second parameter) with respect to RGB colors
 //  3. Support ignoring and omitting the 6th parameter with respect to RGB and CMY colors
 //  4. Support reading RGBA colors
-func ReadStyleColor(params Params, co *color.Color) (n int) {
-	if len(params) < 2 { // Need at least SGR type and color type
+func ReadStyleColor(
+	params Params,
+	co *color.Color,
+) (n int) {
+	if len(
+		params,
+	) < 2 { // Need at least SGR type and color type
 		return 0
 	}
 
@@ -543,21 +550,51 @@ func ReadStyleColor(params Params, co *color.Color) (n int) {
 		case s.HasMore() && p.HasMore() && len(params) > 8 && params[2].HasMore() && params[3].HasMore() && params[4].HasMore() && params[5].HasMore() && params[6].HasMore() && params[7].HasMore():
 			// We have color space id, a 6th parameter, a tolerance value, and a tolerance color space
 			n += 7
-			return params[3].Param(0), params[4].Param(0), params[5].Param(0), params[6].Param(0)
+			return params[3].Param(
+					0,
+				), params[4].Param(
+					0,
+				), params[5].Param(
+					0,
+				), params[6].Param(
+					0,
+				)
 		case s.HasMore() && p.HasMore() && len(params) > 7 && params[2].HasMore() && params[3].HasMore() && params[4].HasMore() && params[5].HasMore() && params[6].HasMore():
 			// We have color space id, a 6th parameter, and a tolerance value
 			n += 6
-			return params[3].Param(0), params[4].Param(0), params[5].Param(0), params[6].Param(0)
+			return params[3].Param(
+					0,
+				), params[4].Param(
+					0,
+				), params[5].Param(
+					0,
+				), params[6].Param(
+					0,
+				)
 		case s.HasMore() && p.HasMore() && len(params) > 6 && params[2].HasMore() && params[3].HasMore() && params[4].HasMore() && params[5].HasMore():
 			// We have color space id and a 6th parameter
 			// 48 : 4 : : 1 : 2 : 3 :4
 			n += 5
-			return params[3].Param(0), params[4].Param(0), params[5].Param(0), params[6].Param(0)
+			return params[3].Param(
+					0,
+				), params[4].Param(
+					0,
+				), params[5].Param(
+					0,
+				), params[6].Param(
+					0,
+				)
 		case s.HasMore() && p.HasMore() && len(params) > 5 && params[2].HasMore() && params[3].HasMore() && params[4].HasMore() && !params[5].HasMore():
 			// We have color space
 			// 48 : 3 : : 1 : 2 : 3
 			n += 4
-			return params[3].Param(0), params[4].Param(0), params[5].Param(0), -1
+			return params[3].Param(
+					0,
+				), params[4].Param(
+					0,
+				), params[5].Param(
+					0,
+				), -1
 		case s.HasMore() && p.HasMore() && p.Param(0) == 2 && params[2].HasMore() && params[3].HasMore() && !params[4].HasMore():
 			// We have color values separated by colons (:)
 			// 48 : 2 : 1 : 2 : 3
@@ -566,7 +603,13 @@ func ReadStyleColor(params Params, co *color.Color) (n int) {
 			// Support legacy color values separated by semicolons (;)
 			// 48 ; 2 ; 1 ; 2 ; 3
 			n += 3
-			return params[2].Param(0), params[3].Param(0), params[4].Param(0), -1
+			return params[2].Param(
+					0,
+				), params[3].Param(
+					0,
+				), params[4].Param(
+					0,
+				), -1
 		}
 		// Ambiguous SGR color
 		return -1, -1, -1, -1
@@ -620,7 +663,8 @@ func ReadStyleColor(params Params, co *color.Color) (n int) {
 		}
 
 		c, m, y, k := paramsfn()
-		if c == -1 || m == -1 || y == -1 || k == -1 {
+		if c == -1 || m == -1 || y == -1 ||
+			k == -1 {
 			return 0
 		}
 
@@ -646,7 +690,9 @@ func ReadStyleColor(params Params, co *color.Color) (n int) {
 		default:
 			return 0
 		}
-		*co = ExtendedColor(params[2].Param(0)) //nolint:gosec
+		*co = ExtendedColor(
+			params[2].Param(0),
+		) //nolint:gosec
 		return 3
 
 	case 6: // RGBA direct color
@@ -655,7 +701,8 @@ func ReadStyleColor(params Params, co *color.Color) (n int) {
 		}
 
 		r, g, b, a := paramsfn()
-		if r == -1 || g == -1 || b == -1 || a == -1 {
+		if r == -1 || g == -1 || b == -1 ||
+			a == -1 {
 			return 0
 		}
 

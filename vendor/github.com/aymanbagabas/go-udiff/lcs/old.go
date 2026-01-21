@@ -18,14 +18,26 @@ type Diff struct {
 
 // DiffStrings returns the differences between two strings.
 // It does not respect rune boundaries.
-func DiffStrings(a, b string) []Diff { return diff(stringSeqs{a, b}) }
+func DiffStrings(
+	a, b string,
+) []Diff {
+	return diff(stringSeqs{a, b})
+}
 
 // DiffBytes returns the differences between two byte sequences.
 // It does not respect rune boundaries.
-func DiffBytes(a, b []byte) []Diff { return diff(bytesSeqs{a, b}) }
+func DiffBytes(
+	a, b []byte,
+) []Diff {
+	return diff(bytesSeqs{a, b})
+}
 
 // DiffRunes returns the differences between two rune sequences.
-func DiffRunes(a, b []rune) []Diff { return diff(runesSeqs{a, b}) }
+func DiffRunes(
+	a, b []rune,
+) []Diff {
+	return diff(runesSeqs{a, b})
+}
 
 func diff(seqs sequences) []Diff {
 	// A limit on how deeply the LCS algorithm should search. The value is just a guess.
@@ -37,7 +49,11 @@ func diff(seqs sequences) []Diff {
 // compute computes the list of differences between two sequences,
 // along with the LCS. It is exercised directly by tests.
 // The algorithm is one of {forward, backward, twosided}.
-func compute(seqs sequences, algo func(*editGraph) lcs, limit int) ([]Diff, lcs) {
+func compute(
+	seqs sequences,
+	algo func(*editGraph) lcs,
+	limit int,
+) ([]Diff, lcs) {
 	if limit <= 0 {
 		limit = 1 << 25 // effectively infinity
 	}
@@ -73,13 +89,19 @@ func (lcs lcs) toDiffs(alen, blen int) []Diff {
 	var pa, pb int // offsets in a, b
 	for _, l := range lcs {
 		if pa < l.X || pb < l.Y {
-			diffs = append(diffs, Diff{pa, l.X, pb, l.Y})
+			diffs = append(
+				diffs,
+				Diff{pa, l.X, pb, l.Y},
+			)
 		}
 		pa = l.X + l.Len
 		pb = l.Y + l.Len
 	}
 	if pa < alen || pb < blen {
-		diffs = append(diffs, Diff{pa, alen, pb, blen})
+		diffs = append(
+			diffs,
+			Diff{pa, alen, pb, blen},
+		)
 	}
 	return diffs
 }
@@ -106,18 +128,32 @@ func forward(e *editGraph) lcs {
 	}
 	// from D to D+1
 	for D := range e.limit {
-		e.setForward(D+1, -(D + 1), e.getForward(D, -D))
+		e.setForward(
+			D+1,
+			-(D + 1),
+			e.getForward(D, -D),
+		)
 		if ok, ans := e.fdone(D+1, -(D + 1)); ok {
 			return ans
 		}
-		e.setForward(D+1, D+1, e.getForward(D, D)+1)
+		e.setForward(
+			D+1,
+			D+1,
+			e.getForward(D, D)+1,
+		)
 		if ok, ans := e.fdone(D+1, D+1); ok {
 			return ans
 		}
 		for k := -D + 1; k <= D-1; k += 2 {
 			// these are tricky and easy to get backwards
-			lookv := e.lookForward(k, e.getForward(D, k-1)+1)
-			lookh := e.lookForward(k, e.getForward(D, k+1))
+			lookv := e.lookForward(
+				k,
+				e.getForward(D, k-1)+1,
+			)
+			lookh := e.lookForward(
+				k,
+				e.getForward(D, k+1),
+			)
 			if lookv > lookh {
 				e.setForward(D+1, k, lookv)
 			} else {
@@ -136,7 +172,8 @@ func forward(e *editGraph) lcs {
 	for k := -e.limit; k <= e.limit; k += 2 {
 		x := e.getForward(e.limit, k)
 		y := x - k
-		if x+y > diagmax && x <= e.ux && y <= e.uy {
+		if x+y > diagmax && x <= e.ux &&
+			y <= e.uy {
 			diagmax, kmax = x+y, k
 		}
 	}
@@ -147,7 +184,8 @@ func forward(e *editGraph) lcs {
 func (e *editGraph) forwardlcs(D, k int) lcs {
 	var ans lcs
 	for x := e.getForward(D, k); x != 0 || x-k != 0; {
-		if ok(D-1, k-1) && x-1 == e.getForward(D-1, k-1) {
+		if ok(D-1, k-1) &&
+			x-1 == e.getForward(D-1, k-1) {
 			// if (x-1,y) is labelled D-1, x--,D--,k--,continue
 			D, k, x = D-1, k-1, x-1
 			continue
@@ -170,7 +208,12 @@ func (e *editGraph) lookForward(k, relx int) int {
 	rely := relx - k
 	x, y := relx+e.lx, rely+e.ly
 	if x < e.ux && y < e.uy {
-		x += e.seqs.commonPrefixLen(x, e.ux, y, e.uy)
+		x += e.seqs.commonPrefixLen(
+			x,
+			e.ux,
+			y,
+			e.uy,
+		)
 	}
 	return x
 }
@@ -207,18 +250,32 @@ func backward(e *editGraph) lcs {
 	}
 	// from D to D+1
 	for D := range e.limit {
-		e.setBackward(D+1, -(D + 1), e.getBackward(D, -D)-1)
+		e.setBackward(
+			D+1,
+			-(D + 1),
+			e.getBackward(D, -D)-1,
+		)
 		if ok, ans := e.bdone(D+1, -(D + 1)); ok {
 			return ans
 		}
-		e.setBackward(D+1, D+1, e.getBackward(D, D))
+		e.setBackward(
+			D+1,
+			D+1,
+			e.getBackward(D, D),
+		)
 		if ok, ans := e.bdone(D+1, D+1); ok {
 			return ans
 		}
 		for k := -D + 1; k <= D-1; k += 2 {
 			// these are tricky and easy to get wrong
-			lookv := e.lookBackward(k, e.getBackward(D, k-1))
-			lookh := e.lookBackward(k, e.getBackward(D, k+1)-1)
+			lookv := e.lookBackward(
+				k,
+				e.getBackward(D, k-1),
+			)
+			lookh := e.lookBackward(
+				k,
+				e.getBackward(D, k+1)-1,
+			)
 			if lookv < lookh {
 				e.setBackward(D+1, k, lookv)
 			} else {
@@ -243,7 +300,12 @@ func backward(e *editGraph) lcs {
 		}
 	}
 	if kmax < -e.limit {
-		panic(fmt.Sprintf("no paths when limit=%d?", e.limit))
+		panic(
+			fmt.Sprintf(
+				"no paths when limit=%d?",
+				e.limit,
+			),
+		)
 	}
 	return e.backwardlcs(e.limit, kmax)
 }
@@ -252,7 +314,8 @@ func backward(e *editGraph) lcs {
 func (e *editGraph) backwardlcs(D, k int) lcs {
 	var ans lcs
 	for x := e.getBackward(D, k); x != e.ux || x-(k+e.delta) != e.uy; {
-		if ok(D-1, k-1) && x == e.getBackward(D-1, k-1) {
+		if ok(D-1, k-1) &&
+			x == e.getBackward(D-1, k-1) {
 			// D--, k--, x unchanged
 			D, k = D-1, k-1
 			continue
@@ -269,7 +332,9 @@ func (e *editGraph) backwardlcs(D, k int) lcs {
 }
 
 // start at (x,y), go down the diagonal as far as possible,
-func (e *editGraph) lookBackward(k, relx int) int {
+func (e *editGraph) lookBackward(
+	k, relx int,
+) int {
 	rely := relx - (k + e.delta) // forward k = k + e.delta
 	x, y := relx+e.lx, rely+e.ly
 	if x > 0 && y > 0 {
@@ -306,12 +371,26 @@ func twosided(e *editGraph) lcs {
 			return e.twolcs(D, D, got)
 		}
 		// do a forwards pass (D to D+1)
-		e.setForward(D+1, -(D + 1), e.getForward(D, -D))
-		e.setForward(D+1, D+1, e.getForward(D, D)+1)
+		e.setForward(
+			D+1,
+			-(D + 1),
+			e.getForward(D, -D),
+		)
+		e.setForward(
+			D+1,
+			D+1,
+			e.getForward(D, D)+1,
+		)
 		for k := -D + 1; k <= D-1; k += 2 {
 			// these are tricky and easy to get backwards
-			lookv := e.lookForward(k, e.getForward(D, k-1)+1)
-			lookh := e.lookForward(k, e.getForward(D, k+1))
+			lookv := e.lookForward(
+				k,
+				e.getForward(D, k-1)+1,
+			)
+			lookh := e.lookForward(
+				k,
+				e.getForward(D, k+1),
+			)
 			if lookv > lookh {
 				e.setForward(D+1, k, lookv)
 			} else {
@@ -323,12 +402,26 @@ func twosided(e *editGraph) lcs {
 			return e.twolcs(D+1, D, got)
 		}
 		// do a backward pass, D to D+1
-		e.setBackward(D+1, -(D + 1), e.getBackward(D, -D)-1)
-		e.setBackward(D+1, D+1, e.getBackward(D, D))
+		e.setBackward(
+			D+1,
+			-(D + 1),
+			e.getBackward(D, -D)-1,
+		)
+		e.setBackward(
+			D+1,
+			D+1,
+			e.getBackward(D, D),
+		)
 		for k := -D + 1; k <= D-1; k += 2 {
 			// these are tricky and easy to get wrong
-			lookv := e.lookBackward(k, e.getBackward(D, k-1))
-			lookh := e.lookBackward(k, e.getBackward(D, k+1)-1)
+			lookv := e.lookBackward(
+				k,
+				e.getBackward(D, k-1),
+			)
+			lookh := e.lookBackward(
+				k,
+				e.getBackward(D, k+1)-1,
+			)
 			if lookv < lookh {
 				e.setBackward(D+1, k, lookv)
 			} else {
@@ -344,12 +437,18 @@ func twosided(e *editGraph) lcs {
 	for k := -e.limit; k <= e.limit; k += 2 {
 		x := e.getForward(e.limit, k)
 		y := x - k
-		if x+y > diagmax && x <= e.ux && y <= e.uy {
+		if x+y > diagmax && x <= e.ux &&
+			y <= e.uy {
 			diagmax, kmax = x+y, k
 		}
 	}
 	if kmax < -e.limit {
-		panic(fmt.Sprintf("no forward paths when limit=%d?", e.limit))
+		panic(
+			fmt.Sprintf(
+				"no forward paths when limit=%d?",
+				e.limit,
+			),
+		)
 	}
 	lcs := e.forwardlcs(e.limit, kmax)
 	// now a backward one
@@ -364,16 +463,25 @@ func twosided(e *editGraph) lcs {
 		}
 	}
 	if kmax < -e.limit {
-		panic(fmt.Sprintf("no backward paths when limit=%d?", e.limit))
+		panic(
+			fmt.Sprintf(
+				"no backward paths when limit=%d?",
+				e.limit,
+			),
+		)
 	}
-	lcs = append(lcs, e.backwardlcs(e.limit, kmax)...)
+	lcs = append(
+		lcs,
+		e.backwardlcs(e.limit, kmax)...)
 	// These may overlap (e.forwardlcs and e.backwardlcs return sorted lcs)
 	ans := lcs.fix()
 	return ans
 }
 
 // Does Myers' Lemma apply?
-func (e *editGraph) twoDone(df, db int) (int, bool) {
+func (e *editGraph) twoDone(
+	df, db int,
+) (int, bool) {
 	if (df+db+e.delta)%2 != 0 {
 		return 0, false // diagonals cannot overlap
 	}
@@ -392,7 +500,9 @@ func (e *editGraph) twoDone(df, db int) (int, bool) {
 				y := x - l
 				u := e.vb.get(db, l-e.delta)
 				v := u - l
-				if x == u || u == 0 || v == 0 || y == e.uy || x == e.ux {
+				if x == u || u == 0 || v == 0 ||
+					y == e.uy ||
+					x == e.ux {
 					return l, true
 				}
 			}
@@ -422,29 +532,38 @@ func (e *editGraph) twolcs(df, db, kf int) lcs {
 		// "babaab" "cccaba"
 		// already patched together
 		lcs := e.forwardlcs(df, kf)
-		lcs = append(lcs, e.backwardlcs(db, kb)...)
+		lcs = append(
+			lcs,
+			e.backwardlcs(db, kb)...)
 		return lcs.sort()
 	}
 
 	// is (u-1,v) or (u,v-1) labelled df-1?
 	// if so, that forward df-1-path plus a horizontal or vertical edge
 	// is the df-path to (u,v), then plus the db-path to (N,M)
-	if u > 0 && ok(df-1, u-1-v) && e.vf.get(df-1, u-1-v) == u-1 {
+	if u > 0 && ok(df-1, u-1-v) &&
+		e.vf.get(df-1, u-1-v) == u-1 {
 		//  "aabbab" "cbcabc"
 		lcs := e.forwardlcs(df-1, u-1-v)
-		lcs = append(lcs, e.backwardlcs(db, kb)...)
+		lcs = append(
+			lcs,
+			e.backwardlcs(db, kb)...)
 		return lcs.sort()
 	}
-	if v > 0 && ok(df-1, (u-(v-1))) && e.vf.get(df-1, u-(v-1)) == u {
+	if v > 0 && ok(df-1, (u-(v-1))) &&
+		e.vf.get(df-1, u-(v-1)) == u {
 		//  "abaabb" "bcacab"
 		lcs := e.forwardlcs(df-1, u-(v-1))
-		lcs = append(lcs, e.backwardlcs(db, kb)...)
+		lcs = append(
+			lcs,
+			e.backwardlcs(db, kb)...)
 		return lcs.sort()
 	}
 
 	// The path can't possibly contribute to the lcs because it
 	// is all horizontal or vertical edges
-	if u == 0 || v == 0 || x == e.ux || y == e.uy {
+	if u == 0 || v == 0 || x == e.ux ||
+		y == e.uy {
 		// "abaabb" "abaaaa"
 		if u == 0 || v == 0 {
 			return e.backwardlcs(db, kb)
@@ -453,13 +572,15 @@ func (e *editGraph) twolcs(df, db, kf int) lcs {
 	}
 
 	// is (x+1,y) or (x,y+1) labelled db-1?
-	if x+1 <= e.ux && ok(db-1, x+1-y-e.delta) && e.vb.get(db-1, x+1-y-e.delta) == x+1 {
+	if x+1 <= e.ux && ok(db-1, x+1-y-e.delta) &&
+		e.vb.get(db-1, x+1-y-e.delta) == x+1 {
 		// "bababb" "baaabb"
 		lcs := e.backwardlcs(db-1, kb+1)
 		lcs = append(lcs, e.forwardlcs(df, kf)...)
 		return lcs.sort()
 	}
-	if y+1 <= e.uy && ok(db-1, x-(y+1)-e.delta) && e.vb.get(db-1, x-(y+1)-e.delta) == x {
+	if y+1 <= e.uy && ok(db-1, x-(y+1)-e.delta) &&
+		e.vb.get(db-1, x-(y+1)-e.delta) == x {
 		// "abbbaa" "cabacc"
 		lcs := e.backwardlcs(db-1, kb-1)
 		lcs = append(lcs, e.forwardlcs(df, kf)...)

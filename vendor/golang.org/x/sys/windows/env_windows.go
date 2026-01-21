@@ -11,7 +11,9 @@ import (
 	"unsafe"
 )
 
-func Getenv(key string) (value string, found bool) {
+func Getenv(
+	key string,
+) (value string, found bool) {
 	return syscall.Getenv(key)
 }
 
@@ -30,9 +32,15 @@ func Environ() []string {
 // Returns a default environment associated with the token, rather than the current
 // process. If inheritExisting is true, then this environment also inherits the
 // environment of the current process.
-func (token Token) Environ(inheritExisting bool) (env []string, err error) {
+func (token Token) Environ(
+	inheritExisting bool,
+) (env []string, err error) {
 	var block *uint16
-	err = CreateEnvironmentBlock(&block, token, inheritExisting)
+	err = CreateEnvironmentBlock(
+		&block,
+		token,
+		inheritExisting,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +53,10 @@ func (token Token) Environ(inheritExisting bool) (env []string, err error) {
 			end = unsafe.Add(end, size)
 		}
 
-		entry := unsafe.Slice(block, (uintptr(end)-uintptr(unsafe.Pointer(block)))/size)
+		entry := unsafe.Slice(
+			block,
+			(uintptr(end)-uintptr(unsafe.Pointer(block)))/size,
+		)
 		env = append(env, UTF16ToString(entry))
 		block = (*uint16)(unsafe.Add(end, size))
 	}

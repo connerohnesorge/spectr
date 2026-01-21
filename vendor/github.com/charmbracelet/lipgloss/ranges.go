@@ -9,7 +9,10 @@ import (
 // StyleRanges allows to, given a string, style ranges of it differently.
 // The function will take into account existing styles.
 // Ranges should not overlap.
-func StyleRanges(s string, ranges ...Range) string {
+func StyleRanges(
+	s string,
+	ranges ...Range,
+) string {
 	if len(ranges) == 0 {
 		return s
 	}
@@ -23,15 +26,27 @@ func StyleRanges(s string, ranges ...Range) string {
 	for _, rng := range ranges {
 		// Add the text before this match
 		if rng.Start > lastIdx {
-			buf.WriteString(ansi.Cut(s, lastIdx, rng.Start))
+			buf.WriteString(
+				ansi.Cut(s, lastIdx, rng.Start),
+			)
 		}
 		// Add the matched range with its highlight
-		buf.WriteString(rng.Style.Render(ansi.Cut(stripped, rng.Start, rng.End)))
+		buf.WriteString(
+			rng.Style.Render(
+				ansi.Cut(
+					stripped,
+					rng.Start,
+					rng.End,
+				),
+			),
+		)
 		lastIdx = rng.End
 	}
 
 	// Add any remaining text after the last match
-	buf.WriteString(ansi.TruncateLeft(s, lastIdx, ""))
+	buf.WriteString(
+		ansi.TruncateLeft(s, lastIdx, ""),
+	)
 
 	return buf.String()
 }

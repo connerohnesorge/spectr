@@ -11,10 +11,17 @@ import "math"
 // comparing to the test values, this modified white reference is used internally.
 //
 // See this GitHub thread for details on these values:
-//     https://github.com/hsluv/hsluv/issues/79
-var hSLuvD65 = [3]float64{0.95045592705167, 1.0, 1.089057750759878}
+//
+//	https://github.com/hsluv/hsluv/issues/79
+var hSLuvD65 = [3]float64{
+	0.95045592705167,
+	1.0,
+	1.089057750759878,
+}
 
-func LuvLChToHSLuv(l, c, h float64) (float64, float64, float64) {
+func LuvLChToHSLuv(
+	l, c, h float64,
+) (float64, float64, float64) {
 	// [-1..1] but the code expects it to be [-100..100]
 	c *= 100.0
 	l *= 100.0
@@ -26,10 +33,16 @@ func LuvLChToHSLuv(l, c, h float64) (float64, float64, float64) {
 		max = maxChromaForLH(l, h)
 		s = c / max * 100.0
 	}
-	return h, clamp01(s / 100.0), clamp01(l / 100.0)
+	return h, clamp01(
+			s / 100.0,
+		), clamp01(
+			l / 100.0,
+		)
 }
 
-func HSLuvToLuvLCh(h, s, l float64) (float64, float64, float64) {
+func HSLuvToLuvLCh(
+	h, s, l float64,
+) (float64, float64, float64) {
 	l *= 100.0
 	s *= 100.0
 
@@ -45,7 +58,9 @@ func HSLuvToLuvLCh(h, s, l float64) (float64, float64, float64) {
 	return clamp01(l / 100.0), c / 100.0, h
 }
 
-func LuvLChToHPLuv(l, c, h float64) (float64, float64, float64) {
+func LuvLChToHPLuv(
+	l, c, h float64,
+) (float64, float64, float64) {
 	// [-1..1] but the code expects it to be [-100..100]
 	c *= 100.0
 	l *= 100.0
@@ -60,7 +75,9 @@ func LuvLChToHPLuv(l, c, h float64) (float64, float64, float64) {
 	return h, s / 100.0, l / 100.0
 }
 
-func HPLuvToLuvLCh(h, s, l float64) (float64, float64, float64) {
+func HPLuvToLuvLCh(
+	h, s, l float64,
+) (float64, float64, float64) {
 	// [-1..1] but the code expects it to be [-100..100]
 	l *= 100.0
 	s *= 100.0
@@ -83,7 +100,11 @@ func HPLuvToLuvLCh(h, s, l float64) (float64, float64, float64) {
 func HSLuv(h, s, l float64) Color {
 	// HSLuv -> LuvLCh -> CIELUV -> CIEXYZ -> Linear RGB -> sRGB
 	l, u, v := LuvLChToLuv(HSLuvToLuvLCh(h, s, l))
-	return LinearRgb(XyzToLinearRgb(LuvToXyzWhiteRef(l, u, v, hSLuvD65))).Clamped()
+	return LinearRgb(
+		XyzToLinearRgb(
+			LuvToXyzWhiteRef(l, u, v, hSLuvD65),
+		),
+	).Clamped()
 }
 
 // HPLuv creates a new Color from values in the HPLuv color space.
@@ -94,7 +115,11 @@ func HSLuv(h, s, l float64) Color {
 func HPLuv(h, s, l float64) Color {
 	// HPLuv -> LuvLCh -> CIELUV -> CIEXYZ -> Linear RGB -> sRGB
 	l, u, v := LuvLChToLuv(HPLuvToLuvLCh(h, s, l))
-	return LinearRgb(XyzToLinearRgb(LuvToXyzWhiteRef(l, u, v, hSLuvD65))).Clamped()
+	return LinearRgb(
+		XyzToLinearRgb(
+			LuvToXyzWhiteRef(l, u, v, hSLuvD65),
+		),
+	).Clamped()
 }
 
 // HSLuv returns the Hue, Saturation and Luminance of the color in the HSLuv
@@ -102,7 +127,9 @@ func HPLuv(h, s, l float64) Color {
 // (lightness) in [0..1].
 func (col Color) HSLuv() (h, s, l float64) {
 	// sRGB -> Linear RGB -> CIEXYZ -> CIELUV -> LuvLCh -> HSLuv
-	return LuvLChToHSLuv(col.LuvLChWhiteRef(hSLuvD65))
+	return LuvLChToHSLuv(
+		col.LuvLChWhiteRef(hSLuvD65),
+	)
 }
 
 // HPLuv returns the Hue, Saturation and Luminance of the color in the HSLuv
@@ -112,7 +139,9 @@ func (col Color) HSLuv() (h, s, l float64) {
 // Note that HPLuv can only represent pastel colors, and so the Saturation
 // value could be much larger than 1 for colors it can't represent.
 func (col Color) HPLuv() (h, s, l float64) {
-	return LuvLChToHPLuv(col.LuvLChWhiteRef(hSLuvD65))
+	return LuvLChToHPLuv(
+		col.LuvLChWhiteRef(hSLuvD65),
+	)
 }
 
 // DistanceHSLuv calculates Euclidan distance in the HSLuv colorspace. No idea
@@ -123,7 +152,9 @@ func (col Color) HPLuv() (h, s, l float64) {
 func (c1 Color) DistanceHSLuv(c2 Color) float64 {
 	h1, s1, l1 := c1.HSLuv()
 	h2, s2, l2 := c2.HSLuv()
-	return math.Sqrt(sq((h1-h2)/100.0) + sq(s1-s2) + sq(l1-l2))
+	return math.Sqrt(
+		sq((h1-h2)/100.0) + sq(s1-s2) + sq(l1-l2),
+	)
 }
 
 // DistanceHPLuv calculates Euclidean distance in the HPLuv colorspace. No idea
@@ -134,23 +165,43 @@ func (c1 Color) DistanceHSLuv(c2 Color) float64 {
 func (c1 Color) DistanceHPLuv(c2 Color) float64 {
 	h1, s1, l1 := c1.HPLuv()
 	h2, s2, l2 := c2.HPLuv()
-	return math.Sqrt(sq((h1-h2)/100.0) + sq(s1-s2) + sq(l1-l2))
+	return math.Sqrt(
+		sq((h1-h2)/100.0) + sq(s1-s2) + sq(l1-l2),
+	)
 }
 
 var m = [3][3]float64{
-	{3.2409699419045214, -1.5373831775700935, -0.49861076029300328},
-	{-0.96924363628087983, 1.8759675015077207, 0.041555057407175613},
-	{0.055630079696993609, -0.20397695888897657, 1.0569715142428786},
+	{
+		3.2409699419045214,
+		-1.5373831775700935,
+		-0.49861076029300328,
+	},
+	{
+		-0.96924363628087983,
+		1.8759675015077207,
+		0.041555057407175613,
+	},
+	{
+		0.055630079696993609,
+		-0.20397695888897657,
+		1.0569715142428786,
+	},
 }
 
-const kappa = 903.2962962962963
-const epsilon = 0.0088564516790356308
+const (
+	kappa   = 903.2962962962963
+	epsilon = 0.0088564516790356308
+)
 
 func maxChromaForLH(l, h float64) float64 {
 	hRad := h / 360.0 * math.Pi * 2.0
 	minLength := math.MaxFloat64
 	for _, line := range getBounds(l) {
-		length := lengthOfRayUntilIntersect(hRad, line[0], line[1])
+		length := lengthOfRayUntilIntersect(
+			hRad,
+			line[0],
+			line[1],
+		)
 		if length > 0.0 && length < minLength {
 			minLength = length
 		}
@@ -170,8 +221,12 @@ func getBounds(l float64) [6][2]float64 {
 	for i := range m {
 		for k := 0; k < 2; k++ {
 			top1 := (284517.0*m[i][0] - 94839.0*m[i][2]) * sub2
-			top2 := (838422.0*m[i][2]+769860.0*m[i][1]+731718.0*m[i][0])*l*sub2 - 769860.0*float64(k)*l
-			bottom := (632260.0*m[i][2]-126452.0*m[i][1])*sub2 + 126452.0*float64(k)
+			top2 := (838422.0*m[i][2]+769860.0*m[i][1]+731718.0*m[i][0])*l*sub2 - 769860.0*float64(
+				k,
+			)*l
+			bottom := (632260.0*m[i][2]-126452.0*m[i][1])*sub2 + 126452.0*float64(
+				k,
+			)
 			ret[i*2+k][0] = top1 / bottom
 			ret[i*2+k][1] = top2 / bottom
 		}
@@ -179,7 +234,9 @@ func getBounds(l float64) [6][2]float64 {
 	return ret
 }
 
-func lengthOfRayUntilIntersect(theta, x, y float64) (length float64) {
+func lengthOfRayUntilIntersect(
+	theta, x, y float64,
+) (length float64) {
 	length = y / (math.Sin(theta) - x*math.Cos(theta))
 	return
 }
@@ -189,7 +246,12 @@ func maxSafeChromaForL(l float64) float64 {
 	for _, line := range getBounds(l) {
 		m1 := line[0]
 		b1 := line[1]
-		x := intersectLineLine(m1, b1, -1.0/m1, 0.0)
+		x := intersectLineLine(
+			m1,
+			b1,
+			-1.0/m1,
+			0.0,
+		)
 		dist := distanceFromPole(x, b1+x*m1)
 		if dist < minLength {
 			minLength = dist
@@ -198,10 +260,14 @@ func maxSafeChromaForL(l float64) float64 {
 	return minLength
 }
 
-func intersectLineLine(x1, y1, x2, y2 float64) float64 {
+func intersectLineLine(
+	x1, y1, x2, y2 float64,
+) float64 {
 	return (y1 - y2) / (x2 - x1)
 }
 
 func distanceFromPole(x, y float64) float64 {
-	return math.Sqrt(math.Pow(x, 2.0) + math.Pow(y, 2.0))
+	return math.Sqrt(
+		math.Pow(x, 2.0) + math.Pow(y, 2.0),
+	)
 }

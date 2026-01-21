@@ -10,7 +10,9 @@ import (
 // readPasswordLine also ignores any \r it finds.
 // Windows uses \r as end of line. So, on Windows, readPasswordLine
 // reads until it finds \r and ignores any \n it finds during processing.
-func readPasswordLine(reader io.Reader) ([]byte, error) {
+func readPasswordLine(
+	reader io.Reader,
+) ([]byte, error) {
 	var buf [1]byte
 	var ret []byte
 

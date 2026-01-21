@@ -32,7 +32,9 @@ func (c *Command) Predict(a Args) []string {
 type Commands map[string]Command
 
 // Predict completion of sub command names names according to command line arguments
-func (c Commands) Predict(a Args) (prediction []string) {
+func (c Commands) Predict(
+	a Args,
+) (prediction []string) {
 	for sub := range c {
 		prediction = append(prediction, sub)
 	}
@@ -43,12 +45,16 @@ func (c Commands) Predict(a Args) (prediction []string) {
 type Flags map[string]Predictor
 
 // Predict completion of flags names according to command line arguments
-func (f Flags) Predict(a Args) (prediction []string) {
+func (f Flags) Predict(
+	a Args,
+) (prediction []string) {
 	for flag := range f {
 		// If the flag starts with a hyphen, we avoid emitting the prediction
 		// unless the last typed arg contains a hyphen as well.
-		flagHyphenStart := len(flag) != 0 && flag[0] == '-'
-		lastHyphenStart := len(a.Last) != 0 && a.Last[0] == '-'
+		flagHyphenStart := len(flag) != 0 &&
+			flag[0] == '-'
+		lastHyphenStart := len(a.Last) != 0 &&
+			a.Last[0] == '-'
 		if flagHyphenStart && !lastHyphenStart {
 			continue
 		}
@@ -61,8 +67,9 @@ func (f Flags) Predict(a Args) (prediction []string) {
 // only is set to true if no more options are allowed to be returned
 // those are in cases of special flag that has specific completion arguments,
 // and other flags or sub commands can't come after it.
-func (c *Command) predict(a Args) (options []string, only bool) {
-
+func (c *Command) predict(
+	a Args,
+) (options []string, only bool) {
 	// search sub commands for predictions first
 	subCommandFound := false
 	for i, arg := range a.Completed {
@@ -82,12 +89,18 @@ func (c *Command) predict(a Args) (options []string, only bool) {
 	}
 
 	// if last completed word is a global flag that we need to complete
-	if predictor, ok := c.GlobalFlags[a.LastCompleted]; ok && predictor != nil {
-		Log("Predicting according to global flag %s", a.LastCompleted)
+	if predictor, ok := c.GlobalFlags[a.LastCompleted]; ok &&
+		predictor != nil {
+		Log(
+			"Predicting according to global flag %s",
+			a.LastCompleted,
+		)
 		return predictor.Predict(a), true
 	}
 
-	options = append(options, c.GlobalFlags.Predict(a)...)
+	options = append(
+		options,
+		c.GlobalFlags.Predict(a)...)
 
 	// if a sub command was entered, we won't add the parent command
 	// completions and we return here.
@@ -96,15 +109,23 @@ func (c *Command) predict(a Args) (options []string, only bool) {
 	}
 
 	// if last completed word is a command flag that we need to complete
-	if predictor, ok := c.Flags[a.LastCompleted]; ok && predictor != nil {
-		Log("Predicting according to flag %s", a.LastCompleted)
+	if predictor, ok := c.Flags[a.LastCompleted]; ok &&
+		predictor != nil {
+		Log(
+			"Predicting according to flag %s",
+			a.LastCompleted,
+		)
 		return predictor.Predict(a), true
 	}
 
 	options = append(options, c.Sub.Predict(a)...)
-	options = append(options, c.Flags.Predict(a)...)
+	options = append(
+		options,
+		c.Flags.Predict(a)...)
 	if c.Args != nil {
-		options = append(options, c.Args.Predict(a)...)
+		options = append(
+			options,
+			c.Args.Predict(a)...)
 	}
 
 	return

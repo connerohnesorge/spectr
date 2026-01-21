@@ -51,7 +51,11 @@ func (f *CLI) Run() bool {
 	}
 
 	if err != nil {
-		fmt.Printf("%s failed! %s\n", f.action(), err)
+		fmt.Printf(
+			"%s failed! %s\n",
+			f.action(),
+			err,
+		)
 		os.Exit(3)
 	}
 	fmt.Println("Done!")
@@ -65,7 +69,11 @@ func (f *CLI) prompt() {
 	if f.yes {
 		return
 	}
-	fmt.Printf("%s completion for %s? ", f.action(), f.Name)
+	fmt.Printf(
+		"%s completion for %s? ",
+		f.action(),
+		f.Name,
+	)
 	var answer string
 	fmt.Scanln(&answer)
 
@@ -95,22 +103,43 @@ func (f *CLI) AddFlags(flags *flag.FlagSet) {
 	}
 
 	if flags.Lookup(f.InstallName) == nil {
-		flags.BoolVar(&f.install, f.InstallName, false,
-			fmt.Sprintf("Install completion for %s command", f.Name))
+		flags.BoolVar(
+			&f.install,
+			f.InstallName,
+			false,
+			fmt.Sprintf(
+				"Install completion for %s command",
+				f.Name,
+			),
+		)
 	}
 	if flags.Lookup(f.UninstallName) == nil {
-		flags.BoolVar(&f.uninstall, f.UninstallName, false,
-			fmt.Sprintf("Uninstall completion for %s command", f.Name))
+		flags.BoolVar(
+			&f.uninstall,
+			f.UninstallName,
+			false,
+			fmt.Sprintf(
+				"Uninstall completion for %s command",
+				f.Name,
+			),
+		)
 	}
 	if flags.Lookup("y") == nil {
-		flags.BoolVar(&f.yes, "y", false, "Don't prompt user for typing 'yes' when installing completion")
+		flags.BoolVar(
+			&f.yes,
+			"y",
+			false,
+			"Don't prompt user for typing 'yes' when installing completion",
+		)
 	}
 }
 
 // validate the CLI
 func (f *CLI) validate() error {
 	if f.install && f.uninstall {
-		return errors.New("Install and uninstall are mutually exclusive")
+		return errors.New(
+			"Install and uninstall are mutually exclusive",
+		)
 	}
 	return nil
 }

@@ -123,9 +123,15 @@ func (m Model) HorizontalScrollPercent() float64 {
 
 // SetContent set the pager's text content.
 func (m *Model) SetContent(s string) {
-	s = strings.ReplaceAll(s, "\r\n", "\n") // normalize line endings
+	s = strings.ReplaceAll(
+		s,
+		"\r\n",
+		"\n",
+	) // normalize line endings
 	m.lines = strings.Split(s, "\n")
-	m.longestLineWidth = findLongestLineWidth(m.lines)
+	m.longestLineWidth = findLongestLineWidth(
+		m.lines,
+	)
 
 	if m.YOffset > len(m.lines)-1 {
 		m.GotoBottom()
@@ -135,7 +141,12 @@ func (m *Model) SetContent(s string) {
 // maxYOffset returns the maximum possible value of the y-offset based on the
 // viewport's content and set height.
 func (m Model) maxYOffset() int {
-	return max(0, len(m.lines)-m.Height+m.Style.GetVerticalFrameSize())
+	return max(
+		0,
+		len(
+			m.lines,
+		)-m.Height+m.Style.GetVerticalFrameSize(),
+	)
 }
 
 // visibleLines returns the lines that should currently be visible in the
@@ -146,17 +157,26 @@ func (m Model) visibleLines() (lines []string) {
 
 	if len(m.lines) > 0 {
 		top := max(0, m.YOffset)
-		bottom := clamp(m.YOffset+h, top, len(m.lines))
+		bottom := clamp(
+			m.YOffset+h,
+			top,
+			len(m.lines),
+		)
 		lines = m.lines[top:bottom]
 	}
 
-	if (m.xOffset == 0 && m.longestLineWidth <= w) || w == 0 {
+	if (m.xOffset == 0 && m.longestLineWidth <= w) ||
+		w == 0 {
 		return lines
 	}
 
 	cutLines := make([]string, len(lines))
 	for i := range lines {
-		cutLines[i] = ansi.Cut(lines[i], m.xOffset, m.xOffset+w)
+		cutLines[i] = ansi.Cut(
+			lines[i],
+			m.xOffset,
+			m.xOffset+w,
+		)
 	}
 	return cutLines
 }
@@ -252,8 +272,11 @@ func (m *Model) LineDown(n int) (lines []string) {
 }
 
 // ScrollDown moves the view down by the given number of lines.
-func (m *Model) ScrollDown(n int) (lines []string) {
-	if m.AtBottom() || n == 0 || len(m.lines) == 0 {
+func (m *Model) ScrollDown(
+	n int,
+) (lines []string) {
+	if m.AtBottom() || n == 0 ||
+		len(m.lines) == 0 {
 		return nil
 	}
 
@@ -265,7 +288,11 @@ func (m *Model) ScrollDown(n int) (lines []string) {
 	// Gather lines to send off for performance scrolling.
 	//
 	// XXX: high performance rendering is deprecated in Bubble Tea.
-	bottom := clamp(m.YOffset+m.Height, 0, len(m.lines))
+	bottom := clamp(
+		m.YOffset+m.Height,
+		0,
+		len(m.lines),
+	)
 	top := clamp(m.YOffset+m.Height-n, 0, bottom)
 	return m.lines[top:bottom]
 }
@@ -293,7 +320,11 @@ func (m *Model) ScrollUp(n int) (lines []string) {
 	//
 	// XXX: high performance rendering is deprecated in Bubble Tea.
 	top := max(0, m.YOffset)
-	bottom := clamp(m.YOffset+n, 0, m.maxYOffset())
+	bottom := clamp(
+		m.YOffset+n,
+		0,
+		m.maxYOffset(),
+	)
 	return m.lines[top:bottom]
 }
 
@@ -309,7 +340,11 @@ func (m *Model) SetHorizontalStep(n int) {
 
 // SetXOffset sets the X offset.
 func (m *Model) SetXOffset(n int) {
-	m.xOffset = clamp(n, 0, m.longestLineWidth-m.Width)
+	m.xOffset = clamp(
+		n,
+		0,
+		m.longestLineWidth-m.Width,
+	)
 }
 
 // ScrollLeft moves the viewport to the left by the given number of columns.
@@ -360,7 +395,11 @@ func Sync(m Model) tea.Cmd {
 		return nil
 	}
 	top, bottom := m.scrollArea()
-	return tea.SyncScrollArea(m.visibleLines(), top, bottom)
+	return tea.SyncScrollArea(
+		m.visibleLines(),
+		top,
+		bottom,
+	)
 }
 
 // ViewDown is a high performance command that moves the viewport up by a given
@@ -399,7 +438,9 @@ func ViewUp(m Model, lines []string) tea.Cmd {
 }
 
 // Update handles standard message-based viewport updates.
-func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(
+	msg tea.Msg,
+) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m, cmd = m.updateAsModel(msg)
 	return m, cmd
@@ -407,7 +448,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 // Author's note: this method has been broken out to make it easier to
 // potentially transition Update to satisfy tea.Model.
-func (m Model) updateAsModel(msg tea.Msg) (Model, tea.Cmd) {
+func (m Model) updateAsModel(
+	msg tea.Msg,
+) (Model, tea.Cmd) {
 	if !m.initialized {
 		m.setInitialValues()
 	}
@@ -503,7 +546,10 @@ func (m Model) View() string {
 		// content separately. We still need to send something that equals the
 		// height of this view so that the Bubble Tea standard renderer can
 		// position anything below this view properly.
-		return strings.Repeat("\n", max(0, m.Height-1))
+		return strings.Repeat(
+			"\n",
+			max(0, m.Height-1),
+		)
 	}
 
 	w, h := m.Width, m.Height
@@ -516,10 +562,13 @@ func (m Model) View() string {
 	contentWidth := w - m.Style.GetHorizontalFrameSize()
 	contentHeight := h - m.Style.GetVerticalFrameSize()
 	contents := lipgloss.NewStyle().
-		Width(contentWidth).      // pad to width.
-		Height(contentHeight).    // pad to height.
-		MaxHeight(contentHeight). // truncate height if taller.
-		MaxWidth(contentWidth).   // truncate width if wider.
+		Width(contentWidth). // pad to width.
+		Height(contentHeight).
+		// pad to height.
+		MaxHeight(contentHeight).
+		// truncate height if taller.
+		MaxWidth(contentWidth).
+		// truncate width if wider.
 		Render(strings.Join(m.visibleLines(), "\n"))
 	return m.Style.
 		UnsetWidth().UnsetHeight(). // Style size already applied in contents.

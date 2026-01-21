@@ -68,8 +68,17 @@ const (
 //	}
 //
 // This function treats the text as a sequence of grapheme clusters.
-func DecodeSequence[T string | []byte](b T, state byte, p *Parser) (seq T, width int, n int, newState byte) {
-	return decodeSequence(GraphemeWidth, b, state, p)
+func DecodeSequence[T string | []byte](
+	b T,
+	state byte,
+	p *Parser,
+) (seq T, width int, n int, newState byte) {
+	return decodeSequence(
+		GraphemeWidth,
+		b,
+		state,
+		p,
+	)
 }
 
 // DecodeSequenceWc decodes the first ANSI escape sequence or a printable
@@ -118,11 +127,20 @@ func DecodeSequence[T string | []byte](b T, state byte, p *Parser) (seq T, width
 //	}
 //
 // This function treats the text as a sequence of wide characters and runes.
-func DecodeSequenceWc[T string | []byte](b T, state byte, p *Parser) (seq T, width int, n int, newState byte) {
+func DecodeSequenceWc[T string | []byte](
+	b T,
+	state byte,
+	p *Parser,
+) (seq T, width int, n int, newState byte) {
 	return decodeSequence(WcWidth, b, state, p)
 }
 
-func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (seq T, width int, n int, newState byte) {
+func decodeSequence[T string | []byte](
+	m Method,
+	b T,
+	state State,
+	p *Parser,
+) (seq T, width int, n int, newState byte) {
 	for i := 0; i < len(b); i++ {
 		c := b[i]
 
@@ -176,9 +194,14 @@ func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (s
 			}
 
 			if utf8.RuneStart(c) {
-				seq, _, width, _ = FirstGraphemeCluster(b, -1)
+				seq, _, width, _ = FirstGraphemeCluster(
+					b,
+					-1,
+				)
 				if m == WcWidth {
-					width = runewidth.StringWidth(string(seq))
+					width = runewidth.StringWidth(
+						string(seq),
+					)
 				}
 				i += len(seq)
 				return b[:i], width, i, NormalState
@@ -191,7 +214,9 @@ func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (s
 				if p != nil {
 					// We only collect the last prefix character.
 					p.cmd &^= 0xff << parser.PrefixShift
-					p.cmd |= int(c) << parser.PrefixShift
+					p.cmd |= int(
+						c,
+					) << parser.PrefixShift
 				}
 				break
 			}
@@ -206,7 +231,9 @@ func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (s
 					}
 
 					p.params[p.paramsLen] *= 10
-					p.params[p.paramsLen] += int(c - '0')
+					p.params[p.paramsLen] += int(
+						c - '0',
+					)
 				}
 				break
 			}
@@ -220,7 +247,9 @@ func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (s
 			if c == ';' || c == ':' {
 				if p != nil {
 					p.paramsLen++
-					if p.paramsLen < len(p.params) {
+					if p.paramsLen < len(
+						p.params,
+					) {
 						p.params[p.paramsLen] = parser.MissingParam
 					}
 				}
@@ -233,15 +262,21 @@ func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (s
 			if c >= ' ' && c <= '/' {
 				if p != nil {
 					p.cmd &^= 0xff << parser.IntermedShift
-					p.cmd |= int(c) << parser.IntermedShift
+					p.cmd |= int(
+						c,
+					) << parser.IntermedShift
 				}
 				break
 			}
 
 			if p != nil {
 				// Increment the last parameter
-				if p.paramsLen > 0 && p.paramsLen < len(p.params)-1 ||
-					p.paramsLen == 0 && len(p.params) > 0 && p.params[0] != parser.MissingParam {
+				if p.paramsLen > 0 &&
+					p.paramsLen < len(
+						p.params,
+					)-1 ||
+					p.paramsLen == 0 && len(p.params) > 0 &&
+						p.params[0] != parser.MissingParam {
 					p.paramsLen++
 				}
 			}
@@ -290,7 +325,9 @@ func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (s
 			if c >= ' ' && c <= '/' {
 				if p != nil {
 					p.cmd &^= 0xff << parser.IntermedShift
-					p.cmd |= int(c) << parser.IntermedShift
+					p.cmd |= int(
+						c,
+					) << parser.IntermedShift
 				}
 				continue
 			} else if c >= '0' && c <= '~' {
@@ -340,7 +377,8 @@ func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (s
 				return b[:i], 0, i, NormalState
 			}
 
-			if p != nil && p.dataLen < len(p.data) {
+			if p != nil &&
+				p.dataLen < len(p.data) {
 				p.data[p.dataLen] = c
 				p.dataLen++
 
@@ -356,7 +394,8 @@ func decodeSequence[T string | []byte](m Method, b T, state State, p *Parser) (s
 }
 
 func parseOscCmd(p *Parser) {
-	if p == nil || p.cmd != parser.MissingCommand {
+	if p == nil ||
+		p.cmd != parser.MissingCommand {
 		return
 	}
 	for j := range p.dataLen {
@@ -378,13 +417,19 @@ func Equal[T string | []byte](a, b T) bool {
 }
 
 // HasPrefix returns true if the given byte slice has prefix.
-func HasPrefix[T string | []byte](b, prefix T) bool {
-	return len(b) >= len(prefix) && Equal(b[0:len(prefix)], prefix)
+func HasPrefix[T string | []byte](
+	b, prefix T,
+) bool {
+	return len(b) >= len(prefix) &&
+		Equal(b[0:len(prefix)], prefix)
 }
 
 // HasSuffix returns true if the given byte slice has suffix.
-func HasSuffix[T string | []byte](b, suffix T) bool {
-	return len(b) >= len(suffix) && Equal(b[len(b)-len(suffix):], suffix)
+func HasSuffix[T string | []byte](
+	b, suffix T,
+) bool {
+	return len(b) >= len(suffix) &&
+		Equal(b[len(b)-len(suffix):], suffix)
 }
 
 // HasCsiPrefix returns true if the given byte slice has a CSI prefix.
@@ -437,7 +482,10 @@ func HasEscPrefix[T string | []byte](b T) bool {
 // FirstGraphemeCluster returns the first grapheme cluster in the given string or byte slice.
 // This is a syntactic sugar function that wraps
 // uniseg.FirstGraphemeClusterInString and uniseg.FirstGraphemeCluster.
-func FirstGraphemeCluster[T string | []byte](b T, state int) (T, T, int, int) {
+func FirstGraphemeCluster[T string | []byte](
+	b T,
+	state int,
+) (T, T, int, int) {
 	switch b := any(b).(type) {
 	case string:
 		cluster, rest, width, newState := uniseg.FirstGraphemeClusterInString(b, state)

@@ -94,7 +94,10 @@ func (b MouseButton) String() string {
 //
 // If button is [MouseNone], and motion is false, this returns a release event.
 // If button is undefined, this function returns 0xff.
-func EncodeMouseButton(b MouseButton, motion, shift, alt, ctrl bool) (m byte) {
+func EncodeMouseButton(
+	b MouseButton,
+	motion, shift, alt, ctrl bool,
+) (m byte) {
 	// mouse bit shifts
 	const (
 		bitShift  = 0b0000_0100
@@ -148,7 +151,13 @@ const x10Offset = 32
 //
 // See: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
 func MouseX10(b byte, x, y int) string {
-	return "\x1b[M" + string(b+x10Offset) + string(byte(x)+x10Offset+1) + string(byte(y)+x10Offset+1)
+	return "\x1b[M" + string(
+		b+x10Offset,
+	) + string(
+		byte(x)+x10Offset+1,
+	) + string(
+		byte(y)+x10Offset+1,
+	)
 }
 
 // MouseSgr returns an escape sequence representing a mouse event in SGR mode.
@@ -157,7 +166,11 @@ func MouseX10(b byte, x, y int) string {
 //	CSI < Cb ; Cx ; Cy m (release)
 //
 // See: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
-func MouseSgr(b byte, x, y int, release bool) string {
+func MouseSgr(
+	b byte,
+	x, y int,
+	release bool,
+) string {
 	s := 'M'
 	if release {
 		s = 'm'
@@ -168,5 +181,11 @@ func MouseSgr(b byte, x, y int, release bool) string {
 	if y < 0 {
 		y = -y
 	}
-	return fmt.Sprintf("\x1b[<%d;%d;%d%c", b, x+1, y+1, s)
+	return fmt.Sprintf(
+		"\x1b[<%d;%d;%d%c",
+		b,
+		x+1,
+		y+1,
+		s,
+	)
 }

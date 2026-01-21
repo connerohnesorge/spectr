@@ -733,15 +733,30 @@ const (
 )
 
 var (
-	OID_PKIX_KP_SERVER_AUTH = []byte("1.3.6.1.5.5.7.3.1\x00")
-	OID_SERVER_GATED_CRYPTO = []byte("1.3.6.1.4.1.311.10.3.3\x00")
-	OID_SGC_NETSCAPE        = []byte("2.16.840.1.113730.4.1\x00")
+	OID_PKIX_KP_SERVER_AUTH = []byte(
+		"1.3.6.1.5.5.7.3.1\x00",
+	)
+	OID_SERVER_GATED_CRYPTO = []byte(
+		"1.3.6.1.4.1.311.10.3.3\x00",
+	)
+	OID_SGC_NETSCAPE = []byte(
+		"2.16.840.1.113730.4.1\x00",
+	)
 
 	WINTRUST_ACTION_GENERIC_VERIFY_V2 = GUID{
 		Data1: 0xaac56b,
 		Data2: 0xcd44,
 		Data3: 0x11d0,
-		Data4: [8]byte{0x8c, 0xc2, 0x0, 0xc0, 0x4f, 0xc2, 0x95, 0xee},
+		Data4: [8]byte{
+			0x8c,
+			0xc2,
+			0x0,
+			0xc0,
+			0x4f,
+			0xc2,
+			0x95,
+			0xee,
+		},
 	}
 )
 
@@ -793,7 +808,11 @@ type Filetime struct {
 // since Epoch (00:00:00 UTC, January 1, 1970).
 func (ft *Filetime) Nanoseconds() int64 {
 	// 100-nanosecond intervals since January 1, 1601
-	nsec := int64(ft.HighDateTime)<<32 + int64(ft.LowDateTime)
+	nsec := int64(
+		ft.HighDateTime,
+	)<<32 + int64(
+		ft.LowDateTime,
+	)
 	// change starting time to the Epoch (00:00:00 UTC, January 1, 1970)
 	nsec -= 116444736000000000
 	// convert into nanoseconds
@@ -808,7 +827,9 @@ func NsecToFiletime(nsec int64) (ft Filetime) {
 	nsec += 116444736000000000
 	// split into high / low
 	ft.LowDateTime = uint32(nsec & 0xffffffff)
-	ft.HighDateTime = uint32(nsec >> 32 & 0xffffffff)
+	ft.HighDateTime = uint32(
+		nsec >> 32 & 0xffffffff,
+	)
 	return ft
 }
 
@@ -848,7 +869,10 @@ type win32finddata1 struct {
 	// ² https://golang.org/issue/42637#issuecomment-760715755.
 }
 
-func copyFindData(dst *Win32finddata, src *win32finddata1) {
+func copyFindData(
+	dst *Win32finddata,
+	src *win32finddata1,
+) {
 	dst.FileAttributes = src.FileAttributes
 	dst.CreationTime = src.CreationTime
 	dst.LastAccessTime = src.LastAccessTime
@@ -860,7 +884,10 @@ func copyFindData(dst *Win32finddata, src *win32finddata1) {
 
 	// The src is 1 element bigger than dst, but it must be NUL.
 	copy(dst.FileName[:], src.FileName[:])
-	copy(dst.AlternateFileName[:], src.AlternateFileName[:])
+	copy(
+		dst.AlternateFileName[:],
+		src.AlternateFileName[:],
+	)
 }
 
 type ByHandleFileInformation struct {
@@ -991,7 +1018,9 @@ type ModuleEntry32 struct {
 	ExePath      [MAX_PATH]uint16
 }
 
-const SizeofModuleEntry32 = unsafe.Sizeof(ModuleEntry32{})
+const SizeofModuleEntry32 = unsafe.Sizeof(
+	ModuleEntry32{},
+)
 
 type Systemtime struct {
 	Year         uint16
@@ -1429,9 +1458,11 @@ type IpAddrString struct {
 	Context   uint32
 }
 
-const MAX_ADAPTER_NAME_LENGTH = 256
-const MAX_ADAPTER_DESCRIPTION_LENGTH = 128
-const MAX_ADAPTER_ADDRESS_LENGTH = 8
+const (
+	MAX_ADAPTER_NAME_LENGTH        = 256
+	MAX_ADAPTER_DESCRIPTION_LENGTH = 128
+	MAX_ADAPTER_ADDRESS_LENGTH     = 8
+)
 
 type IpAdapterInfo struct {
 	Next                *IpAdapterInfo
@@ -1454,9 +1485,11 @@ type IpAdapterInfo struct {
 	LeaseExpires        int64
 }
 
-const MAXLEN_PHYSADDR = 8
-const MAX_INTERFACE_NAME_LEN = 256
-const MAXLEN_IFDESCR = 256
+const (
+	MAXLEN_PHYSADDR        = 8
+	MAX_INTERFACE_NAME_LEN = 256
+	MAXLEN_IFDESCR         = 256
+)
 
 type MibIfRow struct {
 	Name            [MAX_INTERFACE_NAME_LEN]uint16
@@ -1520,18 +1553,20 @@ type DataBlob struct {
 	Size uint32
 	Data *byte
 }
-type CryptIntegerBlob DataBlob
-type CryptUintBlob DataBlob
-type CryptObjidBlob DataBlob
-type CertNameBlob DataBlob
-type CertRdnValueBlob DataBlob
-type CertBlob DataBlob
-type CrlBlob DataBlob
-type CryptDataBlob DataBlob
-type CryptHashBlob DataBlob
-type CryptDigestBlob DataBlob
-type CryptDerBlob DataBlob
-type CryptAttrBlob DataBlob
+type (
+	CryptIntegerBlob DataBlob
+	CryptUintBlob    DataBlob
+	CryptObjidBlob   DataBlob
+	CertNameBlob     DataBlob
+	CertRdnValueBlob DataBlob
+	CertBlob         DataBlob
+	CrlBlob          DataBlob
+	CryptDataBlob    DataBlob
+	CryptHashBlob    DataBlob
+	CryptDigestBlob  DataBlob
+	CryptDerBlob     DataBlob
+	CryptAttrBlob    DataBlob
+)
 
 type CryptBitBlob struct {
 	Size       uint32
@@ -1807,21 +1842,48 @@ var WSAID_CONNECTEX = GUID{
 	0x25a207b9,
 	0xddf3,
 	0x4660,
-	[8]byte{0x8e, 0xe9, 0x76, 0xe5, 0x8c, 0x74, 0x06, 0x3e},
+	[8]byte{
+		0x8e,
+		0xe9,
+		0x76,
+		0xe5,
+		0x8c,
+		0x74,
+		0x06,
+		0x3e,
+	},
 }
 
 var WSAID_WSASENDMSG = GUID{
 	0xa441e712,
 	0x754f,
 	0x43ca,
-	[8]byte{0x84, 0xa7, 0x0d, 0xee, 0x44, 0xcf, 0x60, 0x6d},
+	[8]byte{
+		0x84,
+		0xa7,
+		0x0d,
+		0xee,
+		0x44,
+		0xcf,
+		0x60,
+		0x6d,
+	},
 }
 
 var WSAID_WSARECVMSG = GUID{
 	0xf689d7c8,
 	0x6f1f,
 	0x436b,
-	[8]byte{0x8a, 0x53, 0xe5, 0x4f, 0xe3, 0x51, 0xc3, 0x22},
+	[8]byte{
+		0x8a,
+		0x53,
+		0xe5,
+		0x4f,
+		0xe3,
+		0x51,
+		0xc3,
+		0x22,
+	},
 }
 
 const (
@@ -2117,7 +2179,12 @@ type SocketAddress struct {
 
 // IP returns an IPv4 or IPv6 address, or nil if the underlying SocketAddress is neither.
 func (addr *SocketAddress) IP() net.IP {
-	if uintptr(addr.SockaddrLength) >= unsafe.Sizeof(RawSockaddrInet4{}) && addr.Sockaddr.Addr.Family == AF_INET {
+	if uintptr(
+		addr.SockaddrLength,
+	) >= unsafe.Sizeof(
+		RawSockaddrInet4{},
+	) &&
+		addr.Sockaddr.Addr.Family == AF_INET {
 		return (*RawSockaddrInet4)(unsafe.Pointer(addr.Sockaddr)).Addr[:]
 	} else if uintptr(addr.SockaddrLength) >= unsafe.Sizeof(RawSockaddrInet6{}) && addr.Sockaddr.Addr.Family == AF_INET6 {
 		return (*RawSockaddrInet6)(unsafe.Pointer(addr.Sockaddr)).Addr[:]

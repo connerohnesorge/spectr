@@ -18,7 +18,9 @@ import (
 // - Empty strings (zero-length)
 // - Strings containing only quote characters
 // - Mixed quote styles within a single string
-func TestJSONCValidation_EmptyishStrings(t *testing.T) {
+func TestJSONCValidation_EmptyishStrings(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -105,29 +107,48 @@ func TestJSONCValidation_EmptyishStrings(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(original, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				original,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSONC can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip is lossless:
 			// Strip comments (though we don't have any in this test)
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 
 			// Unmarshal back to TasksFile
 			var result parsers.TasksFile
 			if err := json.Unmarshal(stripped, &result); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			// Verify we got exactly one task back
 			if len(result.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(result.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(result.Tasks),
+				)
 			}
 
 			// Verify the description matches exactly (lossless round-trip)
@@ -141,20 +162,32 @@ func TestJSONCValidation_EmptyishStrings(t *testing.T) {
 
 			// Verify all other fields match
 			if result.Tasks[0].ID != original.Tasks[0].ID {
-				t.Errorf("Task ID mismatch: got %q, want %q",
-					result.Tasks[0].ID, original.Tasks[0].ID)
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					result.Tasks[0].ID,
+					original.Tasks[0].ID,
+				)
 			}
 			if result.Tasks[0].Section != original.Tasks[0].Section {
-				t.Errorf("Task Section mismatch: got %q, want %q",
-					result.Tasks[0].Section, original.Tasks[0].Section)
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					result.Tasks[0].Section,
+					original.Tasks[0].Section,
+				)
 			}
 			if result.Tasks[0].Status != original.Tasks[0].Status {
-				t.Errorf("Task Status mismatch: got %q, want %q",
-					result.Tasks[0].Status, original.Tasks[0].Status)
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					result.Tasks[0].Status,
+					original.Tasks[0].Status,
+				)
 			}
 			if result.Version != original.Version {
-				t.Errorf("Version mismatch: got %d, want %d",
-					result.Version, original.Version)
+				t.Errorf(
+					"Version mismatch: got %d, want %d",
+					result.Version,
+					original.Version,
+				)
 			}
 		})
 	}

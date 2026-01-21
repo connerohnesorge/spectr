@@ -51,10 +51,14 @@ func errnoErr(e syscall.Errno) error {
 
 // ErrnoName returns the error name for error number e.
 func ErrnoName(e syscall.Errno) string {
-	i := sort.Search(len(errorList), func(i int) bool {
-		return errorList[i].num >= e
-	})
-	if i < len(errorList) && errorList[i].num == e {
+	i := sort.Search(
+		len(errorList),
+		func(i int) bool {
+			return errorList[i].num >= e
+		},
+	)
+	if i < len(errorList) &&
+		errorList[i].num == e {
 		return errorList[i].name
 	}
 	return ""
@@ -62,10 +66,14 @@ func ErrnoName(e syscall.Errno) string {
 
 // SignalName returns the signal name for signal number s.
 func SignalName(s syscall.Signal) string {
-	i := sort.Search(len(signalList), func(i int) bool {
-		return signalList[i].num >= s
-	})
-	if i < len(signalList) && signalList[i].num == s {
+	i := sort.Search(
+		len(signalList),
+		func(i int) bool {
+			return signalList[i].num >= s
+		},
+	)
+	if i < len(signalList) &&
+		signalList[i].num == s {
 		return signalList[i].name
 	}
 	return ""
@@ -76,7 +84,10 @@ func SignalName(s syscall.Signal) string {
 // The signal name should start with "SIG".
 func SignalNum(s string) syscall.Signal {
 	signalNameMapOnce.Do(func() {
-		signalNameMap = make(map[string]syscall.Signal, len(signalList))
+		signalNameMap = make(
+			map[string]syscall.Signal,
+			len(signalList),
+		)
 		for _, signal := range signalList {
 			signalNameMap[signal.name] = signal.num
 		}
@@ -102,19 +113,35 @@ type mmapper struct {
 	munmap func(addr uintptr, length uintptr) error
 }
 
-func (m *mmapper) Mmap(fd int, offset int64, length int, prot int, flags int) (data []byte, err error) {
+func (m *mmapper) Mmap(
+	fd int,
+	offset int64,
+	length int,
+	prot int,
+	flags int,
+) (data []byte, err error) {
 	if length <= 0 {
 		return nil, EINVAL
 	}
 
 	// Map the requested memory.
-	addr, errno := m.mmap(0, uintptr(length), prot, flags, fd, offset)
+	addr, errno := m.mmap(
+		0,
+		uintptr(length),
+		prot,
+		flags,
+		fd,
+		offset,
+	)
 	if errno != nil {
 		return nil, errno
 	}
 
 	// Use unsafe to convert addr into a []byte.
-	b := unsafe.Slice((*byte)(unsafe.Pointer(addr)), length)
+	b := unsafe.Slice(
+		(*byte)(unsafe.Pointer(addr)),
+		length,
+	)
 
 	// Register mapping in m and return it.
 	p := &b[cap(b)-1]
@@ -124,7 +151,9 @@ func (m *mmapper) Mmap(fd int, offset int64, length int, prot int, flags int) (d
 	return b, nil
 }
 
-func (m *mmapper) Munmap(data []byte) (err error) {
+func (m *mmapper) Munmap(
+	data []byte,
+) (err error) {
 	if len(data) == 0 || len(data) != cap(data) {
 		return EINVAL
 	}
@@ -146,20 +175,49 @@ func (m *mmapper) Munmap(data []byte) (err error) {
 	return nil
 }
 
-func Mmap(fd int, offset int64, length int, prot int, flags int) (data []byte, err error) {
-	return mapper.Mmap(fd, offset, length, prot, flags)
+func Mmap(
+	fd int,
+	offset int64,
+	length int,
+	prot int,
+	flags int,
+) (data []byte, err error) {
+	return mapper.Mmap(
+		fd,
+		offset,
+		length,
+		prot,
+		flags,
+	)
 }
 
 func Munmap(b []byte) (err error) {
 	return mapper.Munmap(b)
 }
 
-func MmapPtr(fd int, offset int64, addr unsafe.Pointer, length uintptr, prot int, flags int) (ret unsafe.Pointer, err error) {
-	xaddr, err := mapper.mmap(uintptr(addr), length, prot, flags, fd, offset)
+func MmapPtr(
+	fd int,
+	offset int64,
+	addr unsafe.Pointer,
+	length uintptr,
+	prot int,
+	flags int,
+) (ret unsafe.Pointer, err error) {
+	xaddr, err := mapper.mmap(
+		uintptr(addr),
+		length,
+		prot,
+		flags,
+		fd,
+		offset,
+	)
 	return unsafe.Pointer(xaddr), err
 }
 
-func MunmapPtr(addr unsafe.Pointer, length uintptr) (err error) {
+func MunmapPtr(
+	addr unsafe.Pointer,
+	length uintptr,
+) (err error) {
 	return mapper.munmap(uintptr(addr), length)
 }
 
@@ -167,7 +225,10 @@ func Read(fd int, p []byte) (n int, err error) {
 	n, err = read(fd, p)
 	if raceenabled {
 		if n > 0 {
-			raceWriteRange(unsafe.Pointer(&p[0]), n)
+			raceWriteRange(
+				unsafe.Pointer(&p[0]),
+				n,
+			)
 		}
 		if err == nil {
 			raceAcquire(unsafe.Pointer(&ioSync))
@@ -187,11 +248,18 @@ func Write(fd int, p []byte) (n int, err error) {
 	return
 }
 
-func Pread(fd int, p []byte, offset int64) (n int, err error) {
+func Pread(
+	fd int,
+	p []byte,
+	offset int64,
+) (n int, err error) {
 	n, err = pread(fd, p, offset)
 	if raceenabled {
 		if n > 0 {
-			raceWriteRange(unsafe.Pointer(&p[0]), n)
+			raceWriteRange(
+				unsafe.Pointer(&p[0]),
+				n,
+			)
 		}
 		if err == nil {
 			raceAcquire(unsafe.Pointer(&ioSync))
@@ -200,7 +268,11 @@ func Pread(fd int, p []byte, offset int64) (n int, err error) {
 	return
 }
 
-func Pwrite(fd int, p []byte, offset int64) (n int, err error) {
+func Pwrite(
+	fd int,
+	p []byte,
+	offset int64,
+) (n int, err error) {
 	if raceenabled {
 		raceReleaseMerge(unsafe.Pointer(&ioSync))
 	}
@@ -257,7 +329,9 @@ func Connect(fd int, sa Sockaddr) (err error) {
 	return connect(fd, ptr, n)
 }
 
-func Getpeername(fd int) (sa Sockaddr, err error) {
+func Getpeername(
+	fd int,
+) (sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	if err = getpeername(fd, &rsa, &len); err != nil {
@@ -266,76 +340,160 @@ func Getpeername(fd int) (sa Sockaddr, err error) {
 	return anyToSockaddr(fd, &rsa)
 }
 
-func GetsockoptByte(fd, level, opt int) (value byte, err error) {
+func GetsockoptByte(
+	fd, level, opt int,
+) (value byte, err error) {
 	var n byte
 	vallen := _Socklen(1)
-	err = getsockopt(fd, level, opt, unsafe.Pointer(&n), &vallen)
+	err = getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&n),
+		&vallen,
+	)
 	return n, err
 }
 
-func GetsockoptInt(fd, level, opt int) (value int, err error) {
+func GetsockoptInt(
+	fd, level, opt int,
+) (value int, err error) {
 	var n int32
 	vallen := _Socklen(4)
-	err = getsockopt(fd, level, opt, unsafe.Pointer(&n), &vallen)
+	err = getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&n),
+		&vallen,
+	)
 	return int(n), err
 }
 
-func GetsockoptInet4Addr(fd, level, opt int) (value [4]byte, err error) {
+func GetsockoptInet4Addr(
+	fd, level, opt int,
+) (value [4]byte, err error) {
 	vallen := _Socklen(4)
-	err = getsockopt(fd, level, opt, unsafe.Pointer(&value[0]), &vallen)
+	err = getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value[0]),
+		&vallen,
+	)
 	return value, err
 }
 
-func GetsockoptIPMreq(fd, level, opt int) (*IPMreq, error) {
+func GetsockoptIPMreq(
+	fd, level, opt int,
+) (*IPMreq, error) {
 	var value IPMreq
 	vallen := _Socklen(SizeofIPMreq)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, err
 }
 
-func GetsockoptIPv6Mreq(fd, level, opt int) (*IPv6Mreq, error) {
+func GetsockoptIPv6Mreq(
+	fd, level, opt int,
+) (*IPv6Mreq, error) {
 	var value IPv6Mreq
 	vallen := _Socklen(SizeofIPv6Mreq)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, err
 }
 
-func GetsockoptIPv6MTUInfo(fd, level, opt int) (*IPv6MTUInfo, error) {
+func GetsockoptIPv6MTUInfo(
+	fd, level, opt int,
+) (*IPv6MTUInfo, error) {
 	var value IPv6MTUInfo
 	vallen := _Socklen(SizeofIPv6MTUInfo)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, err
 }
 
-func GetsockoptICMPv6Filter(fd, level, opt int) (*ICMPv6Filter, error) {
+func GetsockoptICMPv6Filter(
+	fd, level, opt int,
+) (*ICMPv6Filter, error) {
 	var value ICMPv6Filter
 	vallen := _Socklen(SizeofICMPv6Filter)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, err
 }
 
-func GetsockoptLinger(fd, level, opt int) (*Linger, error) {
+func GetsockoptLinger(
+	fd, level, opt int,
+) (*Linger, error) {
 	var linger Linger
 	vallen := _Socklen(SizeofLinger)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&linger), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&linger),
+		&vallen,
+	)
 	return &linger, err
 }
 
-func GetsockoptTimeval(fd, level, opt int) (*Timeval, error) {
+func GetsockoptTimeval(
+	fd, level, opt int,
+) (*Timeval, error) {
 	var tv Timeval
 	vallen := _Socklen(unsafe.Sizeof(tv))
-	err := getsockopt(fd, level, opt, unsafe.Pointer(&tv), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&tv),
+		&vallen,
+	)
 	return &tv, err
 }
 
-func GetsockoptUint64(fd, level, opt int) (value uint64, err error) {
+func GetsockoptUint64(
+	fd, level, opt int,
+) (value uint64, err error) {
 	var n uint64
 	vallen := _Socklen(8)
-	err = getsockopt(fd, level, opt, unsafe.Pointer(&n), &vallen)
+	err = getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&n),
+		&vallen,
+	)
 	return n, err
 }
 
-func Recvfrom(fd int, p []byte, flags int) (n int, from Sockaddr, err error) {
+func Recvfrom(
+	fd int,
+	p []byte,
+	flags int,
+) (n int, from Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	if n, err = recvfrom(fd, p, flags, &rsa, &len); err != nil {
@@ -360,14 +518,24 @@ func Recvfrom(fd int, p []byte, flags int) (n int, from Sockaddr, err error) {
 // If the underlying socket type is not SOCK_DGRAM, a received message
 // containing oob data and a single '\0' of non-control data is treated as if
 // the message contained only control data, i.e. n will be zero on return.
-func Recvmsg(fd int, p, oob []byte, flags int) (n, oobn int, recvflags int, from Sockaddr, err error) {
+func Recvmsg(
+	fd int,
+	p, oob []byte,
+	flags int,
+) (n, oobn int, recvflags int, from Sockaddr, err error) {
 	var iov [1]Iovec
 	if len(p) > 0 {
 		iov[0].Base = &p[0]
 		iov[0].SetLen(len(p))
 	}
 	var rsa RawSockaddrAny
-	n, oobn, recvflags, err = recvmsgRaw(fd, iov[:], oob, flags, &rsa)
+	n, oobn, recvflags, err = recvmsgRaw(
+		fd,
+		iov[:],
+		oob,
+		flags,
+		&rsa,
+	)
 	// source address is only specified if the socket is unconnected
 	if rsa.Addr.Family != AF_UNSPEC {
 		from, err = anyToSockaddr(fd, &rsa)
@@ -378,7 +546,12 @@ func Recvmsg(fd int, p, oob []byte, flags int) (n, oobn int, recvflags int, from
 // RecvmsgBuffers receives a message from a socket using the recvmsg system
 // call. This function is equivalent to Recvmsg, but non-control data read is
 // scattered into the buffers slices.
-func RecvmsgBuffers(fd int, buffers [][]byte, oob []byte, flags int) (n, oobn int, recvflags int, from Sockaddr, err error) {
+func RecvmsgBuffers(
+	fd int,
+	buffers [][]byte,
+	oob []byte,
+	flags int,
+) (n, oobn int, recvflags int, from Sockaddr, err error) {
 	iov := make([]Iovec, len(buffers))
 	for i := range buffers {
 		if len(buffers[i]) > 0 {
@@ -389,8 +562,15 @@ func RecvmsgBuffers(fd int, buffers [][]byte, oob []byte, flags int) (n, oobn in
 		}
 	}
 	var rsa RawSockaddrAny
-	n, oobn, recvflags, err = recvmsgRaw(fd, iov, oob, flags, &rsa)
-	if err == nil && rsa.Addr.Family != AF_UNSPEC {
+	n, oobn, recvflags, err = recvmsgRaw(
+		fd,
+		iov,
+		oob,
+		flags,
+		&rsa,
+	)
+	if err == nil &&
+		rsa.Addr.Family != AF_UNSPEC {
 		from, err = anyToSockaddr(fd, &rsa)
 	}
 	return
@@ -399,7 +579,12 @@ func RecvmsgBuffers(fd int, buffers [][]byte, oob []byte, flags int) (n, oobn in
 // Sendmsg sends a message on a socket to an address using the sendmsg system
 // call. This function is equivalent to SendmsgN, but does not return the
 // number of bytes actually sent.
-func Sendmsg(fd int, p, oob []byte, to Sockaddr, flags int) (err error) {
+func Sendmsg(
+	fd int,
+	p, oob []byte,
+	to Sockaddr,
+	flags int,
+) (err error) {
 	_, err = SendmsgN(fd, p, oob, to, flags)
 	return
 }
@@ -428,7 +613,12 @@ func Sendmsg(fd int, p, oob []byte, to Sockaddr, flags int) (err error) {
 //	}
 //	msg.SetControllen(len(oob))
 //	n, _, errno := unix.Syscall(unix.SYS_SENDMSG, uintptr(fd), uintptr(unsafe.Pointer(msg)), flags)
-func SendmsgN(fd int, p, oob []byte, to Sockaddr, flags int) (n int, err error) {
+func SendmsgN(
+	fd int,
+	p, oob []byte,
+	to Sockaddr,
+	flags int,
+) (n int, err error) {
 	var iov [1]Iovec
 	if len(p) > 0 {
 		iov[0].Base = &p[0]
@@ -442,13 +632,26 @@ func SendmsgN(fd int, p, oob []byte, to Sockaddr, flags int) (n int, err error) 
 			return 0, err
 		}
 	}
-	return sendmsgN(fd, iov[:], oob, ptr, salen, flags)
+	return sendmsgN(
+		fd,
+		iov[:],
+		oob,
+		ptr,
+		salen,
+		flags,
+	)
 }
 
 // SendmsgBuffers sends a message on a socket to an address using the sendmsg
 // system call. This function is equivalent to SendmsgN, but the non-control
 // data is gathered from buffers.
-func SendmsgBuffers(fd int, buffers [][]byte, oob []byte, to Sockaddr, flags int) (n int, err error) {
+func SendmsgBuffers(
+	fd int,
+	buffers [][]byte,
+	oob []byte,
+	to Sockaddr,
+	flags int,
+) (n int, err error) {
 	iov := make([]Iovec, len(buffers))
 	for i := range buffers {
 		if len(buffers[i]) > 0 {
@@ -466,14 +669,30 @@ func SendmsgBuffers(fd int, buffers [][]byte, oob []byte, to Sockaddr, flags int
 			return 0, err
 		}
 	}
-	return sendmsgN(fd, iov, oob, ptr, salen, flags)
+	return sendmsgN(
+		fd,
+		iov,
+		oob,
+		ptr,
+		salen,
+		flags,
+	)
 }
 
-func Send(s int, buf []byte, flags int) (err error) {
+func Send(
+	s int,
+	buf []byte,
+	flags int,
+) (err error) {
 	return sendto(s, buf, flags, nil, 0)
 }
 
-func Sendto(fd int, p []byte, flags int, to Sockaddr) (err error) {
+func Sendto(
+	fd int,
+	p []byte,
+	flags int,
+	to Sockaddr,
+) (err error) {
 	var ptr unsafe.Pointer
 	var salen _Socklen
 	if to != nil {
@@ -485,52 +704,144 @@ func Sendto(fd int, p []byte, flags int, to Sockaddr) (err error) {
 	return sendto(fd, p, flags, ptr, salen)
 }
 
-func SetsockoptByte(fd, level, opt int, value byte) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(&value), 1)
+func SetsockoptByte(
+	fd, level, opt int,
+	value byte,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		1,
+	)
 }
 
-func SetsockoptInt(fd, level, opt int, value int) (err error) {
-	var n = int32(value)
-	return setsockopt(fd, level, opt, unsafe.Pointer(&n), 4)
+func SetsockoptInt(
+	fd, level, opt int,
+	value int,
+) (err error) {
+	n := int32(value)
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&n),
+		4,
+	)
 }
 
-func SetsockoptInet4Addr(fd, level, opt int, value [4]byte) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(&value[0]), 4)
+func SetsockoptInet4Addr(
+	fd, level, opt int,
+	value [4]byte,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value[0]),
+		4,
+	)
 }
 
-func SetsockoptIPMreq(fd, level, opt int, mreq *IPMreq) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(mreq), SizeofIPMreq)
+func SetsockoptIPMreq(
+	fd, level, opt int,
+	mreq *IPMreq,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(mreq),
+		SizeofIPMreq,
+	)
 }
 
-func SetsockoptIPv6Mreq(fd, level, opt int, mreq *IPv6Mreq) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(mreq), SizeofIPv6Mreq)
+func SetsockoptIPv6Mreq(
+	fd, level, opt int,
+	mreq *IPv6Mreq,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(mreq),
+		SizeofIPv6Mreq,
+	)
 }
 
-func SetsockoptICMPv6Filter(fd, level, opt int, filter *ICMPv6Filter) error {
-	return setsockopt(fd, level, opt, unsafe.Pointer(filter), SizeofICMPv6Filter)
+func SetsockoptICMPv6Filter(
+	fd, level, opt int,
+	filter *ICMPv6Filter,
+) error {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(filter),
+		SizeofICMPv6Filter,
+	)
 }
 
-func SetsockoptLinger(fd, level, opt int, l *Linger) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(l), SizeofLinger)
+func SetsockoptLinger(
+	fd, level, opt int,
+	l *Linger,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(l),
+		SizeofLinger,
+	)
 }
 
-func SetsockoptString(fd, level, opt int, s string) (err error) {
+func SetsockoptString(
+	fd, level, opt int,
+	s string,
+) (err error) {
 	var p unsafe.Pointer
 	if len(s) > 0 {
 		p = unsafe.Pointer(&[]byte(s)[0])
 	}
-	return setsockopt(fd, level, opt, p, uintptr(len(s)))
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		p,
+		uintptr(len(s)),
+	)
 }
 
-func SetsockoptTimeval(fd, level, opt int, tv *Timeval) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(tv), unsafe.Sizeof(*tv))
+func SetsockoptTimeval(
+	fd, level, opt int,
+	tv *Timeval,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(tv),
+		unsafe.Sizeof(*tv),
+	)
 }
 
-func SetsockoptUint64(fd, level, opt int, value uint64) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(&value), 8)
+func SetsockoptUint64(
+	fd, level, opt int,
+	value uint64,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		8,
+	)
 }
 
-func Socket(domain, typ, proto int) (fd int, err error) {
+func Socket(
+	domain, typ, proto int,
+) (fd int, err error) {
 	if domain == AF_INET6 && SocketDisableIPv6 {
 		return -1, EAFNOSUPPORT
 	}
@@ -538,7 +849,9 @@ func Socket(domain, typ, proto int) (fd int, err error) {
 	return
 }
 
-func Socketpair(domain, typ, proto int) (fd [2]int, err error) {
+func Socketpair(
+	domain, typ, proto int,
+) (fd [2]int, err error) {
 	var fdx [2]int32
 	err = socketpair(domain, typ, proto, &fdx)
 	if err == nil {
@@ -550,9 +863,16 @@ func Socketpair(domain, typ, proto int) (fd [2]int, err error) {
 
 var ioSync int64
 
-func CloseOnExec(fd int) { fcntl(fd, F_SETFD, FD_CLOEXEC) }
+func CloseOnExec(
+	fd int,
+) {
+	fcntl(fd, F_SETFD, FD_CLOEXEC)
+}
 
-func SetNonblock(fd int, nonblocking bool) (err error) {
+func SetNonblock(
+	fd int,
+	nonblocking bool,
+) (err error) {
 	flag, err := fcntl(fd, F_GETFL, 0)
 	if err != nil {
 		return err
@@ -574,7 +894,11 @@ func SetNonblock(fd int, nonblocking bool) (err error) {
 // executable name should also be the first argument in argv (["ls", "-l"]).
 // envv are the environment variables that should be passed to the new
 // process (["USER=go", "PWD=/tmp"]).
-func Exec(argv0 string, argv []string, envv []string) error {
+func Exec(
+	argv0 string,
+	argv []string,
+	envv []string,
+) error {
 	return syscall.Exec(argv0, argv, envv)
 }
 
@@ -585,7 +909,12 @@ func Exec(argv0 string, argv []string, envv []string) error {
 // element and modification time as the second element.
 func Lutimes(path string, tv []Timeval) error {
 	if tv == nil {
-		return UtimesNanoAt(AT_FDCWD, path, nil, AT_SYMLINK_NOFOLLOW)
+		return UtimesNanoAt(
+			AT_FDCWD,
+			path,
+			nil,
+			AT_SYMLINK_NOFOLLOW,
+		)
 	}
 	if len(tv) != 2 {
 		return EINVAL
@@ -594,7 +923,12 @@ func Lutimes(path string, tv []Timeval) error {
 		NsecToTimespec(TimevalToNsec(tv[0])),
 		NsecToTimespec(TimevalToNsec(tv[1])),
 	}
-	return UtimesNanoAt(AT_FDCWD, path, ts, AT_SYMLINK_NOFOLLOW)
+	return UtimesNanoAt(
+		AT_FDCWD,
+		path,
+		ts,
+		AT_SYMLINK_NOFOLLOW,
+	)
 }
 
 // emptyIovecs reports whether there are no bytes in the slice of Iovec.
@@ -611,5 +945,8 @@ func emptyIovecs(iov []Iovec) bool {
 func Setrlimit(resource int, rlim *Rlimit) error {
 	// Just call the syscall version, because as of Go 1.21
 	// it will affect starting a new process.
-	return syscall.Setrlimit(resource, (*syscall.Rlimit)(rlim))
+	return syscall.Setrlimit(
+		resource,
+		(*syscall.Rlimit)(rlim),
+	)
 }

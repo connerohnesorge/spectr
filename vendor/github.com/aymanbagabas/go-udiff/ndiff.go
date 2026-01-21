@@ -20,9 +20,15 @@ func Strings(before, after string) []Edit {
 
 	if isASCII(before) && isASCII(after) {
 		// TODO(adonovan): opt: specialize diffASCII for strings.
-		return diffASCII([]byte(before), []byte(after))
+		return diffASCII(
+			[]byte(before),
+			[]byte(after),
+		)
 	}
-	return diffRunes([]rune(before), []rune(after))
+	return diffRunes(
+		[]rune(before),
+		[]rune(after),
+	)
 }
 
 // Bytes computes the differences between two byte slices.
@@ -44,7 +50,11 @@ func diffASCII(before, after []byte) []Edit {
 	// Convert from LCS diffs.
 	res := make([]Edit, len(diffs))
 	for i, d := range diffs {
-		res[i] = Edit{d.Start, d.End, string(after[d.ReplStart:d.ReplEnd])}
+		res[i] = Edit{
+			d.Start,
+			d.End,
+			string(after[d.ReplStart:d.ReplEnd]),
+		}
 	}
 	return res
 }
@@ -59,10 +69,18 @@ func diffRunes(before, after []rune) []Edit {
 	lastEnd := 0
 	utf8Len := 0
 	for i, d := range diffs {
-		utf8Len += runesLen(before[lastEnd:d.Start]) // text between edits
+		utf8Len += runesLen(
+			before[lastEnd:d.Start],
+		) // text between edits
 		start := utf8Len
-		utf8Len += runesLen(before[d.Start:d.End]) // text deleted by this edit
-		res[i] = Edit{start, utf8Len, string(after[d.ReplStart:d.ReplEnd])}
+		utf8Len += runesLen(
+			before[d.Start:d.End],
+		) // text deleted by this edit
+		res[i] = Edit{
+			start,
+			utf8Len,
+			string(after[d.ReplStart:d.ReplEnd]),
+		}
 		lastEnd = d.End
 	}
 	return res

@@ -77,7 +77,11 @@ func findNull(buf []byte, i int) int {
 }
 
 // readStrings decodes n strings from string data table buf using the indexes in idx.
-func readStrings(idx []int, buf []byte, n int) (map[int][]byte, int, error) {
+func readStrings(
+	idx []int,
+	buf []byte,
+	n int,
+) (map[int][]byte, int, error) {
 	var last int
 	m := make(map[int][]byte)
 	for i := 0; i < n; i++ {
@@ -102,7 +106,9 @@ type decoder struct {
 }
 
 // readBytes reads the next n bytes of buf, incrementing pos by n.
-func (d *decoder) readBytes(n int) ([]byte, error) {
+func (d *decoder) readBytes(
+	n int,
+) ([]byte, error) {
 	if d.n < d.pos+n {
 		return nil, ErrUnexpectedFileEnd
 	}
@@ -111,7 +117,9 @@ func (d *decoder) readBytes(n int) ([]byte, error) {
 }
 
 // readInts reads n number of ints with width w.
-func (d *decoder) readInts(n, w int) ([]int, error) {
+func (d *decoder) readInts(
+	n, w int,
+) ([]int, error) {
 	w /= 8
 	l := n * w
 	buf, err := d.readBytes(l)
@@ -126,22 +134,42 @@ func (d *decoder) readInts(n, w int) ([]int, error) {
 		case 1:
 			z[i] = int(buf[i])
 		case 2:
-			z[j] = int(int16(buf[i+1])<<8 | int16(buf[i]))
+			z[j] = int(
+				int16(
+					buf[i+1],
+				)<<8 | int16(
+					buf[i],
+				),
+			)
 		case 4:
-			z[j] = int(buf[i+3])<<24 | int(buf[i+2])<<16 | int(buf[i+1])<<8 | int(buf[i])
+			z[j] = int(
+				buf[i+3],
+			)<<24 | int(
+				buf[i+2],
+			)<<16 | int(
+				buf[i+1],
+			)<<8 | int(
+				buf[i],
+			)
 		}
 	}
 	return z, nil
 }
 
 // readBools reads the next n bools.
-func (d *decoder) readBools(n int) (map[int]bool, map[int]bool, error) {
+func (d *decoder) readBools(
+	n int,
+) (map[int]bool, map[int]bool, error) {
 	buf, err := d.readInts(n, 8)
 	if err != nil {
 		return nil, nil, err
 	}
 	// process
-	bools, boolsM := make(map[int]bool), make(map[int]bool)
+	bools, boolsM := make(
+		map[int]bool,
+	), make(
+		map[int]bool,
+	)
 	for i, b := range buf {
 		bools[i] = b == 1
 		if int8(b) == -2 {
@@ -152,13 +180,19 @@ func (d *decoder) readBools(n int) (map[int]bool, map[int]bool, error) {
 }
 
 // readNums reads the next n nums.
-func (d *decoder) readNums(n, w int) (map[int]int, map[int]bool, error) {
+func (d *decoder) readNums(
+	n, w int,
+) (map[int]int, map[int]bool, error) {
 	buf, err := d.readInts(n, w)
 	if err != nil {
 		return nil, nil, err
 	}
 	// process
-	nums, numsM := make(map[int]int), make(map[int]bool)
+	nums, numsM := make(
+		map[int]int,
+	), make(
+		map[int]bool,
+	)
 	for i := 0; i < n; i++ {
 		nums[i] = buf[i]
 		if buf[i] == -2 {
@@ -170,7 +204,9 @@ func (d *decoder) readNums(n, w int) (map[int]int, map[int]bool, error) {
 
 // readStringTable reads the string data for n strings and the accompanying data
 // table of length sz.
-func (d *decoder) readStringTable(n, sz int) ([][]byte, []int, error) {
+func (d *decoder) readStringTable(
+	n, sz int,
+) ([][]byte, []int, error) {
 	buf, err := d.readInts(n, 16)
 	if err != nil {
 		return nil, nil, err
@@ -202,7 +238,9 @@ func (d *decoder) readStringTable(n, sz int) ([][]byte, []int, error) {
 
 // readStrings reads the next n strings and processes the string data table of
 // length sz.
-func (d *decoder) readStrings(n, sz int) (map[int][]byte, map[int]bool, error) {
+func (d *decoder) readStrings(
+	n, sz int,
+) (map[int][]byte, map[int]bool, error) {
 	s, m, err := d.readStringTable(n, sz)
 	if err != nil {
 		return nil, nil, err

@@ -56,7 +56,9 @@ func (c Cell) String() string {
 	if len(c.Comb) == 0 {
 		return string(c.Rune)
 	}
-	return string(append([]rune{c.Rune}, c.Comb...))
+	return string(
+		append([]rune{c.Rune}, c.Comb...),
+	)
 }
 
 // Equal returns whether the cell is equal to the other cell.
@@ -89,7 +91,10 @@ func (c *Cell) Reset() {
 // Clear returns whether the cell consists of only attributes that don't
 // affect appearance of a space character.
 func (c *Cell) Clear() bool {
-	return c.Rune == ' ' && len(c.Comb) == 0 && c.Width == 1 && c.Style.Clear() && c.Link.Empty()
+	return c.Rune == ' ' && len(c.Comb) == 0 &&
+		c.Width == 1 &&
+		c.Style.Clear() &&
+		c.Link.Empty()
 }
 
 // Clone returns a copy of the cell.
@@ -127,7 +132,8 @@ func (h *Link) Reset() {
 
 // Equal returns whether the hyperlink is equal to the other hyperlink.
 func (h *Link) Equal(o *Link) bool {
-	return o != nil && h.URL == o.URL && h.Params == o.Params
+	return o != nil && h.URL == o.URL &&
+		h.Params == o.Params
 }
 
 // Empty returns whether the hyperlink is empty.
@@ -349,7 +355,8 @@ func colorEqual(c, o ansi.Color) bool {
 	}
 	cr, cg, cb, ca := c.RGBA()
 	or, og, ob, oa := o.RGBA()
-	return cr == or && cg == og && cb == ob && ca == oa
+	return cr == or && cg == og && cb == ob &&
+		ca == oa
 }
 
 // Bold sets the bold attribute.
@@ -433,7 +440,9 @@ func (s *Style) Strikethrough(v bool) *Style {
 }
 
 // UnderlineStyle sets the underline style.
-func (s *Style) UnderlineStyle(style UnderlineStyle) *Style {
+func (s *Style) UnderlineStyle(
+	style UnderlineStyle,
+) *Style {
 	s.UlStyle = style
 	return s
 }
@@ -460,7 +469,9 @@ func (s *Style) Background(c ansi.Color) *Style {
 }
 
 // UnderlineColor sets the underline color.
-func (s *Style) UnderlineColor(c ansi.Color) *Style {
+func (s *Style) UnderlineColor(
+	c ansi.Color,
+) *Style {
 	s.Ul = c
 	return s
 }
@@ -477,7 +488,10 @@ func (s *Style) Reset() *Style {
 
 // Empty returns true if the style is empty.
 func (s *Style) Empty() bool {
-	return s.Fg == nil && s.Bg == nil && s.Ul == nil && s.Attrs == ResetAttr && s.UlStyle == NoUnderline
+	return s.Fg == nil && s.Bg == nil &&
+		s.Ul == nil &&
+		s.Attrs == ResetAttr &&
+		s.UlStyle == NoUnderline
 }
 
 // Clear returns whether the style consists of only attributes that don't

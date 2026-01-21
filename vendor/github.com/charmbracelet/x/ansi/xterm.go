@@ -38,7 +38,10 @@ func XTMODKEYS(p int, vs ...int) string {
 
 // SetKeyModifierOptions sets xterm key modifier options.
 // This is an alias for [KeyModifierOptions].
-func SetKeyModifierOptions(pp int, pv int) string {
+func SetKeyModifierOptions(
+	pp int,
+	pv int,
+) string {
 	return KeyModifierOptions(pp, pv)
 }
 

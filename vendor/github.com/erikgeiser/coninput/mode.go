@@ -10,7 +10,10 @@ import (
 )
 
 // AddInputModes returns the given mode with one or more additional modes enabled.
-func AddInputModes(mode uint32, enableModes ...uint32) uint32 {
+func AddInputModes(
+	mode uint32,
+	enableModes ...uint32,
+) uint32 {
 	for _, enableMode := range enableModes {
 		mode |= enableMode
 	}
@@ -19,7 +22,10 @@ func AddInputModes(mode uint32, enableModes ...uint32) uint32 {
 }
 
 // RemoveInputModes returns the given mode with one or more additional modes disabled.
-func RemoveInputModes(mode uint32, disableModes ...uint32) uint32 {
+func RemoveInputModes(
+	mode uint32,
+	disableModes ...uint32,
+) uint32 {
 	for _, disableMode := range disableModes {
 		mode &^= disableMode
 	}
@@ -28,7 +34,10 @@ func RemoveInputModes(mode uint32, disableModes ...uint32) uint32 {
 }
 
 // ToggleInputModes returns the given mode with one or more additional modes toggeled.
-func ToggleInputModes(mode uint32, toggleModes ...uint32) uint32 {
+func ToggleInputModes(
+	mode uint32,
+	toggleModes ...uint32,
+) uint32 {
 	for _, toggeMode := range toggleModes {
 		mode ^= toggeMode
 	}
@@ -40,14 +49,38 @@ var inputModes = []struct {
 	mode uint32
 	name string
 }{
-	{mode: windows.ENABLE_ECHO_INPUT, name: "ENABLE_ECHO_INPUT"},
-	{mode: windows.ENABLE_INSERT_MODE, name: "ENABLE_INSERT_MODE"},
-	{mode: windows.ENABLE_LINE_INPUT, name: "ENABLE_LINE_INPUT"},
-	{mode: windows.ENABLE_MOUSE_INPUT, name: "ENABLE_MOUSE_INPUT"},
-	{mode: windows.ENABLE_PROCESSED_INPUT, name: "ENABLE_PROCESSED_INPUT"},
-	{mode: windows.ENABLE_QUICK_EDIT_MODE, name: "ENABLE_QUICK_EDIT_MODE"},
-	{mode: windows.ENABLE_WINDOW_INPUT, name: "ENABLE_WINDOW_INPUT"},
-	{mode: windows.ENABLE_VIRTUAL_TERMINAL_INPUT, name: "ENABLE_VIRTUAL_TERMINAL_INPUT"},
+	{
+		mode: windows.ENABLE_ECHO_INPUT,
+		name: "ENABLE_ECHO_INPUT",
+	},
+	{
+		mode: windows.ENABLE_INSERT_MODE,
+		name: "ENABLE_INSERT_MODE",
+	},
+	{
+		mode: windows.ENABLE_LINE_INPUT,
+		name: "ENABLE_LINE_INPUT",
+	},
+	{
+		mode: windows.ENABLE_MOUSE_INPUT,
+		name: "ENABLE_MOUSE_INPUT",
+	},
+	{
+		mode: windows.ENABLE_PROCESSED_INPUT,
+		name: "ENABLE_PROCESSED_INPUT",
+	},
+	{
+		mode: windows.ENABLE_QUICK_EDIT_MODE,
+		name: "ENABLE_QUICK_EDIT_MODE",
+	},
+	{
+		mode: windows.ENABLE_WINDOW_INPUT,
+		name: "ENABLE_WINDOW_INPUT",
+	},
+	{
+		mode: windows.ENABLE_VIRTUAL_TERMINAL_INPUT,
+		name: "ENABLE_VIRTUAL_TERMINAL_INPUT",
+	},
 }
 
 // ListInputMode returnes the isolated enabled input modes as a list.
@@ -78,5 +111,8 @@ func ListInputModeNames(mode uint32) []string {
 
 // DescribeInputMode returns a string containing the names of each enabled input mode.
 func DescribeInputMode(mode uint32) string {
-	return strings.Join(ListInputModeNames(mode), "|")
+	return strings.Join(
+		ListInputModeNames(mode),
+		"|",
+	)
 }

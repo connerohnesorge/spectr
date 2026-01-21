@@ -121,9 +121,11 @@ func (p Properties) BoundaryAfter() bool {
 type qcInfo uint8
 
 func (p Properties) isYesC() bool { return p.flags&0x10 == 0 }
+
 func (p Properties) isYesD() bool { return p.flags&0x4 == 0 }
 
-func (p Properties) combinesForward() bool  { return p.flags&0x20 != 0 }
+func (p Properties) combinesForward() bool { return p.flags&0x20 != 0 }
+
 func (p Properties) combinesBackward() bool { return p.flags&0x8 != 0 } // == isMaybe
 func (p Properties) hasDecomposition() bool { return p.flags&0x4 != 0 } // == isNoD
 
@@ -132,7 +134,8 @@ func (p Properties) isInert() bool {
 }
 
 func (p Properties) multiSegment() bool {
-	return p.index >= firstMulti && p.index < endMulti
+	return p.index >= firstMulti &&
+		p.index < endMulti
 }
 
 func (p Properties) nLeadingNonStarters() uint8 {
@@ -182,7 +185,10 @@ func (p Properties) TrailCCC() uint8 {
 }
 
 func buildRecompMap() {
-	recompMap = make(map[uint32]rune, len(recompMapPacked)/8)
+	recompMap = make(
+		map[uint32]rune,
+		len(recompMapPacked)/8,
+	)
 	var buf [8]byte
 	for i := 0; i < len(recompMapPacked); i += 8 {
 		copy(buf[:], recompMapPacked[i:i+8])
@@ -204,7 +210,11 @@ func buildRecompMap() {
 // The caller is responsible for calling
 // recompMapOnce.Do(buildRecompMap) sometime before this is called.
 func combine(a, b rune) rune {
-	key := uint32(uint16(a))<<16 + uint32(uint16(b))
+	key := uint32(
+		uint16(a),
+	)<<16 + uint32(
+		uint16(b),
+	)
 	if recompMap == nil {
 		panic("caller error") // see func comment
 	}
@@ -230,7 +240,9 @@ func (f Form) Properties(s []byte) Properties {
 }
 
 // PropertiesString returns properties for the first rune in s.
-func (f Form) PropertiesString(s string) Properties {
+func (f Form) PropertiesString(
+	s string,
+) Properties {
 	if f == NFC || f == NFD {
 		return compInfo(nfcData.lookupString(s))
 	}
@@ -258,7 +270,11 @@ func compInfo(v uint16, sz int) Properties {
 	// has decomposition
 	h := decomps[v]
 	f := (qcInfo(h&headerFlagsMask) >> 2) | 0x4
-	p := Properties{size: uint8(sz), flags: f, index: v}
+	p := Properties{
+		size:  uint8(sz),
+		flags: f,
+		index: v,
+	}
 	if v >= firstCCC {
 		v += uint16(h&headerLenMask) + 1
 		c := decomps[v]

@@ -13,6 +13,8 @@ import (
 // successfully. If the input reader is not a File or the file descriptor
 // is 1024 or larger, the cancel function does nothing and always returns false.
 // The generic unix implementation is based on the posix select syscall.
-func NewReader(reader io.Reader) (CancelReader, error) {
+func NewReader(
+	reader io.Reader,
+) (CancelReader, error) {
 	return newSelectCancelReader(reader)
 }

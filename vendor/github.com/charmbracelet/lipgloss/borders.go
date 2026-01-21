@@ -30,31 +30,49 @@ type Border struct {
 // varying widths, the widest rune is returned. If no border exists on the top
 // edge, 0 is returned.
 func (b Border) GetTopSize() int {
-	return getBorderEdgeWidth(b.TopLeft, b.Top, b.TopRight)
+	return getBorderEdgeWidth(
+		b.TopLeft,
+		b.Top,
+		b.TopRight,
+	)
 }
 
 // GetRightSize returns the width of the right border. If borders contain
 // runes of varying widths, the widest rune is returned. If no border exists on
 // the right edge, 0 is returned.
 func (b Border) GetRightSize() int {
-	return getBorderEdgeWidth(b.TopRight, b.Right, b.BottomRight)
+	return getBorderEdgeWidth(
+		b.TopRight,
+		b.Right,
+		b.BottomRight,
+	)
 }
 
 // GetBottomSize returns the width of the bottom border. If borders contain
 // runes of varying widths, the widest rune is returned. If no border exists on
 // the bottom edge, 0 is returned.
 func (b Border) GetBottomSize() int {
-	return getBorderEdgeWidth(b.BottomLeft, b.Bottom, b.BottomRight)
+	return getBorderEdgeWidth(
+		b.BottomLeft,
+		b.Bottom,
+		b.BottomRight,
+	)
 }
 
 // GetLeftSize returns the width of the left border. If borders contain runes
 // of varying widths, the widest rune is returned. If no border exists on the
 // left edge, 0 is returned.
 func (b Border) GetLeftSize() int {
-	return getBorderEdgeWidth(b.TopLeft, b.Left, b.BottomLeft)
+	return getBorderEdgeWidth(
+		b.TopLeft,
+		b.Left,
+		b.BottomLeft,
+	)
 }
 
-func getBorderEdgeWidth(borderParts ...string) (maxWidth int) {
+func getBorderEdgeWidth(
+	borderParts ...string,
+) (maxWidth int) {
 	for _, piece := range borderParts {
 		w := maxRuneWidth(piece)
 		if w > maxWidth {
@@ -280,21 +298,49 @@ func ASCIIBorder() Border {
 
 func (s Style) applyBorder(str string) string {
 	var (
-		border    = s.getBorderStyle()
-		hasTop    = s.getAsBool(borderTopKey, false)
-		hasRight  = s.getAsBool(borderRightKey, false)
-		hasBottom = s.getAsBool(borderBottomKey, false)
-		hasLeft   = s.getAsBool(borderLeftKey, false)
+		border = s.getBorderStyle()
+		hasTop = s.getAsBool(
+			borderTopKey,
+			false,
+		)
+		hasRight = s.getAsBool(
+			borderRightKey,
+			false,
+		)
+		hasBottom = s.getAsBool(
+			borderBottomKey,
+			false,
+		)
+		hasLeft = s.getAsBool(
+			borderLeftKey,
+			false,
+		)
 
-		topFG    = s.getAsColor(borderTopForegroundKey)
-		rightFG  = s.getAsColor(borderRightForegroundKey)
-		bottomFG = s.getAsColor(borderBottomForegroundKey)
-		leftFG   = s.getAsColor(borderLeftForegroundKey)
+		topFG = s.getAsColor(
+			borderTopForegroundKey,
+		)
+		rightFG = s.getAsColor(
+			borderRightForegroundKey,
+		)
+		bottomFG = s.getAsColor(
+			borderBottomForegroundKey,
+		)
+		leftFG = s.getAsColor(
+			borderLeftForegroundKey,
+		)
 
-		topBG    = s.getAsColor(borderTopBackgroundKey)
-		rightBG  = s.getAsColor(borderRightBackgroundKey)
-		bottomBG = s.getAsColor(borderBottomBackgroundKey)
-		leftBG   = s.getAsColor(borderLeftBackgroundKey)
+		topBG = s.getAsColor(
+			borderTopBackgroundKey,
+		)
+		rightBG = s.getAsColor(
+			borderRightBackgroundKey,
+		)
+		bottomBG = s.getAsColor(
+			borderBottomBackgroundKey,
+		)
+		leftBG = s.getAsColor(
+			borderLeftBackgroundKey,
+		)
 	)
 
 	// If a border is set and no sides have been specifically turned on or off
@@ -307,7 +353,8 @@ func (s Style) applyBorder(str string) string {
 	}
 
 	// If no border is set or all borders are been disabled, abort.
-	if border == noBorder || (!hasTop && !hasRight && !hasBottom && !hasLeft) {
+	if border == noBorder ||
+		(!hasTop && !hasRight && !hasBottom && !hasLeft) {
 		return str
 	}
 
@@ -329,13 +376,16 @@ func (s Style) applyBorder(str string) string {
 	if hasTop && hasLeft && border.TopLeft == "" {
 		border.TopLeft = " "
 	}
-	if hasTop && hasRight && border.TopRight == "" {
+	if hasTop && hasRight &&
+		border.TopRight == "" {
 		border.TopRight = " "
 	}
-	if hasBottom && hasLeft && border.BottomLeft == "" {
+	if hasBottom && hasLeft &&
+		border.BottomLeft == "" {
 		border.BottomLeft = " "
 	}
-	if hasBottom && hasRight && border.BottomRight == "" {
+	if hasBottom && hasRight &&
+		border.BottomRight == "" {
 		border.BottomRight = " "
 	}
 
@@ -365,16 +415,29 @@ func (s Style) applyBorder(str string) string {
 	}
 
 	// For now, limit corners to one rune.
-	border.TopLeft = getFirstRuneAsString(border.TopLeft)
-	border.TopRight = getFirstRuneAsString(border.TopRight)
-	border.BottomRight = getFirstRuneAsString(border.BottomRight)
-	border.BottomLeft = getFirstRuneAsString(border.BottomLeft)
+	border.TopLeft = getFirstRuneAsString(
+		border.TopLeft,
+	)
+	border.TopRight = getFirstRuneAsString(
+		border.TopRight,
+	)
+	border.BottomRight = getFirstRuneAsString(
+		border.BottomRight,
+	)
+	border.BottomLeft = getFirstRuneAsString(
+		border.BottomLeft,
+	)
 
 	var out strings.Builder
 
 	// Render top
 	if hasTop {
-		top := renderHorizontalEdge(border.TopLeft, border.Top, border.TopRight, width)
+		top := renderHorizontalEdge(
+			border.TopLeft,
+			border.Top,
+			border.TopRight,
+			width,
+		)
 		top = s.styleBorder(top, topFG, topBG)
 		out.WriteString(top)
 		out.WriteRune('\n')
@@ -394,7 +457,9 @@ func (s Style) applyBorder(str string) string {
 			if leftIndex >= len(leftRunes) {
 				leftIndex = 0
 			}
-			out.WriteString(s.styleBorder(r, leftFG, leftBG))
+			out.WriteString(
+				s.styleBorder(r, leftFG, leftBG),
+			)
 		}
 		out.WriteString(l)
 		if hasRight {
@@ -403,7 +468,13 @@ func (s Style) applyBorder(str string) string {
 			if rightIndex >= len(rightRunes) {
 				rightIndex = 0
 			}
-			out.WriteString(s.styleBorder(r, rightFG, rightBG))
+			out.WriteString(
+				s.styleBorder(
+					r,
+					rightFG,
+					rightBG,
+				),
+			)
 		}
 		if i < len(lines)-1 {
 			out.WriteRune('\n')
@@ -412,8 +483,17 @@ func (s Style) applyBorder(str string) string {
 
 	// Render bottom
 	if hasBottom {
-		bottom := renderHorizontalEdge(border.BottomLeft, border.Bottom, border.BottomRight, width)
-		bottom = s.styleBorder(bottom, bottomFG, bottomBG)
+		bottom := renderHorizontalEdge(
+			border.BottomLeft,
+			border.Bottom,
+			border.BottomRight,
+			width,
+		)
+		bottom = s.styleBorder(
+			bottom,
+			bottomFG,
+			bottomBG,
+		)
 		out.WriteRune('\n')
 		out.WriteString(bottom)
 	}
@@ -422,7 +502,10 @@ func (s Style) applyBorder(str string) string {
 }
 
 // Render the horizontal (top or bottom) portion of a border.
-func renderHorizontalEdge(left, middle, right string, width int) string {
+func renderHorizontalEdge(
+	left, middle, right string,
+	width int,
+) string {
 	if middle == "" {
 		middle = " "
 	}
@@ -449,7 +532,10 @@ func renderHorizontalEdge(left, middle, right string, width int) string {
 }
 
 // Apply foreground and background styling to a border.
-func (s Style) styleBorder(border string, fg, bg TerminalColor) string {
+func (s Style) styleBorder(
+	border string,
+	fg, bg TerminalColor,
+) string {
 	if fg == noColor && bg == noColor {
 		return border
 	}
@@ -472,7 +558,10 @@ func maxRuneWidth(str string) int {
 	state := -1
 	for len(str) > 0 {
 		var w int
-		_, str, w, state = uniseg.FirstGraphemeClusterInString(str, state)
+		_, str, w, state = uniseg.FirstGraphemeClusterInString(
+			str,
+			state,
+		)
 		if w > width {
 			width = w
 		}

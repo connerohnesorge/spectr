@@ -12,12 +12,18 @@ type state struct {
 }
 
 func isTerminal(fd uintptr) bool {
-	_, err := unix.IoctlGetTermios(int(fd), ioctlReadTermios)
+	_, err := unix.IoctlGetTermios(
+		int(fd),
+		ioctlReadTermios,
+	)
 	return err == nil
 }
 
 func makeRaw(fd uintptr) (*State, error) {
-	termios, err := unix.IoctlGetTermios(int(fd), ioctlReadTermios)
+	termios, err := unix.IoctlGetTermios(
+		int(fd),
+		ioctlReadTermios,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +51,18 @@ func setState(fd uintptr, state *State) error {
 	if state != nil {
 		termios = &state.Termios
 	}
-	return unix.IoctlSetTermios(int(fd), ioctlWriteTermios, termios)
+	return unix.IoctlSetTermios(
+		int(fd),
+		ioctlWriteTermios,
+		termios,
+	)
 }
 
 func getState(fd uintptr) (*State, error) {
-	termios, err := unix.IoctlGetTermios(int(fd), ioctlReadTermios)
+	termios, err := unix.IoctlGetTermios(
+		int(fd),
+		ioctlReadTermios,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -58,11 +71,20 @@ func getState(fd uintptr) (*State, error) {
 }
 
 func restore(fd uintptr, state *State) error {
-	return unix.IoctlSetTermios(int(fd), ioctlWriteTermios, &state.Termios)
+	return unix.IoctlSetTermios(
+		int(fd),
+		ioctlWriteTermios,
+		&state.Termios,
+	)
 }
 
-func getSize(fd uintptr) (width, height int, err error) {
-	ws, err := unix.IoctlGetWinsize(int(fd), unix.TIOCGWINSZ)
+func getSize(
+	fd uintptr,
+) (width, height int, err error) {
+	ws, err := unix.IoctlGetWinsize(
+		int(fd),
+		unix.TIOCGWINSZ,
+	)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -72,12 +94,17 @@ func getSize(fd uintptr) (width, height int, err error) {
 // passwordReader is an io.Reader that reads from a specific file descriptor.
 type passwordReader int
 
-func (r passwordReader) Read(buf []byte) (int, error) {
+func (r passwordReader) Read(
+	buf []byte,
+) (int, error) {
 	return unix.Read(int(r), buf)
 }
 
 func readPassword(fd uintptr) ([]byte, error) {
-	termios, err := unix.IoctlGetTermios(int(fd), ioctlReadTermios)
+	termios, err := unix.IoctlGetTermios(
+		int(fd),
+		ioctlReadTermios,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +117,11 @@ func readPassword(fd uintptr) ([]byte, error) {
 		return nil, err
 	}
 
-	defer unix.IoctlSetTermios(int(fd), ioctlWriteTermios, termios)
+	defer unix.IoctlSetTermios(
+		int(fd),
+		ioctlWriteTermios,
+		termios,
+	)
 
 	return readPasswordLine(passwordReader(fd))
 }

@@ -7,6 +7,9 @@
 package unix
 
 // ReadDirent reads directory entries from fd and writes them into buf.
-func ReadDirent(fd int, buf []byte) (n int, err error) {
+func ReadDirent(
+	fd int,
+	buf []byte,
+) (n int, err error) {
 	return Getdents(fd, buf)
 }

@@ -10,7 +10,9 @@ import (
 )
 
 // colorToHexString returns a hex string representation of a color.
-func colorToHexString(c color.Color) string { //nolint:unused
+func colorToHexString(
+	c color.Color,
+) string { //nolint:unused
 	if c == nil {
 		return ""
 	}
@@ -28,7 +30,9 @@ func colorToHexString(c color.Color) string { //nolint:unused
 // rgbToHex converts red, green, and blue values to a hexadecimal value.
 //
 //	hex := rgbToHex(0, 0, 255) // 0x0000FF
-func rgbToHex(r, g, b uint32) uint32 { //nolint:unused
+func rgbToHex(
+	r, g, b uint32,
+) uint32 { //nolint:unused
 	return r<<16 + g<<8 + b
 }
 
@@ -70,23 +74,61 @@ func XParseColor(s string) color.Color {
 			return nil
 		}
 
-		r, _ := strconv.ParseUint(parts[0], 16, 32)
-		g, _ := strconv.ParseUint(parts[1], 16, 32)
-		b, _ := strconv.ParseUint(parts[2], 16, 32)
+		r, _ := strconv.ParseUint(
+			parts[0],
+			16,
+			32,
+		)
+		g, _ := strconv.ParseUint(
+			parts[1],
+			16,
+			32,
+		)
+		b, _ := strconv.ParseUint(
+			parts[2],
+			16,
+			32,
+		)
 
-		return color.RGBA{uint8(shift(r)), uint8(shift(g)), uint8(shift(b)), 255} //nolint:gosec
+		return color.RGBA{
+			uint8(shift(r)),
+			uint8(shift(g)),
+			uint8(shift(b)),
+			255,
+		} //nolint:gosec
 	case strings.HasPrefix(s, "rgba:"):
 		parts := strings.Split(s[5:], "/")
 		if len(parts) != 4 {
 			return nil
 		}
 
-		r, _ := strconv.ParseUint(parts[0], 16, 32)
-		g, _ := strconv.ParseUint(parts[1], 16, 32)
-		b, _ := strconv.ParseUint(parts[2], 16, 32)
-		a, _ := strconv.ParseUint(parts[3], 16, 32)
+		r, _ := strconv.ParseUint(
+			parts[0],
+			16,
+			32,
+		)
+		g, _ := strconv.ParseUint(
+			parts[1],
+			16,
+			32,
+		)
+		b, _ := strconv.ParseUint(
+			parts[2],
+			16,
+			32,
+		)
+		a, _ := strconv.ParseUint(
+			parts[3],
+			16,
+			32,
+		)
 
-		return color.RGBA{uint8(shift(r)), uint8(shift(g)), uint8(shift(b)), uint8(shift(a))} //nolint:gosec
+		return color.RGBA{
+			uint8(shift(r)),
+			uint8(shift(g)),
+			uint8(shift(b)),
+			uint8(shift(a)),
+		} //nolint:gosec
 	}
 	return nil
 }

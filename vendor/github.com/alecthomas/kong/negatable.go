@@ -7,7 +7,9 @@ const negatableDefault = "_"
 
 // negatableFlagName returns the name of the flag for a negatable field, or
 // an empty string if the field is not negatable.
-func negatableFlagName(name, negation string) string {
+func negatableFlagName(
+	name, negation string,
+) string {
 	switch negation {
 	case "":
 		return ""

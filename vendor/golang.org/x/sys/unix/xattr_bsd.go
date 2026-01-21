@@ -13,7 +13,9 @@ import (
 
 // Derive extattr namespace and attribute name
 
-func xattrnamespace(fullattr string) (ns int, attr string, err error) {
+func xattrnamespace(
+	fullattr string,
+) (ns int, attr string, err error) {
 	s := strings.IndexByte(fullattr, '.')
 	if s == -1 {
 		return -1, "", ENOATTR
@@ -32,7 +34,10 @@ func xattrnamespace(fullattr string) (ns int, attr string, err error) {
 	}
 }
 
-func initxattrdest(dest []byte, idx int) (d unsafe.Pointer) {
+func initxattrdest(
+	dest []byte,
+	idx int,
+) (d unsafe.Pointer) {
 	if len(dest) > idx {
 		return unsafe.Pointer(&dest[idx])
 	}
@@ -47,7 +52,11 @@ func initxattrdest(dest []byte, idx int) (d unsafe.Pointer) {
 
 // FreeBSD and NetBSD implement their own syscalls to handle extended attributes
 
-func Getxattr(file string, attr string, dest []byte) (sz int, err error) {
+func Getxattr(
+	file string,
+	attr string,
+	dest []byte,
+) (sz int, err error) {
 	d := initxattrdest(dest, 0)
 	destsize := len(dest)
 
@@ -56,10 +65,20 @@ func Getxattr(file string, attr string, dest []byte) (sz int, err error) {
 		return -1, err
 	}
 
-	return ExtattrGetFile(file, nsid, a, uintptr(d), destsize)
+	return ExtattrGetFile(
+		file,
+		nsid,
+		a,
+		uintptr(d),
+		destsize,
+	)
 }
 
-func Fgetxattr(fd int, attr string, dest []byte) (sz int, err error) {
+func Fgetxattr(
+	fd int,
+	attr string,
+	dest []byte,
+) (sz int, err error) {
 	d := initxattrdest(dest, 0)
 	destsize := len(dest)
 
@@ -68,10 +87,20 @@ func Fgetxattr(fd int, attr string, dest []byte) (sz int, err error) {
 		return -1, err
 	}
 
-	return ExtattrGetFd(fd, nsid, a, uintptr(d), destsize)
+	return ExtattrGetFd(
+		fd,
+		nsid,
+		a,
+		uintptr(d),
+		destsize,
+	)
 }
 
-func Lgetxattr(link string, attr string, dest []byte) (sz int, err error) {
+func Lgetxattr(
+	link string,
+	attr string,
+	dest []byte,
+) (sz int, err error) {
 	d := initxattrdest(dest, 0)
 	destsize := len(dest)
 
@@ -80,12 +109,23 @@ func Lgetxattr(link string, attr string, dest []byte) (sz int, err error) {
 		return -1, err
 	}
 
-	return ExtattrGetLink(link, nsid, a, uintptr(d), destsize)
+	return ExtattrGetLink(
+		link,
+		nsid,
+		a,
+		uintptr(d),
+		destsize,
+	)
 }
 
 // flags are unused on FreeBSD
 
-func Fsetxattr(fd int, attr string, data []byte, flags int) (err error) {
+func Fsetxattr(
+	fd int,
+	attr string,
+	data []byte,
+	flags int,
+) (err error) {
 	var d unsafe.Pointer
 	if len(data) > 0 {
 		d = unsafe.Pointer(&data[0])
@@ -97,11 +137,22 @@ func Fsetxattr(fd int, attr string, data []byte, flags int) (err error) {
 		return
 	}
 
-	_, err = ExtattrSetFd(fd, nsid, a, uintptr(d), datasiz)
+	_, err = ExtattrSetFd(
+		fd,
+		nsid,
+		a,
+		uintptr(d),
+		datasiz,
+	)
 	return
 }
 
-func Setxattr(file string, attr string, data []byte, flags int) (err error) {
+func Setxattr(
+	file string,
+	attr string,
+	data []byte,
+	flags int,
+) (err error) {
 	var d unsafe.Pointer
 	if len(data) > 0 {
 		d = unsafe.Pointer(&data[0])
@@ -113,11 +164,22 @@ func Setxattr(file string, attr string, data []byte, flags int) (err error) {
 		return
 	}
 
-	_, err = ExtattrSetFile(file, nsid, a, uintptr(d), datasiz)
+	_, err = ExtattrSetFile(
+		file,
+		nsid,
+		a,
+		uintptr(d),
+		datasiz,
+	)
 	return
 }
 
-func Lsetxattr(link string, attr string, data []byte, flags int) (err error) {
+func Lsetxattr(
+	link string,
+	attr string,
+	data []byte,
+	flags int,
+) (err error) {
 	var d unsafe.Pointer
 	if len(data) > 0 {
 		d = unsafe.Pointer(&data[0])
@@ -129,11 +191,20 @@ func Lsetxattr(link string, attr string, data []byte, flags int) (err error) {
 		return
 	}
 
-	_, err = ExtattrSetLink(link, nsid, a, uintptr(d), datasiz)
+	_, err = ExtattrSetLink(
+		link,
+		nsid,
+		a,
+		uintptr(d),
+		datasiz,
+	)
 	return
 }
 
-func Removexattr(file string, attr string) (err error) {
+func Removexattr(
+	file string,
+	attr string,
+) (err error) {
 	nsid, a, err := xattrnamespace(attr)
 	if err != nil {
 		return
@@ -143,7 +214,10 @@ func Removexattr(file string, attr string) (err error) {
 	return
 }
 
-func Fremovexattr(fd int, attr string) (err error) {
+func Fremovexattr(
+	fd int,
+	attr string,
+) (err error) {
 	nsid, a, err := xattrnamespace(attr)
 	if err != nil {
 		return
@@ -153,7 +227,10 @@ func Fremovexattr(fd int, attr string) (err error) {
 	return
 }
 
-func Lremovexattr(link string, attr string) (err error) {
+func Lremovexattr(
+	link string,
+	attr string,
+) (err error) {
 	nsid, a, err := xattrnamespace(attr)
 	if err != nil {
 		return
@@ -163,13 +240,20 @@ func Lremovexattr(link string, attr string) (err error) {
 	return
 }
 
-func Listxattr(file string, dest []byte) (sz int, err error) {
+func Listxattr(
+	file string,
+	dest []byte,
+) (sz int, err error) {
 	destsiz := len(dest)
 
 	// FreeBSD won't allow you to list xattrs from multiple namespaces
 	s, pos := 0, 0
 	for _, nsid := range [...]int{EXTATTR_NAMESPACE_USER, EXTATTR_NAMESPACE_SYSTEM} {
-		stmp, e := ListxattrNS(file, nsid, dest[pos:])
+		stmp, e := ListxattrNS(
+			file,
+			nsid,
+			dest[pos:],
+		)
 
 		/* Errors accessing system attrs are ignored so that
 		 * we can implement the Linux-like behavior of omitting errors that
@@ -179,7 +263,8 @@ func Listxattr(file string, dest []byte) (sz int, err error) {
 		 * we don't have read permissions on, so don't ignore those errors
 		 */
 		if e != nil {
-			if e == EPERM && nsid != EXTATTR_NAMESPACE_USER {
+			if e == EPERM &&
+				nsid != EXTATTR_NAMESPACE_USER {
 				continue
 			}
 			return s, e
@@ -195,11 +280,20 @@ func Listxattr(file string, dest []byte) (sz int, err error) {
 	return s, nil
 }
 
-func ListxattrNS(file string, nsid int, dest []byte) (sz int, err error) {
+func ListxattrNS(
+	file string,
+	nsid int,
+	dest []byte,
+) (sz int, err error) {
 	d := initxattrdest(dest, 0)
 	destsiz := len(dest)
 
-	s, e := ExtattrListFile(file, nsid, uintptr(d), destsiz)
+	s, e := ExtattrListFile(
+		file,
+		nsid,
+		uintptr(d),
+		destsiz,
+	)
 	if e != nil {
 		return 0, err
 	}
@@ -207,15 +301,23 @@ func ListxattrNS(file string, nsid int, dest []byte) (sz int, err error) {
 	return s, nil
 }
 
-func Flistxattr(fd int, dest []byte) (sz int, err error) {
+func Flistxattr(
+	fd int,
+	dest []byte,
+) (sz int, err error) {
 	destsiz := len(dest)
 
 	s, pos := 0, 0
 	for _, nsid := range [...]int{EXTATTR_NAMESPACE_USER, EXTATTR_NAMESPACE_SYSTEM} {
-		stmp, e := FlistxattrNS(fd, nsid, dest[pos:])
+		stmp, e := FlistxattrNS(
+			fd,
+			nsid,
+			dest[pos:],
+		)
 
 		if e != nil {
-			if e == EPERM && nsid != EXTATTR_NAMESPACE_USER {
+			if e == EPERM &&
+				nsid != EXTATTR_NAMESPACE_USER {
 				continue
 			}
 			return s, e
@@ -231,11 +333,20 @@ func Flistxattr(fd int, dest []byte) (sz int, err error) {
 	return s, nil
 }
 
-func FlistxattrNS(fd int, nsid int, dest []byte) (sz int, err error) {
+func FlistxattrNS(
+	fd int,
+	nsid int,
+	dest []byte,
+) (sz int, err error) {
 	d := initxattrdest(dest, 0)
 	destsiz := len(dest)
 
-	s, e := ExtattrListFd(fd, nsid, uintptr(d), destsiz)
+	s, e := ExtattrListFd(
+		fd,
+		nsid,
+		uintptr(d),
+		destsiz,
+	)
 	if e != nil {
 		return 0, err
 	}
@@ -243,15 +354,23 @@ func FlistxattrNS(fd int, nsid int, dest []byte) (sz int, err error) {
 	return s, nil
 }
 
-func Llistxattr(link string, dest []byte) (sz int, err error) {
+func Llistxattr(
+	link string,
+	dest []byte,
+) (sz int, err error) {
 	destsiz := len(dest)
 
 	s, pos := 0, 0
 	for _, nsid := range [...]int{EXTATTR_NAMESPACE_USER, EXTATTR_NAMESPACE_SYSTEM} {
-		stmp, e := LlistxattrNS(link, nsid, dest[pos:])
+		stmp, e := LlistxattrNS(
+			link,
+			nsid,
+			dest[pos:],
+		)
 
 		if e != nil {
-			if e == EPERM && nsid != EXTATTR_NAMESPACE_USER {
+			if e == EPERM &&
+				nsid != EXTATTR_NAMESPACE_USER {
 				continue
 			}
 			return s, e
@@ -267,11 +386,20 @@ func Llistxattr(link string, dest []byte) (sz int, err error) {
 	return s, nil
 }
 
-func LlistxattrNS(link string, nsid int, dest []byte) (sz int, err error) {
+func LlistxattrNS(
+	link string,
+	nsid int,
+	dest []byte,
+) (sz int, err error) {
 	d := initxattrdest(dest, 0)
 	destsiz := len(dest)
 
-	s, e := ExtattrListLink(link, nsid, uintptr(d), destsiz)
+	s, e := ExtattrListLink(
+		link,
+		nsid,
+		uintptr(d),
+		destsiz,
+	)
 	if e != nil {
 		return 0, err
 	}

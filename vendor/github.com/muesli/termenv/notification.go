@@ -7,5 +7,7 @@ func Notify(title, body string) {
 
 // Notify triggers a notification using OSC777.
 func (o *Output) Notify(title, body string) {
-	_, _ = o.WriteString(OSC + "777;notify;" + title + ";" + body + ST)
+	_, _ = o.WriteString(
+		OSC + "777;notify;" + title + ";" + body + ST,
+	)
 }

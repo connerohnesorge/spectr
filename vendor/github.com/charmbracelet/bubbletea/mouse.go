@@ -29,8 +29,10 @@ type MouseEvent struct {
 
 // IsWheel returns true if the mouse event is a wheel event.
 func (m MouseEvent) IsWheel() bool {
-	return m.Button == MouseButtonWheelUp || m.Button == MouseButtonWheelDown ||
-		m.Button == MouseButtonWheelLeft || m.Button == MouseButtonWheelRight
+	return m.Button == MouseButtonWheelUp ||
+		m.Button == MouseButtonWheelDown ||
+		m.Button == MouseButtonWheelLeft ||
+		m.Button == MouseButtonWheelRight
 }
 
 // String returns a string representation of a mouse event.
@@ -46,7 +48,8 @@ func (m MouseEvent) String() (s string) {
 	}
 
 	if m.Button == MouseButtonNone { //nolint:nestif
-		if m.Action == MouseActionMotion || m.Action == MouseActionRelease {
+		if m.Action == MouseActionMotion ||
+			m.Action == MouseActionRelease {
 			s += mouseActions[m.Action]
 		} else {
 			s += "unknown"
@@ -171,7 +174,9 @@ const (
 // https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Extended-coordinates
 func parseSGRMouseEvent(buf []byte) MouseEvent {
 	str := string(buf[3:])
-	matches := mouseSGRRegex.FindStringSubmatch(str)
+	matches := mouseSGRRegex.FindStringSubmatch(
+		str,
+	)
 	if len(matches) != 5 { //nolint:mnd
 		// Unreachable, we already checked the regex in `detectOneMsg`.
 		panic("invalid mouse event")
@@ -185,7 +190,9 @@ func parseSGRMouseEvent(buf []byte) MouseEvent {
 
 	// Wheel buttons don't have release events
 	// Motion can be reported as a release event in some terminals (Windows Terminal)
-	if m.Action != MouseActionMotion && !m.IsWheel() && release {
+	if m.Action != MouseActionMotion &&
+		!m.IsWheel() &&
+		release {
 		m.Action = MouseActionRelease
 		m.Type = MouseRelease
 	}
@@ -223,7 +230,10 @@ func parseX10MouseEvent(buf []byte) MouseEvent {
 }
 
 // See: https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Extended-coordinates
-func parseMouseButton(b int, isSGR bool) MouseEvent {
+func parseMouseButton(
+	b int,
+	isSGR bool,
+) MouseEvent {
 	var m MouseEvent
 	e := b
 	if !isSGR {
@@ -242,7 +252,9 @@ func parseMouseButton(b int, isSGR bool) MouseEvent {
 	)
 
 	if e&bitAdd != 0 {
-		m.Button = MouseButtonBackward + MouseButton(e&bitsMask)
+		m.Button = MouseButtonBackward + MouseButton(
+			e&bitsMask,
+		)
 	} else if e&bitWheel != 0 {
 		m.Button = MouseButtonWheelUp + MouseButton(e&bitsMask)
 	} else {

@@ -10,89 +10,156 @@ import (
 )
 
 // validateMixedIndentation checks mixed indentation test case
-func validateMixedIndentation(t *testing.T, tasks []parsers.Task) {
+func validateMixedIndentation(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 2 {
-		t.Errorf("Expected 2 tasks, got %d", len(tasks))
+		t.Errorf(
+			"Expected 2 tasks, got %d",
+			len(tasks),
+		)
 	}
-	if !strings.Contains(tasks[0].Description, "Sub-item one") {
+	if !strings.Contains(
+		tasks[0].Description,
+		"Sub-item one",
+	) {
 		t.Error("Failed to capture sub-item one")
 	}
-	if !strings.Contains(tasks[0].Description, "Nested item") {
+	if !strings.Contains(
+		tasks[0].Description,
+		"Nested item",
+	) {
 		t.Error("Failed to capture nested item")
 	}
-	if !strings.Contains(tasks[0].Description, "Sub-item two") {
+	if !strings.Contains(
+		tasks[0].Description,
+		"Sub-item two",
+	) {
 		t.Error("Failed to capture sub-item two")
 	}
 }
 
 // validateTabsAndSpaces checks tabs and spaces mixed test case
-func validateTabsAndSpaces(t *testing.T, tasks []parsers.Task) {
+func validateTabsAndSpaces(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	desc := tasks[0].Description
 	if !strings.Contains(desc, "Tab-indented") {
-		t.Error("Failed to capture tab-indented sub-item")
+		t.Error(
+			"Failed to capture tab-indented sub-item",
+		)
 	}
 	if !strings.Contains(desc, "Space-indented") {
-		t.Error("Failed to capture space-indented sub-item")
+		t.Error(
+			"Failed to capture space-indented sub-item",
+		)
 	}
 }
 
 // validateEmptyLines checks empty lines within continuation test case
-func validateEmptyLines(t *testing.T, tasks []parsers.Task) {
+func validateEmptyLines(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 2 {
-		t.Errorf("Expected 2 tasks, got %d", len(tasks))
+		t.Errorf(
+			"Expected 2 tasks, got %d",
+			len(tasks),
+		)
 	}
-	if !strings.Contains(tasks[0].Description, "Item one") {
+	if !strings.Contains(
+		tasks[0].Description,
+		"Item one",
+	) {
 		t.Error("Failed to capture Item one")
 	}
-	if strings.Contains(tasks[0].Description, "Item two") {
-		t.Error("Item two should not be captured (after blank line)")
+	if strings.Contains(
+		tasks[0].Description,
+		"Item two",
+	) {
+		t.Error(
+			"Item two should not be captured (after blank line)",
+		)
 	}
 }
 
 // validateSpecialChars checks special characters test case
-func validateSpecialChars(t *testing.T, tasks []parsers.Task) {
+func validateSpecialChars(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	desc := tasks[0].Description
 	if !strings.Contains(desc, "Backslash") {
-		t.Error("Failed to capture backslash item")
+		t.Error(
+			"Failed to capture backslash item",
+		)
 	}
 	if !strings.Contains(desc, "Quote") {
 		t.Error("Failed to capture quote item")
 	}
 	if !strings.Contains(desc, "\\test") {
-		t.Error("Failed to preserve backslash in content")
+		t.Error(
+			"Failed to preserve backslash in content",
+		)
 	}
 }
 
 // validateUnicode checks unicode in continuation lines test case
-func validateUnicode(t *testing.T, tasks []parsers.Task) {
+func validateUnicode(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	desc := tasks[0].Description
 	if !strings.Contains(desc, "🚀") {
 		t.Error("Failed to preserve emoji")
 	}
 	if !strings.Contains(desc, "你好") {
-		t.Error("Failed to preserve Chinese characters")
+		t.Error(
+			"Failed to preserve Chinese characters",
+		)
 	}
 	if !strings.Contains(desc, "مرحبا") {
-		t.Error("Failed to preserve Arabic characters")
+		t.Error(
+			"Failed to preserve Arabic characters",
+		)
 	}
 	if !strings.Contains(desc, "Привет") {
-		t.Error("Failed to preserve Russian characters")
+		t.Error(
+			"Failed to preserve Russian characters",
+		)
 	}
 }
 
 // validateLongContent checks very long continuation lines test case
-func validateLongContent(t *testing.T, tasks []parsers.Task) {
+func validateLongContent(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	if len(tasks[0].Description) < 200 {
 		t.Errorf(
@@ -103,9 +170,15 @@ func validateLongContent(t *testing.T, tasks []parsers.Task) {
 }
 
 // validateCodeBlocks checks code blocks in continuation test case
-func validateCodeBlocks(t *testing.T, tasks []parsers.Task) {
+func validateCodeBlocks(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	desc := tasks[0].Description
 	if !strings.Contains(desc, "fmt.Println") {
@@ -117,31 +190,60 @@ func validateCodeBlocks(t *testing.T, tasks []parsers.Task) {
 }
 
 // validateMultipleSections checks multiple sections with multi-line tasks test case
-func validateMultipleSections(t *testing.T, tasks []parsers.Task) {
+func validateMultipleSections(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 3 {
-		t.Errorf("Expected 3 tasks, got %d", len(tasks))
+		t.Errorf(
+			"Expected 3 tasks, got %d",
+			len(tasks),
+		)
 	}
-	if !strings.Contains(tasks[0].Description, "Detail A") {
+	if !strings.Contains(
+		tasks[0].Description,
+		"Detail A",
+	) {
 		t.Error("Task 1 missing Detail A")
 	}
-	if !strings.Contains(tasks[1].Description, "Detail X") {
+	if !strings.Contains(
+		tasks[1].Description,
+		"Detail X",
+	) {
 		t.Error("Task 2 missing Detail X")
 	}
-	if !strings.Contains(tasks[2].Description, "Detail 3") {
+	if !strings.Contains(
+		tasks[2].Description,
+		"Detail 3",
+	) {
 		t.Error("Task 3 missing Detail 3")
 	}
-	if strings.Contains(tasks[0].Description, "Detail X") {
-		t.Error("Task 1 incorrectly includes Task 2 details")
+	if strings.Contains(
+		tasks[0].Description,
+		"Detail X",
+	) {
+		t.Error(
+			"Task 1 incorrectly includes Task 2 details",
+		)
 	}
 }
 
 // validateMixedLists checks numbered and unnumbered sub-items test case
-func validateMixedLists(t *testing.T, tasks []parsers.Task) {
+func validateMixedLists(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	desc := tasks[0].Description
-	if !strings.Contains(desc, "Bullet item one") {
+	if !strings.Contains(
+		desc,
+		"Bullet item one",
+	) {
 		t.Error("Failed to capture bullet item")
 	}
 	if !strings.Contains(desc, "Numbered item") {
@@ -150,17 +252,30 @@ func validateMixedLists(t *testing.T, tasks []parsers.Task) {
 }
 
 // validateMinimalTask checks task with only continuation test case
-func validateMinimalTask(t *testing.T, tasks []parsers.Task) {
+func validateMinimalTask(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
 	if len(tasks) != 2 {
-		t.Errorf("Expected 2 tasks, got %d", len(tasks))
+		t.Errorf(
+			"Expected 2 tasks, got %d",
+			len(tasks),
+		)
 	}
-	if !strings.Contains(tasks[0].Description, "minimal base text") {
-		t.Error("Failed to capture continuation for minimal task")
+	if !strings.Contains(
+		tasks[0].Description,
+		"minimal base text",
+	) {
+		t.Error(
+			"Failed to capture continuation for minimal task",
+		)
 	}
 }
 
 // TestParseTasksMdFuzzMultilineVariations tests various multi-line task description patterns
-func TestParseTasksMdFuzzMultilineVariations(t *testing.T) {
+func TestParseTasksMdFuzzMultilineVariations(
+	t *testing.T,
+) {
 	tests := []struct {
 		name     string
 		markdown string
@@ -297,15 +412,24 @@ func TestParseTasksMdFuzzMultilineVariations(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			tasksMdPath := filepath.Join(tmpDir, "tasks.md")
+			tasksMdPath := filepath.Join(
+				tmpDir,
+				"tasks.md",
+			)
 
 			if err := os.WriteFile(tasksMdPath, []byte(tt.markdown), 0o644); err != nil {
-				t.Fatalf("failed to write test file: %v", err)
+				t.Fatalf(
+					"failed to write test file: %v",
+					err,
+				)
 			}
 
 			got, err := parseTasksMd(tasksMdPath)
 			if err != nil {
-				t.Fatalf("parseTasksMd() error = %v", err)
+				t.Fatalf(
+					"parseTasksMd() error = %v",
+					err,
+				)
 			}
 
 			if tt.validate != nil {
@@ -316,104 +440,182 @@ func TestParseTasksMdFuzzMultilineVariations(t *testing.T) {
 }
 
 // validateOnlySections checks file with only sections no tasks
-func validateOnlySections(t *testing.T, tasks []parsers.Task, err error) {
+func validateOnlySections(
+	t *testing.T,
+	tasks []parsers.Task,
+	err error,
+) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if len(tasks) != 0 {
-		t.Errorf("Expected 0 tasks, got %d", len(tasks))
+		t.Errorf(
+			"Expected 0 tasks, got %d",
+			len(tasks),
+		)
 	}
 }
 
 // validateOnlyTasks checks file with only tasks no sections
-func validateOnlyTasks(t *testing.T, tasks []parsers.Task, err error) {
+func validateOnlyTasks(
+	t *testing.T,
+	tasks []parsers.Task,
+	err error,
+) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if len(tasks) != 3 {
-		t.Errorf("Expected 3 tasks, got %d", len(tasks))
+		t.Errorf(
+			"Expected 3 tasks, got %d",
+			len(tasks),
+		)
 	}
 }
 
 // validateContinuationAtEnd checks continuation lines at end of file
-func validateContinuationAtEnd(t *testing.T, tasks []parsers.Task, err error) {
+func validateContinuationAtEnd(
+	t *testing.T,
+	tasks []parsers.Task,
+	err error,
+) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	desc := tasks[0].Description
-	if !strings.Contains(desc, "Continuation three") {
-		t.Error("Failed to capture last continuation line")
+	if !strings.Contains(
+		desc,
+		"Continuation three",
+	) {
+		t.Error(
+			"Failed to capture last continuation line",
+		)
 	}
 }
 
 // validateDeepNesting checks deeply nested indentation
-func validateDeepNesting(t *testing.T, tasks []parsers.Task, err error) {
+func validateDeepNesting(
+	t *testing.T,
+	tasks []parsers.Task,
+	err error,
+) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	desc := tasks[0].Description
 	if !strings.Contains(desc, "Level 5") {
-		t.Error("Failed to capture deeply nested items")
+		t.Error(
+			"Failed to capture deeply nested items",
+		)
 	}
 }
 
 // validateMarkdownFormatting checks task descriptions with markdown formatting
-func validateMarkdownFormatting(t *testing.T, tasks []parsers.Task, err error) {
+func validateMarkdownFormatting(
+	t *testing.T,
+	tasks []parsers.Task,
+	err error,
+) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
 	desc := tasks[0].Description
 	if !strings.Contains(desc, "**bold**") {
-		t.Error("Failed to preserve markdown bold")
+		t.Error(
+			"Failed to preserve markdown bold",
+		)
 	}
 	if !strings.Contains(desc, "_underscore_") {
-		t.Error("Failed to preserve underscore emphasis")
+		t.Error(
+			"Failed to preserve underscore emphasis",
+		)
 	}
 }
 
 // validateWhitespaceOnly checks whitespace-only continuation lines treated as stop
-func validateWhitespaceOnly(t *testing.T, tasks []parsers.Task, err error) {
+func validateWhitespaceOnly(
+	t *testing.T,
+	tasks []parsers.Task,
+	err error,
+) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if len(tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasks),
+		)
 	}
-	if strings.Contains(tasks[0].Description, "Item two") {
-		t.Error("Item two should not be captured (after blank line)")
+	if strings.Contains(
+		tasks[0].Description,
+		"Item two",
+	) {
+		t.Error(
+			"Item two should not be captured (after blank line)",
+		)
 	}
 }
 
 // validateUnusualIDs checks task IDs with unusual formats
-func validateUnusualIDs(t *testing.T, tasks []parsers.Task, err error) {
+func validateUnusualIDs(
+	t *testing.T,
+	tasks []parsers.Task,
+	err error,
+) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if len(tasks) < 3 {
-		t.Errorf("Expected at least 3 tasks, got %d", len(tasks))
+		t.Errorf(
+			"Expected at least 3 tasks, got %d",
+			len(tasks),
+		)
 	}
 }
 
 // validateRapidAlternation checks rapid alternation between tasks and continuations
-func validateRapidAlternation(t *testing.T, tasks []parsers.Task, err error) {
+func validateRapidAlternation(
+	t *testing.T,
+	tasks []parsers.Task,
+	err error,
+) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if len(tasks) != 4 {
-		t.Errorf("Expected 4 tasks, got %d", len(tasks))
+		t.Errorf(
+			"Expected 4 tasks, got %d",
+			len(tasks),
+		)
 	}
 	for i, task := range tasks {
-		if !strings.Contains(task.Description, "Detail") {
-			t.Errorf("Task %d missing detail", i+1)
+		if !strings.Contains(
+			task.Description,
+			"Detail",
+		) {
+			t.Errorf(
+				"Task %d missing detail",
+				i+1,
+			)
 		}
 	}
 }
@@ -520,10 +722,16 @@ func TestParseTasksMdFuzzEdgeCases(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
-			tasksMdPath := filepath.Join(tmpDir, "tasks.md")
+			tasksMdPath := filepath.Join(
+				tmpDir,
+				"tasks.md",
+			)
 
 			if err := os.WriteFile(tasksMdPath, []byte(tt.markdown), 0o644); err != nil {
-				t.Fatalf("failed to write test file: %v", err)
+				t.Fatalf(
+					"failed to write test file: %v",
+					err,
+				)
 			}
 
 			got, err := parseTasksMd(tasksMdPath)
@@ -536,31 +744,58 @@ func TestParseTasksMdFuzzEdgeCases(t *testing.T) {
 }
 
 // testTaskParsed checks basic task parsing
-func testTaskParsed(t *testing.T, task *parsers.Task, expectedID, expectedContent string) {
-	if task.ID != expectedID || task.Description != expectedContent {
-		t.Errorf("Task %s corrupted: %+v", expectedID, task)
+func testTaskParsed(
+	t *testing.T,
+	task *parsers.Task,
+	expectedID, expectedContent string,
+) {
+	if task.ID != expectedID ||
+		task.Description != expectedContent {
+		t.Errorf(
+			"Task %s corrupted: %+v",
+			expectedID,
+			task,
+		)
 	}
 }
 
 // testEscapedCharacters checks task with escaped characters
-func testEscapedCharacters(t *testing.T, task *parsers.Task) {
-	if !strings.Contains(task.Description, "TestJSONCValidation_SpecialCharacters") {
+func testEscapedCharacters(
+	t *testing.T,
+	task *parsers.Task,
+) {
+	if !strings.Contains(
+		task.Description,
+		"TestJSONCValidation_SpecialCharacters",
+	) {
 		t.Error("Task 1.2 lost title")
 	}
 	if !strings.Contains(task.Description, "\\") {
 		t.Error("Task 1.2 lost backslash")
 	}
-	if !strings.Contains(task.Description, "\\n") {
+	if !strings.Contains(
+		task.Description,
+		"\\n",
+	) {
 		t.Error("Task 1.2 lost newline escape")
 	}
-	if !strings.Contains(task.Description, "\\t") {
+	if !strings.Contains(
+		task.Description,
+		"\\t",
+	) {
 		t.Error("Task 1.2 lost tab escape")
 	}
 }
 
 // testUnicodeContent checks task with unicode
-func testUnicodeContent(t *testing.T, task *parsers.Task) {
-	if !strings.Contains(task.Description, "TestJSONCValidation_Unicode") {
+func testUnicodeContent(
+	t *testing.T,
+	task *parsers.Task,
+) {
+	if !strings.Contains(
+		task.Description,
+		"TestJSONCValidation_Unicode",
+	) {
 		t.Error("Task 1.3 lost title")
 	}
 	if !strings.Contains(task.Description, "🚀") {
@@ -572,52 +807,104 @@ func testUnicodeContent(t *testing.T, task *parsers.Task) {
 }
 
 // testSubItems checks task with multiple sub-items
-func testSubItems(t *testing.T, task *parsers.Task) {
+func testSubItems(
+	t *testing.T,
+	task *parsers.Task,
+) {
 	if task.ID != "1.4" {
-		t.Errorf("Task 1.4 has wrong ID: %s", task.ID)
+		t.Errorf(
+			"Task 1.4 has wrong ID: %s",
+			task.ID,
+		)
 	}
-	if !strings.Contains(task.Description, "Sub-item one") {
+	if !strings.Contains(
+		task.Description,
+		"Sub-item one",
+	) {
 		t.Error("Task 1.4 lost Sub-item one")
 	}
-	if !strings.Contains(task.Description, "Sub-item three") {
+	if !strings.Contains(
+		task.Description,
+		"Sub-item three",
+	) {
 		t.Error("Task 1.4 lost Sub-item three")
 	}
 }
 
 // testNoCrossContamination checks no cross-contamination between tasks
-func testNoCrossContamination(t *testing.T, tasks []parsers.Task) {
-	if strings.Contains(tasks[0].Description, "Special") {
-		t.Error("Task 1.1 incorrectly includes Task 1.2 content")
+func testNoCrossContamination(
+	t *testing.T,
+	tasks []parsers.Task,
+) {
+	if strings.Contains(
+		tasks[0].Description,
+		"Special",
+	) {
+		t.Error(
+			"Task 1.1 incorrectly includes Task 1.2 content",
+		)
 	}
-	if strings.Contains(tasks[1].Description, "Unicode") {
-		t.Error("Task 1.2 incorrectly includes Task 1.3 content")
+	if strings.Contains(
+		tasks[1].Description,
+		"Unicode",
+	) {
+		t.Error(
+			"Task 1.2 incorrectly includes Task 1.3 content",
+		)
 	}
 }
 
 // testJSONSerializationIntegrity checks JSON output preserves content
-func testJSONSerializationIntegrity(t *testing.T, jsonStr string) {
-	if !strings.Contains(jsonStr, "TestJSONCValidation_SpecialCharacters") {
-		t.Error("Special characters task title lost in JSON output")
+func testJSONSerializationIntegrity(
+	t *testing.T,
+	jsonStr string,
+) {
+	if !strings.Contains(
+		jsonStr,
+		"TestJSONCValidation_SpecialCharacters",
+	) {
+		t.Error(
+			"Special characters task title lost in JSON output",
+		)
 	}
 	if !strings.Contains(jsonStr, "Backslash") {
-		t.Error("Backslash item lost in JSON output")
+		t.Error(
+			"Backslash item lost in JSON output",
+		)
 	}
-	if !strings.Contains(jsonStr, "TestJSONCValidation_Unicode") {
-		t.Error("Unicode task title lost in JSON output")
+	if !strings.Contains(
+		jsonStr,
+		"TestJSONCValidation_Unicode",
+	) {
+		t.Error(
+			"Unicode task title lost in JSON output",
+		)
 	}
 	if !strings.Contains(jsonStr, "🚀") {
 		t.Error("Emoji lost in JSON output")
 	}
-	if !strings.Contains(jsonStr, "Sub-item one") {
-		t.Error("Sub-item content lost in JSON output")
+	if !strings.Contains(
+		jsonStr,
+		"Sub-item one",
+	) {
+		t.Error(
+			"Sub-item content lost in JSON output",
+		)
 	}
-	if !strings.Contains(jsonStr, "Sub-item three") {
-		t.Error("Last sub-item lost in JSON output")
+	if !strings.Contains(
+		jsonStr,
+		"Sub-item three",
+	) {
+		t.Error(
+			"Last sub-item lost in JSON output",
+		)
 	}
 }
 
 // TestParseTasksMdContinuationIntegrity ensures multi-line parsing doesn't corrupt data
-func TestParseTasksMdContinuationIntegrity(t *testing.T) {
+func TestParseTasksMdContinuationIntegrity(
+	t *testing.T,
+) {
 	markdown := `## 1. Property-Based Testing
 
 - [ ] 1.1 Create test infrastructure
@@ -636,10 +923,16 @@ func TestParseTasksMdContinuationIntegrity(t *testing.T) {
 `
 
 	tmpDir := t.TempDir()
-	tasksMdPath := filepath.Join(tmpDir, "tasks.md")
+	tasksMdPath := filepath.Join(
+		tmpDir,
+		"tasks.md",
+	)
 
 	if err := os.WriteFile(tasksMdPath, []byte(markdown), 0o644); err != nil {
-		t.Fatalf("failed to write test file: %v", err)
+		t.Fatalf(
+			"failed to write test file: %v",
+			err,
+		)
 	}
 
 	got, err := parseTasksMd(tasksMdPath)
@@ -648,23 +941,40 @@ func TestParseTasksMdContinuationIntegrity(t *testing.T) {
 	}
 
 	if len(got) != 4 {
-		t.Fatalf("Expected 4 tasks, got %d", len(got))
+		t.Fatalf(
+			"Expected 4 tasks, got %d",
+			len(got),
+		)
 	}
 
-	testTaskParsed(t, &got[0], "1.1", "Create test infrastructure")
+	testTaskParsed(
+		t,
+		&got[0],
+		"1.1",
+		"Create test infrastructure",
+	)
 	testEscapedCharacters(t, &got[1])
 	testUnicodeContent(t, &got[2])
 	testSubItems(t, &got[3])
 	testNoCrossContamination(t, got)
 
-	tasksJSONPath := filepath.Join(tmpDir, "tasks.jsonc")
+	tasksJSONPath := filepath.Join(
+		tmpDir,
+		"tasks.jsonc",
+	)
 	if err := writeTasksJSONC(tasksJSONPath, got, nil); err != nil {
-		t.Fatalf("writeTasksJSONC() error = %v", err)
+		t.Fatalf(
+			"writeTasksJSONC() error = %v",
+			err,
+		)
 	}
 
 	jsonContent, err := os.ReadFile(tasksJSONPath)
 	if err != nil {
-		t.Fatalf("failed to read generated JSON: %v", err)
+		t.Fatalf(
+			"failed to read generated JSON: %v",
+			err,
+		)
 	}
 
 	jsonStr := string(jsonContent)
@@ -672,7 +982,9 @@ func TestParseTasksMdContinuationIntegrity(t *testing.T) {
 }
 
 // BenchmarkParseTasksMdMultiline benchmarks multi-line task parsing performance
-func BenchmarkParseTasksMdMultiline(b *testing.B) {
+func BenchmarkParseTasksMdMultiline(
+	b *testing.B,
+) {
 	markdown := `## 1. Section One
 
 - [ ] 1.1 Task one
@@ -707,17 +1019,26 @@ func BenchmarkParseTasksMdMultiline(b *testing.B) {
 `
 
 	tmpDir := b.TempDir()
-	tasksMdPath := filepath.Join(tmpDir, "tasks.md")
+	tasksMdPath := filepath.Join(
+		tmpDir,
+		"tasks.md",
+	)
 
 	if err := os.WriteFile(tasksMdPath, []byte(markdown), 0o644); err != nil {
-		b.Fatalf("failed to write test file: %v", err)
+		b.Fatalf(
+			"failed to write test file: %v",
+			err,
+		)
 	}
 
 	b.ResetTimer()
 	for range b.N {
 		_, err := parseTasksMd(tasksMdPath)
 		if err != nil {
-			b.Fatalf("parseTasksMd() error = %v", err)
+			b.Fatalf(
+				"parseTasksMd() error = %v",
+				err,
+			)
 		}
 	}
 }

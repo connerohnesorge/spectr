@@ -12,11 +12,17 @@ package unix
 //sys	mmap(addr uintptr, length uintptr, prot int, flags int, fd int, offset int64) (xaddr uintptr, err error)
 
 func setTimespec(sec, nsec int64) Timespec {
-	return Timespec{Sec: int32(sec), Nsec: int32(nsec)}
+	return Timespec{
+		Sec:  int32(sec),
+		Nsec: int32(nsec),
+	}
 }
 
 func setTimeval(sec, usec int64) Timeval {
-	return Timeval{Sec: int32(sec), Usec: int32(usec)}
+	return Timeval{
+		Sec:  int32(sec),
+		Usec: int32(usec),
+	}
 }
 
 func (iov *Iovec) SetLen(length int) {
@@ -39,7 +45,12 @@ func Fstat(fd int, stat *Stat_t) error {
 	return fstat(fd, stat)
 }
 
-func Fstatat(dirfd int, path string, stat *Stat_t, flags int) error {
+func Fstatat(
+	dirfd int,
+	path string,
+	stat *Stat_t,
+	flags int,
+) error {
 	return fstatat(dirfd, path, stat, flags)
 }
 

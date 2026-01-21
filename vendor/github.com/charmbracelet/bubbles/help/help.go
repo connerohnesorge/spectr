@@ -59,20 +59,23 @@ type Model struct {
 
 // New creates a new help view with some useful defaults.
 func New() Model {
-	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-		Light: "#909090",
-		Dark:  "#626262",
-	})
+	keyStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.AdaptiveColor{
+			Light: "#909090",
+			Dark:  "#626262",
+		})
 
-	descStyle := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-		Light: "#B2B2B2",
-		Dark:  "#4A4A4A",
-	})
+	descStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.AdaptiveColor{
+			Light: "#B2B2B2",
+			Dark:  "#4A4A4A",
+		})
 
-	sepStyle := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{
-		Light: "#DDDADA",
-		Dark:  "#3C3C3C",
-	})
+	sepStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.AdaptiveColor{
+			Light: "#DDDADA",
+			Dark:  "#3C3C3C",
+		})
 
 	return Model{
 		ShortSeparator: " • ",
@@ -96,7 +99,9 @@ func New() Model {
 var NewModel = New
 
 // Update helps satisfy the Bubble Tea Model interface. It's a no-op.
-func (m Model) Update(_ tea.Msg) (Model, tea.Cmd) {
+func (m Model) Update(
+	_ tea.Msg,
+) (Model, tea.Cmd) {
 	return m, nil
 }
 
@@ -111,14 +116,17 @@ func (m Model) View(k KeyMap) string {
 // ShortHelpView renders a single line help view from a slice of keybindings.
 // If the line is longer than the maximum width it will be gracefully
 // truncated, showing only as many help items as possible.
-func (m Model) ShortHelpView(bindings []key.Binding) string {
+func (m Model) ShortHelpView(
+	bindings []key.Binding,
+) string {
 	if len(bindings) == 0 {
 		return ""
 	}
 
 	var b strings.Builder
 	var totalWidth int
-	separator := m.Styles.ShortSeparator.Inline(true).Render(m.ShortSeparator)
+	separator := m.Styles.ShortSeparator.Inline(true).
+		Render(m.ShortSeparator)
 
 	for i, kb := range bindings {
 		if !kb.Enabled() {
@@ -133,8 +141,11 @@ func (m Model) ShortHelpView(bindings []key.Binding) string {
 
 		// Item
 		str := sep +
-			m.Styles.ShortKey.Inline(true).Render(kb.Help().Key) + " " +
-			m.Styles.ShortDesc.Inline(true).Render(kb.Help().Desc)
+			m.Styles.ShortKey.Inline(true).
+				Render(kb.Help().Key) +
+			" " +
+			m.Styles.ShortDesc.Inline(true).
+				Render(kb.Help().Desc)
 		w := lipgloss.Width(str)
 
 		// Tail
@@ -154,7 +165,9 @@ func (m Model) ShortHelpView(bindings []key.Binding) string {
 
 // FullHelpView renders help columns from a slice of key binding slices. Each
 // top level slice entry renders into a column.
-func (m Model) FullHelpView(groups [][]key.Binding) string {
+func (m Model) FullHelpView(
+	groups [][]key.Binding,
+) string {
 	if len(groups) == 0 {
 		return ""
 	}
@@ -166,12 +179,14 @@ func (m Model) FullHelpView(groups [][]key.Binding) string {
 		out []string
 
 		totalWidth int
-		separator  = m.Styles.FullSeparator.Inline(true).Render(m.FullSeparator)
+		separator  = m.Styles.FullSeparator.Inline(true).
+				Render(m.FullSeparator)
 	)
 
 	// Iterate over groups to build columns
 	for i, group := range groups {
-		if group == nil || !shouldRenderColumn(group) {
+		if group == nil ||
+			!shouldRenderColumn(group) {
 			continue
 		}
 		var (
@@ -191,15 +206,23 @@ func (m Model) FullHelpView(groups [][]key.Binding) string {
 				continue
 			}
 			keys = append(keys, kb.Help().Key)
-			descriptions = append(descriptions, kb.Help().Desc)
+			descriptions = append(
+				descriptions,
+				kb.Help().Desc,
+			)
 		}
 
 		// Column
-		col := lipgloss.JoinHorizontal(lipgloss.Top,
+		col := lipgloss.JoinHorizontal(
+			lipgloss.Top,
 			sep,
-			m.Styles.FullKey.Render(strings.Join(keys, "\n")),
+			m.Styles.FullKey.Render(
+				strings.Join(keys, "\n"),
+			),
 			" ",
-			m.Styles.FullDesc.Render(strings.Join(descriptions, "\n")),
+			m.Styles.FullDesc.Render(
+				strings.Join(descriptions, "\n"),
+			),
 		)
 		w := lipgloss.Width(col)
 
@@ -215,22 +238,31 @@ func (m Model) FullHelpView(groups [][]key.Binding) string {
 		out = append(out, col)
 	}
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, out...)
+	return lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		out...)
 }
 
-func (m Model) shouldAddItem(totalWidth, width int) (tail string, ok bool) {
+func (m Model) shouldAddItem(
+	totalWidth, width int,
+) (tail string, ok bool) {
 	// If there's room for an ellipsis, print that.
 	if m.Width > 0 && totalWidth+width > m.Width {
-		tail = " " + m.Styles.Ellipsis.Inline(true).Render(m.Ellipsis)
+		tail = " " + m.Styles.Ellipsis.Inline(true).
+			Render(m.Ellipsis)
 
-		if totalWidth+lipgloss.Width(tail) < m.Width {
+		if totalWidth+lipgloss.Width(
+			tail,
+		) < m.Width {
 			return tail, false
 		}
 	}
 	return "", true
 }
 
-func shouldRenderColumn(b []key.Binding) (ok bool) {
+func shouldRenderColumn(
+	b []key.Binding,
+) (ok bool) {
 	for _, v := range b {
 		if v.Enabled() {
 			return true

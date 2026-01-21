@@ -25,7 +25,9 @@ var (
 )
 
 func supportsABI(ver uint32) bool {
-	osreldateOnce.Do(func() { osreldate, _ = SysctlUint32("kern.osreldate") })
+	osreldateOnce.Do(
+		func() { osreldate, _ = SysctlUint32("kern.osreldate") },
+	)
 	return osreldate >= ver
 }
 
@@ -42,12 +44,17 @@ type SockaddrDatalink struct {
 	raw    RawSockaddrDatalink
 }
 
-func anyToSockaddrGOOS(fd int, rsa *RawSockaddrAny) (Sockaddr, error) {
+func anyToSockaddrGOOS(
+	fd int,
+	rsa *RawSockaddrAny,
+) (Sockaddr, error) {
 	return nil, EAFNOSUPPORT
 }
 
 // Translate "kern.hostname" to []_C_int{0,1,2,3}.
-func nametomib(name string) (mib []_C_int, err error) {
+func nametomib(
+	name string,
+) (mib []_C_int, err error) {
 	const siz = unsafe.Sizeof(mib[0])
 
 	// NOTE(rsc): It seems strange to set the buffer to have
@@ -75,15 +82,27 @@ func nametomib(name string) (mib []_C_int, err error) {
 }
 
 func direntIno(buf []byte) (uint64, bool) {
-	return readInt(buf, unsafe.Offsetof(Dirent{}.Fileno), unsafe.Sizeof(Dirent{}.Fileno))
+	return readInt(
+		buf,
+		unsafe.Offsetof(Dirent{}.Fileno),
+		unsafe.Sizeof(Dirent{}.Fileno),
+	)
 }
 
 func direntReclen(buf []byte) (uint64, bool) {
-	return readInt(buf, unsafe.Offsetof(Dirent{}.Reclen), unsafe.Sizeof(Dirent{}.Reclen))
+	return readInt(
+		buf,
+		unsafe.Offsetof(Dirent{}.Reclen),
+		unsafe.Sizeof(Dirent{}.Reclen),
+	)
 }
 
 func direntNamlen(buf []byte) (uint64, bool) {
-	return readInt(buf, unsafe.Offsetof(Dirent{}.Namlen), unsafe.Sizeof(Dirent{}.Namlen))
+	return readInt(
+		buf,
+		unsafe.Offsetof(Dirent{}.Namlen),
+		unsafe.Sizeof(Dirent{}.Namlen),
+	)
 }
 
 func Pipe(p []int) (err error) {
@@ -105,27 +124,54 @@ func Pipe2(p []int, flags int) error {
 	return err
 }
 
-func GetsockoptIPMreqn(fd, level, opt int) (*IPMreqn, error) {
+func GetsockoptIPMreqn(
+	fd, level, opt int,
+) (*IPMreqn, error) {
 	var value IPMreqn
 	vallen := _Socklen(SizeofIPMreqn)
-	errno := getsockopt(fd, level, opt, unsafe.Pointer(&value), &vallen)
+	errno := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(&value),
+		&vallen,
+	)
 	return &value, errno
 }
 
-func SetsockoptIPMreqn(fd, level, opt int, mreq *IPMreqn) (err error) {
-	return setsockopt(fd, level, opt, unsafe.Pointer(mreq), unsafe.Sizeof(*mreq))
+func SetsockoptIPMreqn(
+	fd, level, opt int,
+	mreq *IPMreqn,
+) (err error) {
+	return setsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(mreq),
+		unsafe.Sizeof(*mreq),
+	)
 }
 
 // GetsockoptXucred is a getsockopt wrapper that returns an Xucred struct.
 // The usual level and opt are SOL_LOCAL and LOCAL_PEERCRED, respectively.
-func GetsockoptXucred(fd, level, opt int) (*Xucred, error) {
+func GetsockoptXucred(
+	fd, level, opt int,
+) (*Xucred, error) {
 	x := new(Xucred)
 	vallen := _Socklen(SizeofXucred)
-	err := getsockopt(fd, level, opt, unsafe.Pointer(x), &vallen)
+	err := getsockopt(
+		fd,
+		level,
+		opt,
+		unsafe.Pointer(x),
+		&vallen,
+	)
 	return x, err
 }
 
-func Accept4(fd, flags int) (nfd int, sa Sockaddr, err error) {
+func Accept4(
+	fd, flags int,
+) (nfd int, sa Sockaddr, err error) {
 	var rsa RawSockaddrAny
 	var len _Socklen = SizeofSockaddrAny
 	nfd, err = accept4(fd, &rsa, &len, flags)
@@ -145,16 +191,28 @@ func Accept4(fd, flags int) (nfd int, sa Sockaddr, err error) {
 
 //sys	Getcwd(buf []byte) (n int, err error) = SYS___GETCWD
 
-func Getfsstat(buf []Statfs_t, flags int) (n int, err error) {
+func Getfsstat(
+	buf []Statfs_t,
+	flags int,
+) (n int, err error) {
 	var (
 		_p0     unsafe.Pointer
 		bufsize uintptr
 	)
 	if len(buf) > 0 {
 		_p0 = unsafe.Pointer(&buf[0])
-		bufsize = unsafe.Sizeof(Statfs_t{}) * uintptr(len(buf))
+		bufsize = unsafe.Sizeof(
+			Statfs_t{},
+		) * uintptr(
+			len(buf),
+		)
 	}
-	r0, _, e1 := Syscall(SYS_GETFSSTAT, uintptr(_p0), bufsize, uintptr(flags))
+	r0, _, e1 := Syscall(
+		SYS_GETFSSTAT,
+		uintptr(_p0),
+		bufsize,
+		uintptr(flags),
+	)
 	n = int(r0)
 	if e1 != 0 {
 		err = e1
@@ -171,25 +229,29 @@ func Uname(uname *Utsname) error {
 	mib := []_C_int{CTL_KERN, KERN_OSTYPE}
 	n := unsafe.Sizeof(uname.Sysname)
 	// Suppress ENOMEM errors to be compatible with the C library __xuname() implementation.
-	if err := sysctl(mib, &uname.Sysname[0], &n, nil, 0); err != nil && !errors.Is(err, ENOMEM) {
+	if err := sysctl(mib, &uname.Sysname[0], &n, nil, 0); err != nil &&
+		!errors.Is(err, ENOMEM) {
 		return err
 	}
 
 	mib = []_C_int{CTL_KERN, KERN_HOSTNAME}
 	n = unsafe.Sizeof(uname.Nodename)
-	if err := sysctl(mib, &uname.Nodename[0], &n, nil, 0); err != nil && !errors.Is(err, ENOMEM) {
+	if err := sysctl(mib, &uname.Nodename[0], &n, nil, 0); err != nil &&
+		!errors.Is(err, ENOMEM) {
 		return err
 	}
 
 	mib = []_C_int{CTL_KERN, KERN_OSRELEASE}
 	n = unsafe.Sizeof(uname.Release)
-	if err := sysctl(mib, &uname.Release[0], &n, nil, 0); err != nil && !errors.Is(err, ENOMEM) {
+	if err := sysctl(mib, &uname.Release[0], &n, nil, 0); err != nil &&
+		!errors.Is(err, ENOMEM) {
 		return err
 	}
 
 	mib = []_C_int{CTL_KERN, KERN_VERSION}
 	n = unsafe.Sizeof(uname.Version)
-	if err := sysctl(mib, &uname.Version[0], &n, nil, 0); err != nil && !errors.Is(err, ENOMEM) {
+	if err := sysctl(mib, &uname.Version[0], &n, nil, 0); err != nil &&
+		!errors.Is(err, ENOMEM) {
 		return err
 	}
 
@@ -207,7 +269,8 @@ func Uname(uname *Utsname) error {
 
 	mib = []_C_int{CTL_HW, HW_MACHINE}
 	n = unsafe.Sizeof(uname.Machine)
-	if err := sysctl(mib, &uname.Machine[0], &n, nil, 0); err != nil && !errors.Is(err, ENOMEM) {
+	if err := sysctl(mib, &uname.Machine[0], &n, nil, 0); err != nil &&
+		!errors.Is(err, ENOMEM) {
 		return err
 	}
 
@@ -219,16 +282,33 @@ func Stat(path string, st *Stat_t) (err error) {
 }
 
 func Lstat(path string, st *Stat_t) (err error) {
-	return Fstatat(AT_FDCWD, path, st, AT_SYMLINK_NOFOLLOW)
+	return Fstatat(
+		AT_FDCWD,
+		path,
+		st,
+		AT_SYMLINK_NOFOLLOW,
+	)
 }
 
-func Getdents(fd int, buf []byte) (n int, err error) {
+func Getdents(
+	fd int,
+	buf []byte,
+) (n int, err error) {
 	return Getdirentries(fd, buf, nil)
 }
 
-func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
-	if basep == nil || unsafe.Sizeof(*basep) == 8 {
-		return getdirentries(fd, buf, (*uint64)(unsafe.Pointer(basep)))
+func Getdirentries(
+	fd int,
+	buf []byte,
+	basep *uintptr,
+) (n int, err error) {
+	if basep == nil ||
+		unsafe.Sizeof(*basep) == 8 {
+		return getdirentries(
+			fd,
+			buf,
+			(*uint64)(unsafe.Pointer(basep)),
+		)
 	}
 	// The syscall needs a 64-bit base. On 32-bit machines
 	// we can't just use the basep passed in. See #32498.
@@ -244,11 +324,20 @@ func Getdirentries(fd int, buf []byte, basep *uintptr) (n int, err error) {
 	return
 }
 
-func Mknod(path string, mode uint32, dev uint64) (err error) {
+func Mknod(
+	path string,
+	mode uint32,
+	dev uint64,
+) (err error) {
 	return Mknodat(AT_FDCWD, path, mode, dev)
 }
 
-func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
+func Sendfile(
+	outfd int,
+	infd int,
+	offset *int64,
+	count int,
+) (written int, err error) {
 	if raceenabled {
 		raceReleaseMerge(unsafe.Pointer(&ioSync))
 	}
@@ -270,15 +359,37 @@ func PtraceDetach(pid int) (err error) {
 	return ptrace(PT_DETACH, pid, 1, 0)
 }
 
-func PtraceGetFpRegs(pid int, fpregsout *FpReg) (err error) {
-	return ptracePtr(PT_GETFPREGS, pid, unsafe.Pointer(fpregsout), 0)
+func PtraceGetFpRegs(
+	pid int,
+	fpregsout *FpReg,
+) (err error) {
+	return ptracePtr(
+		PT_GETFPREGS,
+		pid,
+		unsafe.Pointer(fpregsout),
+		0,
+	)
 }
 
-func PtraceGetRegs(pid int, regsout *Reg) (err error) {
-	return ptracePtr(PT_GETREGS, pid, unsafe.Pointer(regsout), 0)
+func PtraceGetRegs(
+	pid int,
+	regsout *Reg,
+) (err error) {
+	return ptracePtr(
+		PT_GETREGS,
+		pid,
+		unsafe.Pointer(regsout),
+		0,
+	)
 }
 
-func PtraceIO(req int, pid int, offs uintptr, out []byte, countin int) (count int, err error) {
+func PtraceIO(
+	req int,
+	pid int,
+	offs uintptr,
+	out []byte,
+	countin int,
+) (count int, err error) {
 	ioDesc := PtraceIoDesc{
 		Op:   int32(req),
 		Offs: offs,
@@ -291,36 +402,100 @@ func PtraceIO(req int, pid int, offs uintptr, out []byte, countin int) (count in
 	}
 	ioDesc.SetLen(countin)
 
-	err = ptracePtr(PT_IO, pid, unsafe.Pointer(&ioDesc), 0)
+	err = ptracePtr(
+		PT_IO,
+		pid,
+		unsafe.Pointer(&ioDesc),
+		0,
+	)
 	return int(ioDesc.Len), err
 }
 
-func PtraceLwpEvents(pid int, enable int) (err error) {
+func PtraceLwpEvents(
+	pid int,
+	enable int,
+) (err error) {
 	return ptrace(PT_LWP_EVENTS, pid, 0, enable)
 }
 
-func PtraceLwpInfo(pid int, info *PtraceLwpInfoStruct) (err error) {
-	return ptracePtr(PT_LWPINFO, pid, unsafe.Pointer(info), int(unsafe.Sizeof(*info)))
+func PtraceLwpInfo(
+	pid int,
+	info *PtraceLwpInfoStruct,
+) (err error) {
+	return ptracePtr(
+		PT_LWPINFO,
+		pid,
+		unsafe.Pointer(info),
+		int(unsafe.Sizeof(*info)),
+	)
 }
 
-func PtracePeekData(pid int, addr uintptr, out []byte) (count int, err error) {
-	return PtraceIO(PIOD_READ_D, pid, addr, out, SizeofLong)
+func PtracePeekData(
+	pid int,
+	addr uintptr,
+	out []byte,
+) (count int, err error) {
+	return PtraceIO(
+		PIOD_READ_D,
+		pid,
+		addr,
+		out,
+		SizeofLong,
+	)
 }
 
-func PtracePeekText(pid int, addr uintptr, out []byte) (count int, err error) {
-	return PtraceIO(PIOD_READ_I, pid, addr, out, SizeofLong)
+func PtracePeekText(
+	pid int,
+	addr uintptr,
+	out []byte,
+) (count int, err error) {
+	return PtraceIO(
+		PIOD_READ_I,
+		pid,
+		addr,
+		out,
+		SizeofLong,
+	)
 }
 
-func PtracePokeData(pid int, addr uintptr, data []byte) (count int, err error) {
-	return PtraceIO(PIOD_WRITE_D, pid, addr, data, SizeofLong)
+func PtracePokeData(
+	pid int,
+	addr uintptr,
+	data []byte,
+) (count int, err error) {
+	return PtraceIO(
+		PIOD_WRITE_D,
+		pid,
+		addr,
+		data,
+		SizeofLong,
+	)
 }
 
-func PtracePokeText(pid int, addr uintptr, data []byte) (count int, err error) {
-	return PtraceIO(PIOD_WRITE_I, pid, addr, data, SizeofLong)
+func PtracePokeText(
+	pid int,
+	addr uintptr,
+	data []byte,
+) (count int, err error) {
+	return PtraceIO(
+		PIOD_WRITE_I,
+		pid,
+		addr,
+		data,
+		SizeofLong,
+	)
 }
 
-func PtraceSetRegs(pid int, regs *Reg) (err error) {
-	return ptracePtr(PT_SETREGS, pid, unsafe.Pointer(regs), 0)
+func PtraceSetRegs(
+	pid int,
+	regs *Reg,
+) (err error) {
+	return ptracePtr(
+		PT_SETREGS,
+		pid,
+		unsafe.Pointer(regs),
+		0,
+	)
 }
 
 func PtraceSingleStep(pid int) (err error) {

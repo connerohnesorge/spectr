@@ -114,14 +114,18 @@ func (s Sequence) String() string {
 	// mode escape sequences start
 	seq.WriteString(s.seqStart())
 	// actual OSC52 sequence start
-	seq.WriteString(fmt.Sprintf("\x1b]52;%c;", s.clipboard))
+	seq.WriteString(
+		fmt.Sprintf("\x1b]52;%c;", s.clipboard),
+	)
 	switch s.op {
 	case SetOperation:
 		str := s.str
 		if s.limit > 0 && len(str) > s.limit {
 			return ""
 		}
-		b64 := base64.StdEncoding.EncodeToString([]byte(str))
+		b64 := base64.StdEncoding.EncodeToString(
+			[]byte(str),
+		)
 		switch s.mode {
 		case ScreenMode:
 			// Screen doesn't support OSC52 but will pass the contents of a DCS
@@ -140,7 +144,9 @@ func (s Sequence) String() string {
 				}
 				s = append(s, b64[i:end])
 			}
-			seq.WriteString(strings.Join(s, "\x1b\\\x1bP"))
+			seq.WriteString(
+				strings.Join(s, "\x1b\\\x1bP"),
+			)
 		default:
 			seq.WriteString(b64)
 		}
@@ -160,7 +166,9 @@ func (s Sequence) String() string {
 }
 
 // WriteTo writes the OSC52 sequence to the writer.
-func (s Sequence) WriteTo(out io.Writer) (int64, error) {
+func (s Sequence) WriteTo(
+	out io.Writer,
+) (int64, error) {
 	n, err := out.Write([]byte(s.String()))
 	return int64(n), err
 }
@@ -191,7 +199,9 @@ func (s Sequence) Screen() Sequence {
 }
 
 // Clipboard sets the clipboard buffer for the OSC52 sequence.
-func (s Sequence) Clipboard(c Clipboard) Sequence {
+func (s Sequence) Clipboard(
+	c Clipboard,
+) Sequence {
 	s.clipboard = c
 	return s
 }
@@ -221,7 +231,9 @@ func (s Sequence) Limit(l int) Sequence {
 
 // Operation sets the operation for the OSC52 sequence.
 // The default operation is SetOperation.
-func (s Sequence) Operation(o Operation) Sequence {
+func (s Sequence) Operation(
+	o Operation,
+) Sequence {
 	s.op = o
 	return s
 }
@@ -244,7 +256,9 @@ func (s Sequence) Query() Sequence {
 
 // SetString sets the string for the OSC52 sequence. Strings are joined with a
 // space character.
-func (s Sequence) SetString(strs ...string) Sequence {
+func (s Sequence) SetString(
+	strs ...string,
+) Sequence {
 	s.str = strings.Join(strs, " ")
 	return s
 }

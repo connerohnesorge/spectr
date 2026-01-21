@@ -25,6 +25,8 @@ func (o Output) backgroundColor() Color {
 // Windows for w and returns a function that restores w to its previous state.
 // On non-Windows platforms, or if w does not refer to a terminal, then it
 // returns a non-nil no-op function and no error.
-func EnableVirtualTerminalProcessing(w io.Writer) (func() error, error) {
+func EnableVirtualTerminalProcessing(
+	w io.Writer,
+) (func() error, error) {
 	return func() error { return nil }, nil
 }

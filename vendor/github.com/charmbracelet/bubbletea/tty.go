@@ -52,7 +52,9 @@ func (p *Program) restoreTerminalState() error {
 			p.renderer.exitAltScreen()
 
 			// give the terminal a moment to catch up
-			time.Sleep(time.Millisecond * 10) //nolint:mnd
+			time.Sleep(
+				time.Millisecond * 10,
+			) //nolint:mnd
 		}
 	}
 
@@ -61,30 +63,46 @@ func (p *Program) restoreTerminalState() error {
 
 // restoreInput restores the tty input to its original state.
 func (p *Program) restoreInput() error {
-	if p.ttyInput != nil && p.previousTtyInputState != nil {
+	if p.ttyInput != nil &&
+		p.previousTtyInputState != nil {
 		if err := term.Restore(p.ttyInput.Fd(), p.previousTtyInputState); err != nil {
-			return fmt.Errorf("error restoring console: %w", err)
+			return fmt.Errorf(
+				"error restoring console: %w",
+				err,
+			)
 		}
 	}
-	if p.ttyOutput != nil && p.previousOutputState != nil {
+	if p.ttyOutput != nil &&
+		p.previousOutputState != nil {
 		if err := term.Restore(p.ttyOutput.Fd(), p.previousOutputState); err != nil {
-			return fmt.Errorf("error restoring console: %w", err)
+			return fmt.Errorf(
+				"error restoring console: %w",
+				err,
+			)
 		}
 	}
 	return nil
 }
 
 // initCancelReader (re)commences reading inputs.
-func (p *Program) initCancelReader(cancel bool) error {
+func (p *Program) initCancelReader(
+	cancel bool,
+) error {
 	if cancel && p.cancelReader != nil {
 		p.cancelReader.Cancel()
 		p.waitForReadLoop()
 	}
 
 	var err error
-	p.cancelReader, err = newInputReader(p.input, p.mouseMode)
+	p.cancelReader, err = newInputReader(
+		p.input,
+		p.mouseMode,
+	)
 	if err != nil {
-		return fmt.Errorf("error creating cancelreader: %w", err)
+		return fmt.Errorf(
+			"error creating cancelreader: %w",
+			err,
+		)
 	}
 
 	p.readLoopDone = make(chan struct{})
@@ -96,8 +114,16 @@ func (p *Program) initCancelReader(cancel bool) error {
 func (p *Program) readLoop() {
 	defer close(p.readLoopDone)
 
-	err := readInputs(p.ctx, p.msgs, p.cancelReader)
-	if !errors.Is(err, io.EOF) && !errors.Is(err, cancelreader.ErrCanceled) {
+	err := readInputs(
+		p.ctx,
+		p.msgs,
+		p.cancelReader,
+	)
+	if !errors.Is(err, io.EOF) &&
+		!errors.Is(
+			err,
+			cancelreader.ErrCanceled,
+		) {
 		select {
 		case <-p.ctx.Done():
 		case p.errs <- err:

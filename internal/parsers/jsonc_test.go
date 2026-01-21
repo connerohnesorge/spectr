@@ -23,10 +23,18 @@ func TestToJSON(t *testing.T) {
   }`
 	out := string(JSONCToJSON([]byte(json)))
 	if out != expect {
-		t.Fatalf("expected '%s', got '%s'", expect, out)
+		t.Fatalf(
+			"expected '%s', got '%s'",
+			expect,
+			out,
+		)
 	}
 	out = string(JSONCToJSONInPlace([]byte(json)))
 	if out != expect {
-		t.Fatalf("expected '%s', got '%s'", expect, out)
+		t.Fatalf(
+			"expected '%s', got '%s'",
+			expect,
+			out,
+		)
 	}
 }

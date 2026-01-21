@@ -16,9 +16,14 @@ func (*GeminiProvider) Initializers(
 	tm TemplateManager,
 ) []Initializer { //nolint:lll // Constructor calls with template refs exceed line limit
 	return []Initializer{
-		NewDirectoryInitializer(".gemini/commands/spectr"),
+		NewDirectoryInitializer(
+			".gemini/commands/spectr",
+		),
 		NewDirectoryInitializer(".gemini/skills"),
-		NewConfigFileInitializer("GEMINI.md", tm.InstructionPointer()),
+		NewConfigFileInitializer(
+			"GEMINI.md",
+			tm.InstructionPointer(),
+		),
 		NewTOMLSlashCommandsInitializer(
 			".gemini/commands/spectr",
 			map[domain.SlashCommand]domain.TemplateRef{

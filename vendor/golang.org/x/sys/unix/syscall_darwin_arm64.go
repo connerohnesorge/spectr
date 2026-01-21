@@ -38,7 +38,9 @@ func (cmsg *Cmsghdr) SetLen(length int) {
 	cmsg.Len = uint32(length)
 }
 
-func Syscall9(num, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr) (r1, r2 uintptr, err syscall.Errno) // sic
+func Syscall9(
+	num, a1, a2, a3, a4, a5, a6, a7, a8, a9 uintptr,
+) (r1, r2 uintptr, err syscall.Errno) // sic
 
 //sys	Fstat(fd int, stat *Stat_t) (err error)
 //sys	Fstatat(fd int, path string, stat *Stat_t, flags int) (err error)

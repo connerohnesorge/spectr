@@ -28,17 +28,32 @@ type httpDir struct {
 	fs       HttpFs
 }
 
-func (d httpDir) Open(name string) (http.File, error) {
-	if filepath.Separator != '/' && strings.ContainsRune(name, filepath.Separator) ||
+func (d httpDir) Open(
+	name string,
+) (http.File, error) {
+	if filepath.Separator != '/' &&
+		strings.ContainsRune(
+			name,
+			filepath.Separator,
+		) ||
 		strings.Contains(name, "\x00") {
-		return nil, errors.New("http: invalid character in file path")
+		return nil, errors.New(
+			"http: invalid character in file path",
+		)
 	}
 	dir := string(d.basePath)
 	if dir == "" {
 		dir = "."
 	}
 
-	f, err := d.fs.Open(filepath.Join(dir, filepath.FromSlash(path.Clean("/"+name))))
+	f, err := d.fs.Open(
+		filepath.Join(
+			dir,
+			filepath.FromSlash(
+				path.Clean("/"+name),
+			),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -59,31 +74,51 @@ func (h HttpFs) Dir(s string) *httpDir {
 
 func (h HttpFs) Name() string { return "h HttpFs" }
 
-func (h HttpFs) Create(name string) (File, error) {
+func (h HttpFs) Create(
+	name string,
+) (File, error) {
 	return h.source.Create(name)
 }
 
-func (h HttpFs) Chmod(name string, mode os.FileMode) error {
+func (h HttpFs) Chmod(
+	name string,
+	mode os.FileMode,
+) error {
 	return h.source.Chmod(name, mode)
 }
 
-func (h HttpFs) Chown(name string, uid, gid int) error {
+func (h HttpFs) Chown(
+	name string,
+	uid, gid int,
+) error {
 	return h.source.Chown(name, uid, gid)
 }
 
-func (h HttpFs) Chtimes(name string, atime time.Time, mtime time.Time) error {
+func (h HttpFs) Chtimes(
+	name string,
+	atime time.Time,
+	mtime time.Time,
+) error {
 	return h.source.Chtimes(name, atime, mtime)
 }
 
-func (h HttpFs) Mkdir(name string, perm os.FileMode) error {
+func (h HttpFs) Mkdir(
+	name string,
+	perm os.FileMode,
+) error {
 	return h.source.Mkdir(name, perm)
 }
 
-func (h HttpFs) MkdirAll(path string, perm os.FileMode) error {
+func (h HttpFs) MkdirAll(
+	path string,
+	perm os.FileMode,
+) error {
 	return h.source.MkdirAll(path, perm)
 }
 
-func (h HttpFs) Open(name string) (http.File, error) {
+func (h HttpFs) Open(
+	name string,
+) (http.File, error) {
 	f, err := h.source.Open(name)
 	if err == nil {
 		if httpfile, ok := f.(http.File); ok {
@@ -93,7 +128,11 @@ func (h HttpFs) Open(name string) (http.File, error) {
 	return nil, err
 }
 
-func (h HttpFs) OpenFile(name string, flag int, perm os.FileMode) (File, error) {
+func (h HttpFs) OpenFile(
+	name string,
+	flag int,
+	perm os.FileMode,
+) (File, error) {
 	return h.source.OpenFile(name, flag, perm)
 }
 
@@ -105,10 +144,14 @@ func (h HttpFs) RemoveAll(path string) error {
 	return h.source.RemoveAll(path)
 }
 
-func (h HttpFs) Rename(oldname, newname string) error {
+func (h HttpFs) Rename(
+	oldname, newname string,
+) error {
 	return h.source.Rename(oldname, newname)
 }
 
-func (h HttpFs) Stat(name string) (os.FileInfo, error) {
+func (h HttpFs) Stat(
+	name string,
+) (os.FileInfo, error) {
 	return h.source.Stat(name)
 }

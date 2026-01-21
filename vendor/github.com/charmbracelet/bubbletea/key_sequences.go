@@ -26,14 +26,27 @@ var extSequences = func() map[string]Key {
 			continue
 		}
 		s[string([]byte{byte(i)})] = Key{Type: i}
-		s[string([]byte{'\x1b', byte(i)})] = Key{Type: i, Alt: true}
+		s[string([]byte{'\x1b', byte(i)})] = Key{
+			Type: i,
+			Alt:  true,
+		}
 		if i == keyUS {
 			i = keyDEL - 1
 		}
 	}
-	s[" "] = Key{Type: KeySpace, Runes: spaceRunes}
-	s["\x1b "] = Key{Type: KeySpace, Alt: true, Runes: spaceRunes}
-	s["\x1b\x1b"] = Key{Type: KeyEscape, Alt: true}
+	s[" "] = Key{
+		Type:  KeySpace,
+		Runes: spaceRunes,
+	}
+	s["\x1b "] = Key{
+		Type:  KeySpace,
+		Alt:   true,
+		Runes: spaceRunes,
+	}
+	s["\x1b\x1b"] = Key{
+		Type: KeyEscape,
+		Alt:  true,
+	}
 	return s
 }()
 
@@ -48,13 +61,18 @@ var seqLengths = func() []int {
 	for sz := range sizes {
 		lsizes = append(lsizes, sz)
 	}
-	sort.Slice(lsizes, func(i, j int) bool { return lsizes[i] > lsizes[j] })
+	sort.Slice(
+		lsizes,
+		func(i, j int) bool { return lsizes[i] > lsizes[j] },
+	)
 	return lsizes
 }()
 
 // detectSequence uses a longest prefix match over the input
 // sequence and a hash map.
-func detectSequence(input []byte) (hasSeq bool, width int, msg Msg) {
+func detectSequence(
+	input []byte,
+) (hasSeq bool, width int, msg Msg) {
 	seqs := extSequences
 	for _, sz := range seqLengths {
 		if sz > len(input) {
@@ -68,7 +86,9 @@ func detectSequence(input []byte) (hasSeq bool, width int, msg Msg) {
 	}
 	// Is this an unknown CSI sequence?
 	if loc := unknownCSIRe.FindIndex(input); loc != nil {
-		return true, loc[1], unknownCSISequenceMsg(input[:loc[1]])
+		return true, loc[1], unknownCSISequenceMsg(
+			input[:loc[1]],
+		)
 	}
 
 	return false, 0, nil
@@ -80,10 +100,13 @@ func detectSequence(input []byte) (hasSeq bool, width int, msg Msg) {
 // Note: this function is a no-op if bracketed paste was not enabled
 // on the terminal, since in that case we'd never see this
 // particular escape sequence.
-func detectBracketedPaste(input []byte) (hasBp bool, width int, msg Msg) {
+func detectBracketedPaste(
+	input []byte,
+) (hasBp bool, width int, msg Msg) {
 	// Detect the start sequence.
 	const bpStart = "\x1b[200~"
-	if len(input) < len(bpStart) || string(input[:len(bpStart)]) != bpStart {
+	if len(input) < len(bpStart) ||
+		string(input[:len(bpStart)]) != bpStart {
 		return false, 0, nil
 	}
 
@@ -119,7 +142,9 @@ func detectBracketedPaste(input []byte) (hasBp bool, width int, msg Msg) {
 }
 
 // detectReportFocus detects a focus report sequence.
-func detectReportFocus(input []byte) (hasRF bool, width int, msg Msg) {
+func detectReportFocus(
+	input []byte,
+) (hasRF bool, width int, msg Msg) {
 	switch {
 	case bytes.Equal(input, []byte("\x1b[I")):
 		return true, 3, FocusMsg{} //nolint:mnd

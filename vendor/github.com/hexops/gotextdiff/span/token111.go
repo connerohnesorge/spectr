@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build !go1.12
 // +build !go1.12
 
 package span
@@ -13,7 +14,10 @@ import (
 // lineStart is the pre-Go 1.12 version of (*token.File).LineStart. For Go
 // versions <= 1.11, we borrow logic from the analysisutil package.
 // TODO(rstambler): Delete this file when we no longer support Go 1.11.
-func lineStart(f *token.File, line int) token.Pos {
+func lineStart(
+	f *token.File,
+	line int,
+) token.Pos {
 	// Use binary search to find the start offset of this line.
 
 	min := 0        // inclusive

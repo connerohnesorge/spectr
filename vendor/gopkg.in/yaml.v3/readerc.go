@@ -1,17 +1,17 @@
-// 
+//
 // Copyright (c) 2011-2019 Canonical Ltd
 // Copyright (c) 2006-2010 Kirill Simonov
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
 // the Software without restriction, including without limitation the rights to
 // use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 // of the Software, and to permit persons to whom the Software is furnished to do
 // so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,7 +27,12 @@ import (
 )
 
 // Set the reader error and return 0.
-func yaml_parser_set_reader_error(parser *yaml_parser_t, problem string, offset int, value int) bool {
+func yaml_parser_set_reader_error(
+	parser *yaml_parser_t,
+	problem string,
+	offset int,
+	value int,
+) bool {
 	parser.error = yaml_READER_ERROR
 	parser.problem = problem
 	parser.problem_offset = offset
@@ -44,10 +49,14 @@ const (
 
 // Determine the input stream encoding by checking the BOM symbol. If no BOM is
 // found, the UTF-8 encoding is assumed. Return 1 on success, 0 on failure.
-func yaml_parser_determine_encoding(parser *yaml_parser_t) bool {
+func yaml_parser_determine_encoding(
+	parser *yaml_parser_t,
+) bool {
 	// Ensure that we had enough bytes in the raw buffer.
 	for !parser.eof && len(parser.raw_buffer)-parser.raw_buffer_pos < 3 {
-		if !yaml_parser_update_raw_buffer(parser) {
+		if !yaml_parser_update_raw_buffer(
+			parser,
+		) {
 			return false
 		}
 	}
@@ -56,7 +65,8 @@ func yaml_parser_determine_encoding(parser *yaml_parser_t) bool {
 	buf := parser.raw_buffer
 	pos := parser.raw_buffer_pos
 	avail := len(buf) - pos
-	if avail >= 2 && buf[pos] == bom_UTF16LE[0] && buf[pos+1] == bom_UTF16LE[1] {
+	if avail >= 2 && buf[pos] == bom_UTF16LE[0] &&
+		buf[pos+1] == bom_UTF16LE[1] {
 		parser.encoding = yaml_UTF16LE_ENCODING
 		parser.raw_buffer_pos += 2
 		parser.offset += 2
@@ -75,11 +85,18 @@ func yaml_parser_determine_encoding(parser *yaml_parser_t) bool {
 }
 
 // Update the raw buffer.
-func yaml_parser_update_raw_buffer(parser *yaml_parser_t) bool {
+func yaml_parser_update_raw_buffer(
+	parser *yaml_parser_t,
+) bool {
 	size_read := 0
 
 	// Return if the raw buffer is full.
-	if parser.raw_buffer_pos == 0 && len(parser.raw_buffer) == cap(parser.raw_buffer) {
+	if parser.raw_buffer_pos == 0 &&
+		len(
+			parser.raw_buffer,
+		) == cap(
+			parser.raw_buffer,
+		) {
 		return true
 	}
 
@@ -89,14 +106,23 @@ func yaml_parser_update_raw_buffer(parser *yaml_parser_t) bool {
 	}
 
 	// Move the remaining bytes in the raw buffer to the beginning.
-	if parser.raw_buffer_pos > 0 && parser.raw_buffer_pos < len(parser.raw_buffer) {
-		copy(parser.raw_buffer, parser.raw_buffer[parser.raw_buffer_pos:])
+	if parser.raw_buffer_pos > 0 &&
+		parser.raw_buffer_pos < len(
+			parser.raw_buffer,
+		) {
+		copy(
+			parser.raw_buffer,
+			parser.raw_buffer[parser.raw_buffer_pos:],
+		)
 	}
 	parser.raw_buffer = parser.raw_buffer[:len(parser.raw_buffer)-parser.raw_buffer_pos]
 	parser.raw_buffer_pos = 0
 
 	// Call the read handler to fill the buffer.
-	size_read, err := parser.read_handler(parser, parser.raw_buffer[len(parser.raw_buffer):cap(parser.raw_buffer)])
+	size_read, err := parser.read_handler(
+		parser,
+		parser.raw_buffer[len(parser.raw_buffer):cap(parser.raw_buffer)],
+	)
 	parser.raw_buffer = parser.raw_buffer[:len(parser.raw_buffer)+size_read]
 	if err == io.EOF {
 		parser.eof = true
@@ -110,7 +136,10 @@ func yaml_parser_update_raw_buffer(parser *yaml_parser_t) bool {
 // Return true on success, false on failure.
 //
 // The length is supposed to be significantly less that the buffer size.
-func yaml_parser_update_buffer(parser *yaml_parser_t, length int) bool {
+func yaml_parser_update_buffer(
+	parser *yaml_parser_t,
+	length int,
+) bool {
 	if parser.read_handler == nil {
 		panic("read handler must be set")
 	}
@@ -120,13 +149,16 @@ func yaml_parser_update_buffer(parser *yaml_parser_t, length int) bool {
 	// for that to be the case, and there are tests
 
 	// If the EOF flag is set and the raw buffer is empty, do nothing.
-	if parser.eof && parser.raw_buffer_pos == len(parser.raw_buffer) {
+	if parser.eof &&
+		parser.raw_buffer_pos == len(
+			parser.raw_buffer,
+		) {
 		// [Go] ACTUALLY! Read the documentation of this function above.
 		// This is just broken. To return true, we need to have the
 		// given length in the buffer. Not doing that means every single
 		// check that calls this function to make sure the buffer has a
 		// given length is Go) panicking; or C) accessing invalid memory.
-		//return true
+		// return true
 	}
 
 	// Return if the buffer contains enough characters.
@@ -136,15 +168,21 @@ func yaml_parser_update_buffer(parser *yaml_parser_t, length int) bool {
 
 	// Determine the input encoding if it is not known yet.
 	if parser.encoding == yaml_ANY_ENCODING {
-		if !yaml_parser_determine_encoding(parser) {
+		if !yaml_parser_determine_encoding(
+			parser,
+		) {
 			return false
 		}
 	}
 
 	// Move the unread characters to the beginning of the buffer.
 	buffer_len := len(parser.buffer)
-	if parser.buffer_pos > 0 && parser.buffer_pos < buffer_len {
-		copy(parser.buffer, parser.buffer[parser.buffer_pos:])
+	if parser.buffer_pos > 0 &&
+		parser.buffer_pos < buffer_len {
+		copy(
+			parser.buffer,
+			parser.buffer[parser.buffer_pos:],
+		)
 		buffer_len -= parser.buffer_pos
 		parser.buffer_pos = 0
 	} else if parser.buffer_pos == buffer_len {
@@ -160,8 +198,13 @@ func yaml_parser_update_buffer(parser *yaml_parser_t, length int) bool {
 	for parser.unread < length {
 
 		// Fill the raw buffer if necessary.
-		if !first || parser.raw_buffer_pos == len(parser.raw_buffer) {
-			if !yaml_parser_update_raw_buffer(parser) {
+		if !first ||
+			parser.raw_buffer_pos == len(
+				parser.raw_buffer,
+			) {
+			if !yaml_parser_update_raw_buffer(
+				parser,
+			) {
 				parser.buffer = parser.buffer[:buffer_len]
 				return false
 			}

@@ -33,24 +33,35 @@ func createTaskWithDescription(
 // marshalAndValidateRoundTrip marshals a Task to JSON, strips JSONC comments,
 // unmarshals back, and validates that the description is preserved correctly.
 // Returns an error if the round-trip fails or if the description doesn't match.
-func marshalAndValidateRoundTrip(t *testing.T, task *parsers.Task) error {
+func marshalAndValidateRoundTrip(
+	t *testing.T,
+	task *parsers.Task,
+) error {
 	t.Helper()
 
 	// Marshal the task to JSON
 	jsonData, err := json.Marshal(task)
 	if err != nil {
-		t.Errorf("Failed to marshal task: %v", err)
+		t.Errorf(
+			"Failed to marshal task: %v",
+			err,
+		)
 
 		return err
 	}
 
 	// Strip JSONC comments (simulating the comment stripping process)
-	strippedData := parsers.StripJSONComments(jsonData)
+	strippedData := parsers.StripJSONComments(
+		jsonData,
+	)
 
 	// Unmarshal back to a Task
 	var unmarshaledTask parsers.Task
 	if err := json.Unmarshal(strippedData, &unmarshaledTask); err != nil {
-		t.Errorf("Failed to unmarshal task after comment stripping: %v", err)
+		t.Errorf(
+			"Failed to unmarshal task after comment stripping: %v",
+			err,
+		)
 
 		return err
 	}
@@ -68,20 +79,34 @@ func marshalAndValidateRoundTrip(t *testing.T, task *parsers.Task) error {
 
 	// Verify all other fields match
 	if unmarshaledTask.ID != task.ID {
-		t.Errorf("ID mismatch: got %q, want %q", unmarshaledTask.ID, task.ID)
+		t.Errorf(
+			"ID mismatch: got %q, want %q",
+			unmarshaledTask.ID,
+			task.ID,
+		)
 	}
 	if unmarshaledTask.Section != task.Section {
-		t.Errorf("Section mismatch: got %q, want %q", unmarshaledTask.Section, task.Section)
+		t.Errorf(
+			"Section mismatch: got %q, want %q",
+			unmarshaledTask.Section,
+			task.Section,
+		)
 	}
 	if unmarshaledTask.Status != task.Status {
-		t.Errorf("Status mismatch: got %q, want %q", unmarshaledTask.Status, task.Status)
+		t.Errorf(
+			"Status mismatch: got %q, want %q",
+			unmarshaledTask.Status,
+			task.Status,
+		)
 	}
 
 	return nil
 }
 
 // createTasksFileWithTasks creates a TasksFile with the given tasks for testing
-func createTasksFileWithTasks(tasks []parsers.Task) parsers.TasksFile {
+func createTasksFileWithTasks(
+	tasks []parsers.Task,
+) parsers.TasksFile {
 	return parsers.TasksFile{
 		Version: 1,
 		Tasks:   tasks,
@@ -91,35 +116,58 @@ func createTasksFileWithTasks(tasks []parsers.Task) parsers.TasksFile {
 // validateTasksFileSerialization validates that a TasksFile can be marshaled
 // to JSON, have comments stripped, and then unmarshaled back with all task
 // descriptions preserved.
-func validateTasksFileSerialization(t *testing.T, tasksFile parsers.TasksFile) error {
+func validateTasksFileSerialization(
+	t *testing.T,
+	tasksFile parsers.TasksFile,
+) error {
 	t.Helper()
 
 	// Marshal the tasks file to JSON
-	jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+	jsonData, err := json.MarshalIndent(
+		tasksFile,
+		"",
+		"  ",
+	)
 	if err != nil {
-		t.Errorf("Failed to marshal tasks file: %v", err)
+		t.Errorf(
+			"Failed to marshal tasks file: %v",
+			err,
+		)
 
 		return err
 	}
 
 	// Strip JSONC comments
-	strippedData := parsers.StripJSONComments(jsonData)
+	strippedData := parsers.StripJSONComments(
+		jsonData,
+	)
 
 	// Unmarshal back to a TasksFile
 	var unmarshaledFile parsers.TasksFile
 	if err := json.Unmarshal(strippedData, &unmarshaledFile); err != nil {
-		t.Errorf("Failed to unmarshal tasks file after comment stripping: %v", err)
+		t.Errorf(
+			"Failed to unmarshal tasks file after comment stripping: %v",
+			err,
+		)
 
 		return err
 	}
 
 	// Verify version matches
 	if unmarshaledFile.Version != tasksFile.Version {
-		t.Errorf("Version mismatch: got %d, want %d", unmarshaledFile.Version, tasksFile.Version)
+		t.Errorf(
+			"Version mismatch: got %d, want %d",
+			unmarshaledFile.Version,
+			tasksFile.Version,
+		)
 	}
 
 	// Verify task count matches
-	if len(unmarshaledFile.Tasks) != len(tasksFile.Tasks) {
+	if len(
+		unmarshaledFile.Tasks,
+	) != len(
+		tasksFile.Tasks,
+	) {
 		t.Errorf(
 			"Task count mismatch: got %d, want %d",
 			len(unmarshaledFile.Tasks),
@@ -141,7 +189,12 @@ func validateTasksFileSerialization(t *testing.T, tasksFile parsers.TasksFile) e
 			)
 		}
 		if unmarshaledTask.ID != originalTask.ID {
-			t.Errorf("Task %d ID mismatch: got %q, want %q", i, unmarshaledTask.ID, originalTask.ID)
+			t.Errorf(
+				"Task %d ID mismatch: got %q, want %q",
+				i,
+				unmarshaledTask.ID,
+				originalTask.ID,
+			)
 		}
 		if unmarshaledTask.Section != originalTask.Section {
 			t.Errorf(
@@ -175,15 +228,24 @@ func TestHelperFunctions_Basic(t *testing.T) {
 	)
 
 	if task.ID != "1.1" {
-		t.Errorf("Expected ID 1.1, got %s", task.ID)
+		t.Errorf(
+			"Expected ID 1.1, got %s",
+			task.ID,
+		)
 	}
 	if task.Description != "Test description" {
-		t.Errorf("Expected description 'Test description', got %s", task.Description)
+		t.Errorf(
+			"Expected description 'Test description', got %s",
+			task.Description,
+		)
 	}
 
 	// Test marshalAndValidateRoundTrip
 	if err := marshalAndValidateRoundTrip(t, &task); err != nil {
-		t.Errorf("marshalAndValidateRoundTrip failed: %v", err)
+		t.Errorf(
+			"marshalAndValidateRoundTrip failed: %v",
+			err,
+		)
 	}
 
 	// Test createTasksFileWithTasks
@@ -191,15 +253,24 @@ func TestHelperFunctions_Basic(t *testing.T) {
 	tasksFile := createTasksFileWithTasks(tasks)
 
 	if tasksFile.Version != 1 {
-		t.Errorf("Expected version 1, got %d", tasksFile.Version)
+		t.Errorf(
+			"Expected version 1, got %d",
+			tasksFile.Version,
+		)
 	}
 	if len(tasksFile.Tasks) != 1 {
-		t.Errorf("Expected 1 task, got %d", len(tasksFile.Tasks))
+		t.Errorf(
+			"Expected 1 task, got %d",
+			len(tasksFile.Tasks),
+		)
 	}
 
 	// Test validateTasksFileSerialization
 	if err := validateTasksFileSerialization(t, tasksFile); err != nil {
-		t.Errorf("validateTasksFileSerialization failed: %v", err)
+		t.Errorf(
+			"validateTasksFileSerialization failed: %v",
+			err,
+		)
 	}
 }
 
@@ -210,7 +281,9 @@ func TestHelperFunctions_Basic(t *testing.T) {
 // quotes, newlines, tabs, and other control characters are properly
 // escaped during JSON marshalling and can be successfully round-tripped
 // through the validation process.
-func TestJSONCValidation_SpecialCharacters(t *testing.T) {
+func TestJSONCValidation_SpecialCharacters(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -269,25 +342,44 @@ func TestJSONCValidation_SpecialCharacters(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSON can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip: unmarshal and check that description is preserved
 			var roundTrip parsers.TasksFile
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			if len(roundTrip.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(roundTrip.Tasks),
+				)
 			}
 
 			if roundTrip.Tasks[0].Description != tt.description {
@@ -396,29 +488,48 @@ func TestJSONCValidation_Unicode(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(original, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				original,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSONC can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip is lossless:
 			// Strip comments (though we don't have any in this test)
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 
 			// Unmarshal back to TasksFile
 			var result parsers.TasksFile
 			if err := json.Unmarshal(stripped, &result); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			// Verify we got exactly one task back
 			if len(result.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(result.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(result.Tasks),
+				)
 			}
 
 			// Verify the description matches exactly (lossless round-trip)
@@ -432,20 +543,32 @@ func TestJSONCValidation_Unicode(t *testing.T) {
 
 			// Verify all other fields match
 			if result.Tasks[0].ID != original.Tasks[0].ID {
-				t.Errorf("Task ID mismatch: got %q, want %q",
-					result.Tasks[0].ID, original.Tasks[0].ID)
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					result.Tasks[0].ID,
+					original.Tasks[0].ID,
+				)
 			}
 			if result.Tasks[0].Section != original.Tasks[0].Section {
-				t.Errorf("Task Section mismatch: got %q, want %q",
-					result.Tasks[0].Section, original.Tasks[0].Section)
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					result.Tasks[0].Section,
+					original.Tasks[0].Section,
+				)
 			}
 			if result.Tasks[0].Status != original.Tasks[0].Status {
-				t.Errorf("Task Status mismatch: got %q, want %q",
-					result.Tasks[0].Status, original.Tasks[0].Status)
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					result.Tasks[0].Status,
+					original.Tasks[0].Status,
+				)
 			}
 			if result.Version != original.Version {
-				t.Errorf("Version mismatch: got %d, want %d",
-					result.Version, original.Version)
+				t.Errorf(
+					"Version mismatch: got %d, want %d",
+					result.Version,
+					original.Version,
+				)
 			}
 		})
 	}
@@ -453,7 +576,9 @@ func TestJSONCValidation_Unicode(t *testing.T) {
 
 // TestRoundTripConversion_Version2Hierarchical tests round-trip JSON serialization
 // for version 2 hierarchical task files (parent/child structure with $ref:tasks-*.jsonc)
-func TestRoundTripConversion_Version2Hierarchical(t *testing.T) {
+func TestRoundTripConversion_Version2Hierarchical(
+	t *testing.T,
+) {
 	// Create a root tasks file (version 2) with parent tasks that have children
 	rootTasksFile := parsers.TasksFile{
 		Version: 2,
@@ -540,18 +665,30 @@ func TestRoundTripConversion_Version2Hierarchical(t *testing.T) {
 		t.Helper()
 
 		// Marshal the tasks file to JSON
-		jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+		jsonData, err := json.MarshalIndent(
+			tasksFile,
+			"",
+			"  ",
+		)
 		if err != nil {
-			t.Fatalf("Failed to marshal tasks file: %v", err)
+			t.Fatalf(
+				"Failed to marshal tasks file: %v",
+				err,
+			)
 		}
 
 		// Strip JSONC comments (simulating the comment stripping process)
-		strippedData := parsers.StripJSONComments(jsonData)
+		strippedData := parsers.StripJSONComments(
+			jsonData,
+		)
 
 		// Unmarshal back to a TasksFile
 		var unmarshaledFile parsers.TasksFile
 		if err := json.Unmarshal(strippedData, &unmarshaledFile); err != nil {
-			t.Fatalf("Failed to unmarshal tasks file after comment stripping: %v", err)
+			t.Fatalf(
+				"Failed to unmarshal tasks file after comment stripping: %v",
+				err,
+			)
 		}
 
 		// Verify version matches
@@ -565,11 +702,19 @@ func TestRoundTripConversion_Version2Hierarchical(t *testing.T) {
 
 		// Verify parent field is preserved (if present)
 		if unmarshaledFile.Parent != tasksFile.Parent {
-			t.Errorf("Parent mismatch: got %q, want %q", unmarshaledFile.Parent, tasksFile.Parent)
+			t.Errorf(
+				"Parent mismatch: got %q, want %q",
+				unmarshaledFile.Parent,
+				tasksFile.Parent,
+			)
 		}
 
 		// Verify includes field is preserved (if present)
-		if len(unmarshaledFile.Includes) != len(tasksFile.Includes) {
+		if len(
+			unmarshaledFile.Includes,
+		) != len(
+			tasksFile.Includes,
+		) {
 			t.Errorf(
 				"Includes count mismatch: got %d, want %d",
 				len(unmarshaledFile.Includes),
@@ -577,7 +722,8 @@ func TestRoundTripConversion_Version2Hierarchical(t *testing.T) {
 			)
 		}
 		for i, include := range unmarshaledFile.Includes {
-			if i < len(tasksFile.Includes) && include != tasksFile.Includes[i] {
+			if i < len(tasksFile.Includes) &&
+				include != tasksFile.Includes[i] {
 				t.Errorf(
 					"Includes[%d] mismatch: got %q, want %q",
 					i,
@@ -588,7 +734,11 @@ func TestRoundTripConversion_Version2Hierarchical(t *testing.T) {
 		}
 
 		// Verify task count matches
-		if len(unmarshaledFile.Tasks) != len(tasksFile.Tasks) {
+		if len(
+			unmarshaledFile.Tasks,
+		) != len(
+			tasksFile.Tasks,
+		) {
 			t.Fatalf(
 				"Task count mismatch: got %d, want %d",
 				len(unmarshaledFile.Tasks),
@@ -648,24 +798,35 @@ func TestRoundTripConversion_Version2Hierarchical(t *testing.T) {
 	})
 
 	// Test child tasks file 1 round-trip (with parent field)
-	t.Run("child_tasks_file_1", func(t *testing.T) {
-		validateRoundTrip(t, childTasksFile1)
-	})
+	t.Run(
+		"child_tasks_file_1",
+		func(t *testing.T) {
+			validateRoundTrip(t, childTasksFile1)
+		},
+	)
 
 	// Test child tasks file 2 round-trip (with comment-like text in descriptions)
-	t.Run("child_tasks_file_2", func(t *testing.T) {
-		validateRoundTrip(t, childTasksFile2)
-	})
+	t.Run(
+		"child_tasks_file_2",
+		func(t *testing.T) {
+			validateRoundTrip(t, childTasksFile2)
+		},
+	)
 
 	// Test child tasks file 3 round-trip (with quotes in descriptions)
-	t.Run("child_tasks_file_3", func(t *testing.T) {
-		validateRoundTrip(t, childTasksFile3)
-	})
+	t.Run(
+		"child_tasks_file_3",
+		func(t *testing.T) {
+			validateRoundTrip(t, childTasksFile3)
+		},
+	)
 }
 
 // TestValidateJSONCOutput_ErrorMessages tests that validation failures
 // produce helpful error messages with context and suggestions.
-func TestValidateJSONCOutput_ErrorMessages(t *testing.T) {
+func TestValidateJSONCOutput_ErrorMessages(
+	t *testing.T,
+) {
 	tests := []struct {
 		name             string
 		invalidJSON      string
@@ -706,18 +867,25 @@ func TestValidateJSONCOutput_ErrorMessages(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Validate the invalid JSON
-			err := validateJSONCOutput([]byte(tt.invalidJSON))
+			err := validateJSONCOutput(
+				[]byte(tt.invalidJSON),
+			)
 
 			// Should always return an error
 			if err == nil {
-				t.Fatal("Expected error but got none")
+				t.Fatal(
+					"Expected error but got none",
+				)
 			}
 
 			errMsg := err.Error()
 
 			// Check that expected strings are present
 			for _, expected := range tt.expectInError {
-				if !strings.Contains(errMsg, expected) {
+				if !strings.Contains(
+					errMsg,
+					expected,
+				) {
 					t.Errorf(
 						"Expected error message to contain %q, but it didn't.\nFull error: %s",
 						expected,
@@ -728,7 +896,10 @@ func TestValidateJSONCOutput_ErrorMessages(t *testing.T) {
 
 			// Check that unexpected strings are not present
 			for _, unexpected := range tt.expectNotInError {
-				if strings.Contains(errMsg, unexpected) {
+				if strings.Contains(
+					errMsg,
+					unexpected,
+				) {
 					t.Errorf(
 						"Expected error message NOT to contain %q, but it did.\nFull error: %s",
 						unexpected,
@@ -739,7 +910,10 @@ func TestValidateJSONCOutput_ErrorMessages(t *testing.T) {
 
 			// Verify the error is not empty and has reasonable length
 			if len(errMsg) < 50 {
-				t.Errorf("Error message seems too short: %q", errMsg)
+				t.Errorf(
+					"Error message seems too short: %q",
+					errMsg,
+				)
 			}
 		})
 	}
@@ -747,7 +921,9 @@ func TestValidateJSONCOutput_ErrorMessages(t *testing.T) {
 
 // TestBuildJSONCValidationError_ContextSize tests that the error context
 // display properly handles edge cases like errors near the start or end of data.
-func TestBuildJSONCValidationError_ContextSize(t *testing.T) {
+func TestBuildJSONCValidationError_ContextSize(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		invalidJSON string
@@ -759,8 +935,11 @@ func TestBuildJSONCValidationError_ContextSize(t *testing.T) {
 			description: "Error near the beginning should not panic",
 		},
 		{
-			name:        "error at end",
-			invalidJSON: strings.Repeat("a", 200) + `{"version": 1, "tasks": [}`,
+			name: "error at end",
+			invalidJSON: strings.Repeat(
+				"a",
+				200,
+			) + `{"version": 1, "tasks": [}`,
 			description: "Error near the end should not panic",
 		},
 		{
@@ -773,10 +952,14 @@ func TestBuildJSONCValidationError_ContextSize(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// This should not panic
-			err := validateJSONCOutput([]byte(tt.invalidJSON))
+			err := validateJSONCOutput(
+				[]byte(tt.invalidJSON),
+			)
 
 			if err == nil {
-				t.Fatal("Expected error but got none")
+				t.Fatal(
+					"Expected error but got none",
+				)
 			}
 
 			// Verify we got a reasonable error message
@@ -785,15 +968,24 @@ func TestBuildJSONCValidationError_ContextSize(t *testing.T) {
 				t.Error("Error message is empty")
 			}
 
-			if !strings.Contains(errMsg, "JSONC validation failed") {
-				t.Errorf("Error message doesn't contain expected header: %s", errMsg)
+			if !strings.Contains(
+				errMsg,
+				"JSONC validation failed",
+			) {
+				t.Errorf(
+					"Error message doesn't contain expected header: %s",
+					errMsg,
+				)
 			}
 		})
 	}
 }
 
 // verifyRoundTrip checks that a round-trip conversion preserves data
-func verifyRoundTrip(t *testing.T, originalFile, roundTrippedFile *parsers.TasksFile) {
+func verifyRoundTrip(
+	t *testing.T,
+	originalFile, roundTrippedFile *parsers.TasksFile,
+) {
 	// Verify version
 	if roundTrippedFile.Version != originalFile.Version {
 		t.Errorf(
@@ -804,7 +996,11 @@ func verifyRoundTrip(t *testing.T, originalFile, roundTrippedFile *parsers.Tasks
 	}
 
 	// Verify task count
-	if len(roundTrippedFile.Tasks) != len(originalFile.Tasks) {
+	if len(
+		roundTrippedFile.Tasks,
+	) != len(
+		originalFile.Tasks,
+	) {
 		t.Fatalf(
 			"Task count mismatch: got %d, want %d",
 			len(roundTrippedFile.Tasks),
@@ -814,22 +1010,44 @@ func verifyRoundTrip(t *testing.T, originalFile, roundTrippedFile *parsers.Tasks
 
 	// Verify each task
 	for i := range originalFile.Tasks {
-		verifyTaskPreserved(t, i, &roundTrippedFile.Tasks[i], &originalFile.Tasks[i])
+		verifyTaskPreserved(
+			t,
+			i,
+			&roundTrippedFile.Tasks[i],
+			&originalFile.Tasks[i],
+		)
 	}
 
 	// Verify parent
 	if roundTrippedFile.Parent != originalFile.Parent {
-		t.Errorf("Parent mismatch: got %q, want %q", roundTrippedFile.Parent, originalFile.Parent)
+		t.Errorf(
+			"Parent mismatch: got %q, want %q",
+			roundTrippedFile.Parent,
+			originalFile.Parent,
+		)
 	}
 
 	// Verify includes
-	verifyIncludesPreserved(t, originalFile.Includes, roundTrippedFile.Includes)
+	verifyIncludesPreserved(
+		t,
+		originalFile.Includes,
+		roundTrippedFile.Includes,
+	)
 }
 
 // verifyTaskPreserved checks that a task is preserved correctly
-func verifyTaskPreserved(t *testing.T, idx int, roundTripped, original *parsers.Task) {
+func verifyTaskPreserved(
+	t *testing.T,
+	idx int,
+	roundTripped, original *parsers.Task,
+) {
 	if roundTripped.ID != original.ID {
-		t.Errorf("Task %d ID mismatch: got %q, want %q", idx, roundTripped.ID, original.ID)
+		t.Errorf(
+			"Task %d ID mismatch: got %q, want %q",
+			idx,
+			roundTripped.ID,
+			original.ID,
+		)
 	}
 	if roundTripped.Section != original.Section {
 		t.Errorf(
@@ -866,30 +1084,52 @@ func verifyTaskPreserved(t *testing.T, idx int, roundTripped, original *parsers.
 }
 
 // verifyIncludesPreserved checks that includes are preserved
-func verifyIncludesPreserved(t *testing.T, original, roundTripped []string) {
+func verifyIncludesPreserved(
+	t *testing.T,
+	original, roundTripped []string,
+) {
 	if len(roundTripped) != len(original) {
-		t.Errorf("Includes count mismatch: got %d, want %d", len(roundTripped), len(original))
+		t.Errorf(
+			"Includes count mismatch: got %d, want %d",
+			len(roundTripped),
+			len(original),
+		)
 
 		return
 	}
 	for i, inc := range original {
 		if roundTripped[i] != inc {
-			t.Errorf("Includes[%d] mismatch: got %q, want %q", i, roundTripped[i], inc)
+			t.Errorf(
+				"Includes[%d] mismatch: got %q, want %q",
+				i,
+				roundTripped[i],
+				inc,
+			)
 		}
 	}
 }
 
 // TestRoundTripConversion_RealWorldData tests round-trip conversion using
 // actual archived tasks.jsonc files to ensure validation works with production data.
-func TestRoundTripConversion_RealWorldData(t *testing.T) {
+func TestRoundTripConversion_RealWorldData(
+	t *testing.T,
+) {
 	// Get testdata directory and walk archived changes
 	testDataDir := GetTestDataDir(t)
-	archivedDir := filepath.Join(testDataDir, "integration", "changes", "archive")
+	archivedDir := filepath.Join(
+		testDataDir,
+		"integration",
+		"changes",
+		"archive",
+	)
 
 	// Find all tasks.jsonc files in archived changes
 	entries, err := os.ReadDir(archivedDir)
 	if err != nil {
-		t.Fatalf("Failed to read archived changes directory: %v", err)
+		t.Fatalf(
+			"Failed to read archived changes directory: %v",
+			err,
+		)
 	}
 
 	var archivedFiles []string
@@ -898,9 +1138,16 @@ func TestRoundTripConversion_RealWorldData(t *testing.T) {
 			continue
 		}
 		// Check for tasks.jsonc in each archived change subdirectory
-		tasksPath := filepath.Join(archivedDir, entry.Name(), "tasks.jsonc")
+		tasksPath := filepath.Join(
+			archivedDir,
+			entry.Name(),
+			"tasks.jsonc",
+		)
 		if _, err := os.Stat(tasksPath); err == nil {
-			archivedFiles = append(archivedFiles, tasksPath)
+			archivedFiles = append(
+				archivedFiles,
+				tasksPath,
+			)
 		}
 	}
 
@@ -911,31 +1158,55 @@ func TestRoundTripConversion_RealWorldData(t *testing.T) {
 	}
 
 	for _, filePath := range archivedFiles {
-		t.Run(filepath.Base(filePath), func(t *testing.T) {
-			// Read the archived tasks.jsonc file
-			tasksFile, err := parsers.ReadTasksJson(filePath)
-			if err != nil {
-				t.Fatalf("Failed to read archived tasks.jsonc: %v", err)
-			}
+		t.Run(
+			filepath.Base(filePath),
+			func(t *testing.T) {
+				// Read the archived tasks.jsonc file
+				tasksFile, err := parsers.ReadTasksJson(
+					filePath,
+				)
+				if err != nil {
+					t.Fatalf(
+						"Failed to read archived tasks.jsonc: %v",
+						err,
+					)
+				}
 
-			// Marshal back to JSON
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
-			if err != nil {
-				t.Fatalf("Failed to marshal tasks file: %v", err)
-			}
+				// Marshal back to JSON
+				jsonData, err := json.MarshalIndent(
+					tasksFile,
+					"",
+					"  ",
+				)
+				if err != nil {
+					t.Fatalf(
+						"Failed to marshal tasks file: %v",
+						err,
+					)
+				}
 
-			// Strip JSONC comments (simulating the round-trip through JSONC processing)
-			strippedData := parsers.StripJSONComments(jsonData)
+				// Strip JSONC comments (simulating the round-trip through JSONC processing)
+				strippedData := parsers.StripJSONComments(
+					jsonData,
+				)
 
-			// Unmarshal back to a TasksFile
-			var roundTrippedFile parsers.TasksFile
-			if err := json.Unmarshal(strippedData, &roundTrippedFile); err != nil {
-				t.Fatalf("Failed to unmarshal after round-trip: %v", err)
-			}
+				// Unmarshal back to a TasksFile
+				var roundTrippedFile parsers.TasksFile
+				if err := json.Unmarshal(strippedData, &roundTrippedFile); err != nil {
+					t.Fatalf(
+						"Failed to unmarshal after round-trip: %v",
+						err,
+					)
+				}
 
-			// Verify the round-trip is lossless
-			verifyRoundTrip(t, tasksFile, &roundTrippedFile)
-		})
+				// Verify the round-trip is lossless
+				verifyRoundTrip(
+					t,
+					tasksFile,
+					&roundTrippedFile,
+				)
+			},
+		)
 	}
 }
 
@@ -947,7 +1218,9 @@ func TestRoundTripConversion_RealWorldData(t *testing.T) {
 // These patterns are common in task descriptions related to code implementation,
 // configuration files, and shell scripts. The test ensures they round-trip correctly
 // through JSON marshaling/unmarshaling without data loss or corruption.
-func TestJSONCValidation_FormatStrings(t *testing.T) {
+func TestJSONCValidation_FormatStrings(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -1022,25 +1295,44 @@ func TestJSONCValidation_FormatStrings(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSON can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip: unmarshal and check that description is preserved
 			var roundTrip parsers.TasksFile
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			if len(roundTrip.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(roundTrip.Tasks),
+				)
 			}
 
 			if roundTrip.Tasks[0].Description != tt.description {
@@ -1053,16 +1345,25 @@ func TestJSONCValidation_FormatStrings(t *testing.T) {
 
 			// Verify all other fields are preserved
 			if roundTrip.Tasks[0].ID != tasksFile.Tasks[0].ID {
-				t.Errorf("Task ID mismatch: got %q, want %q",
-					roundTrip.Tasks[0].ID, tasksFile.Tasks[0].ID)
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					roundTrip.Tasks[0].ID,
+					tasksFile.Tasks[0].ID,
+				)
 			}
 			if roundTrip.Tasks[0].Section != tasksFile.Tasks[0].Section {
-				t.Errorf("Task Section mismatch: got %q, want %q",
-					roundTrip.Tasks[0].Section, tasksFile.Tasks[0].Section)
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Section,
+					tasksFile.Tasks[0].Section,
+				)
 			}
 			if roundTrip.Tasks[0].Status != tasksFile.Tasks[0].Status {
-				t.Errorf("Task Status mismatch: got %q, want %q",
-					roundTrip.Tasks[0].Status, tasksFile.Tasks[0].Status)
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					roundTrip.Tasks[0].Status,
+					tasksFile.Tasks[0].Status,
+				)
 			}
 		})
 	}
@@ -1133,19 +1434,25 @@ func TestJSONCValidation_EdgeCases(t *testing.T) {
 			shouldPass:  true,
 		},
 		{
-			name:        "very long description 10KB",
-			description: generateLongString(10 * 1024),
-			shouldPass:  true,
+			name: "very long description 10KB",
+			description: generateLongString(
+				10 * 1024,
+			),
+			shouldPass: true,
 		},
 		{
-			name:        "very long description 50KB",
-			description: generateLongString(50 * 1024),
-			shouldPass:  true,
+			name: "very long description 50KB",
+			description: generateLongString(
+				50 * 1024,
+			),
+			shouldPass: true,
 		},
 		{
-			name:        "very long description 100KB",
-			description: generateLongString(100 * 1024),
-			shouldPass:  true,
+			name: "very long description 100KB",
+			description: generateLongString(
+				100 * 1024,
+			),
+			shouldPass: true,
 		},
 		{
 			name:        "mixed special characters",
@@ -1265,7 +1572,11 @@ func TestJSONCValidation_EdgeCases(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
 				if tt.shouldPass {
 					t.Errorf(
@@ -1281,7 +1592,11 @@ func TestJSONCValidation_EdgeCases(t *testing.T) {
 			// Validate that the generated JSON can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
 				if tt.shouldPass {
-					t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+					t.Errorf(
+						"validateJSONCOutput failed for %s: %v",
+						tt.name,
+						err,
+					)
 				}
 
 				return
@@ -1289,17 +1604,26 @@ func TestJSONCValidation_EdgeCases(t *testing.T) {
 
 			// Verify round-trip: unmarshal and check that description is preserved
 			var roundTrip parsers.TasksFile
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
 				if tt.shouldPass {
-					t.Errorf("round-trip unmarshal failed for %s: %v", tt.name, err)
+					t.Errorf(
+						"round-trip unmarshal failed for %s: %v",
+						tt.name,
+						err,
+					)
 				}
 
 				return
 			}
 
 			if len(roundTrip.Tasks) != 1 {
-				t.Errorf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+				t.Errorf(
+					"expected 1 task after round-trip, got %d",
+					len(roundTrip.Tasks),
+				)
 
 				return
 			}
@@ -1368,7 +1692,9 @@ func generatePrintableASCII() string {
 //
 // This is critical because StripJSONComments should only remove actual
 // comments, not comment-like strings that appear inside JSON string values.
-func TestJSONCValidation_CommentLikeStrings(t *testing.T) {
+func TestJSONCValidation_CommentLikeStrings(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -1436,15 +1762,26 @@ func TestJSONCValidation_CommentLikeStrings(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent() error = %v", err)
+				t.Fatalf(
+					"json.MarshalIndent() error = %v",
+					err,
+				)
 			}
 
 			// Verify JSON is valid by unmarshaling it directly
 			var directUnmarshal parsers.TasksFile
 			if err := json.Unmarshal(jsonData, &directUnmarshal); err != nil {
-				t.Fatalf("json.Unmarshal() error = %v, JSON:\n%s", err, string(jsonData))
+				t.Fatalf(
+					"json.Unmarshal() error = %v, JSON:\n%s",
+					err,
+					string(jsonData),
+				)
 			}
 
 			// Verify direct unmarshal preserves description
@@ -1459,7 +1796,9 @@ func TestJSONCValidation_CommentLikeStrings(t *testing.T) {
 			// Now test with StripJSONComments (simulating JSONC parsing)
 			// This is the critical test: StripJSONComments should NOT remove
 			// comment-like syntax when it's inside a quoted string
-			strippedData := parsers.StripJSONComments(jsonData)
+			strippedData := parsers.StripJSONComments(
+				jsonData,
+			)
 
 			var roundTripUnmarshal parsers.TasksFile
 			if err := json.Unmarshal(strippedData, &roundTripUnmarshal); err != nil {
@@ -1519,7 +1858,9 @@ func TestJSONCValidation_CommentLikeStrings(t *testing.T) {
 // during JSON marshal/unmarshal round-trip conversion. This ensures that the
 // JSONC serialization process correctly handles all field types including
 // ID, Section, Description, Status, and Children.
-func TestRoundTripConversion_AllFields(t *testing.T) {
+func TestRoundTripConversion_AllFields(
+	t *testing.T,
+) {
 	tests := []struct {
 		name      string
 		tasksFile parsers.TasksFile
@@ -1610,9 +1951,13 @@ func TestRoundTripConversion_AllFields(t *testing.T) {
 		{
 			name: "version 2 root file with parent and includes",
 			tasksFile: parsers.TasksFile{
-				Version:  2,
-				Parent:   "root",
-				Includes: []string{"tasks-1.jsonc", "tasks-2.jsonc", "tasks-3.jsonc"},
+				Version: 2,
+				Parent:  "root",
+				Includes: []string{
+					"tasks-1.jsonc",
+					"tasks-2.jsonc",
+					"tasks-3.jsonc",
+				},
 				Tasks: []parsers.Task{
 					{
 						ID:          "1",
@@ -1665,18 +2010,30 @@ func TestRoundTripConversion_AllFields(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Marshal to JSON
-			jsonData, err := json.MarshalIndent(tt.tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tt.tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("Failed to marshal tasks file: %v", err)
+				t.Fatalf(
+					"Failed to marshal tasks file: %v",
+					err,
+				)
 			}
 
 			// Strip JSONC comments (simulating the comment stripping process)
-			strippedData := parsers.StripJSONComments(jsonData)
+			strippedData := parsers.StripJSONComments(
+				jsonData,
+			)
 
 			// Unmarshal back to TasksFile
 			var roundTripped parsers.TasksFile
 			if err := json.Unmarshal(strippedData, &roundTripped); err != nil {
-				t.Fatalf("Failed to unmarshal after round-trip: %v", err)
+				t.Fatalf(
+					"Failed to unmarshal after round-trip: %v",
+					err,
+				)
 			}
 
 			// Deep equality check on Version
@@ -1698,7 +2055,11 @@ func TestRoundTripConversion_AllFields(t *testing.T) {
 			}
 
 			// Deep equality check on Includes
-			if len(roundTripped.Includes) != len(tt.tasksFile.Includes) {
+			if len(
+				roundTripped.Includes,
+			) != len(
+				tt.tasksFile.Includes,
+			) {
 				t.Errorf(
 					"Includes length mismatch: got %d, want %d",
 					len(roundTripped.Includes),
@@ -1718,7 +2079,11 @@ func TestRoundTripConversion_AllFields(t *testing.T) {
 			}
 
 			// Deep equality check on Tasks array
-			if len(roundTripped.Tasks) != len(tt.tasksFile.Tasks) {
+			if len(
+				roundTripped.Tasks,
+			) != len(
+				tt.tasksFile.Tasks,
+			) {
 				t.Fatalf(
 					"Tasks length mismatch: got %d, want %d",
 					len(roundTripped.Tasks),
@@ -1731,7 +2096,12 @@ func TestRoundTripConversion_AllFields(t *testing.T) {
 				rtTask := roundTripped.Tasks[i]
 
 				if rtTask.ID != originalTask.ID {
-					t.Errorf("Task[%d].ID mismatch: got %q, want %q", i, rtTask.ID, originalTask.ID)
+					t.Errorf(
+						"Task[%d].ID mismatch: got %q, want %q",
+						i,
+						rtTask.ID,
+						originalTask.ID,
+					)
 				}
 
 				if rtTask.Section != originalTask.Section {
@@ -1790,7 +2160,9 @@ func TestRoundTripConversion_AllFields(t *testing.T) {
 //
 // This is critical for security and data integrity when task descriptions
 // might contain code examples, documentation snippets, or malicious input.
-func TestJSONCValidation_HTMLInjection(t *testing.T) {
+func TestJSONCValidation_HTMLInjection(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -1893,29 +2265,48 @@ func TestJSONCValidation_HTMLInjection(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(original, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				original,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSONC can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip is lossless:
 			// Strip comments (though we don't have any in this test)
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 
 			// Unmarshal back to TasksFile
 			var result parsers.TasksFile
 			if err := json.Unmarshal(stripped, &result); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			// Verify we got exactly one task back
 			if len(result.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(result.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(result.Tasks),
+				)
 			}
 
 			// Verify the description matches exactly (lossless round-trip)
@@ -1970,7 +2361,9 @@ func TestJSONCValidation_HTMLInjection(t *testing.T) {
 //
 // This test covers task 1.7 from test-extreme-jsonc change proposal:
 // "Quote bombardment: \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\""
-func TestJSONCValidation_QuoteBombardment(t *testing.T) {
+func TestJSONCValidation_QuoteBombardment(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -2033,32 +2426,57 @@ func TestJSONCValidation_QuoteBombardment(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSON can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip: unmarshal and check that description is preserved
 			var roundTrip parsers.TasksFile
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			if len(roundTrip.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(roundTrip.Tasks),
+				)
 			}
 
 			if roundTrip.Tasks[0].Description != tt.description {
 				t.Errorf(
 					"round-trip failed to preserve quote bombardment\noriginal length: %d quotes\nround-trip length: %d quotes\noriginal: %q\nround-trip: %q",
-					strings.Count(tt.description, `"`),
-					strings.Count(roundTrip.Tasks[0].Description, `"`),
+					strings.Count(
+						tt.description,
+						`"`,
+					),
+					strings.Count(
+						roundTrip.Tasks[0].Description,
+						`"`,
+					),
 					tt.description,
 					roundTrip.Tasks[0].Description,
 				)
@@ -2066,7 +2484,11 @@ func TestJSONCValidation_QuoteBombardment(t *testing.T) {
 
 			// Verify all other fields are preserved
 			if roundTrip.Tasks[0].ID != "1.7" {
-				t.Errorf("Task ID mismatch: got %q, want %q", roundTrip.Tasks[0].ID, "1.7")
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					roundTrip.Tasks[0].ID,
+					"1.7",
+				)
 			}
 			if roundTrip.Tasks[0].Section != testSectionExtremeEdgeCases {
 				t.Errorf(
@@ -2088,7 +2510,9 @@ func TestJSONCValidation_QuoteBombardment(t *testing.T) {
 			// In JSON, each quote in the description should be escaped as \"
 			// So we should find the escaped version in the JSON string
 			if !strings.Contains(jsonStr, `\"`) {
-				t.Error("JSON output does not contain escaped quotes as expected")
+				t.Error(
+					"JSON output does not contain escaped quotes as expected",
+				)
 			}
 		})
 	}
@@ -2103,7 +2527,9 @@ func TestJSONCValidation_QuoteBombardment(t *testing.T) {
 //
 // are properly escaped in JSON and can be successfully round-tripped
 // through the validation process without losing data.
-func TestJSONCValidation_PathTraversal(t *testing.T) {
+func TestJSONCValidation_PathTraversal(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -2182,29 +2608,48 @@ func TestJSONCValidation_PathTraversal(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(original, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				original,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSONC can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip is lossless:
 			// Strip comments (though we don't have any in this test)
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 
 			// Unmarshal back to TasksFile
 			var result parsers.TasksFile
 			if err := json.Unmarshal(stripped, &result); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			// Verify we got exactly one task back
 			if len(result.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(result.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(result.Tasks),
+				)
 			}
 
 			// Verify the description matches exactly (lossless round-trip)
@@ -2218,20 +2663,32 @@ func TestJSONCValidation_PathTraversal(t *testing.T) {
 
 			// Verify all other fields match
 			if result.Tasks[0].ID != original.Tasks[0].ID {
-				t.Errorf("Task ID mismatch: got %q, want %q",
-					result.Tasks[0].ID, original.Tasks[0].ID)
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					result.Tasks[0].ID,
+					original.Tasks[0].ID,
+				)
 			}
 			if result.Tasks[0].Section != original.Tasks[0].Section {
-				t.Errorf("Task Section mismatch: got %q, want %q",
-					result.Tasks[0].Section, original.Tasks[0].Section)
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					result.Tasks[0].Section,
+					original.Tasks[0].Section,
+				)
 			}
 			if result.Tasks[0].Status != original.Tasks[0].Status {
-				t.Errorf("Task Status mismatch: got %q, want %q",
-					result.Tasks[0].Status, original.Tasks[0].Status)
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					result.Tasks[0].Status,
+					original.Tasks[0].Status,
+				)
 			}
 			if result.Version != original.Version {
-				t.Errorf("Version mismatch: got %d, want %d",
-					result.Version, original.Version)
+				t.Errorf(
+					"Version mismatch: got %d, want %d",
+					result.Version,
+					original.Version,
+				)
 			}
 		})
 	}
@@ -2244,7 +2701,9 @@ func TestJSONCValidation_PathTraversal(t *testing.T) {
 // The test verifies that the exact string from task 1.15:
 // !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 // can be marshaled to JSON, parsed back, and round-trip correctly without data loss.
-func TestJSONCValidation_AllPrintableASCII(t *testing.T) {
+func TestJSONCValidation_AllPrintableASCII(
+	t *testing.T,
+) {
 	// The exact description from task 1.15
 	task115Description := "All printable ASCII: !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 
@@ -2293,27 +2752,45 @@ func TestJSONCValidation_AllPrintableASCII(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(original, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				original,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSONC can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed: %v", err)
+				t.Errorf(
+					"validateJSONCOutput failed: %v",
+					err,
+				)
 			}
 
 			// Verify round-trip: Strip comments and unmarshal
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 
 			var result parsers.TasksFile
 			if err := json.Unmarshal(stripped, &result); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			// Verify we got exactly one task back
 			if len(result.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(result.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(result.Tasks),
+				)
 			}
 
 			// Verify the description matches exactly (lossless round-trip)
@@ -2327,20 +2804,32 @@ func TestJSONCValidation_AllPrintableASCII(t *testing.T) {
 
 			// Verify all other fields match
 			if result.Tasks[0].ID != original.Tasks[0].ID {
-				t.Errorf("Task ID mismatch: got %q, want %q",
-					result.Tasks[0].ID, original.Tasks[0].ID)
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					result.Tasks[0].ID,
+					original.Tasks[0].ID,
+				)
 			}
 			if result.Tasks[0].Section != original.Tasks[0].Section {
-				t.Errorf("Task Section mismatch: got %q, want %q",
-					result.Tasks[0].Section, original.Tasks[0].Section)
+				t.Errorf(
+					"Task Section mismatch: got %q, want %q",
+					result.Tasks[0].Section,
+					original.Tasks[0].Section,
+				)
 			}
 			if result.Tasks[0].Status != original.Tasks[0].Status {
-				t.Errorf("Task Status mismatch: got %q, want %q",
-					result.Tasks[0].Status, original.Tasks[0].Status)
+				t.Errorf(
+					"Task Status mismatch: got %q, want %q",
+					result.Tasks[0].Status,
+					original.Tasks[0].Status,
+				)
 			}
 			if result.Version != original.Version {
-				t.Errorf("Version mismatch: got %d, want %d",
-					result.Version, original.Version)
+				t.Errorf(
+					"Version mismatch: got %d, want %d",
+					result.Version,
+					original.Version,
+				)
 			}
 		})
 	}
@@ -2363,7 +2852,9 @@ func TestJSONCValidation_AllPrintableASCII(t *testing.T) {
 //
 // This is a security-critical test for any system that processes user-provided
 // text and serializes it to JSON.
-func TestJSONCValidation_JSONInjectionAttempt(t *testing.T) {
+func TestJSONCValidation_JSONInjectionAttempt(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -2438,23 +2929,40 @@ func TestJSONCValidation_JSONInjectionAttempt(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(original, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				original,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent() error = %v", err)
+				t.Fatalf(
+					"json.MarshalIndent() error = %v",
+					err,
+				)
 			}
 
 			// CRITICAL: Validate that the generated JSON is valid and parseable
 			// If the injection succeeded, this would fail or produce wrong structure
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v\nGenerated JSON:\n%s",
-					tt.name, err, string(jsonData))
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v\nGenerated JSON:\n%s",
+					tt.name,
+					err,
+					string(jsonData),
+				)
 			}
 
 			// Verify round-trip: unmarshal and check structure integrity
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			var roundTrip parsers.TasksFile
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v\nJSON:\n%s", err, string(jsonData))
+				t.Fatalf(
+					"round-trip unmarshal failed: %v\nJSON:\n%s",
+					err,
+					string(jsonData),
+				)
 			}
 
 			// CRITICAL: Verify that we still have exactly 3 tasks (not injected extras)
@@ -2477,16 +2985,26 @@ func TestJSONCValidation_JSONInjectionAttempt(t *testing.T) {
 
 			// Verify that other task fields are not affected by the injection
 			if roundTrip.Tasks[0].Description != "Normal task before injection" {
-				t.Errorf("Task before injection was corrupted: %q", roundTrip.Tasks[0].Description)
+				t.Errorf(
+					"Task before injection was corrupted: %q",
+					roundTrip.Tasks[0].Description,
+				)
 			}
 			if len(roundTrip.Tasks) >= 3 &&
 				roundTrip.Tasks[2].Description != "Normal task after injection" {
-				t.Errorf("Task after injection was corrupted: %q", roundTrip.Tasks[2].Description)
+				t.Errorf(
+					"Task after injection was corrupted: %q",
+					roundTrip.Tasks[2].Description,
+				)
 			}
 
 			// Verify task IDs are preserved (not replaced by injected IDs)
 			if roundTrip.Tasks[1].ID != "1.2" {
-				t.Errorf("Task ID corrupted: expected %q, got %q", "1.2", roundTrip.Tasks[1].ID)
+				t.Errorf(
+					"Task ID corrupted: expected %q, got %q",
+					"1.2",
+					roundTrip.Tasks[1].ID,
+				)
 			}
 
 			// Verify task statuses are preserved (not changed to "hacked" or "completed")
@@ -2500,7 +3018,10 @@ func TestJSONCValidation_JSONInjectionAttempt(t *testing.T) {
 
 			// Verify version is preserved (not changed by injection)
 			if roundTrip.Version != 1 {
-				t.Errorf("Version corrupted: expected 1, got %d", roundTrip.Version)
+				t.Errorf(
+					"Version corrupted: expected 1, got %d",
+					roundTrip.Version,
+				)
 			}
 		})
 	}
@@ -2520,7 +3041,9 @@ func TestJSONCValidation_JSONInjectionAttempt(t *testing.T) {
 // When marshaling to JSON:
 //   - Actual newline '\n' becomes "\\n" in JSON
 //   - Literal backslash-n '\\n' becomes "\\\\n" in JSON (backslash escaped, then n)
-func TestJSONCValidation_LiteralNewlineChars(t *testing.T) {
+func TestJSONCValidation_LiteralNewlineChars(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -2591,25 +3114,44 @@ func TestJSONCValidation_LiteralNewlineChars(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSONC can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip: unmarshal and check that description is preserved
 			var roundTrip parsers.TasksFile
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v", err)
+				t.Fatalf(
+					"round-trip unmarshal failed: %v",
+					err,
+				)
 			}
 
 			if len(roundTrip.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(roundTrip.Tasks),
+				)
 			}
 
 			// Verify the description is preserved EXACTLY (this is the critical test)
@@ -2629,12 +3171,18 @@ func TestJSONCValidation_LiteralNewlineChars(t *testing.T) {
 
 			// Verify that literal backslash sequences are properly escaped
 			// If input contains \n (backslash + n), JSON must contain \\n (escaped backslash + n)
-			if !strings.Contains(tt.description, "\\n") {
+			if !strings.Contains(
+				tt.description,
+				"\\n",
+			) {
 				return
 			}
 
 			// The JSON representation should have the backslash escaped
-			if !strings.Contains(jsonStr, "\\\\n") {
+			if !strings.Contains(
+				jsonStr,
+				"\\\\n",
+			) {
 				t.Errorf(
 					"JSON output does not properly escape literal \\n sequence\nInput: %q\nJSON:\n%s",
 					tt.description,
@@ -2649,7 +3197,9 @@ func TestJSONCValidation_LiteralNewlineChars(t *testing.T) {
 // This test ensures that task descriptions containing extreme combinations of quotes
 // and backslashes (as seen in task 1.9 of test-extreme-jsonc) are properly escaped
 // during JSON marshalling and can be successfully round-tripped through the validation process.
-func TestJSONCValidation_MixedBombardment(t *testing.T) {
+func TestJSONCValidation_MixedBombardment(
+	t *testing.T,
+) {
 	tests := []struct {
 		name        string
 		description string
@@ -2700,25 +3250,45 @@ func TestJSONCValidation_MixedBombardment(t *testing.T) {
 			}
 
 			// Marshal to JSON (this is what writeTasksJSONC does internally)
-			jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+			jsonData, err := json.MarshalIndent(
+				tasksFile,
+				"",
+				"  ",
+			)
 			if err != nil {
-				t.Fatalf("json.MarshalIndent failed: %v", err)
+				t.Fatalf(
+					"json.MarshalIndent failed: %v",
+					err,
+				)
 			}
 
 			// Validate that the generated JSON can be parsed back
 			if err := validateJSONCOutput(jsonData); err != nil {
-				t.Errorf("validateJSONCOutput failed for %s: %v", tt.name, err)
+				t.Errorf(
+					"validateJSONCOutput failed for %s: %v",
+					tt.name,
+					err,
+				)
 			}
 
 			// Verify round-trip: unmarshal and check that description is preserved
 			var roundTrip parsers.TasksFile
-			stripped := parsers.StripJSONComments(jsonData)
+			stripped := parsers.StripJSONComments(
+				jsonData,
+			)
 			if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-				t.Fatalf("round-trip unmarshal failed: %v\nJSON:\n%s", err, string(jsonData))
+				t.Fatalf(
+					"round-trip unmarshal failed: %v\nJSON:\n%s",
+					err,
+					string(jsonData),
+				)
 			}
 
 			if len(roundTrip.Tasks) != 1 {
-				t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+				t.Fatalf(
+					"expected 1 task after round-trip, got %d",
+					len(roundTrip.Tasks),
+				)
 			}
 
 			if roundTrip.Tasks[0].Description != tt.description {
@@ -2732,7 +3302,11 @@ func TestJSONCValidation_MixedBombardment(t *testing.T) {
 
 			// Verify all other fields are preserved
 			if roundTrip.Tasks[0].ID != "1.9" {
-				t.Errorf("Task ID mismatch: got %q, want %q", roundTrip.Tasks[0].ID, "1.9")
+				t.Errorf(
+					"Task ID mismatch: got %q, want %q",
+					roundTrip.Tasks[0].ID,
+					"1.9",
+				)
 			}
 			if roundTrip.Tasks[0].Section != "Extreme Edge Cases" {
 				t.Errorf(
@@ -2781,26 +3355,44 @@ func TestFinalCompletion(t *testing.T) {
 	}
 
 	// Marshal to JSON (this is what writeTasksJSONC does)
-	jsonData, err := json.MarshalIndent(tasksFile, "", "  ")
+	jsonData, err := json.MarshalIndent(
+		tasksFile,
+		"",
+		"  ",
+	)
 	if err != nil {
-		t.Fatalf("json.MarshalIndent() failed: %v", err)
+		t.Fatalf(
+			"json.MarshalIndent() failed: %v",
+			err,
+		)
 	}
 
 	// Validate that the generated JSONC is valid JSON
 	if err := validateJSONCOutput(jsonData); err != nil {
-		t.Fatalf("validateJSONCOutput() failed: %v", err)
+		t.Fatalf(
+			"validateJSONCOutput() failed: %v",
+			err,
+		)
 	}
 
 	// Verify round-trip: unmarshal and check that description is preserved
 	var roundTrip parsers.TasksFile
-	stripped := parsers.StripJSONComments(jsonData)
+	stripped := parsers.StripJSONComments(
+		jsonData,
+	)
 	if err := json.Unmarshal(stripped, &roundTrip); err != nil {
-		t.Fatalf("round-trip unmarshal failed: %v", err)
+		t.Fatalf(
+			"round-trip unmarshal failed: %v",
+			err,
+		)
 	}
 
 	// Verify we got exactly one task back
 	if len(roundTrip.Tasks) != 1 {
-		t.Fatalf("expected 1 task after round-trip, got %d", len(roundTrip.Tasks))
+		t.Fatalf(
+			"expected 1 task after round-trip, got %d",
+			len(roundTrip.Tasks),
+		)
 	}
 
 	// Verify the description matches exactly (lossless round-trip)
@@ -2814,30 +3406,66 @@ func TestFinalCompletion(t *testing.T) {
 
 	// Verify all fields are preserved
 	if roundTrip.Tasks[0].ID != task.ID {
-		t.Errorf("Task ID mismatch: got %q, want %q", roundTrip.Tasks[0].ID, task.ID)
+		t.Errorf(
+			"Task ID mismatch: got %q, want %q",
+			roundTrip.Tasks[0].ID,
+			task.ID,
+		)
 	}
 	if roundTrip.Tasks[0].Section != task.Section {
-		t.Errorf("Task Section mismatch: got %q, want %q", roundTrip.Tasks[0].Section, task.Section)
+		t.Errorf(
+			"Task Section mismatch: got %q, want %q",
+			roundTrip.Tasks[0].Section,
+			task.Section,
+		)
 	}
 	if roundTrip.Tasks[0].Status != task.Status {
-		t.Errorf("Task Status mismatch: got %q, want %q", roundTrip.Tasks[0].Status, task.Status)
+		t.Errorf(
+			"Task Status mismatch: got %q, want %q",
+			roundTrip.Tasks[0].Status,
+			task.Status,
+		)
 	}
 	if roundTrip.Version != tasksFile.Version {
-		t.Errorf("Version mismatch: got %d, want %d", roundTrip.Version, tasksFile.Version)
+		t.Errorf(
+			"Version mismatch: got %d, want %d",
+			roundTrip.Version,
+			tasksFile.Version,
+		)
 	}
 
 	// Extra verification: Ensure specific characters are present
-	if !strings.Contains(roundTrip.Tasks[0].Description, "<promise>") {
-		t.Error("Missing <promise> tag in round-tripped description")
+	if !strings.Contains(
+		roundTrip.Tasks[0].Description,
+		"<promise>",
+	) {
+		t.Error(
+			"Missing <promise> tag in round-tripped description",
+		)
 	}
-	if !strings.Contains(roundTrip.Tasks[0].Description, "</promise>") {
-		t.Error("Missing </promise> tag in round-tripped description")
+	if !strings.Contains(
+		roundTrip.Tasks[0].Description,
+		"</promise>",
+	) {
+		t.Error(
+			"Missing </promise> tag in round-tripped description",
+		)
 	}
-	if !strings.Contains(roundTrip.Tasks[0].Description, "\"This is the last task: COMPLETE\"") {
-		t.Error("Missing quoted text in round-tripped description")
+	if !strings.Contains(
+		roundTrip.Tasks[0].Description,
+		"\"This is the last task: COMPLETE\"",
+	) {
+		t.Error(
+			"Missing quoted text in round-tripped description",
+		)
 	}
-	if !strings.HasSuffix(roundTrip.Tasks[0].Description, "\n") {
-		t.Error("Missing trailing newline in round-tripped description")
+	if !strings.HasSuffix(
+		roundTrip.Tasks[0].Description,
+		"\n",
+	) {
+		t.Error(
+			"Missing trailing newline in round-tripped description",
+		)
 	}
 
 	// SUCCESS: This is the last task - COMPLETE

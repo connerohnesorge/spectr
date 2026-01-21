@@ -40,11 +40,17 @@ func WindowOp(p int, ps ...int) string {
 	params = append(params, strconv.Itoa(p))
 	for _, p := range ps {
 		if p >= 0 {
-			params = append(params, strconv.Itoa(p))
+			params = append(
+				params,
+				strconv.Itoa(p),
+			)
 		}
 	}
 
-	return "\x1b[" + strings.Join(params, ";") + "t"
+	return "\x1b[" + strings.Join(
+		params,
+		";",
+	) + "t"
 }
 
 // XTWINOPS is an alias for [WindowOp].

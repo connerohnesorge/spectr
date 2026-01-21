@@ -16,7 +16,10 @@ func setTimespec(sec, nsec int64) Timespec {
 }
 
 func setTimeval(sec, usec int64) Timeval {
-	return Timeval{Sec: int64(sec), Usec: int32(usec)}
+	return Timeval{
+		Sec:  int64(sec),
+		Usec: int32(usec),
+	}
 }
 
 func (iov *Iovec) SetLen(length int) {
@@ -55,7 +58,12 @@ func Fstat(fd int, stat *Stat_t) error {
 	return nil
 }
 
-func Fstatat(dirfd int, path string, stat *Stat_t, flags int) error {
+func Fstatat(
+	dirfd int,
+	path string,
+	stat *Stat_t,
+	flags int,
+) error {
 	err := fstatat(dirfd, path, stat, flags)
 	if err != nil {
 		return err

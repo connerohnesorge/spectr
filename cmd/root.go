@@ -24,6 +24,7 @@ type CLI struct {
 	Archive    archive.ArchiveCmd        `cmd:"" help:"Archive a change"`                  //nolint:lll,revive // Kong struct tag with alignment
 	PR         PRCmd                     `cmd:"" help:"Create pull requests"`              //nolint:lll,revive // Kong struct tag with alignment
 	View       ViewCmd                   `cmd:"" help:"Display dashboard"`                 //nolint:lll,revive // Kong struct tag with alignment
+	Ralph      RalphCmd                  `cmd:"" help:"Orchestrate task execution"`        //nolint:lll,revive // Kong struct tag with alignment
 	Version    VersionCmd                `cmd:"" help:"Show version info"`                 //nolint:lll,revive // Kong struct tag with alignment
 	Completion kongcompletion.Completion `cmd:"" help:"Generate completions"`              //nolint:lll,revive // Kong struct tag with alignment
 }

@@ -10,7 +10,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/x/exp/teatest v0.0.0-20251117171329-74ce264f24fc
-	github.com/jotaen/kong-completion v0.0.7
+	github.com/jotaen/kong-completion v0.0.9
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/posener/complete v1.2.3

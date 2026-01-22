@@ -116,6 +116,25 @@ for _, tt := range tests {
 
 Test fixtures in `testdata/`. TUI tests use `charmbracelet/x/exp/teatest`.
 
+### Round-Trip Validation
+For JSONC generation, tests verify data integrity using round-trip validation:
+```go
+// Marshal to JSONC
+jsonData, _ := json.MarshalIndent(original, "", "  ")
+
+// Parse back
+stripped := parsers.StripJSONComments(jsonData)
+var parsed TasksFile
+json.Unmarshal(stripped, &parsed)
+
+// Verify identical
+if parsed.Field != original.Field {
+    t.Errorf("round-trip failed")
+}
+```
+
+Special character testing systematically covers JSON escape sequences (`\`, `"`, `\n`, `\t`, etc.).
+
 ## Orchestration Model
 
 This project uses an orchestrator pattern for complex tasks:

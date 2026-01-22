@@ -25,10 +25,17 @@ type Task struct {
 	Description string `json:"description"`
 	// Status is one of pending, in_progress, completed
 	Status TaskStatusValue `json:"status"`
+	// Children is an optional reference to a child tasks file (e.g., "$ref:tasks-1.jsonc")
+	// Used in version 2 hierarchical task files
+	Children string `json:"children,omitempty"`
 }
 
 // TasksFile represents the root structure of a tasks.json file
 type TasksFile struct {
 	Version int    `json:"version"`
 	Tasks   []Task `json:"tasks"`
+	// Parent is the parent task ID for child task files (version 2)
+	Parent string `json:"parent,omitempty"`
+	// Includes is a list of child task file patterns (version 2 root files)
+	Includes []string `json:"includes,omitempty"`
 }

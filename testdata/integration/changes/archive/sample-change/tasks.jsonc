@@ -1,0 +1,22 @@
+{
+  // Sample archived tasks.jsonc file for testing round-trip conversion
+  // This mirrors the structure of actual archived changes in spectr/changes/archive/
+  "version": 1,
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create database schema",
+      "status": "completed"
+    },
+    {
+      "id": "1.2",
+      "title": "Implement API endpoint",
+      "status": "completed"
+    },
+    {
+      "id": "1.3",
+      "title": "Add frontend component",
+      "status": "completed"
+    }
+  ]
+}

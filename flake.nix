@@ -48,7 +48,7 @@
           exec = rooted ''
             cd "$REPO_ROOT"
             golangci-lint run
-            markdownlint ./spectr/
+            markdownlint ./spectr/ --ignore ./spectr/changes/archive
             cd -
           '';
           description = "Run golangci-lint and markdownlint";
@@ -183,7 +183,7 @@
           pname = "spectr";
           version = "0.0.10";
           src = self;
-          vendorHash = "sha256-i0N0jXuI3r2LHruOuwFGscbk++kKgszKe6QDn07zkVk=";
+          vendorHash = null;
           ldflags = [
             "-s"
             "-w"

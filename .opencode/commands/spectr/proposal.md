@@ -1,6 +1,6 @@
 ---
-allowed-tools: Read, Glob, Grep, Write, Edit, Bash(spectr:*)
 description: Proposal Creation Guide (project)
+allowed-tools: Read, Glob, Grep, Write, Edit, Bash(spectr:*)
 subtask: false
 ---
 # Proposal Creation Guide

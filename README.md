@@ -38,6 +38,10 @@ Version](https://img.shields.io/badge/Go-1.25%2B-00ADD8?logo=go)](https://go.dev
   - [spectr validate](#spectr-validate)
   - [spectr accept](#spectr-accept)
   - [spectr archive](#spectr-archive)
+  - [spectr pr](#spectr-pr)
+    - [spectr pr archive](#spectr-pr-archive)
+    - [spectr pr proposal](#spectr-pr-proposal)
+    - [spectr pr rm](#spectr-pr-rm)
   - [spectr view](#spectr-view)
 - [Architecture & Development](#architecture--development)
   - [Architecture Overview](#architecture-overview)
@@ -68,8 +72,8 @@ manage specifications and changes through a structured three-stage workflow:
 
 1. **Creating Changes**: Write proposals with delta specs showing what SHOULD
   change
-2. **Implementing Changes**: Follow the implementation checklist in `tasks.md`
-3. **Archiving Changes**: Merge deltas into specs, preserving history
+2. **Implementing Changes**: Create proposal PR, wait for approval, follow implementation checklist
+3. **Archiving Changes**: Create archive PR, merge deltas into specs, preserve history
 
 Spectr enforces a clear separation between current truth (`spectr/specs/` - what
 IS built) and proposed changes (`spectr/changes/` - what SHOULD change),
@@ -674,6 +678,236 @@ Archiving change: add-two-factor-auth
 ✓ Archive complete!
 ```text
 
+### spectr pr
+
+Create pull requests for spectr changes to enable team collaboration and integration with CI/CD pipelines.
+
+**Quick Start:**
+```bash
+spectr pr archive <change-id>      # Archive completed work and create PR for spec merging
+spectr pr proposal <change-id>     # Create PR for proposal review before implementation
+spectr pr rm <change-id>           # Create PR to remove obsolete or rejected changes
+```
+
+**#### Why Use PRs with Spectr?**
+
+Pull requests created from spectr changes serve as integration gateways for your team:
+- **Review & Approval**: Get team consensus before merging specs or starting implementation
+- **AI Agent Integration**: PRs can trigger specialized agents for code review, security analysis, or documentation validation
+- **CI/CD Automation**: Use PR creation as a hook to automatically validate specs, run tests, or deploy to staging
+- **Audit Trail**: Maintain complete history of decisions with structured commit messages and PR descriptions
+
+**#### Overview**
+
+The `spectr pr` command has three subcommands:
+
+| Subcommand | Purpose |
+|---|---|
+| `archive` | Archive completed changes and create PR for spec merging |
+| `proposal` | Create PR for team review of new proposals before implementation |
+| `rm` | Create PR to remove obsolete or rejected changes |
+
+**Supported Platforms:**
+
+Spectr uses your system's native version control CLI for PR creation:
+
+| Platform | CLI Tool | Status |
+|---|---|---|
+| GitHub | `gh` | Fully supported |
+| GitLab | `glab` | Fully supported |
+| Gitea | `tea` | Fully supported |
+| Bitbucket | N/A | Manual via web UI |
+
+**#### Common Flags**
+
+These flags are available across all `spectr pr` subcommands:
+
+- `--base <branch>` / `-b <branch>`: Target branch for the PR (auto-detects main/master if omitted)
+- `--draft` / `-d`: Create the PR as a draft (blocks auto-merge but allows collaboration)
+- `--force` / `-f`: Force delete existing remote branch before creating new PR (use with caution)
+- `--dry-run`: Preview what would happen without actually creating the PR or pushing
+
+**#### spectr pr archive**
+
+Archive completed changes and create a pull request for merging delta specs into the main specs.
+
+**When to use:** After implementing and testing a change, ready to integrate specs
+
+**Usage:**
+```bash
+spectr pr archive <change-id> [flags]
+```
+
+**Additional Flags:**
+- `--skip-specs`: Archive the change without running spec merge operations (useful for non-spec changes)
+
+**What happens when you run `spectr pr archive`:**
+
+1. Creates an isolated git worktree on a new branch
+2. Runs the archive operation to merge delta specs into main specs
+3. Stages and commits with structured message: `spectr(archive): <change-id>`
+4. Pushes the new branch to remote
+5. Creates a PR with archive details and spec operation counts
+6. Cleans up the git worktree and removes the local change directory
+
+**Example:**
+```bash
+$ spectr pr archive add-feature-auth
+Creating worktree on branch: spectr/archive/add-feature-auth (based on origin/main)
+Fetching origin...
+Running archive operation...
+
+Archiving change: add-feature-auth
+✓ Validation passed
+✓ Merging deltas into specs/auth/spec.md
+  - Added 2 requirements
+  - Modified 1 requirement
+✓ Moving to archive/2025-01-20-add-feature-auth/
+✓ Archive complete!
+
+Cleaning up worktree...
+
+Branch: spectr/archive/add-feature-auth
+Archived to: spectr/changes/archive/2025-01-20-add-feature-auth
+Spec operations: +2 ~1 -0
+
+PR created: https://github.com/org/repo/pull/42
+```
+
+**Note:** The git worktree provides complete isolation - your main working directory remains untouched while the PR branch is created and modified.
+
+**#### spectr pr proposal**
+
+Create a pull request for team review of a new proposal before implementation begins.
+
+**When to use:** After creating a proposal but before starting implementation (approval gate)
+
+**Usage:**
+```bash
+spectr pr proposal [change-id] [flags]
+```
+
+If no `change-id` is provided, you'll be prompted to select from unmerged proposals.
+
+**What happens when you run `spectr pr proposal`:**
+
+1. Filters to show only unmerged proposals (excludes already-archived changes)
+2. Creates an isolated git worktree on a new branch
+3. Copies the proposal files to the worktree
+4. Stages and commits with structured message: `spectr(proposal): <change-id>`
+5. Pushes to remote
+6. Creates a PR with proposal details (title, description, requirements overview)
+7. Cleans up the git worktree (keeps the local change directory for implementation)
+
+**Example:**
+```bash
+$ spectr pr proposal
+Fetching origin...
+Select proposal to review:
+  1) add-feature-auth (2 requirements)
+  2) refactor-state-mgmt (4 requirements)
+  3) migrate-database (1 requirement)
+Choice: 1
+
+Creating worktree on branch: spectr/proposal/add-feature-auth (based on origin/main)
+Copying proposal files...
+Staging and committing changes...
+Pushing to remote...
+Cleaning up worktree...
+
+Branch: spectr/proposal/add-feature-auth
+
+PR created: https://github.com/org/repo/pull/41
+```
+
+**Note:** The local change directory remains after creating the proposal PR, so you can begin implementation while the team reviews.
+
+**#### spectr pr rm**
+
+Create a pull request to document the removal of an obsolete or rejected change.
+
+**When to use:** When a change is no longer needed (rejected after proposal review, superseded by another change, etc.)
+
+**Usage:**
+```bash
+spectr pr rm <change-id> [flags]
+```
+
+**What happens when you run `spectr pr rm`:**
+
+1. Creates an isolated git worktree on a new branch
+2. Copies the change directory to the worktree
+3. Removes the change directory (preserves it in git history for audit trail)
+4. Commits with structured message: `spectr(remove): <change-id>`
+5. Creates a PR documenting the removal
+6. Cleans up the worktree and removes the local change directory
+
+**Example:**
+```bash
+$ spectr pr rm deprecated-feature
+Creating worktree on branch: spectr/remove/deprecated-feature (based on origin/main)
+Fetching origin...
+Copying change for archive...
+Removing change directory...
+Staging and committing changes...
+Pushing to remote...
+Cleaning up worktree...
+
+Branch: spectr/remove/deprecated-feature
+
+PR created: https://github.com/org/repo/pull/43
+```
+
+**Note:** Even though the change is removed from the filesystem, it remains in git history via the PR for audit purposes.
+
+**#### Collaboration Examples**
+
+**Example 1: Proposal Review Workflow**
+
+Team uses PRs as approval gates before implementation:
+
+```bash
+# Developer creates proposal
+spectr init add-two-factor-auth
+# (writes requirements and scenarios)
+
+# Create PR for team review
+spectr pr proposal add-two-factor-auth
+
+# Team reviews PR. AI agents can be automatically triggered:
+# - Security review agent: Analyzes authentication requirements
+# - Compliance agent: Validates regulatory requirements
+# - Documentation agent: Checks requirement clarity
+
+# Once approved, developer implements
+spectr accept add-two-factor-auth
+# (implement code according to requirements)
+
+# Developer creates archive PR when done
+spectr pr archive add-two-factor-auth
+```
+
+**Example 2: Archive with CI/CD Integration**
+
+PRs trigger automated processes:
+
+```bash
+# Complete feature implementation
+# (code tested, requirements met)
+
+# Create archive PR to merge specs
+spectr pr archive add-feature
+
+# CI/CD pipeline automatically triggered by PR:
+# - Validates spec merge integrity
+# - Runs full test suite
+# - Deploys specs to staging environment
+# - Notifies team when ready for production
+
+# Team reviews and approves merged specs
+# Specs automatically sync to main when PR merges
+```
+
 ### spectr view
 
 Display detailed information about a change or spec.
@@ -1039,23 +1273,25 @@ Create a proposal when you need to:
 
 #### Stage 2: Implementing Changes
 
-1. Read `proposal.md` - Understand what's being built
-2. Read `design.md` (if exists) - Review technical decisions
-3. Read `tasks.md` - Get implementation checklist
-4. Run `spectr accept <id>` - Convert to stable JSON format
-5. Implement tasks sequentially
-6. Update task status in `tasks.jsonc` with values: `pending`, `in_progress`,
+1. **Create Proposal PR** - Run `spectr pr proposal <id>` to get team review
+2. **Wait for Approval** - Address review feedback, iterate until approved
+3. Read `proposal.md` - Understand what's being built
+4. Read `design.md` (if exists) - Review technical decisions
+5. Read `tasks.md` - Get implementation checklist
+6. Run `spectr accept <id>` - Convert to stable JSON format
+7. Implement tasks sequentially
+8. Update task status in `tasks.jsonc` with values: `pending`, `in_progress`,
   `completed`
-7. **Approval gate**: Do not implement until proposal is approved
 
 #### Stage 3: Archiving Changes
 
 After deployment:
 
-1. Run `spectr validate \<change\>` to ensure quality
-2. Run `spectr archive \<change\>` to merge deltas into specs
-3. Changes move to `archive/YYYY-MM-DD-\<change\>/`
-4. Specs in `specs/` are updated with merged requirements
+1. **Create Archive PR** - Run `spectr pr archive <change>` to merge specs
+2. **Review & Merge** - Team reviews the spec merge, approves PR
+3. **Confirm Completion** - Once PR is merged, specs are automatically updated
+4. Changes move to `archive/YYYY-MM-DD-<change>/`
+5. Specs in `specs/` are updated with merged requirements
 
 ### Delta Specifications
 

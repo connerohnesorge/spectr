@@ -10,11 +10,13 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/x/exp/teatest v0.0.0-20251117171329-74ce264f24fc
+	github.com/creack/pty v1.1.24
 	github.com/jotaen/kong-completion v0.0.7
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/mattn/go-isatty v0.0.20
 	github.com/posener/complete v1.2.3
 	github.com/spf13/afero v1.15.0
+	github.com/tidwall/jsonc v0.3.2
 	gopkg.in/yaml.v3 v3.0.1
 )
 

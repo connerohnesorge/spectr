@@ -1,81 +1,100 @@
 # Support Gemini Specification
 
-## Purpose
-
-Documents the Gemini CLI provider integration for Spectr.
-
 ## Requirements
 
-### Requirement: Gemini Provider Configuration
+### Requirement: Gemini Skills Directory
 
-The provider SHALL be configured with these settings:
+The system SHALL create a `.gemini/skills/` directory in the project root for
+storing Gemini CLI agent skills.
 
-- ID: `gemini`
-- Name: `Gemini CLI`
-- Priority: 2
-- Config File: (none - Gemini has no instruction file)
-- Command Format: TOML
+#### Scenario: Initialize skills directory
 
-#### Scenario: Provider registration
+- **WHEN** `spectr init` runs in a project directory with Gemini provider
+- **THEN** the system creates `.gemini/skills/` directory
+- **AND** the directory has appropriate permissions (0755)
 
-- **WHEN** the Gemini provider is registered
-- **THEN** it SHALL use the new Registration struct with metadata
-- **AND** registration SHALL include ID `gemini`, Name `Gemini CLI`, Priority 2
-- **AND** the Provider implementation SHALL return initializers
+### Requirement: Gemini Agent Skills Installation
 
-#### Scenario: Provider returns initializers
+The system SHALL install Spectr agent skills in the Gemini skills directory
+following the [Agent Skills specification][agentskills].
 
-- **WHEN** the provider's `Initializers(ctx context.Context, tm
-  *TemplateManager)` method is called
-- **THEN** it SHALL return a `DirectoryInitializer` for
-  `.gemini/commands/spectr/`
-- **AND** it SHALL return a `TOMLSlashCommandsInitializer` for TOML format slash
-  commands
-- **AND** it SHALL NOT return a `ConfigFileInitializer` (Gemini has no
-  instruction file)
+[agentskills]: https://agentskills.io
 
-### Requirement: No Instruction File
+#### Scenario: Install spectr-accept-wo-spectr-bin skill
 
-The Gemini provider SHALL NOT create an instruction file since Gemini CLI does
-not support project-level instruction files.
+- **WHEN** the Gemini provider initializes
+- **THEN** it installs the `spectr-accept-wo-spectr-bin` skill to
+  `.gemini/skills/spectr-accept-wo-spectr-bin/`
+- **AND** the skill includes SKILL.md with valid frontmatter (name, description)
+- **AND** the skill includes scripts/accept.sh
+- **AND** scripts maintain executable permissions (0755) after installation
 
-#### Scenario: Config file check
+#### Scenario: Install spectr-validate-wo-spectr-bin skill
 
-- **WHEN** `HasConfigFile()` is called on Gemini provider
-- **THEN** it returns false
+- **WHEN** the Gemini provider initializes
+- **THEN** it installs the `spectr-validate-wo-spectr-bin` skill to
+  `.gemini/skills/spectr-validate-wo-spectr-bin/`
+- **AND** the skill includes SKILL.md with valid frontmatter (name, description)
+- **AND** the skill includes scripts/validate.sh
+- **AND** scripts maintain executable permissions (0755) after installation
 
-### Requirement: Gemini Slash Commands
+#### Scenario: Skills are idempotent
 
-The provider SHALL create slash commands in `.gemini/commands/spectr/` directory
-using TOML format.
+- **WHEN** `spectr init` runs multiple times
+- **THEN** skills are overwritten with latest templates
+- **AND** no duplicate files are created
+- **AND** the operation completes without error
 
-#### Scenario: Command directory structure
+### Requirement: Gemini Instruction File
 
-- **WHEN** the provider returns initializers
-- **THEN** DirectoryInitializer SHALL create `.gemini/commands/spectr/`
-  directory
+The system SHALL create a GEMINI.md instruction file in the project root to
+provide workspace-wide guidance for Gemini CLI.
 
-#### Scenario: Command paths
+#### Scenario: Create GEMINI.md with Spectr instructions
 
-- **WHEN** the `TOMLSlashCommandsInitializer` executes
-- **THEN** it SHALL create `.gemini/commands/spectr/proposal.toml`
-- **AND** it SHALL create `.gemini/commands/spectr/apply.toml`
+- **WHEN** the Gemini provider initializes
+- **THEN** it creates `GEMINI.md` file in the project root
+- **AND** the file contains Spectr workflow guidance
+- **AND** the file includes managed markers for automatic updates
 
-#### Scenario: TOML command format
+#### Scenario: GEMINI.md preserves user content
 
-- **WHEN** slash command files are created by `TOMLSlashCommandsInitializer`
-- **THEN** they SHALL use TOML format with `.toml` extension
-- **AND** it SHALL include `description` field with command description
-- **AND** it SHALL include `prompt` field with command content
+- **WHEN** `spectr init` runs and GEMINI.md already exists with user content
+  outside managed markers
+- **THEN** the user content is preserved
+- **AND** only content within managed markers is updated
 
-### Requirement: Custom TOML Generation
+### Requirement: Gemini TOML Commands Backward Compatibility
 
-The Gemini provider SHALL override the base Configure method to generate TOML
-files instead of Markdown.
+The system SHALL maintain existing TOML-based slash commands alongside the new
+agent skills.
 
-#### Scenario: TOML content structure
+#### Scenario: Preserve existing slash commands
 
-- **WHEN** a TOML command file is generated
-- **THEN** it includes a comment header `# Spectr command for Gemini CLI`
-- **AND** description is a quoted string
-- **AND** prompt uses TOML multiline string syntax (triple quotes)
+- **WHEN** the Gemini provider initializes
+- **THEN** `.gemini/commands/spectr/` directory is maintained
+- **AND** TOML slash command files (proposal.toml, apply.toml) are preserved
+- **AND** both slash commands and skills are available for use
+
+### Requirement: Gemini Provider Skill Registration
+
+The system SHALL register the Gemini provider's skill initializers in the
+correct initialization order.
+
+#### Scenario: Skills initialize after directories
+
+- **WHEN** the Gemini provider initializes
+- **THEN** the `.gemini/skills/` directory is created first
+- **AND** then the skills are copied into the directory
+- **AND** the initialization order prevents errors
+
+#### Scenario: Provider initializers are complete
+
+- **WHEN** the Gemini provider's Initializers() method is called
+- **THEN** it returns initializers for:
+  - `.gemini/commands/spectr/` directory (existing)
+  - `.gemini/skills/` directory (new)
+  - TOML slash commands (existing)
+  - GEMINI.md instruction file (new)
+  - spectr-accept-wo-spectr-bin skill (new)
+  - spectr-validate-wo-spectr-bin skill (new)

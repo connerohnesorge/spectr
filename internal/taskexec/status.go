@@ -1,3 +1,4 @@
+// Package taskexec provides functionality for executing and managing tasks in spectr changes.
 package taskexec
 
 import (
@@ -9,6 +10,9 @@ import (
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
 )
+
+// filePerm is the permission mode for writing files
+const filePerm = 0o644
 
 // StatusUpdater handles updating task statuses in tasks.jsonc files
 type StatusUpdater struct {
@@ -44,11 +48,14 @@ func (su *StatusUpdater) UpdateTaskStatus(taskID string, status parsers.TaskStat
 	// Find and update the task
 	taskFound := false
 	for i := range tasksFileData.Tasks {
-		if tasksFileData.Tasks[i].ID == taskID {
-			tasksFileData.Tasks[i].Status = status
-			taskFound = true
-			break
+		if tasksFileData.Tasks[i].ID != taskID {
+			continue
 		}
+
+		tasksFileData.Tasks[i].Status = status
+		taskFound = true
+
+		break
 	}
 
 	if !taskFound {
@@ -63,12 +70,13 @@ func (su *StatusUpdater) UpdateTaskStatus(taskID string, status parsers.TaskStat
 
 	// Write back to the file atomically
 	tmpFile := tasksFile + ".tmp"
-	if err := os.WriteFile(tmpFile, updatedJSON, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, updatedJSON, filePerm); err != nil {
 		return fmt.Errorf("failed to write temporary file: %w", err)
 	}
 
 	if err := os.Rename(tmpFile, tasksFile); err != nil {
-		os.Remove(tmpFile)
+		_ = os.Remove(tmpFile)
+
 		return fmt.Errorf("failed to rename temporary file: %w", err)
 	}
 
@@ -90,7 +98,7 @@ func stripJSONCComments(data []byte) []byte {
 		if idx := strings.Index(line, "//"); idx != -1 {
 			// Check if the // is inside quotes
 			quoteCount := 0
-			for i := 0; i < idx; i++ {
+			for i := range idx {
 				if line[i] == '"' && (i == 0 || line[i-1] != '\\') {
 					quoteCount++
 				}

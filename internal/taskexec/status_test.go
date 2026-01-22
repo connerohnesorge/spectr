@@ -181,7 +181,7 @@ func TestUpdateTaskStatus(t *testing.T) {
 
 			// Write initial tasks file
 			tasksFile := filepath.Join(tempDir, "tasks.jsonc")
-			if err := os.WriteFile(tasksFile, []byte(tt.initialContent), 0644); err != nil {
+			if err := os.WriteFile(tasksFile, []byte(tt.initialContent), 0o644); err != nil {
 				t.Fatalf("Failed to write tasks file: %v", err)
 			}
 
@@ -194,13 +194,15 @@ func TestUpdateTaskStatus(t *testing.T) {
 			// Check results
 			if tt.wantErr {
 				if err == nil {
-					t.Errorf("Expected error but got none")
+					t.Error("Expected error but got none")
 				}
+
 				return
 			}
 
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
+
 				return
 			}
 
@@ -239,7 +241,7 @@ func TestUpdateTaskStatusAtomic(t *testing.T) {
 	}`
 
 	tasksFile := filepath.Join(tempDir, "tasks.jsonc")
-	if err := os.WriteFile(tasksFile, []byte(initialContent), 0644); err != nil {
+	if err := os.WriteFile(tasksFile, []byte(initialContent), 0o644); err != nil {
 		t.Fatalf("Failed to write tasks file: %v", err)
 	}
 
@@ -258,16 +260,25 @@ func TestUpdateTaskStatusAtomic(t *testing.T) {
 	}
 
 	if !contains(string(updatedContent), `"status": "completed"`) {
-		t.Errorf("Task status was not updated correctly")
+		t.Error("Task status was not updated correctly")
 	}
 
 	// Verify no temporary file remains
 	if _, err := os.Stat(tasksFile + ".tmp"); !os.IsNotExist(err) {
-		t.Errorf("Temporary file was not cleaned up")
+		t.Error("Temporary file was not cleaned up")
 	}
 }
 
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) &&
-		(s == substr || len(s) > 0 && (s[:len(substr)] == substr || contains(s[1:], substr)))
+	if len(s) < len(substr) {
+		return false
+	}
+	if s == substr {
+		return true
+	}
+	if s == "" {
+		return false
+	}
+
+	return s[:len(substr)] == substr || contains(s[1:], substr)
 }

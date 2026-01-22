@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -48,7 +49,7 @@ func (td *TaskDiscovery) FindNextPendingTask() (*parsers.Task, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("no pending tasks found")
+	return nil, errors.New("no pending tasks found")
 }
 
 // stripJSONCComments removes single-line comments from JSONC content
@@ -66,7 +67,7 @@ func stripJSONCComments(data []byte) []byte {
 		if idx := strings.Index(line, "//"); idx != -1 {
 			// Check if the // is inside quotes
 			quoteCount := 0
-			for i := 0; i < idx; i++ {
+			for i := range idx {
 				if line[i] == '"' && (i == 0 || line[i-1] != '\\') {
 					quoteCount++
 				}

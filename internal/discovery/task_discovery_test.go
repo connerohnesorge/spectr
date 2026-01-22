@@ -106,7 +106,7 @@ func TestFindNextPendingTask(t *testing.T) {
 
 			// Write test tasks file
 			tasksFile := filepath.Join(tempDir, "tasks.jsonc")
-			if err := os.WriteFile(tasksFile, []byte(tt.tasksContent), 0644); err != nil {
+			if err := os.WriteFile(tasksFile, []byte(tt.tasksContent), 0o644); err != nil {
 				t.Fatalf("Failed to write tasks file: %v", err)
 			}
 
@@ -119,13 +119,15 @@ func TestFindNextPendingTask(t *testing.T) {
 			// Check results
 			if tt.wantErr {
 				if err == nil {
-					t.Errorf("Expected error but got none")
+					t.Error("Expected error but got none")
 				}
+
 				return
 			}
 
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
+
 				return
 			}
 

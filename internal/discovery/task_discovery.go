@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/connerohnesorge/spectr/internal/parsers"
+	"github.com/connerohnesorge/spectr/internal/utils"
 )
 
 // TaskDiscovery handles finding and managing tasks in spectr changes
@@ -34,7 +34,7 @@ func (td *TaskDiscovery) FindNextPendingTask() (*parsers.Task, error) {
 	}
 
 	// Parse JSONC (strip comments)
-	jsonData := stripJSONCComments(data)
+	jsonData := utils.StripJSONCComments(data)
 
 	// Parse the tasks structure
 	var tasksFileData parsers.TasksFile
@@ -50,38 +50,4 @@ func (td *TaskDiscovery) FindNextPendingTask() (*parsers.Task, error) {
 	}
 
 	return nil, errors.New("no pending tasks found")
-}
-
-// stripJSONCComments removes single-line comments from JSONC content
-func stripJSONCComments(data []byte) []byte {
-	lines := strings.Split(string(data), "\n")
-	var cleaned []string
-
-	for _, line := range lines {
-		// Skip comment lines (lines starting with // after whitespace)
-		trimmed := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmed, "//") {
-			continue
-		}
-		// Remove inline comments
-		if idx := strings.Index(line, "//"); idx != -1 {
-			// Check if the // is inside quotes
-			quoteCount := 0
-			for i := range idx {
-				if line[i] == '"' && (i == 0 || line[i-1] != '\\') {
-					quoteCount++
-				}
-			}
-			// Only strip comment if we're not inside quotes
-			if quoteCount%2 == 0 {
-				line = strings.TrimRight(line[:idx], " \t")
-			}
-		}
-		// Only add non-empty lines
-		if strings.TrimSpace(line) != "" {
-			cleaned = append(cleaned, line)
-		}
-	}
-
-	return []byte(strings.Join(cleaned, "\n"))
 }

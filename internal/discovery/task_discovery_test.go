@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/connerohnesorge/spectr/internal/utils"
 )
 
 func TestFindNextPendingTask(t *testing.T) {
@@ -179,7 +181,7 @@ func TestStripJSONCComments(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := string(stripJSONCComments([]byte(tt.input)))
+			result := string(utils.StripJSONCComments([]byte(tt.input)))
 			if result != tt.expected {
 				t.Errorf("Expected:\n%s\nGot:\n%s", tt.expected, result)
 			}

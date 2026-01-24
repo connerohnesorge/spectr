@@ -34,6 +34,7 @@ spectr/
 | Create proposals | spectr/changes/ | Scaffold with proposal.md, tasks.md, delta specs |
 | Validate changes | spectr validate | Enforce scenarios, formatting rules |
 | Accept proposals | spectr accept | Convert tasks.md → tasks.jsonc |
+| Execute next task | /spectr:next | AI slash command: auto-execute next pending task |
 | Archive changes | spectr archive | Merge deltas into specs/ |
 | View status | spectr view | Interactive dashboard |
 
@@ -118,6 +119,8 @@ The system SHALL...
 
 ## COMMANDS
 
+### CLI Commands
+
 ```bash
 # Initialize
 spectr init [path]
@@ -141,6 +144,38 @@ spectr view <change-id>
 # Pull request
 spectr pr new <change-id>
 ```
+
+### AI Slash Commands
+
+```bash
+# Execute next pending task (AI agents only)
+/spectr:next [change-id]
+```
+
+**How /spectr:next works:**
+1. Discovers change proposal directory in `spectr/changes/`
+2. Parses `tasks.jsonc` to find first task with `status: "pending"`
+3. Executes the task based on its description
+4. Updates task status: `pending` → `in_progress` → `completed`
+5. Reports progress and suggests next steps
+
+**Example workflow:**
+```
+User: /spectr:next add-feature-x
+
+AI Agent:
+→ Found next pending task: #3.2 "Implement validation logic"
+→ Marked task #3.2 as in_progress
+→ Implementing validation in internal/validation/validator.go
+→ Updated task status to completed
+→ Next task: #3.3 "Add unit tests for validation"
+```
+
+**Best practices:**
+- Always verify the task description before execution
+- Update status immediately when starting work
+- Report progress clearly and suggest next steps
+- Use with `/spectr:apply` for full change lifecycle
 
 ## VALIDATION RULES
 | Rule | Severity | Description |

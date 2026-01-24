@@ -186,7 +186,7 @@
       "id": "5.2",
       "section": "Provider Integration - Claude Ecosystem",
       "description": "Update `internal/initialize/providers/claude_code.go` with SlashNext",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "5.3",
@@ -204,7 +204,7 @@
       "id": "5.5",
       "section": "Provider Integration - Claude Ecosystem",
       "description": "Test `spectr init` generates next.md for each provider",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "6.1",
@@ -222,7 +222,7 @@
       "id": "6.3",
       "section": "Provider Integration - Other Providers (Batch 1)",
       "description": "Update `internal/initialize/providers/kimi.go` with SlashNext",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "6.4",
@@ -366,19 +366,19 @@
       "id": "10.3",
       "section": "Documentation and Validation",
       "description": "Update provider system spec documentation",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "10.4",
       "section": "Documentation and Validation",
       "description": "Create usage examples with sample proposals",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "10.5",
       "section": "Documentation and Validation",
       "description": "Document SlashNext behavior in AGENTS.md",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "11.1",
@@ -390,25 +390,25 @@
       "id": "11.2",
       "section": "Final Integration",
       "description": "Test `spectr init` in fresh project",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "11.3",
       "section": "Final Integration",
       "description": "Verify next.md generated for multiple providers",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "11.4",
       "section": "Final Integration",
       "description": "Review generated command files for accuracy",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "11.5",
       "section": "Final Integration",
       "description": "Create demo video/GIF of SlashNext usage",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "12.1",

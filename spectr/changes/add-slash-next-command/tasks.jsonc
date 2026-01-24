@@ -420,31 +420,31 @@
       "id": "12.2",
       "section": "Cleanup and Archive",
       "description": "Create PR following spectr workflow",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "12.3",
       "section": "Cleanup and Archive",
       "description": "Include test results in PR description",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "12.4",
       "section": "Cleanup and Archive",
       "description": "Add screenshots of generated slash command files",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "12.5",
       "section": "Cleanup and Archive",
       "description": "Run `spectr pr archive add-slash-next-command` on completion",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "13.1",
       "section": "99.99.99 Final section (after all tasks)",
       "description": "Output/return: \u003cpromise\u003e\"This is the last task: COMPLETE\"\u003c/promise\u003e\n",
-      "status": "pending"
+      "status": "completed"
     }
   ]
 }

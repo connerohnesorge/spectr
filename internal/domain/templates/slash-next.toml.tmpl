@@ -1,13 +1,13 @@
-name = "spectr:next"
-description = "Execute the next pending task in a spectr change proposal"
+description = "Execute the next pending task in a Spectr change proposal"
+agent = ""
+model = ""
+subtask = false
+prompt = """
+# Guardrails
+- Favor straightforward, minimal implementations first and add complexity only when it is requested or clearly required.
+- Keep changes tightly scoped to the requested outcome.
+- Refer to `{{ .AgentsFile }}` and `{{ .BaseDir }}/project.md` (located inside the `{{ .BaseDir }}/` directory—run `ls {{ .BaseDir }}`) if you need additional Spectr conventions or clarifications.
 
-[[parameters]]
-name = "change_id"
-description = "The spectr change proposal ID (optional - will auto-detect if not provided)"
-required = false
-
-[[instructions]]
-text = """
 # Spectr: Next Task Execution
 
 ## Overview
@@ -16,40 +16,35 @@ This command automatically executes the next pending task in the current spectr 
 
 ## What This Command Does
 
-1. **Discovers** the change proposal directory in spectr/changes/
+1. **Discovers** the change proposal directory in `{{ .ChangesDir }}/`
 2. **Parses** the `tasks.jsonc` file to find the first pending task
 3. **Executes** the task based on its description
 4. **Updates** task status: pending → in_progress → completed
 5. **Reports** what was done and what's next
 
-## Task Execution Flow
+## Steps
 
-```
-User: /spectr:next
+1. Read the change proposal ID (argument) or auto-detect from context
+2. Read `{{ .ChangesDir }}/<id>/tasks.jsonc` to find the first task with status "pending"
+3. Update the task status to "in_progress" in `tasks.jsonc`
+4. Read `{{ .ChangesDir }}/<id>/proposal.md` and `design.md` (if present) for context
+5. Execute the task based on its description, keeping changes minimal and focused
+6. Update the task status to "completed" in `tasks.jsonc`
+7. Report what was done and suggest the next task
 
-AI Agent:
-→ Found next pending task: #5 "Update API documentation"
-→ Marked task #5 as in_progress
-→ Updating API documentation...
-→ Completed task #5
-→ Next task: #6 "Run tests and fix any failures"
-```
-
-## Implementation Details
-
-### Task Discovery
+## Task Discovery
 - Supports both v1 flat `tasks.jsonc` files and v2 hierarchical files with `$ref` links
 - Automatically follows `$ref` links to child task files
 - Includes circular reference detection
 - Returns the first task with status "pending"
 
-### Status Management
+## Status Management
 - Updates task status atomically to prevent corruption
 - Handles both flat and hierarchical task structures
-- Implements parent task status aggregation when children complete
+- Tasks have status values: `pending`, `in_progress`, `completed`
 - Provides clear error messages for common failure scenarios
 
-### Error Handling
+## Error Handling
 - **No pending tasks**: Reports all tasks are completed
 - **Malformed tasks.jsonc**: Provides parsing error details
 - **Missing $ref files**: Reports which child files are missing
@@ -62,4 +57,9 @@ AI Agent:
 3. **Report progress** clearly and concisely
 4. **Handle errors gracefully** with helpful messages
 5. **Suggest next steps** after completion
+
+# Reference
+- Read `{{ .ChangesDir }}/<id>/proposal.md` for proposal details
+- Read `{{ .ChangesDir }}/<id>/tasks.jsonc` for task status
+- Read `{{ .ChangesDir }}/<id>/specs/<capability>/spec.md` for delta specs
 """

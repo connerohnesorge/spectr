@@ -294,10 +294,14 @@ func TestUpdateTaskStatusHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644)
+				if err := os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644); err != nil {
+					t.Fatal(err)
+				}
 
 				// Create child directory
-				os.MkdirAll(filepath.Join(tempDir, "specs", "features"), 0o755)
+				if err := os.MkdirAll(filepath.Join(tempDir, "specs", "features"), 0o755); err != nil {
+					t.Fatal(err)
+				}
 
 				// Child tasks.jsonc
 				childTasks := `{
@@ -316,11 +320,13 @@ func TestUpdateTaskStatusHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(
+				if err := os.WriteFile(
 					filepath.Join(tempDir, "specs", "features", "tasks.jsonc"),
 					[]byte(childTasks),
 					0o644,
-				)
+				); err != nil {
+					t.Fatal(err)
+				}
 			},
 			taskID:    "1.2",
 			newStatus: parsers.TaskStatusCompleted,
@@ -359,10 +365,14 @@ func TestUpdateTaskStatusHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644)
+				if err := os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644); err != nil {
+					t.Fatal(err)
+				}
 
 				// Create child directory
-				os.MkdirAll(filepath.Join(tempDir, "specs", "features"), 0o755)
+				if err := os.MkdirAll(filepath.Join(tempDir, "specs", "features"), 0o755); err != nil {
+					t.Fatal(err)
+				}
 
 				// Child tasks.jsonc
 				childTasks := `{
@@ -386,11 +396,13 @@ func TestUpdateTaskStatusHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(
+				if err := os.WriteFile(
 					filepath.Join(tempDir, "specs", "features", "tasks.jsonc"),
 					[]byte(childTasks),
 					0o644,
-				)
+				); err != nil {
+					t.Fatal(err)
+				}
 			},
 			taskID:    "1.1",
 			newStatus: parsers.TaskStatusCompleted,
@@ -481,7 +493,7 @@ func TestAggregateChildStatuses(t *testing.T) {
 		},
 		{
 			name:       "empty tasks",
-			tasks:      []parsers.Task{},
+			tasks:      nil,
 			wantStatus: parsers.TaskStatusPending,
 		},
 	}

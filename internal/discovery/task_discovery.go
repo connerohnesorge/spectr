@@ -31,6 +31,7 @@ func NewTaskDiscovery(changeDir string) *TaskDiscovery {
 // Supports both v1 flat and v2 hierarchical formats with $ref resolution
 func (td *TaskDiscovery) FindNextPendingTask() (*parsers.Task, error) {
 	tasksFile := filepath.Join(td.changeDir, "tasks.jsonc")
+
 	return td.findNextPendingTaskInFile(tasksFile)
 }
 
@@ -89,7 +90,7 @@ func (td *TaskDiscovery) findNextPendingTaskInFile(filePath string) (*parsers.Ta
 }
 
 // resolveChildRef resolves a $ref link to a child task file and finds the first pending task
-func (td *TaskDiscovery) resolveChildRef(ref string, baseDir string) (*parsers.Task, error) {
+func (td *TaskDiscovery) resolveChildRef(ref, baseDir string) (*parsers.Task, error) {
 	// Parse the $ref format: "$ref:specs/capability/tasks.jsonc"
 	if !strings.HasPrefix(ref, "$ref:") {
 		return nil, fmt.Errorf("invalid $ref format: %s (must start with $ref:)", ref)

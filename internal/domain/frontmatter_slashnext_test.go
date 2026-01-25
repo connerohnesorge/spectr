@@ -23,6 +23,7 @@ func TestSlashNextFrontmatter(t *testing.T) {
 				"SlashNext frontmatter missing field %q",
 				key,
 			)
+
 			continue
 		}
 

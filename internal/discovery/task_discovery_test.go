@@ -169,10 +169,14 @@ func TestFindNextPendingTaskHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644)
+				if err := os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644); err != nil {
+					t.Fatal(err)
+				}
 
 				// Create child directory
-				os.MkdirAll(filepath.Join(tempDir, "specs", "features"), 0o755)
+				if err := os.MkdirAll(filepath.Join(tempDir, "specs", "features"), 0o755); err != nil {
+					t.Fatal(err)
+				}
 
 				// Child tasks.jsonc
 				childTasks := `{
@@ -191,11 +195,13 @@ func TestFindNextPendingTaskHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(
+				if err := os.WriteFile(
 					filepath.Join(tempDir, "specs", "features", "tasks.jsonc"),
 					[]byte(childTasks),
 					0o644,
-				)
+				); err != nil {
+					t.Fatal(err)
+				}
 			},
 			wantTaskID: "2.2",
 			wantErr:    false,
@@ -222,10 +228,14 @@ func TestFindNextPendingTaskHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644)
+				if err := os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644); err != nil {
+					t.Fatal(err)
+				}
 
 				// Create child directory
-				os.MkdirAll(filepath.Join(tempDir, "specs", "features"), 0o755)
+				if err := os.MkdirAll(filepath.Join(tempDir, "specs", "features"), 0o755); err != nil {
+					t.Fatal(err)
+				}
 
 				// Child tasks.jsonc (all completed)
 				childTasks := `{
@@ -239,11 +249,13 @@ func TestFindNextPendingTaskHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(
+				if err := os.WriteFile(
 					filepath.Join(tempDir, "specs", "features", "tasks.jsonc"),
 					[]byte(childTasks),
 					0o644,
-				)
+				); err != nil {
+					t.Fatal(err)
+				}
 			},
 			wantTaskID: "2",
 			wantErr:    false,
@@ -270,7 +282,9 @@ func TestFindNextPendingTaskHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644)
+				if err := os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644); err != nil {
+					t.Fatal(err)
+				}
 			},
 			wantTaskID: "2",
 			wantErr:    false,
@@ -291,11 +305,17 @@ func TestFindNextPendingTaskHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644)
+				if err := os.WriteFile(filepath.Join(tempDir, "tasks.jsonc"), []byte(rootTasks), 0o644); err != nil {
+					t.Fatal(err)
+				}
 
 				// Create child directories
-				os.MkdirAll(filepath.Join(tempDir, "specs", "a"), 0o755)
-				os.MkdirAll(filepath.Join(tempDir, "specs", "b"), 0o755)
+				if err := os.MkdirAll(filepath.Join(tempDir, "specs", "a"), 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.MkdirAll(filepath.Join(tempDir, "specs", "b"), 0o755); err != nil {
+					t.Fatal(err)
+				}
 
 				// Child A references Child B
 				childA := `{
@@ -310,11 +330,13 @@ func TestFindNextPendingTaskHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(
+				if err := os.WriteFile(
 					filepath.Join(tempDir, "specs", "a", "tasks.jsonc"),
 					[]byte(childA),
 					0o644,
-				)
+				); err != nil {
+					t.Fatal(err)
+				}
 
 				// Child B references back to root (circular)
 				childB := `{
@@ -329,11 +351,13 @@ func TestFindNextPendingTaskHierarchical(t *testing.T) {
 						}
 					]
 				}`
-				os.WriteFile(
+				if err := os.WriteFile(
 					filepath.Join(tempDir, "specs", "b", "tasks.jsonc"),
 					[]byte(childB),
 					0o644,
-				)
+				); err != nil {
+					t.Fatal(err)
+				}
 			},
 			wantTaskID: "",
 			wantErr:    true,

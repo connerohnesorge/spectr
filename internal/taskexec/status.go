@@ -50,9 +50,8 @@ func (su *StatusUpdater) UpdateTaskStatus(taskID string, status parsers.TaskStat
 
 // updateTaskInFile updates a task in a specific file
 // Returns true if the task was found and updated, false otherwise
-func (su *StatusUpdater) updateTaskInFile(
-	filePath string,
-	taskID string,
+func (*StatusUpdater) updateTaskInFile(
+	filePath, taskID string,
 	status parsers.TaskStatusValue,
 ) (bool, error) {
 	// Read the tasks file
@@ -110,8 +109,7 @@ func (su *StatusUpdater) updateTaskInFile(
 
 // updateTaskInHierarchy searches for a task in child files and updates it
 func (su *StatusUpdater) updateTaskInHierarchy(
-	rootFile string,
-	taskID string,
+	rootFile, taskID string,
 	status parsers.TaskStatusValue,
 ) error {
 	// Read the root tasks file to find child references
@@ -158,7 +156,7 @@ func (su *StatusUpdater) updateTaskInHierarchy(
 }
 
 // resolveChildPath resolves a $ref link to an absolute file path
-func (su *StatusUpdater) resolveChildPath(ref string, baseDir string) (string, error) {
+func (*StatusUpdater) resolveChildPath(ref, baseDir string) (string, error) {
 	// Parse the $ref format: "$ref:specs/capability/tasks.jsonc"
 	if !strings.HasPrefix(ref, "$ref:") {
 		return "", fmt.Errorf("invalid $ref format: %s", ref)
@@ -198,6 +196,7 @@ func (su *StatusUpdater) updateParentStatusIfNeeded(filePath string) error {
 
 	// Update the parent task in the root file with the aggregated status
 	rootFile := filepath.Join(su.changeDir, "tasks.jsonc")
+
 	return su.updateParentTask(rootFile, childFileData.Parent, aggregatedStatus)
 }
 
@@ -206,7 +205,7 @@ func (su *StatusUpdater) updateParentStatusIfNeeded(filePath string) error {
 // - If any child is pending, parent is in_progress (work started but not done)
 // - If all children are completed, parent is completed
 // - If all children are pending, parent is pending
-func (su *StatusUpdater) aggregateChildStatuses(tasks []parsers.Task) parsers.TaskStatusValue {
+func (*StatusUpdater) aggregateChildStatuses(tasks []parsers.Task) parsers.TaskStatusValue {
 	if len(tasks) == 0 {
 		return parsers.TaskStatusPending
 	}
@@ -241,9 +240,8 @@ func (su *StatusUpdater) aggregateChildStatuses(tasks []parsers.Task) parsers.Ta
 }
 
 // updateParentTask updates a parent task's status in the root file
-func (su *StatusUpdater) updateParentTask(
-	rootFile string,
-	parentID string,
+func (*StatusUpdater) updateParentTask(
+	rootFile, parentID string,
 	status parsers.TaskStatusValue,
 ) error {
 	// Read the root tasks file

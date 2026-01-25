@@ -167,9 +167,9 @@ func TestClaudeProvider_Initializers(
 			slashInit.dir,
 		)
 	}
-	if len(slashInit.commands) != 2 {
+	if len(slashInit.commands) != 3 {
 		t.Errorf(
-			"ClaudeProvider SlashCommandsInitializer has %d commands, want 2",
+			"ClaudeProvider SlashCommandsInitializer has %d commands, want 3",
 			len(slashInit.commands),
 		)
 	}
@@ -239,9 +239,9 @@ func TestGeminiProvider_Initializers(
 			slashInit.dir,
 		)
 	}
-	if len(slashInit.commands) != 2 {
+	if len(slashInit.commands) != 3 {
 		t.Errorf(
-			"GeminiProvider TOMLSlashCommandsInitializer has %d commands, want 2",
+			"GeminiProvider TOMLSlashCommandsInitializer has %d commands, want 3",
 			len(slashInit.commands),
 		)
 	}

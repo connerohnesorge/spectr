@@ -198,3 +198,196 @@ func ResolveChangeID(
 			partialID,
 		)
 }
+
+// ChangeStatus represents the status of a change proposal.
+type ChangeStatus int
+
+const (
+	// ChangeStatusUnknown indicates the change ID was not found anywhere.
+	ChangeStatusUnknown ChangeStatus = iota
+	// ChangeStatusActive indicates the change exists in spectr/changes/ (not archived).
+	ChangeStatusActive
+	// ChangeStatusArchived indicates the change exists in spectr/changes/archive/.
+	ChangeStatusArchived
+)
+
+// String returns a human-readable string for the change status.
+func (s ChangeStatus) String() string {
+	switch s {
+	case ChangeStatusActive:
+		return "active"
+	case ChangeStatusArchived:
+		return "archived"
+	case ChangeStatusUnknown:
+		return "unknown"
+	default:
+		return "unknown"
+	}
+}
+
+// IsChangeArchived checks if a change with the given ID exists in the archive.
+// It searches spectr/changes/archive/ for directories matching the pattern
+// YYYY-MM-DD-<changeID> or just <changeID>.
+func IsChangeArchived(
+	changeID, projectRoot string,
+) (bool, error) {
+	archiveDir := filepath.Join(
+		projectRoot,
+		"spectr",
+		"changes",
+		"archive",
+	)
+
+	// Check if archive directory exists
+	_, err := os.Stat(archiveDir)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	entries, err := os.ReadDir(archiveDir)
+	if err != nil {
+		return false, fmt.Errorf(
+			"failed to read archive directory: %w",
+			err,
+		)
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		extractedID := ExtractChangeIDFromArchivePath(entry.Name())
+		if extractedID == changeID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// GetChangeStatus returns the status of a change proposal.
+// It checks if the change exists as active or archived.
+func GetChangeStatus(
+	changeID, projectRoot string,
+) (ChangeStatus, error) {
+	// Check if archived first
+	archived, err := IsChangeArchived(changeID, projectRoot)
+	if err != nil {
+		return ChangeStatusUnknown, err
+	}
+	if archived {
+		return ChangeStatusArchived, nil
+	}
+
+	// Check if active
+	activeChanges, err := GetActiveChangeIDs(projectRoot)
+	if err != nil {
+		return ChangeStatusUnknown, err
+	}
+
+	for _, id := range activeChanges {
+		if id == changeID {
+			return ChangeStatusActive, nil
+		}
+	}
+
+	return ChangeStatusUnknown, nil
+}
+
+// GetArchivedChangeIDs returns a list of all archived change IDs.
+// It extracts the change ID portion from archive directory names,
+// which may have date prefixes (e.g., "2024-01-15-feat-auth" -> "feat-auth").
+func GetArchivedChangeIDs(
+	projectRoot string,
+) ([]string, error) {
+	archiveDir := filepath.Join(
+		projectRoot,
+		"spectr",
+		"changes",
+		"archive",
+	)
+
+	// Check if archive directory exists
+	_, err := os.Stat(archiveDir)
+	if os.IsNotExist(err) {
+		return make([]string, 0), nil
+	}
+
+	entries, err := os.ReadDir(archiveDir)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to read archive directory: %w",
+			err,
+		)
+	}
+
+	var changeIDs []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		// Skip hidden directories
+		if strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
+
+		// Extract change ID from directory name
+		changeID := ExtractChangeIDFromArchivePath(entry.Name())
+		if changeID != "" {
+			changeIDs = append(changeIDs, changeID)
+		}
+	}
+
+	// Sort for consistency
+	sort.Strings(changeIDs)
+
+	return changeIDs, nil
+}
+
+// ExtractChangeIDFromArchivePath extracts the change ID from an archive
+// directory name. Archive directories may have a date prefix in the format
+// YYYY-MM-DD-<changeID>, or just be the change ID directly.
+//
+// Examples:
+//   - "2024-01-15-feat-auth" -> "feat-auth"
+//   - "feat-auth" -> "feat-auth"
+//   - "2024-01-15-add-feature-x" -> "add-feature-x"
+func ExtractChangeIDFromArchivePath(dirName string) string {
+	const (
+		datePrefixLength = 11
+		yearDashPos      = 4
+		monthDashPos     = 7
+		dayDashPos       = 10
+	)
+	// Try to match date prefix pattern: YYYY-MM-DD-
+	// Date format: 4 digits, dash, 2 digits, dash, 2 digits, dash
+	if len(dirName) > datePrefixLength {
+		prefix := dirName[:datePrefixLength]
+		// Check if it looks like a date prefix (YYYY-MM-DD-)
+		if len(prefix) == datePrefixLength &&
+			prefix[yearDashPos] == '-' &&
+			prefix[monthDashPos] == '-' &&
+			prefix[dayDashPos] == '-' &&
+			isDigits(prefix[0:4]) &&
+			isDigits(prefix[5:7]) &&
+			isDigits(prefix[8:10]) {
+			return dirName[datePrefixLength:]
+		}
+	}
+
+	// No date prefix, return as-is
+	return dirName
+}
+
+// isDigits returns true if all characters in s are digits.
+func isDigits(s string) bool {
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+
+	return true
+}

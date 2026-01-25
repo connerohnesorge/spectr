@@ -34,6 +34,7 @@ spectr/
 | Create proposals | spectr/changes/ | Scaffold with proposal.md, tasks.md, delta specs |
 | Validate changes | spectr validate | Enforce scenarios, formatting rules |
 | Accept proposals | spectr accept | Convert tasks.md → tasks.jsonc |
+| Execute next task | /spectr:next | AI slash command: auto-execute next pending task |
 | Archive changes | spectr archive | Merge deltas into specs/ |
 | View status | spectr view | Interactive dashboard |
 
@@ -90,6 +91,59 @@ The system SHALL...
 - Affected code: [key files/systems]
 ```
 
+## CHAINED PROPOSALS
+
+Proposals can declare dependencies on other proposals using YAML frontmatter:
+
+```yaml
+---
+id: feat-dashboard
+requires:
+  - id: feat-auth
+    reason: "needs user model and session management"
+  - id: feat-db
+    reason: "needs schema migrations for dashboard tables"
+enables:
+  - id: feat-analytics
+    reason: "unlocks event tracking on dashboard"
+---
+```
+
+**Fields:**
+- `id`: Optional explicit ID for this proposal
+- `requires`: List of proposals that must be archived before this can be accepted
+- `enables`: Informational list of proposals this unlocks (not enforced)
+
+**Behavior:**
+- `spectr validate`: Warns if required proposals aren't archived, errors on cycles
+- `spectr accept`: Hard fails if any `requires` entries aren't archived
+- `spectr graph`: Visualizes the proposal dependency DAG
+
+**Commands:**
+```bash
+# View dependency graph (ASCII)
+spectr graph
+
+# View graph for specific proposal
+spectr graph <change-id>
+
+# Output in Graphviz DOT format
+spectr graph --dot
+
+# Output in JSON format
+spectr graph --json
+```
+
+**Example Graph Output:**
+```
+feat-dashboard (⧖)
+├── requires: feat-auth ✓
+├── requires: feat-db ⧖
+└── enables: feat-analytics
+```
+
+Legend: ✓ = archived, ⧖ = active/pending
+
 ## TASKS FILE FORMAT
 
 ```markdown
@@ -118,6 +172,8 @@ The system SHALL...
 
 ## COMMANDS
 
+### CLI Commands
+
 ```bash
 # Initialize
 spectr init [path]
@@ -141,6 +197,38 @@ spectr view <change-id>
 # Pull request
 spectr pr new <change-id>
 ```
+
+### AI Slash Commands
+
+```bash
+# Execute next pending task (AI agents only)
+/spectr:next [change-id]
+```
+
+**How /spectr:next works:**
+1. Discovers change proposal directory in `spectr/changes/`
+2. Parses `tasks.jsonc` to find first task with `status: "pending"`
+3. Executes the task based on its description
+4. Updates task status: `pending` → `in_progress` → `completed`
+5. Reports progress and suggests next steps
+
+**Example workflow:**
+```
+User: /spectr:next add-feature-x
+
+AI Agent:
+→ Found next pending task: #3.2 "Implement validation logic"
+→ Marked task #3.2 as in_progress
+→ Implementing validation in internal/validation/validator.go
+→ Updated task status to completed
+→ Next task: #3.3 "Add unit tests for validation"
+```
+
+**Best practices:**
+- Always verify the task description before execution
+- Update status immediately when starting work
+- Report progress clearly and suggest next steps
+- Use with `/spectr:apply` for full change lifecycle
 
 ## VALIDATION RULES
 | Rule | Severity | Description |

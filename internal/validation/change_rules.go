@@ -182,14 +182,47 @@ func ValidateChangeDeltaSpecs(
 		allIssues,
 		divergenceIssues...)
 
+	// Validate proposal dependencies (chained proposals)
+	// Only validate if proposal.md exists
+	proposalPath := filepath.Join(changeDir, "proposal.md")
+	if _, statErr := os.Stat(proposalPath); statErr == nil {
+		changeID := filepath.Base(changeDir)
+		projectRoot := filepath.Dir(spectrRoot)
+		depResult, err := ValidateDependencies(changeID, projectRoot)
+		if err != nil {
+			// Non-fatal: log warning but continue validation
+			allIssues = append(allIssues, ValidationIssue{
+				Level:   LevelWarning,
+				Path:    proposalPath,
+				Message: fmt.Sprintf("failed to validate dependencies: %v", err),
+			})
+		} else {
+			// Add dependency validation issues
+			// Note: For validate command, unmet dependencies are warnings, cycles are errors
+			allIssues = append(allIssues, depResult.Issues...)
+		}
+	}
+
 	// Always convert warnings to errors (strict mode)
+	// EXCEPT for dependency warnings - those should remain as warnings
+	// so they don't block validation
 	for i := range allIssues {
 		if allIssues[i].Level == LevelWarning {
-			allIssues[i].Level = LevelError
+			// Keep dependency warnings as warnings (non-blocking)
+			if !isDependencyWarning(allIssues[i].Message) {
+				allIssues[i].Level = LevelError
+			}
 		}
 	}
 
 	return NewValidationReport(allIssues), nil
+}
+
+// isDependencyWarning returns true if the message is a dependency-related warning
+func isDependencyWarning(message string) bool {
+	return strings.Contains(message, "Dependency '") &&
+		(strings.Contains(message, "is not yet archived") ||
+			strings.Contains(message, "not found"))
 }
 
 // validateSingleDeltaFile validates a single spec.md delta file

@@ -383,10 +383,11 @@ func TestNewWizardModelWithConfiguredProviders(
 		)
 	}
 
-	// Create the two slash command files (in the spectr/ subdirectory)
+	// Create the three slash command files (in the spectr/ subdirectory)
 	for _, cmdFile := range []string{
 		"proposal.md",
 		"apply.md",
+		"next.md",
 	} {
 		filePath := filepath.Join(
 			commandsDir,

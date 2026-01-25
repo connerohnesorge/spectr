@@ -85,6 +85,11 @@ var BaseSlashCommandFrontmatter = map[SlashCommand]map[string]any{
 		"allowed-tools": "Read, Glob, Grep, Write, Edit, Bash(spectr:*)",
 		"subtask":       false,
 	},
+	SlashNext: {
+		"description":   "Spectr: Next Task Execution",
+		"allowed-tools": "Read, Glob, Grep, Write, Edit, Bash(spectr:*)",
+		"subtask":       false,
+	},
 }
 
 // GetBaseFrontmatter returns a copy of the base frontmatter for a command.

@@ -667,3 +667,317 @@ func TestResolveChangeID_EmptyChanges(
 		)
 	}
 }
+
+func TestExtractChangeIDFromArchivePath(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "date prefix",
+			input:    "2024-01-15-feat-auth",
+			expected: "feat-auth",
+		},
+		{
+			name:     "no date prefix",
+			input:    "feat-auth",
+			expected: "feat-auth",
+		},
+		{
+			name:     "date prefix with longer ID",
+			input:    "2024-12-31-add-feature-x",
+			expected: "add-feature-x",
+		},
+		{
+			name:     "short name",
+			input:    "abc",
+			expected: "abc",
+		},
+		{
+			name:     "exactly 11 chars but not date",
+			input:    "abcdefghijk",
+			expected: "abcdefghijk",
+		},
+		{
+			name:     "looks like date but wrong format",
+			input:    "2024-1-15-feat-auth",
+			expected: "2024-1-15-feat-auth",
+		},
+		{
+			name:     "date prefix with single char ID",
+			input:    "2024-01-15-x",
+			expected: "x",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ExtractChangeIDFromArchivePath(tt.input)
+			if result != tt.expected {
+				t.Errorf(
+					"ExtractChangeIDFromArchivePath(%q) = %q, want %q",
+					tt.input,
+					result,
+					tt.expected,
+				)
+			}
+		})
+	}
+}
+
+func TestIsChangeArchived(t *testing.T) {
+	tmpDir := t.TempDir()
+	archiveDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+		"archive",
+	)
+
+	// Create archive structure
+	if err := os.MkdirAll(archiveDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create archived changes
+	archivedChanges := []string{
+		"2024-01-15-feat-auth",
+		"2024-02-20-add-feature",
+		"standalone-change",
+	}
+	for _, name := range archivedChanges {
+		dir := filepath.Join(archiveDir, name)
+		if err := os.MkdirAll(dir, testDirPerm); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	tests := []struct {
+		name     string
+		changeID string
+		expected bool
+	}{
+		{
+			name:     "archived with date prefix",
+			changeID: "feat-auth",
+			expected: true,
+		},
+		{
+			name:     "archived with date prefix 2",
+			changeID: "add-feature",
+			expected: true,
+		},
+		{
+			name:     "archived without date prefix",
+			changeID: "standalone-change",
+			expected: true,
+		},
+		{
+			name:     "not archived",
+			changeID: "nonexistent",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := IsChangeArchived(tt.changeID, tmpDir)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if result != tt.expected {
+				t.Errorf(
+					"IsChangeArchived(%q) = %v, want %v",
+					tt.changeID,
+					result,
+					tt.expected,
+				)
+			}
+		})
+	}
+}
+
+func TestIsChangeArchived_NoArchiveDir(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// No archive directory exists
+	result, err := IsChangeArchived("anything", tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result {
+		t.Error("expected false when archive directory doesn't exist")
+	}
+}
+
+func TestGetArchivedChangeIDs(t *testing.T) {
+	tmpDir := t.TempDir()
+	archiveDir := filepath.Join(
+		tmpDir,
+		"spectr",
+		"changes",
+		"archive",
+	)
+
+	// Create archive structure
+	if err := os.MkdirAll(archiveDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create archived changes
+	archivedChanges := []string{
+		"2024-01-15-feat-auth",
+		"2024-02-20-add-feature",
+		"standalone-change",
+	}
+	for _, name := range archivedChanges {
+		dir := filepath.Join(archiveDir, name)
+		if err := os.MkdirAll(dir, testDirPerm); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Create a hidden directory (should be excluded)
+	hiddenDir := filepath.Join(archiveDir, ".hidden")
+	if err := os.MkdirAll(hiddenDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a file (should be excluded)
+	if err := os.WriteFile(
+		filepath.Join(archiveDir, "readme.txt"),
+		[]byte("test"),
+		testFilePerm,
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := GetArchivedChangeIDs(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedIDs := []string{
+		"add-feature",
+		"feat-auth",
+		"standalone-change",
+	}
+
+	if len(result) != len(expectedIDs) {
+		t.Fatalf(
+			"expected %d IDs, got %d: %v",
+			len(expectedIDs),
+			len(result),
+			result,
+		)
+	}
+
+	for i, id := range expectedIDs {
+		if result[i] != id {
+			t.Errorf(
+				"expected ID %q at index %d, got %q",
+				id,
+				i,
+				result[i],
+			)
+		}
+	}
+}
+
+func TestGetArchivedChangeIDs_NoArchiveDir(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	result, err := GetArchivedChangeIDs(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result) != 0 {
+		t.Errorf("expected empty result, got %v", result)
+	}
+}
+
+func TestGetChangeStatus(t *testing.T) {
+	tmpDir := t.TempDir()
+	changesDir := filepath.Join(tmpDir, "spectr", "changes")
+	archiveDir := filepath.Join(changesDir, "archive")
+
+	// Create directories
+	if err := os.MkdirAll(changesDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(archiveDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create active change
+	createChangeDir(t, changesDir, "active-change", "# Active")
+
+	// Create archived change
+	archivedDir := filepath.Join(archiveDir, "2024-01-15-archived-change")
+	if err := os.MkdirAll(archivedDir, testDirPerm); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name     string
+		changeID string
+		expected ChangeStatus
+	}{
+		{
+			name:     "active change",
+			changeID: "active-change",
+			expected: ChangeStatusActive,
+		},
+		{
+			name:     "archived change",
+			changeID: "archived-change",
+			expected: ChangeStatusArchived,
+		},
+		{
+			name:     "unknown change",
+			changeID: "nonexistent",
+			expected: ChangeStatusUnknown,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			status, err := GetChangeStatus(tt.changeID, tmpDir)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if status != tt.expected {
+				t.Errorf(
+					"GetChangeStatus(%q) = %v, want %v",
+					tt.changeID,
+					status,
+					tt.expected,
+				)
+			}
+		})
+	}
+}
+
+func TestChangeStatus_String(t *testing.T) {
+	tests := []struct {
+		status   ChangeStatus
+		expected string
+	}{
+		{ChangeStatusActive, "active"},
+		{ChangeStatusArchived, "archived"},
+		{ChangeStatusUnknown, "unknown"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			if tt.status.String() != tt.expected {
+				t.Errorf(
+					"ChangeStatus.String() = %q, want %q",
+					tt.status.String(),
+					tt.expected,
+				)
+			}
+		})
+	}
+}

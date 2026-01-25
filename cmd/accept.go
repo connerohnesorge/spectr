@@ -20,6 +20,7 @@ import (
 	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
+	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
 // filePerm is the standard file permission for created files (rw-r--r--)
@@ -100,6 +101,12 @@ func (c *AcceptCmd) processChange(
 			"validation failed: %w",
 			err,
 		)
+	}
+
+	// Check proposal dependencies (chained proposals)
+	// This is a hard fail - required dependencies must be archived
+	if depErr := c.checkDependencies(projectRoot, changeID); depErr != nil {
+		return depErr
 	}
 
 	tasks, err := parseTasksMd(tasksMdPath)
@@ -455,6 +462,33 @@ func validateParsedTasks(
 				FileSize:    info.Size(),
 			}
 		}
+	}
+
+	return nil
+}
+
+// checkDependencies verifies that all required dependencies are archived.
+// This is a hard check - if any required proposals are not archived,
+// the accept command fails with a clear error message.
+func (*AcceptCmd) checkDependencies(
+	projectRoot, changeID string,
+) error {
+	err := validation.ValidateDependenciesForAccept(changeID, projectRoot)
+	if err != nil {
+		// Check if it's an UnmetDependenciesError for better formatting
+		if unmetErr, ok := err.(*validation.UnmetDependenciesError); ok {
+			fmt.Println("\nDependency check failed:")
+			fmt.Printf(
+				"  Change '%s' requires the following proposals to be archived:\n",
+				unmetErr.ChangeID,
+			)
+			for _, dep := range unmetErr.Dependencies {
+				fmt.Printf("    - %s\n", dep)
+			}
+			fmt.Println("\nArchive the required proposals first using 'spectr pr archive <id>'")
+		}
+
+		return err
 	}
 
 	return nil

@@ -84,19 +84,19 @@
       "id": "2.4",
       "section": "Task Discovery Implementation",
       "description": "Add support for v2 hierarchical files with $ref links",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.5",
       "section": "Task Discovery Implementation",
       "description": "Implement $ref resolution to follow child task files",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.6",
       "section": "Task Discovery Implementation",
       "description": "Add circular reference detection",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.7",
@@ -120,7 +120,7 @@
       "id": "3.3",
       "section": "Status Management Implementation",
       "description": "Handle both flat v1 and hierarchical v2 file structures",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "3.4",
@@ -132,7 +132,7 @@
       "id": "3.5",
       "section": "Status Management Implementation",
       "description": "Implement parent task status aggregation logic",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "3.6",
@@ -306,19 +306,19 @@
       "id": "8.4",
       "section": "Integration Testing",
       "description": "Create test proposal with v2 hierarchical tasks.jsonc",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "8.5",
       "section": "Integration Testing",
       "description": "Test $ref resolution to child task files",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "8.6",
       "section": "Integration Testing",
       "description": "Verify parent task status aggregation when children complete",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "9.1",
@@ -336,7 +336,7 @@
       "id": "9.3",
       "section": "Error Handling Tests",
       "description": "Test with missing $ref child files",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "9.4",
@@ -348,7 +348,7 @@
       "id": "9.5",
       "section": "Error Handling Tests",
       "description": "Verify graceful recovery and status rollback on error",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "10.1",

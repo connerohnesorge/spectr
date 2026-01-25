@@ -25,10 +25,27 @@ type Task struct {
 	Description string `json:"description"`
 	// Status is one of pending, in_progress, completed
 	Status TaskStatusValue `json:"status"`
+	// Children is a $ref to a child task file (v2 hierarchical format)
+	// Format: "$ref:specs/capability/tasks.jsonc"
+	Children string `json:"children,omitempty"`
+}
+
+// TaskSummary represents task completion statistics
+type TaskSummary struct {
+	Total      int `json:"total"`
+	Completed  int `json:"completed"`
+	InProgress int `json:"in_progress"`
+	Pending    int `json:"pending"`
 }
 
 // TasksFile represents the root structure of a tasks.json file
 type TasksFile struct {
 	Version int    `json:"version"`
 	Tasks   []Task `json:"tasks"`
+	// Summary provides quick overview (v2 format only)
+	Summary *TaskSummary `json:"summary,omitempty"`
+	// Includes is a list of glob patterns for child task files (v2 format only)
+	Includes []string `json:"includes,omitempty"`
+	// Parent is the parent task ID (used in child task files, v2 format only)
+	Parent string `json:"parent,omitempty"`
 }

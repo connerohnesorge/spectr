@@ -205,6 +205,7 @@ func (tm *TemplateManager) SlashCommand(
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.md.tmpl",
 		domain.SlashApply:    "slash-apply.md.tmpl",
+		domain.SlashNext:     "slash-next.md.tmpl",
 	}
 
 	return domain.TemplateRef{
@@ -236,6 +237,7 @@ func (tm *TemplateManager) TOMLSlashCommand(
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.toml.tmpl",
 		domain.SlashApply:    "slash-apply.toml.tmpl",
+		domain.SlashNext:     "slash-next.toml.tmpl",
 	}
 
 	// TOML templates don't use dynamic frontmatter (Command is nil)

@@ -28,6 +28,9 @@ func (*GeminiProvider) Initializers(
 				domain.SlashApply: tm.TOMLSlashCommand(
 					domain.SlashApply,
 				),
+				domain.SlashNext: tm.TOMLSlashCommand(
+					domain.SlashNext,
+				),
 			},
 		),
 	}

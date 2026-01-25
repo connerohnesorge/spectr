@@ -29,6 +29,15 @@ func TestGetBaseFrontmatter(t *testing.T) {
 				"subtask",
 			},
 		},
+		{
+			name: "next command has expected fields",
+			cmd:  SlashNext,
+			wantFields: []string{
+				"description",
+				"allowed-tools",
+				"subtask",
+			},
+		},
 	}
 
 	for _, tt := range tests {

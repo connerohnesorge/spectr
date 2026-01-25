@@ -4,6 +4,7 @@ package domain
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -111,7 +112,7 @@ func ExtractFrontmatter(content []byte) ([]byte, error) {
 		if readErr != nil {
 			if line == "" {
 				// EOF without closing delimiter
-				return nil, fmt.Errorf(
+				return nil, errors.New(
 					"frontmatter not closed: missing closing '---'",
 				)
 			}
@@ -121,7 +122,7 @@ func ExtractFrontmatter(content []byte) ([]byte, error) {
 			}
 			fmContent.WriteString(line)
 
-			return nil, fmt.Errorf(
+			return nil, errors.New(
 				"frontmatter not closed: missing closing '---'",
 			)
 		}

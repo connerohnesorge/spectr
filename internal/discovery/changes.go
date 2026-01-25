@@ -355,19 +355,25 @@ func GetArchivedChangeIDs(
 //   - "feat-auth" -> "feat-auth"
 //   - "2024-01-15-add-feature-x" -> "add-feature-x"
 func ExtractChangeIDFromArchivePath(dirName string) string {
+	const (
+		datePrefixLength = 11
+		yearDashPos      = 4
+		monthDashPos     = 7
+		dayDashPos       = 10
+	)
 	// Try to match date prefix pattern: YYYY-MM-DD-
 	// Date format: 4 digits, dash, 2 digits, dash, 2 digits, dash
-	if len(dirName) > 11 {
-		prefix := dirName[:11]
+	if len(dirName) > datePrefixLength {
+		prefix := dirName[:datePrefixLength]
 		// Check if it looks like a date prefix (YYYY-MM-DD-)
-		if len(prefix) == 11 &&
-			prefix[4] == '-' &&
-			prefix[7] == '-' &&
-			prefix[10] == '-' &&
+		if len(prefix) == datePrefixLength &&
+			prefix[yearDashPos] == '-' &&
+			prefix[monthDashPos] == '-' &&
+			prefix[dayDashPos] == '-' &&
 			isDigits(prefix[0:4]) &&
 			isDigits(prefix[5:7]) &&
 			isDigits(prefix[8:10]) {
-			return dirName[11:]
+			return dirName[datePrefixLength:]
 		}
 	}
 

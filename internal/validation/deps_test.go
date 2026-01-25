@@ -159,11 +159,12 @@ requires:
 	hasErrorIssue := false
 	foundSelfRef := false
 	for _, issue := range result.Issues {
-		if issue.Level == LevelError {
-			hasErrorIssue = true
-			if issue.Message == "proposal cannot require itself: test-change" {
-				foundSelfRef = true
-			}
+		if issue.Level != LevelError {
+			continue
+		}
+		hasErrorIssue = true
+		if issue.Message == "proposal cannot require itself: test-change" {
+			foundSelfRef = true
 		}
 	}
 

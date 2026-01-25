@@ -123,7 +123,8 @@ func DetectCycles(graph *DependencyGraph) [][]string {
 		colors[node] = 1 // Mark as in-progress (gray)
 
 		for _, dep := range graph.Edges[node] {
-			if colors[dep] == 1 {
+			switch colors[dep] {
+			case 1:
 				// Found a cycle - trace back to find the cycle path
 				cycle := []string{dep}
 				curr := node
@@ -133,7 +134,7 @@ func DetectCycles(graph *DependencyGraph) [][]string {
 				}
 				cycle = append([]string{dep}, cycle...)
 				cycles = append(cycles, cycle)
-			} else if colors[dep] == 0 {
+			case 0:
 				parent[dep] = node
 				dfs(dep)
 			}

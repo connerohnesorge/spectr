@@ -238,15 +238,16 @@ func (c *GraphCmd) collectAllNodes(
 		allNodes[id] = status
 
 		meta := graph.Nodes[id]
-		if meta != nil {
-			for _, dep := range meta.Requires {
-				depStatus, _ := discovery.GetChangeStatus(dep.ID, projectRoot)
-				allNodes[dep.ID] = depStatus
-			}
-			for _, dep := range meta.Enables {
-				depStatus, _ := discovery.GetChangeStatus(dep.ID, projectRoot)
-				allNodes[dep.ID] = depStatus
-			}
+		if meta == nil {
+			continue
+		}
+		for _, dep := range meta.Requires {
+			depStatus, _ := discovery.GetChangeStatus(dep.ID, projectRoot)
+			allNodes[dep.ID] = depStatus
+		}
+		for _, dep := range meta.Enables {
+			depStatus, _ := discovery.GetChangeStatus(dep.ID, projectRoot)
+			allNodes[dep.ID] = depStatus
 		}
 	}
 

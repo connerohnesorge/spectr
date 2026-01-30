@@ -1,12 +1,14 @@
 # Implementation Tasks
 
-Complete the implementation of the `/spectr:next` slash command for automated task execution.
+Complete the implementation of the `/spectr:next` slash command for automated
+task execution.
 
 ## 1. Core Domain Changes
 
 - [x] 1.1 Add `SlashNext SlashCommand = iota` to `internal/domain/slashcmd.go`
 - [x] 1.2 Update String() method to return "next" for SlashNext
-- [x] 1.3 Ensure SlashNext has unique value distinct from SlashProposal and SlashApply
+- [x] 1.3 Ensure SlashNext has unique value distinct from SlashProposal and
+  SlashApply
 - [x] 1.4 Run domain tests: `go test ./internal/domain/...`
 
 ## 2. Task Discovery Implementation
@@ -22,7 +24,8 @@ Complete the implementation of the `/spectr:next` slash command for automated ta
 ## 3. Status Management Implementation
 
 - [x] 3.1 Create `internal/taskexec/status.go`
-- [x] 3.2 Implement `UpdateTaskStatus(changeDir string, taskID string, status string) error`
+- [x] 3.2 Implement `UpdateTaskStatus(changeDir string, taskID string, status
+  string) error`
 - [x] 3.3 Handle both flat v1 and hierarchical v2 file structures
 - [x] 3.4 Ensure atomic writes to tasks.jsonc files
 - [x] 3.5 Implement parent task status aggregation logic
@@ -30,7 +33,8 @@ Complete the implementation of the `/spectr:next` slash command for automated ta
 
 ## 4. Template System Updates
 
-- [x] 4.1 Add `SlashNext()` method to TemplateManager in `internal/initialize/templates.go`
+- [x] 4.1 Add `SlashNext()` method to TemplateManager in
+  `internal/initialize/templates.go`
 - [x] 4.2 Create SlashNext template file in `internal/initialize/templates/`
 - [x] 4.3 Include task discovery logic in template
 - [x] 4.4 Include status management workflow

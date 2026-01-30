@@ -4,7 +4,8 @@
 
 - [x] 1.1 Create `internal/sync/sync.go` with `SyncTasksToMarkdown` function
 - [x] 1.2 Implement tasks.jsonc parsing to read current task statuses
-- [x] 1.3 Implement tasks.md parsing that preserves original structure/formatting
+- [x] 1.3 Implement tasks.md parsing that preserves original
+  structure/formatting
 - [x] 1.4 Implement status marker replacement (`[ ]` ↔ `[x]`) in-place
 - [x] 1.5 Handle edge case: tasks.md doesn't exist (skip sync gracefully)
 - [x] 1.6 Handle edge case: tasks.jsonc doesn't exist (skip sync gracefully)
@@ -51,4 +52,5 @@
 - [x] 7.1 Run `spectr validate add-auto-sync-tasks`
 - [x] 7.2 Run full test suite: `nix develop -c tests`
 - [x] 7.3 Run linter: `nix develop -c lint`
-- [x] 7.4 Manual test: modify tasks.jsonc status, run any spectr command, verify tasks.md updated
+- [x] 7.4 Manual test: modify tasks.jsonc status, run any spectr command, verify
+  tasks.md updated

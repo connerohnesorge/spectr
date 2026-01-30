@@ -3,22 +3,25 @@
 ## Why
 
 AI agents working with spectr proposals currently need to manually:
+
 1. Read tasks.jsonc to find the next pending task
 2. Understand the task requirements
 3. Execute the task manually
 4. Update the task status
 
-This creates friction and requires agents to implement task iteration logic themselves. By providing a `/spectr:next` slash command that automatically executes the next pending task in the current change proposal, we streamline the agent workflow and ensure consistent task execution order.
+This creates friction and requires agents to implement task iteration logic
+themselves. By providing a `/spectr:next` slash command that automatically
+executes the next pending task in the current change proposal, we streamline
+the agent workflow and ensure consistent task execution order.
 
 ## What Changes
 
 - **ADDED**: New `SlashNext` constant to `domain.SlashCommand` enum
-- **ADDED**: `/spectr:next` slash command template that:
-  - Discovers the current change proposal directory
-  - Parses tasks.jsonc to find the first pending task
-  - Reads the task description and requirements
-  - Executes the appropriate action based on task type
-  - Updates task status from pending → in_progress → completed
+- **ADDED**: `/spectr:next` slash command template that discovers the current
+  change proposal directory, parses tasks.jsonc to find the first pending
+  task, reads the task description and requirements, executes the appropriate
+  action based on task type, and updates task status from pending →
+  in_progress → completed
 - **MODIFIED**: `domain/slashcmd.go` - add SlashNext to enum
 - **MODIFIED**: All provider initializers to include SlashNext command
 - **MODIFIED**: Slash command templates to support the new command
@@ -31,7 +34,8 @@ This creates friction and requires agents to implement task iteration logic them
   - `internal/initialize/providers/` - update all provider initializers
   - `internal/initialize/templates.go` - add SlashNext template
 - **Breaking changes**: None - purely additive
-- **New functionality**: AI agents can now use `/spectr:next` to automatically work through task lists
+- **New functionality**: AI agents can now use `/spectr:next` to automatically
+  work through task lists
 
 ## Examples
 
@@ -72,6 +76,7 @@ AI Agent:
 ### Command Behavior
 
 The `/spectr:next` command will:
+
 1. Find the current change directory in spectr/changes/
 2. Read tasks.jsonc (following $ref links if hierarchical)
 3. Locate the first task with status "pending"

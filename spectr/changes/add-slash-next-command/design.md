@@ -2,7 +2,9 @@
 
 ## Overview
 
-The `/spectr:next` slash command will automate task execution for AI agents working with spectr proposals. It finds the next pending task, executes it, and updates statuses automatically.
+The `/spectr:next` slash command will automate task execution for AI agents
+working with spectr proposals. It finds the next pending task, executes it,
+and updates statuses automatically.
 
 ## Key Components
 
@@ -11,11 +13,12 @@ The `/spectr:next` slash command will automate task execution for AI agents work
 **File**: `internal/domain/slashcmd.go`
 
 Add new enum value:
+
 ```go
 const (
-    SlashProposal SlashCommand = iota
-    SlashApply
-    SlashNext  // NEW: Execute next pending task
+  SlashProposal SlashCommand = iota
+  SlashApply
+  SlashNext  // NEW: Execute next pending task
 )
 ```
 
@@ -24,12 +27,14 @@ Update String() method to include "next".
 ### 2. Task Discovery Logic
 
 **Responsibilities**:
+
 - Parse tasks.jsonc (handle both flat version 1 and hierarchical version 2)
 - Follow $ref links to child task files
 - Find first task with status "pending"
 - Return task details: ID, description, section, any children
 
 **Implementation approach**:
+
 - Reuse existing parsers from `internal/parsers/`
 - Create new `taskdiscovery` package or add to existing `discovery`
 - Handle circular reference detection
@@ -38,6 +43,7 @@ Update String() method to include "next".
 ### 3. Task Execution Engine
 
 **Responsibilities**:
+
 - Map task descriptions to actions
 - Support common task types:
   - Code implementation (single file changes)
@@ -48,6 +54,7 @@ Update String() method to include "next".
 - Provide extensibility for custom task types
 
 **Simple Version 1 approach**:
+
 - Parse task description for keywords
 - Use heuristics to determine action type
 - For unknown tasks, provide clear instructions to AI agent
@@ -56,12 +63,14 @@ Update String() method to include "next".
 ### 4. Status Management
 
 **Responsibilities**:
+
 - Update task status: pending → in_progress before execution
 - Update task status: in_progress → completed after execution
 - Handle failures gracefully (in_progress → pending on error)
 - Save updated tasks.jsonc atomically
 
 **Implementation**:
+
 - Reuse existing task sync logic from `internal/sync/`
 - Ensure atomic writes with proper error handling
 - Support both hierarchical and flat file structures
@@ -69,10 +78,13 @@ Update String() method to include "next".
 ### 5. Provider Template Updates
 
 **Files to update**:
+
 - `internal/initialize/templates.go` - add SlashNext template
-- All provider files in `internal/initialize/providers/` - add SlashNext to command maps
+- All provider files in `internal/initialize/providers/` - add SlashNext to
+  command maps
 
 **Template structure**:
+
 - Include discovery logic
 - Include execution engine
 - Include status management
@@ -108,11 +120,13 @@ Update String() method to include "next".
 ### Heuristic-based vs. Explicit Task Types
 
 **Chosen**: Heuristic-based approach for simplicity
+
 - Parse task description keywords ("Implement", "Test", "Update", "Create")
 - Map to common actions
 - Provide fallback for unknown tasks
 
 **Alternative considered**: Explicit task types in schema
+
 - Add "type" field to tasks.jsonc
 - More precise but requires spec changes
 - Can be added later if needed
@@ -120,16 +134,20 @@ Update String() method to include "next".
 ### Single Command vs. Multi-Step
 
 **Chosen**: Single `/spectr:next` command
+
 - Simple interface for AI agents
 - Automatically handles discovery → execution → status update
 
-**Alternative**: Separate commands (`/spectr:discover`, `/spectr:execute`, `/spectr:complete`)
+**Alternative**: Separate commands (`/spectr:discover`, `/spectr:execute`,
+`/spectr:complete`)
+
 - More flexible but more complex
 - Requires agent to manage state
 
 ### Template Implementation Language
 
 **Chosen**: Keep templates in Go with shell commands
+
 - Consistent with existing slash commands
 - AI agents can read and understand the logic
 - Easy to extend and customize per provider

@@ -2,13 +2,17 @@
 
 ## Problem
 
-Claude Code now supports `context: fork` in slash command frontmatter to run commands in a forked sub-agent context. We need to add this frontmatter to the proposal slash command for Claude Code, but:
+Claude Code now supports `context: fork` in slash command frontmatter to
+run commands in a forked sub-agent context. We need to add this frontmatter
+to the proposal slash command for Claude Code, but:
 
 1. We don't want to duplicate entire templates for each provider variation
 2. Hardcoding frontmatter in templates is inflexible
-3. Other providers (or Claude Code's other commands) may need different overrides
+3. Other providers (or Claude Code's other commands) may need different
+   overrides
 
-The current system embeds frontmatter directly in `.tmpl` files, requiring duplication for provider-specific variations.
+The current system embeds frontmatter directly in `.tmpl` files, requiring
+duplication for provider-specific variations. This causes:
 
 ## Solution
 
@@ -20,8 +24,11 @@ Implement an intelligent frontmatter override system that:
 4. **Inserts** the final frontmatter into the generated file
 
 This allows:
+
 - Base frontmatter stored centrally in the package (not in templates)
-- Providers to override specific fields (e.g., add `context: fork`, remove `agent: plan`)
+
+- Providers to override specific fields (add `context: fork`, remove `agent`)
+
 - Clean, maintainable template reuse without duplication or parsing from templates
 
 ## Architecture
@@ -34,6 +41,7 @@ Base Frontmatter (map[string]interface{})
 Merged Frontmatter (map[string]interface{})
   ↓ render to YAML + template body
 Final Slash Command (.md file)
+
 ```
 
 ### Key Components
@@ -53,32 +61,41 @@ Final Slash Command (.md file)
 ## Implementation
 
 ### Phase 1: Core Frontmatter System
-- Create base frontmatter map in `internal/frontmatter` package (keyed by slash command name)
-- Implement `FrontmatterOverride` type in `internal/domain` with Set and Remove fields
+
+- Create base frontmatter map in `internal/frontmatter` package
+- Implement `FrontmatterOverride` type in `internal/domain` with Set and Remove
+  fields
 - Add YAML rendering utilities to convert merged map back to YAML
 - Add tests for frontmatter merge logic and override application
 
 ### Phase 2: TemplateManager Extension
-- Add `SlashCommandWithOverrides()` method to lookup base frontmatter from package
+
+- Add `SlashCommandWithOverrides()` method to lookup frontmatter
 - Apply provider-specific overrides (Set then Remove)
 - Render merged frontmatter map to YAML
 - Combine rendered YAML with template body to create final slash command file
 
 ### Phase 3: ClaudeProvider Integration
+
 - Update `ClaudeProvider.Initializers()` to use overrides
+
 - Add `context: fork` to proposal command
+
 - Remove `agent: plan` from proposal command
 
 ### Phase 4: Validation & Testing
+
 - Test with `spectr init --provider=claude-code`
+
 - Verify generated `.claude/commands/spectr/proposal.md` has correct frontmatter
+
 - Run existing tests to ensure no regression
 
 ## Benefits
 
 - **No template duplication**: Single source of truth for command content
 - **Flexible**: Easy to add provider-specific customizations
-- **Maintainable**: Frontmatter changes don't require duplicating entire templates
+- **Maintainable**: Frontmatter changes don't require duplicating templates
 - **Type-safe**: Go structs for overrides prevent typos
 - **Future-proof**: Other providers can use same mechanism
 
@@ -87,8 +104,8 @@ Final Slash Command (.md file)
 | Risk | Mitigation |
 |------|------------|
 | YAML parsing errors | Comprehensive error handling and tests |
-| Breaking existing providers | Defaults maintain current behavior, overrides are opt-in |
-| Complex merge logic | Clear precedence rules: overrides always win, removes executed last |
+| Breaking existing providers | Defaults keep current behavior, overrides opt-in |
+| Complex merge logic | Overrides win, then removes execute |
 
 ## Open Questions
 

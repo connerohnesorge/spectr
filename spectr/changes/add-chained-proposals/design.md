@@ -22,6 +22,7 @@ enables:
   - id: feat-analytics
     reason: "unlocks event tracking"
 ---
+
 ```
 
 **Parser location**: `internal/domain/proposal.go` (new file)
@@ -39,6 +40,7 @@ type Dependency struct {
     ID     string `yaml:"id"`
     Reason string `yaml:"reason,omitempty"`
 }
+
 ```
 
 ### Validation Pipeline
@@ -46,19 +48,25 @@ type Dependency struct {
 **Stage 1: Parse frontmatter** (in discovery or validation)
 
 - Extract YAML block from proposal.md
+
 - Parse into ProposalMetadata
+
 - Store in memory for validation
 
 **Stage 2: Validate during `spectr validate`** (warning level)
 
 - For each `requires` entry, check if change-id exists in archive
+
 - If not archived: emit warning "Dependency 'X' is not yet archived"
+
 - Check for circular dependencies in the DAG
+
 - If cycle detected: emit error "Circular dependency: A → B → A"
 
 **Stage 3: Enforce during `spectr accept`** (error level)
 
 - Same checks as Stage 2, but hard fail instead of warn
+
 - Exit code 1 with clear message listing unmet dependencies
 
 ### Archive Detection
@@ -80,16 +88,19 @@ type Dependency struct {
 **Output formats**:
 
 - ASCII tree (default)
+
 - DOT format (`--dot`) for Graphviz
+
 - JSON (`--json`)
 
 **Example ASCII output**:
 
-```
+```text
 feat-dashboard
 ├── requires: feat-auth (archived ✓)
 ├── requires: feat-db (active ⧖)
 └── enables: feat-analytics
+
 ```
 
 **Example DOT output**:
@@ -100,6 +111,7 @@ digraph proposals {
   "feat-db" -> "feat-dashboard" [label="requires"]
   "feat-dashboard" -> "feat-analytics" [label="enables"]
 }
+
 ```
 
 ### Cycle Detection
@@ -115,16 +127,16 @@ digraph proposals {
 
 ## File Changes Summary
 
-| File                               | Change Type | Purpose                        |
-| ---------------------------------- | ----------- | ------------------------------ |
-| `internal/domain/proposal.go`      | New         | ProposalMetadata type, parsing |
-| `internal/domain/proposal_test.go` | New         | Unit tests for parsing         |
-| `internal/validation/deps.go`      | New         | Dependency validation rules    |
-| `internal/validation/deps_test.go` | New         | Unit tests for validation      |
-| `internal/discovery/changes.go`    | Modified    | Add IsChangeArchived function  |
-| `cmd/accept.go`                    | Modified    | Check dependencies before accept|
-| `cmd/validate.go`                  | Modified    | Warn on unmet dependencies     |
-| `cmd/graph.go`                     | New         | Graph visualization command    |
+| File | Change Type | Purpose |
+|------|-------------|---------|
+| `internal/domain/proposal.go` | New | ProposalMetadata type |
+| `internal/domain/proposal_test.go` | New | Unit tests |
+| `internal/validation/deps.go` | New | Dependency validation |
+| `internal/validation/deps_test.go` | New | Unit tests |
+| `internal/discovery/changes.go` | Modified | IsChangeArchived |
+| `cmd/accept.go` | Modified | Check dependencies |
+| `cmd/validate.go` | Modified | Warn on unmet deps |
+| `cmd/graph.go` | New | Graph visualization |
 
 ## Edge Cases
 

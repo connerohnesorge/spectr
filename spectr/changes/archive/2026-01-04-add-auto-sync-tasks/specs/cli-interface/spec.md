@@ -76,7 +76,7 @@ enabled or errors occur.
 #### Scenario: Verbose output with flag
 
 - **WHEN** `--verbose` flag is set and sync makes changes
-- **THEN** the system SHALL print "Synced N task statuses in <change-id>"
+- **THEN** the system SHALL print "Synced N task statuses in [change-id]"
 
 ### Requirement: Global Verbose Flag
 

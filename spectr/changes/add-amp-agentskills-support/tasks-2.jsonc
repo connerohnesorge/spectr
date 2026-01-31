@@ -9,7 +9,7 @@
       "id": "2.1",
       "section": "SkillFileInitializer",
       "description": "Create `internal/initialize/providers/skillfile.go` with `SkillFileInitializer` struct",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "2.2",

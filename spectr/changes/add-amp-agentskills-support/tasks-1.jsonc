@@ -9,31 +9,31 @@
       "id": "1.1",
       "section": "Template Infrastructure",
       "description": "Create `internal/domain/templates/skill-proposal.md.tmpl` with Amp frontmatter and proposal creation instructions",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.2",
       "section": "Template Infrastructure",
       "description": "Create `internal/domain/templates/skill-apply.md.tmpl` with Amp frontmatter and apply instructions",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.3",
       "section": "Template Infrastructure",
       "description": "Update `internal/initialize/templates.go` embed directive to include `skill-*.md.tmpl`",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.4",
       "section": "Template Infrastructure",
       "description": "Add `ProposalSkill() domain.TemplateRef` method to TemplateManager",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "1.5",
       "section": "Template Infrastructure",
       "description": "Add `ApplySkill() domain.TemplateRef` method to TemplateManager",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "parent": "1"

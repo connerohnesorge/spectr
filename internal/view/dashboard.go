@@ -239,3 +239,105 @@ func calculatePercentage(
 		),
 	)
 }
+
+// aggregateRootData merges data from a single root into the aggregated result.
+func aggregateRootData(
+	aggregated, rootData *DashboardData,
+	relativeTo string,
+) {
+	// Aggregate metrics
+	aggregated.Summary.TotalSpecs += rootData.Summary.TotalSpecs
+	aggregated.Summary.TotalRequirements += rootData.Summary.TotalRequirements
+	aggregated.Summary.ActiveChanges += rootData.Summary.ActiveChanges
+	aggregated.Summary.CompletedChanges += rootData.Summary.CompletedChanges
+	aggregated.Summary.TotalTasks += rootData.Summary.TotalTasks
+	aggregated.Summary.CompletedTasks += rootData.Summary.CompletedTasks
+
+	// Aggregate active changes with root path
+	for i := range rootData.ActiveChanges {
+		rootData.ActiveChanges[i].RootPath = relativeTo
+		aggregated.ActiveChanges = append(aggregated.ActiveChanges, rootData.ActiveChanges[i])
+	}
+
+	// Aggregate completed changes with root path
+	for i := range rootData.CompletedChanges {
+		rootData.CompletedChanges[i].RootPath = relativeTo
+		aggregated.CompletedChanges = append(
+			aggregated.CompletedChanges,
+			rootData.CompletedChanges[i],
+		)
+	}
+
+	// Aggregate specs with root path
+	for i := range rootData.Specs {
+		rootData.Specs[i].RootPath = relativeTo
+		aggregated.Specs = append(aggregated.Specs, rootData.Specs[i])
+	}
+}
+
+// sortAggregatedData sorts the aggregated dashboard data.
+func sortAggregatedData(aggregated *DashboardData) {
+	sort.Slice(aggregated.ActiveChanges, func(i, j int) bool {
+		if aggregated.ActiveChanges[i].Progress.Percentage != aggregated.ActiveChanges[j].Progress.Percentage {
+			return aggregated.ActiveChanges[i].Progress.Percentage < aggregated.ActiveChanges[j].Progress.Percentage
+		}
+
+		return aggregated.ActiveChanges[i].ID < aggregated.ActiveChanges[j].ID
+	})
+
+	sort.Slice(aggregated.CompletedChanges, func(i, j int) bool {
+		return aggregated.CompletedChanges[i].ID < aggregated.CompletedChanges[j].ID
+	})
+
+	sort.Slice(aggregated.Specs, func(i, j int) bool {
+		if aggregated.Specs[i].RequirementCount != aggregated.Specs[j].RequirementCount {
+			return aggregated.Specs[i].RequirementCount > aggregated.Specs[j].RequirementCount
+		}
+
+		return aggregated.Specs[i].ID < aggregated.Specs[j].ID
+	})
+}
+
+// CollectDataMultiRoot gathers dashboard information from multiple spectr roots
+// and aggregates the results. Each item includes its root path when multiple
+// roots are present.
+func CollectDataMultiRoot(
+	roots []discovery.SpectrRoot,
+) (*DashboardData, error) {
+	if len(roots) == 0 {
+		return &DashboardData{
+			Summary:          SummaryMetrics{},
+			ActiveChanges:    make([]ChangeProgress, 0),
+			CompletedChanges: make([]CompletedChange, 0),
+			Specs:            make([]SpecInfo, 0),
+		}, nil
+	}
+
+	// For single root, use existing function (backward compatible)
+	if len(roots) == 1 {
+		return CollectData(roots[0].Path)
+	}
+
+	// Aggregate data from multiple roots
+	aggregated := &DashboardData{
+		Summary:          SummaryMetrics{},
+		ActiveChanges:    make([]ChangeProgress, 0),
+		CompletedChanges: make([]CompletedChange, 0),
+		Specs:            make([]SpecInfo, 0),
+		HasMultipleRoots: true,
+	}
+
+	for _, root := range roots {
+		rootData, err := CollectData(root.Path)
+		if err != nil {
+			// Skip roots that fail to load
+			continue
+		}
+
+		aggregateRootData(aggregated, rootData, root.RelativeTo)
+	}
+
+	sortAggregatedData(aggregated)
+
+	return aggregated, nil
+}

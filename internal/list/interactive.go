@@ -65,6 +65,10 @@ const (
 	itemTypeChange = "change"
 	itemTypeSpec   = "spec"
 
+	// Type display strings
+	typeDisplayChange = "CHANGE"
+	typeDisplaySpec   = "SPEC"
+
 	// Column title constants
 	columnTitleID           = "ID"
 	columnTitleTitle        = "Title"
@@ -610,7 +614,7 @@ func buildUnifiedRows(
 		var typeStr, details string
 		switch item.Type {
 		case ItemTypeChange:
-			typeStr = "CHANGE"
+			typeStr = typeDisplayChange
 			if item.Change != nil {
 				details = fmt.Sprintf(
 					"Tasks: %d/%d 🔺 %d",
@@ -620,7 +624,7 @@ func buildUnifiedRows(
 				)
 			}
 		case ItemTypeSpec:
-			typeStr = "SPEC"
+			typeStr = typeDisplaySpec
 			if item.Spec != nil {
 				details = fmt.Sprintf(
 					"Reqs: %d",
@@ -812,7 +816,7 @@ func (m *interactiveModel) Update(
 	return m, cmd
 }
 
-// handleEnter handles the enter key press for copying selected ID
+// handleEnter handles the enter key press for copying selected path
 // or selecting in selection mode
 func (m *interactiveModel) handleEnter() {
 	cursor := m.table.Cursor()
@@ -827,7 +831,8 @@ func (m *interactiveModel) handleEnter() {
 	}
 
 	// ID is in first column for all modes
-	m.selectedID = row[0]
+	itemID := row[0]
+	m.selectedID = itemID
 
 	// In selection mode, just select without copying to clipboard
 	if m.selectionMode {
@@ -839,12 +844,92 @@ func (m *interactiveModel) handleEnter() {
 		return
 	}
 
-	// Otherwise, copy to clipboard
+	// Build the full path to copy to clipboard
+	copyPath := m.buildCopyPath(itemID, row)
+
+	// Copy to clipboard
 	m.copied = true
-	err := tui.CopyToClipboard(m.selectedID)
+	err := tui.CopyToClipboard(copyPath)
 	if err != nil {
 		m.err = err
 	}
+}
+
+// buildCopyPath builds the path to copy for the selected item.
+// Returns path relative to cwd (e.g., "spectr/changes/<id>/proposal.md")
+func (m *interactiveModel) buildCopyPath(itemID string, row table.Row) string {
+	// Determine the item type
+	var itemType, rootPath string
+
+	switch m.itemType {
+	case itemTypeChange:
+		// Find the change in changesData to get root path
+		for _, change := range m.changesData {
+			if change.ID == itemID {
+				rootPath = change.RootPath
+
+				break
+			}
+		}
+
+		return buildChangePath(rootPath, itemID)
+
+	case itemTypeSpec:
+		// Find the spec in specsData to get root path
+		for _, spec := range m.specsData {
+			if spec.ID == itemID {
+				rootPath = spec.RootPath
+
+				break
+			}
+		}
+
+		return buildSpecPath(rootPath, itemID)
+
+	case itemTypeAll:
+		// In unified mode, check the type column (second column)
+		if len(row) > 1 {
+			itemType = row[1]
+		}
+
+		// Find the item in allItems to get root path
+		for i := range m.allItems {
+			if m.allItems[i].ID() == itemID {
+				rootPath = m.allItems[i].RootPath()
+
+				break
+			}
+		}
+
+		if itemType == typeDisplaySpec {
+			return buildSpecPath(rootPath, itemID)
+		}
+
+		return buildChangePath(rootPath, itemID)
+	}
+
+	// Fallback to just the ID
+	return itemID
+}
+
+// buildChangePath builds the path for a change.
+func buildChangePath(rootPath, changeID string) string {
+	// If rootPath is "." or empty, use current directory
+	if rootPath == "" || rootPath == "." {
+		return fmt.Sprintf("spectr/changes/%s/proposal.md", changeID)
+	}
+	// Otherwise prefix with root path
+	return fmt.Sprintf("%s/spectr/changes/%s/proposal.md", rootPath, changeID)
+}
+
+// buildSpecPath builds the path for a spec.
+func buildSpecPath(rootPath, specID string) string {
+	// If rootPath is "." or empty, use current directory
+	if rootPath == "" || rootPath == "." {
+		return fmt.Sprintf("spectr/specs/%s/spec.md", specID)
+	}
+	// Otherwise prefix with root path
+	return fmt.Sprintf("%s/spectr/specs/%s/spec.md", rootPath, specID)
 }
 
 // handleEdit handles the 'e' key press for opening file in editor
@@ -870,7 +955,7 @@ func (m *interactiveModel) handleEdit() (tea.Model, tea.Cmd) {
 		// In unified mode, need to check the item type
 		itemID = row[0]
 		itemTypeStr := row[1] // Type is second column in unified mode
-		if itemTypeStr == "SPEC" {
+		if itemTypeStr == typeDisplaySpec {
 			editItemType = itemTypeSpec
 		} else {
 			editItemType = itemTypeChange
@@ -980,7 +1065,7 @@ func (m *interactiveModel) handleArchive() (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 	case itemTypeAll:
 		// In unified mode, check the type column
-		if len(row) > 1 && row[1] == "CHANGE" {
+		if len(row) > 1 && row[1] == typeDisplayChange {
 			m.selectedID = row[0]
 			m.archiveRequested = true
 

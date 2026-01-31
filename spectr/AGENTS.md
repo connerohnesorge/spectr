@@ -294,6 +294,49 @@ AI Agent:
 | ModifiedComplete | Error | MODIFIED requirements include full content |
 | DeltaPresence | Error | Changes MUST have ≥1 delta spec |
 
+## MULTI-REPO DISCOVERY
+
+Spectr supports mono-repo setups with nested git repositories, each with their
+own `spectr/` directory.
+
+### Discovery Behavior
+
+- **Automatic discovery**: Spectr walks up from the current working directory to
+  find all `spectr/` directories, stopping at `.git` boundaries
+- **Git isolation**: Each git repository is isolated; discovery stops at the git
+  root
+- **Aggregated results**: Commands like `list`, `validate`, `view` aggregate
+  results from all discovered roots
+- **Root prefix**: In multi-root scenarios, items are prefixed with their
+  relative path: `[../project] add-feature`
+
+### SPECTR_ROOT Environment Variable
+
+Override automatic discovery by setting `SPECTR_ROOT`:
+
+```bash
+# Use explicit spectr root
+SPECTR_ROOT=/path/to/project spectr list
+
+# Relative paths work too
+SPECTR_ROOT=../other-project spectr validate --all
+```
+
+**Behavior:**
+
+- When set, uses ONLY the specified root (skips automatic discovery)
+- Errors if the path doesn't contain a `spectr/` directory
+
+### Clipboard Copy Paths
+
+When selecting items in interactive mode (Enter key), Spectr copies the full
+path relative to your cwd:
+
+- Single root: `spectr/changes/add-feature/proposal.md`
+- Nested root: `../project/spectr/changes/add-feature/proposal.md`
+
+This enables direct navigation with `@` file references in AI tools.
+
 ## NOTES
 
 - **Validation is strict**: All issues treated as errors (no warnings in strict mode)
@@ -308,3 +351,6 @@ AI Agent:
 
 - **Multi-platform PRs**: Supports GitHub (gh), GitLab (glab), Gitea/Forgejo
   (tea), Bitbucket (manual)
+
+- **Multi-repo support**: Aggregates from all discovered `spectr/` directories
+  within the git boundary

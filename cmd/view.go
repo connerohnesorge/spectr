@@ -4,7 +4,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/connerohnesorge/spectr/internal/view"
 )
@@ -34,31 +33,39 @@ type ViewCmd struct {
 }
 
 // Run executes the view command.
-// It collects dashboard data from the project and formats the output
+// It collects dashboard data from all discovered spectr roots and formats the output
 // based on the JSON flag (either human-readable text or JSON).
-// Returns an error if the spectr directory is missing or if
+// Returns an error if no spectr directories are found or if
 // discovery/parsing fails.
 func (c *ViewCmd) Run() error {
-	// Get current working directory as the project path
-	projectPath, err := os.Getwd()
+	// Discover all spectr roots
+	roots, err := GetDiscoveredRoots()
 	if err != nil {
 		return fmt.Errorf(
-			"failed to get current directory: %w",
+			"failed to discover spectr roots: %w",
 			err,
 		)
 	}
 
-	// Collect dashboard data from the project
-	data, err := view.CollectData(projectPath)
-	if err != nil {
-		// Handle missing spectr directory error
-		if os.IsNotExist(err) {
-			return fmt.Errorf(
-				"spectr directory not found: %w\n"+
-					"Hint: Run 'spectr init' to initialize Spectr",
-				err,
-			)
+	// If no roots found, show empty dashboard (graceful degradation)
+	if len(roots) == 0 {
+		// Return empty dashboard data
+		data := &view.DashboardData{
+			Summary:          view.SummaryMetrics{},
+			ActiveChanges:    make([]view.ChangeProgress, 0),
+			CompletedChanges: make([]view.CompletedChange, 0),
+			Specs:            make([]view.SpecInfo, 0),
 		}
+
+		output := view.FormatDashboardText(data)
+		fmt.Println(output)
+
+		return nil
+	}
+
+	// Collect dashboard data from all roots
+	data, err := view.CollectDataMultiRoot(roots)
+	if err != nil {
 		// Handle other discovery/parsing failures
 		return fmt.Errorf(
 			"failed to collect dashboard data: %w",

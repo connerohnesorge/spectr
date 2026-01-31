@@ -447,7 +447,7 @@ func TestRunInteractiveAll_ValidData(
 	// This test verifies that the function can be called without error
 	// Actual interactive testing would require terminal simulation
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         "add-test-feature",
 			Title:      "Add test feature",
 			DeltaCount: 2,
@@ -471,7 +471,7 @@ func TestRunInteractiveAll_ValidData(
 func TestHandleToggleFilter(t *testing.T) {
 	// Create a model with all items
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         "change-1",
 			Title:      "Change 1",
 			DeltaCount: 1,
@@ -816,7 +816,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	)
 
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         changeID,
 			Title:      "Test Change",
 			DeltaCount: 2,
@@ -3460,7 +3460,7 @@ func TestBuildUnifiedRows_ResponsiveColumns(
 	t *testing.T,
 ) {
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         interactiveTestChangeID,
 			Title:      "Test Change",
 			DeltaCount: 2,

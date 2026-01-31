@@ -13,6 +13,7 @@ type ValidationItem struct {
 	Name     string
 	ItemType string // "change" or "spec"
 	Path     string
+	RootPath string // Relative path to spectr root (for multi-root scenarios)
 }
 
 // CreateValidationItems creates validation items from IDs and item type.
@@ -116,4 +117,73 @@ func GetSpecItems(
 		ItemTypeSpec,
 		basePath,
 	), nil
+}
+
+// GetAllItemsMultiRoot returns all changes and specs from multiple roots.
+func GetAllItemsMultiRoot(
+	roots []discovery.SpectrRoot,
+) ([]ValidationItem, error) {
+	var items []ValidationItem
+
+	for _, root := range roots {
+		rootItems, err := GetAllItems(root.Path)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add root path to each item
+		for i := range rootItems {
+			rootItems[i].RootPath = root.RelativeTo
+		}
+
+		items = append(items, rootItems...)
+	}
+
+	return items, nil
+}
+
+// GetChangeItemsMultiRoot returns all changes from multiple roots.
+func GetChangeItemsMultiRoot(
+	roots []discovery.SpectrRoot,
+) ([]ValidationItem, error) {
+	var items []ValidationItem
+
+	for _, root := range roots {
+		rootItems, err := GetChangeItems(root.Path)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add root path to each item
+		for i := range rootItems {
+			rootItems[i].RootPath = root.RelativeTo
+		}
+
+		items = append(items, rootItems...)
+	}
+
+	return items, nil
+}
+
+// GetSpecItemsMultiRoot returns all specs from multiple roots.
+func GetSpecItemsMultiRoot(
+	roots []discovery.SpectrRoot,
+) ([]ValidationItem, error) {
+	var items []ValidationItem
+
+	for _, root := range roots {
+		rootItems, err := GetSpecItems(root.Path)
+		if err != nil {
+			return nil, err
+		}
+
+		// Add root path to each item
+		for i := range rootItems {
+			rootItems[i].RootPath = root.RelativeTo
+		}
+
+		items = append(items, rootItems...)
+	}
+
+	return items, nil
 }

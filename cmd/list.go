@@ -69,7 +69,22 @@ func (c *ListCmd) Run() error {
 		}
 	}
 
-	// Get current working directory as the project path
+	// Discover all spectr roots
+	roots, err := GetDiscoveredRoots()
+	if err != nil {
+		return fmt.Errorf(
+			"failed to discover spectr roots: %w",
+			err,
+		)
+	}
+
+	if len(roots) == 0 {
+		fmt.Println("No spectr directories found.")
+
+		return nil
+	}
+
+	// Get current working directory for interactive mode
 	projectPath, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf(
@@ -78,28 +93,30 @@ func (c *ListCmd) Run() error {
 		)
 	}
 
-	// Create lister instance for the project
-	lister := list.NewLister(projectPath)
+	// Create multi-root lister
+	multiLister := list.NewMultiRootLister(roots)
+	hasMultipleRoots := multiLister.HasMultipleRoots()
 
 	// Route to appropriate listing function
 	if c.All {
-		return c.listAll(lister, projectPath)
+		return c.listAllMulti(multiLister, projectPath, hasMultipleRoots)
 	}
 	if c.Specs {
-		return c.listSpecs(lister, projectPath)
+		return c.listSpecsMulti(multiLister, projectPath, hasMultipleRoots)
 	}
 
-	return c.listChanges(lister, projectPath)
+	return c.listChangesMulti(multiLister, projectPath, hasMultipleRoots)
 }
 
-// listChanges retrieves and displays changes in the requested format.
+// listChangesMulti retrieves and displays changes from all discovered roots.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listChanges(
-	lister *list.Lister,
+func (c *ListCmd) listChangesMulti(
+	multiLister *list.MultiRootLister,
 	projectPath string,
+	hasMultipleRoots bool,
 ) error {
-	// Retrieve all changes from the project
-	changes, err := lister.ListChanges()
+	// Retrieve all changes from all roots
+	changes, err := multiLister.ListChanges()
 	if err != nil {
 		return fmt.Errorf(
 			"failed to list changes: %w",
@@ -148,22 +165,22 @@ func (c *ListCmd) listChanges(
 	switch {
 	case c.JSON:
 		// JSON format for machine consumption
-		var err error
-		output, err = list.FormatChangesJSON(
+		var jsonErr error
+		output, jsonErr = list.FormatChangesJSON(
 			changes,
 		)
-		if err != nil {
+		if jsonErr != nil {
 			return fmt.Errorf(
 				"failed to format JSON: %w",
-				err,
+				jsonErr,
 			)
 		}
 	case c.Long:
 		// Long format with detailed information
-		output = list.FormatChangesLong(changes)
+		output = list.FormatChangesLongMulti(changes, list.NewFormatMode(hasMultipleRoots))
 	default:
-		// Default text format - simple ID list
-		output = list.FormatChangesText(changes)
+		// Default text format - simple ID list (with root prefix if multi-root)
+		output = list.FormatChangesTextMulti(changes, list.NewFormatMode(hasMultipleRoots))
 	}
 
 	// Display the formatted output
@@ -229,14 +246,15 @@ func (*ListCmd) runPRWorkflow(
 	return nil
 }
 
-// listSpecs retrieves and displays specifications in the requested format.
+// listSpecsMulti retrieves and displays specifications from all discovered roots.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listSpecs(
-	lister *list.Lister,
+func (c *ListCmd) listSpecsMulti(
+	multiLister *list.MultiRootLister,
 	projectPath string,
+	hasMultipleRoots bool,
 ) error {
-	// Retrieve all specifications from the project
-	specs, err := lister.ListSpecs()
+	// Retrieve all specifications from all roots
+	specs, err := multiLister.ListSpecs()
 	if err != nil {
 		return fmt.Errorf(
 			"failed to list specs: %w",
@@ -264,20 +282,20 @@ func (c *ListCmd) listSpecs(
 	switch {
 	case c.JSON:
 		// JSON format for machine consumption
-		var err error
-		output, err = list.FormatSpecsJSON(specs)
-		if err != nil {
+		var jsonErr error
+		output, jsonErr = list.FormatSpecsJSON(specs)
+		if jsonErr != nil {
 			return fmt.Errorf(
 				"failed to format JSON: %w",
-				err,
+				jsonErr,
 			)
 		}
 	case c.Long:
 		// Long format with detailed information
-		output = list.FormatSpecsLong(specs)
+		output = list.FormatSpecsLongMulti(specs, list.NewFormatMode(hasMultipleRoots))
 	default:
 		// Default text format - simple ID list
-		output = list.FormatSpecsText(specs)
+		output = list.FormatSpecsTextMulti(specs, list.NewFormatMode(hasMultipleRoots))
 	}
 
 	// Display the formatted output
@@ -286,14 +304,15 @@ func (c *ListCmd) listSpecs(
 	return nil
 }
 
-// listAll retrieves and displays both changes and specs in unified format.
+// listAllMulti retrieves and displays both changes and specs from all roots.
 // It handles interactive mode, JSON, long, and default text formats.
-func (c *ListCmd) listAll(
-	lister *list.Lister,
+func (c *ListCmd) listAllMulti(
+	multiLister *list.MultiRootLister,
 	projectPath string,
+	hasMultipleRoots bool,
 ) error {
-	// Retrieve all items (changes and specs) from the project
-	items, err := lister.ListAll(nil)
+	// Retrieve all items (changes and specs) from all roots
+	items, err := multiLister.ListAll(nil)
 	if err != nil {
 		return fmt.Errorf(
 			"failed to list all items: %w",
@@ -321,20 +340,20 @@ func (c *ListCmd) listAll(
 	switch {
 	case c.JSON:
 		// JSON format for machine consumption
-		var err error
-		output, err = list.FormatAllJSON(items)
-		if err != nil {
+		var jsonErr error
+		output, jsonErr = list.FormatAllJSON(items)
+		if jsonErr != nil {
 			return fmt.Errorf(
 				"failed to format JSON: %w",
-				err,
+				jsonErr,
 			)
 		}
 	case c.Long:
 		// Long format with detailed information
-		output = list.FormatAllLong(items)
+		output = list.FormatAllLongMulti(items, list.NewFormatMode(hasMultipleRoots))
 	default:
 		// Default text format - simple ID list with type indicators
-		output = list.FormatAllText(items)
+		output = list.FormatAllTextMulti(items, list.NewFormatMode(hasMultipleRoots))
 	}
 
 	// Display the formatted output

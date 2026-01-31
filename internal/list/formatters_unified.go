@@ -143,3 +143,128 @@ func FormatAllJSON(
 
 	return string(data), nil
 }
+
+// calculateItemWidths computes max ID and root path lengths for alignment.
+func calculateItemWidths(items ItemList, mode FormatMode) (maxIDLen, maxRootLen int) {
+	for _, item := range items {
+		if len(item.ID()) > maxIDLen {
+			maxIDLen = len(item.ID())
+		}
+
+		if !mode.IsMulti() {
+			continue
+		}
+
+		rootPath := item.RootPath()
+		if len(rootPath) > maxRootLen {
+			maxRootLen = len(rootPath)
+		}
+	}
+
+	return maxIDLen, maxRootLen
+}
+
+// formatItemTypeAndDetails extracts type indicator and details from an item.
+func formatItemTypeAndDetails(item Item) (typeIndicator, details string) {
+	switch item.Type {
+	case ItemTypeChange:
+		typeIndicator = "[CHANGE]"
+		if item.Change != nil {
+			details = fmt.Sprintf("%d/%d tasks",
+				item.Change.TaskStatus.Completed,
+				item.Change.TaskStatus.Total)
+		}
+	case ItemTypeSpec:
+		typeIndicator = "[SPEC]  "
+		if item.Spec != nil {
+			details = fmt.Sprintf("%d requirements", item.Spec.RequirementCount)
+		}
+	}
+
+	return typeIndicator, details
+}
+
+// FormatAllTextMulti formats all items with optional root prefix for multi-root scenarios.
+func FormatAllTextMulti(items ItemList, mode FormatMode) string {
+	if len(items) == 0 {
+		return noItemsFoundMsg
+	}
+
+	// Sort by ID
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].ID() < items[j].ID()
+	})
+
+	maxIDLen, maxRootLen := calculateItemWidths(items, mode)
+
+	// Build lines for each item with type indicator
+	lines := make([]string, 0, len(items))
+	for _, item := range items {
+		typeIndicator, details := formatItemTypeAndDetails(item)
+		rootPath := item.RootPath()
+
+		var line string
+		if rootPath != currentDirPath && rootPath != "" && mode.IsMulti() {
+			line = fmt.Sprintf("[%-*s] %-*s  %s  %s",
+				maxRootLen, rootPath, maxIDLen, item.ID(), typeIndicator, details)
+		} else {
+			line = fmt.Sprintf("%-*s  %s  %s", maxIDLen, item.ID(), typeIndicator, details)
+		}
+
+		lines = append(lines, line)
+	}
+
+	return strings.Join(lines, lineSeparator)
+}
+
+// FormatAllLongMulti formats all items with detailed information and optional root prefix.
+func FormatAllLongMulti(items ItemList, mode FormatMode) string {
+	if len(items) == 0 {
+		return noItemsFoundMsg
+	}
+
+	// Sort by ID
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].ID() < items[j].ID()
+	})
+
+	var lines []string
+	for _, item := range items {
+		var line string
+		rootPath := item.RootPath()
+		rootPrefix := ""
+		if rootPath != currentDirPath && rootPath != "" && mode.IsMulti() {
+			rootPrefix = fmt.Sprintf("[%s] ", rootPath)
+		}
+
+		switch item.Type {
+		case ItemTypeChange:
+			if item.Change != nil {
+				line = fmt.Sprintf(
+					"%s%s [CHANGE]: %s [deltas %d] [tasks %d/%d]",
+					rootPrefix,
+					item.Change.ID,
+					item.Change.Title,
+					item.Change.DeltaCount,
+					item.Change.TaskStatus.Completed,
+					item.Change.TaskStatus.Total,
+				)
+			}
+		case ItemTypeSpec:
+			if item.Spec != nil {
+				line = fmt.Sprintf(
+					"%s%s [SPEC]: %s [requirements %d]",
+					rootPrefix,
+					item.Spec.ID,
+					item.Spec.Title,
+					item.Spec.RequirementCount,
+				)
+			}
+		}
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+
+	return strings.Join(lines, lineSeparator)
+}

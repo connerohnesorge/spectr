@@ -9,19 +9,19 @@
       "id": "5.1",
       "section": "Documentation and Polish",
       "description": "Update `spectr/AGENTS.md` to document multi-repo discovery behavior",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "5.2",
       "section": "Documentation and Polish",
       "description": "Add `SPECTR_ROOT` env var documentation to help text and README",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "5.3",
       "section": "Documentation and Polish",
       "description": "Add integration test: create nested git repos with spectr dirs,",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "parent": "5"

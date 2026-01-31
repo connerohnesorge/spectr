@@ -9,25 +9,25 @@
       "id": "3.1",
       "section": "TUI Path Copying",
       "description": "Modify `internal/tui/list.go` (or equivalent) to track the full path",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "3.2",
       "section": "TUI Path Copying",
       "description": "Change Enter key handler to copy path relative to cwd instead of ID",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "3.3",
       "section": "TUI Path Copying",
       "description": "Update clipboard copy to use `filepath.Rel(cwd, itemPath)` for the",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "3.4",
       "section": "TUI Path Copying",
       "description": "Ensure path works for both changes (`spectr/changes/\u003cid\u003e/proposal.md`)",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "parent": "3"

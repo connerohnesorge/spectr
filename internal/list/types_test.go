@@ -51,7 +51,7 @@ func TestNewChangeItem(t *testing.T) {
 		},
 	}
 
-	item := NewChangeItem(change)
+	item := NewChangeItem(&change)
 
 	if item.Type != ItemTypeChange {
 		t.Errorf(
@@ -162,13 +162,13 @@ func TestItem_Title_EmptyWhenNil(t *testing.T) {
 
 func TestItemList_FilterByType(t *testing.T) {
 	change1 := NewChangeItem(
-		ChangeInfo{
+		&ChangeInfo{
 			ID:    "change1",
 			Title: "Change 1",
 		},
 	)
 	change2 := NewChangeItem(
-		ChangeInfo{
+		&ChangeInfo{
 			ID:    "change2",
 			Title: "Change 2",
 		},
@@ -206,13 +206,13 @@ func TestItemList_FilterByType(t *testing.T) {
 
 func TestItemList_Changes(t *testing.T) {
 	change1 := NewChangeItem(
-		ChangeInfo{
+		&ChangeInfo{
 			ID:    "change1",
 			Title: "Change 1",
 		},
 	)
 	change2 := NewChangeItem(
-		ChangeInfo{
+		&ChangeInfo{
 			ID:    "change2",
 			Title: "Change 2",
 		},
@@ -248,7 +248,7 @@ func TestItemList_Changes(t *testing.T) {
 
 func TestItemList_Specs(t *testing.T) {
 	change1 := NewChangeItem(
-		ChangeInfo{
+		&ChangeInfo{
 			ID:    "change1",
 			Title: "Change 1",
 		},
@@ -295,7 +295,7 @@ func TestItem_JSONMarshaling(t *testing.T) {
 			Completed: 2,
 		},
 	}
-	item := NewChangeItem(change)
+	item := NewChangeItem(&change)
 
 	data, err := json.Marshal(item)
 	if err != nil {

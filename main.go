@@ -17,7 +17,10 @@ func main() {
 		cli,
 		kong.Name("spectr"),
 		kong.Description(
-			"Validatable spec-driven development",
+			"Validatable spec-driven development\n\n"+
+				"Environment Variables:\n"+
+				"  SPECTR_ROOT    Override automatic discovery with explicit spectr root path.\n"+
+				"                 When set, uses only the specified path (skips discovery).",
 		),
 		kong.UsageOnError(),
 	)

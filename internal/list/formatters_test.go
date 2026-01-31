@@ -428,7 +428,7 @@ func TestFormatAllText(t *testing.T) {
 		{
 			name: "Mixed items sorted",
 			items: ItemList{
-				NewChangeItem(ChangeInfo{
+				NewChangeItem(&ChangeInfo{
 					ID:         "update-docs",
 					Title:      "Update Docs",
 					DeltaCount: 1,
@@ -442,7 +442,7 @@ func TestFormatAllText(t *testing.T) {
 					Title:            "API",
 					RequirementCount: 12,
 				}),
-				NewChangeItem(ChangeInfo{
+				NewChangeItem(&ChangeInfo{
 					ID:         testAddFeature,
 					Title:      "Add Feature",
 					DeltaCount: 2,
@@ -488,7 +488,7 @@ func TestFormatAllText(t *testing.T) {
 
 func TestFormatAllLong(t *testing.T) {
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         testAddFeature,
 			Title:      "Add Feature",
 			DeltaCount: 2,
@@ -563,7 +563,7 @@ func TestFormatAllLong(t *testing.T) {
 
 func TestFormatAllJSON(t *testing.T) {
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         "update-docs",
 			Title:      "Update Docs",
 			DeltaCount: 1,
@@ -622,5 +622,141 @@ func TestFormatAllJSON_Empty(t *testing.T) {
 	}
 	if result != "[]" {
 		t.Errorf("Expected '[]', got %q", result)
+	}
+}
+
+// Multi-root formatting tests
+
+func TestFormatItemWithRoot(t *testing.T) {
+	tests := []struct {
+		name     string
+		rootPath string
+		id       string
+		mode     FormatMode
+		expected string
+	}{
+		{
+			name:     "single root returns just ID",
+			rootPath: ".",
+			id:       "add-feature",
+			mode:     FormatModeSingle,
+			expected: "add-feature",
+		},
+		{
+			name:     "multiple roots with dot returns just ID",
+			rootPath: ".",
+			id:       "add-feature",
+			mode:     FormatModeMulti,
+			expected: "add-feature",
+		},
+		{
+			name:     "multiple roots with empty returns just ID",
+			rootPath: "",
+			id:       "add-feature",
+			mode:     FormatModeMulti,
+			expected: "add-feature",
+		},
+		{
+			name:     "multiple roots with path returns prefixed ID",
+			rootPath: "../project",
+			id:       "add-feature",
+			mode:     FormatModeMulti,
+			expected: "[../project] add-feature",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := FormatItemWithRoot(tt.rootPath, tt.id, tt.mode)
+			if result != tt.expected {
+				t.Errorf("expected %q, got %q", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestFormatChangesTextMulti_SingleRoot(t *testing.T) {
+	changes := []ChangeInfo{
+		{
+			ID:         "add-feature",
+			Title:      "Add Feature",
+			DeltaCount: 2,
+			TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+			RootPath:   ".",
+		},
+	}
+
+	result := FormatChangesTextMulti(changes, FormatModeSingle)
+
+	// Should NOT have root prefix for single root
+	if strings.Contains(result, "[") {
+		t.Error("Single root should not have prefix")
+	}
+	if !strings.Contains(result, "add-feature") {
+		t.Error("Should contain change ID")
+	}
+}
+
+func TestFormatChangesTextMulti_MultipleRoots(t *testing.T) {
+	changes := []ChangeInfo{
+		{
+			ID:         "add-feature",
+			Title:      "Add Feature",
+			DeltaCount: 2,
+			TaskStatus: parsers.TaskStatus{Total: 5, Completed: 3},
+			RootPath:   "../project",
+		},
+		{
+			ID:         "fix-bug",
+			Title:      "Fix Bug",
+			DeltaCount: 1,
+			TaskStatus: parsers.TaskStatus{Total: 3, Completed: 1},
+			RootPath:   ".",
+		},
+	}
+
+	result := FormatChangesTextMulti(changes, FormatModeMulti)
+
+	// First change should have root prefix
+	if !strings.Contains(result, "[../project]") {
+		t.Error("Multi-root should have prefix for non-cwd roots")
+	}
+	// Both IDs should be present
+	if !strings.Contains(result, "add-feature") {
+		t.Error("Should contain first change ID")
+	}
+	if !strings.Contains(result, "fix-bug") {
+		t.Error("Should contain second change ID")
+	}
+}
+
+func TestFormatSpecsTextMulti_MultipleRoots(t *testing.T) {
+	specs := []SpecInfo{
+		{
+			ID:               "auth",
+			Title:            "Authentication",
+			RequirementCount: 5,
+			RootPath:         "../lib",
+		},
+		{
+			ID:               "api",
+			Title:            "API",
+			RequirementCount: 12,
+			RootPath:         ".",
+		},
+	}
+
+	result := FormatSpecsTextMulti(specs, FormatModeMulti)
+
+	// Spec from parent should have prefix
+	if !strings.Contains(result, "[../lib]") {
+		t.Error("Multi-root should have prefix for non-cwd roots")
+	}
+	// Both IDs should be present
+	if !strings.Contains(result, "api") {
+		t.Error("Should contain api spec")
+	}
+	if !strings.Contains(result, "auth") {
+		t.Error("Should contain auth spec")
 	}
 }

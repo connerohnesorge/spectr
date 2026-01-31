@@ -11,6 +11,8 @@ import (
 	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
+// Note: GetDiscoveredRoots() is defined in cmd/discovery.go
+
 // ValidateCmd represents the validate command
 type ValidateCmd struct {
 	ItemName      *string `arg:"" optional:"" predictor:"item"`
@@ -115,14 +117,25 @@ func (c *ValidateCmd) runDirectValidation(
 
 // runBulkValidation validates multiple items based on flags
 func (c *ValidateCmd) runBulkValidation(
-	projectPath string,
+	_ string,
 ) error {
 	validator := validation.NewValidator()
 
+	// Discover all spectr roots
+	roots, err := GetDiscoveredRoots()
+	if err != nil {
+		return fmt.Errorf(
+			"failed to discover spectr roots: %w",
+			err,
+		)
+	}
+
+	if len(roots) == 0 {
+		return c.handleNoItems()
+	}
+
 	// Determine what to validate
-	items, err := c.getItemsToValidate(
-		projectPath,
-	)
+	items, err := c.getItemsToValidateMultiRoot(roots)
 	if err != nil {
 		return err
 	}
@@ -138,10 +151,11 @@ func (c *ValidateCmd) runBulkValidation(
 	)
 
 	// Print results
+	hasMultipleRoots := len(roots) > 1
 	if c.JSON {
 		validation.PrintBulkJSONResults(results)
 	} else {
-		validation.PrintBulkHumanResults(results)
+		validation.PrintBulkHumanResultsMulti(results, hasMultipleRoots)
 	}
 
 	if hasFailures {
@@ -153,21 +167,17 @@ func (c *ValidateCmd) runBulkValidation(
 	return nil
 }
 
-// getItemsToValidate returns the items to validate based on flags
-func (c *ValidateCmd) getItemsToValidate(
-	projectPath string,
+// getItemsToValidateMultiRoot returns the items to validate from all roots.
+func (c *ValidateCmd) getItemsToValidateMultiRoot(
+	roots []discovery.SpectrRoot,
 ) ([]validation.ValidationItem, error) {
 	switch {
 	case c.All:
-		return validation.GetAllItems(projectPath)
+		return validation.GetAllItemsMultiRoot(roots)
 	case c.Changes:
-		return validation.GetChangeItems(
-			projectPath,
-		)
+		return validation.GetChangeItemsMultiRoot(roots)
 	case c.Specs:
-		return validation.GetSpecItems(
-			projectPath,
-		)
+		return validation.GetSpecItemsMultiRoot(roots)
 	default:
 		return nil, nil
 	}

@@ -30,37 +30,54 @@ type CLI struct {
 }
 
 // AfterApply is called by Kong after parsing flags but before running the command.
-// It synchronizes task statuses from tasks.jsonc to tasks.md for all active changes.
+// It synchronizes task statuses from tasks.jsonc to tasks.md for all active changes
+// across all discovered spectr roots.
 func (c *CLI) AfterApply() error {
 	if c.NoSync {
 		return nil
 	}
 
-	projectRoot, err := os.Getwd()
+	// Discover all spectr roots
+	roots, err := GetDiscoveredRoots()
 	if err != nil {
 		// Log error but don't block command
 		fmt.Fprintf(
 			os.Stderr,
-			"sync: failed to get working directory: %v\n",
+			"sync: failed to discover spectr roots: %v\n",
 			err,
 		)
 
 		return nil
 	}
 
-	// Check if spectr/ directory exists (not initialized = skip)
-	spectrDir := filepath.Join(
-		projectRoot,
-		"spectr",
-	)
-	if _, err := os.Stat(spectrDir); os.IsNotExist(
-		err,
-	) {
+	// If no roots found, skip sync (not initialized)
+	if len(roots) == 0 {
 		return nil
 	}
 
-	return sync.SyncAllActiveChanges(
-		projectRoot,
-		c.Verbose,
-	)
+	// Sync all active changes across all discovered roots
+	for _, root := range roots {
+		// Check if spectr/ directory exists for this root
+		spectrDir := filepath.Join(root.Path, "spectr")
+		if _, statErr := os.Stat(spectrDir); os.IsNotExist(statErr) {
+			continue
+		}
+
+		syncErr := sync.SyncAllActiveChanges(root.Path, c.Verbose)
+		if syncErr == nil {
+			continue
+		}
+
+		// Log error but continue with other roots
+		if c.Verbose {
+			fmt.Fprintf(
+				os.Stderr,
+				"sync: failed for %s: %v\n",
+				root.RelativeTo,
+				syncErr,
+			)
+		}
+	}
+
+	return nil
 }

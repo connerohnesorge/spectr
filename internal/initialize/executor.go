@@ -503,6 +503,10 @@ func initializerPriority(
 		*providers.HomePrefixedSlashCommandsInitializer,
 		*providers.TOMLSlashCommandsInitializer:
 		return 3
+	// Priority 4: Agent skills initializers (need directories and config files first)
+	case *providers.SkillFileInitializer,
+		*providers.AgentSkillsInitializer:
+		return 4
 	// Default: Unknown types go last to maintain stability
 	default:
 		return 99

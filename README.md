@@ -98,6 +98,7 @@ development workflows:
 | Tool | Website |
 |------|---------|
 | [Claude Code](https://claude.ai/code) | Anthropic's CLI AI coding agent |
+| [Amp](https://ampcode.com) | Production-grade AI coding assistant with agent skills |
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Google's Gemini CLI |
 | [Cursor](https://cursor.sh) | AI-powered code editor |
 | [Windsurf](https://codeium.com/windsurf) | AI code editor by Codeium |
@@ -415,6 +416,17 @@ spectr init /path/to/project --tools git
 # Non-interactive with defaults
 spectr init --non-interactive
 ```text
+
+**AI Provider Selection:**
+
+During interactive initialization, you can select which AI coding assistants you use. For example:
+
+- **Claude Code**: Generates agent skills in `.claude/skills/` and slash commands in `.claude/commands/spectr/`
+- **Amp**: Generates agent skills in `.agents/skills/` (based on Claude Code, uses user-invocable skills)
+- **Gemini CLI**: Generates TOML slash commands in `.gemini/commands/spectr/`
+- **Cursor, Windsurf, Aider**: Generates standard instruction pointers in `CLAUDE.md` or `AGENTS.md`
+
+You can select multiple providers - Spectr will generate appropriate configuration files for each.
 
 **Output:**
 

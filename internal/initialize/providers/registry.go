@@ -106,6 +106,7 @@ func Reset() {
 // Priority constants for built-in providers (lower = higher priority).
 const (
 	PriorityClaudeCode  = 1
+	PriorityAmp         = 15
 	PriorityGemini      = 2
 	PriorityCostrict    = 3
 	PriorityQoder       = 4
@@ -119,7 +120,8 @@ const (
 	PriorityKilocode    = 12
 	PriorityContinue    = 13
 	PriorityCrush       = 14
-	PriorityOpencode    = 15
+	PriorityOpencode    = 16
+	PriorityKimi        = 17
 )
 
 // RegisterAllProviders registers all built-in providers.
@@ -132,6 +134,12 @@ func RegisterAllProviders() error {
 			Name:     "Claude Code",
 			Priority: PriorityClaudeCode,
 			Provider: &ClaudeProvider{},
+		},
+		{
+			ID:       "amp",
+			Name:     "Amp",
+			Priority: PriorityAmp,
+			Provider: &AmpProvider{},
 		},
 		{
 			ID:       "gemini",
@@ -216,6 +224,12 @@ func RegisterAllProviders() error {
 			Name:     "OpenCode",
 			Priority: PriorityOpencode,
 			Provider: &OpencodeProvider{},
+		},
+		{
+			ID:       "kimi",
+			Name:     "Kimi",
+			Priority: PriorityKimi,
+			Provider: &KimiProvider{},
 		},
 	}
 

@@ -26,6 +26,7 @@ const (
 	testClaudeValidateSkillDir = ".claude/skills/spectr-validate-wo-spectr-bin"
 	testCodexAcceptSkillDir    = ".codex/skills/spectr-accept-wo-spectr-bin"
 	testCodexValidateSkillDir  = ".codex/skills/spectr-validate-wo-spectr-bin"
+	testAgentsFilename         = "AGENTS.md"
 )
 
 // mockTemplateManager implements TemplateManager for testing
@@ -396,10 +397,11 @@ func TestAntigravityProvider_Initializers(
 
 	// Check ConfigFileInitializer uses AGENTS.md
 	cfgInit := inits[1].(*ConfigFileInitializer)
-	if cfgInit.path != "AGENTS.md" {
+	if cfgInit.path != testAgentsFilename {
 		t.Errorf(
-			"AntigravityProvider ConfigFileInitializer path = %s, want \"AGENTS.md\"",
+			"AntigravityProvider ConfigFileInitializer path = %s, want \"%s\"",
 			cfgInit.path,
+			testAgentsFilename,
 		)
 	}
 }
@@ -595,10 +597,11 @@ func TestCodexProvider_Initializers(
 
 	// Check ConfigFileInitializer uses AGENTS.md
 	cfgInit := inits[2].(*ConfigFileInitializer)
-	if cfgInit.path != "AGENTS.md" {
+	if cfgInit.path != testAgentsFilename {
 		t.Errorf(
-			"CodexProvider ConfigFileInitializer path = %s, want \"AGENTS.md\"",
+			"CodexProvider ConfigFileInitializer path = %s, want \"%s\"",
 			cfgInit.path,
+			testAgentsFilename,
 		)
 	}
 }
@@ -789,10 +792,11 @@ func TestKimiProvider_Initializers(
 
 	// Check ConfigFileInitializer uses AGENTS.md
 	cfgInit := inits[1].(*ConfigFileInitializer)
-	if cfgInit.path != "AGENTS.md" {
+	if cfgInit.path != testAgentsFilename {
 		t.Errorf(
-			"KimiProvider ConfigFileInitializer path = %s, want \"AGENTS.md\"",
+			"KimiProvider ConfigFileInitializer path = %s, want \"%s\"",
 			cfgInit.path,
+			testAgentsFilename,
 		)
 	}
 

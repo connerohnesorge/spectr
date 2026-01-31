@@ -491,7 +491,7 @@ func TestWriteHierarchicalTasksJSONC(t *testing.T) {
 
 	statusMap := make(map[string]parsers.TaskStatusValue)
 
-	err := writeHierarchicalTasksJSONC(tmpDir, "test-change", sections, statusMap)
+	err := writeHierarchicalTasksJSONC(tmpDir, "test-change", sections, statusMap, nil, nil)
 	if err != nil {
 		t.Fatalf("writeHierarchicalTasksJSONC() error = %v", err)
 	}

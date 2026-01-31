@@ -397,6 +397,59 @@ Minimal `design.md` skeleton:
 - [...]
 ```
 
+## CHAINED PROPOSALS
+
+Proposals can declare dependencies on other proposals using YAML frontmatter:
+
+```yaml
+---
+id: feat-dashboard
+requires:
+  - id: feat-auth
+    reason: "needs user model and session management"
+  - id: feat-db
+    reason: "needs schema migrations for dashboard tables"
+enables:
+  - id: feat-analytics
+    reason: "unlocks event tracking on dashboard"
+---
+```
+
+**Fields:**
+- `id`: Optional explicit ID for this proposal
+- `requires`: List of proposals that must be archived before this can be accepted
+- `enables`: Informational list of proposals this unlocks (not enforced)
+
+**Behavior:**
+- `spectr validate`: Warns if required proposals aren't archived, errors on cycles
+- `spectr accept`: Hard fails if any `requires` entries aren't archived
+- `spectr graph`: Visualizes the proposal dependency DAG
+
+**Commands:**
+```bash
+# View dependency graph (ASCII)
+spectr graph
+
+# View graph for specific proposal
+spectr graph <change-id>
+
+# Output in Graphviz DOT format
+spectr graph --dot
+
+# Output in JSON format
+spectr graph --json
+```
+
+**Example Graph Output:**
+```
+feat-dashboard (⧖)
+├── requires: feat-auth ✓
+├── requires: feat-db ⧖
+└── enables: feat-analytics
+```
+
+Legend: ✓ = archived, ⧖ = active/pending
+
 ## Spec File Format
 
 ### Critical: Scenario Formatting

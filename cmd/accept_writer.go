@@ -186,6 +186,56 @@ func findNextSectionNumber(
 	return maxSection + 1
 }
 
+// createChildPrependedTasks creates Task structs to prepend to a child file.
+// It generates task IDs like "1.0.1", "1.0.2" (using 0 subsection for prepended tasks).
+// These tasks appear before the regular tasks (e.g., 1.1, 1.2) in the child file.
+func createChildPrependedTasks(
+	sectionNum string,
+	cfg *config.RefsTasksConfig,
+) []parsers.Task {
+	if cfg == nil || !cfg.HasTasks() {
+		return nil
+	}
+
+	tasks := make([]parsers.Task, 0, len(cfg.Tasks))
+	for i, desc := range cfg.Tasks {
+		taskID := fmt.Sprintf("%s.0.%d", sectionNum, i+1)
+		tasks = append(tasks, parsers.Task{
+			ID:          taskID,
+			Section:     "Section Prerequisites",
+			Description: desc,
+			Status:      parsers.TaskStatusPending,
+		})
+	}
+
+	return tasks
+}
+
+// createChildAppendedTasks creates Task structs to append to a child file.
+// It generates task IDs like "1.99.1", "1.99.2" (using 99 subsection for appended tasks).
+// These tasks appear after the regular tasks (e.g., 1.1, 1.2) in the child file.
+func createChildAppendedTasks(
+	sectionNum string,
+	cfg *config.RefsTasksConfig,
+) []parsers.Task {
+	if cfg == nil || !cfg.HasTasks() {
+		return nil
+	}
+
+	tasks := make([]parsers.Task, 0, len(cfg.Tasks))
+	for i, desc := range cfg.Tasks {
+		taskID := fmt.Sprintf("%s.99.%d", sectionNum, i+1)
+		tasks = append(tasks, parsers.Task{
+			ID:          taskID,
+			Section:     "Section Verification",
+			Description: desc,
+			Status:      parsers.TaskStatusPending,
+		})
+	}
+
+	return tasks
+}
+
 // buildTaskStatusMap reads existing tasks.jsonc (v1 or v2) and child files
 // to create a map from task ID to status value. This enables status preservation
 // when re-running accept after manual status edits.
@@ -387,10 +437,13 @@ func aggregateSectionStatus(
 // writeHierarchicalTasksJSONC writes a hierarchical v2 task structure.
 // Creates a root tasks.jsonc with section-level tasks that reference
 // child tasks-{N}.jsonc files containing the actual task details.
+// If prependCfg or appendCfg are provided, those tasks are injected into
+// each child file with IDs like "N.0.X" (prepended) and "N.99.X" (appended).
 func writeHierarchicalTasksJSONC(
 	changeDir, changeID string,
 	sections []sectionGroup,
 	statusMap map[string]parsers.TaskStatusValue,
+	prependCfg, appendCfg *config.RefsTasksConfig,
 ) error {
 	// Build root tasks with children references
 	rootTasks := make([]parsers.Task, 0, len(sections))
@@ -414,8 +467,29 @@ func writeHierarchicalTasksJSONC(
 		// Create child file reference
 		childFileName := fmt.Sprintf("tasks-%s.jsonc", section.sectionNum)
 
+		// Build child tasks with prepend/append
+		var childTasks []parsers.Task
+
+		// Add prepended tasks if configured
+		if prependCfg != nil && prependCfg.HasTasks() {
+			prependedTasks := createChildPrependedTasks(section.sectionNum, prependCfg)
+			childTasks = append(childTasks, prependedTasks...)
+		}
+
+		// Add original section tasks
+		childTasks = append(childTasks, section.tasks...)
+
+		// Add appended tasks if configured
+		if appendCfg != nil && appendCfg.HasTasks() {
+			appendedTasks := createChildAppendedTasks(section.sectionNum, appendCfg)
+			childTasks = append(childTasks, appendedTasks...)
+		}
+
+		// Apply status preservation to all child tasks (including injected ones)
+		applyStatusPreservation(childTasks, statusMap)
+
 		// Create root task for this section
-		sectionStatus := aggregateSectionStatus(section.tasks, statusMap)
+		sectionStatus := aggregateSectionStatus(childTasks, statusMap)
 		rootTask := parsers.Task{
 			ID:          section.sectionNum,
 			Section:     section.sectionName,
@@ -427,12 +501,11 @@ func writeHierarchicalTasksJSONC(
 
 		// Write child file
 		childPath := filepath.Join(changeDir, childFileName)
-		applyStatusPreservation(section.tasks, statusMap)
 
 		childFile := parsers.TasksFile{
 			Version: 2,
 			Parent:  section.sectionNum,
-			Tasks:   section.tasks,
+			Tasks:   childTasks,
 		}
 
 		header := buildChildTasksHeader(changeID, section.sectionNum)

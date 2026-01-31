@@ -160,6 +160,13 @@ func (c *AcceptCmd) processChange(
 		return nil
 	}
 
+	// Extract refs configs for hierarchical task files
+	var prependRefsCfg, appendRefsCfg *config.RefsTasksConfig
+	if cfg != nil {
+		prependRefsCfg = cfg.RefsAlwaysPrepend
+		appendRefsCfg = cfg.RefsAlwaysAppend
+	}
+
 	// Check if we should split into hierarchical format
 	// Split based on generated JSONC complexity, not tasks.md line count
 	allTasks := tasks
@@ -176,6 +183,8 @@ func (c *AcceptCmd) processChange(
 			tasksMdPath,
 			tasks,
 			appendCfg,
+			prependRefsCfg,
+			appendRefsCfg,
 		)
 	}
 
@@ -266,6 +275,7 @@ func writeAndCleanupHierarchical(
 	changeID, changeDir, tasksMdPath string,
 	tasks []parsers.Task,
 	appendCfg *config.AppendTasksConfig,
+	prependRefsCfg, appendRefsCfg *config.RefsTasksConfig,
 ) error {
 	// Append configured tasks if present
 	allTasks := tasks
@@ -280,13 +290,30 @@ func writeAndCleanupHierarchical(
 	// Group tasks by section
 	sections := groupTasksBySection(allTasks)
 
-	// Write hierarchical structure
-	if err := writeHierarchicalTasksJSONC(changeDir, changeID, sections, statusMap); err != nil {
+	// Write hierarchical structure with ref configs
+	if err := writeHierarchicalTasksJSONC(
+		changeDir, changeID, sections, statusMap,
+		prependRefsCfg, appendRefsCfg,
+	); err != nil {
 		return fmt.Errorf("failed to write hierarchical tasks: %w", err)
 	}
 
-	// Count total tasks
+	// Count total tasks (including injected refs tasks)
 	totalTasks := len(allTasks)
+	// Count sections that will have children (non-zero, non-empty)
+	childSectionCount := 0
+	for _, s := range sections {
+		if s.sectionNum != "0" && len(s.tasks) > 0 {
+			childSectionCount++
+		}
+	}
+	// Add injected tasks to total count
+	if prependRefsCfg != nil && prependRefsCfg.HasTasks() {
+		totalTasks += len(prependRefsCfg.Tasks) * childSectionCount
+	}
+	if appendRefsCfg != nil && appendRefsCfg.HasTasks() {
+		totalTasks += len(appendRefsCfg.Tasks) * childSectionCount
+	}
 
 	fmt.Printf(
 		"Converted %s -> hierarchical tasks.jsonc (v2)\nPreserved %s\nWrote %d tasks across %d sections\n",

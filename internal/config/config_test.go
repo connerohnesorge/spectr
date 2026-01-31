@@ -295,3 +295,132 @@ func TestAppendTasksConfig_NilReceiver(
 		},
 	)
 }
+
+func TestLoadConfig_RefsAlwaysPrepend(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "spectr.yaml")
+
+	configContent := `refs_always_prepend:
+  tasks:
+    - "Review section requirements before starting"
+    - "Verify prerequisites are met"
+`
+	err := os.WriteFile(configPath, []byte(configContent), 0o644)
+	assert.NoError(t, err)
+
+	cfg, err := LoadConfig(tmpDir)
+	assert.NoError(t, err)
+	assert.NotEqual(t, nil, cfg)
+	assert.NotEqual(t, nil, cfg.RefsAlwaysPrepend)
+	assert.True(t, cfg.RefsAlwaysPrepend.HasTasks())
+	assert.Equal(t, 2, len(cfg.RefsAlwaysPrepend.Tasks))
+	assert.Equal(
+		t,
+		"Review section requirements before starting",
+		cfg.RefsAlwaysPrepend.Tasks[0],
+	)
+	assert.Equal(
+		t,
+		"Verify prerequisites are met",
+		cfg.RefsAlwaysPrepend.Tasks[1],
+	)
+}
+
+func TestLoadConfig_RefsAlwaysAppend(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "spectr.yaml")
+
+	configContent := `refs_always_append:
+  tasks:
+    - "Verify all tasks in this section are complete"
+    - "Run tests for this section"
+`
+	err := os.WriteFile(configPath, []byte(configContent), 0o644)
+	assert.NoError(t, err)
+
+	cfg, err := LoadConfig(tmpDir)
+	assert.NoError(t, err)
+	assert.NotEqual(t, nil, cfg)
+	assert.NotEqual(t, nil, cfg.RefsAlwaysAppend)
+	assert.True(t, cfg.RefsAlwaysAppend.HasTasks())
+	assert.Equal(t, 2, len(cfg.RefsAlwaysAppend.Tasks))
+	assert.Equal(
+		t,
+		"Verify all tasks in this section are complete",
+		cfg.RefsAlwaysAppend.Tasks[0],
+	)
+	assert.Equal(
+		t,
+		"Run tests for this section",
+		cfg.RefsAlwaysAppend.Tasks[1],
+	)
+}
+
+func TestLoadConfig_BothRefsConfigs(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "spectr.yaml")
+
+	configContent := `refs_always_prepend:
+  tasks:
+    - "Check prerequisites"
+
+refs_always_append:
+  tasks:
+    - "Verify completion"
+
+append_tasks:
+  section: "Final Tasks"
+  tasks:
+    - "Output: COMPLETE"
+`
+	err := os.WriteFile(configPath, []byte(configContent), 0o644)
+	assert.NoError(t, err)
+
+	cfg, err := LoadConfig(tmpDir)
+	assert.NoError(t, err)
+	assert.NotEqual(t, nil, cfg)
+	assert.NotEqual(t, nil, cfg.RefsAlwaysPrepend)
+	assert.NotEqual(t, nil, cfg.RefsAlwaysAppend)
+	assert.NotEqual(t, nil, cfg.AppendTasks)
+	assert.True(t, cfg.RefsAlwaysPrepend.HasTasks())
+	assert.True(t, cfg.RefsAlwaysAppend.HasTasks())
+	assert.True(t, cfg.AppendTasks.HasTasks())
+}
+
+func TestRefsTasksConfig_HasTasks(t *testing.T) {
+	tests := []struct {
+		name     string
+		tasks    []string
+		expected bool
+	}{
+		{
+			name:     "with tasks",
+			tasks:    []string{"task1", "task2"},
+			expected: true,
+		},
+		{
+			name:     "empty tasks",
+			tasks:    make([]string, 0),
+			expected: false,
+		},
+		{
+			name:     "nil tasks",
+			tasks:    nil,
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &RefsTasksConfig{
+				Tasks: tt.tasks,
+			}
+			assert.Equal(t, tt.expected, cfg.HasTasks())
+		})
+	}
+}
+
+func TestRefsTasksConfig_NilReceiver(t *testing.T) {
+	var cfg *RefsTasksConfig
+	assert.False(t, cfg.HasTasks())
+}

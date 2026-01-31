@@ -9,8 +9,6 @@ The system SHALL support a `SlashNext` command identifier for the
 
 #### Scenario: SlashNext is defined in enum
 
-
-
 - GIVEN the domain.SlashCommand type
 - WHEN examining the available constants
 - THEN SlashNext SHALL be present with a unique value
@@ -169,4 +167,3 @@ The SlashNext command SHALL report what task was executed and what comes next.
 - THEN it SHALL report the error
 - AND update status from "in_progress" back to "pending"
 - AND provide guidance on how to proceed
-

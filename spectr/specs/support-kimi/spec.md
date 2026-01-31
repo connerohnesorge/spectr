@@ -67,4 +67,3 @@ appropriate priority.
 - THEN the Kimi provider is registered with ID "kimi"
 - AND has name "Kimi"
 - AND has appropriate priority for initialization order
-

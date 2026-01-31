@@ -41,7 +41,7 @@ the agent workflow and ensure consistent task execution order.
 
 ### Before (manual task execution)
 
-```
+```text
 Human: Work on the add-feature-x proposal
 
 AI Agent:
@@ -55,7 +55,7 @@ AI Agent:
 
 ### After (automated with /spectr:next)
 
-```
+```text
 Human: /spectr:next add-feature-x
 
 AI Agent:
@@ -66,7 +66,7 @@ AI Agent:
 
 ### Slash Command File Structure
 
-```
+```text
 .claude/commands/spectr/
 ├── proposal.md    # Create new proposal
 ├── apply.md       # Apply a change
@@ -87,7 +87,7 @@ The `/spectr:next` command will:
 
 ### Example Task Execution Flow
 
-```
+```text
 User: /spectr:next
 
 AI Agent:

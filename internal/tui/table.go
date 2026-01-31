@@ -19,15 +19,16 @@ const (
 
 // TablePicker is a configurable table-based item selector.
 type TablePicker struct {
-	table       table.Model
-	actions     map[string]Action
-	result      *ActionResult
-	quitting    bool
-	helpText    string
-	projectPath string
-	footerExtra string
-	err         error
-	showHelp    bool
+	table            table.Model
+	actions          map[string]Action
+	result           *ActionResult
+	quitting         bool
+	helpText         string
+	projectPath      string
+	footerExtra      string
+	err              error
+	showHelp         bool
+	countPrefixState CountPrefixState
 }
 
 // NewTablePicker creates a new TablePicker with the given configuration.
@@ -198,6 +199,15 @@ func (p *TablePicker) generateMinimalFooter(
 	rowCount int,
 ) string {
 	var parts []string
+
+	// Add count prefix indicator if active
+	if p.countPrefixState.IsActive() {
+		parts = append(
+			parts,
+			fmt.Sprintf("count: %s", p.countPrefixState.String()),
+		)
+	}
+
 	parts = append(
 		parts,
 		fmt.Sprintf("showing: %d", rowCount),
@@ -258,6 +268,35 @@ func (p *TablePicker) Update(
 		if keyStr == "?" {
 			p.showHelp = !p.showHelp
 
+			return p, nil
+		}
+
+		// Handle count prefix first
+		count, isNavKey, handled := p.countPrefixState.HandleKey(keyMsg)
+		if handled {
+			if isNavKey {
+				// Navigation key with active count - use SetCursor directly
+				cursor := p.table.Cursor()
+				rowCount := len(p.table.Rows())
+				switch keyStr {
+				case "up", "k":
+					newCursor := cursor - count
+					if newCursor < 0 {
+						newCursor = 0
+					}
+					p.table.SetCursor(newCursor)
+				case "down", "j":
+					newCursor := cursor + count
+					if newCursor >= rowCount {
+						newCursor = rowCount - 1
+					}
+					p.table.SetCursor(newCursor)
+				}
+				p.showHelp = false
+
+				return p, nil
+			}
+			// Key was handled (digit or ESC) but not a nav key
 			return p, nil
 		}
 

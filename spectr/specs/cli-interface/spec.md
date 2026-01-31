@@ -1541,7 +1541,7 @@ tasks can reference child tasks in delta spec directories.
 - AND discovered files SHALL be included after explicit children references
 - AND duplicate files (by path) SHALL be processed only once
 
-#### Scenario: Child file structure
+#### Scenario: Capability-specific child file structure
 
 - WHEN a delta spec has its own tasks.jsonc (`specs/<capability>/tasks.jsonc`)
 - THEN it SHALL contain a `parent` field with the parent task ID
@@ -1627,14 +1627,14 @@ hierarchical task files.
 - AND tasks are shown with full hierarchical IDs
 - AND output format matches flat tasks.jsonc structure
 
-#### Scenario: JSON output
+#### Scenario: JSON output for tasks command
 
 - WHEN user runs `spectr tasks <change-id> --json`
 - THEN the system outputs merged task data as JSON
 - AND includes all tasks from root and child files
 - AND includes aggregated summary counts
 
-#### Scenario: Interactive change selection
+#### Scenario: Interactive change selection for tasks command
 
 - WHEN user runs `spectr tasks` without specifying a change ID
 - THEN the system displays a list of active changes with tasks.jsonc files

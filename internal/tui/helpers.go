@@ -11,6 +11,13 @@ const (
 	// EllipsisMinLength is the minimum string length before
 	// truncation adds ellipsis.
 	EllipsisMinLength = 3
+
+	// Common key names used across TUI components.
+	keyEsc  = "esc"
+	keyDown = "down"
+	keyUp   = "up"
+	keyJ    = "j"
+	keyK    = "k"
 )
 
 // TruncateString truncates a string and adds ellipsis if needed.

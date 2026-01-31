@@ -682,8 +682,9 @@ type interactiveModel struct {
 	stdoutMode       bool        // true: prints ID to stdout instead of clipboard
 	terminalWidth    int         // current terminal width for responsive columns
 	// Source data for rebuilding rows on resize
-	changesData []ChangeInfo // original changes data for changes/archive views
-	specsData   []SpecInfo   // original specs data for specs view
+	changesData      []ChangeInfo         // original changes data for changes/archive views
+	specsData        []SpecInfo           // original specs data for specs view
+	countPrefixState tui.CountPrefixState // vim-style count prefix state
 }
 
 // Init initializes the model
@@ -699,6 +700,40 @@ func (m *interactiveModel) Update(
 
 	switch typedMsg := msg.(type) {
 	case tea.KeyMsg:
+		keyStr := typedMsg.String()
+
+		// Handle count prefix (before search mode)
+		// Count prefix mode and search mode are mutually exclusive
+		if !m.searchMode {
+			count, isNavKey, handled := m.countPrefixState.HandleKey(typedMsg)
+			if handled {
+				if isNavKey {
+					cursor := m.table.Cursor()
+					rowCount := len(m.table.Rows())
+					// Apply counted navigation with SetCursor
+					switch keyStr {
+					case "up", "k":
+						newCursor := cursor - count
+						if newCursor < 0 {
+							newCursor = 0
+						}
+						m.table.SetCursor(newCursor)
+					case "down", "j":
+						newCursor := cursor + count
+						if newCursor >= rowCount {
+							newCursor = rowCount - 1
+						}
+						m.table.SetCursor(newCursor)
+					}
+					m.showHelp = false
+
+					return m, nil
+				}
+				// Key was handled (digit or ESC) but not a nav key
+				return m, nil
+			}
+		}
+
 		// Handle search mode input
 		if m.searchMode {
 			var handled bool
@@ -708,7 +743,7 @@ func (m *interactiveModel) Update(
 			}
 		}
 
-		switch typedMsg.String() {
+		switch keyStr {
 		case "q", "ctrl+c":
 			m.quitting = true
 
@@ -1030,7 +1065,7 @@ func rebuildUnifiedTable(
 		filterDesc = m.filterType.String() + "s"
 	}
 	m.helpText = fmt.Sprintf(
-		"↑/↓/j/k: navigate | Enter: copy ID | e: edit | "+
+		"↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | "+
 			"a: archive | t: filter (%s) | /: search | q: quit",
 		filterDesc,
 	)
@@ -1352,6 +1387,11 @@ func (m *interactiveModel) View() string {
 		footer += " | (some columns hidden)"
 	}
 
+	// Append count prefix indicator when active
+	if m.countPrefixState.IsActive() {
+		footer += fmt.Sprintf(" | count: %s_", m.countPrefixState.String())
+	}
+
 	view += m.table.View() + "\n" + footer + "\n"
 
 	// Display error message if present, but keep TUI active
@@ -1414,7 +1454,7 @@ func RunInteractiveChanges(
 		terminalWidth: 0,          // Will be set by WindowSizeMsg
 		changesData:   changes,    // Store for rebuild on resize
 		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
-		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
+		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
 			"a: archive | P: pr | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
@@ -1504,7 +1544,7 @@ func RunInteractiveArchive(
 		terminalWidth: 0,       // Will be set by WindowSizeMsg
 		changesData:   changes, // Store for rebuild on resize
 		selectionMode: true,    // Enter selects without copying
-		helpText:      "↑/↓/j/k: navigate | Enter: select | /: search | q: quit",
+		helpText:      "↑/↓/j/k: navigate (try 9j) | Enter: select | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),
@@ -1587,7 +1627,7 @@ func RunInteractiveSpecs(
 		terminalWidth: 0,          // Will be set by WindowSizeMsg
 		specsData:     specs,      // Store for rebuild on resize
 		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
-		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
+		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
 			"/: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
@@ -1666,7 +1706,7 @@ func RunInteractiveAll(
 		allRows:       rows,
 		terminalWidth: 0,          // Will be set by WindowSizeMsg
 		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
-		helpText: "↑/↓/j/k: navigate | Enter: copy ID | e: edit | " +
+		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
 			"a: archive | t: filter (all) | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",

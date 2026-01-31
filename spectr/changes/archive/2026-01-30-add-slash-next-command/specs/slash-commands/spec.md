@@ -9,8 +9,6 @@ The system SHALL support a `SlashNext` command identifier for the
 
 #### Scenario: SlashNext is defined in enum
 
-
-
 - GIVEN the domain.SlashCommand type
 - WHEN examining the available constants
 - THEN SlashNext SHALL be present with a unique value

@@ -22,6 +22,8 @@ type MenuPicker struct {
 	quitting bool
 	// selectHandler is called when an item is selected.
 	selectHandler func(index int) (tea.Model, tea.Cmd)
+	// countPrefixState manages vim-style count prefix navigation (e.g., "9j").
+	countPrefixState CountPrefixState
 }
 
 // NewMenuPicker creates a new MenuPicker with the given configuration.
@@ -77,29 +79,70 @@ func (m *MenuPicker) Update(
 		return m, nil
 	}
 
-	switch keyMsg.String() {
-	case "q", "ctrl+c", "esc":
+	keyStr := keyMsg.String()
+
+	// Handle quit keys (but check count prefix state for ESC)
+	if keyStr == "q" || keyStr == "ctrl+c" {
 		m.quitting = true
 
 		return m, tea.Quit
+	}
 
-	case "up", "k":
-		if m.cursor > 0 {
-			m.cursor--
+	// Handle ESC - quit only if count prefix is not active
+	if keyStr == keyEsc {
+		if m.countPrefixState.IsActive() {
+			// Reset count prefix and continue
+			m.countPrefixState.Reset()
+
+			return m, nil
 		}
 
-	case "down", "j":
-		if m.cursor < len(m.choices)-1 {
-			m.cursor++
+		// No count prefix active, so quit
+		m.quitting = true
+
+		return m, tea.Quit
+	}
+
+	// Handle count prefix navigation
+	count, isNavKey, handled := m.countPrefixState.HandleKey(keyMsg)
+	if handled && isNavKey {
+		// Apply counted navigation with boundary checks
+		switch keyStr {
+		case keyUp, "k":
+			m.cursor = maxInt(0, m.cursor-count)
+		case keyDown, "j":
+			m.cursor = minInt(len(m.choices)-1, m.cursor+count)
 		}
 
-	case "enter":
+		return m, nil
+	}
+
+	// Handle enter key for selection
+	if keyStr == "enter" {
 		m.selected = m.cursor
 
 		return m.handleSelection()
 	}
 
 	return m, nil
+}
+
+// maxInt returns the larger of two integers.
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+
+// minInt returns the smaller of two integers.
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+
+	return b
 }
 
 // handleSelection processes the menu selection.
@@ -150,9 +193,12 @@ func (m *MenuPicker) View() string {
 		}
 	}
 
-	s += "\n" + helpStyle.Render(
-		"↑/↓ or j/k: navigate | Enter: select | q: quit",
-	)
+	helpText := "↑/↓ or j/k: navigate | Enter: select | q: quit"
+	if m.countPrefixState.IsActive() {
+		helpText += fmt.Sprintf(" | count: %s_", m.countPrefixState.String())
+	}
+
+	s += "\n" + helpStyle.Render(helpText)
 
 	return s
 }

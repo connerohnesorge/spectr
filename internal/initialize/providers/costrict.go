@@ -32,6 +32,9 @@ func (*CostrictProvider) Initializers(
 				domain.SlashApply: tm.SlashCommand(
 					domain.SlashApply,
 				),
+				domain.SlashNext: tm.SlashCommand(
+					domain.SlashNext,
+				),
 			},
 		),
 	}

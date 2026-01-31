@@ -20,6 +20,7 @@ import (
 	"github.com/connerohnesorge/spectr/internal/markdown"
 	"github.com/connerohnesorge/spectr/internal/parsers"
 	"github.com/connerohnesorge/spectr/internal/specterrs"
+	"github.com/connerohnesorge/spectr/internal/validation"
 )
 
 // filePerm is the standard file permission for created files (rw-r--r--)
@@ -102,6 +103,12 @@ func (c *AcceptCmd) processChange(
 		)
 	}
 
+	// Check proposal dependencies (chained proposals)
+	// This is a hard fail - required dependencies must be archived
+	if depErr := c.checkDependencies(projectRoot, changeID); depErr != nil {
+		return depErr
+	}
+
 	tasks, err := parseTasksMd(tasksMdPath)
 	if err != nil {
 		return fmt.Errorf(
@@ -128,19 +135,57 @@ func (c *AcceptCmd) processChange(
 	)
 
 	if c.DryRun {
-		totalTasks := len(tasks)
-		if appendCfg != nil {
-			totalTasks += len(appendCfg.Tasks)
+		allTasks := tasks
+		if appendCfg != nil && appendCfg.HasTasks() {
+			appendedTasks := createAppendedTasks(tasks, appendCfg)
+			allTasks = append(allTasks, appendedTasks...)
 		}
+
+		shouldSplit := shouldSplitTasksJSONC(allTasks)
+		formatType := "flat (v1)"
+		if shouldSplit {
+			formatType = "hierarchical (v2)"
+		}
+		totalTasks := len(allTasks)
+
 		fmt.Printf(
-			"Would convert: %s\nwould write to: %s\nWould preserve: %s\nFound %d tasks\n", //nolint:lll,revive // Long format string for dry-run output
+			"Would convert: %s\nwould write to: %s\nWould preserve: %s\nFound %d tasks\nFormat: %s\n", //nolint:lll,revive // Long format string for dry-run output
 			tasksMdPath,
 			tasksJSONPath,
 			tasksMdPath,
 			totalTasks,
+			formatType,
 		)
 
 		return nil
+	}
+
+	// Extract refs configs for hierarchical task files
+	var prependRefsCfg, appendRefsCfg *config.RefsTasksConfig
+	if cfg != nil {
+		prependRefsCfg = cfg.RefsAlwaysPrepend
+		appendRefsCfg = cfg.RefsAlwaysAppend
+	}
+
+	// Check if we should split into hierarchical format
+	// Split based on generated JSONC complexity, not tasks.md line count
+	allTasks := tasks
+	if appendCfg != nil && appendCfg.HasTasks() {
+		appendedTasks := createAppendedTasks(tasks, appendCfg)
+		allTasks = append(allTasks, appendedTasks...)
+	}
+
+	shouldSplit := shouldSplitTasksJSONC(allTasks)
+	if shouldSplit {
+		return writeAndCleanupHierarchical(
+			changeID,
+			changeDir,
+			tasksMdPath,
+			tasks,
+			appendCfg,
+			prependRefsCfg,
+			appendRefsCfg,
+		)
 	}
 
 	return writeAndCleanup(
@@ -218,6 +263,64 @@ func writeAndCleanup(
 		tasksJSONPath,
 		tasksMdPath,
 		totalTasks,
+	)
+
+	return nil
+}
+
+// writeAndCleanupHierarchical writes hierarchical v2 tasks.jsonc structure.
+// Creates a root tasks.jsonc plus child tasks-{N}.jsonc files for each section.
+// Preserves task status from existing files when re-running accept.
+func writeAndCleanupHierarchical(
+	changeID, changeDir, tasksMdPath string,
+	tasks []parsers.Task,
+	appendCfg *config.AppendTasksConfig,
+	prependRefsCfg, appendRefsCfg *config.RefsTasksConfig,
+) error {
+	// Append configured tasks if present
+	allTasks := tasks
+	if appendCfg != nil && appendCfg.HasTasks() {
+		appendedTasks := createAppendedTasks(tasks, appendCfg)
+		allTasks = append(allTasks, appendedTasks...)
+	}
+
+	// Build status map from existing files
+	statusMap := buildTaskStatusMap(changeDir)
+
+	// Group tasks by section
+	sections := groupTasksBySection(allTasks)
+
+	// Write hierarchical structure with ref configs
+	if err := writeHierarchicalTasksJSONC(
+		changeDir, changeID, sections, statusMap,
+		prependRefsCfg, appendRefsCfg,
+	); err != nil {
+		return fmt.Errorf("failed to write hierarchical tasks: %w", err)
+	}
+
+	// Count total tasks (including injected refs tasks)
+	totalTasks := len(allTasks)
+	// Count sections that will have children (non-zero, non-empty)
+	childSectionCount := 0
+	for _, s := range sections {
+		if s.sectionNum != "0" && len(s.tasks) > 0 {
+			childSectionCount++
+		}
+	}
+	// Add injected tasks to total count
+	if prependRefsCfg != nil && prependRefsCfg.HasTasks() {
+		totalTasks += len(prependRefsCfg.Tasks) * childSectionCount
+	}
+	if appendRefsCfg != nil && appendRefsCfg.HasTasks() {
+		totalTasks += len(appendRefsCfg.Tasks) * childSectionCount
+	}
+
+	fmt.Printf(
+		"Converted %s -> hierarchical tasks.jsonc (v2)\nPreserved %s\nWrote %d tasks across %d sections\n",
+		tasksMdPath,
+		tasksMdPath,
+		totalTasks,
+		len(sections),
 	)
 
 	return nil
@@ -441,6 +544,79 @@ func parseTasksMd(
 	return tasks, nil
 }
 
+// sectionGroup represents a group of tasks under a common section
+type sectionGroup struct {
+	sectionNum  string // Section number (e.g., "1", "2")
+	sectionName string // Section name (e.g., "Template Infrastructure")
+	tasks       []parsers.Task
+}
+
+// groupTasksBySection groups tasks by their section number.
+// Tasks are grouped by the first part of their ID (e.g., "1.1" -> "1").
+// Tasks without sections or with non-standard IDs go into section "0".
+func groupTasksBySection(tasks []parsers.Task) []sectionGroup {
+	// Map from section number to tasks
+	sectionMap := make(map[string]*sectionGroup)
+	var sectionOrder []string // Track insertion order
+
+	for _, task := range tasks {
+		sectionNum := extractSectionNumber(task.ID)
+
+		if _, exists := sectionMap[sectionNum]; !exists {
+			// Create new section group
+			sectionMap[sectionNum] = &sectionGroup{
+				sectionNum:  sectionNum,
+				sectionName: task.Section,
+				tasks:       []parsers.Task{},
+			}
+			sectionOrder = append(sectionOrder, sectionNum)
+		}
+
+		sectionMap[sectionNum].tasks = append(sectionMap[sectionNum].tasks, task)
+	}
+
+	// Convert map to ordered slice
+	result := make([]sectionGroup, 0, len(sectionMap))
+	for _, num := range sectionOrder {
+		result = append(result, *sectionMap[num])
+	}
+
+	return result
+}
+
+// extractSectionNumber extracts the section number from a task ID.
+// Examples: "1.1" -> "1", "2.3" -> "2", "5" -> "0" (no subsection)
+// Returns "0" for tasks without a clear section structure.
+func extractSectionNumber(taskID string) string {
+	parts := strings.Split(taskID, ".")
+	if len(parts) >= 2 {
+		// Has subsection - return first part
+		return parts[0]
+	}
+	// No subsection - return "0" (preliminary tasks)
+	return "0"
+}
+
+// shouldSplitTasksJSONC determines if tasks should be split into hierarchical format.
+// Split occurs when the generated JSONC would be large (> 20 tasks or multiple sections).
+func shouldSplitTasksJSONC(tasks []parsers.Task) bool {
+	if len(tasks) <= 20 {
+		return false
+	}
+
+	// Count sections (tasks with IDs like "1.1", "2.1" indicate multiple sections)
+	sections := make(map[string]bool)
+	for _, task := range tasks {
+		sectionNum := extractSectionNumber(task.ID)
+		if sectionNum != "0" {
+			sections[sectionNum] = true
+		}
+	}
+
+	// Split if > 20 tasks AND multiple sections
+	return len(sections) > 1
+}
+
 // validateParsedTasks checks if tasks.md has content but no valid tasks
 // were found, which indicates a format mismatch.
 func validateParsedTasks(
@@ -455,6 +631,33 @@ func validateParsedTasks(
 				FileSize:    info.Size(),
 			}
 		}
+	}
+
+	return nil
+}
+
+// checkDependencies verifies that all required dependencies are archived.
+// This is a hard check - if any required proposals are not archived,
+// the accept command fails with a clear error message.
+func (*AcceptCmd) checkDependencies(
+	projectRoot, changeID string,
+) error {
+	err := validation.ValidateDependenciesForAccept(changeID, projectRoot)
+	if err != nil {
+		// Check if it's an UnmetDependenciesError for better formatting
+		if unmetErr, ok := err.(*validation.UnmetDependenciesError); ok {
+			fmt.Println("\nDependency check failed:")
+			fmt.Printf(
+				"  Change '%s' requires the following proposals to be archived:\n",
+				unmetErr.ChangeID,
+			)
+			for _, dep := range unmetErr.Dependencies {
+				fmt.Printf("    - %s\n", dep)
+			}
+			fmt.Println("\nArchive the required proposals first using 'spectr pr archive <id>'")
+		}
+
+		return err
 	}
 
 	return nil

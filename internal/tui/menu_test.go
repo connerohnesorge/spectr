@@ -334,3 +334,236 @@ func TestMenuPicker_WithSelectHandler(
 		)
 	}
 }
+
+// TestMenuPicker_CountPrefix_Navigation tests navigating with count prefix.
+func TestMenuPicker_CountPrefix_Navigation(
+	t *testing.T,
+) {
+	// Create menu with 20 items
+	choices := make([]string, 20)
+	for i := range 20 {
+		choices[i] = string(rune('A' + i))
+	}
+
+	config := MenuConfig{
+		Title:   "Test Count Prefix",
+		Choices: choices,
+	}
+
+	menu := NewMenuPicker(config)
+
+	// Send "9j" to move down 9 positions
+	model, _ := menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'9'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	model, _ = menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'j'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	if menu.cursor != 9 {
+		t.Errorf(
+			"After '9j', cursor = %d, want %d",
+			menu.cursor,
+			9,
+		)
+	}
+}
+
+// TestMenuPicker_CountPrefix_Boundaries tests boundary checks with count prefix.
+func TestMenuPicker_CountPrefix_Boundaries(
+	t *testing.T,
+) {
+	config := MenuConfig{
+		Title:   "Test",
+		Choices: []string{"A", "B", "C", "D", "E"},
+	}
+
+	menu := NewMenuPicker(config)
+
+	// Move to position 3
+	menu.cursor = 3
+
+	// Try to move up 50 positions (should stop at 0)
+	model, _ := menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'5'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	model, _ = menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'0'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	model, _ = menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'k'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	if menu.cursor != 0 {
+		t.Errorf(
+			"After '50k' from position 3, cursor = %d, want %d",
+			menu.cursor,
+			0,
+		)
+	}
+
+	// Try to move down 50 positions (should stop at last item)
+	model, _ = menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'5'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	model, _ = menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'0'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	model, _ = menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'j'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	if menu.cursor != 4 {
+		t.Errorf(
+			"After '50j' from position 0, cursor = %d, want %d",
+			menu.cursor,
+			4,
+		)
+	}
+}
+
+// TestMenuPicker_CountPrefix_Cancellation tests ESC cancels count prefix.
+func TestMenuPicker_CountPrefix_Cancellation(
+	t *testing.T,
+) {
+	config := MenuConfig{
+		Title:   "Test",
+		Choices: []string{"A", "B", "C", "D", "E"},
+	}
+
+	menu := NewMenuPicker(config)
+
+	// Send "9"
+	model, _ := menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'9'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	// Send ESC to cancel
+	model, _ = menu.Update(tea.KeyMsg{Type: tea.KeyEsc})
+	menu = model.(*MenuPicker)
+
+	// Verify count prefix is not active
+	if menu.countPrefixState.IsActive() {
+		t.Error("Count prefix should not be active after ESC")
+	}
+
+	// Send "j" to move down only 1 position
+	model, _ = menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'j'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	if menu.cursor != 1 {
+		t.Errorf(
+			"After '9', ESC, 'j', cursor = %d, want %d",
+			menu.cursor,
+			1,
+		)
+	}
+}
+
+// TestMenuPicker_CountPrefix_VisualFeedback tests visual feedback display.
+func TestMenuPicker_CountPrefix_VisualFeedback(
+	t *testing.T,
+) {
+	config := MenuConfig{
+		Title:   "Test",
+		Choices: []string{"A", "B", "C"},
+	}
+
+	menu := NewMenuPicker(config)
+
+	// Send "9" to activate count prefix
+	model, _ := menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'9'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	// Check that count prefix is active
+	if !menu.countPrefixState.IsActive() {
+		t.Error(
+			"Count prefix should be active after '9'",
+		)
+	}
+
+	// Check the view contains count feedback
+	view := menu.View()
+	if !strings.Contains(view, "count: 9_") {
+		t.Errorf(
+			"View should contain 'count: 9_', got: %s",
+			view,
+		)
+	}
+
+	// Send "j" to complete the navigation
+	model, _ = menu.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'j'},
+		},
+	)
+	menu = model.(*MenuPicker)
+
+	// Check that count prefix is no longer active
+	if menu.countPrefixState.IsActive() {
+		t.Error(
+			"Count prefix should not be active after navigation key",
+		)
+	}
+
+	// Check the view no longer contains count feedback
+	view = menu.View()
+	if strings.Contains(view, "count:") {
+		t.Errorf(
+			"View should not contain 'count:' after navigation, got: %s",
+			view,
+		)
+	}
+}

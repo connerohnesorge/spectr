@@ -274,35 +274,39 @@ type FlexibleTaskMatch struct {
 //   - "- [ ] 1. Task description" (simple dot)
 //   - "- [ ] 1 Task description" (number only)
 //   - "- [ ] Task description" (no number)
+//   - "  - [ ] Task description" (indented, for sub-tasks)
 //
 // Returns the parsed task match and true if matched, or nil and false.
 func MatchFlexibleTask(
 	line string,
 ) (*FlexibleTaskMatch, bool) {
+	// Skip leading whitespace to handle indented tasks
+	trimmed := strings.TrimLeft(line, " \t")
+
 	// Must start with "- ["
-	if !strings.HasPrefix(line, "- [") {
+	if !strings.HasPrefix(trimmed, "- [") {
 		return nil, false
 	}
 
 	// Need at least "- [x] X" (7 chars)
-	if len(line) < 7 {
+	if len(trimmed) < 7 {
 		return nil, false
 	}
 
 	// Extract checkbox state
-	checkChar := line[3]
+	checkChar := trimmed[3]
 	if checkChar != ' ' && checkChar != 'x' &&
 		checkChar != 'X' {
 		return nil, false
 	}
 
 	// Must be followed by "] "
-	if line[4] != ']' || line[5] != ' ' {
+	if trimmed[4] != ']' || trimmed[5] != ' ' {
 		return nil, false
 	}
 
 	// Rest of line after "- [x] "
-	rest := line[6:]
+	rest := trimmed[6:]
 	if rest == "" {
 		return nil, false
 	}

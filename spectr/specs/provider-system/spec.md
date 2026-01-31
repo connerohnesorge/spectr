@@ -818,3 +818,298 @@ The system SHALL embed skill directories under
 - **WHEN** templates are parsed
 - **THEN** the embed directive SHALL use `//go:embed templates/skills/**/*`
 - **AND** all skill files SHALL be available via `SkillFS()`
+
+### Requirement: Frontmatter Override Structure
+
+The system SHALL provide a `FrontmatterOverride` type in `internal/domain` for
+modifying slash command frontmatter.
+
+#### Scenario: Override structure definition
+
+- **WHEN** code needs to specify frontmatter modifications
+
+- **THEN** it SHALL use `domain.FrontmatterOverride` with the following structure:
+
+```go
+type FrontmatterOverride struct {
+    Set    map[string]interface{} // Fields to add or modify
+    Remove []string                // Field names to delete
+}
+
+```
+
+- **AND** `Set` values SHALL support any YAML-serializable type
+  (string, bool, []string, etc.)
+
+- **AND** `Remove` SHALL be applied after `Set` to allow replacing fields
+
+#### Scenario: Creating overrides for Claude Code proposal command
+
+- **WHEN** ClaudeProvider needs to customize the proposal slash command
+
+- **THEN** it SHALL create a `FrontmatterOverride` like:
+
+```go
+&domain.FrontmatterOverride{
+    Set: map[string]interface{}{
+        "context": "fork",
+    },
+    Remove: []string{"agent"},
+}
+
+```
+
+- **AND** this SHALL add `context: fork` to the frontmatter
+
+- **AND** this SHALL remove the `agent` field from the frontmatter
+
+### Requirement: Frontmatter Parsing and Rendering
+
+The system SHALL provide utilities in `internal/domain` for YAML frontmatter
+manipulation.
+
+#### Scenario: Parse frontmatter from template content
+
+- **WHEN** `ParseFrontmatter(content string)` is called with markdown
+  containing YAML frontmatter
+
+- **THEN** it SHALL return a `map[string]interface{}` with parsed YAML values
+
+- **AND** it SHALL return the body content without frontmatter
+
+- **AND** it SHALL return an error if frontmatter is malformed
+
+Example:
+
+```go
+content := `---
+description: Test
+allowed-tools: Read, Write
+---
+
+# Body`
+
+fm, body, err := domain.ParseFrontmatter(content)
+// fm = map[string]interface{}{"description": "Test", "allowed-tools": "Read, Write"}
+// body = "# Body"
+// err = nil
+
+```
+
+#### Scenario: Render frontmatter to YAML
+
+- **WHEN** `RenderFrontmatter(fm map[string]interface{}, body string)` is called
+
+- **THEN** it SHALL serialize `fm` to YAML format
+
+- **AND** it SHALL wrap YAML in `---` delimiters
+
+- **AND** it SHALL append the body content
+
+- **AND** it SHALL return the complete markdown with frontmatter
+
+Example:
+
+```go
+fm := map[string]interface{}{"context": "fork", "description": "Test"}
+body := "# Body"
+
+result := domain.RenderFrontmatter(fm, body)
+// result = "---\ncontext: fork\ndescription: Test\n---\n# Body"
+
+```
+
+#### Scenario: Apply overrides to frontmatter
+
+- **WHEN** `ApplyFrontmatterOverrides(base map[string]interface{},`
+  `overrides *FrontmatterOverride)` is called
+
+- **THEN** it SHALL copy `base` to avoid mutation
+
+- **AND** it SHALL apply all fields from `overrides.Set`,
+  replacing existing values
+
+- **AND** it SHALL remove all fields listed in `overrides.Remove`
+
+- **AND** it SHALL return the modified frontmatter map
+
+Example:
+
+```go
+base := map[string]interface{}{"description": "Test", "agent": "plan",
+  "subtask": false}
+overrides := &domain.FrontmatterOverride{
+    Set:    map[string]interface{}{"context": "fork"},
+    Remove: []string{"agent"},
+}
+
+result := domain.ApplyFrontmatterOverrides(base, overrides)
+// result = map[string]interface{}{"description": "Test",
+//   "context": "fork", "subtask": false}
+
+```
+
+### Requirement: TemplateManager Override Support
+
+The system SHALL extend `TemplateManager` to support frontmatter overrides
+for slash commands.
+
+#### Scenario: SlashCommandWithOverrides method
+
+- **WHEN** `TemplateManager.SlashCommandWithOverrides(cmd domain.SlashCommand,`
+  `overrides *FrontmatterOverride)` is called
+
+- **THEN** it SHALL look up the base template for `cmd`
+
+- **AND** it SHALL parse the template's frontmatter
+
+- **AND** it SHALL apply the `overrides` to the frontmatter
+
+- **AND** it SHALL render the modified frontmatter back to YAML
+
+- **AND** it SHALL return a `domain.TemplateRef` that produces the
+  modified content when rendered
+
+- **AND** if `overrides` is `nil`, it SHALL behave identically to
+  `SlashCommand(cmd)`
+
+#### Scenario: Rendering overridden template
+
+- **WHEN** `TemplateRef.Render(ctx)` is called on a template with overrides
+
+- **THEN** the rendered content SHALL contain the modified frontmatter
+- **AND** the body content SHALL remain unchanged from the base template
+
+### Requirement: ClaudeProvider Uses Overrides
+
+The `ClaudeProvider` SHALL use frontmatter overrides for the proposal slash command.
+
+#### Scenario: Claude Code proposal command has context: fork
+
+- **WHEN** `ClaudeProvider.Initializers()` is called
+
+- **THEN** it SHALL pass a `FrontmatterOverride` to the proposal slash command initializer
+
+- **AND** the override SHALL add `context: fork`
+
+- **AND** the override SHALL remove the `agent` field
+
+- **AND** the generated `.claude/commands/spectr/proposal.md` SHALL contain
+  `context: fork` in frontmatter
+- **AND** the generated file SHALL NOT contain `agent:` in frontmatter
+
+#### Scenario: Claude Code apply command uses defaults
+
+- **WHEN** `ClaudeProvider.Initializers()` is called
+- **THEN** the apply slash command SHALL use default frontmatter (no overrides)
+- **AND** the generated `.claude/commands/spectr/apply.md` SHALL match the base
+  template exactly
+
+### Requirement: TemplateManager Skill Template Accessors
+
+The TemplateManager SHALL provide methods for accessing agent skill templates.
+
+```go
+// ProposalSkill returns the skill-proposal.md.tmpl template reference.
+// Used by providers that generate Amp-style agent skills.
+func (tm *TemplateManager) ProposalSkill() domain.TemplateRef
+
+// ApplySkill returns the skill-apply.md.tmpl template reference.
+// Used by providers that generate Amp-style agent skills.
+func (tm *TemplateManager) ApplySkill() domain.TemplateRef
+```
+
+#### Scenario: ProposalSkill accessor
+
+- **WHEN** `TemplateManager.ProposalSkill()` is called
+- **THEN** it SHALL return a `domain.TemplateRef` for `skill-proposal.md.tmpl`
+- **AND** the template SHALL be pre-parsed and ready for rendering
+
+#### Scenario: ApplySkill accessor
+
+- **WHEN** `TemplateManager.ApplySkill()` is called
+- **THEN** it SHALL return a `domain.TemplateRef` for `skill-apply.md.tmpl`
+- **AND** the template SHALL be pre-parsed and ready for rendering
+
+#### Scenario: Skill template rendering
+
+- **WHEN** a skill template is rendered via `TemplateManager.Render(templateName, data)`
+- **THEN** it SHALL accept a `domain.TemplateContext` as the data parameter
+- **AND** it SHALL substitute all template variables (BaseDir, SpecsDir, ChangesDir, etc.)
+- **AND** it SHALL return the fully rendered skill content with YAML frontmatter
+
+### Requirement: SkillFileInitializer
+
+The system SHALL provide a `SkillFileInitializer` for creating individual SKILL.md files from templates.
+
+```go
+// SkillFileInitializer creates a SKILL.md file from a template.
+type SkillFileInitializer struct {
+    targetPath string           // target file path (e.g., ".agents/skills/spectr-proposal/SKILL.md")
+    template   domain.TemplateRef // template to render for skill content
+}
+
+// NewSkillFileInitializer creates a SkillFileInitializer for the given path and template.
+func NewSkillFileInitializer(
+    targetPath string, template domain.TemplateRef) *SkillFileInitializer
+```
+
+#### Scenario: SkillFileInitializer construction
+
+- **WHEN** a SkillFileInitializer is created via `NewSkillFileInitializer(targetPath, template)`
+- **THEN** it SHALL receive a target file path ending in `SKILL.md`
+- **AND** it SHALL receive a TemplateRef directly (not a function)
+- **AND** the TemplateRef SHALL be resolved at provider construction time
+- **AND** the initializer SHALL use `projectFs` for file operations
+
+#### Scenario: Create new skill file
+
+- **WHEN** the skill file does not exist
+- **THEN** the initializer SHALL create the parent directory if needed
+- **AND** SHALL create the SKILL.md file with rendered content
+- **AND** SHALL return the file path in `ExecutionResult.CreatedFiles`
+
+#### Scenario: Update existing skill file
+
+- **WHEN** the skill file already exists
+- **THEN** the initializer SHALL overwrite it with rendered content
+- **AND** SHALL return the file path in `ExecutionResult.UpdatedFiles`
+- **AND** this ensures idempotent execution
+
+#### Scenario: IsSetup check for skill file
+
+- **WHEN** `IsSetup()` is called on a SkillFileInitializer
+- **THEN** it SHALL return `true` if the SKILL.md file exists at the target path
+- **AND** SHALL return `false` if the file does not exist
+
+#### Scenario: Deduplication key for skill file
+
+- **WHEN** `dedupeKey()` is called on a SkillFileInitializer
+- **THEN** it SHALL return `SkillFileInitializer:<targetPath>`
+- **AND** the path SHALL be normalized with `filepath.Clean`
+- **AND** multiple initializers with the same target path SHALL deduplicate
+
+#### Scenario: Initializer ordering for skill files
+
+- **WHEN** skill file initializers are executed
+- **THEN** they SHALL run after `DirectoryInitializer` (to ensure parent directories exist)
+- **AND** SHALL run after `ConfigFileInitializer` (instruction pointers first)
+- **AND** SHALL run before or alongside other file creation initializers
+
+### Requirement: Embedded Skill Template Location
+
+Agent skill templates SHALL be embedded in `internal/domain/templates/`.
+
+#### Scenario: Skill template embedding
+
+- **WHEN** the template embed directive is processed
+- **THEN** it SHALL include `skill-proposal.md.tmpl` and `skill-apply.md.tmpl`
+- **AND** templates SHALL be located in `internal/domain/templates/`
+- **AND** templates SHALL be accessible via `TemplateManager.ProposalSkill()` and `TemplateManager.ApplySkill()`
+
+#### Scenario: Skill template parsing
+
+- **WHEN** templates are loaded into TemplateManager
+- **THEN** skill templates SHALL be parsed with the same template engine as other templates
+- **AND** SHALL support the same template context variables (BaseDir, SpecsDir, etc.)
+- **AND** parsing errors SHALL be reported during initialization

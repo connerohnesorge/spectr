@@ -205,6 +205,7 @@ func (tm *TemplateManager) SlashCommand(
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.md.tmpl",
 		domain.SlashApply:    "slash-apply.md.tmpl",
+		domain.SlashNext:     "slash-next.md.tmpl",
 	}
 
 	return domain.TemplateRef{
@@ -236,11 +237,39 @@ func (tm *TemplateManager) TOMLSlashCommand(
 	names := map[domain.SlashCommand]string{
 		domain.SlashProposal: "slash-proposal.toml.tmpl",
 		domain.SlashApply:    "slash-apply.toml.tmpl",
+		domain.SlashNext:     "slash-next.toml.tmpl",
 	}
 
 	// TOML templates don't use dynamic frontmatter (Command is nil)
 	return domain.TemplateRef{
 		Name:     names[cmd],
+		Template: tm.templates,
+	}
+}
+
+// ProposalSkill returns a type-safe reference to the skill-proposal.md.tmpl template.
+// This template is used for Amp agent skills that create change proposals.
+func (tm *TemplateManager) ProposalSkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "skill-proposal.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// ApplySkill returns a type-safe reference to the skill-apply.md.tmpl template.
+// This template is used for Amp agent skills that apply/accept change proposals.
+func (tm *TemplateManager) ApplySkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "skill-apply.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// NextSkill returns a type-safe reference to the skill-next.md.tmpl template.
+// This template is used for agent skills that execute the next pending task.
+func (tm *TemplateManager) NextSkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "skill-next.md.tmpl",
 		Template: tm.templates,
 	}
 }

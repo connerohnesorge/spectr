@@ -11,11 +11,22 @@ import (
 )
 
 const (
-	testClaudeCommandsDir = ".claude/commands/spectr"
-	testGeminiCommandsDir = ".gemini/commands/spectr"
-	testAgentWorkflowsDir = ".agent/workflows"
-	testSpectrPrefix      = "spectr-"
-	testCodexPromptsDir   = ".codex/prompts"
+	testClaudeCommandsDir      = ".claude/commands/spectr"
+	testGeminiCommandsDir      = ".gemini/commands/spectr"
+	testAgentWorkflowsDir      = ".agent/workflows"
+	testSpectrPrefix           = "spectr-"
+	testCodexPromptsDir        = ".codex/prompts"
+	testAcceptSkillName        = "spectr-accept-wo-spectr-bin"
+	testValidateSkillName      = "spectr-validate-wo-spectr-bin"
+	testProposalSkillPath      = ".agents/skills/spectr-proposal/SKILL.md"
+	testApplySkillPath         = ".agents/skills/spectr-apply/SKILL.md"
+	testAcceptSkillTargetDir   = ".agents/skills/spectr-accept-wo-spectr-bin"
+	testValidateSkillTargetDir = ".agents/skills/spectr-validate-wo-spectr-bin"
+	testClaudeAcceptSkillDir   = ".claude/skills/spectr-accept-wo-spectr-bin"
+	testClaudeValidateSkillDir = ".claude/skills/spectr-validate-wo-spectr-bin"
+	testCodexAcceptSkillDir    = ".codex/skills/spectr-accept-wo-spectr-bin"
+	testCodexValidateSkillDir  = ".codex/skills/spectr-validate-wo-spectr-bin"
+	testAgentsFilename         = "AGENTS.md"
 )
 
 // mockTemplateManager implements TemplateManager for testing
@@ -77,6 +88,24 @@ func (*mockTemplateManager) SkillFS(
 		"skill %s not found",
 		skillName,
 	)
+}
+
+func (*mockTemplateManager) ProposalSkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: "skill-proposal.md.tmpl",
+	}
+}
+
+func (*mockTemplateManager) ApplySkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: "skill-apply.md.tmpl",
+	}
+}
+
+func (*mockTemplateManager) NextSkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: "skill-next.md.tmpl",
+	}
 }
 
 // Test each provider returns expected initializers
@@ -167,25 +196,27 @@ func TestClaudeProvider_Initializers(
 			slashInit.dir,
 		)
 	}
-	if len(slashInit.commands) != 2 {
+	if len(slashInit.commands) != 3 {
 		t.Errorf(
-			"ClaudeProvider SlashCommandsInitializer has %d commands, want 2",
+			"ClaudeProvider SlashCommandsInitializer has %d commands, want 3",
 			len(slashInit.commands),
 		)
 	}
 
 	// Check AgentSkillsInitializer
 	skillInit := inits[4].(*AgentSkillsInitializer) //nolint:revive // test code, type checked above
-	if skillInit.skillName != "spectr-accept-wo-spectr-bin" {
+	if skillInit.skillName != testAcceptSkillName {
 		t.Errorf(
-			"ClaudeProvider AgentSkillsInitializer skillName = %s, want \"spectr-accept-wo-spectr-bin\"",
+			"ClaudeProvider AgentSkillsInitializer skillName = %s, want %q",
 			skillInit.skillName,
+			testAcceptSkillName,
 		)
 	}
-	if skillInit.targetDir != ".claude/skills/spectr-accept-wo-spectr-bin" {
+	if skillInit.targetDir != testClaudeAcceptSkillDir {
 		t.Errorf(
-			"ClaudeProvider AgentSkillsInitializer targetDir = %s, want \".claude/skills/spectr-accept-wo-spectr-bin\"",
+			"ClaudeProvider AgentSkillsInitializer targetDir = %s, want %q",
 			skillInit.targetDir,
+			testClaudeAcceptSkillDir,
 		)
 	}
 }
@@ -239,9 +270,9 @@ func TestGeminiProvider_Initializers(
 			slashInit.dir,
 		)
 	}
-	if len(slashInit.commands) != 2 {
+	if len(slashInit.commands) != 3 {
 		t.Errorf(
-			"GeminiProvider TOMLSlashCommandsInitializer has %d commands, want 2",
+			"GeminiProvider TOMLSlashCommandsInitializer has %d commands, want 3",
 			len(slashInit.commands),
 		)
 	}
@@ -366,10 +397,11 @@ func TestAntigravityProvider_Initializers(
 
 	// Check ConfigFileInitializer uses AGENTS.md
 	cfgInit := inits[1].(*ConfigFileInitializer)
-	if cfgInit.path != "AGENTS.md" {
+	if cfgInit.path != testAgentsFilename {
 		t.Errorf(
-			"AntigravityProvider ConfigFileInitializer path = %s, want \"AGENTS.md\"",
+			"AntigravityProvider ConfigFileInitializer path = %s, want \"%s\"",
 			cfgInit.path,
+			testAgentsFilename,
 		)
 	}
 }
@@ -532,39 +564,44 @@ func TestCodexProvider_Initializers(
 
 	// Check AgentSkillsInitializer instances
 	acceptSkill := inits[4].(*AgentSkillsInitializer)
-	if acceptSkill.skillName != "spectr-accept-wo-spectr-bin" {
+	if acceptSkill.skillName != testAcceptSkillName {
 		t.Errorf(
-			"CodexProvider AgentSkillsInitializer[4] skillName = %s, want \"spectr-accept-wo-spectr-bin\"",
+			"CodexProvider AgentSkillsInitializer[4] skillName = %s, want %q",
 			acceptSkill.skillName,
+			testAcceptSkillName,
 		)
 	}
-	if acceptSkill.targetDir != ".codex/skills/spectr-accept-wo-spectr-bin" {
+	if acceptSkill.targetDir != testCodexAcceptSkillDir {
 		t.Errorf(
-			"CodexProvider AgentSkillsInitializer[4] targetDir = %s, want \".codex/skills/spectr-accept-wo-spectr-bin\"",
+			"CodexProvider AgentSkillsInitializer[4] targetDir = %s, want %q",
 			acceptSkill.targetDir,
+			testCodexAcceptSkillDir,
 		)
 	}
 
 	validateSkill := inits[5].(*AgentSkillsInitializer)
-	if validateSkill.skillName != "spectr-validate-wo-spectr-bin" {
+	if validateSkill.skillName != testValidateSkillName {
 		t.Errorf(
-			"CodexProvider AgentSkillsInitializer[5] skillName = %s, want \"spectr-validate-wo-spectr-bin\"",
+			"CodexProvider AgentSkillsInitializer[5] skillName = %s, want %q",
 			validateSkill.skillName,
+			testValidateSkillName,
 		)
 	}
-	if validateSkill.targetDir != ".codex/skills/spectr-validate-wo-spectr-bin" {
+	if validateSkill.targetDir != testCodexValidateSkillDir {
 		t.Errorf(
-			"CodexProvider AgentSkillsInitializer[5] targetDir = %s, want \".codex/skills/spectr-validate-wo-spectr-bin\"",
+			"CodexProvider AgentSkillsInitializer[5] targetDir = %s, want %q",
 			validateSkill.targetDir,
+			testCodexValidateSkillDir,
 		)
 	}
 
 	// Check ConfigFileInitializer uses AGENTS.md
 	cfgInit := inits[2].(*ConfigFileInitializer)
-	if cfgInit.path != "AGENTS.md" {
+	if cfgInit.path != testAgentsFilename {
 		t.Errorf(
-			"CodexProvider ConfigFileInitializer path = %s, want \"AGENTS.md\"",
+			"CodexProvider ConfigFileInitializer path = %s, want \"%s\"",
 			cfgInit.path,
+			testAgentsFilename,
 		)
 	}
 }
@@ -678,6 +715,240 @@ func TestOpencodeProvider_Initializers(
 		t.Fatalf(
 			"OpencodeProvider.Initializers() returned %d initializers, want 2",
 			len(inits),
+		)
+	}
+}
+
+func TestKimiProvider_Initializers(
+	t *testing.T,
+) {
+	p := &KimiProvider{}
+	ctx := context.Background()
+	tm := &mockTemplateManager{}
+
+	inits := p.Initializers(ctx, tm)
+
+	// Kimi should return 7 initializers: Directory (skills), ConfigFile, 3x SkillFile, 2x AgentSkills
+	if len(inits) != 7 {
+		t.Fatalf(
+			"KimiProvider.Initializers() returned %d initializers, want 7",
+			len(inits),
+		)
+	}
+
+	// Check types
+	if _, ok := inits[0].(*DirectoryInitializer); !ok {
+		t.Errorf(
+			"KimiProvider.Initializers()[0] is %T, want *DirectoryInitializer",
+			inits[0],
+		)
+	}
+	if _, ok := inits[1].(*ConfigFileInitializer); !ok {
+		t.Errorf(
+			"KimiProvider.Initializers()[1] is %T, want *ConfigFileInitializer",
+			inits[1],
+		)
+	}
+	if _, ok := inits[2].(*SkillFileInitializer); !ok {
+		t.Errorf(
+			"KimiProvider.Initializers()[2] is %T, want *SkillFileInitializer",
+			inits[2],
+		)
+	}
+	if _, ok := inits[3].(*SkillFileInitializer); !ok {
+		t.Errorf(
+			"KimiProvider.Initializers()[3] is %T, want *SkillFileInitializer",
+			inits[3],
+		)
+	}
+	if _, ok := inits[4].(*SkillFileInitializer); !ok {
+		t.Errorf(
+			"KimiProvider.Initializers()[4] is %T, want *SkillFileInitializer",
+			inits[4],
+		)
+	}
+	if _, ok := inits[5].(*AgentSkillsInitializer); !ok {
+		t.Errorf(
+			"KimiProvider.Initializers()[5] is %T, want *AgentSkillsInitializer",
+			inits[5],
+		)
+	}
+	if _, ok := inits[6].(*AgentSkillsInitializer); !ok {
+		t.Errorf(
+			"KimiProvider.Initializers()[6] is %T, want *AgentSkillsInitializer",
+			inits[6],
+		)
+	}
+
+	// Check DirectoryInitializer paths
+	dirInit := inits[0].(*DirectoryInitializer)
+	if len(dirInit.paths) != 1 ||
+		dirInit.paths[0] != ".claude/skills" {
+		t.Errorf(
+			"KimiProvider DirectoryInitializer paths = %v, want [\".claude/skills\"]",
+			dirInit.paths,
+		)
+	}
+
+	// Check ConfigFileInitializer uses AGENTS.md
+	cfgInit := inits[1].(*ConfigFileInitializer)
+	if cfgInit.path != testAgentsFilename {
+		t.Errorf(
+			"KimiProvider ConfigFileInitializer path = %s, want \"%s\"",
+			cfgInit.path,
+			testAgentsFilename,
+		)
+	}
+
+	// Check SkillFileInitializer paths
+	proposalSkill := inits[2].(*SkillFileInitializer)
+	if proposalSkill.targetPath != ".claude/skills/spectr-proposal/SKILL.md" {
+		t.Errorf(
+			"KimiProvider SkillFileInitializer[2] targetPath = %s, want \".claude/skills/spectr-proposal/SKILL.md\"",
+			proposalSkill.targetPath,
+		)
+	}
+
+	applySkill := inits[3].(*SkillFileInitializer)
+	if applySkill.targetPath != ".claude/skills/spectr-apply/SKILL.md" {
+		t.Errorf(
+			"KimiProvider SkillFileInitializer[3] targetPath = %s, want \".claude/skills/spectr-apply/SKILL.md\"",
+			applySkill.targetPath,
+		)
+	}
+
+	nextSkill := inits[4].(*SkillFileInitializer)
+	if nextSkill.targetPath != ".claude/skills/spectr-next/SKILL.md" {
+		t.Errorf(
+			"KimiProvider SkillFileInitializer[4] targetPath = %s, want \".claude/skills/spectr-next/SKILL.md\"",
+			nextSkill.targetPath,
+		)
+	}
+}
+
+func TestAmpProvider_Initializers(
+	t *testing.T,
+) {
+	p := &AmpProvider{}
+	ctx := context.Background()
+	tm := &mockTemplateManager{}
+
+	inits := p.Initializers(ctx, tm)
+
+	// Amp should return 6 initializers: Directory, ConfigFile, 2x SkillFile, 2x AgentSkills
+	if len(inits) != 6 {
+		t.Fatalf(
+			"AmpProvider.Initializers() returned %d initializers, want 6",
+			len(inits),
+		)
+	}
+
+	// Check types
+	if _, ok := inits[0].(*DirectoryInitializer); !ok {
+		t.Errorf(
+			"AmpProvider.Initializers()[0] is %T, want *DirectoryInitializer",
+			inits[0],
+		)
+	}
+	if _, ok := inits[1].(*ConfigFileInitializer); !ok {
+		t.Errorf(
+			"AmpProvider.Initializers()[1] is %T, want *ConfigFileInitializer",
+			inits[1],
+		)
+	}
+	if _, ok := inits[2].(*SkillFileInitializer); !ok {
+		t.Errorf(
+			"AmpProvider.Initializers()[2] is %T, want *SkillFileInitializer",
+			inits[2],
+		)
+	}
+	if _, ok := inits[3].(*SkillFileInitializer); !ok {
+		t.Errorf(
+			"AmpProvider.Initializers()[3] is %T, want *SkillFileInitializer",
+			inits[3],
+		)
+	}
+	if _, ok := inits[4].(*AgentSkillsInitializer); !ok {
+		t.Errorf(
+			"AmpProvider.Initializers()[4] is %T, want *AgentSkillsInitializer",
+			inits[4],
+		)
+	}
+	if _, ok := inits[5].(*AgentSkillsInitializer); !ok {
+		t.Errorf(
+			"AmpProvider.Initializers()[5] is %T, want *AgentSkillsInitializer",
+			inits[5],
+		)
+	}
+
+	// Check DirectoryInitializer paths
+	dirInit := inits[0].(*DirectoryInitializer)
+	if len(dirInit.paths) != 1 ||
+		dirInit.paths[0] != ".agents/skills" {
+		t.Errorf(
+			"AmpProvider DirectoryInitializer paths = %v, want [\".agents/skills\"]",
+			dirInit.paths,
+		)
+	}
+
+	// Check ConfigFileInitializer path
+	cfgInit := inits[1].(*ConfigFileInitializer)
+	if cfgInit.path != "AMP.md" {
+		t.Errorf(
+			"AmpProvider ConfigFileInitializer path = %s, want \"AMP.md\"",
+			cfgInit.path,
+		)
+	}
+
+	// Check SkillFileInitializer paths
+	proposalSkill := inits[2].(*SkillFileInitializer)
+	if proposalSkill.targetPath != testProposalSkillPath {
+		t.Errorf(
+			"AmpProvider SkillFileInitializer[2] targetPath = %s, want %q",
+			proposalSkill.targetPath,
+			testProposalSkillPath,
+		)
+	}
+
+	applySkill := inits[3].(*SkillFileInitializer)
+	if applySkill.targetPath != testApplySkillPath {
+		t.Errorf(
+			"AmpProvider SkillFileInitializer[3] targetPath = %s, want %q",
+			applySkill.targetPath,
+			testApplySkillPath,
+		)
+	}
+
+	// Check AgentSkillsInitializer instances
+	acceptSkill := inits[4].(*AgentSkillsInitializer)
+	if acceptSkill.skillName != testAcceptSkillName {
+		t.Errorf(
+			"AmpProvider AgentSkillsInitializer[4] skillName = %s, want %q",
+			acceptSkill.skillName,
+			testAcceptSkillName,
+		)
+	}
+	if acceptSkill.targetDir != testAcceptSkillTargetDir {
+		t.Errorf(
+			"AmpProvider AgentSkillsInitializer[4] targetDir = %s, want %q",
+			acceptSkill.targetDir,
+			testAcceptSkillTargetDir,
+		)
+	}
+
+	validateSkill := inits[5].(*AgentSkillsInitializer)
+	if validateSkill.skillName != testValidateSkillName {
+		t.Errorf(
+			"AmpProvider AgentSkillsInitializer[5] skillName = %s, want %q",
+			validateSkill.skillName,
+			testValidateSkillName,
+		)
+	}
+	if validateSkill.targetDir != testValidateSkillTargetDir {
+		t.Errorf(
+			"AmpProvider AgentSkillsInitializer[5] targetDir = %s, want %q",
+			validateSkill.targetDir,
+			testValidateSkillTargetDir,
 		)
 	}
 }
@@ -834,6 +1105,24 @@ func TestAllProviders_InitializerCounts(
 			false,
 			false,
 		},
+		{
+			"amp",
+			&AmpProvider{},
+			6,
+			true,
+			false,
+			false,
+			false,
+		},
+		{
+			"kimi",
+			&KimiProvider{},
+			7,
+			true,
+			false,
+			false,
+			false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -862,6 +1151,7 @@ func TestAllProviders_InitializerCounts(
 			hasToml := false
 			hasPrefix := false
 			hasHomePrefix := false
+			hasSkillFile := false
 
 			for _, init := range inits {
 				switch init.(type) {
@@ -881,6 +1171,8 @@ func TestAllProviders_InitializerCounts(
 					hasPrefix = true
 				case *HomePrefixedSlashCommandsInitializer:
 					hasHomePrefix = true
+				case *SkillFileInitializer:
+					hasSkillFile = true
 				}
 			}
 
@@ -932,13 +1224,14 @@ func TestAllProviders_InitializerCounts(
 				)
 			}
 
-			// All providers should have slash commands in some form
+			// All providers should have slash commands or skills in some form
 			if !hasSlash && !hasHomeSlash &&
 				!hasToml &&
 				!hasPrefix &&
-				!hasHomePrefix {
+				!hasHomePrefix &&
+				!hasSkillFile {
 				t.Errorf(
-					"%s has no slash command initializer",
+					"%s has no slash command or skill initializer",
 					tt.name,
 				)
 			}
@@ -981,12 +1274,14 @@ func TestProviderRegistration_AllProviders(
 		{"kilocode", "Kilocode", 12},
 		{"continue", "Continue", 13},
 		{"crush", "Crush", 14},
-		{"opencode", "OpenCode", 15},
+		{"amp", "Amp", 15},
+		{"opencode", "OpenCode", 16},
+		{"kimi", "Kimi", 17},
 	}
 
 	// Verify count
-	if Count() != 15 {
-		t.Fatalf("Count() = %d, want 15", Count())
+	if Count() != 17 {
+		t.Fatalf("Count() = %d, want 17", Count())
 	}
 
 	// Verify each provider
@@ -1035,22 +1330,30 @@ func TestProviderRegistration_AllProviders(
 
 	// Verify priority order
 	registered := RegisteredProviders()
-	for i := range registered {
-		if registered[i].Priority != i+1 {
-			t.Errorf(
-				"RegisteredProviders()[%d].Priority = %d, want %d (priorities should be sequential 1-15)",
-				i,
-				registered[i].Priority,
-				i+1,
-			)
-		}
-		if i < len(expected) &&
-			registered[i].ID != expected[i].id {
+
+	// Note: Priorities are no longer strictly sequential due to Amp (priority 15)
+	// being inserted between Claude Code and other providers
+	expectedOrder := []string{
+		"claude-code", "gemini", "costrict", "qoder", "qwen",
+		"antigravity", "cline", "cursor", "codex", "aider",
+		"windsurf", "kilocode", "continue", "crush", "amp", "opencode", "kimi",
+	}
+
+	if len(registered) != len(expectedOrder) {
+		t.Fatalf(
+			"RegisteredProviders() returned %d providers, want %d",
+			len(registered),
+			len(expectedOrder),
+		)
+	}
+
+	for i, reg := range registered {
+		if reg.ID != expectedOrder[i] {
 			t.Errorf(
 				"RegisteredProviders()[%d].ID = %s, want %s (priority order incorrect)",
 				i,
-				registered[i].ID,
-				expected[i].id,
+				reg.ID,
+				expectedOrder[i],
 			)
 		}
 	}

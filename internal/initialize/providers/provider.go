@@ -85,6 +85,18 @@ type TemplateManager interface {
 	// The filesystem contains all files under templates/skills/<skillName>/
 	// with paths relative to the skill root (e.g., SKILL.md, scripts/accept.sh).
 	SkillFS(skillName string) (fs.FS, error)
+
+	// ProposalSkill returns the template for the proposal skill (SKILL.md).
+	// This template is used for Amp agent skills that create change proposals.
+	ProposalSkill() domain.TemplateRef
+
+	// ApplySkill returns the template for the apply skill (SKILL.md).
+	// This template is used for Amp agent skills that apply/accept change proposals.
+	ApplySkill() domain.TemplateRef
+
+	// NextSkill returns the template for the next skill (SKILL.md).
+	// This template is used for agent skills that execute the next pending task.
+	NextSkill() domain.TemplateRef
 }
 
 // Provider represents an AI CLI tool (Claude Code, Gemini, Cline, etc.).

@@ -2,32 +2,35 @@
 
 ## Purpose
 
-Defines the CLI framework using Kong for declarative commands, struct tags, subcommands (archive, list, validate, view), and interactive features (TUI, wizard, visual styling).
+Defines the CLI framework using Kong for declarative commands, struct tags,
+subcommands (archive, list, validate, view), and interactive features (TUI,
+wizard, visual styling).
 
 ## Requirements
 
 ### Requirement: Archive Command
 
-The system SHALL provide an `archive` command to move completed changes and apply deltas.
+The system SHALL provide an `archive` command to move completed changes and
+apply deltas.
 
 #### Scenario: Archive with change ID
-- WHEN `spectr archive <change-id>`
+
 - THEN archive change without prompting
 
 #### Scenario: Interactive archive selection
-- WHEN `spectr archive` (no ID)
+
 - THEN prompt to select active change
 
 #### Scenario: Non-interactive archiving with yes flag
-- WHEN `spectr archive <change-id> --yes`
+
 - THEN archive without confirmation
 
 #### Scenario: Skip spec updates for tooling changes
-- WHEN `spectr archive <change-id> --skip-specs`
+
 - THEN archive without updating specs
 
 #### Scenario: Skip validation with confirmation
-- WHEN `spectr archive <change-id> --no-validate`
+
 - THEN warn and require confirmation (unless --yes)
 
 ### Requirement: Positional Argument Support
@@ -35,11 +38,11 @@ The system SHALL provide an `archive` command to move completed changes and appl
 The system SHALL support positional arguments via struct fields tagged `arg`.
 
 #### Scenario: Optional positional argument
-- WHEN command accepts optional arg
+
 - THEN define with `arg` and `optional` tags (pointer or zero-value)
 
 #### Scenario: Required positional argument
-- WHEN command requires arg
+
 - THEN define with `arg` tag; fail if missing
 
 ### Requirement: Built-in Help Generation
@@ -47,11 +50,11 @@ The system SHALL support positional arguments via struct fields tagged `arg`.
 The system SHALL generate help text from struct tags.
 
 #### Scenario: Root help display
-- WHEN `--help` or no args
+
 - THEN list subcommands, descriptions, and args
 
 #### Scenario: Subcommand help display
-- WHEN subcommand `--help`
+
 - THEN show description, flags, types, and args
 
 ### Requirement: Error Handling and Exit Codes
@@ -59,11 +62,11 @@ The system SHALL generate help text from struct tags.
 The system SHALL provide clear errors and exit codes.
 
 #### Scenario: Parse error handling
-- WHEN invalid flags/args
+
 - THEN show error, usage, exit non-zero
 
 #### Scenario: Execution error handling
-- WHEN Run method returns error
+
 - THEN show error, exit non-zero
 
 ### Requirement: Backward-Compatible CLI Interface
@@ -71,11 +74,11 @@ The system SHALL provide clear errors and exit codes.
 The system SHALL maintain syntax and flag compatibility.
 
 #### Scenario: Init command compatibility
-- WHEN `spectr init` invoked
+
 - THEN match previous Cobra behavior (flags, aliases, args)
 
 #### Scenario: Help text accessibility
-- WHEN `spectr --help`
+
 - THEN document all commands/flags
 
 ### Requirement: List Command for Changes
@@ -83,19 +86,19 @@ The system SHALL maintain syntax and flag compatibility.
 The system SHALL provide a `list` command that enumerates active changes (IDs default).
 
 #### Scenario: List changes with IDs only
-- WHEN `spectr list`
+
 - THEN display IDs (sorted, excluding archive)
 
 #### Scenario: List changes with details
-- WHEN `spectr list --long`
+
 - THEN format: `{id}: {title} [deltas {count}] [tasks {completed}/{total}]`
 
 #### Scenario: List changes as JSON
-- WHEN `spectr list --json`
+
 - THEN output JSON array (id, title, deltaCount, taskStatus)
 
 #### Scenario: No changes found
-- WHEN no active changes
+
 - THEN display "No items found"
 
 ### Requirement: List Command for Specs
@@ -103,19 +106,19 @@ The system SHALL provide a `list` command that enumerates active changes (IDs de
 The system SHALL support a `--specs` flag to list specifications.
 
 #### Scenario: List specs with IDs only
-- WHEN `spectr list --specs`
+
 - THEN display spec IDs
 
 #### Scenario: List specs with details
-- WHEN `spectr list --specs --long`
+
 - THEN format: `{id}: {title} [requirements {count}]`
 
 #### Scenario: List specs as JSON
-- WHEN `spectr list --specs --json`
+
 - THEN output JSON array (id, title, requirementCount)
 
 #### Scenario: No specs found
-- WHEN no specs exist
+
 - THEN display "No items found"
 
 ### Requirement: Change Discovery
@@ -123,7 +126,7 @@ The system SHALL support a `--specs` flag to list specifications.
 The system SHALL scan `spectr/changes/` for subdirectories with `proposal.md`.
 
 #### Scenario: Find active changes
-- WHEN scanning
+
 - THEN include `spectr/changes/*/proposal.md`
 - AND exclude `archive/` and hidden dirs
 
@@ -132,24 +135,25 @@ The system SHALL scan `spectr/changes/` for subdirectories with `proposal.md`.
 The system SHALL scan `spectr/specs/` for subdirectories with `spec.md`.
 
 #### Scenario: Find specs
-- WHEN scanning
+
 - THEN include `spectr/specs/*/spec.md`
 - AND exclude hidden dirs
 
 ### Requirement: Title Extraction
 
-The system SHALL extract title from first level-1 heading in markdown (removing "Change:"/"Spec:" prefix).
+The system SHALL extract title from first level-1 heading in markdown
+(removing "Change:"/"Spec:" prefix).
 
 #### Scenario: Extract title from proposal
-- WHEN reading proposal
+
 - THEN extract title from `# Change: ...`
 
 #### Scenario: Extract title from spec
-- WHEN reading spec
+
 - THEN extract title from `# ...`
 
 #### Scenario: Fallback to ID when title not found
-- WHEN no title found
+
 - THEN use directory name
 
 ### Requirement: Task Counting
@@ -157,23 +161,23 @@ The system SHALL extract title from first level-1 heading in markdown (removing 
 The system SHALL count tasks from `tasks.jsonc` or `tasks.md` (ignore `tasks.json`).
 
 #### Scenario: Count tasks from JSONC
-- WHEN `tasks.jsonc` exists
+
 - THEN count by status (strip comments)
 
 #### Scenario: Count tasks from Markdown
-- WHEN `tasks.md` exists (no jsonc)
+
 - THEN count `- [ ]` and `- [x]`
 
 #### Scenario: Ignore legacy tasks.json
-- WHEN only `tasks.json` exists
+
 - THEN report 0 tasks
 
 #### Scenario: Handle missing tasks file
-- WHEN no tasks file
+
 - THEN report 0 tasks
 
 #### Scenario: JSONC takes precedence over Markdown
-- WHEN both exist
+
 - THEN use `tasks.jsonc`
 
 ### Requirement: Validate Command
@@ -181,43 +185,43 @@ The system SHALL count tasks from `tasks.jsonc` or `tasks.md` (ignore `tasks.jso
 The system SHALL check spec/change correctness.
 
 #### Scenario: Validate command registration
-- WHEN initialized
+
 - THEN register `spectr validate`
 
 #### Scenario: Direct item validation invocation
-- WHEN `spectr validate <item-name>`
+
 - THEN validate item, print results, exit 0/1
 
 #### Scenario: Bulk validation invocation
-- WHEN `spectr validate --all`
+
 - THEN validate all, print summary/issues, exit 1 on failure
 
 #### Scenario: Interactive validation invocation
-- WHEN `spectr validate` (no args, TTY)
+
 - THEN prompt for selection
 
 #### Scenario: Default validation behavior (always strict)
-- WHEN validating
+
 - THEN treat warnings as errors (exit 1)
 
 #### Scenario: JSON output flag
-- WHEN `--json`
+
 - THEN output structured JSON
 
 #### Scenario: Type disambiguation flag
-- WHEN `--type change` or `--type spec`
+
 - THEN validate as type (error if missing)
 
 #### Scenario: Changes only flag
-- WHEN `--changes`
+
 - THEN validate changes only
 
 #### Scenario: Specs only flag
-- WHEN `--specs`
+
 - THEN validate specs only
 
 #### Scenario: Non-interactive flag
-- WHEN `--no-interactive`
+
 - THEN no prompt, exit 1 if no item
 
 ### Requirement: Validate Command Help Text
@@ -225,7 +229,7 @@ The system SHALL check spec/change correctness.
 The system SHALL document validation purpose and flags.
 
 #### Scenario: Command help display
-- WHEN `spectr validate --help`
+
 - THEN show description, flags, examples
 
 ### Requirement: Positional Argument Support for Item Name
@@ -233,11 +237,11 @@ The system SHALL document validation purpose and flags.
 The system SHALL accept an optional item name.
 
 #### Scenario: Optional item name argument
-- WHEN defined
+
 - THEN `arg:"" optional:""`
 
 #### Scenario: Item name provided
-- WHEN provided
+
 - THEN validate specific item (auto-detect type)
 
 ### Requirement: View Command
@@ -245,27 +249,27 @@ The system SHALL accept an optional item name.
 The system SHALL display a project dashboard (`spectr view`).
 
 #### Scenario: View command registration
-- WHEN initialized
+
 - THEN register `spectr view`
 
 #### Scenario: View command invocation
-- WHEN `spectr view`
+
 - THEN show dashboard (summary, active/completed changes, specs)
 
 #### Scenario: View command with JSON output
-- WHEN `spectr view --json`
+
 - THEN output dashboard JSON
 
 #### Scenario: JSON structure
-- WHEN JSON output
+
 - THEN include `summary`, `activeChanges`, `completedChanges`, `specs`
 
 #### Scenario: JSON arrays sorted consistently
-- WHEN JSON output
+
 - THEN sort active (progress, ID), completed (ID), specs (reqs, ID)
 
 #### Scenario: JSON with no items
-- WHEN empty
+
 - THEN return empty arrays
 
 ### Requirement: Dashboard Summary Metrics
@@ -273,15 +277,15 @@ The system SHALL display a project dashboard (`spectr view`).
 The system SHALL display aggregated stats.
 
 #### Scenario: Display summary with all metrics
-- WHEN rendering summary
+
 - THEN show counts: specs, requirements, active/completed changes, tasks
 
 #### Scenario: Calculate total requirements
-- WHEN aggregating
+
 - THEN sum requirements from all specs
 
 #### Scenario: Calculate task progress
-- WHEN aggregating
+
 - THEN sum tasks/completed from active changes
 
 ### Requirement: Active Changes Display
@@ -289,20 +293,20 @@ The system SHALL display aggregated stats.
 The system SHALL show active changes with progress bars.
 
 #### Scenario: List active changes with progress
-- WHEN rendering active changes
+
 - THEN show ID, progress bar, %, indicator (◉)
 - AND sort by completion asc, ID
 
 #### Scenario: Render progress bar
-- WHEN rendering bar
+
 - THEN 20 chars, full/light blocks, green/gray
 
 #### Scenario: Handle zero tasks
-- WHEN 0 tasks
+
 - THEN empty bar, 0%
 
 #### Scenario: No active changes
-- WHEN none
+
 - THEN hide section
 
 ### Requirement: Completed Changes Display
@@ -310,15 +314,15 @@ The system SHALL show active changes with progress bars.
 The system SHALL show completed changes.
 
 #### Scenario: List completed changes
-- WHEN rendering completed
+
 - THEN show ID, checkmark (✓), sort ID
 
 #### Scenario: Determine completion status
-- WHEN evaluating
+
 - THEN complete if all tasks done or 0 tasks
 
 #### Scenario: No completed changes
-- WHEN none
+
 - THEN hide section
 
 ### Requirement: Specifications Display
@@ -326,15 +330,15 @@ The system SHALL show completed changes.
 The system SHALL show specs sorted by complexity.
 
 #### Scenario: List specifications with requirement counts
-- WHEN rendering specs
+
 - THEN show ID, count, indicator (▪), sort count desc
 
 #### Scenario: Pluralize requirement label
-- WHEN displaying
+
 - THEN handle singular/plural
 
 #### Scenario: No specifications found
-- WHEN none
+
 - THEN hide section
 
 ### Requirement: Dashboard Visual Formatting
@@ -342,19 +346,19 @@ The system SHALL show specs sorted by complexity.
 The system SHALL use colors and box-drawing chars.
 
 #### Scenario: Render dashboard header
-- WHEN rendering
+
 - THEN title, double-line separator
 
 #### Scenario: Render section headers
-- WHEN rendering section
+
 - THEN bold cyan, single-line separator
 
 #### Scenario: Render footer
-- WHEN rendering footer
+
 - THEN double-line separator, hints
 
 #### Scenario: Color scheme consistency
-- WHEN coloring
+
 - THEN cyan (headers), yellow (active), green (done), blue (specs)
 
 ### Requirement: Sorting Strategy
@@ -362,15 +366,15 @@ The system SHALL use colors and box-drawing chars.
 The system SHALL sort for relevance.
 
 #### Scenario: Sort active changes by priority
-- WHEN sorting active
+
 - THEN % asc, ID
 
 #### Scenario: Sort specs by complexity
-- WHEN sorting specs
+
 - THEN count desc, ID
 
 #### Scenario: Sort completed changes alphabetically
-- WHEN sorting completed
+
 - THEN ID
 
 ### Requirement: View Command Help Text
@@ -378,27 +382,28 @@ The system SHALL sort for relevance.
 The system SHALL document the view command.
 
 #### Scenario: View command help display
-- WHEN `spectr view --help`
+
 - THEN show description, `--json`
 
 ### Requirement: Provider Interface
 
-The system SHALL provide a `Provider` interface for AI tools (instruction files + slash commands).
+The system SHALL provide a `Provider` interface for AI tools (instruction
+files + slash commands).
 
 #### Scenario: Provider interface methods
-- WHEN provider created
+
 - THEN implement ID, Name, Priority, ConfigFile, paths, Configure, IsConfigured
 
 #### Scenario: Single provider per tool
-- WHEN tool has config & slash
+
 - THEN one provider handles both
 
 #### Scenario: Flexible command paths
-- WHEN returning paths
+
 - THEN relative path or empty
 
 #### Scenario: HasSlashCommands detection
-- WHEN checking
+
 - THEN true if any path non-empty
 
 ### Requirement: Command Format Support
@@ -406,11 +411,11 @@ The system SHALL provide a `Provider` interface for AI tools (instruction files 
 The system SHALL support Markdown/TOML formats.
 
 #### Scenario: Markdown command format
-- WHEN `FormatMarkdown`
+
 - THEN create `.md` with frontmatter
 
 #### Scenario: TOML command format
-- WHEN `FormatTOML`
+
 - THEN create `.toml` with description/prompt
 
 ### Requirement: Version Command Structure
@@ -418,19 +423,19 @@ The system SHALL support Markdown/TOML formats.
 The system SHALL display version/commit/date.
 
 #### Scenario: Version command registration
-- WHEN initialized
+
 - THEN register `spectr version`
 
 #### Scenario: Version command invocation
-- WHEN `spectr version`
+
 - THEN show version info
 
 #### Scenario: Version command with short flag
-- WHEN `spectr version --short`
+
 - THEN show version only
 
 #### Scenario: Version command with JSON flag
-- WHEN `spectr version --json`
+
 - THEN output JSON
 
 ### Requirement: Version Variable Injection
@@ -438,7 +443,7 @@ The system SHALL display version/commit/date.
 The system SHALL inject version variables via ldflags.
 
 #### Scenario: Goreleaser/Nix/Dev injection
-- WHEN building
+
 - THEN set version/commit/date (default dev/unknown)
 
 ### Requirement: Completion Command Structure
@@ -446,11 +451,11 @@ The system SHALL inject version variables via ldflags.
 The system SHALL generate shell completions.
 
 #### Scenario: Completion command registration
-- WHEN initialized
+
 - THEN register `spectr completion`
 
 #### Scenario: Bash/Zsh/Fish completion output
-- WHEN `spectr completion <shell>`
+
 - THEN output script
 
 ### Requirement: Custom Predictors for Dynamic Arguments
@@ -458,75 +463,169 @@ The system SHALL generate shell completions.
 The system SHALL suggest IDs.
 
 #### Scenario: Change/Spec ID completion
-- WHEN tabbing ID arg
+
 - THEN suggest active changes/specs
 
 #### Scenario: Item type completion
-- WHEN tabbing `--type`
+
 - THEN suggest `change`, `spec`
 
 ### Requirement: Accept Command Structure
 
-The system SHALL convert `tasks.md` to `tasks.jsonc`.
+The CLI SHALL provide an `accept` command that converts `tasks.md` to
+`tasks.jsonc` format with header comments for stable agent manipulation during
+implementation.
 
 #### Scenario: Accept command registration
-- WHEN initialized
-- THEN register `spectr accept`
+
+- WHEN the CLI is initialized
+- THEN it SHALL include an AcceptCmd struct field tagged with `cmd`
+- AND the command SHALL be accessible via `spectr accept`
+- AND the command help text SHALL reference tasks.jsonc output
 
 #### Scenario: Accept with change ID
-- WHEN `spectr accept <id>`
-- THEN validate, parse md, write jsonc (preserve md)
+
+- WHEN user runs `spectr accept <change-id>`
+- THEN the system validates the change exists in `spectr/changes/<change-id>/`
+- AND the system parses `tasks.md` into structured format
+- AND the system writes `tasks.jsonc` with proper schema and header comments
+- AND the system removes `tasks.md` to prevent drift
 
 #### Scenario: Accept with validation
-- WHEN running
-- THEN abort if invalid
+
+- WHEN user runs `spectr accept <change-id>`
+- THEN the system validates the change before conversion
+- AND if validation fails, the system aborts
+- AND the system displays validation errors
 
 #### Scenario: Accept dry-run mode
-- WHEN `--dry-run`
-- THEN preview only
+
+- WHEN user runs `spectr accept <change-id> --dry-run`
+- THEN the system displays what would be converted
+- AND the system does NOT write tasks.jsonc
+- AND the system does NOT remove tasks.md
 
 #### Scenario: Accept already accepted change
-- WHEN jsonc exists
-- THEN regenerate from md
+
+- WHEN user runs `spectr accept <change-id>` on a change that already has
+  tasks.jsonc
+- THEN the system displays a message indicating change is already accepted
+- AND the system exits with code 0 (success, idempotent)
 
 #### Scenario: Accept change without tasks.md
-- WHEN no md
-- THEN error
 
-#### Scenario: Both tasks.md and tasks.jsonc exist
-- WHEN both exist
-- THEN prefer jsonc runtime, md reference
+- WHEN user runs `spectr accept <change-id>` on a change without tasks.md
+- THEN the system displays an error indicating no tasks.md found
+- AND the system exits with code 1
 
 ### Requirement: Tasks JSON Schema
 
-The system SHALL generate a versioned `tasks.jsonc`.
+The system SHALL generate a versioned `tasks.jsonc` with optional hierarchical
+structure for large task files, automatically splitting files over 100 lines
+while preserving section boundaries.
 
 #### Scenario: JSONC file structure
-- WHEN generating
-- THEN header comments, version, tasks array
+
+- **WHEN** generating tasks.jsonc
+- **THEN** the file SHALL start with header comments documenting status values
+  and transitions
+- **AND** the file SHALL contain a root object with `version` and `tasks` fields
+- **AND** `version` SHALL be integer 2 for hierarchical files, integer 1 for
+  flat files
+- **AND** `tasks` SHALL be an array of task objects
+
+#### Scenario: Version 2 hierarchical structure
+
+- **WHEN** tasks.md exceeds 100 lines during accept
+- **THEN** the system SHALL generate version 2 tasks.jsonc with split files
+- **AND** root file SHALL contain reference tasks with `children` field
+- **AND** child files SHALL be named `tasks-N.jsonc` where N is sequential
+- **AND** root file SHALL include `includes` field with glob pattern
+  `["tasks-*.jsonc"]`
+
+#### Scenario: Version 1 flat structure preserved
+
+- **WHEN** tasks.md is 100 lines or fewer
+- **THEN** the system SHALL generate version 1 tasks.jsonc with flat structure
+- **AND** no split files SHALL be created
 
 #### Scenario: Header comment content
-- WHEN generating
-- THEN document status values/transitions, machine-generated warning
+
+- **WHEN** generating root tasks.jsonc
+- **THEN** the header SHALL use `//` line comment syntax
+- **AND** the header SHALL indicate the file is machine-generated by `spectr
+  accept`
+- **AND** the header SHALL document the three valid status values: "pending",
+  "in_progress", "completed"
+- **AND** the header SHALL document valid status transitions: pending ->
+  in_progress -> completed
+- **AND** the header SHALL explain that agents should mark a task "in_progress"
+  when starting work
+- **AND** the header SHALL explain that agents should mark a task "completed"
+  only after verification
+- **AND** the header SHALL note that skipping directly from "pending" to
+  "completed" is allowed for trivial tasks
+
+#### Scenario: Child file header content
+
+- **WHEN** generating child tasks-N.jsonc files
+- **THEN** the header SHALL include the full header from root file
+- **AND** the header SHALL add "Generated by: spectr accept `change-id`"
+- **AND** the header SHALL add "Parent change: `change-id`"
+- **AND** the header SHALL add "Parent task: `parent-task-id`"
 
 #### Scenario: Task object structure
-- WHEN serializing
-- THEN id, section, description, status
+
+- **WHEN** a task is serialized to JSONC
+- **THEN** it SHALL have `id` field containing the task identifier (e.g., "1.1")
+- **AND** it SHALL have `section` field containing the section header (e.g.,
+  "Implementation")
+- **AND** it SHALL have `description` field containing the full task text
+- **AND** it SHALL have `status` field with value "pending", "in_progress", or
+  "completed"
+- **AND** it MAY have `children` field with value "$ref:`path`" for reference
+  tasks
 
 #### Scenario: Status value mapping from Markdown
-- WHEN converting
-- THEN map `[ ]` -> pending, `[x]` -> completed
+
+- **WHEN** converting tasks from markdown
+- **THEN** map `- [ ]` to status "pending"
+- **AND** map `- [x]` to status "completed"
+
+#### Scenario: Reference task structure
+
+- **WHEN** a task references child tasks in a split file
+- **THEN** it SHALL have all standard fields (id, section, description, status)
+- **AND** it SHALL have `children` field with value "$ref:tasks-N.jsonc"
+- **AND** the description SHALL be the section header or summary
+- **AND** the status SHALL reflect aggregate status of children (pending if any
+  pending, in_progress if any in_progress, completed if all completed)
+
+#### Scenario: Child file structure
+
+- **WHEN** generating a child tasks-N.jsonc file
+- **THEN** it SHALL have `version` field set to 2
+- **AND** it SHALL have `parent` field containing the parent task ID
+- **AND** it SHALL have `tasks` array with child task objects
+- **AND** child task IDs SHALL use dot notation (e.g., "1.1", "1.2" for parent
+  "1")
+
+#### Scenario: Includes field for discovery
+
+- **WHEN** generating version 2 root tasks.jsonc
+- **THEN** it SHALL include `includes` field with value `["tasks-*.jsonc"]`
+- **AND** agents MAY use this glob pattern to discover all split files
 
 ### Requirement: Accept Command Flags
 
 The system SHALL provide flags to control behavior.
 
 #### Scenario: Dry-run flag
-- WHEN `--dry-run`
+
 - THEN preview JSON
 
 #### Scenario: Interactive change selection
-- WHEN no ID
+
 - THEN prompt list
 
 ### Requirement: List Command Alias
@@ -534,7 +633,7 @@ The system SHALL provide flags to control behavior.
 The system SHALL alias `ls` to `list`.
 
 #### Scenario: User runs spectr ls shorthand
-- WHEN `spectr ls`
+
 - THEN same as `list` (flags work)
 
 ### Requirement: Item Name Path Normalization
@@ -542,7 +641,7 @@ The system SHALL alias `ls` to `list`.
 The system SHALL normalize paths to IDs.
 
 #### Scenario: Path/ID normalization
-- WHEN path provided (e.g. `spectr/changes/id`)
+
 - THEN extract ID, infer type
 
 ### Requirement: Interactive List Mode
@@ -550,19 +649,19 @@ The system SHALL normalize paths to IDs.
 The system SHALL provide a unified TUI for changes/specs.
 
 #### Scenario: Default behavior unchanged
-- WHEN `spectr list -I`
+
 - THEN show changes only
 
 #### Scenario: Unified mode opt-in
-- WHEN `spectr list -I --all`
+
 - THEN show changes and specs (Type column)
 
 #### Scenario: Type-specific actions
-- WHEN unified
+
 - THEN only specs editable
 
 #### Scenario: Help text formatting
-- WHEN interactive
+
 - THEN minimal footer, `?` for full help
 
 ### Requirement: Clipboard Copy on Selection
@@ -570,7 +669,7 @@ The system SHALL provide a unified TUI for changes/specs.
 The system SHALL copy ID on Enter.
 
 #### Scenario: Copy ID
-- WHEN Enter pressed
+
 - THEN copy ID to clipboard (exit)
 
 ### Requirement: Interactive Mode Exit Controls
@@ -578,7 +677,7 @@ The system SHALL copy ID on Enter.
 The system SHALL provide standard quit controls.
 
 #### Scenario: Quit
-- WHEN `q` or `Ctrl+C`
+
 - THEN exit
 
 ### Requirement: Table Visual Styling
@@ -586,7 +685,7 @@ The system SHALL provide standard quit controls.
 The system SHALL provide consistent TUI styling.
 
 #### Scenario: Visual hierarchy
-- WHEN displaying
+
 - THEN styled headers, selection, borders (`tui.ApplyTableStyles`)
 
 ### Requirement: Cross-Platform Clipboard Support
@@ -594,7 +693,7 @@ The system SHALL provide consistent TUI styling.
 The system SHALL support Linux/macOS/Windows/SSH.
 
 #### Scenario: Clipboard support
-- WHEN copying
+
 - THEN use native API or OSC 52 fallback
 
 ### Requirement: Initialization Next Steps Message
@@ -602,11 +701,11 @@ The system SHALL support Linux/macOS/Windows/SSH.
 The system SHALL guide the user after init.
 
 #### Scenario: Next steps display
-- WHEN init succeeds
+
 - THEN show 3 steps (project.md, proposal, AGENTS.md)
 
 #### Scenario: Init does not create README
-- WHEN init
+
 - THEN do not create README.md
 
 ### Requirement: Flat Tool List in Initialization Wizard
@@ -614,11 +713,11 @@ The system SHALL guide the user after init.
 The system SHALL provide a unified tool list.
 
 #### Scenario: Display only config-based tools
-- WHEN selecting tools
+
 - THEN show config tools only (auto-install slash commands)
 
 #### Scenario: Navigation/Selection
-- WHEN interacting
+
 - THEN navigate flat list, space toggle, a/n bulk
 
 ### Requirement: Interactive Archive Mode
@@ -626,11 +725,11 @@ The system SHALL provide a unified tool list.
 The system SHALL provide a table interface for archive.
 
 #### Scenario: Archive no args / -I
-- WHEN `spectr archive [-I]`
+
 - THEN show interactive table (same columns as list)
 
 #### Scenario: Selection behavior
-- WHEN selecting
+
 - THEN capture ID (no copy), proceed to archive
 
 ### Requirement: Archive Interactive Table Display
@@ -638,7 +737,7 @@ The system SHALL provide a table interface for archive.
 The system SHALL match list columns in archive mode.
 
 #### Scenario: Table columns
-- WHEN displaying
+
 - THEN ID, Title, Deltas, Tasks (consistent style)
 
 ### Requirement: Archive Selection Without Clipboard
@@ -646,7 +745,7 @@ The system SHALL match list columns in archive mode.
 The system SHALL capture selection internally only.
 
 #### Scenario: Enter key
-- WHEN Enter
+
 - THEN proceed with ID (no clipboard)
 
 ### Requirement: Validation Output Format
@@ -654,11 +753,11 @@ The system SHALL capture selection internally only.
 The system SHALL provide consistent issue reporting.
 
 #### Scenario: Single/Bulk output
-- WHEN validating
+
 - THEN show issues (Level, Path, Message), summary
 
 #### Scenario: JSON output
-- WHEN `--json`
+
 - THEN structured issue data
 
 ### Requirement: Editor Hotkey in Interactive Specs List
@@ -666,7 +765,7 @@ The system SHALL provide consistent issue reporting.
 The system SHALL allow editing specs with 'e'.
 
 #### Scenario: Edit spec
-- WHEN `e` pressed (specs mode)
+
 - THEN open `$EDITOR` (wait), return to TUI
 
 ### Requirement: Editor Hotkey Scope
@@ -674,7 +773,7 @@ The system SHALL allow editing specs with 'e'.
 The system SHALL limit editor hotkey to specs only.
 
 #### Scenario: No edit for changes
-- WHEN `e` pressed (changes mode)
+
 - THEN ignore
 
 ### Requirement: Project Path Display in Interactive Mode
@@ -682,7 +781,7 @@ The system SHALL limit editor hotkey to specs only.
 The system SHALL show context by displaying the project path.
 
 #### Scenario: Path display
-- WHEN interactive
+
 - THEN show project root path
 
 ### Requirement: Unified Item List Display
@@ -690,7 +789,7 @@ The system SHALL show context by displaying the project path.
 The system SHALL provide a mixed table for changes/specs.
 
 #### Scenario: Unified display
-- WHEN `--all -I`
+
 - THEN show Type, ID, Title, Details
 
 ### Requirement: Type-Aware Item Selection
@@ -698,11 +797,11 @@ The system SHALL provide a mixed table for changes/specs.
 The system SHALL handle types correctly.
 
 #### Scenario: Selection
-- WHEN Enter
+
 - THEN copy ID (both types)
 
 #### Scenario: Edit restriction
-- WHEN `e`
+
 - THEN specs only
 
 ### Requirement: Backward-Compatible Separate Modes
@@ -710,7 +809,7 @@ The system SHALL handle types correctly.
 The system SHALL preserve existing modes.
 
 #### Scenario: Separate modes
-- WHEN `-I` (no `--all`) -> Changes
+
 - WHEN `--specs -I` -> Specs
 
 ### Requirement: Enhanced List Command Flags
@@ -718,7 +817,7 @@ The system SHALL preserve existing modes.
 The system SHALL validate flags.
 
 #### Scenario: Validation
-- WHEN conflicting flags (e.g. `-I` + `--json`)
+
 - THEN error
 
 ### Requirement: Automatic Slash Command Installation
@@ -726,7 +825,7 @@ The system SHALL validate flags.
 The system SHALL install slash commands with config.
 
 #### Scenario: Auto-install
-- WHEN config tool selected
+
 - THEN install slash commands (CLAUDE.md + .claude/...)
 
 ### Requirement: Archive Hotkey in Interactive Changes Mode
@@ -734,7 +833,7 @@ The system SHALL install slash commands with config.
 The system SHALL allow archiving with 'a'.
 
 #### Scenario: Archive action
-- WHEN `a` pressed (changes mode)
+
 - THEN exit and archive selected change
 
 ### Requirement: Shared TUI Component Library
@@ -742,7 +841,7 @@ The system SHALL allow archiving with 'a'.
 The system SHALL use `internal/tui`.
 
 #### Scenario: Components
-- WHEN building UI
+
 - THEN use `TablePicker`, `MenuPicker`, `TruncateString`, `CopyToClipboard`
 
 ### Requirement: Search Hotkey in Interactive Lists
@@ -750,7 +849,7 @@ The system SHALL use `internal/tui`.
 The system SHALL filter lists with '/'.
 
 #### Scenario: Search mode
-- WHEN `/` pressed
+
 - THEN input field, filter rows by ID/Title
 
 ### Requirement: Help Toggle Hotkey
@@ -758,7 +857,7 @@ The system SHALL filter lists with '/'.
 The system SHALL toggle help with '?'.
 
 #### Scenario: Help toggle
-- WHEN `?` pressed
+
 - THEN toggle full/minimal help
 
 ### Requirement: Partial Change ID Resolution for Archive Command
@@ -766,7 +865,7 @@ The system SHALL toggle help with '?'.
 The system SHALL resolve prefixes/substrings.
 
 #### Scenario: Resolution
-- WHEN partial ID provided
+
 - THEN resolve if unique (prefix > substring), else error
 
 ### Requirement: Configured Provider Detection in Init Wizard
@@ -774,7 +873,7 @@ The system SHALL resolve prefixes/substrings.
 The system SHALL detect existing config.
 
 #### Scenario: Detection
-- WHEN initializing
+
 - THEN mark/select existing providers
 
 ### Requirement: Instruction File Pointer Template
@@ -782,7 +881,7 @@ The system SHALL detect existing config.
 The system SHALL use pointers in root files.
 
 #### Scenario: Pointer content
-- WHEN creating `CLAUDE.md` etc
+
 - THEN point to `spectr/AGENTS.md`
 
 ### Requirement: PR Archive Subcommand Alias
@@ -790,7 +889,7 @@ The system SHALL use pointers in root files.
 The system SHALL alias `a` to `archive`.
 
 #### Scenario: Alias
-- WHEN `spectr pr a`
+
 - THEN same as `spectr pr archive`
 
 ### Requirement: PR Branch Naming Convention
@@ -798,7 +897,7 @@ The system SHALL alias `a` to `archive`.
 The system SHALL use consistent branch naming.
 
 #### Scenario: Naming
-- WHEN archive -> `spectr/archive/<id>`
+
 - WHEN proposal -> `spectr/proposal/<id>`
 
 ### Requirement: PR Command Structure
@@ -806,7 +905,7 @@ The system SHALL use consistent branch naming.
 The system SHALL support `spectr pr <subcommand>`.
 
 #### Scenario: Subcommands
-- WHEN `archive`/`proposal`
+
 - THEN execute workflow
 
 ### Requirement: PR Archive Subcommand
@@ -814,15 +913,15 @@ The system SHALL support `spectr pr <subcommand>`.
 The system SHALL create an archive PR (isolated worktree).
 
 #### Scenario: Workflow
-- WHEN `spectr pr archive <id>`
+
 - THEN worktree, archive --yes, commit, push, create PR
 
 ### Requirement: PR Proposal Subcommand
 
 The system SHALL create a proposal PR (isolated worktree).
 
-#### Scenario: Workflow
-- WHEN `spectr pr proposal <id>`
+#### Scenario: Proposal workflow
+
 - THEN worktree, copy change, commit, push, create PR (no archive)
 
 ### Requirement: PR Common Flags
@@ -830,15 +929,15 @@ The system SHALL create a proposal PR (isolated worktree).
 The system SHALL provide shared flags.
 
 #### Scenario: Flags
-- WHEN `--base`, `--draft`, `--force`, `--dry-run`
+
 - THEN apply behavior
 
 ### Requirement: Git Platform Detection
 
 The system SHALL detect GitHub/GitLab/Gitea/Bitbucket.
 
-#### Scenario: Detection
-- WHEN remote URL
+#### Scenario: Platform detection
+
 - THEN detect platform, use CLI (gh/glab/tea)
 
 ### Requirement: Platform CLI Availability
@@ -846,7 +945,7 @@ The system SHALL detect GitHub/GitLab/Gitea/Bitbucket.
 The system SHALL check if CLI is installed.
 
 #### Scenario: Check
-- WHEN running
+
 - THEN error if CLI missing/unauthenticated
 
 ### Requirement: Git Worktree Isolation
@@ -854,7 +953,7 @@ The system SHALL check if CLI is installed.
 The system SHALL isolate operations.
 
 #### Scenario: Isolation
-- WHEN running
+
 - THEN use temp worktree, clean up after
 
 ### Requirement: PR Commit Message Format
@@ -862,7 +961,7 @@ The system SHALL isolate operations.
 The system SHALL use conventional commits.
 
 #### Scenario: Format
-- WHEN committing
+
 - THEN `spectr(archive/proposal): <id>`
 
 ### Requirement: PR Body Content
@@ -870,31 +969,31 @@ The system SHALL use conventional commits.
 The system SHALL provide a useful description.
 
 #### Scenario: Content
-- WHEN creating PR
+
 - THEN summary, checklist, location
 
 ### Requirement: PR Branch Naming
 
 The system SHALL use branch naming pattern `spectr/<id>`.
 
-#### Scenario: Naming
-- WHEN creating branch
+#### Scenario: Branch naming
+
 - THEN `spectr/<id>`
 
 ### Requirement: PR Error Handling
 
 The system SHALL provide clear errors.
 
-#### Scenario: Errors
-- WHEN no git/remote/change/push fail
+#### Scenario: Error handling
+
 - THEN display specific error
 
 ### Requirement: Partial Change ID Resolution for PR Commands
 
 The system SHALL resolve IDs.
 
-#### Scenario: Resolution
-- WHEN partial ID
+#### Scenario: ID resolution
+
 - THEN resolve unique match
 
 ### Requirement: PR Proposal Interactive Selection Filters Unmerged Changes
@@ -902,7 +1001,7 @@ The system SHALL resolve IDs.
 The system SHALL filter already merged changes.
 
 #### Scenario: Filtering
-- WHEN selecting proposal
+
 - THEN hide changes already on main
 
 ### Requirement: Template Path Variables
@@ -910,7 +1009,7 @@ The system SHALL filter already merged changes.
 The system SHALL support dynamic paths.
 
 #### Scenario: Variables
-- WHEN templating
+
 - THEN use `{{ .BaseDir }}` etc
 
 ### Requirement: Copy Populate Context Prompt in Init Next Steps
@@ -918,7 +1017,7 @@ The system SHALL support dynamic paths.
 The system SHALL copy prompt with 'c'.
 
 #### Scenario: Copy prompt
-- WHEN 'c' pressed (success screen)
+
 - THEN copy prompt to clipboard
 
 ### Requirement: PR Hotkey in Interactive Changes List Mode
@@ -926,7 +1025,7 @@ The system SHALL copy prompt with 'c'.
 The system SHALL enable PR workflow with 'P'.
 
 #### Scenario: PR action
-- WHEN `Shift+P` pressed
+
 - THEN enter PR workflow
 
 ### Requirement: VHS Demo for PR Hotkey
@@ -934,7 +1033,7 @@ The system SHALL enable PR workflow with 'P'.
 The system SHALL include a demo asset.
 
 #### Scenario: Demo
-- WHEN viewing assets
+
 - THEN `pr-hotkey.tape` exists
 
 ### Requirement: PR Proposal Local Change Cleanup Confirmation
@@ -942,7 +1041,7 @@ The system SHALL include a demo asset.
 The system SHALL prompt to remove local changes.
 
 #### Scenario: Prompt
-- WHEN proposal PR success
+
 - THEN prompt remove local (default No)
 
 ### Requirement: CI Workflow Setup Option in Init Wizard Review Step
@@ -950,7 +1049,7 @@ The system SHALL prompt to remove local changes.
 The system SHALL setup GitHub Actions.
 
 #### Scenario: CI option
-- WHEN init review
+
 - THEN checkbox for `.github/workflows/spectr-ci.yml`
 
 ### Requirement: PR Remove Subcommand
@@ -958,31 +1057,31 @@ The system SHALL setup GitHub Actions.
 The system SHALL remove change PR.
 
 #### Scenario: Remove workflow
-- WHEN `spectr pr rm <id>`
+
 - THEN worktree, remove dir, commit, PR, clean local
 
 ### Requirement: Remove PR Branch Naming
 
 The system SHALL use branch naming pattern `spectr/remove/<id>`.
 
-#### Scenario: Naming
-- WHEN remove PR
+#### Scenario: Remove branch naming
+
 - THEN `spectr/remove/<id>`
 
 ### Requirement: Remove PR Commit Message Format
 
 The system SHALL use commit message format `spectr(remove): <id>`.
 
-#### Scenario: Format
-- WHEN committing
+#### Scenario: Remove commit format
+
 - THEN structured message
 
 ### Requirement: Remove PR Body Content
 
 The system SHALL explain removal in PR body.
 
-#### Scenario: Content
-- WHEN PR body
+#### Scenario: Remove PR content
+
 - THEN summary, removed path
 
 ### Requirement: Responsive Table Column Layout
@@ -990,7 +1089,7 @@ The system SHALL explain removal in PR body.
 The system SHALL adapt columns to width.
 
 #### Scenario: Responsive columns
-- WHEN displaying
+
 - THEN hide/narrow columns based on width
 
 ### Requirement: Dynamic Terminal Resize Handling
@@ -998,7 +1097,7 @@ The system SHALL adapt columns to width.
 The system SHALL handle terminal resize.
 
 #### Scenario: Resize
-- WHEN resized
+
 - THEN recalculate layout
 
 ### Requirement: Column Priority System
@@ -1006,7 +1105,7 @@ The system SHALL handle terminal resize.
 The system SHALL prioritize columns.
 
 #### Scenario: Priority
-- WHEN calculating
+
 - THEN ID > Title > Deltas/Reqs > Tasks
 
 ### Requirement: Provider Search in Init Wizard
@@ -1014,7 +1113,7 @@ The system SHALL prioritize columns.
 The system SHALL search tools with '/'.
 
 #### Scenario: Search
-- WHEN `/` in wizard
+
 - THEN filter tools
 
 ### Requirement: Stdout Output Mode for Interactive List
@@ -1022,7 +1121,7 @@ The system SHALL search tools with '/'.
 The system SHALL output ID to stdout.
 
 #### Scenario: Stdout mode
-- WHEN `-I --stdout`
+
 - THEN print ID (no clipboard)
 
 ### Requirement: JSONC Comment Parsing
@@ -1030,7 +1129,7 @@ The system SHALL output ID to stdout.
 The system SHALL strip comments.
 
 #### Scenario: Parsing
-- WHEN reading JSONC
+
 - THEN strip `//` and `/* */`
 
 ### Requirement: TTY Error Hint
@@ -1038,7 +1137,7 @@ The system SHALL strip comments.
 The system SHALL provide hints for non-TTY.
 
 #### Scenario: Hint
-- WHEN TTY error
+
 - THEN suggest `--non-interactive`
 
 ### Requirement: File Coexistence Documentation
@@ -1046,7 +1145,7 @@ The system SHALL provide hints for non-TTY.
 The system SHALL document tasks.md/jsonc coexistence.
 
 #### Scenario: Docs
-- WHEN help/success
+
 - THEN mention coexistence
 
 ### Requirement: Slash Command Template Updates
@@ -1054,7 +1153,7 @@ The system SHALL document tasks.md/jsonc coexistence.
 The system SHALL provide instructions for tasks.
 
 #### Scenario: Templates
-- WHEN proposal/apply
+
 - THEN instruct on tasks.md/jsonc usage
 
 ### Requirement: Project Configuration File
@@ -1192,7 +1291,7 @@ enabled or errors occur.
 #### Scenario: Verbose output with flag
 
 - **WHEN** `--verbose` flag is set and sync makes changes
-- **THEN** the system SHALL print "Synced N task statuses in <change-id>"
+- **THEN** the system SHALL print "Synced N task statuses in [change-id]"
 
 ### Requirement: Global Verbose Flag
 
@@ -1238,3 +1337,470 @@ correctly.
 
 - **WHEN** status is `completed` in tasks.jsonc
 - **THEN** the system SHALL write `[x]` in tasks.md
+
+### Requirement: Proposal Frontmatter Support
+
+The system SHALL support YAML frontmatter in `proposal.md` files for declaring
+metadata including dependencies.
+
+#### Scenario: Parse valid frontmatter
+
+- **WHEN** proposal.md contains YAML frontmatter block (`---` delimiters)
+
+- **THEN** extract and parse frontmatter into ProposalMetadata
+
+- **AND** make metadata available for validation and commands
+
+#### Scenario: Handle missing frontmatter
+
+- **WHEN** proposal.md has no frontmatter block
+
+- **THEN** treat as valid with empty metadata (backward compatible)
+
+#### Scenario: Handle malformed frontmatter
+
+- **WHEN** proposal.md has invalid YAML in frontmatter
+
+- **THEN** emit validation error with line number and details
+
+### Requirement: Chained Proposal Dependencies
+
+The system SHALL support `requires` and `enables` fields in proposal frontmatter
+to declare dependencies between proposals.
+
+#### Scenario: Declare required dependencies
+
+- **WHEN** frontmatter contains `requires` list with id and optional reason
+
+- **THEN** parse as list of Dependency objects
+
+- **AND** validate that referenced change IDs exist or are archived
+
+#### Scenario: Declare enabled proposals
+
+- **WHEN** frontmatter contains `enables` list with id and optional reason
+
+- **THEN** parse as informational metadata (not enforced)
+
+#### Scenario: Self-reference detection
+
+- **WHEN** proposal requires itself
+
+- **THEN** emit validation error "Proposal cannot require itself"
+
+### Requirement: Dependency Validation in Validate Command
+
+The system SHALL check proposal dependencies during `spectr validate`.
+
+#### Scenario: Warn on unmet dependencies
+
+- **WHEN** `spectr validate <id>` runs on proposal with requires
+
+- **AND** a required proposal is not archived
+
+- **THEN** emit warning "Dependency '[id]' is not yet archived"
+
+#### Scenario: Error on circular dependencies
+
+- **WHEN** `spectr validate <id>` detects a dependency cycle
+
+- **THEN** emit error "Circular dependency detected: A → B → ... → A"
+
+- **AND** exit non-zero
+
+#### Scenario: Pass validation when dependencies met
+
+- **WHEN** all required proposals are archived
+
+- **AND** no circular dependencies exist
+
+- **THEN** validation passes (no dependency warnings/errors)
+
+### Requirement: Dependency Enforcement in Accept Command
+
+The system SHALL enforce `requires` dependencies before accepting a proposal.
+
+#### Scenario: Block accept with unmet dependencies
+
+- **WHEN** `spectr accept <id>` runs on proposal with requires
+
+- **AND** any required proposal is not archived
+
+- **THEN** exit non-zero with error listing unmet dependencies
+
+- **AND** do not create tasks.jsonc
+
+#### Scenario: Allow accept when dependencies met
+
+- **WHEN** `spectr accept <id>` runs on proposal with requires
+
+- **AND** all required proposals are archived
+
+- **THEN** proceed with normal accept flow
+
+#### Scenario: Accept proposal without dependencies
+
+- **WHEN** `spectr accept <id>` runs on proposal without requires
+
+- **THEN** proceed with normal accept flow (backward compatible)
+
+### Requirement: Graph Command
+
+The system SHALL provide a `spectr graph` command to visualize proposal
+dependencies.
+
+#### Scenario: Graph command registration
+
+- **WHEN** CLI is initialized
+
+- **THEN** register `spectr graph` command
+
+#### Scenario: Display ASCII dependency tree
+
+- **WHEN** `spectr graph [id]`
+
+- **THEN** display ASCII tree showing requires/enables relationships
+
+- **AND** indicate archived status with checkmark (✓) or pending (⧖)
+
+#### Scenario: Display single proposal graph
+
+- **WHEN** `spectr graph <id>`
+
+- **THEN** show dependency tree rooted at specified proposal
+
+#### Scenario: Display full dependency graph
+
+- **WHEN** `spectr graph` (no args)
+
+- **THEN** show all proposals and their relationships
+
+#### Scenario: DOT format output
+
+- **WHEN** `spectr graph --dot`
+
+- **THEN** output Graphviz DOT format for external visualization
+
+#### Scenario: JSON format output
+
+- **WHEN** `spectr graph --json`
+
+- **THEN** output JSON with nodes and edges arrays
+
+### Requirement: Archive Status Detection
+
+The system SHALL detect whether a change proposal has been archived.
+
+#### Scenario: Detect archived change
+
+- **WHEN** checking if change-id is archived
+
+- **THEN** search `spectr/changes/archive/` for matching directory
+
+- **AND** handle date prefix format (YYYY-MM-DD-[id])
+
+#### Scenario: Detect active change
+
+- **WHEN** change-id exists in `spectr/changes/` (not archive)
+
+- **THEN** report as not archived
+
+#### Scenario: Handle unknown change ID
+
+- **WHEN** change-id does not exist anywhere
+
+- **THEN** report as unknown/not found
+
+### Requirement: Hierarchical Tasks Structure
+
+The tasks.jsonc format SHALL support hierarchical task organization where root
+tasks can reference child tasks in delta spec directories.
+
+#### Scenario: Root file with summary
+
+- WHEN a tasks.jsonc uses hierarchical structure (version 2)
+- THEN the root object MAY contain a `summary` field
+- AND `summary` SHALL contain `total`, `completed`, `in_progress`, and
+  `pending` counts
+- AND counts SHALL reflect aggregated status across all referenced child
+  files
+
+#### Scenario: Child task references
+
+- WHEN a task has `children` field with value
+  "$ref:specs/`<capability>`/tasks.jsonc"
+- THEN the referenced file SHALL contain tasks that are children of this
+  task
+- AND child task IDs SHALL use the parent ID as prefix (e.g., parent "5" has
+  children "5.1", "5.2")
+
+#### Scenario: Auto-discovery via includes
+
+- WHEN a tasks.jsonc contains `includes` field with glob patterns
+- THEN the system SHALL discover matching task files automatically
+- AND discovered files SHALL be included after explicit children references
+- AND duplicate files (by path) SHALL be processed only once
+
+#### Scenario: Capability-specific child file structure
+
+- WHEN a delta spec has its own tasks.jsonc (`specs/<capability>/tasks.jsonc`)
+- THEN it SHALL contain a `parent` field with the parent task ID
+- AND it SHALL contain a `tasks` array with child tasks
+- AND it SHALL use version 2 format
+- AND the header comments MAY be abbreviated (status values only)
+
+#### Scenario: Hierarchical ID schema
+
+- WHEN tasks use hierarchical IDs
+- THEN root-level tasks SHALL use single numbers (e.g., "1", "2", "5")
+- AND first-level children SHALL use parent.child format (e.g., "5.1",
+  "5.2")
+- AND deeper nesting SHALL extend the pattern (e.g., "5.1.1")
+- AND maximum nesting depth SHALL be 2 levels (root -> capability)
+
+### Requirement: Auto-Split on Accept
+
+The `spectr accept` command SHALL automatically split tasks into
+capability-specific files when section names match delta spec directories.
+
+#### Scenario: Section matches delta spec
+
+- WHEN accepting a change with section "5. Support Aider"
+- AND delta spec directory `specs/support-aider/` exists
+- THEN tasks from that section SHALL be written to
+  `specs/support-aider/tasks.jsonc`
+- AND root tasks.jsonc SHALL contain a reference task with `children`
+  field
+
+#### Scenario: Section name normalization
+
+- WHEN matching section names to delta spec directories
+- THEN section names SHALL be normalized to kebab-case
+- AND leading numbers and punctuation SHALL be stripped (e.g.,
+  "5. Support Aider" -> "support-aider")
+- AND matching SHALL be case-insensitive
+
+#### Scenario: No matching delta spec
+
+- WHEN a section does not match any delta spec directory
+- THEN tasks from that section SHALL remain in the root tasks.jsonc
+- AND they SHALL be written as flat tasks (no children reference)
+
+#### Scenario: Mixed structure
+
+- WHEN some sections match delta specs and others do not
+- THEN the root tasks.jsonc SHALL contain:
+  - Flat tasks for non-matching sections
+  - Reference tasks with children for matching sections
+- AND the appropriate child files SHALL be created
+
+#### Scenario: Auto-discovery pattern
+
+- WHEN hierarchical tasks.jsonc is generated
+- THEN root file SHALL include `"includes": ["specs/*/tasks.jsonc"]` for
+  auto-discovery
+- AND this enables agents to find child files without explicit
+  references
+
+### Requirement: Tasks Command
+
+The CLI SHALL provide a `tasks` command for viewing task status across
+hierarchical task files.
+
+#### Scenario: Tasks command registration
+
+- WHEN the CLI is initialized
+- THEN it SHALL include a TasksCmd struct field tagged with `cmd`
+- AND the command SHALL be accessible via `spectr tasks`
+
+#### Scenario: Summary view (default)
+
+- WHEN user runs `spectr tasks <change-id>`
+- THEN the system displays section-by-section progress summary
+- AND each section shows completed/total counts
+- AND total progress percentage is displayed at the end
+
+#### Scenario: Flatten view
+
+- WHEN user runs `spectr tasks <change-id> --flatten`
+- THEN the system displays all tasks from root and child files
+- AND tasks are shown with full hierarchical IDs
+- AND output format matches flat tasks.jsonc structure
+
+#### Scenario: JSON output for tasks command
+
+- WHEN user runs `spectr tasks <change-id> --json`
+- THEN the system outputs merged task data as JSON
+- AND includes all tasks from root and child files
+- AND includes aggregated summary counts
+
+#### Scenario: Interactive change selection for tasks command
+
+- WHEN user runs `spectr tasks` without specifying a change ID
+- THEN the system displays a list of active changes with tasks.jsonc files
+- AND prompts for selection using existing TUI components
+
+#### Scenario: Missing tasks file
+
+- WHEN user runs `spectr tasks <change-id>` on a change without tasks.jsonc
+- THEN the system displays an error indicating no tasks.jsonc found
+- AND suggests running `spectr accept` first
+- AND the system exits with code 1
+
+### Requirement: Child File Validation
+
+The validation system SHALL validate hierarchical task file references.
+
+#### Scenario: Valid child reference
+
+- WHEN validating a tasks.jsonc with children references
+- AND all referenced files exist and have valid format
+- THEN validation SHALL pass
+
+#### Scenario: Missing child file
+
+- WHEN validating a tasks.jsonc with children reference to non-existent file
+- THEN validation SHALL report an error
+- AND error message SHALL include the missing file path
+
+#### Scenario: Invalid child format
+
+- WHEN a referenced child tasks.jsonc has invalid format
+- THEN validation SHALL report an error
+- AND error message SHALL identify the specific file and issue
+
+#### Scenario: Orphaned child files
+
+- WHEN a delta spec has tasks.jsonc but is not referenced by root
+- AND root has auto-discovery includes pattern
+- THEN validation SHALL pass (file is discovered)
+
+#### Scenario: Circular references
+
+- WHEN a child tasks.jsonc references another child file
+- THEN validation SHALL report an error
+- AND error message SHALL indicate circular reference detected
+
+### Requirement: Automatic Task File Splitting
+
+The system SHALL automatically split large tasks.md files during `spectr accept`
+based on a 100-line threshold, using section boundaries for clean breaks.
+
+#### Scenario: Detect large tasks.md file
+
+- **WHEN** running `spectr accept <change-id>`
+- **THEN** the system SHALL count lines in tasks.md
+- **AND** if line count exceeds 100, enable splitting mode
+
+#### Scenario: Split by section boundaries
+
+- **WHEN** splitting is enabled
+- **THEN** the system SHALL identify top-level sections (lines starting with `##
+  N.`)
+- **AND** each section SHALL be evaluated for splitting into its own file
+- **AND** the root tasks.jsonc SHALL contain reference tasks for each split
+  section
+
+#### Scenario: Split large sections by subsections
+
+- **WHEN** a single section exceeds 100 lines
+- **THEN** the system SHALL identify subsections by task ID prefixes (e.g.,
+  "1.1", "1.2")
+- **AND** group related tasks with common ID prefixes together
+- **AND** split subsection groups into separate files if needed
+
+#### Scenario: Preserve small sections in root
+
+- **WHEN** splitting is enabled
+- **THEN** sections with fewer than 10 tasks MAY remain in root file
+- **AND** the system SHALL prioritize splitting largest sections first
+
+#### Scenario: Sequential file naming
+
+- **WHEN** generating split files
+- **THEN** name files sequentially: tasks-1.jsonc, tasks-2.jsonc, etc.
+- **AND** the sequence SHALL follow section order from tasks.md
+
+#### Scenario: Regenerate from tasks.md
+
+- **WHEN** running `spectr accept` on a change with existing tasks.jsonc
+- **THEN** the system SHALL delete all existing tasks-*.jsonc files
+- **AND** regenerate all files from tasks.md
+- **AND** preserve status values from existing tasks.jsonc where task IDs match
+
+### Requirement: Hierarchical Task ID Schema
+
+The system SHALL support hierarchical task IDs using dot notation to represent
+parent-child relationships.
+
+#### Scenario: Root task IDs
+
+- **WHEN** a task is in the root tasks.jsonc
+- **THEN** its ID SHALL be a single integer or decimal (e.g., "1", "2", "5")
+
+#### Scenario: Child task IDs
+
+- **WHEN** a task is in a child file with parent ID "5"
+- **THEN** its ID SHALL be prefixed with parent ID (e.g., "5.1", "5.2")
+
+#### Scenario: Nested child task IDs
+
+- **WHEN** a child task has its own children (subsections within a split
+  section)
+- **THEN** IDs SHALL use additional dot notation (e.g., "5.1.1", "5.1.2")
+
+#### Scenario: ID uniqueness within change
+
+- **WHEN** generating tasks across multiple files
+- **THEN** all task IDs SHALL be unique within the change
+- **AND** parent-child relationships SHALL be explicit via dot notation
+
+### Requirement: Task Status Aggregation
+
+The system SHALL compute aggregate status for reference tasks based on their
+children.
+
+#### Scenario: All children pending
+
+- **WHEN** all child tasks have status "pending"
+- **THEN** the parent reference task SHALL have status "pending"
+
+#### Scenario: Any child in progress
+
+- **WHEN** at least one child task has status "in_progress"
+- **THEN** the parent reference task SHALL have status "in_progress"
+
+#### Scenario: All children completed
+
+- **WHEN** all child tasks have status "completed"
+- **THEN** the parent reference task SHALL have status "completed"
+
+#### Scenario: Mixed pending and completed
+
+- **WHEN** some children are "completed" and others are "pending" (none
+  "in_progress")
+- **THEN** the parent reference task SHALL have status "in_progress"
+
+### Requirement: Backwards Compatibility
+
+The system SHALL maintain full compatibility with version 1 flat tasks.jsonc
+files.
+
+#### Scenario: Read version 1 files
+
+- **WHEN** reading a tasks.jsonc with `version: 1`
+- **THEN** the system SHALL parse it as a flat task list
+- **AND** no split file lookup SHALL be performed
+
+#### Scenario: Generate version 1 for small files
+
+- **WHEN** tasks.md is 100 lines or fewer
+- **THEN** generate version 1 tasks.jsonc
+- **AND** use existing flat structure without hierarchical fields
+
+#### Scenario: Upgrade from version 1 to version 2
+
+- **WHEN** running accept on a change with version 1 tasks.jsonc where tasks.md
+  now exceeds 100 lines
+- **THEN** the system SHALL regenerate as version 2 with split files
+- **AND** preserve existing task statuses where IDs match

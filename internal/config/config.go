@@ -24,6 +24,10 @@ var ErrConfigMalformed = errors.New(
 type Config struct {
 	// AppendTasks defines tasks to automatically append during accept.
 	AppendTasks *AppendTasksConfig `yaml:"append_tasks"`
+	// RefsAlwaysPrepend defines tasks to prepend to each child task file (v2 format).
+	RefsAlwaysPrepend *RefsTasksConfig `yaml:"refs_always_prepend"`
+	// RefsAlwaysAppend defines tasks to append to each child task file (v2 format).
+	RefsAlwaysAppend *RefsTasksConfig `yaml:"refs_always_append"`
 }
 
 // AppendTasksConfig defines the configuration for auto-appending tasks.
@@ -46,6 +50,22 @@ func (c *AppendTasksConfig) GetSection() string {
 
 // HasTasks returns true if there are tasks to append.
 func (c *AppendTasksConfig) HasTasks() bool {
+	if c == nil {
+		return false
+	}
+
+	return len(c.Tasks) > 0
+}
+
+// RefsTasksConfig defines tasks to prepend or append to each child task file.
+// Used for refs_always_prepend and refs_always_append configuration.
+type RefsTasksConfig struct {
+	// Tasks is the list of task descriptions to prepend/append to each child file.
+	Tasks []string `yaml:"tasks"`
+}
+
+// HasTasks returns true if there are tasks configured.
+func (c *RefsTasksConfig) HasTasks() bool {
 	if c == nil {
 		return false
 	}

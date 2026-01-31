@@ -8,16 +8,16 @@ synchronization from `tasks.jsonc` to `tasks.md` before every spectr command.
 ## Design Decisions
 
 | Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Hook timing | `AfterApply` | Runs after parsing, before `Run()` - flags available |
-| Package location | `internal/sync/` | Clean separation, single responsibility |
-| Missing tasks.md | Generate from jsonc | Full sync capability, not just updates |
-| Source of truth | `tasks.jsonc` | Machine-readable, updated by AI agents |
-| Status mapping | `pending`/`in_progress` → `[ ]`, `completed` → `[x]` | Matches existing convention |
+|----------|--------|---------|
+| Hook timing | `AfterApply` | Runs after parsing, before Run() |
+| Package location | `internal/sync/` | Clean separation |
+| Missing tasks.md | Generate from jsonc | Full sync capability |
+| Source of truth | `tasks.jsonc` | Machine-readable |
+| Status mapping | `pending`/`in_progress` → `[ ]` | Convention match |
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                         main.go                                  │
 │  ctx, _ := app.Parse(os.Args[1:])  ←── AfterApply hook fires    │
@@ -348,7 +348,7 @@ Matching algorithm:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `cmd/root.go` | Modify | Add `NoSync`, `Verbose` flags and `AfterApply()` hook |
+| `cmd/root.go` | Modify | Add flags and AfterApply() hook |
 | `internal/sync/sync.go` | Create | Entry point, iterate active changes |
 | `internal/sync/markdown.go` | Create | Core sync logic, status map building |
 | `internal/sync/update.go` | Create | In-place tasks.md update |

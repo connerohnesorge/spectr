@@ -24,12 +24,12 @@ stop:
       showCommand: true
       message: "Tests failed - please fix failing tests before continuing"
       maxOutputLines: 5
-    # - run: "nix develop -c 'lint'"
-    #   showStdout: false
-    #   showStderr: false
-    #   showCommand: true
-    #   message: "Fix all lint errors without being lazy or ignoring them"
-    #   maxOutputLines: 5
+    - run: "nix develop -c 'lint'"
+      showStdout: false
+      showStderr: false
+      showCommand: true
+      message: "Fix all lint errors without being lazy or ignoring them"
+      maxOutputLines: 5
     - run: "spectr validate --all"
       showStdout: false
       showStderr: false
@@ -149,12 +149,16 @@ notifications:
 # Automatically prepends context when prompts match patterns
 # Uncomment to enable:
 #
-# userPromptSubmit:
-#   contextRules:
-#     # Pattern-based context injection
-#     - pattern: "sidebar"
-#       prompt: |
-#         Make sure to read @.claude/contexts/sidebar.md before proceeding.
+userPromptSubmit:
+  contextRules:
+    # Pattern-based context injection
+    - pattern: "mcp"
+      prompt: |
+        Make sure to read @.claude/contexts/mcp.md before proceeding.
+    - pattern: "skills|skill|agent"
+      prompt: |
+        Make sure to read @.claude/contexts/agentskills.md before proceeding.
+
 #
 #     # Multiple patterns with regex alternation
 #     - pattern: "auth|login|authentication"

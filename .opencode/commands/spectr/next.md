@@ -1,0 +1,101 @@
+---
+allowed-tools: Read, Glob, Grep, Write, Edit, Bash(spectr:*)
+description: 'Spectr: Next Task Execution'
+subtask: false
+---
+# Spectr: Next Task Execution
+
+## Overview
+
+This command automatically executes the next pending task in the current spectr change proposal.
+
+## Usage
+
+```
+/spectr:next [change-id]
+```
+
+If no change-id is provided, the command will attempt to find the current change proposal directory.
+
+## What This Command Does
+
+1. **Discovers** the change proposal directory in `spectr/changes/`
+2. **Parses** the `tasks.jsonc` file to find the first pending task
+3. **Executes** the task based on its description
+4. **Updates** task status: pending → in_progress → completed
+5. **Reports** what was done and what's next
+
+## Task Execution Flow
+
+```
+User: /spectr:next
+
+AI Agent:
+→ Found next pending task: #5 "Update API documentation"
+→ Marked task #5 as in_progress
+→ Updating API documentation...
+→ Completed task #5
+→ Next task: #6 "Run tests and fix any failures"
+```
+
+## Implementation Details
+
+### Task Discovery
+- Supports both v1 flat `tasks.jsonc` files and v2 hierarchical files with `$ref` links
+- Automatically follows `$ref` links to child task files
+- Includes circular reference detection
+- Returns the first task with status "pending"
+
+### Status Management
+- Updates task status atomically to prevent corruption
+- Handles both flat and hierarchical task structures
+- Implements parent task status aggregation when children complete
+- Provides clear error messages for common failure scenarios
+
+### Error Handling
+- **No pending tasks**: Reports all tasks are completed
+- **Malformed tasks.jsonc**: Provides parsing error details
+- **Missing $ref files**: Reports which child files are missing
+- **Status update failures**: Attempts rollback to previous state
+
+## Example Task Types
+
+### Code Implementation Tasks
+```
+Found next pending task: #3.2 "Add validation logic"
+→ Implementing validation in internal/validation/...
+→ Updated task status to completed
+```
+
+### Testing Tasks
+```
+Found next pending task: #4.1 "Create unit tests"
+→ Creating test file internal/pkg/test_test.go
+→ Running tests...
+→ All tests passing
+→ Updated task status to completed
+```
+
+### Documentation Tasks
+```
+Found next pending task: #5.3 "Update API documentation"
+→ Updating docs/api.md with new endpoints
+→ Added examples for new features
+→ Updated task status to completed
+```
+
+## Best Practices
+
+1. **Always verify** the proposed task before execution
+2. **Update status immediately** after starting work
+3. **Report progress** clearly and concisely
+4. **Handle errors gracefully** with helpful messages
+5. **Suggest next steps** after completion
+
+## Integration with Spectr Workflow
+
+This command integrates seamlessly with the spectr workflow:
+- Works with proposals created via `/spectr:proposal`
+- Complements `/spectr:apply` for full change lifecycle
+- Maintains task state consistency across executions
+- Supports both manual and automated task progression

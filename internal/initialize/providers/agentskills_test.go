@@ -78,6 +78,24 @@ func (m *mockSkillTemplateManager) SkillFS(
 	return m.skillFS, nil
 }
 
+func (*mockSkillTemplateManager) ProposalSkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: "skill-proposal.md.tmpl",
+	}
+}
+
+func (*mockSkillTemplateManager) ApplySkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: "skill-apply.md.tmpl",
+	}
+}
+
+func (*mockSkillTemplateManager) NextSkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name: "skill-next.md.tmpl",
+	}
+}
+
 // TestAgentSkillsInitializer_Construction tests that NewAgentSkillsInitializer
 // correctly creates an initializer with skill name, target dir, and template manager.
 func TestAgentSkillsInitializer_Construction(

@@ -247,6 +247,33 @@ func (tm *TemplateManager) TOMLSlashCommand(
 	}
 }
 
+// ProposalSkill returns a type-safe reference to the skill-proposal.md.tmpl template.
+// This template is used for Amp agent skills that create change proposals.
+func (tm *TemplateManager) ProposalSkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "skill-proposal.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// ApplySkill returns a type-safe reference to the skill-apply.md.tmpl template.
+// This template is used for Amp agent skills that apply/accept change proposals.
+func (tm *TemplateManager) ApplySkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "skill-apply.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
+// NextSkill returns a type-safe reference to the skill-next.md.tmpl template.
+// This template is used for agent skills that execute the next pending task.
+func (tm *TemplateManager) NextSkill() domain.TemplateRef {
+	return domain.TemplateRef{
+		Name:     "skill-next.md.tmpl",
+		Template: tm.templates,
+	}
+}
+
 // SkillFS returns an fs.FS rooted at the skill directory for the given skill name.
 // Returns an error if the skill does not exist.
 // The filesystem contains all files under templates/skills/<skillName>/ with paths

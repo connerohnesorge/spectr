@@ -142,6 +142,13 @@
       "description": "Cleanup and Archive Old Proposal tasks",
       "status": "pending",
       "children": "$ref:tasks-15.jsonc"
+    },
+    {
+      "id": "16",
+      "section": "99.99.99 Final section (after all tasks)",
+      "description": "99.99.99 Final section (after all tasks) tasks",
+      "status": "pending",
+      "children": "$ref:tasks-16.jsonc"
     }
   ],
   "includes": [

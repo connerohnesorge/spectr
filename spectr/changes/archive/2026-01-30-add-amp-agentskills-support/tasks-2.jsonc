@@ -9,37 +9,37 @@
       "id": "2.1",
       "section": "SkillFileInitializer",
       "description": "Create `internal/initialize/providers/skillfile.go` with `SkillFileInitializer` struct",
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "2.2",
       "section": "SkillFileInitializer",
       "description": "Implement `NewSkillFileInitializer(targetPath, template)` constructor",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.3",
       "section": "SkillFileInitializer",
       "description": "Implement `Init(ctx, projectFs, homeFs, cfg, tm)` method",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.4",
       "section": "SkillFileInitializer",
       "description": "Implement `IsSetup(projectFs, homeFs, cfg)` method",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.5",
       "section": "SkillFileInitializer",
       "description": "Implement `dedupeKey()` method returning `SkillFileInitializer:\u003ctargetPath\u003e`",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "2.6",
       "section": "SkillFileInitializer",
       "description": "Add SkillFileInitializer to initializer type priority ordering",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "parent": "2"

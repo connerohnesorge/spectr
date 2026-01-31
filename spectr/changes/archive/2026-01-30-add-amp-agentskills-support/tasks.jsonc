@@ -42,49 +42,49 @@
       "id": "1",
       "section": "Template Infrastructure",
       "description": "Template Infrastructure tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-1.jsonc"
     },
     {
       "id": "2",
       "section": "SkillFileInitializer",
       "description": "SkillFileInitializer tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-2.jsonc"
     },
     {
       "id": "3",
       "section": "Amp Provider",
       "description": "Amp Provider tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-3.jsonc"
     },
     {
       "id": "4",
       "section": "Testing",
       "description": "Testing tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-4.jsonc"
     },
     {
       "id": "5",
       "section": "Documentation",
       "description": "Documentation tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-5.jsonc"
     },
     {
       "id": "6",
       "section": "Validation",
       "description": "Validation tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-6.jsonc"
     },
     {
       "id": "7",
       "section": "99.99.99 Final section (after all tasks)",
       "description": "99.99.99 Final section (after all tasks) tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-7.jsonc"
     }
   ],

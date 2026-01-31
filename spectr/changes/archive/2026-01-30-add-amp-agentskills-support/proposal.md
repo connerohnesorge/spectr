@@ -5,6 +5,7 @@
 Amp (ampcode.com) is a production-grade AI coding assistant that uses the agent skills system for extensibility. While Amp is based on Claude Code's architecture, it has adopted `.agents/skills/` as the primary location for agent skills with `SKILL.md` frontmatter, deprecating custom commands in favor of user-invocable skills. Supporting Amp enables Spectr users to leverage Amp's skill discovery system and user-invocable skills (e.g., `/spectr:proposal`, `/spectr:apply`) for spec-driven development.
 
 Amp represents a simplified, production-focused approach to agent skills:
+
 - Uses `.agents/skills/` as the primary location (with compatibility for `.claude/skills/`)
 - Requires YAML frontmatter in `SKILL.md` with `name` and `description` fields
 - Supports user-invocable skills that agents can load on-demand
@@ -22,6 +23,7 @@ This change adds Amp as a first-class provider in Spectr.
 - Create skill templates with proper frontmatter (`name`, `description`)
 
 **Skills to be generated:**
+
 - `.agents/skills/spectr-proposal/SKILL.md` - Create change proposals
 - `.agents/skills/spectr-apply/SKILL.md` - Apply/accept proposals
 - `.agents/skills/spectr-accept-wo-spectr-bin/SKILL.md` - Accept without binary

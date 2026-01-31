@@ -11,6 +11,7 @@ Amp is based on Claude Code but has adopted `.agents/skills/` as the standard lo
 **Decision:** Generate agent skills (`.agents/skills/`) instead of slash commands.
 
 **Rationale:**
+
 - Amp has deprecated custom commands in favor of skills
 - User-invocable skills allow both agent and user to invoke `/spectr:proposal`
 - Skills support lazy-loading of instructions for better context efficiency
@@ -28,6 +29,7 @@ description: Create a Spectr change proposal with delta specs and tasks
 ```
 
 **Rationale:**
+
 - Amp requires only `name` and `description` in frontmatter
 - Simpler than Claude Code's extended frontmatter (no `allowed-tools`, `context`, etc.)
 - Follows Amp's conventions for skill discovery
@@ -36,7 +38,7 @@ description: Create a Spectr change proposal with delta specs and tasks
 
 **Decision:** Generate skills in `.agents/skills/<skill-name>/SKILL.md`.
 
-```
+```text
 .agents/skills/
 ├── spectr-proposal/
 │   └── SKILL.md
@@ -51,6 +53,7 @@ description: Create a Spectr change proposal with delta specs and tasks
 ```
 
 **Rationale:**
+
 - Matches Amp's expected structure
 - Each skill in its own directory
 - Scripts co-located with SKILL.md for easy bundling
@@ -59,10 +62,12 @@ description: Create a Spectr change proposal with delta specs and tasks
 ### 4. Template Strategy
 
 **Decision:** Create new skill templates in `internal/domain/templates/`:
+
 - `skill-proposal.md.tmpl`
 - `skill-apply.md.tmpl`
 
 **Rationale:**
+
 - Keeps skill templates separate from slash command templates
 - Allows different frontmatter and content structure
 - Reuses the same instructional content as slash commands where applicable
@@ -73,6 +78,7 @@ description: Create a Spectr change proposal with delta specs and tasks
 **Decision:** Register Amp with priority 15 (Claude Code: 10, Gemini: 20).
 
 **Rationale:**
+
 - Amp is based on Claude Code but is a distinct tool
 - Priority 15 places it logically between Claude Code and Gemini
 - Ensures Amp initializers run after Claude Code when both are selected
@@ -82,6 +88,7 @@ description: Create a Spectr change proposal with delta specs and tasks
 **Decision:** Use existing `AgentSkillsInitializer` for embedded skills.
 
 **Rationale:**
+
 - Already handles recursive copying of skill directories
 - Preserves file permissions (executable scripts)
 - Idempotent execution
@@ -120,6 +127,7 @@ description: Create a Spectr change proposal with delta specs and tasks
 ## Migration Path
 
 For users migrating from Claude Code to Amp:
+
 1. Run `spectr init` and select Amp
 2. Amp will automatically discover skills in `.agents/skills/`
 3. Existing `.claude/skills/` remain for Claude Code compatibility

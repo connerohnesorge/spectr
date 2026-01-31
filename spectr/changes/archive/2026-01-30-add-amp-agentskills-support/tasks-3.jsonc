@@ -9,19 +9,19 @@
       "id": "3.1",
       "section": "Amp Provider",
       "description": "Create `internal/initialize/providers/amp.go` with `AmpProvider` struct",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "3.2",
       "section": "Amp Provider",
       "description": "Implement `Initializers(ctx, tm)` method returning:",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "3.3",
       "section": "Amp Provider",
       "description": "Register Amp provider in `internal/initialize/providers/registry.go` with priority 15",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "parent": "3"

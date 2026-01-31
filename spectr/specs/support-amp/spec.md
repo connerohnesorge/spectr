@@ -4,7 +4,7 @@
 
 Defines Spectr support for Amp (ampcode.com), a production-grade AI coding assistant based on Claude Code that uses agent skills for extensibility.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Amp Provider
 
@@ -25,7 +25,8 @@ The system SHALL provide an `AmpProvider` that generates Amp-compatible agent sk
 
 - **WHEN** Amp initializers execute
 - **THEN** they SHALL create the following structure:
-  ```
+
+  ```text
   .agents/skills/
   ├── spectr-proposal/
   │   └── SKILL.md
@@ -39,6 +40,13 @@ The system SHALL provide an `AmpProvider` that generates Amp-compatible agent sk
       └── scripts/validate.sh
   ```
 
+#### Scenario: Provider initialization is idempotent
+
+- **WHEN** Amp initializers execute multiple times
+- **THEN** they SHALL only create files that do not already exist
+- **AND** existing files SHALL NOT be overwritten
+- **AND** each execution SHALL produce the same final state
+
 ### Requirement: Amp Skill Frontmatter
 
 Agent skills for Amp SHALL use YAML frontmatter with `name` and `description` fields.
@@ -47,48 +55,56 @@ Agent skills for Amp SHALL use YAML frontmatter with `name` and `description` fi
 
 - **WHEN** the spectr-proposal skill is generated
 - **THEN** the SKILL.md SHALL contain frontmatter:
+
   ```yaml
   ---
   name: spectr-proposal
   description: Create a Spectr change proposal with delta specs and tasks
   ---
   ```
+
 - **AND** the frontmatter SHALL be followed by instructional content
 
 #### Scenario: Apply skill frontmatter
 
 - **WHEN** the spectr-apply skill is generated
 - **THEN** the SKILL.md SHALL contain frontmatter:
+
   ```yaml
   ---
   name: spectr-apply
   description: Apply a Spectr change proposal by converting tasks.md to tasks.jsonc
   ---
   ```
+
 - **AND** the frontmatter SHALL be followed by instructional content
 
 #### Scenario: Accept-without-binary skill frontmatter
 
 - **WHEN** the spectr-accept-wo-spectr-bin skill is generated
 - **THEN** the SKILL.md SHALL contain frontmatter:
+
   ```yaml
   ---
   name: spectr-accept-wo-spectr-bin
   description: Accept Spectr change proposals without requiring the spectr binary
   ---
   ```
+
 - **AND** the skill SHALL include embedded `scripts/accept.sh`
 
 #### Scenario: Validate-without-binary skill frontmatter
 
 - **WHEN** the spectr-validate-wo-spectr-bin skill is generated
 - **THEN** the SKILL.md SHALL contain frontmatter:
+
   ```yaml
   ---
   name: spectr-validate-wo-spectr-bin
   description: Validate Spectr specifications without requiring the spectr binary
   ---
   ```
+
 - **AND** the skill SHALL include embedded `scripts/validate.sh`
 
 ### Requirement: Skill Templates

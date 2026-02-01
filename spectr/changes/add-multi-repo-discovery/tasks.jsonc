@@ -42,42 +42,42 @@
       "id": "1",
       "section": "Core Discovery Infrastructure",
       "description": "Core Discovery Infrastructure tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-1.jsonc"
     },
     {
       "id": "2",
       "section": "Command Integration",
       "description": "Command Integration tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-2.jsonc"
     },
     {
       "id": "3",
       "section": "TUI Path Copying",
       "description": "TUI Path Copying tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-3.jsonc"
     },
     {
       "id": "4",
       "section": "Output Formatting",
       "description": "Output Formatting tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-4.jsonc"
     },
     {
       "id": "5",
       "section": "Documentation and Polish",
       "description": "Documentation and Polish tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-5.jsonc"
     },
     {
       "id": "6",
       "section": "99.99.99 Final section (after all tasks)",
       "description": "99.99.99 Final section (after all tasks) tasks",
-      "status": "pending",
+      "status": "completed",
       "children": "$ref:tasks-6.jsonc"
     }
   ],

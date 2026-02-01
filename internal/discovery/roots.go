@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 )
 
 const (
 	// spectrDirName is the standard name for spectr directories.
 	spectrDirName = "spectr"
+
+	// maxDiscoveryDepth limits how deep downward discovery will traverse.
+	maxDiscoveryDepth = 10
 )
 
 // SpectrRoot represents a discovered spectr/ directory with its location context.
@@ -118,7 +122,8 @@ func findSpectrRootFromEnv(envRoot, cwd string) ([]SpectrRoot, error) {
 }
 
 // findSpectrRootsFromCwd walks up from cwd to find all spectr/ directories,
-// stopping at git boundaries.
+// stopping at git boundaries, and also searches downward from cwd (or git root)
+// to find nested spectr/ directories in subdirectories.
 func findSpectrRootsFromCwd(cwd string) ([]SpectrRoot, error) {
 	var roots []SpectrRoot
 
@@ -131,7 +136,7 @@ func findSpectrRootsFromCwd(cwd string) ([]SpectrRoot, error) {
 	// Find the git root first to establish the boundary
 	gitRoot := findGitRoot(absCwd)
 
-	// Walk up from cwd to git root (or filesystem root if no git)
+	// 1. Upward discovery: Walk up from cwd to git root (or filesystem root if no git)
 	current := absCwd
 	for {
 		// Check if spectr/ directory exists at this level
@@ -165,6 +170,24 @@ func findSpectrRootsFromCwd(cwd string) ([]SpectrRoot, error) {
 		current = parent
 	}
 
+	// 2. Downward discovery: Search for nested spectr/ directories from cwd
+	// Only do downward discovery if we're NOT inside a git repository
+	// (i.e., gitRoot is empty). This prevents finding nested repos when
+	// we're already inside a git boundary.
+	if gitRoot == "" {
+		downwardRoots, err := findSpectrRootsDownward(absCwd, absCwd, maxDiscoveryDepth)
+		// Ignore downward discovery errors - upward discovery already succeeded
+		if err == nil {
+			roots = append(roots, downwardRoots...)
+		}
+	}
+
+	// 3. Deduplicate roots (upward and downward may find same directories)
+	roots = deduplicateRoots(roots)
+
+	// 4. Sort by distance from cwd (closest first)
+	roots = sortRootsByDistance(roots, absCwd)
+
 	return roots, nil
 }
 
@@ -192,4 +215,227 @@ func findGitRoot(startPath string) string {
 
 		current = parent
 	}
+}
+
+// shouldSkipDirectory returns true if the directory should be skipped during downward discovery.
+func shouldSkipDirectory(dirName string) bool {
+	skipDirs := []string{".git", "node_modules", "vendor", "target", "dist", "build"}
+	for _, skip := range skipDirs {
+		if dirName == skip {
+			return true
+		}
+	}
+
+	return false
+}
+
+// calculateDepth computes the depth of a directory relative to the start path.
+func calculateDepth(path, absStartPath string, depthMap map[string]int) int {
+	parent := filepath.Dir(path)
+	if depth, ok := depthMap[parent]; ok {
+		return depth + 1
+	}
+
+	// Fallback: calculate depth from path segments
+	relPath, relErr := filepath.Rel(absStartPath, path)
+	if relErr == nil {
+		return len(filepath.SplitList(relPath))
+	}
+
+	return 0
+}
+
+// addSpectrRootIfExists checks if a directory contains a spectr/ subdirectory
+// and adds it to the roots slice if it does.
+func addSpectrRootIfExists(path, cwd string, roots *[]SpectrRoot) {
+	spectrDir := filepath.Join(path, spectrDirName)
+	info, statErr := os.Stat(spectrDir)
+	if statErr != nil || !info.IsDir() {
+		return
+	}
+
+	// Found a spectr/ directory!
+	// Calculate relative path from original cwd
+	relPath, relErr := filepath.Rel(cwd, path)
+	if relErr != nil {
+		relPath = path // Fallback to absolute
+	}
+
+	// Find git root for this spectr root
+	gitRoot := findGitRoot(path)
+
+	*roots = append(*roots, SpectrRoot{
+		Path:       path,
+		RelativeTo: relPath,
+		GitRoot:    gitRoot,
+	})
+}
+
+// shouldSkipGitBoundary checks if a directory contains a .git subdirectory
+// and should not be descended into (unless it's the start path).
+func shouldSkipGitBoundary(path, absStartPath string) bool {
+	if path == absStartPath {
+		return false // Don't skip the start path itself
+	}
+
+	gitDir := filepath.Join(path, ".git")
+	info, err := os.Stat(gitDir)
+	// If .git exists (as dir or file for worktrees), skip descending
+	return err == nil && (info.IsDir() || !info.IsDir())
+}
+
+// downwardContext holds the context for downward directory traversal.
+type downwardContext struct {
+	absStartPath string
+	cwd          string
+	depthMap     map[string]int
+	maxDepth     int
+	roots        *[]SpectrRoot
+}
+
+// processDownwardDirectory handles a single directory during downward discovery.
+// Returns filepath.SkipDir if the directory should not be descended into.
+func processDownwardDirectory(path string, d os.DirEntry, ctx *downwardContext) error {
+	// Only process directories
+	if !d.IsDir() {
+		return nil
+	}
+
+	// Calculate and store current depth
+	currentDepth := calculateDepth(path, ctx.absStartPath, ctx.depthMap)
+	ctx.depthMap[path] = currentDepth
+
+	// Stop descending if we've hit max depth
+	if currentDepth > ctx.maxDepth {
+		return filepath.SkipDir
+	}
+
+	// Skip descending into common non-project directories
+	if shouldSkipDirectory(d.Name()) {
+		return filepath.SkipDir
+	}
+
+	// Check if this directory contains a spectr/ subdirectory and add it if so
+	addSpectrRootIfExists(path, ctx.cwd, ctx.roots)
+
+	// Check if we should skip descending into this directory (git boundary)
+	if shouldSkipGitBoundary(path, ctx.absStartPath) {
+		return filepath.SkipDir
+	}
+
+	return nil
+}
+
+// findSpectrRootsDownward searches for spectr/ directories in subdirectories,
+// descending from startPath up to maxDepth levels deep. It discovers nested
+// repositories (directories with .git) and their spectr/ directories.
+//
+// This complements upward discovery to support mono-repo structures where
+// multiple nested projects each have their own .git and spectr/ directories.
+//
+// The function:
+// - Uses filepath.WalkDir for efficient traversal
+// - Tracks depth with configurable limit (prevents excessive traversal)
+// - Finds all spectr/ directories in subdirectories
+// - Creates SpectrRoot entries with Path, RelativeTo (from cwd), and GitRoot
+// - Skips descending into .git/, node_modules/, vendor/, target/, dist/, build/
+// - Includes directories that CONTAIN .git (nested repos are discovered)
+// - Handles permission errors gracefully (continues search)
+// - Continues searching after finding spectr/ (doesn't stop at first match)
+func findSpectrRootsDownward(startPath, cwd string, maxDepth int) ([]SpectrRoot, error) {
+	var roots []SpectrRoot
+	absStartPath, err := filepath.Abs(startPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get absolute path: %w", err)
+	}
+
+	// Create context for traversal
+	ctx := &downwardContext{
+		absStartPath: absStartPath,
+		cwd:          cwd,
+		depthMap:     map[string]int{absStartPath: 0},
+		maxDepth:     maxDepth,
+		roots:        &roots,
+	}
+
+	err = filepath.WalkDir(absStartPath, func(path string, d os.DirEntry, err error) error {
+		// Handle permission errors gracefully - continue walking
+		if err != nil {
+			// Skip directories we can't read
+			if d != nil && d.IsDir() {
+				return filepath.SkipDir
+			}
+
+			return nil // Continue for non-directory errors
+		}
+
+		return processDownwardDirectory(path, d, ctx)
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to walk directory tree: %w", err)
+	}
+
+	return roots, nil
+}
+
+// deduplicateRoots removes duplicate SpectrRoot entries based on their Path field.
+// Preserves the order of first occurrence.
+func deduplicateRoots(roots []SpectrRoot) []SpectrRoot {
+	if len(roots) == 0 {
+		return roots
+	}
+
+	seen := make(map[string]bool)
+	result := make([]SpectrRoot, 0, len(roots))
+
+	for _, root := range roots {
+		if !seen[root.Path] {
+			seen[root.Path] = true
+			result = append(result, root)
+		}
+	}
+
+	return result
+}
+
+// sortRootsByDistance sorts SpectrRoot entries by their relative path length from cwd.
+// Roots closer to cwd (shorter relative paths) appear first.
+// This ensures that when discovering both upward and downward, the closest root is prioritized.
+func sortRootsByDistance(roots []SpectrRoot, cwd string) []SpectrRoot {
+	if len(roots) <= 1 {
+		return roots
+	}
+
+	// Create a copy to avoid modifying the original slice
+	sorted := make([]SpectrRoot, len(roots))
+	copy(sorted, roots)
+
+	// Sort by the length of the relative path
+	// filepath.Rel returns the shortest path, so shorter = closer
+	sort.Slice(sorted, func(i, j int) bool {
+		relI, errI := filepath.Rel(cwd, sorted[i].Path)
+		relJ, errJ := filepath.Rel(cwd, sorted[j].Path)
+
+		// If there's an error calculating relative path, fall back to comparing paths
+		if errI != nil || errJ != nil {
+			return sorted[i].Path < sorted[j].Path
+		}
+
+		// Compare by number of path separators (shorter = closer)
+		// "." has 0 separators (closest)
+		// ".." has 1 separator
+		// "../.." has 2 separators, etc.
+		depthI := len(filepath.SplitList(relI))
+		depthJ := len(filepath.SplitList(relJ))
+
+		if depthI == depthJ {
+			// If same depth, sort alphabetically for consistency
+			return relI < relJ
+		}
+
+		return depthI < depthJ
+	})
+
+	return sorted
 }

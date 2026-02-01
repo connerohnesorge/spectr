@@ -916,20 +916,20 @@ func (m *interactiveModel) buildCopyPath(itemID string, row table.Row) string {
 func buildChangePath(rootPath, changeID string) string {
 	// If rootPath is "." or empty, use current directory
 	if rootPath == "" || rootPath == "." {
-		return fmt.Sprintf("spectr/changes/%s/proposal.md", changeID)
+		return fmt.Sprintf("spectr/changes/%s", changeID)
 	}
 	// Otherwise prefix with root path
-	return fmt.Sprintf("%s/spectr/changes/%s/proposal.md", rootPath, changeID)
+	return fmt.Sprintf("%s/spectr/changes/%s", rootPath, changeID)
 }
 
 // buildSpecPath builds the path for a spec.
 func buildSpecPath(rootPath, specID string) string {
 	// If rootPath is "." or empty, use current directory
 	if rootPath == "" || rootPath == "." {
-		return fmt.Sprintf("spectr/specs/%s/spec.md", specID)
+		return fmt.Sprintf("spectr/specs/%s", specID)
 	}
 	// Otherwise prefix with root path
-	return fmt.Sprintf("%s/spectr/specs/%s/spec.md", rootPath, specID)
+	return fmt.Sprintf("%s/spectr/specs/%s", rootPath, specID)
 }
 
 // handleEdit handles the 'e' key press for opening file in editor

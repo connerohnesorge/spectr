@@ -4734,12 +4734,13 @@ func TestHandleEnter_WithLineNumbers(t *testing.T) {
 
 // TestBuildCopyPath_NestedProject tests that nested projects with RootPath
 // correctly build paths that include the nested path.
+// Note: itemID should be the formatted ID as it would appear in the table row
+// (e.g., "[nested/project] my-change" in multi-root mode).
 func TestBuildCopyPath_NestedProject(t *testing.T) {
 	tests := []struct {
 		name         string
 		itemType     string
-		itemID       string
-		rootPath     string
+		itemID       string // The displayed/formatted ID (what appears in table row)
 		changesData  []ChangeInfo
 		specsData    []SpecInfo
 		expectedPath string
@@ -4748,7 +4749,6 @@ func TestBuildCopyPath_NestedProject(t *testing.T) {
 			name:     "change in root project",
 			itemType: itemTypeChange,
 			itemID:   "my-change",
-			rootPath: "",
 			changesData: []ChangeInfo{
 				{ID: "my-change", RootPath: ""},
 			},
@@ -4757,8 +4757,8 @@ func TestBuildCopyPath_NestedProject(t *testing.T) {
 		{
 			name:     "change in nested project",
 			itemType: itemTypeChange,
-			itemID:   "my-change",
-			rootPath: "nested/project",
+			// In multi-root mode, displayed ID has project prefix
+			itemID: "[nested/project] my-change",
 			changesData: []ChangeInfo{
 				{ID: "my-change", RootPath: "nested/project"},
 			},
@@ -4768,7 +4768,6 @@ func TestBuildCopyPath_NestedProject(t *testing.T) {
 			name:     "spec in root project",
 			itemType: itemTypeSpec,
 			itemID:   "my-spec",
-			rootPath: "",
 			specsData: []SpecInfo{
 				{ID: "my-spec", RootPath: ""},
 			},
@@ -4777,8 +4776,8 @@ func TestBuildCopyPath_NestedProject(t *testing.T) {
 		{
 			name:     "spec in nested project",
 			itemType: itemTypeSpec,
-			itemID:   "my-spec",
-			rootPath: "apps/frontend",
+			// In multi-root mode, displayed ID has project prefix
+			itemID: "[apps/frontend] my-spec",
 			specsData: []SpecInfo{
 				{ID: "my-spec", RootPath: "apps/frontend"},
 			},
@@ -4788,7 +4787,6 @@ func TestBuildCopyPath_NestedProject(t *testing.T) {
 			name:     "change with dot rootPath treated as root",
 			itemType: itemTypeChange,
 			itemID:   "my-change",
-			rootPath: ".",
 			changesData: []ChangeInfo{
 				{ID: "my-change", RootPath: "."},
 			},

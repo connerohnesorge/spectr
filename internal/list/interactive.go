@@ -1027,26 +1027,32 @@ func (m *interactiveModel) buildCopyPath(itemID string, row table.Row) string {
 	switch m.itemType {
 	case itemTypeChange:
 		// Find the change in changesData to get root path
+		// Compare using formatted ID (display format) since itemID comes from display
+		hasMultipleRoots := detectMultiRootChanges(m.changesData)
 		for _, change := range m.changesData {
-			if change.ID == itemID {
-				rootPath = change.RootPath
-
-				break
+			formattedID := formatChangeIDWithProject(change.ID, change.RootPath, hasMultipleRoots)
+			if formattedID == itemID {
+				// Use raw ID for path construction
+				return buildChangePath(change.RootPath, change.ID)
 			}
 		}
 
+		// Fallback for single-root mode where itemID equals raw ID
 		return buildChangePath(rootPath, itemID)
 
 	case itemTypeSpec:
 		// Find the spec in specsData to get root path
+		// Compare using formatted ID (display format) since itemID comes from display
+		hasMultipleRoots := detectMultiRootSpecs(m.specsData)
 		for _, spec := range m.specsData {
-			if spec.ID == itemID {
-				rootPath = spec.RootPath
-
-				break
+			formattedID := formatSpecIDWithProject(spec.ID, spec.RootPath, hasMultipleRoots)
+			if formattedID == itemID {
+				// Use raw ID for path construction
+				return buildSpecPath(spec.RootPath, spec.ID)
 			}
 		}
 
+		// Fallback for single-root mode where itemID equals raw ID
 		return buildSpecPath(rootPath, itemID)
 
 	case itemTypeAll:
@@ -1063,14 +1069,26 @@ func (m *interactiveModel) buildCopyPath(itemID string, row table.Row) string {
 		}
 
 		// Find the item in allItems to get root path
+		// Compare using formatted ID (display format) since itemID comes from display
+		hasMultipleRoots := detectMultiRootItems(m.allItems)
 		for i := range m.allItems {
-			if m.allItems[i].ID() == itemID {
+			formattedID := formatItemIDWithProject(
+				m.allItems[i].ID(),
+				m.allItems[i].RootPath(),
+				hasMultipleRoots,
+			)
+			if formattedID == itemID {
 				rootPath = m.allItems[i].RootPath()
+				rawID := m.allItems[i].ID()
+				if itemType == typeDisplaySpec {
+					return buildSpecPath(rootPath, rawID)
+				}
 
-				break
+				return buildChangePath(rootPath, rawID)
 			}
 		}
 
+		// Fallback for single-root mode
 		if itemType == typeDisplaySpec {
 			return buildSpecPath(rootPath, itemID)
 		}

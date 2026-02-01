@@ -4585,3 +4585,342 @@ func TestAbs(t *testing.T) {
 		})
 	}
 }
+
+// TestHandleEnter_WithLineNumbers tests that when line numbers are enabled,
+// the correct ID is extracted from the row (not the line number).
+func TestHandleEnter_WithLineNumbers(t *testing.T) {
+	tests := []struct {
+		name           string
+		lineNumberMode LineNumberMode
+		rows           [][]string
+		columns        []table.Column
+		expectedID     string
+	}{
+		{
+			name:           "line numbers off - ID in first column",
+			lineNumberMode: LineNumberOff,
+			rows: [][]string{
+				{"my-change-id", "My Title", "2"},
+			},
+			columns: []table.Column{
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+			},
+			expectedID: "my-change-id",
+		},
+		{
+			name:           "relative mode - line num in first column, ID in second",
+			lineNumberMode: LineNumberRelative,
+			rows: [][]string{
+				{"0", "my-change-id", "My Title", "2"},
+			},
+			columns: []table.Column{
+				{Title: "Ln", Width: 3},
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+			},
+			expectedID: "my-change-id",
+		},
+		{
+			name:           "hybrid mode - line num in first column, ID in second",
+			lineNumberMode: LineNumberHybrid,
+			rows: [][]string{
+				{"1", "my-change-id", "My Title", "2"},
+			},
+			columns: []table.Column{
+				{Title: "Ln", Width: 3},
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+			},
+			expectedID: "my-change-id",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tableRows := make([]table.Row, len(tt.rows))
+			for i, row := range tt.rows {
+				tableRows[i] = row
+			}
+
+			model := &interactiveModel{
+				stdoutMode:     true,
+				lineNumberMode: tt.lineNumberMode,
+				table: table.New(
+					table.WithColumns(tt.columns),
+					table.WithRows(tableRows),
+					table.WithFocused(true),
+					table.WithHeight(10),
+				),
+			}
+
+			model.handleEnter()
+
+			if model.selectedID != tt.expectedID {
+				t.Errorf(
+					"selectedID = %q, want %q",
+					model.selectedID,
+					tt.expectedID,
+				)
+			}
+		})
+	}
+}
+
+// TestBuildCopyPath_NestedProject tests that nested projects with RootPath
+// correctly build paths that include the nested path.
+func TestBuildCopyPath_NestedProject(t *testing.T) {
+	tests := []struct {
+		name         string
+		itemType     string
+		itemID       string
+		rootPath     string
+		changesData  []ChangeInfo
+		specsData    []SpecInfo
+		expectedPath string
+	}{
+		{
+			name:     "change in root project",
+			itemType: itemTypeChange,
+			itemID:   "my-change",
+			rootPath: "",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: ""},
+			},
+			expectedPath: "spectr/changes/my-change",
+		},
+		{
+			name:     "change in nested project",
+			itemType: itemTypeChange,
+			itemID:   "my-change",
+			rootPath: "nested/project",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: "nested/project"},
+			},
+			expectedPath: "nested/project/spectr/changes/my-change",
+		},
+		{
+			name:     "spec in root project",
+			itemType: itemTypeSpec,
+			itemID:   "my-spec",
+			rootPath: "",
+			specsData: []SpecInfo{
+				{ID: "my-spec", RootPath: ""},
+			},
+			expectedPath: "spectr/specs/my-spec",
+		},
+		{
+			name:     "spec in nested project",
+			itemType: itemTypeSpec,
+			itemID:   "my-spec",
+			rootPath: "apps/frontend",
+			specsData: []SpecInfo{
+				{ID: "my-spec", RootPath: "apps/frontend"},
+			},
+			expectedPath: "apps/frontend/spectr/specs/my-spec",
+		},
+		{
+			name:     "change with dot rootPath treated as root",
+			itemType: itemTypeChange,
+			itemID:   "my-change",
+			rootPath: ".",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: "."},
+			},
+			expectedPath: "spectr/changes/my-change",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := &interactiveModel{
+				itemType:    tt.itemType,
+				changesData: tt.changesData,
+				specsData:   tt.specsData,
+			}
+
+			row := table.Row{tt.itemID}
+			result := model.buildCopyPath(tt.itemID, row)
+
+			if result != tt.expectedPath {
+				t.Errorf(
+					"buildCopyPath() = %q, want %q",
+					result,
+					tt.expectedPath,
+				)
+			}
+		})
+	}
+}
+
+// TestHandleArchive_WithLineNumbers tests that handleArchive correctly
+// extracts the ID when line numbers are enabled.
+func TestHandleArchive_WithLineNumbers(t *testing.T) {
+	tests := []struct {
+		name              string
+		lineNumberMode    LineNumberMode
+		rows              [][]string
+		columns           []table.Column
+		itemType          string
+		expectedID        string
+		expectArchiveFlag bool
+	}{
+		{
+			name:           "change mode - line numbers off",
+			lineNumberMode: LineNumberOff,
+			rows: [][]string{
+				{"my-change-id", "My Title", "2", "3/5"},
+			},
+			columns: []table.Column{
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+				{Title: "Tasks", Width: 10},
+			},
+			itemType:          itemTypeChange,
+			expectedID:        "my-change-id",
+			expectArchiveFlag: true,
+		},
+		{
+			name:           "change mode - relative line numbers",
+			lineNumberMode: LineNumberRelative,
+			rows: [][]string{
+				{"0", "my-change-id", "My Title", "2", "3/5"},
+			},
+			columns: []table.Column{
+				{Title: "Ln", Width: 3},
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+				{Title: "Tasks", Width: 10},
+			},
+			itemType:          itemTypeChange,
+			expectedID:        "my-change-id",
+			expectArchiveFlag: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tableRows := make([]table.Row, len(tt.rows))
+			for i, row := range tt.rows {
+				tableRows[i] = row
+			}
+
+			model := &interactiveModel{
+				lineNumberMode: tt.lineNumberMode,
+				itemType:       tt.itemType,
+				table: table.New(
+					table.WithColumns(tt.columns),
+					table.WithRows(tableRows),
+					table.WithFocused(true),
+					table.WithHeight(10),
+				),
+			}
+
+			model.handleArchive()
+
+			if model.selectedID != tt.expectedID {
+				t.Errorf(
+					"selectedID = %q, want %q",
+					model.selectedID,
+					tt.expectedID,
+				)
+			}
+
+			if model.archiveRequested != tt.expectArchiveFlag {
+				t.Errorf(
+					"archiveRequested = %v, want %v",
+					model.archiveRequested,
+					tt.expectArchiveFlag,
+				)
+			}
+		})
+	}
+}
+
+// TestHandlePR_WithLineNumbers tests that handlePR correctly
+// extracts the ID when line numbers are enabled.
+func TestHandlePR_WithLineNumbers(t *testing.T) {
+	tests := []struct {
+		name           string
+		lineNumberMode LineNumberMode
+		rows           [][]string
+		columns        []table.Column
+		expectedID     string
+		expectPRFlag   bool
+	}{
+		{
+			name:           "line numbers off",
+			lineNumberMode: LineNumberOff,
+			rows: [][]string{
+				{"my-change-id", "My Title", "2", "3/5"},
+			},
+			columns: []table.Column{
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+				{Title: "Tasks", Width: 10},
+			},
+			expectedID:   "my-change-id",
+			expectPRFlag: true,
+		},
+		{
+			name:           "relative line numbers",
+			lineNumberMode: LineNumberRelative,
+			rows: [][]string{
+				{"0", "my-change-id", "My Title", "2", "3/5"},
+			},
+			columns: []table.Column{
+				{Title: "Ln", Width: 3},
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+				{Title: "Tasks", Width: 10},
+			},
+			expectedID:   "my-change-id",
+			expectPRFlag: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tableRows := make([]table.Row, len(tt.rows))
+			for i, row := range tt.rows {
+				tableRows[i] = row
+			}
+
+			model := &interactiveModel{
+				lineNumberMode: tt.lineNumberMode,
+				itemType:       itemTypeChange, // PR only works in change mode
+				table: table.New(
+					table.WithColumns(tt.columns),
+					table.WithRows(tableRows),
+					table.WithFocused(true),
+					table.WithHeight(10),
+				),
+			}
+
+			model.handlePR()
+
+			if model.selectedID != tt.expectedID {
+				t.Errorf(
+					"selectedID = %q, want %q",
+					model.selectedID,
+					tt.expectedID,
+				)
+			}
+
+			if model.prRequested != tt.expectPRFlag {
+				t.Errorf(
+					"prRequested = %v, want %v",
+					model.prRequested,
+					tt.expectPRFlag,
+				)
+			}
+		})
+	}
+}

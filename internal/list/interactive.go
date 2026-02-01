@@ -897,8 +897,18 @@ func (m *interactiveModel) handleEnter() {
 		return
 	}
 
-	// ID is in first column for all modes
-	itemID := row[0]
+	// ID column index depends on whether line numbers are enabled
+	// When line numbers are on, first column is line number, ID is second
+	idColumn := 0
+	if m.lineNumberMode != LineNumberOff {
+		idColumn = 1
+	}
+
+	if len(row) <= idColumn {
+		return
+	}
+
+	itemID := row[idColumn]
 	m.selectedID = itemID
 
 	// In selection mode, just select without copying to clipboard
@@ -954,9 +964,16 @@ func (m *interactiveModel) buildCopyPath(itemID string, row table.Row) string {
 		return buildSpecPath(rootPath, itemID)
 
 	case itemTypeAll:
-		// In unified mode, check the type column (second column)
-		if len(row) > 1 {
-			itemType = row[1]
+		// Calculate column offset when line numbers are enabled
+		colOffset := 0
+		if m.lineNumberMode != LineNumberOff {
+			colOffset = 1
+		}
+
+		// In unified mode, check the type column (column after ID)
+		typeColIdx := colOffset + 1
+		if len(row) > typeColIdx {
+			itemType = row[typeColIdx]
 		}
 
 		// Find the item in allItems to get root path
@@ -1013,6 +1030,12 @@ func (m *interactiveModel) handleEdit() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// Calculate column offset when line numbers are enabled
+	colOffset := 0
+	if m.lineNumberMode != LineNumberOff {
+		colOffset = 1
+	}
+
 	var itemID string
 	var editItemType string
 
@@ -1020,8 +1043,11 @@ func (m *interactiveModel) handleEdit() (tea.Model, tea.Cmd) {
 	switch m.itemType {
 	case itemTypeAll:
 		// In unified mode, need to check the item type
-		itemID = row[0]
-		itemTypeStr := row[1] // Type is second column in unified mode
+		if len(row) <= colOffset+1 {
+			return m, nil
+		}
+		itemID = row[colOffset]
+		itemTypeStr := row[colOffset+1] // Type is column after ID in unified mode
 		if itemTypeStr == typeDisplaySpec {
 			editItemType = itemTypeSpec
 		} else {
@@ -1029,11 +1055,17 @@ func (m *interactiveModel) handleEdit() (tea.Model, tea.Cmd) {
 		}
 	case itemTypeSpec:
 		// In spec-only mode
-		itemID = row[0]
+		if len(row) <= colOffset {
+			return m, nil
+		}
+		itemID = row[colOffset]
 		editItemType = itemTypeSpec
 	case itemTypeChange:
 		// In change-only mode
-		itemID = row[0]
+		if len(row) <= colOffset {
+			return m, nil
+		}
+		itemID = row[colOffset]
 		editItemType = itemTypeChange
 	default:
 		// Unknown mode, no editing allowed
@@ -1119,6 +1151,12 @@ func (m *interactiveModel) handleArchive() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// Calculate column offset when line numbers are enabled
+	colOffset := 0
+	if m.lineNumberMode != LineNumberOff {
+		colOffset = 1
+	}
+
 	// Determine if item is a change based on mode
 	switch m.itemType {
 	case itemTypeSpec:
@@ -1126,14 +1164,18 @@ func (m *interactiveModel) handleArchive() (tea.Model, tea.Cmd) {
 		return m, nil
 	case itemTypeChange:
 		// In change mode, all items are changes
-		m.selectedID = row[0]
+		if len(row) <= colOffset {
+			return m, nil
+		}
+		m.selectedID = row[colOffset]
 		m.archiveRequested = true
 
 		return m, tea.Quit
 	case itemTypeAll:
-		// In unified mode, check the type column
-		if len(row) > 1 && row[1] == typeDisplayChange {
-			m.selectedID = row[0]
+		// In unified mode, check the type column (column after ID)
+		typeColIdx := colOffset + 1
+		if len(row) > typeColIdx && row[typeColIdx] == typeDisplayChange {
+			m.selectedID = row[colOffset]
 			m.archiveRequested = true
 
 			return m, tea.Quit
@@ -1164,7 +1206,17 @@ func (m *interactiveModel) handlePR() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	m.selectedID = row[0]
+	// Calculate column offset when line numbers are enabled
+	colOffset := 0
+	if m.lineNumberMode != LineNumberOff {
+		colOffset = 1
+	}
+
+	if len(row) <= colOffset {
+		return m, nil
+	}
+
+	m.selectedID = row[colOffset]
 	m.prRequested = true
 
 	return m, tea.Quit

@@ -171,18 +171,7 @@ func findSpectrRootsFromCwd(cwd string) ([]SpectrRoot, error) {
 	}
 
 	// 2. Downward discovery: Search for nested spectr/ directories from cwd
-	// Do downward discovery when:
-	// a) We're NOT inside a git repository (gitRoot is empty), OR
-	// b) We ARE at the git root itself (to find nested subprojects in monorepos)
-	// This enables monorepo support where the root contains subprojects with
-	// their own .git and spectr/ directories.
-	if gitRoot == "" || absCwd == gitRoot {
-		downwardRoots, err := findSpectrRootsDownward(absCwd, absCwd, maxDiscoveryDepth)
-		// Ignore downward discovery errors - upward discovery already succeeded
-		if err == nil {
-			roots = append(roots, downwardRoots...)
-		}
-	}
+	roots = appendDownwardRoots(roots, absCwd, gitRoot)
 
 	// 3. Deduplicate roots (upward and downward may find same directories)
 	roots = deduplicateRoots(roots)
@@ -191,6 +180,26 @@ func findSpectrRootsFromCwd(cwd string) ([]SpectrRoot, error) {
 	roots = sortRootsByDistance(roots, absCwd)
 
 	return roots, nil
+}
+
+// appendDownwardRoots performs downward discovery and appends results to roots.
+// Downward discovery happens when:
+// a) We're NOT inside a git repository (gitRoot is empty), OR
+// b) We ARE at the git root itself (to find nested subprojects in monorepos)
+// This enables monorepo support where the root contains subprojects with
+// their own .git and spectr/ directories.
+func appendDownwardRoots(existingRoots []SpectrRoot, absCwd, gitRoot string) []SpectrRoot {
+	if gitRoot != "" && absCwd != gitRoot {
+		return existingRoots
+	}
+
+	downwardRoots, err := findSpectrRootsDownward(absCwd, absCwd, maxDiscoveryDepth)
+	// Ignore downward discovery errors - upward discovery already succeeded
+	if err == nil {
+		return append(existingRoots, downwardRoots...)
+	}
+
+	return existingRoots
 }
 
 // findGitRoot walks up from the given path to find the nearest .git directory.

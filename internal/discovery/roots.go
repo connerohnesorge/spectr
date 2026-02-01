@@ -171,10 +171,12 @@ func findSpectrRootsFromCwd(cwd string) ([]SpectrRoot, error) {
 	}
 
 	// 2. Downward discovery: Search for nested spectr/ directories from cwd
-	// Only do downward discovery if we're NOT inside a git repository
-	// (i.e., gitRoot is empty). This prevents finding nested repos when
-	// we're already inside a git boundary.
-	if gitRoot == "" {
+	// Do downward discovery when:
+	// a) We're NOT inside a git repository (gitRoot is empty), OR
+	// b) We ARE at the git root itself (to find nested subprojects in monorepos)
+	// This enables monorepo support where the root contains subprojects with
+	// their own .git and spectr/ directories.
+	if gitRoot == "" || absCwd == gitRoot {
 		downwardRoots, err := findSpectrRootsDownward(absCwd, absCwd, maxDiscoveryDepth)
 		// Ignore downward discovery errors - upward discovery already succeeded
 		if err == nil {

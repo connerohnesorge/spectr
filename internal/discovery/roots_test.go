@@ -392,12 +392,37 @@ func TestFindSpectrRoots_NestedGitRepos(t *testing.T) {
 	//       spectr/             <- api's spectr
 	tmpDir := setupNestedGitRepoFixture(t)
 
-	t.Run("from mono-repo root finds only main spectr", func(t *testing.T) {
+	t.Run("from mono-repo root finds all spectr directories", func(t *testing.T) {
 		roots, err := FindSpectrRoots(tmpDir)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		assertSingleRoot(t, roots, tmpDir)
+
+		// Should find 3 roots: main, auth, and api
+		if len(roots) != 3 {
+			t.Fatalf("expected 3 roots (main + auth + api), got %d", len(roots))
+		}
+
+		// First root should be main (closest to cwd)
+		if roots[0].Path != tmpDir {
+			t.Errorf("expected first root to be main repo, got %s", roots[0].Path)
+		}
+
+		// Verify auth and api were found
+		foundAuth := false
+		foundAPI := false
+		for _, root := range roots[1:] {
+			switch filepath.Base(root.Path) {
+			case "auth":
+				foundAuth = true
+			case "api":
+				foundAPI = true
+			}
+		}
+
+		if !foundAuth || !foundAPI {
+			t.Error("expected to find both auth and api subprojects")
+		}
 	})
 
 	t.Run("from auth package finds only auth spectr", func(t *testing.T) {
@@ -1050,14 +1075,48 @@ func TestFindSpectrRoots_MonorepoWithSubprojects(t *testing.T) {
 	mustMkdirAll(t, filepath.Join(apiDir, ".git"))
 	mustMkdirAll(t, filepath.Join(apiDir, "spectr"))
 
-	t.Run("from mono-repo root finds only main spectr", func(t *testing.T) {
+	t.Run("from mono-repo root finds all spectr directories", func(t *testing.T) {
 		roots, err := FindSpectrRoots(tmpDir)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		assertSingleRoot(t, roots, tmpDir)
+
+		// Should find 3 roots: main, auth, and api
+		if len(roots) != 3 {
+			t.Fatalf("expected 3 roots (main + auth + api), got %d", len(roots))
+		}
+
+		// First root should be main (closest to cwd)
+		if roots[0].Path != tmpDir {
+			t.Errorf("expected first root to be main repo, got %s", roots[0].Path)
+		}
 		if roots[0].GitRoot != tmpDir {
-			t.Errorf("expected GitRoot %s, got %s", tmpDir, roots[0].GitRoot)
+			t.Errorf("expected main GitRoot %s, got %s", tmpDir, roots[0].GitRoot)
+		}
+
+		// Verify auth and api were found (order may vary due to alphabetical sorting)
+		foundAuth := false
+		foundAPI := false
+		for _, root := range roots[1:] {
+			switch filepath.Base(root.Path) {
+			case "auth":
+				foundAuth = true
+				if root.GitRoot != authDir {
+					t.Errorf("expected auth GitRoot %s, got %s", authDir, root.GitRoot)
+				}
+			case "api":
+				foundAPI = true
+				if root.GitRoot != apiDir {
+					t.Errorf("expected api GitRoot %s, got %s", apiDir, root.GitRoot)
+				}
+			}
+		}
+
+		if !foundAuth {
+			t.Error("expected to find auth subproject")
+		}
+		if !foundAPI {
+			t.Error("expected to find api subproject")
 		}
 	})
 

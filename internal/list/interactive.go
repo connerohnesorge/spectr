@@ -542,6 +542,30 @@ func hasHiddenColumns(
 // buildChangesRows creates table rows for changes data with the given
 // title truncation and column set. The column set determines which fields
 // are included in each row to match the visible columns.
+
+// detectMultiRootChanges returns true if any change has a non-trivial RootPath.
+func detectMultiRootChanges(changes []ChangeInfo) bool {
+	for _, c := range changes {
+		if c.RootPath != "" && c.RootPath != "." {
+			return true
+		}
+	}
+
+	return false
+}
+
+// formatChangeIDWithProject formats a change ID with project prefix if in multi-root mode.
+func formatChangeIDWithProject(id, rootPath string, hasMultipleRoots bool) string {
+	if !hasMultipleRoots || rootPath == "" || rootPath == "." {
+		return id
+	}
+
+	return fmt.Sprintf("[%s] %s", rootPath, id)
+}
+
+// buildChangesRows creates table rows for changes data with the given
+// title truncation and column set. The column set determines which fields
+// are included in each row to match the visible columns.
 func buildChangesRows(
 	changes []ChangeInfo,
 	titleTruncate int,
@@ -550,6 +574,9 @@ func buildChangesRows(
 	cursor int,
 ) []table.Row {
 	rows := make([]table.Row, len(changes))
+
+	// Detect if we have multiple roots to show project prefix in ID column
+	hasMultipleRoots := detectMultiRootChanges(changes)
 
 	// Calculate effective number of data columns (excluding line number column)
 	dataColumns := numColumns
@@ -562,6 +589,9 @@ func buildChangesRows(
 			change.TaskStatus.Completed,
 			change.TaskStatus.Total)
 
+		// Format ID with project prefix if in multi-root mode
+		displayID := formatChangeIDWithProject(change.ID, change.RootPath, hasMultipleRoots)
+
 		// Calculate line number
 		var lineNumStr string
 		if lineNumberMode != LineNumberOff {
@@ -573,7 +603,7 @@ func buildChangesRows(
 		case 4:
 			// Full: ID, Title, Deltas, Tasks
 			row := table.Row{
-				change.ID,
+				displayID,
 				tui.TruncateString(
 					change.Title,
 					titleTruncate,
@@ -592,7 +622,7 @@ func buildChangesRows(
 		case 3:
 			// 3 columns without Title: ID, Deltas, Tasks
 			row := table.Row{
-				change.ID,
+				displayID,
 				fmt.Sprintf(
 					"%d",
 					change.DeltaCount,
@@ -607,13 +637,33 @@ func buildChangesRows(
 		default:
 			// Minimal 2 columns: ID, Tasks only
 			rows[i] = table.Row{
-				change.ID,
+				displayID,
 				tasksStatus,
 			}
 		}
 	}
 
 	return rows
+}
+
+// detectMultiRootSpecs returns true if any spec has a non-trivial RootPath.
+func detectMultiRootSpecs(specs []SpecInfo) bool {
+	for _, s := range specs {
+		if s.RootPath != "" && s.RootPath != "." {
+			return true
+		}
+	}
+
+	return false
+}
+
+// formatSpecIDWithProject formats a spec ID with project prefix if in multi-root mode.
+func formatSpecIDWithProject(id, rootPath string, hasMultipleRoots bool) string {
+	if !hasMultipleRoots || rootPath == "" || rootPath == "." {
+		return id
+	}
+
+	return fmt.Sprintf("[%s] %s", rootPath, id)
 }
 
 // buildSpecsRows creates table rows for specs data with the given
@@ -624,12 +674,19 @@ func buildSpecsRows(
 	numColumns int,
 ) []table.Row {
 	rows := make([]table.Row, len(specs))
+
+	// Detect if we have multiple roots to show project prefix in ID column
+	hasMultipleRoots := detectMultiRootSpecs(specs)
+
 	for i, spec := range specs {
+		// Format ID with project prefix if in multi-root mode
+		displayID := formatSpecIDWithProject(spec.ID, spec.RootPath, hasMultipleRoots)
+
 		switch numColumns {
 		case 3:
 			// Full: ID, Title, Requirements
 			rows[i] = table.Row{
-				spec.ID,
+				displayID,
 				tui.TruncateString(
 					spec.Title,
 					titleTruncate,
@@ -642,7 +699,7 @@ func buildSpecsRows(
 		default:
 			// Minimal: ID, Title only
 			rows[i] = table.Row{
-				spec.ID,
+				displayID,
 				tui.TruncateString(
 					spec.Title,
 					titleTruncate,
@@ -654,6 +711,27 @@ func buildSpecsRows(
 	return rows
 }
 
+// detectMultiRootItems returns true if any item has a non-trivial RootPath.
+func detectMultiRootItems(items ItemList) bool {
+	for _, item := range items {
+		rootPath := item.RootPath()
+		if rootPath != "" && rootPath != "." {
+			return true
+		}
+	}
+
+	return false
+}
+
+// formatItemIDWithProject formats an item ID with project prefix if in multi-root mode.
+func formatItemIDWithProject(id, rootPath string, hasMultipleRoots bool) string {
+	if !hasMultipleRoots || rootPath == "" || rootPath == "." {
+		return id
+	}
+
+	return fmt.Sprintf("[%s] %s", rootPath, id)
+}
+
 // buildUnifiedRows creates table rows for unified (all items) view with the
 // given title truncation and number of columns.
 func buildUnifiedRows(
@@ -662,7 +740,14 @@ func buildUnifiedRows(
 	numColumns int,
 ) []table.Row {
 	rows := make([]table.Row, len(items))
+
+	// Detect if we have multiple roots to show project prefix in ID column
+	hasMultipleRoots := detectMultiRootItems(items)
+
 	for i, item := range items {
+		// Format ID with project prefix if in multi-root mode
+		displayID := formatItemIDWithProject(item.ID(), item.RootPath(), hasMultipleRoots)
+
 		var typeStr, details string
 		switch item.Type {
 		case ItemTypeChange:
@@ -689,7 +774,7 @@ func buildUnifiedRows(
 		case 4:
 			// Full: ID, Type, Title, Details
 			rows[i] = table.Row{
-				item.ID(),
+				displayID,
 				typeStr,
 				tui.TruncateString(
 					item.Title(),
@@ -700,7 +785,7 @@ func buildUnifiedRows(
 		default:
 			// Narrow/Minimal: ID, Type, Title (no Details)
 			rows[i] = table.Row{
-				item.ID(),
+				displayID,
 				typeStr,
 				tui.TruncateString(
 					item.Title(),
@@ -1570,17 +1655,78 @@ func (m *interactiveModel) getEditFilePath(
 	itemID string,
 	itemType string,
 ) string {
+	// Look up the item's RootPath from the data
+	rootPath := m.lookupRootPath(itemID, itemType)
+
 	if itemType == itemTypeSpec {
+		// Build the absolute path including RootPath if present
+		if rootPath == "" || rootPath == "." {
+			return fmt.Sprintf(
+				"%s/spectr/specs/%s/spec.md",
+				m.projectPath, itemID,
+			)
+		}
+
 		return fmt.Sprintf(
-			"%s/spectr/specs/%s/spec.md",
+			"%s/%s/spectr/specs/%s/spec.md",
+			m.projectPath, rootPath, itemID,
+		)
+	}
+
+	// For changes
+	if rootPath == "" || rootPath == "." {
+		return fmt.Sprintf(
+			"%s/spectr/changes/%s/proposal.md",
 			m.projectPath, itemID,
 		)
 	}
 
 	return fmt.Sprintf(
-		"%s/spectr/changes/%s/proposal.md",
-		m.projectPath, itemID,
+		"%s/%s/spectr/changes/%s/proposal.md",
+		m.projectPath, rootPath, itemID,
 	)
+}
+
+// lookupRootPath finds the RootPath for an item by searching the appropriate data source.
+// It checks specsData/changesData first, then falls back to allItems for unified mode.
+func (m *interactiveModel) lookupRootPath(itemID, itemType string) string {
+	var rootPath string
+	var found bool
+
+	if itemType == itemTypeSpec {
+		// First try specsData
+		for _, spec := range m.specsData {
+			if spec.ID == itemID {
+				rootPath = spec.RootPath
+				found = true
+
+				break
+			}
+		}
+	} else {
+		// First try changesData
+		for _, change := range m.changesData {
+			if change.ID == itemID {
+				rootPath = change.RootPath
+				found = true
+
+				break
+			}
+		}
+	}
+
+	// If not found in dedicated data, search allItems (unified mode)
+	if !found {
+		for i := range m.allItems {
+			if m.allItems[i].ID() == itemID {
+				rootPath = m.allItems[i].RootPath()
+
+				break
+			}
+		}
+	}
+
+	return rootPath
 }
 
 // View renders the model

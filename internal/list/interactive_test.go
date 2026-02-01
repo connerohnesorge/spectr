@@ -4924,3 +4924,147 @@ func TestHandlePR_WithLineNumbers(t *testing.T) {
 		})
 	}
 }
+
+// TestGetEditFilePath_NestedProject tests that getEditFilePath correctly
+// builds paths for items in nested projects with RootPath.
+func TestGetEditFilePath_NestedProject(t *testing.T) {
+	// Helper to create a change Item
+	makeChangeItem := func(id, rootPath string) Item {
+		return Item{
+			Type:   ItemTypeChange,
+			Change: &ChangeInfo{ID: id, RootPath: rootPath},
+		}
+	}
+
+	// Helper to create a spec Item
+	makeSpecItem := func(id, rootPath string) Item {
+		return Item{
+			Type: ItemTypeSpec,
+			Spec: &SpecInfo{ID: id, RootPath: rootPath},
+		}
+	}
+
+	tests := []struct {
+		name         string
+		itemType     string
+		editItemType string // The type passed to getEditFilePath (may differ in unified mode)
+		itemID       string
+		projectPath  string
+		changesData  []ChangeInfo
+		specsData    []SpecInfo
+		allItems     ItemList
+		expectedPath string
+	}{
+		{
+			name:         "change in root project",
+			itemType:     itemTypeChange,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: ""},
+			},
+			expectedPath: "/mono-repo/spectr/changes/my-change/proposal.md",
+		},
+		{
+			name:         "change in nested project",
+			itemType:     itemTypeChange,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: "packages/auth"},
+			},
+			expectedPath: "/mono-repo/packages/auth/spectr/changes/my-change/proposal.md",
+		},
+		{
+			name:         "spec in root project",
+			itemType:     itemTypeSpec,
+			editItemType: itemTypeSpec,
+			itemID:       "my-spec",
+			projectPath:  "/mono-repo",
+			specsData: []SpecInfo{
+				{ID: "my-spec", RootPath: ""},
+			},
+			expectedPath: "/mono-repo/spectr/specs/my-spec/spec.md",
+		},
+		{
+			name:         "spec in nested project",
+			itemType:     itemTypeSpec,
+			editItemType: itemTypeSpec,
+			itemID:       "my-spec",
+			projectPath:  "/mono-repo",
+			specsData: []SpecInfo{
+				{ID: "my-spec", RootPath: "apps/frontend"},
+			},
+			expectedPath: "/mono-repo/apps/frontend/spectr/specs/my-spec/spec.md",
+		},
+		{
+			name:         "change with dot rootPath treated as root",
+			itemType:     itemTypeChange,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: "."},
+			},
+			expectedPath: "/mono-repo/spectr/changes/my-change/proposal.md",
+		},
+		// Unified mode (itemTypeAll) tests - uses allItems instead of changesData/specsData
+		{
+			name:         "unified mode - change in nested project",
+			itemType:     itemTypeAll,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			allItems: ItemList{
+				makeChangeItem("my-change", "packages/api"),
+			},
+			expectedPath: "/mono-repo/packages/api/spectr/changes/my-change/proposal.md",
+		},
+		{
+			name:         "unified mode - spec in nested project",
+			itemType:     itemTypeAll,
+			editItemType: itemTypeSpec,
+			itemID:       "my-spec",
+			projectPath:  "/mono-repo",
+			allItems: ItemList{
+				makeSpecItem("my-spec", "apps/web"),
+			},
+			expectedPath: "/mono-repo/apps/web/spectr/specs/my-spec/spec.md",
+		},
+		{
+			name:         "unified mode - change in root",
+			itemType:     itemTypeAll,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			allItems: ItemList{
+				makeChangeItem("my-change", ""),
+			},
+			expectedPath: "/mono-repo/spectr/changes/my-change/proposal.md",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := &interactiveModel{
+				itemType:    tt.itemType,
+				projectPath: tt.projectPath,
+				changesData: tt.changesData,
+				specsData:   tt.specsData,
+				allItems:    tt.allItems,
+			}
+
+			result := model.getEditFilePath(tt.itemID, tt.editItemType)
+
+			if result != tt.expectedPath {
+				t.Errorf(
+					"getEditFilePath() = %q, want %q",
+					result,
+					tt.expectedPath,
+				)
+			}
+		})
+	}
+}

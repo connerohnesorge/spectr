@@ -783,6 +783,11 @@ func (m *interactiveModel) Update(
 					}
 					m.showHelp = false
 
+					// Update line numbers after count-prefix navigation
+					if m.lineNumberMode != LineNumberOff {
+						m.updateLineNumbers()
+					}
+
 					return m, nil
 				}
 				// Key was handled (digit or ESC) but not a nav key
@@ -1417,6 +1422,28 @@ func calculateLineNumberValue(rowIdx, cursorIdx int, mode LineNumberMode) int {
 	}
 }
 
+func (m *interactiveModel) updateLineNumbers() {
+	if m.lineNumberMode == LineNumberOff {
+		return
+	}
+
+	cursor := m.table.Cursor()
+	rows := m.table.Rows()
+
+	// Create new rows with updated line numbers
+	updatedRows := make([]table.Row, len(rows))
+	for i := range rows {
+		updatedRows[i] = make(table.Row, len(rows[i]))
+		copy(updatedRows[i], rows[i])
+		if len(updatedRows[i]) > 0 {
+			lineNum := calculateLineNumberValue(i, cursor, m.lineNumberMode)
+			updatedRows[i][0] = fmt.Sprintf("%d", lineNum)
+		}
+	}
+
+	m.table.SetRows(updatedRows)
+}
+
 // rebuildTableForWidth rebuilds the table with columns adjusted for the
 // current terminal width. This is called when the terminal is resized.
 // It preserves cursor position and search state during the rebuild.
@@ -1655,7 +1682,7 @@ func RunInteractiveChanges(
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
 	columns := calculateChangesColumns(
 		breakpointFull,
-		LineNumberOff,
+		LineNumberRelative,
 	)
 	titleTruncate := calculateTitleTruncate(
 		itemTypeChange,
@@ -1666,7 +1693,7 @@ func RunInteractiveChanges(
 		changes,
 		titleTruncate,
 		len(columns),
-		LineNumberOff,
+		LineNumberRelative,
 		0,
 	)
 
@@ -1680,14 +1707,15 @@ func RunInteractiveChanges(
 	tui.ApplyTableStyles(&t)
 
 	m := &interactiveModel{
-		table:         t,
-		itemType:      itemTypeChange,
-		projectPath:   projectPath,
-		searchInput:   newTextInput(),
-		allRows:       rows,
-		terminalWidth: 0,          // Will be set by WindowSizeMsg
-		changesData:   changes,    // Store for rebuild on resize
-		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
+		table:          t,
+		itemType:       itemTypeChange,
+		projectPath:    projectPath,
+		searchInput:    newTextInput(),
+		allRows:        rows,
+		terminalWidth:  0,                  // Will be set by WindowSizeMsg
+		changesData:    changes,            // Store for rebuild on resize
+		stdoutMode:     stdoutMode,         // Output to stdout instead of clipboard
+		lineNumberMode: LineNumberRelative, // Default to relative line numbers
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
 			"a: archive | P: pr | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(

@@ -126,38 +126,7 @@ func (c *ListCmd) listChangesMulti(
 
 	// Handle interactive mode - shows a navigable table
 	if c.Interactive {
-		if len(changes) == 0 {
-			fmt.Println("No changes found.")
-
-			return nil
-		}
-
-		archiveID, prID, err := list.RunInteractiveChanges(
-			changes,
-			projectPath,
-			c.Stdout,
-		)
-		if err != nil {
-			return err
-		}
-
-		// If an archive was requested, run the archive workflow
-		if archiveID != "" {
-			return c.runArchiveWorkflow(
-				archiveID,
-				projectPath,
-			)
-		}
-
-		// If PR mode was requested, run the PR workflow
-		if prID != "" {
-			return c.runPRWorkflow(
-				prID,
-				projectPath,
-			)
-		}
-
-		return nil
+		return c.handleInteractiveChanges(changes, projectPath)
 	}
 
 	// Format output based on flags
@@ -185,6 +154,52 @@ func (c *ListCmd) listChangesMulti(
 
 	// Display the formatted output
 	fmt.Println(output)
+
+	return nil
+}
+
+// handleInteractiveChanges runs the interactive TUI for changes
+// and handles archive/PR workflow requests.
+func (c *ListCmd) handleInteractiveChanges(
+	changes []list.ChangeInfo,
+	projectPath string,
+) error {
+	if len(changes) == 0 {
+		fmt.Println("No changes found.")
+
+		return nil
+	}
+
+	archiveID, archiveRootPath, prID, prRootPath, err := list.RunInteractiveChanges(
+		changes,
+		projectPath,
+		c.Stdout,
+	)
+	if err != nil {
+		return err
+	}
+
+	// If an archive was requested, run the archive workflow
+	if archiveID != "" {
+		// Use the change's root path if available, fallback to cwd
+		rootPath := archiveRootPath
+		if rootPath == "" {
+			rootPath = projectPath
+		}
+
+		return c.runArchiveWorkflow(archiveID, rootPath)
+	}
+
+	// If PR mode was requested, run the PR workflow
+	if prID != "" {
+		// Use the change's root path if available, fallback to cwd
+		rootPath := prRootPath
+		if rootPath == "" {
+			rootPath = projectPath
+		}
+
+		return c.runPRWorkflow(prID, rootPath)
+	}
 
 	return nil
 }

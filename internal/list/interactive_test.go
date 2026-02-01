@@ -22,7 +22,7 @@ func TestRunInteractiveChanges_EmptyList(
 	t *testing.T,
 ) {
 	var changes []ChangeInfo
-	archiveID, prID, err := RunInteractiveChanges(
+	archiveID, archiveRootPath, prID, prRootPath, err := RunInteractiveChanges(
 		changes,
 		"/tmp/test-project",
 		false,
@@ -39,10 +39,22 @@ func TestRunInteractiveChanges_EmptyList(
 			archiveID,
 		)
 	}
+	if archiveRootPath != "" {
+		t.Errorf(
+			"RunInteractiveChanges with empty list should return empty archive root path, got: %s",
+			archiveRootPath,
+		)
+	}
 	if prID != "" {
 		t.Errorf(
 			"RunInteractiveChanges with empty list should return empty PR ID, got: %s",
 			prID,
+		)
+	}
+	if prRootPath != "" {
+		t.Errorf(
+			"RunInteractiveChanges with empty list should return empty PR root path, got: %s",
+			prRootPath,
 		)
 	}
 }
@@ -949,10 +961,27 @@ func TestHandleArchive_ChangeMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
+	// Create changesData to match the table rows
+	changesData := []ChangeInfo{
+		{
+			ID:          "test-change-1",
+			Title:       "Test Change 1",
+			DeltaCount:  2,
+			RootAbsPath: "/tmp/test",
+		},
+		{
+			ID:          "test-change-2",
+			Title:       "Test Change 2",
+			DeltaCount:  1,
+			RootAbsPath: "/tmp/test",
+		},
+	}
+
 	model := &interactiveModel{
 		itemType:    "change",
 		projectPath: "/tmp/test",
 		table:       tbl,
+		changesData: changesData,
 	}
 
 	// Call handleArchive
@@ -1072,10 +1101,26 @@ func TestHandleArchive_UnifiedMode_Change(
 		table.WithHeight(10),
 	)
 
+	// Create allItems to match the table rows
+	changeInfo := &ChangeInfo{
+		ID:          interactiveTestChangeID,
+		Title:       "Test Change",
+		RootAbsPath: "/tmp/test",
+	}
+	specInfo := &SpecInfo{
+		ID:    interactiveTestSpecID,
+		Title: "Test Spec",
+	}
+	allItems := ItemList{
+		{Type: ItemTypeChange, Change: changeInfo},
+		{Type: ItemTypeSpec, Spec: specInfo},
+	}
+
 	model := &interactiveModel{
 		itemType:    "all",
 		projectPath: "/tmp/test",
 		table:       tbl,
+		allItems:    allItems,
 	}
 
 	// Call handleArchive (cursor is on first row which is CHANGE)
@@ -1199,10 +1244,27 @@ func TestHandlePR_ChangeMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
+	// Create changesData to match the table rows
+	changesData := []ChangeInfo{
+		{
+			ID:          "test-change-1",
+			Title:       "Test Change 1",
+			DeltaCount:  2,
+			RootAbsPath: "/tmp/test",
+		},
+		{
+			ID:          "test-change-2",
+			Title:       "Test Change 2",
+			DeltaCount:  1,
+			RootAbsPath: "/tmp/test",
+		},
+	}
+
 	model := &interactiveModel{
 		itemType:    "change",
 		projectPath: "/tmp/test",
 		table:       tbl,
+		changesData: changesData,
 	}
 
 	// Call handlePR
@@ -4765,6 +4827,7 @@ func TestHandleArchive_WithLineNumbers(t *testing.T) {
 		rows              [][]string
 		columns           []table.Column
 		itemType          string
+		changesData       []ChangeInfo
 		expectedID        string
 		expectArchiveFlag bool
 	}{
@@ -4780,7 +4843,10 @@ func TestHandleArchive_WithLineNumbers(t *testing.T) {
 				{Title: "Deltas", Width: 10},
 				{Title: "Tasks", Width: 10},
 			},
-			itemType:          itemTypeChange,
+			itemType: itemTypeChange,
+			changesData: []ChangeInfo{
+				{ID: "my-change-id", Title: "My Title", DeltaCount: 2, RootAbsPath: "/tmp/test"},
+			},
 			expectedID:        "my-change-id",
 			expectArchiveFlag: true,
 		},
@@ -4797,7 +4863,10 @@ func TestHandleArchive_WithLineNumbers(t *testing.T) {
 				{Title: "Deltas", Width: 10},
 				{Title: "Tasks", Width: 10},
 			},
-			itemType:          itemTypeChange,
+			itemType: itemTypeChange,
+			changesData: []ChangeInfo{
+				{ID: "my-change-id", Title: "My Title", DeltaCount: 2, RootAbsPath: "/tmp/test"},
+			},
 			expectedID:        "my-change-id",
 			expectArchiveFlag: true,
 		},
@@ -4813,6 +4882,7 @@ func TestHandleArchive_WithLineNumbers(t *testing.T) {
 			model := &interactiveModel{
 				lineNumberMode: tt.lineNumberMode,
 				itemType:       tt.itemType,
+				changesData:    tt.changesData,
 				table: table.New(
 					table.WithColumns(tt.columns),
 					table.WithRows(tableRows),
@@ -4850,6 +4920,7 @@ func TestHandlePR_WithLineNumbers(t *testing.T) {
 		lineNumberMode LineNumberMode
 		rows           [][]string
 		columns        []table.Column
+		changesData    []ChangeInfo
 		expectedID     string
 		expectPRFlag   bool
 	}{
@@ -4864,6 +4935,9 @@ func TestHandlePR_WithLineNumbers(t *testing.T) {
 				{Title: "Title", Width: 45},
 				{Title: "Deltas", Width: 10},
 				{Title: "Tasks", Width: 10},
+			},
+			changesData: []ChangeInfo{
+				{ID: "my-change-id", Title: "My Title", DeltaCount: 2, RootAbsPath: "/tmp/test"},
 			},
 			expectedID:   "my-change-id",
 			expectPRFlag: true,
@@ -4881,6 +4955,9 @@ func TestHandlePR_WithLineNumbers(t *testing.T) {
 				{Title: "Deltas", Width: 10},
 				{Title: "Tasks", Width: 10},
 			},
+			changesData: []ChangeInfo{
+				{ID: "my-change-id", Title: "My Title", DeltaCount: 2, RootAbsPath: "/tmp/test"},
+			},
 			expectedID:   "my-change-id",
 			expectPRFlag: true,
 		},
@@ -4896,6 +4973,7 @@ func TestHandlePR_WithLineNumbers(t *testing.T) {
 			model := &interactiveModel{
 				lineNumberMode: tt.lineNumberMode,
 				itemType:       itemTypeChange, // PR only works in change mode
+				changesData:    tt.changesData,
 				table: table.New(
 					table.WithColumns(tt.columns),
 					table.WithRows(tableRows),

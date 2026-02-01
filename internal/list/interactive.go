@@ -805,7 +805,8 @@ type interactiveModel struct {
 	copied           bool
 	quitting         bool
 	archiveRequested bool
-	prRequested      bool // true when P (pr) hotkey was pressed
+	selectedRootPath string // absolute path to root for archive/PR workflows
+	prRequested      bool   // true when P (pr) hotkey was pressed
 	err              error
 	helpText         string
 	minimalFooter    string
@@ -1248,24 +1249,33 @@ func (m *interactiveModel) handleArchive() (tea.Model, tea.Cmd) {
 		// Can't archive specs
 		return m, nil
 	case itemTypeChange:
-		// In change mode, all items are changes
-		if len(row) <= colOffset {
-			return m, nil
-		}
-		m.selectedID = row[colOffset]
-		m.archiveRequested = true
-
-		return m, tea.Quit
-	case itemTypeAll:
-		// In unified mode, check the type column (column after ID)
-		typeColIdx := colOffset + 1
-		if len(row) > typeColIdx && row[typeColIdx] == typeDisplayChange {
-			m.selectedID = row[colOffset]
+		// In change mode, look up the actual ChangeInfo to get raw ID and root path
+		// When search is active, we need to find the change matching the displayed row
+		change := m.findChangeForCursor(cursor, row, colOffset)
+		if change != nil {
+			m.selectedID = change.ID // Raw ID without prefix
+			m.selectedRootPath = change.RootAbsPath
 			m.archiveRequested = true
 
 			return m, tea.Quit
 		}
-		// Not a change, do nothing
+
+		return m, nil
+	case itemTypeAll:
+		// In unified mode, check the type column (column after ID)
+		typeColIdx := colOffset + 1
+		if len(row) > typeColIdx && row[typeColIdx] == typeDisplayChange {
+			// Find the change in allItems matching the displayed row
+			change := m.findChangeInAllItems(row, colOffset)
+			if change != nil {
+				m.selectedID = change.ID
+				m.selectedRootPath = change.RootAbsPath
+				m.archiveRequested = true
+
+				return m, tea.Quit
+			}
+		}
+		// Not a change or not found
 		return m, nil
 	}
 
@@ -1297,14 +1307,17 @@ func (m *interactiveModel) handlePR() (tea.Model, tea.Cmd) {
 		colOffset = 1
 	}
 
-	if len(row) <= colOffset {
-		return m, nil
+	// Look up the actual ChangeInfo to get raw ID and root path
+	change := m.findChangeForCursor(cursor, row, colOffset)
+	if change != nil {
+		m.selectedID = change.ID // Raw ID without prefix
+		m.selectedRootPath = change.RootAbsPath
+		m.prRequested = true
+
+		return m, tea.Quit
 	}
 
-	m.selectedID = row[colOffset]
-	m.prRequested = true
-
-	return m, tea.Quit
+	return m, nil
 }
 
 // rebuildUnifiedTable rebuilds the table based on current filter
@@ -1729,6 +1742,74 @@ func (m *interactiveModel) lookupRootPath(itemID, itemType string) string {
 	return rootPath
 }
 
+// findChangeForCursor finds the ChangeInfo for the given cursor position.
+// When search filtering is active, it matches against the displayed row's ID.
+func (m *interactiveModel) findChangeForCursor(
+	cursor int,
+	row table.Row,
+	colOffset int,
+) *ChangeInfo {
+	// If no search filter is active and cursor is valid, use direct index
+	if m.searchQuery == "" && cursor < len(m.changesData) {
+		return &m.changesData[cursor]
+	}
+
+	// Search is active - need to find the change matching the displayed ID
+	if len(row) <= colOffset {
+		return nil
+	}
+
+	displayedID := row[colOffset]
+
+	// The displayed ID may have a project prefix like "[project] change-id"
+	// Search through changesData to find matching change
+	for i := range m.changesData {
+		change := &m.changesData[i]
+		formattedID := formatChangeIDWithProject(
+			change.ID,
+			change.RootPath,
+			detectMultiRootChanges(m.changesData),
+		)
+		if formattedID == displayedID {
+			return change
+		}
+	}
+
+	return nil
+}
+
+// findChangeInAllItems finds the ChangeInfo matching a row in unified mode.
+func (m *interactiveModel) findChangeInAllItems(
+	row table.Row,
+	colOffset int,
+) *ChangeInfo {
+	if len(row) <= colOffset {
+		return nil
+	}
+
+	displayedID := row[colOffset]
+	hasMultipleRoots := detectMultiRootItems(m.allItems)
+
+	// Search through allItems to find matching change
+	for i := range m.allItems {
+		item := &m.allItems[i]
+		if item.Type != ItemTypeChange || item.Change == nil {
+			continue
+		}
+
+		formattedID := formatItemIDWithProject(
+			item.Change.ID,
+			item.Change.RootPath,
+			hasMultipleRoots,
+		)
+		if formattedID == displayedID {
+			return item.Change
+		}
+	}
+
+	return nil
+}
+
 // View renders the model
 func (m *interactiveModel) View() string {
 	if m.quitting {
@@ -1827,17 +1908,19 @@ func (m *interactiveModel) View() string {
 }
 
 // RunInteractiveChanges runs the interactive table for changes.
-// Returns (archiveID, prID, error):
+// Returns (archiveID, archiveRootPath, prID, prRootPath, error):
 //   - archiveID is set if archive was requested via 'a' key
+//   - archiveRootPath is the absolute path to the spectr root for archive
 //   - prID is set if PR mode was requested via 'P' key
-//   - Both are empty if user quit or cancelled
+//   - prRootPath is the absolute path to the spectr root for PR
+//   - All are empty if user quit or cancelled
 func RunInteractiveChanges(
 	changes []ChangeInfo,
 	projectPath string,
 	stdoutMode bool,
-) (archiveID, prID string, err error) {
+) (archiveID, archiveRootPath, prID, prRootPath string, err error) {
 	if len(changes) == 0 {
-		return "", "", nil
+		return "", "", "", "", nil
 	}
 
 	// Use default full-width columns initially (terminalWidth=0 means unknown)
@@ -1891,7 +1974,7 @@ func RunInteractiveChanges(
 	p := tea.NewProgram(m)
 	finalModel, runErr := p.Run()
 	if runErr != nil {
-		return "", "", fmt.Errorf(
+		return "", "", "", "", fmt.Errorf(
 			errInteractiveModeFormat,
 			runErr,
 		)
@@ -1909,19 +1992,19 @@ func RunInteractiveChanges(
 			)
 		}
 
-		// Return archive ID if archive was requested
+		// Return archive ID and root path if archive was requested
 		if fm.archiveRequested &&
 			fm.selectedID != "" {
-			return fm.selectedID, "", nil
+			return fm.selectedID, fm.selectedRootPath, "", "", nil
 		}
 
-		// Return PR ID if PR was requested
+		// Return PR ID and root path if PR was requested
 		if fm.prRequested && fm.selectedID != "" {
-			return "", fm.selectedID, nil
+			return "", "", fm.selectedID, fm.selectedRootPath, nil
 		}
 	}
 
-	return "", "", nil
+	return "", "", "", "", nil
 }
 
 // RunInteractiveArchive runs the interactive table for

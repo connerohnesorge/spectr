@@ -2152,6 +2152,7 @@ func TestCalculateChangesColumns_FullWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 4 {
@@ -2228,6 +2229,7 @@ func TestCalculateChangesColumns_MediumWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 4 {
@@ -2282,6 +2284,7 @@ func TestCalculateChangesColumns_NarrowTitleWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 4 {
@@ -2344,6 +2347,7 @@ func TestCalculateChangesColumns_NarrowWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 3 {
@@ -2389,6 +2393,7 @@ func TestCalculateChangesColumns_MinimalWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 2 {
@@ -3307,6 +3312,7 @@ func TestColumnCountsByBreakpoint(t *testing.T) {
 			case itemTypeChange:
 				cols = calculateChangesColumns(
 					tt.width,
+					LineNumberOff,
 				)
 			case itemTypeSpec:
 				cols = calculateSpecsColumns(
@@ -3373,6 +3379,8 @@ func TestBuildChangesRows_ResponsiveColumns(
 				changes,
 				30,
 				tt.numColumns,
+				LineNumberOff,
+				0,
 			)
 
 			if len(rows) != len(changes) {
@@ -3672,7 +3680,7 @@ func TestWindowSizeMsg_TriggersRebuild(
 
 	// At width 75, changes view should have 2 columns (narrow breakpoint)
 	expectedColCount := len(
-		calculateChangesColumns(75),
+		calculateChangesColumns(75, LineNumberOff),
 	)
 	actualColCount := len(m.table.Columns())
 
@@ -3842,6 +3850,7 @@ func TestTitleWidthMinimums(t *testing.T) {
 				// So we check Tasks column width instead
 				changesCols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 				// At minimal widths, changes only has ID and Tasks (no Title)
 				// Verify Tasks column (index 1) has reasonable width
@@ -4373,4 +4382,208 @@ func TestInteractiveModel_CountPrefixSearchModeSwitch(t *testing.T) {
 	// Navigation should work - count prefix functionality is back
 	tm.Send(tea.KeyMsg{Type: tea.KeyCtrlC})
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second*2))
+}
+
+func TestCycleLineNumberMode(t *testing.T) {
+	model := &interactiveModel{
+		lineNumberMode: LineNumberOff,
+	}
+
+	tests := []struct {
+		name     string
+		expected LineNumberMode
+	}{
+		{"off to relative", LineNumberRelative},
+		{"relative to hybrid", LineNumberHybrid},
+		{"hybrid to off", LineNumberOff},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model.cycleLineNumberMode()
+			if model.lineNumberMode != tt.expected {
+				t.Errorf(
+					"Expected lineNumberMode to be %v, got %v",
+					tt.expected,
+					model.lineNumberMode,
+				)
+			}
+		})
+	}
+}
+
+func TestCycleLineNumberMode_KeyHandler(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"change-1", "Change 1", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := &interactiveModel{
+		itemType:       "change",
+		projectPath:    "/tmp/test",
+		table:          tbl,
+		lineNumberMode: LineNumberOff,
+	}
+
+	updatedModel, _ := model.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'#'},
+		},
+	)
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
+	if m.lineNumberMode != LineNumberRelative {
+		t.Errorf(
+			"Expected lineNumberMode to be LineNumberRelative, got %v",
+			m.lineNumberMode,
+		)
+	}
+}
+
+func TestCalculateLineNumber(t *testing.T) {
+	tests := []struct {
+		name        string
+		mode        LineNumberMode
+		rowIdx      int
+		cursorIdx   int
+		expectedNum int
+	}{
+		{"relative - cursor row", LineNumberRelative, 5, 5, 0},
+		{"relative - above cursor", LineNumberRelative, 3, 5, 2},
+		{"relative - below cursor", LineNumberRelative, 7, 5, 2},
+		{"hybrid - cursor row", LineNumberHybrid, 5, 5, 6},
+		{"hybrid - above cursor", LineNumberHybrid, 3, 5, 2},
+		{"hybrid - below cursor", LineNumberHybrid, 7, 5, 2},
+		{"off mode", LineNumberOff, 5, 5, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := &interactiveModel{
+				lineNumberMode: tt.mode,
+			}
+			result := model.calculateLineNumber(tt.rowIdx, tt.cursorIdx)
+			if result != tt.expectedNum {
+				t.Errorf(
+					"calculateLineNumber(%d, %d) = %d, want %d",
+					tt.rowIdx,
+					tt.cursorIdx,
+					result,
+					tt.expectedNum,
+				)
+			}
+		})
+	}
+}
+
+func TestLineNumberFooterIndicator(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"change-1", "Change 1", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	tests := []struct {
+		name          string
+		mode          LineNumberMode
+		wantSubstr    string
+		notWantSubstr string
+	}{
+		{
+			name:          "off mode - no indicator",
+			mode:          LineNumberOff,
+			wantSubstr:    "showing: 1",
+			notWantSubstr: "ln:",
+		},
+		{
+			name:          "relative mode - shows ln: rel",
+			mode:          LineNumberRelative,
+			wantSubstr:    "ln: rel",
+			notWantSubstr: "",
+		},
+		{
+			name:          "hybrid mode - shows ln: hyb",
+			mode:          LineNumberHybrid,
+			wantSubstr:    "ln: hyb",
+			notWantSubstr: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := &interactiveModel{
+				itemType:       "change",
+				projectPath:    "/tmp/test",
+				table:          tbl,
+				lineNumberMode: tt.mode,
+				minimalFooter:  "showing: 1 | project: /tmp/test | ?: help",
+			}
+			view := model.View()
+			if !strings.Contains(view, tt.wantSubstr) {
+				t.Errorf(
+					"Expected view to contain '%s', got: %s",
+					tt.wantSubstr,
+					view,
+				)
+			}
+			if tt.notWantSubstr != "" && strings.Contains(view, tt.notWantSubstr) {
+				t.Errorf(
+					"Expected view to NOT contain '%s', got: %s",
+					tt.notWantSubstr,
+					view,
+				)
+			}
+		})
+	}
+}
+
+func TestAbs(t *testing.T) {
+	tests := []struct {
+		input    int
+		expected int
+	}{
+		{0, 0},
+		{5, 5},
+		{-5, 5},
+		{100, 100},
+		{-100, 100},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("abs(%d)", tt.input), func(t *testing.T) {
+			result := abs(tt.input)
+			if result != tt.expected {
+				t.Errorf(
+					"abs(%d) = %d, want %d",
+					tt.input,
+					result,
+					tt.expected,
+				)
+			}
+		})
+	}
 }

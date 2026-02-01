@@ -11,6 +11,9 @@ const (
 	// spectrDirName is the standard name for spectr directories.
 	spectrDirName = "spectr"
 
+	// gitDirName is the standard name for git directories.
+	gitDirName = ".git"
+
 	// maxDiscoveryDepth limits how deep downward discovery will traverse.
 	maxDiscoveryDepth = 10
 )
@@ -202,12 +205,21 @@ func appendDownwardRoots(existingRoots []SpectrRoot, absCwd, gitRoot string) []S
 	return existingRoots
 }
 
+// hasGitAtLevel checks if a .git directory (or file for worktrees) exists at the given path.
+// This is used to validate that a spectr/ directory belongs to a real git repository.
+func hasGitAtLevel(path string) bool {
+	gitDir := filepath.Join(path, gitDirName)
+	_, err := os.Stat(gitDir)
+
+	return err == nil
+}
+
 // findGitRoot walks up from the given path to find the nearest .git directory.
 // Returns empty string if no git root is found.
 func findGitRoot(startPath string) string {
 	current := startPath
 	for {
-		gitDir := filepath.Join(current, ".git")
+		gitDir := filepath.Join(current, gitDirName)
 		info, err := os.Stat(gitDir)
 		if err == nil && info.IsDir() {
 			return current
@@ -230,7 +242,7 @@ func findGitRoot(startPath string) string {
 
 // shouldSkipDirectory returns true if the directory should be skipped during downward discovery.
 func shouldSkipDirectory(dirName string) bool {
-	skipDirs := []string{".git", "node_modules", "vendor", "target", "dist", "build"}
+	skipDirs := []string{gitDirName, "node_modules", "vendor", "target", "dist", "build"}
 	for _, skip := range skipDirs {
 		if dirName == skip {
 			return true
@@ -258,6 +270,7 @@ func calculateDepth(path, absStartPath string, depthMap map[string]int) int {
 
 // addSpectrRootIfExists checks if a directory contains a spectr/ subdirectory
 // and adds it to the roots slice if it does.
+// Only directories that also have a .git at the same level are considered valid.
 func addSpectrRootIfExists(path, cwd string, roots *[]SpectrRoot) {
 	spectrDir := filepath.Join(path, spectrDirName)
 	info, statErr := os.Stat(spectrDir)
@@ -265,7 +278,13 @@ func addSpectrRootIfExists(path, cwd string, roots *[]SpectrRoot) {
 		return
 	}
 
-	// Found a spectr/ directory!
+	// Only add as root if .git exists at same level
+	// This prevents test fixtures and example directories from being discovered
+	if !hasGitAtLevel(path) {
+		return
+	}
+
+	// Found a valid spectr/ directory with .git at same level!
 	// Calculate relative path from original cwd
 	relPath, relErr := filepath.Rel(cwd, path)
 	if relErr != nil {
@@ -289,7 +308,7 @@ func shouldSkipGitBoundary(path, absStartPath string) bool {
 		return false // Don't skip the start path itself
 	}
 
-	gitDir := filepath.Join(path, ".git")
+	gitDir := filepath.Join(path, gitDirName)
 	info, err := os.Stat(gitDir)
 	// If .git exists (as dir or file for worktrees), skip descending
 	return err == nil && (info.IsDir() || !info.IsDir())

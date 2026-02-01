@@ -524,7 +524,7 @@ func TestFindSpectrRoots_RelativePathCalculation(t *testing.T) {
 // TestFindSpectrRootsDownward tests the downward directory discovery.
 // nolint:revive // Complex test function with multiple comprehensive scenarios
 func TestFindSpectrRootsDownward(t *testing.T) {
-	t.Run("finds nested spectr directories", func(t *testing.T) {
+	t.Run("finds nested spectr directories with git", func(t *testing.T) {
 		// Create structure:
 		// tmpDir/
 		//   project1/
@@ -534,7 +534,7 @@ func TestFindSpectrRootsDownward(t *testing.T) {
 		//     .git/
 		//     spectr/
 		//   project3/
-		//     spectr/  (no .git)
+		//     spectr/  (no .git - should NOT be found)
 		tmpDir := t.TempDir()
 
 		mustMkdirAll(t, filepath.Join(tmpDir, "project1", ".git"))
@@ -550,32 +550,34 @@ func TestFindSpectrRootsDownward(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		if len(roots) != 3 {
-			t.Fatalf("expected 3 roots, got %d", len(roots))
+		// Should only find 2 roots (project3 has no .git)
+		if len(roots) != 2 {
+			t.Fatalf("expected 2 roots (project1 and project2 with .git), got %d", len(roots))
 		}
 
-		// Verify all projects were found
+		// Verify only projects with .git were found
 		foundProjects := make(map[string]bool)
 		for _, root := range roots {
 			baseName := filepath.Base(root.Path)
 			foundProjects[baseName] = true
 
-			// Verify git root is set correctly for projects with .git
-			if baseName != "project1" && baseName != "project2" {
-				continue
-			}
-
+			// Verify git root is set correctly
 			if root.GitRoot != root.Path {
 				t.Errorf("expected GitRoot %s for %s, got %s",
 					root.Path, baseName, root.GitRoot)
 			}
 		}
 
-		expectedProjects := []string{"project1", "project2", "project3"}
+		expectedProjects := []string{"project1", "project2"}
 		for _, project := range expectedProjects {
 			if !foundProjects[project] {
 				t.Errorf("expected to find %s", project)
 			}
+		}
+
+		// project3 should NOT be found (no .git)
+		if foundProjects["project3"] {
+			t.Error("project3 should NOT be found (no .git at same level)")
 		}
 	})
 
@@ -601,15 +603,18 @@ func TestFindSpectrRootsDownward(t *testing.T) {
 	t.Run("skips ignored directories", func(t *testing.T) {
 		// Create structure with directories that should be skipped:
 		// tmpDir/
-		//   .git/spectr/         <- should skip
-		//   node_modules/spectr/ <- should skip
-		//   vendor/spectr/       <- should skip
-		//   project/spectr/      <- should find
+		//   .git/spectr/         <- should skip (ignored dir)
+		//   node_modules/spectr/ <- should skip (ignored dir)
+		//   vendor/spectr/       <- should skip (ignored dir)
+		//   project/
+		//     .git/
+		//     spectr/            <- should find (has .git)
 		tmpDir := t.TempDir()
 
 		mustMkdirAll(t, filepath.Join(tmpDir, ".git", "spectr"))
 		mustMkdirAll(t, filepath.Join(tmpDir, "node_modules", "spectr"))
 		mustMkdirAll(t, filepath.Join(tmpDir, "vendor", "spectr"))
+		mustMkdirAll(t, filepath.Join(tmpDir, "project", ".git"))
 		mustMkdirAll(t, filepath.Join(tmpDir, "project", "spectr"))
 
 		roots, err := findSpectrRootsDownward(tmpDir, tmpDir, maxDiscoveryDepth)
@@ -672,15 +677,20 @@ func TestFindSpectrRootsDownward(t *testing.T) {
 
 	t.Run("continues after finding spectr", func(t *testing.T) {
 		// Verify it doesn't stop at first spectr/ found
+		// (both projects are siblings, not nested)
 		// tmpDir/
-		//   outer/
+		//   projectA/
+		//     .git/
 		//     spectr/
-		//     inner/
-		//       spectr/
+		//   projectB/
+		//     .git/
+		//     spectr/
 		tmpDir := t.TempDir()
 
-		mustMkdirAll(t, filepath.Join(tmpDir, "outer", "spectr"))
-		mustMkdirAll(t, filepath.Join(tmpDir, "outer", "inner", "spectr"))
+		mustMkdirAll(t, filepath.Join(tmpDir, "projectA", ".git"))
+		mustMkdirAll(t, filepath.Join(tmpDir, "projectA", "spectr"))
+		mustMkdirAll(t, filepath.Join(tmpDir, "projectB", ".git"))
+		mustMkdirAll(t, filepath.Join(tmpDir, "projectB", "spectr"))
 
 		roots, err := findSpectrRootsDownward(tmpDir, tmpDir, maxDiscoveryDepth)
 		if err != nil {
@@ -697,7 +707,8 @@ func TestFindSpectrRootsDownward(t *testing.T) {
 		// directories it can't read (permission errors)
 		tmpDir := t.TempDir()
 
-		// Create a readable project
+		// Create a readable project with .git
+		mustMkdirAll(t, filepath.Join(tmpDir, "readable", ".git"))
 		mustMkdirAll(t, filepath.Join(tmpDir, "readable", "spectr"))
 
 		// Note: We can't reliably test permission errors in all environments
@@ -717,6 +728,7 @@ func TestFindSpectrRootsDownward(t *testing.T) {
 		// Test from different cwd
 		tmpDir := t.TempDir()
 
+		mustMkdirAll(t, filepath.Join(tmpDir, "projects", "myapp", ".git"))
 		mustMkdirAll(t, filepath.Join(tmpDir, "projects", "myapp", "spectr"))
 
 		// Pretend cwd is somewhere else
@@ -990,24 +1002,31 @@ func TestSortRootsByDistance(t *testing.T) {
 // TestFindSpectrRoots_SubdirectoryDiscovery tests basic subdirectory discovery.
 // This verifies that FindSpectrRoots can find spectr/ directories in subdirectories
 // when running from a directory without a git repository.
+// Only directories with .git at the same level as spectr/ are discovered.
 func TestFindSpectrRoots_SubdirectoryDiscovery(t *testing.T) {
-	// Create structure (no git boundary, so downward discovery should happen):
+	// Create structure (no git boundary at root, so downward discovery should happen):
 	// tmpDir/
 	//   project1/
+	//     .git/
 	//     spectr/
 	//   project2/
+	//     .git/
 	//     spectr/
 	//   deeply/
 	//     nested/
 	//       project3/
+	//         .git/
 	//         spectr/
 	tmpDir := t.TempDir()
 
+	mustMkdirAll(t, filepath.Join(tmpDir, "project1", ".git"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "project1", "spectr"))
+	mustMkdirAll(t, filepath.Join(tmpDir, "project2", ".git"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "project2", "spectr"))
+	mustMkdirAll(t, filepath.Join(tmpDir, "deeply", "nested", "project3", ".git"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "deeply", "nested", "project3", "spectr"))
 
-	// Run from tmpDir (no .git, so downward discovery occurs)
+	// Run from tmpDir (no .git at root, so downward discovery occurs)
 	roots, err := FindSpectrRoots(tmpDir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -1026,10 +1045,9 @@ func TestFindSpectrRoots_SubdirectoryDiscovery(t *testing.T) {
 		baseName := filepath.Base(root.Path)
 		foundProjects[baseName] = true
 
-		// Verify GitRoot is empty (no git boundaries)
-		if root.GitRoot != "" {
-			t.Errorf("expected empty GitRoot for %s (no .git), got %s",
-				baseName, root.GitRoot)
+		// Verify GitRoot is set (each project has its own .git)
+		if root.GitRoot == "" {
+			t.Errorf("expected GitRoot to be set for %s", baseName)
 		}
 	}
 
@@ -1175,17 +1193,20 @@ func TestFindSpectrRoots_DepthLimit(t *testing.T) {
 	// - tmpDir/a/b/c/d/e/f/g/h/i/j: depth 11 (exceeds limit)
 	tmpDir := t.TempDir()
 
-	// Create shallow spectr (depth 2 with current implementation)
+	// Create shallow spectr with .git (depth 2 with current implementation)
+	mustMkdirAll(t, filepath.Join(tmpDir, "shallow", ".git"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "shallow", "spectr"))
 
-	// Create at-limit spectr (depth 10)
+	// Create at-limit spectr with .git (depth 10)
 	// Using 9 path segments: a/b/c/d/e/f/g/h/i
 	atLimitPath := filepath.Join(tmpDir, "a", "b", "c", "d", "e", "f", "g", "h", "i")
+	mustMkdirAll(t, filepath.Join(atLimitPath, ".git"))
 	mustMkdirAll(t, filepath.Join(atLimitPath, "spectr"))
 
-	// Create too-deep spectr (depth 11, should not be found)
+	// Create too-deep spectr with .git (depth 11, should not be found due to depth limit)
 	// Using 10 path segments: a/b/c/d/e/f/g/h/i/j
 	tooDeepPath := filepath.Join(tmpDir, "a", "b", "c", "d", "e", "f", "g", "h", "i", "j")
+	mustMkdirAll(t, filepath.Join(tooDeepPath, ".git"))
 	mustMkdirAll(t, filepath.Join(tooDeepPath, "spectr"))
 
 	// Test the internal downward discovery function directly
@@ -1239,7 +1260,7 @@ func TestFindSpectrRoots_SkipsIgnoredDirs(t *testing.T) {
 	// function ensures the skip logic is verified.
 	tmpDir := t.TempDir()
 
-	// Create spectr/ inside ignored directories
+	// Create spectr/ inside ignored directories (these should be skipped)
 	mustMkdirAll(t, filepath.Join(tmpDir, ".git", "spectr"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "node_modules", "package", "spectr"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "vendor", "lib", "spectr"))
@@ -1247,7 +1268,8 @@ func TestFindSpectrRoots_SkipsIgnoredDirs(t *testing.T) {
 	mustMkdirAll(t, filepath.Join(tmpDir, "dist", "spectr"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "build", "spectr"))
 
-	// Create valid spectr/ in regular project directory
+	// Create valid spectr/ in regular project directory with .git
+	mustMkdirAll(t, filepath.Join(tmpDir, "project", ".git"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "project", "spectr"))
 
 	// Test the internal downward discovery function directly
@@ -1328,6 +1350,38 @@ func TestFindSpectrRoots_Deduplication(t *testing.T) {
 	}
 	if roots[1].Path != tmpDir {
 		t.Errorf("expected second root to be tmpDir, got %s", roots[1].Path)
+	}
+}
+
+// TestFindSpectrRoots_RequiresGitAtSameLevel verifies that spectr/ directories
+// without .git at the same level are NOT discovered during downward discovery.
+// This prevents test fixtures like examples/*/spectr/ from being picked up.
+func TestFindSpectrRoots_RequiresGitAtSameLevel(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create .git and spectr at root
+	mustMkdirAll(t, filepath.Join(tmpDir, ".git"))
+	mustMkdirAll(t, filepath.Join(tmpDir, "spectr"))
+
+	// Create examples subdirectory with spectr but NO .git (like test fixtures)
+	mustMkdirAll(t, filepath.Join(tmpDir, "examples", "test", "spectr"))
+	mustMkdirAll(t, filepath.Join(tmpDir, "examples", "list", "spectr"))
+
+	roots, err := FindSpectrRoots(tmpDir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Should only find root, not examples/*
+	if len(roots) != 1 {
+		for i, r := range roots {
+			t.Logf("  root[%d]: %s", i, r.Path)
+		}
+		t.Fatalf("expected 1 root (examples/* have no .git), got %d", len(roots))
+	}
+
+	if roots[0].Path != tmpDir {
+		t.Errorf("expected root at %s, got %s", tmpDir, roots[0].Path)
 	}
 }
 

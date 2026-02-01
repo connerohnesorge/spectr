@@ -60,6 +60,9 @@ const (
 	// Table height
 	tableHeight = 10
 
+	// Line number column width
+	lineNumberColumnWidth = 3
+
 	// Item type string constants
 	itemTypeAll    = "all"
 	itemTypeChange = "change"
@@ -96,6 +99,18 @@ const (
 	breakpointHideTitle = 80
 )
 
+// LineNumberMode controls how line numbers are displayed in the interactive list.
+type LineNumberMode int
+
+const (
+	// LineNumberOff - no line numbers displayed
+	LineNumberOff LineNumberMode = iota
+	// LineNumberRelative - show relative distance from cursor
+	LineNumberRelative
+	// LineNumberHybrid - cursor shows absolute, others show relative
+	LineNumberHybrid
+)
+
 // ColumnPriority defines the priority level for table columns.
 // Higher priority columns are shown first when space is limited.
 type ColumnPriority int
@@ -122,15 +137,24 @@ const (
 // Column order is always: ID | Title | Deltas | Tasks (when visible)
 func calculateChangesColumns(
 	width int,
+	lineNumberMode LineNumberMode,
 ) []table.Column {
 	// Calculate available width for content (accounting for table borders/padding)
 	// Table has approximately 4 chars of padding/borders per column
 	const paddingPerColumn = 4
 
+	// Prepend line number column if enabled
+	var lineNumCol []table.Column
+	if lineNumberMode != LineNumberOff {
+		lineNumCol = []table.Column{
+			{Title: "Ln", Width: lineNumberColumnWidth},
+		}
+	}
+
 	switch {
 	case width >= breakpointFull:
 		// Full width (110+): all 4 columns at default widths
-		return []table.Column{
+		cols := []table.Column{
 			{
 				Title: columnTitleID,
 				Width: changeIDWidth,
@@ -148,6 +172,7 @@ func calculateChangesColumns(
 				Width: changeTasksWidth,
 			},
 		}
+		return append(lineNumCol, cols...)
 
 	case width >= breakpointMedium:
 		// Medium width (90-109): all 4 columns visible, Title narrowed
@@ -457,7 +482,7 @@ func calculateTitleTruncate(
 
 	switch viewType {
 	case itemTypeChange:
-		cols := calculateChangesColumns(width)
+		cols := calculateChangesColumns(width, LineNumberOff)
 		// Find Title column (may not be present at narrow widths)
 		for _, col := range cols {
 			if col.Title == columnTitleTitle {
@@ -498,7 +523,7 @@ func hasHiddenColumns(
 	switch viewType {
 	case itemTypeChange:
 		return len(
-			calculateChangesColumns(width),
+			calculateChangesColumns(width, LineNumberOff),
 		) < 4 // Full has 4 columns
 	case itemTypeSpec:
 		return len(
@@ -520,17 +545,33 @@ func buildChangesRows(
 	changes []ChangeInfo,
 	titleTruncate int,
 	numColumns int,
+	lineNumberMode LineNumberMode,
+	cursor int,
 ) []table.Row {
 	rows := make([]table.Row, len(changes))
+
+	// Calculate effective number of data columns (excluding line number column)
+	dataColumns := numColumns
+	if lineNumberMode != LineNumberOff {
+		dataColumns = numColumns - 1
+	}
+
 	for i, change := range changes {
 		tasksStatus := fmt.Sprintf("%d/%d",
 			change.TaskStatus.Completed,
 			change.TaskStatus.Total)
 
-		switch numColumns {
+		// Calculate line number
+		var lineNumStr string
+		if lineNumberMode != LineNumberOff {
+			lineNum := calculateLineNumberValue(i, cursor, lineNumberMode)
+			lineNumStr = fmt.Sprintf("%d", lineNum)
+		}
+
+		switch dataColumns {
 		case 4:
 			// Full: ID, Title, Deltas, Tasks
-			rows[i] = table.Row{
+			row := table.Row{
 				change.ID,
 				tui.TruncateString(
 					change.Title,
@@ -542,15 +583,25 @@ func buildChangesRows(
 				),
 				tasksStatus,
 			}
+			if lineNumberMode != LineNumberOff {
+				rows[i] = append(table.Row{lineNumStr}, row...)
+			} else {
+				rows[i] = row
+			}
 		case 3:
 			// 3 columns without Title: ID, Deltas, Tasks
-			rows[i] = table.Row{
+			row := table.Row{
 				change.ID,
 				fmt.Sprintf(
 					"%d",
 					change.DeltaCount,
 				),
 				tasksStatus,
+			}
+			if lineNumberMode != LineNumberOff {
+				rows[i] = append(table.Row{lineNumStr}, row...)
+			} else {
+				rows[i] = row
 			}
 		default:
 			// Minimal 2 columns: ID, Tasks only
@@ -689,6 +740,7 @@ type interactiveModel struct {
 	changesData      []ChangeInfo         // original changes data for changes/archive views
 	specsData        []SpecInfo           // original specs data for specs view
 	countPrefixState tui.CountPrefixState // vim-style count prefix state
+	lineNumberMode   LineNumberMode       // line number display mode (off, relative, hybrid)
 }
 
 // Init initializes the model
@@ -780,6 +832,11 @@ func (m *interactiveModel) Update(
 
 			return m, nil
 
+		case "#":
+			m.cycleLineNumberMode()
+
+			return m, nil
+
 		case "?":
 			// Toggle help display
 			m.showHelp = !m.showHelp
@@ -810,8 +867,12 @@ func (m *interactiveModel) Update(
 		return m, nil
 	}
 
-	// Update table with key events
+	prevCursor := m.table.Cursor()
 	m.table, cmd = m.table.Update(msg)
+
+	if m.lineNumberMode != LineNumberOff && m.table.Cursor() != prevCursor {
+		m.updateLineNumbers()
+	}
 
 	return m, cmd
 }
@@ -1151,7 +1212,7 @@ func rebuildUnifiedTable(
 	}
 	m.helpText = fmt.Sprintf(
 		"↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | "+
-			"a: archive | t: filter (%s) | /: search | q: quit",
+			"a: archive | t: filter (%s) | #: line numbers | /: search | q: quit",
 		filterDesc,
 	)
 	m.minimalFooter = fmt.Sprintf(
@@ -1280,6 +1341,82 @@ func (m *interactiveModel) toggleSearchMode() {
 	}
 }
 
+func (m *interactiveModel) cycleLineNumberMode() {
+	switch m.lineNumberMode {
+	case LineNumberOff:
+		m.lineNumberMode = LineNumberRelative
+	case LineNumberRelative:
+		m.lineNumberMode = LineNumberHybrid
+	case LineNumberHybrid:
+		m.lineNumberMode = LineNumberOff
+	}
+
+	// Trigger table rebuild to add/remove line number column
+	m.rebuildTableForWidth()
+}
+
+func (m *interactiveModel) renderLineNumbers() string {
+	if m.lineNumberMode == LineNumberOff {
+		return ""
+	}
+
+	rows := m.table.Rows()
+	if len(rows) == 0 {
+		return ""
+	}
+
+	cursor := m.table.Cursor()
+	var result strings.Builder
+
+	for i := range rows {
+		num := m.calculateLineNumber(i, cursor)
+		if i == cursor {
+			result.WriteString(tui.CurrentLineNumberStyle().Render(fmt.Sprintf("%d", num)))
+		} else {
+			result.WriteString(tui.LineNumberStyle().Render(fmt.Sprintf("%d", num)))
+		}
+		result.WriteString("\n")
+	}
+
+	return result.String()
+}
+
+func (m *interactiveModel) calculateLineNumber(rowIdx, cursorIdx int) int {
+	switch m.lineNumberMode {
+	case LineNumberRelative:
+		return abs(rowIdx - cursorIdx)
+	case LineNumberHybrid:
+		if rowIdx == cursorIdx {
+			return cursorIdx + 1
+		}
+		return abs(rowIdx - cursorIdx)
+	default:
+		return 0
+	}
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
+
+// calculateLineNumberValue returns the display value for a line number
+func calculateLineNumberValue(rowIdx, cursorIdx int, mode LineNumberMode) int {
+	switch mode {
+	case LineNumberRelative:
+		return abs(rowIdx - cursorIdx)
+	case LineNumberHybrid:
+		if rowIdx == cursorIdx {
+			return cursorIdx + 1
+		}
+		return abs(rowIdx - cursorIdx)
+	default:
+		return 0
+	}
+}
+
 // rebuildTableForWidth rebuilds the table with columns adjusted for the
 // current terminal width. This is called when the terminal is resized.
 // It preserves cursor position and search state during the rebuild.
@@ -1328,7 +1465,7 @@ func (m *interactiveModel) rebuildChangesTable(
 		return
 	}
 
-	columns := calculateChangesColumns(width)
+	columns := calculateChangesColumns(width, m.lineNumberMode)
 	titleTruncate := calculateTitleTruncate(
 		itemTypeChange,
 		width,
@@ -1337,6 +1474,8 @@ func (m *interactiveModel) rebuildChangesTable(
 		m.changesData,
 		titleTruncate,
 		len(columns),
+		m.lineNumberMode,
+		m.table.Cursor(),
 	)
 
 	t := table.New(
@@ -1472,9 +1611,16 @@ func (m *interactiveModel) View() string {
 		footer += " | (some columns hidden)"
 	}
 
-	// Append count prefix indicator when active
 	if m.countPrefixState.IsActive() {
 		footer += fmt.Sprintf(" | count: %s_", m.countPrefixState.String())
+	}
+
+	if m.lineNumberMode != LineNumberOff {
+		modeStr := "rel"
+		if m.lineNumberMode == LineNumberHybrid {
+			modeStr = "hyb"
+		}
+		footer += fmt.Sprintf(" | ln: %s", modeStr)
 	}
 
 	view += m.table.View() + "\n" + footer + "\n"
@@ -1509,6 +1655,7 @@ func RunInteractiveChanges(
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
 	columns := calculateChangesColumns(
 		breakpointFull,
+		LineNumberOff,
 	)
 	titleTruncate := calculateTitleTruncate(
 		itemTypeChange,
@@ -1519,6 +1666,8 @@ func RunInteractiveChanges(
 		changes,
 		titleTruncate,
 		len(columns),
+		LineNumberOff,
+		0,
 	)
 
 	t := table.New(
@@ -1540,7 +1689,7 @@ func RunInteractiveChanges(
 		changesData:   changes,    // Store for rebuild on resize
 		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
-			"a: archive | P: pr | /: search | q: quit",
+			"a: archive | P: pr | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),
@@ -1599,6 +1748,7 @@ func RunInteractiveArchive(
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
 	columns := calculateChangesColumns(
 		breakpointFull,
+		LineNumberOff,
 	)
 	titleTruncate := calculateTitleTruncate(
 		itemTypeChange,
@@ -1609,6 +1759,8 @@ func RunInteractiveArchive(
 		changes,
 		titleTruncate,
 		len(columns),
+		LineNumberOff,
+		0,
 	)
 
 	t := table.New(
@@ -1629,7 +1781,7 @@ func RunInteractiveArchive(
 		terminalWidth: 0,       // Will be set by WindowSizeMsg
 		changesData:   changes, // Store for rebuild on resize
 		selectionMode: true,    // Enter selects without copying
-		helpText:      "↑/↓/j/k: navigate (try 9j) | Enter: select | /: search | q: quit",
+		helpText:      "↑/↓/j/k: navigate (try 9j) | Enter: select | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),
@@ -1713,7 +1865,7 @@ func RunInteractiveSpecs(
 		specsData:     specs,      // Store for rebuild on resize
 		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
-			"/: search | q: quit",
+			"#: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(specs),
@@ -1792,7 +1944,7 @@ func RunInteractiveAll(
 		terminalWidth: 0,          // Will be set by WindowSizeMsg
 		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
-			"a: archive | t: filter (all) | /: search | q: quit",
+			"a: archive | t: filter (all) | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),

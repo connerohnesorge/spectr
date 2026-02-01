@@ -172,6 +172,7 @@ func calculateChangesColumns(
 				Width: changeTasksWidth,
 			},
 		}
+
 		return append(lineNumCol, cols...)
 
 	case width >= breakpointMedium:
@@ -1360,66 +1361,30 @@ func (m *interactiveModel) cycleLineNumberMode() {
 	m.rebuildTableForWidth()
 }
 
-func (m *interactiveModel) renderLineNumbers() string {
-	if m.lineNumberMode == LineNumberOff {
-		return ""
-	}
-
-	rows := m.table.Rows()
-	if len(rows) == 0 {
-		return ""
-	}
-
-	cursor := m.table.Cursor()
-	var result strings.Builder
-
-	for i := range rows {
-		num := m.calculateLineNumber(i, cursor)
-		if i == cursor {
-			result.WriteString(tui.CurrentLineNumberStyle().Render(fmt.Sprintf("%d", num)))
-		} else {
-			result.WriteString(tui.LineNumberStyle().Render(fmt.Sprintf("%d", num)))
-		}
-		result.WriteString("\n")
-	}
-
-	return result.String()
-}
-
-func (m *interactiveModel) calculateLineNumber(rowIdx, cursorIdx int) int {
-	switch m.lineNumberMode {
-	case LineNumberRelative:
-		return abs(rowIdx - cursorIdx)
-	case LineNumberHybrid:
-		if rowIdx == cursorIdx {
-			return cursorIdx + 1
-		}
-		return abs(rowIdx - cursorIdx)
-	default:
-		return 0
-	}
-}
-
 func abs(n int) int {
 	if n < 0 {
 		return -n
 	}
+
 	return n
 }
 
 // calculateLineNumberValue returns the display value for a line number
 func calculateLineNumberValue(rowIdx, cursorIdx int, mode LineNumberMode) int {
 	switch mode {
+	case LineNumberOff:
+		return 0
 	case LineNumberRelative:
 		return abs(rowIdx - cursorIdx)
 	case LineNumberHybrid:
 		if rowIdx == cursorIdx {
 			return cursorIdx + 1
 		}
+
 		return abs(rowIdx - cursorIdx)
-	default:
-		return 0
 	}
+
+	return 0
 }
 
 func (m *interactiveModel) updateLineNumbers() {

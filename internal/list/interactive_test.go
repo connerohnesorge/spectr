@@ -4473,15 +4473,13 @@ func TestCalculateLineNumber(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			model := &interactiveModel{
-				lineNumberMode: tt.mode,
-			}
-			result := model.calculateLineNumber(tt.rowIdx, tt.cursorIdx)
+			result := calculateLineNumberValue(tt.rowIdx, tt.cursorIdx, tt.mode)
 			if result != tt.expectedNum {
 				t.Errorf(
-					"calculateLineNumber(%d, %d) = %d, want %d",
+					"calculateLineNumberValue(%d, %d, %v) = %d, want %d",
 					tt.rowIdx,
 					tt.cursorIdx,
+					tt.mode,
 					result,
 					tt.expectedNum,
 				)

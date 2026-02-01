@@ -1776,7 +1776,7 @@ func RunInteractiveArchive(
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
 	columns := calculateChangesColumns(
 		breakpointFull,
-		LineNumberOff,
+		LineNumberRelative,
 	)
 	titleTruncate := calculateTitleTruncate(
 		itemTypeChange,
@@ -1787,7 +1787,7 @@ func RunInteractiveArchive(
 		changes,
 		titleTruncate,
 		len(columns),
-		LineNumberOff,
+		LineNumberRelative,
 		0,
 	)
 
@@ -1801,15 +1801,16 @@ func RunInteractiveArchive(
 	tui.ApplyTableStyles(&t)
 
 	m := &interactiveModel{
-		table:         t,
-		itemType:      itemTypeChange,
-		projectPath:   projectPath,
-		searchInput:   newTextInput(),
-		allRows:       rows,
-		terminalWidth: 0,       // Will be set by WindowSizeMsg
-		changesData:   changes, // Store for rebuild on resize
-		selectionMode: true,    // Enter selects without copying
-		helpText:      "↑/↓/j/k: navigate (try 9j) | Enter: select | #: line numbers | /: search | q: quit",
+		table:          t,
+		itemType:       itemTypeChange,
+		projectPath:    projectPath,
+		searchInput:    newTextInput(),
+		allRows:        rows,
+		terminalWidth:  0,                  // Will be set by WindowSizeMsg
+		changesData:    changes,            // Store for rebuild on resize
+		selectionMode:  true,               // Enter selects without copying
+		lineNumberMode: LineNumberRelative, // Default to relative line numbers
+		helpText:       "↑/↓/j/k: navigate (try 9j) | Enter: select | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),
@@ -1884,14 +1885,15 @@ func RunInteractiveSpecs(
 	tui.ApplyTableStyles(&t)
 
 	m := &interactiveModel{
-		table:         t,
-		itemType:      itemTypeSpec,
-		projectPath:   projectPath,
-		searchInput:   newTextInput(),
-		allRows:       rows,
-		terminalWidth: 0,          // Will be set by WindowSizeMsg
-		specsData:     specs,      // Store for rebuild on resize
-		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
+		table:          t,
+		itemType:       itemTypeSpec,
+		projectPath:    projectPath,
+		searchInput:    newTextInput(),
+		allRows:        rows,
+		terminalWidth:  0,                  // Will be set by WindowSizeMsg
+		specsData:      specs,              // Store for rebuild on resize
+		stdoutMode:     stdoutMode,         // Output to stdout instead of clipboard
+		lineNumberMode: LineNumberRelative, // Default to relative line numbers
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
 			"#: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
@@ -1962,15 +1964,16 @@ func RunInteractiveAll(
 	tui.ApplyTableStyles(&t)
 
 	m := &interactiveModel{
-		table:         t,
-		itemType:      itemTypeAll,
-		projectPath:   projectPath,
-		allItems:      items,
-		filterType:    nil, // Start with all items visible
-		searchInput:   newTextInput(),
-		allRows:       rows,
-		terminalWidth: 0,          // Will be set by WindowSizeMsg
-		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
+		table:          t,
+		itemType:       itemTypeAll,
+		projectPath:    projectPath,
+		allItems:       items,
+		filterType:     nil, // Start with all items visible
+		searchInput:    newTextInput(),
+		allRows:        rows,
+		terminalWidth:  0,                  // Will be set by WindowSizeMsg
+		stdoutMode:     stdoutMode,         // Output to stdout instead of clipboard
+		lineNumberMode: LineNumberRelative, // Default to relative line numbers
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
 			"a: archive | t: filter (all) | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(

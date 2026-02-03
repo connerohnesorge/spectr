@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"sync"
 
 	"github.com/connerohnesorge/spectr/internal/discovery"
 	"github.com/connerohnesorge/spectr/internal/git"
@@ -20,11 +21,42 @@ func NewLister(projectPath string) *Lister {
 	return &Lister{projectPath: projectPath}
 }
 
+// processChange extracts info for a single change directory
+func (l *Lister) processChange(changeID string) ChangeInfo {
+	changeDir := filepath.Join(
+		l.projectPath,
+		"spectr",
+		"changes",
+		changeID,
+	)
+	proposalPath := filepath.Join(changeDir, "proposal.md")
+
+	// Extract title
+	title, err := parsers.ExtractTitle(proposalPath)
+	if err != nil || title == "" {
+		title = changeID
+	}
+
+	// Count tasks
+	taskStatus, err := parsers.CountTasks(changeDir)
+	if err != nil {
+		taskStatus = parsers.TaskStatus{}
+	}
+
+	// Count deltas
+	deltaCount, _ := parsers.CountDeltas(changeDir)
+
+	return ChangeInfo{
+		ID:         changeID,
+		Title:      title,
+		DeltaCount: deltaCount,
+		TaskStatus: taskStatus,
+	}
+}
+
 // ListChanges retrieves information about all active changes
 func (l *Lister) ListChanges() ([]ChangeInfo, error) {
-	changeIDs, err := discovery.GetActiveChanges(
-		l.projectPath,
-	)
+	changeIDs, err := discovery.GetActiveChanges(l.projectPath)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to discover changes: %w",
@@ -32,67 +64,73 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 		)
 	}
 
-	changes := make(
-		[]ChangeInfo,
-		0,
-		len(changeIDs),
-	)
-	for _, id := range changeIDs {
-		changeDir := filepath.Join(
-			l.projectPath,
-			"spectr",
-			"changes",
-			id,
-		)
-		proposalPath := filepath.Join(
-			changeDir,
-			"proposal.md",
-		)
+	if len(changeIDs) == 0 {
+		return nil, nil
+	}
 
-		// Extract title
-		title, err := parsers.ExtractTitle(
-			proposalPath,
-		)
-		if err != nil || title == "" {
-			// Fallback to ID if title extraction fails
-			title = id
-		}
+	// Process changes in parallel
+	type changeResult struct {
+		idx    int
+		change ChangeInfo
+	}
 
-		// Count tasks (from tasks.json or tasks.md)
-		taskStatus, err := parsers.CountTasks(
-			changeDir,
-		)
-		if err != nil {
-			// If error reading tasks, use zero status
-			taskStatus = parsers.TaskStatus{
-				Total: 0, Completed: 0, InProgress: 0,
+	results := make(chan changeResult, len(changeIDs))
+	var wg sync.WaitGroup
+
+	for i, id := range changeIDs {
+		wg.Add(1)
+		go func(idx int, changeID string) {
+			defer wg.Done()
+			results <- changeResult{
+				idx:    idx,
+				change: l.processChange(changeID),
 			}
-		}
+		}(i, id)
+	}
 
-		// Count deltas
-		deltaCount, err := parsers.CountDeltas(
-			changeDir,
-		)
-		if err != nil {
-			deltaCount = 0
-		}
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
 
-		changes = append(changes, ChangeInfo{
-			ID:         id,
-			Title:      title,
-			DeltaCount: deltaCount,
-			TaskStatus: taskStatus,
-		})
+	// Collect results maintaining original order
+	changes := make([]ChangeInfo, len(changeIDs))
+	for r := range results {
+		changes[r.idx] = r.change
 	}
 
 	return changes, nil
 }
 
+// processSpec extracts info for a single spec directory
+func (l *Lister) processSpec(specID string) SpecInfo {
+	specPath := filepath.Join(
+		l.projectPath,
+		"spectr",
+		"specs",
+		specID,
+		"spec.md",
+	)
+
+	// Extract title
+	title, err := parsers.ExtractTitle(specPath)
+	if err != nil || title == "" {
+		title = specID
+	}
+
+	// Count requirements
+	reqCount, _ := parsers.CountRequirements(specPath)
+
+	return SpecInfo{
+		ID:               specID,
+		Title:            title,
+		RequirementCount: reqCount,
+	}
+}
+
 // ListSpecs retrieves information about all specs
 func (l *Lister) ListSpecs() ([]SpecInfo, error) {
-	specIDs, err := discovery.GetSpecs(
-		l.projectPath,
-	)
+	specIDs, err := discovery.GetSpecs(l.projectPath)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to discover specs: %w",
@@ -100,38 +138,39 @@ func (l *Lister) ListSpecs() ([]SpecInfo, error) {
 		)
 	}
 
-	specs := make([]SpecInfo, 0, len(specIDs))
-	for _, id := range specIDs {
-		specPath := filepath.Join(
-			l.projectPath,
-			"spectr",
-			"specs",
-			id,
-			"spec.md",
-		)
+	if len(specIDs) == 0 {
+		return nil, nil
+	}
 
-		// Extract title
-		title, err := parsers.ExtractTitle(
-			specPath,
-		)
-		if err != nil || title == "" {
-			// Fallback to ID if title extraction fails
-			title = id
-		}
+	// Process specs in parallel
+	type specResult struct {
+		idx  int
+		spec SpecInfo
+	}
 
-		// Count requirements
-		reqCount, err := parsers.CountRequirements(
-			specPath,
-		)
-		if err != nil {
-			reqCount = 0
-		}
+	results := make(chan specResult, len(specIDs))
+	var wg sync.WaitGroup
 
-		specs = append(specs, SpecInfo{
-			ID:               id,
-			Title:            title,
-			RequirementCount: reqCount,
-		})
+	for i, id := range specIDs {
+		wg.Add(1)
+		go func(idx int, specID string) {
+			defer wg.Done()
+			results <- specResult{
+				idx:  idx,
+				spec: l.processSpec(specID),
+			}
+		}(i, id)
+	}
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Collect results maintaining original order
+	specs := make([]SpecInfo, len(specIDs))
+	for r := range results {
+		specs[r.idx] = r.spec
 	}
 
 	return specs, nil

@@ -12,15 +12,6 @@ var (
 	gitRootCacheMu sync.RWMutex
 )
 
-// hasGitAtLevel checks if a .git directory (or file for worktrees) exists at the given path.
-// This is used to validate that a spectr/ directory belongs to a real git repository.
-func hasGitAtLevel(path string) bool {
-	gitDir := filepath.Join(path, gitDirName)
-	_, err := os.Stat(gitDir)
-
-	return err == nil
-}
-
 // findGitRoot walks up from the given path to find the nearest .git directory.
 // Returns empty string if no git root is found.
 // Results are cached for performance.

@@ -51,54 +51,17 @@ func calculateDepth(path, absStartPath string, depthMap map[string]int) int {
 	return 0
 }
 
-// addSpectrRootIfExists checks if a directory contains a spectr/ subdirectory
-// and adds it to the roots slice if it does.
-// Only directories that also have a .git at the same level are considered valid.
-func addSpectrRootIfExists(path, cwd string, roots *[]SpectrRoot) {
-	spectrDir := filepath.Join(path, spectrDirName)
-	info, statErr := os.Stat(spectrDir)
-	if statErr != nil || !info.IsDir() {
-		return
-	}
-
-	// Only add as root if .git exists at same level
-	// This prevents test fixtures and example directories from being discovered
-	if !hasGitAtLevel(path) {
-		return
-	}
-
-	// Found a valid spectr/ directory with .git at same level!
-	// Calculate relative path from original cwd
-	relPath, relErr := filepath.Rel(cwd, path)
-	if relErr != nil {
-		relPath = path // Fallback to absolute
-	}
-
-	// Find git root for this spectr root
-	gitRoot := findGitRoot(path)
-
-	*roots = append(*roots, SpectrRoot{
-		Path:       path,
-		RelativeTo: relPath,
-		GitRoot:    gitRoot,
-	})
-}
-
-// shouldSkipGitBoundary checks if a directory contains a .git subdirectory
-// and should not be descended into (unless it's the start path).
-func shouldSkipGitBoundary(path, absStartPath string) bool {
-	if path == absStartPath {
-		return false // Don't skip the start path itself
-	}
-
-	gitDir := filepath.Join(path, gitDirName)
-	info, err := os.Stat(gitDir)
-	// If .git exists (as dir or file for worktrees), skip descending
-	return err == nil && (info.IsDir() || !info.IsDir())
-}
-
 // processDownwardDirectory handles a single directory during downward discovery.
 // Returns filepath.SkipDir if the directory should not be descended into.
+//
+// Optimization: We check for .git FIRST because:
+// 1. A valid spectr root requires BOTH spectr/ AND .git
+// 2. If .git exists, we stop descending (git boundary)
+// 3. This means we only stat spectr/ for directories that have .git
+//
+// This reduces stat calls from 3 per directory to 1-2:
+// - Before: stat(spectr/) + stat(.git) + stat(.git) for every directory
+// - After: stat(.git) for all dirs, stat(spectr/) only when .git exists
 func processDownwardDirectory(path string, d os.DirEntry, ctx *downwardContext) error {
 	// Only process directories
 	if !d.IsDir() {
@@ -119,12 +82,38 @@ func processDownwardDirectory(path string, d os.DirEntry, ctx *downwardContext) 
 		return filepath.SkipDir
 	}
 
-	// Check if this directory contains a spectr/ subdirectory and add it if so
-	addSpectrRootIfExists(path, ctx.cwd, ctx.roots)
+	// Check for .git FIRST - this is the critical optimization
+	// We only stat .git once, and only check spectr/ if .git exists
+	gitDir := filepath.Join(path, gitDirName)
+	_, gitErr := os.Stat(gitDir)
+	hasGit := gitErr == nil // .git exists (as file or directory)
 
-	// Check if we should skip descending into this directory (git boundary)
-	if shouldSkipGitBoundary(path, ctx.absStartPath) {
-		return filepath.SkipDir
+	if hasGit {
+		// Found a git repository boundary - check if it also has spectr/
+		spectrDir := filepath.Join(path, spectrDirName)
+		spectrInfo, spectrErr := os.Stat(spectrDir)
+		if spectrErr == nil && spectrInfo.IsDir() {
+			// Found valid spectr root (has both spectr/ and .git)
+			relPath, relErr := filepath.Rel(ctx.cwd, path)
+			if relErr != nil {
+				relPath = path // Fallback to absolute
+			}
+
+			// findGitRoot uses cache, so this is efficient
+			gitRoot := findGitRoot(path)
+
+			*ctx.roots = append(*ctx.roots, SpectrRoot{
+				Path:       path,
+				RelativeTo: relPath,
+				GitRoot:    gitRoot,
+			})
+		}
+
+		// Don't descend into nested git repos (unless start path)
+		// This is the git boundary - nested repos are treated as separate
+		if path != ctx.absStartPath {
+			return filepath.SkipDir
+		}
 	}
 
 	return nil

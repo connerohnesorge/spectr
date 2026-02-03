@@ -149,18 +149,20 @@ func ValidateSingleItem(
 
 	if err != nil {
 		return BulkResult{
-			Name:  item.Name,
-			Type:  item.ItemType,
-			Valid: false,
-			Error: err.Error(),
+			Name:     item.Name,
+			Type:     item.ItemType,
+			Valid:    false,
+			Error:    err.Error(),
+			RootPath: item.RootPath,
 		}, err
 	}
 
 	return BulkResult{
-		Name:   item.Name,
-		Type:   item.ItemType,
-		Valid:  report.Valid,
-		Report: report,
+		Name:     item.Name,
+		Type:     item.ItemType,
+		Valid:    report.Valid,
+		Report:   report,
+		RootPath: item.RootPath,
 	}, nil
 }
 

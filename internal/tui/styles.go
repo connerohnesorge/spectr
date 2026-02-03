@@ -61,3 +61,22 @@ func ChoiceStyle() lipgloss.Style {
 	return lipgloss.NewStyle().
 		PaddingLeft(2)
 }
+
+// LineNumberStyle returns the style for line numbers (dimmed, right-aligned).
+func LineNumberStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorHelp)).
+		Align(lipgloss.Right).
+		Width(3).
+		MarginRight(1)
+}
+
+// CurrentLineNumberStyle returns the style for the current line number.
+func CurrentLineNumberStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorHeader)).
+		Bold(true).
+		Align(lipgloss.Right).
+		Width(3).
+		MarginRight(1)
+}

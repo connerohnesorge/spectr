@@ -60,10 +60,17 @@ const (
 	// Table height
 	tableHeight = 10
 
+	// Line number column width
+	lineNumberColumnWidth = 3
+
 	// Item type string constants
 	itemTypeAll    = "all"
 	itemTypeChange = "change"
 	itemTypeSpec   = "spec"
+
+	// Type display strings
+	typeDisplayChange = "CHANGE"
+	typeDisplaySpec   = "SPEC"
 
 	// Column title constants
 	columnTitleID           = "ID"
@@ -92,6 +99,18 @@ const (
 	breakpointHideTitle = 80
 )
 
+// LineNumberMode controls how line numbers are displayed in the interactive list.
+type LineNumberMode int
+
+const (
+	// LineNumberOff - no line numbers displayed
+	LineNumberOff LineNumberMode = iota
+	// LineNumberRelative - show relative distance from cursor
+	LineNumberRelative
+	// LineNumberHybrid - cursor shows absolute, others show relative
+	LineNumberHybrid
+)
+
 // ColumnPriority defines the priority level for table columns.
 // Higher priority columns are shown first when space is limited.
 type ColumnPriority int
@@ -118,15 +137,24 @@ const (
 // Column order is always: ID | Title | Deltas | Tasks (when visible)
 func calculateChangesColumns(
 	width int,
+	lineNumberMode LineNumberMode,
 ) []table.Column {
 	// Calculate available width for content (accounting for table borders/padding)
 	// Table has approximately 4 chars of padding/borders per column
 	const paddingPerColumn = 4
 
+	// Prepend line number column if enabled
+	var lineNumCol []table.Column
+	if lineNumberMode != LineNumberOff {
+		lineNumCol = []table.Column{
+			{Title: "Ln", Width: lineNumberColumnWidth},
+		}
+	}
+
 	switch {
 	case width >= breakpointFull:
 		// Full width (110+): all 4 columns at default widths
-		return []table.Column{
+		cols := []table.Column{
 			{
 				Title: columnTitleID,
 				Width: changeIDWidth,
@@ -144,6 +172,8 @@ func calculateChangesColumns(
 				Width: changeTasksWidth,
 			},
 		}
+
+		return append(lineNumCol, cols...)
 
 	case width >= breakpointMedium:
 		// Medium width (90-109): all 4 columns visible, Title narrowed
@@ -453,7 +483,7 @@ func calculateTitleTruncate(
 
 	switch viewType {
 	case itemTypeChange:
-		cols := calculateChangesColumns(width)
+		cols := calculateChangesColumns(width, LineNumberOff)
 		// Find Title column (may not be present at narrow widths)
 		for _, col := range cols {
 			if col.Title == columnTitleTitle {
@@ -494,7 +524,7 @@ func hasHiddenColumns(
 	switch viewType {
 	case itemTypeChange:
 		return len(
-			calculateChangesColumns(width),
+			calculateChangesColumns(width, LineNumberOff),
 		) < 4 // Full has 4 columns
 	case itemTypeSpec:
 		return len(
@@ -512,22 +542,68 @@ func hasHiddenColumns(
 // buildChangesRows creates table rows for changes data with the given
 // title truncation and column set. The column set determines which fields
 // are included in each row to match the visible columns.
+
+// detectMultiRootChanges returns true if any change has a non-trivial RootPath.
+func detectMultiRootChanges(changes []ChangeInfo) bool {
+	for _, c := range changes {
+		if c.RootPath != "" && c.RootPath != "." {
+			return true
+		}
+	}
+
+	return false
+}
+
+// formatChangeIDWithProject formats a change ID with project prefix if in multi-root mode.
+func formatChangeIDWithProject(id, rootPath string, hasMultipleRoots bool) string {
+	if !hasMultipleRoots || rootPath == "" || rootPath == "." {
+		return id
+	}
+
+	return fmt.Sprintf("[%s] %s", rootPath, id)
+}
+
+// buildChangesRows creates table rows for changes data with the given
+// title truncation and column set. The column set determines which fields
+// are included in each row to match the visible columns.
 func buildChangesRows(
 	changes []ChangeInfo,
 	titleTruncate int,
 	numColumns int,
+	lineNumberMode LineNumberMode,
+	cursor int,
 ) []table.Row {
 	rows := make([]table.Row, len(changes))
+
+	// Detect if we have multiple roots to show project prefix in ID column
+	hasMultipleRoots := detectMultiRootChanges(changes)
+
+	// Calculate effective number of data columns (excluding line number column)
+	dataColumns := numColumns
+	if lineNumberMode != LineNumberOff {
+		dataColumns = numColumns - 1
+	}
+
 	for i, change := range changes {
 		tasksStatus := fmt.Sprintf("%d/%d",
 			change.TaskStatus.Completed,
 			change.TaskStatus.Total)
 
-		switch numColumns {
+		// Format ID with project prefix if in multi-root mode
+		displayID := formatChangeIDWithProject(change.ID, change.RootPath, hasMultipleRoots)
+
+		// Calculate line number
+		var lineNumStr string
+		if lineNumberMode != LineNumberOff {
+			lineNum := calculateLineNumberValue(i, cursor, lineNumberMode)
+			lineNumStr = fmt.Sprintf("%d", lineNum)
+		}
+
+		switch dataColumns {
 		case 4:
 			// Full: ID, Title, Deltas, Tasks
-			rows[i] = table.Row{
-				change.ID,
+			row := table.Row{
+				displayID,
 				tui.TruncateString(
 					change.Title,
 					titleTruncate,
@@ -538,26 +614,56 @@ func buildChangesRows(
 				),
 				tasksStatus,
 			}
+			if lineNumberMode != LineNumberOff {
+				rows[i] = append(table.Row{lineNumStr}, row...)
+			} else {
+				rows[i] = row
+			}
 		case 3:
 			// 3 columns without Title: ID, Deltas, Tasks
-			rows[i] = table.Row{
-				change.ID,
+			row := table.Row{
+				displayID,
 				fmt.Sprintf(
 					"%d",
 					change.DeltaCount,
 				),
 				tasksStatus,
 			}
+			if lineNumberMode != LineNumberOff {
+				rows[i] = append(table.Row{lineNumStr}, row...)
+			} else {
+				rows[i] = row
+			}
 		default:
 			// Minimal 2 columns: ID, Tasks only
 			rows[i] = table.Row{
-				change.ID,
+				displayID,
 				tasksStatus,
 			}
 		}
 	}
 
 	return rows
+}
+
+// detectMultiRootSpecs returns true if any spec has a non-trivial RootPath.
+func detectMultiRootSpecs(specs []SpecInfo) bool {
+	for _, s := range specs {
+		if s.RootPath != "" && s.RootPath != "." {
+			return true
+		}
+	}
+
+	return false
+}
+
+// formatSpecIDWithProject formats a spec ID with project prefix if in multi-root mode.
+func formatSpecIDWithProject(id, rootPath string, hasMultipleRoots bool) string {
+	if !hasMultipleRoots || rootPath == "" || rootPath == "." {
+		return id
+	}
+
+	return fmt.Sprintf("[%s] %s", rootPath, id)
 }
 
 // buildSpecsRows creates table rows for specs data with the given
@@ -568,12 +674,19 @@ func buildSpecsRows(
 	numColumns int,
 ) []table.Row {
 	rows := make([]table.Row, len(specs))
+
+	// Detect if we have multiple roots to show project prefix in ID column
+	hasMultipleRoots := detectMultiRootSpecs(specs)
+
 	for i, spec := range specs {
+		// Format ID with project prefix if in multi-root mode
+		displayID := formatSpecIDWithProject(spec.ID, spec.RootPath, hasMultipleRoots)
+
 		switch numColumns {
 		case 3:
 			// Full: ID, Title, Requirements
 			rows[i] = table.Row{
-				spec.ID,
+				displayID,
 				tui.TruncateString(
 					spec.Title,
 					titleTruncate,
@@ -586,7 +699,7 @@ func buildSpecsRows(
 		default:
 			// Minimal: ID, Title only
 			rows[i] = table.Row{
-				spec.ID,
+				displayID,
 				tui.TruncateString(
 					spec.Title,
 					titleTruncate,
@@ -598,6 +711,27 @@ func buildSpecsRows(
 	return rows
 }
 
+// detectMultiRootItems returns true if any item has a non-trivial RootPath.
+func detectMultiRootItems(items ItemList) bool {
+	for _, item := range items {
+		rootPath := item.RootPath()
+		if rootPath != "" && rootPath != "." {
+			return true
+		}
+	}
+
+	return false
+}
+
+// formatItemIDWithProject formats an item ID with project prefix if in multi-root mode.
+func formatItemIDWithProject(id, rootPath string, hasMultipleRoots bool) string {
+	if !hasMultipleRoots || rootPath == "" || rootPath == "." {
+		return id
+	}
+
+	return fmt.Sprintf("[%s] %s", rootPath, id)
+}
+
 // buildUnifiedRows creates table rows for unified (all items) view with the
 // given title truncation and number of columns.
 func buildUnifiedRows(
@@ -606,11 +740,18 @@ func buildUnifiedRows(
 	numColumns int,
 ) []table.Row {
 	rows := make([]table.Row, len(items))
+
+	// Detect if we have multiple roots to show project prefix in ID column
+	hasMultipleRoots := detectMultiRootItems(items)
+
 	for i, item := range items {
+		// Format ID with project prefix if in multi-root mode
+		displayID := formatItemIDWithProject(item.ID(), item.RootPath(), hasMultipleRoots)
+
 		var typeStr, details string
 		switch item.Type {
 		case ItemTypeChange:
-			typeStr = "CHANGE"
+			typeStr = typeDisplayChange
 			if item.Change != nil {
 				details = fmt.Sprintf(
 					"Tasks: %d/%d 🔺 %d",
@@ -620,7 +761,7 @@ func buildUnifiedRows(
 				)
 			}
 		case ItemTypeSpec:
-			typeStr = "SPEC"
+			typeStr = typeDisplaySpec
 			if item.Spec != nil {
 				details = fmt.Sprintf(
 					"Reqs: %d",
@@ -633,7 +774,7 @@ func buildUnifiedRows(
 		case 4:
 			// Full: ID, Type, Title, Details
 			rows[i] = table.Row{
-				item.ID(),
+				displayID,
 				typeStr,
 				tui.TruncateString(
 					item.Title(),
@@ -644,7 +785,7 @@ func buildUnifiedRows(
 		default:
 			// Narrow/Minimal: ID, Type, Title (no Details)
 			rows[i] = table.Row{
-				item.ID(),
+				displayID,
 				typeStr,
 				tui.TruncateString(
 					item.Title(),
@@ -664,7 +805,8 @@ type interactiveModel struct {
 	copied           bool
 	quitting         bool
 	archiveRequested bool
-	prRequested      bool // true when P (pr) hotkey was pressed
+	selectedRootPath string // absolute path to root for archive/PR workflows
+	prRequested      bool   // true when P (pr) hotkey was pressed
 	err              error
 	helpText         string
 	minimalFooter    string
@@ -685,6 +827,7 @@ type interactiveModel struct {
 	changesData      []ChangeInfo         // original changes data for changes/archive views
 	specsData        []SpecInfo           // original specs data for specs view
 	countPrefixState tui.CountPrefixState // vim-style count prefix state
+	lineNumberMode   LineNumberMode       // line number display mode (off, relative, hybrid)
 }
 
 // Init initializes the model
@@ -726,6 +869,11 @@ func (m *interactiveModel) Update(
 						m.table.SetCursor(newCursor)
 					}
 					m.showHelp = false
+
+					// Update line numbers after count-prefix navigation
+					if m.lineNumberMode != LineNumberOff {
+						m.updateLineNumbers()
+					}
 
 					return m, nil
 				}
@@ -776,6 +924,11 @@ func (m *interactiveModel) Update(
 
 			return m, nil
 
+		case "#":
+			m.cycleLineNumberMode()
+
+			return m, nil
+
 		case "?":
 			// Toggle help display
 			m.showHelp = !m.showHelp
@@ -806,13 +959,17 @@ func (m *interactiveModel) Update(
 		return m, nil
 	}
 
-	// Update table with key events
+	prevCursor := m.table.Cursor()
 	m.table, cmd = m.table.Update(msg)
+
+	if m.lineNumberMode != LineNumberOff && m.table.Cursor() != prevCursor {
+		m.updateLineNumbers()
+	}
 
 	return m, cmd
 }
 
-// handleEnter handles the enter key press for copying selected ID
+// handleEnter handles the enter key press for copying selected path
 // or selecting in selection mode
 func (m *interactiveModel) handleEnter() {
 	cursor := m.table.Cursor()
@@ -826,8 +983,19 @@ func (m *interactiveModel) handleEnter() {
 		return
 	}
 
-	// ID is in first column for all modes
-	m.selectedID = row[0]
+	// ID column index depends on whether line numbers are enabled
+	// When line numbers are on, first column is line number, ID is second
+	idColumn := 0
+	if m.lineNumberMode != LineNumberOff {
+		idColumn = 1
+	}
+
+	if len(row) <= idColumn {
+		return
+	}
+
+	itemID := row[idColumn]
+	m.selectedID = itemID
 
 	// In selection mode, just select without copying to clipboard
 	if m.selectionMode {
@@ -839,12 +1007,117 @@ func (m *interactiveModel) handleEnter() {
 		return
 	}
 
-	// Otherwise, copy to clipboard
+	// Build the full path to copy to clipboard
+	copyPath := m.buildCopyPath(itemID, row)
+
+	// Copy to clipboard
 	m.copied = true
-	err := tui.CopyToClipboard(m.selectedID)
+	err := tui.CopyToClipboard(copyPath)
 	if err != nil {
 		m.err = err
 	}
+}
+
+// buildCopyPath builds the path to copy for the selected item.
+// Returns path relative to cwd (e.g., "spectr/changes/<id>/proposal.md")
+func (m *interactiveModel) buildCopyPath(itemID string, row table.Row) string {
+	// Determine the item type
+	var itemType, rootPath string
+
+	switch m.itemType {
+	case itemTypeChange:
+		// Find the change in changesData to get root path
+		// Compare using formatted ID (display format) since itemID comes from display
+		hasMultipleRoots := detectMultiRootChanges(m.changesData)
+		for _, change := range m.changesData {
+			formattedID := formatChangeIDWithProject(change.ID, change.RootPath, hasMultipleRoots)
+			if formattedID == itemID {
+				// Use raw ID for path construction
+				return buildChangePath(change.RootPath, change.ID)
+			}
+		}
+
+		// Fallback for single-root mode where itemID equals raw ID
+		return buildChangePath(rootPath, itemID)
+
+	case itemTypeSpec:
+		// Find the spec in specsData to get root path
+		// Compare using formatted ID (display format) since itemID comes from display
+		hasMultipleRoots := detectMultiRootSpecs(m.specsData)
+		for _, spec := range m.specsData {
+			formattedID := formatSpecIDWithProject(spec.ID, spec.RootPath, hasMultipleRoots)
+			if formattedID == itemID {
+				// Use raw ID for path construction
+				return buildSpecPath(spec.RootPath, spec.ID)
+			}
+		}
+
+		// Fallback for single-root mode where itemID equals raw ID
+		return buildSpecPath(rootPath, itemID)
+
+	case itemTypeAll:
+		// Calculate column offset when line numbers are enabled
+		colOffset := 0
+		if m.lineNumberMode != LineNumberOff {
+			colOffset = 1
+		}
+
+		// In unified mode, check the type column (column after ID)
+		typeColIdx := colOffset + 1
+		if len(row) > typeColIdx {
+			itemType = row[typeColIdx]
+		}
+
+		// Find the item in allItems to get root path
+		// Compare using formatted ID (display format) since itemID comes from display
+		hasMultipleRoots := detectMultiRootItems(m.allItems)
+		for i := range m.allItems {
+			formattedID := formatItemIDWithProject(
+				m.allItems[i].ID(),
+				m.allItems[i].RootPath(),
+				hasMultipleRoots,
+			)
+			if formattedID == itemID {
+				rootPath = m.allItems[i].RootPath()
+				rawID := m.allItems[i].ID()
+				if itemType == typeDisplaySpec {
+					return buildSpecPath(rootPath, rawID)
+				}
+
+				return buildChangePath(rootPath, rawID)
+			}
+		}
+
+		// Fallback for single-root mode
+		if itemType == typeDisplaySpec {
+			return buildSpecPath(rootPath, itemID)
+		}
+
+		return buildChangePath(rootPath, itemID)
+	}
+
+	// Fallback to just the ID
+	return itemID
+}
+
+// buildChangePath builds the path for a change.
+func buildChangePath(rootPath, changeID string) string {
+	// If rootPath is "." or empty, use current directory
+	if rootPath == "" || rootPath == "." {
+		return fmt.Sprintf("spectr/changes/%s", changeID)
+	}
+	// Otherwise prefix with root path
+	return fmt.Sprintf("%s/spectr/changes/%s", rootPath, changeID)
+}
+
+// buildSpecPath builds the path for a spec.
+func buildSpecPath(rootPath, specID string) string {
+	// If rootPath is "." or empty, use current directory
+	if rootPath == "" || rootPath == "." {
+		return fmt.Sprintf("spectr/specs/%s", specID)
+	}
+	// Otherwise prefix with root path
+	return fmt.Sprintf("%s/spectr/specs/%s", rootPath, specID)
 }
 
 // handleEdit handles the 'e' key press for opening file in editor
@@ -861,6 +1134,12 @@ func (m *interactiveModel) handleEdit() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// Calculate column offset when line numbers are enabled
+	colOffset := 0
+	if m.lineNumberMode != LineNumberOff {
+		colOffset = 1
+	}
+
 	var itemID string
 	var editItemType string
 
@@ -868,20 +1147,29 @@ func (m *interactiveModel) handleEdit() (tea.Model, tea.Cmd) {
 	switch m.itemType {
 	case itemTypeAll:
 		// In unified mode, need to check the item type
-		itemID = row[0]
-		itemTypeStr := row[1] // Type is second column in unified mode
-		if itemTypeStr == "SPEC" {
+		if len(row) <= colOffset+1 {
+			return m, nil
+		}
+		itemID = row[colOffset]
+		itemTypeStr := row[colOffset+1] // Type is column after ID in unified mode
+		if itemTypeStr == typeDisplaySpec {
 			editItemType = itemTypeSpec
 		} else {
 			editItemType = itemTypeChange
 		}
 	case itemTypeSpec:
 		// In spec-only mode
-		itemID = row[0]
+		if len(row) <= colOffset {
+			return m, nil
+		}
+		itemID = row[colOffset]
 		editItemType = itemTypeSpec
 	case itemTypeChange:
 		// In change-only mode
-		itemID = row[0]
+		if len(row) <= colOffset {
+			return m, nil
+		}
+		itemID = row[colOffset]
 		editItemType = itemTypeChange
 	default:
 		// Unknown mode, no editing allowed
@@ -967,26 +1255,45 @@ func (m *interactiveModel) handleArchive() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// Calculate column offset when line numbers are enabled
+	colOffset := 0
+	if m.lineNumberMode != LineNumberOff {
+		colOffset = 1
+	}
+
 	// Determine if item is a change based on mode
 	switch m.itemType {
 	case itemTypeSpec:
 		// Can't archive specs
 		return m, nil
 	case itemTypeChange:
-		// In change mode, all items are changes
-		m.selectedID = row[0]
-		m.archiveRequested = true
-
-		return m, tea.Quit
-	case itemTypeAll:
-		// In unified mode, check the type column
-		if len(row) > 1 && row[1] == "CHANGE" {
-			m.selectedID = row[0]
+		// In change mode, look up the actual ChangeInfo to get raw ID and root path
+		// When search is active, we need to find the change matching the displayed row
+		change := m.findChangeForCursor(cursor, row, colOffset)
+		if change != nil {
+			m.selectedID = change.ID // Raw ID without prefix
+			m.selectedRootPath = change.RootAbsPath
 			m.archiveRequested = true
 
 			return m, tea.Quit
 		}
-		// Not a change, do nothing
+
+		return m, nil
+	case itemTypeAll:
+		// In unified mode, check the type column (column after ID)
+		typeColIdx := colOffset + 1
+		if len(row) > typeColIdx && row[typeColIdx] == typeDisplayChange {
+			// Find the change in allItems matching the displayed row
+			change := m.findChangeInAllItems(row, colOffset)
+			if change != nil {
+				m.selectedID = change.ID
+				m.selectedRootPath = change.RootAbsPath
+				m.archiveRequested = true
+
+				return m, tea.Quit
+			}
+		}
+		// Not a change or not found
 		return m, nil
 	}
 
@@ -1012,10 +1319,23 @@ func (m *interactiveModel) handlePR() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	m.selectedID = row[0]
-	m.prRequested = true
+	// Calculate column offset when line numbers are enabled
+	colOffset := 0
+	if m.lineNumberMode != LineNumberOff {
+		colOffset = 1
+	}
 
-	return m, tea.Quit
+	// Look up the actual ChangeInfo to get raw ID and root path
+	change := m.findChangeForCursor(cursor, row, colOffset)
+	if change != nil {
+		m.selectedID = change.ID // Raw ID without prefix
+		m.selectedRootPath = change.RootAbsPath
+		m.prRequested = true
+
+		return m, tea.Quit
+	}
+
+	return m, nil
 }
 
 // rebuildUnifiedTable rebuilds the table based on current filter
@@ -1066,7 +1386,7 @@ func rebuildUnifiedTable(
 	}
 	m.helpText = fmt.Sprintf(
 		"↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | "+
-			"a: archive | t: filter (%s) | /: search | q: quit",
+			"a: archive | t: filter (%s) | #: line numbers | /: search | q: quit",
 		filterDesc,
 	)
 	m.minimalFooter = fmt.Sprintf(
@@ -1195,6 +1515,68 @@ func (m *interactiveModel) toggleSearchMode() {
 	}
 }
 
+func (m *interactiveModel) cycleLineNumberMode() {
+	switch m.lineNumberMode {
+	case LineNumberOff:
+		m.lineNumberMode = LineNumberRelative
+	case LineNumberRelative:
+		m.lineNumberMode = LineNumberHybrid
+	case LineNumberHybrid:
+		m.lineNumberMode = LineNumberOff
+	}
+
+	// Trigger table rebuild to add/remove line number column
+	m.rebuildTableForWidth()
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+
+	return n
+}
+
+// calculateLineNumberValue returns the display value for a line number
+func calculateLineNumberValue(rowIdx, cursorIdx int, mode LineNumberMode) int {
+	switch mode {
+	case LineNumberOff:
+		return 0
+	case LineNumberRelative:
+		return abs(rowIdx - cursorIdx)
+	case LineNumberHybrid:
+		if rowIdx == cursorIdx {
+			return cursorIdx + 1
+		}
+
+		return abs(rowIdx - cursorIdx)
+	}
+
+	return 0
+}
+
+func (m *interactiveModel) updateLineNumbers() {
+	if m.lineNumberMode == LineNumberOff {
+		return
+	}
+
+	cursor := m.table.Cursor()
+	rows := m.table.Rows()
+
+	// Create new rows with updated line numbers
+	updatedRows := make([]table.Row, len(rows))
+	for i := range rows {
+		updatedRows[i] = make(table.Row, len(rows[i]))
+		copy(updatedRows[i], rows[i])
+		if len(updatedRows[i]) > 0 {
+			lineNum := calculateLineNumberValue(i, cursor, m.lineNumberMode)
+			updatedRows[i][0] = fmt.Sprintf("%d", lineNum)
+		}
+	}
+
+	m.table.SetRows(updatedRows)
+}
+
 // rebuildTableForWidth rebuilds the table with columns adjusted for the
 // current terminal width. This is called when the terminal is resized.
 // It preserves cursor position and search state during the rebuild.
@@ -1243,7 +1625,7 @@ func (m *interactiveModel) rebuildChangesTable(
 		return
 	}
 
-	columns := calculateChangesColumns(width)
+	columns := calculateChangesColumns(width, m.lineNumberMode)
 	titleTruncate := calculateTitleTruncate(
 		itemTypeChange,
 		width,
@@ -1252,6 +1634,8 @@ func (m *interactiveModel) rebuildChangesTable(
 		m.changesData,
 		titleTruncate,
 		len(columns),
+		m.lineNumberMode,
+		m.table.Cursor(),
 	)
 
 	t := table.New(
@@ -1302,17 +1686,146 @@ func (m *interactiveModel) getEditFilePath(
 	itemID string,
 	itemType string,
 ) string {
+	// Look up the item's RootPath from the data
+	rootPath := m.lookupRootPath(itemID, itemType)
+
 	if itemType == itemTypeSpec {
+		// Build the absolute path including RootPath if present
+		if rootPath == "" || rootPath == "." {
+			return fmt.Sprintf(
+				"%s/spectr/specs/%s/spec.md",
+				m.projectPath, itemID,
+			)
+		}
+
 		return fmt.Sprintf(
-			"%s/spectr/specs/%s/spec.md",
+			"%s/%s/spectr/specs/%s/spec.md",
+			m.projectPath, rootPath, itemID,
+		)
+	}
+
+	// For changes
+	if rootPath == "" || rootPath == "." {
+		return fmt.Sprintf(
+			"%s/spectr/changes/%s/proposal.md",
 			m.projectPath, itemID,
 		)
 	}
 
 	return fmt.Sprintf(
-		"%s/spectr/changes/%s/proposal.md",
-		m.projectPath, itemID,
+		"%s/%s/spectr/changes/%s/proposal.md",
+		m.projectPath, rootPath, itemID,
 	)
+}
+
+// lookupRootPath finds the RootPath for an item by searching the appropriate data source.
+// It checks specsData/changesData first, then falls back to allItems for unified mode.
+func (m *interactiveModel) lookupRootPath(itemID, itemType string) string {
+	var rootPath string
+	var found bool
+
+	if itemType == itemTypeSpec {
+		// First try specsData
+		for _, spec := range m.specsData {
+			if spec.ID == itemID {
+				rootPath = spec.RootPath
+				found = true
+
+				break
+			}
+		}
+	} else {
+		// First try changesData
+		for _, change := range m.changesData {
+			if change.ID == itemID {
+				rootPath = change.RootPath
+				found = true
+
+				break
+			}
+		}
+	}
+
+	// If not found in dedicated data, search allItems (unified mode)
+	if !found {
+		for i := range m.allItems {
+			if m.allItems[i].ID() == itemID {
+				rootPath = m.allItems[i].RootPath()
+
+				break
+			}
+		}
+	}
+
+	return rootPath
+}
+
+// findChangeForCursor finds the ChangeInfo for the given cursor position.
+// When search filtering is active, it matches against the displayed row's ID.
+func (m *interactiveModel) findChangeForCursor(
+	cursor int,
+	row table.Row,
+	colOffset int,
+) *ChangeInfo {
+	// If no search filter is active and cursor is valid, use direct index
+	if m.searchQuery == "" && cursor < len(m.changesData) {
+		return &m.changesData[cursor]
+	}
+
+	// Search is active - need to find the change matching the displayed ID
+	if len(row) <= colOffset {
+		return nil
+	}
+
+	displayedID := row[colOffset]
+
+	// The displayed ID may have a project prefix like "[project] change-id"
+	// Search through changesData to find matching change
+	for i := range m.changesData {
+		change := &m.changesData[i]
+		formattedID := formatChangeIDWithProject(
+			change.ID,
+			change.RootPath,
+			detectMultiRootChanges(m.changesData),
+		)
+		if formattedID == displayedID {
+			return change
+		}
+	}
+
+	return nil
+}
+
+// findChangeInAllItems finds the ChangeInfo matching a row in unified mode.
+func (m *interactiveModel) findChangeInAllItems(
+	row table.Row,
+	colOffset int,
+) *ChangeInfo {
+	if len(row) <= colOffset {
+		return nil
+	}
+
+	displayedID := row[colOffset]
+	hasMultipleRoots := detectMultiRootItems(m.allItems)
+
+	// Search through allItems to find matching change
+	for i := range m.allItems {
+		item := &m.allItems[i]
+		if item.Type != ItemTypeChange || item.Change == nil {
+			continue
+		}
+
+		formattedID := formatItemIDWithProject(
+			item.Change.ID,
+			item.Change.RootPath,
+			hasMultipleRoots,
+		)
+		if formattedID == displayedID {
+			return item.Change
+		}
+	}
+
+	return nil
 }
 
 // View renders the model
@@ -1387,9 +1900,16 @@ func (m *interactiveModel) View() string {
 		footer += " | (some columns hidden)"
 	}
 
-	// Append count prefix indicator when active
 	if m.countPrefixState.IsActive() {
 		footer += fmt.Sprintf(" | count: %s_", m.countPrefixState.String())
+	}
+
+	if m.lineNumberMode != LineNumberOff {
+		modeStr := "rel"
+		if m.lineNumberMode == LineNumberHybrid {
+			modeStr = "hyb"
+		}
+		footer += fmt.Sprintf(" | ln: %s", modeStr)
 	}
 
 	view += m.table.View() + "\n" + footer + "\n"
@@ -1406,17 +1926,19 @@ func (m *interactiveModel) View() string {
 }
 
 // RunInteractiveChanges runs the interactive table for changes.
-// Returns (archiveID, prID, error):
+// Returns (archiveID, archiveRootPath, prID, prRootPath, error):
 //   - archiveID is set if archive was requested via 'a' key
+//   - archiveRootPath is the absolute path to the spectr root for archive
 //   - prID is set if PR mode was requested via 'P' key
-//   - Both are empty if user quit or cancelled
+//   - prRootPath is the absolute path to the spectr root for PR
+//   - All are empty if user quit or cancelled
 func RunInteractiveChanges(
 	changes []ChangeInfo,
 	projectPath string,
 	stdoutMode bool,
-) (archiveID, prID string, err error) {
+) (archiveID, archiveRootPath, prID, prRootPath string, err error) {
 	if len(changes) == 0 {
-		return "", "", nil
+		return "", "", "", "", nil
 	}
 
 	// Use default full-width columns initially (terminalWidth=0 means unknown)
@@ -1424,6 +1946,7 @@ func RunInteractiveChanges(
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
 	columns := calculateChangesColumns(
 		breakpointFull,
+		LineNumberRelative,
 	)
 	titleTruncate := calculateTitleTruncate(
 		itemTypeChange,
@@ -1434,6 +1957,8 @@ func RunInteractiveChanges(
 		changes,
 		titleTruncate,
 		len(columns),
+		LineNumberRelative,
+		0,
 	)
 
 	t := table.New(
@@ -1446,16 +1971,17 @@ func RunInteractiveChanges(
 	tui.ApplyTableStyles(&t)
 
 	m := &interactiveModel{
-		table:         t,
-		itemType:      itemTypeChange,
-		projectPath:   projectPath,
-		searchInput:   newTextInput(),
-		allRows:       rows,
-		terminalWidth: 0,          // Will be set by WindowSizeMsg
-		changesData:   changes,    // Store for rebuild on resize
-		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
+		table:          t,
+		itemType:       itemTypeChange,
+		projectPath:    projectPath,
+		searchInput:    newTextInput(),
+		allRows:        rows,
+		terminalWidth:  0,                  // Will be set by WindowSizeMsg
+		changesData:    changes,            // Store for rebuild on resize
+		stdoutMode:     stdoutMode,         // Output to stdout instead of clipboard
+		lineNumberMode: LineNumberRelative, // Default to relative line numbers
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
-			"a: archive | P: pr | /: search | q: quit",
+			"a: archive | P: pr | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),
@@ -1466,7 +1992,7 @@ func RunInteractiveChanges(
 	p := tea.NewProgram(m)
 	finalModel, runErr := p.Run()
 	if runErr != nil {
-		return "", "", fmt.Errorf(
+		return "", "", "", "", fmt.Errorf(
 			errInteractiveModeFormat,
 			runErr,
 		)
@@ -1484,19 +2010,19 @@ func RunInteractiveChanges(
 			)
 		}
 
-		// Return archive ID if archive was requested
+		// Return archive ID and root path if archive was requested
 		if fm.archiveRequested &&
 			fm.selectedID != "" {
-			return fm.selectedID, "", nil
+			return fm.selectedID, fm.selectedRootPath, "", "", nil
 		}
 
-		// Return PR ID if PR was requested
+		// Return PR ID and root path if PR was requested
 		if fm.prRequested && fm.selectedID != "" {
-			return "", fm.selectedID, nil
+			return "", "", fm.selectedID, fm.selectedRootPath, nil
 		}
 	}
 
-	return "", "", nil
+	return "", "", "", "", nil
 }
 
 // RunInteractiveArchive runs the interactive table for
@@ -1514,6 +2040,7 @@ func RunInteractiveArchive(
 	// WindowSizeMsg will trigger a rebuild with correct responsive columns
 	columns := calculateChangesColumns(
 		breakpointFull,
+		LineNumberRelative,
 	)
 	titleTruncate := calculateTitleTruncate(
 		itemTypeChange,
@@ -1524,6 +2051,8 @@ func RunInteractiveArchive(
 		changes,
 		titleTruncate,
 		len(columns),
+		LineNumberRelative,
+		0,
 	)
 
 	t := table.New(
@@ -1536,15 +2065,16 @@ func RunInteractiveArchive(
 	tui.ApplyTableStyles(&t)
 
 	m := &interactiveModel{
-		table:         t,
-		itemType:      itemTypeChange,
-		projectPath:   projectPath,
-		searchInput:   newTextInput(),
-		allRows:       rows,
-		terminalWidth: 0,       // Will be set by WindowSizeMsg
-		changesData:   changes, // Store for rebuild on resize
-		selectionMode: true,    // Enter selects without copying
-		helpText:      "↑/↓/j/k: navigate (try 9j) | Enter: select | /: search | q: quit",
+		table:          t,
+		itemType:       itemTypeChange,
+		projectPath:    projectPath,
+		searchInput:    newTextInput(),
+		allRows:        rows,
+		terminalWidth:  0,                  // Will be set by WindowSizeMsg
+		changesData:    changes,            // Store for rebuild on resize
+		selectionMode:  true,               // Enter selects without copying
+		lineNumberMode: LineNumberRelative, // Default to relative line numbers
+		helpText:       "↑/↓/j/k: navigate (try 9j) | Enter: select | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),
@@ -1619,16 +2149,17 @@ func RunInteractiveSpecs(
 	tui.ApplyTableStyles(&t)
 
 	m := &interactiveModel{
-		table:         t,
-		itemType:      itemTypeSpec,
-		projectPath:   projectPath,
-		searchInput:   newTextInput(),
-		allRows:       rows,
-		terminalWidth: 0,          // Will be set by WindowSizeMsg
-		specsData:     specs,      // Store for rebuild on resize
-		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
+		table:          t,
+		itemType:       itemTypeSpec,
+		projectPath:    projectPath,
+		searchInput:    newTextInput(),
+		allRows:        rows,
+		terminalWidth:  0,                  // Will be set by WindowSizeMsg
+		specsData:      specs,              // Store for rebuild on resize
+		stdoutMode:     stdoutMode,         // Output to stdout instead of clipboard
+		lineNumberMode: LineNumberRelative, // Default to relative line numbers
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
-			"/: search | q: quit",
+			"#: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(specs),
@@ -1697,17 +2228,18 @@ func RunInteractiveAll(
 	tui.ApplyTableStyles(&t)
 
 	m := &interactiveModel{
-		table:         t,
-		itemType:      itemTypeAll,
-		projectPath:   projectPath,
-		allItems:      items,
-		filterType:    nil, // Start with all items visible
-		searchInput:   newTextInput(),
-		allRows:       rows,
-		terminalWidth: 0,          // Will be set by WindowSizeMsg
-		stdoutMode:    stdoutMode, // Output to stdout instead of clipboard
+		table:          t,
+		itemType:       itemTypeAll,
+		projectPath:    projectPath,
+		allItems:       items,
+		filterType:     nil, // Start with all items visible
+		searchInput:    newTextInput(),
+		allRows:        rows,
+		terminalWidth:  0,                  // Will be set by WindowSizeMsg
+		stdoutMode:     stdoutMode,         // Output to stdout instead of clipboard
+		lineNumberMode: LineNumberRelative, // Default to relative line numbers
 		helpText: "↑/↓/j/k: navigate (try 9j) | Enter: copy ID | e: edit | " +
-			"a: archive | t: filter (all) | /: search | q: quit",
+			"a: archive | t: filter (all) | #: line numbers | /: search | q: quit",
 		minimalFooter: fmt.Sprintf(
 			"showing: %d | project: %s | ?: help",
 			len(rows),

@@ -13,11 +13,27 @@ import (
 // Lister handles listing operations for changes and specs
 type Lister struct {
 	projectPath string
+	// rootPath is the relative path from cwd to this root (empty for single root)
+	rootPath string
+	// absPath is the absolute path to the project root
+	absPath string
 }
 
 // NewLister creates a new Lister for the given project path
 func NewLister(projectPath string) *Lister {
-	return &Lister{projectPath: projectPath}
+	return &Lister{
+		projectPath: projectPath,
+		absPath:     projectPath,
+	}
+}
+
+// NewListerWithRoot creates a new Lister with root path information
+func NewListerWithRoot(projectPath, rootPath string) *Lister {
+	return &Lister{
+		projectPath: projectPath,
+		rootPath:    rootPath,
+		absPath:     projectPath,
+	}
 }
 
 // ListChanges retrieves information about all active changes
@@ -78,10 +94,12 @@ func (l *Lister) ListChanges() ([]ChangeInfo, error) {
 		}
 
 		changes = append(changes, ChangeInfo{
-			ID:         id,
-			Title:      title,
-			DeltaCount: deltaCount,
-			TaskStatus: taskStatus,
+			ID:          id,
+			Title:       title,
+			DeltaCount:  deltaCount,
+			TaskStatus:  taskStatus,
+			RootPath:    l.rootPath,
+			RootAbsPath: l.absPath,
 		})
 	}
 
@@ -131,6 +149,8 @@ func (l *Lister) ListSpecs() ([]SpecInfo, error) {
 			ID:               id,
 			Title:            title,
 			RequirementCount: reqCount,
+			RootPath:         l.rootPath,
+			RootAbsPath:      l.absPath,
 		})
 	}
 
@@ -169,10 +189,10 @@ func (l *Lister) ListAll(
 				err,
 			)
 		}
-		for _, change := range changes {
+		for i := range changes {
 			items = append(
 				items,
-				NewChangeItem(change),
+				NewChangeItem(&changes[i]),
 			)
 		}
 	}
@@ -241,4 +261,98 @@ func FilterChangesNotOnRef(
 	}
 
 	return unmerged, nil
+}
+
+// MultiRootLister aggregates listing results from multiple spectr roots.
+type MultiRootLister struct {
+	listers []*Lister
+}
+
+// NewMultiRootLister creates a lister that aggregates from multiple roots.
+func NewMultiRootLister(roots []discovery.SpectrRoot) *MultiRootLister {
+	listers := make([]*Lister, len(roots))
+	for i, root := range roots {
+		listers[i] = NewListerWithRoot(root.Path, root.RelativeTo)
+	}
+
+	return &MultiRootLister{listers: listers}
+}
+
+// ListChanges retrieves changes from all roots.
+func (m *MultiRootLister) ListChanges() ([]ChangeInfo, error) {
+	var allChanges []ChangeInfo
+
+	for _, lister := range m.listers {
+		changes, err := lister.ListChanges()
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to list changes from %s: %w",
+				lister.rootPath,
+				err,
+			)
+		}
+		allChanges = append(allChanges, changes...)
+	}
+
+	// Sort by ID for consistency
+	sort.Slice(allChanges, func(i, j int) bool {
+		return allChanges[i].ID < allChanges[j].ID
+	})
+
+	return allChanges, nil
+}
+
+// ListSpecs retrieves specs from all roots.
+func (m *MultiRootLister) ListSpecs() ([]SpecInfo, error) {
+	var allSpecs []SpecInfo
+
+	for _, lister := range m.listers {
+		specs, err := lister.ListSpecs()
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to list specs from %s: %w",
+				lister.rootPath,
+				err,
+			)
+		}
+		allSpecs = append(allSpecs, specs...)
+	}
+
+	// Sort by ID for consistency
+	sort.Slice(allSpecs, func(i, j int) bool {
+		return allSpecs[i].ID < allSpecs[j].ID
+	})
+
+	return allSpecs, nil
+}
+
+// ListAll retrieves all items from all roots.
+func (m *MultiRootLister) ListAll(opts *ListAllOptions) (ItemList, error) {
+	var items ItemList
+
+	for _, lister := range m.listers {
+		rootItems, err := lister.ListAll(opts)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to list items from %s: %w",
+				lister.rootPath,
+				err,
+			)
+		}
+		items = append(items, rootItems...)
+	}
+
+	// Sort by ID for consistency (if requested by options)
+	if opts == nil || opts.SortByID {
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].ID() < items[j].ID()
+		})
+	}
+
+	return items, nil
+}
+
+// HasMultipleRoots returns true if there are multiple roots.
+func (m *MultiRootLister) HasMultipleRoots() bool {
+	return len(m.listers) > 1
 }

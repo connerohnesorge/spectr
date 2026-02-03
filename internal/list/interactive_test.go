@@ -22,7 +22,7 @@ func TestRunInteractiveChanges_EmptyList(
 	t *testing.T,
 ) {
 	var changes []ChangeInfo
-	archiveID, prID, err := RunInteractiveChanges(
+	archiveID, archiveRootPath, prID, prRootPath, err := RunInteractiveChanges(
 		changes,
 		"/tmp/test-project",
 		false,
@@ -39,10 +39,22 @@ func TestRunInteractiveChanges_EmptyList(
 			archiveID,
 		)
 	}
+	if archiveRootPath != "" {
+		t.Errorf(
+			"RunInteractiveChanges with empty list should return empty archive root path, got: %s",
+			archiveRootPath,
+		)
+	}
 	if prID != "" {
 		t.Errorf(
 			"RunInteractiveChanges with empty list should return empty PR ID, got: %s",
 			prID,
+		)
+	}
+	if prRootPath != "" {
+		t.Errorf(
+			"RunInteractiveChanges with empty list should return empty PR root path, got: %s",
+			prRootPath,
 		)
 	}
 }
@@ -447,7 +459,7 @@ func TestRunInteractiveAll_ValidData(
 	// This test verifies that the function can be called without error
 	// Actual interactive testing would require terminal simulation
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         "add-test-feature",
 			Title:      "Add test feature",
 			DeltaCount: 2,
@@ -471,7 +483,7 @@ func TestRunInteractiveAll_ValidData(
 func TestHandleToggleFilter(t *testing.T) {
 	// Create a model with all items
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         "change-1",
 			Title:      "Change 1",
 			DeltaCount: 1,
@@ -816,7 +828,7 @@ func TestEditorOpensInUnifiedMode(t *testing.T) {
 	)
 
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         changeID,
 			Title:      "Test Change",
 			DeltaCount: 2,
@@ -949,10 +961,27 @@ func TestHandleArchive_ChangeMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
+	// Create changesData to match the table rows
+	changesData := []ChangeInfo{
+		{
+			ID:          "test-change-1",
+			Title:       "Test Change 1",
+			DeltaCount:  2,
+			RootAbsPath: "/tmp/test",
+		},
+		{
+			ID:          "test-change-2",
+			Title:       "Test Change 2",
+			DeltaCount:  1,
+			RootAbsPath: "/tmp/test",
+		},
+	}
+
 	model := &interactiveModel{
 		itemType:    "change",
 		projectPath: "/tmp/test",
 		table:       tbl,
+		changesData: changesData,
 	}
 
 	// Call handleArchive
@@ -1072,10 +1101,26 @@ func TestHandleArchive_UnifiedMode_Change(
 		table.WithHeight(10),
 	)
 
+	// Create allItems to match the table rows
+	changeInfo := &ChangeInfo{
+		ID:          interactiveTestChangeID,
+		Title:       "Test Change",
+		RootAbsPath: "/tmp/test",
+	}
+	specInfo := &SpecInfo{
+		ID:    interactiveTestSpecID,
+		Title: "Test Spec",
+	}
+	allItems := ItemList{
+		{Type: ItemTypeChange, Change: changeInfo},
+		{Type: ItemTypeSpec, Spec: specInfo},
+	}
+
 	model := &interactiveModel{
 		itemType:    "all",
 		projectPath: "/tmp/test",
 		table:       tbl,
+		allItems:    allItems,
 	}
 
 	// Call handleArchive (cursor is on first row which is CHANGE)
@@ -1199,10 +1244,27 @@ func TestHandlePR_ChangeMode(t *testing.T) {
 		table.WithHeight(10),
 	)
 
+	// Create changesData to match the table rows
+	changesData := []ChangeInfo{
+		{
+			ID:          "test-change-1",
+			Title:       "Test Change 1",
+			DeltaCount:  2,
+			RootAbsPath: "/tmp/test",
+		},
+		{
+			ID:          "test-change-2",
+			Title:       "Test Change 2",
+			DeltaCount:  1,
+			RootAbsPath: "/tmp/test",
+		},
+	}
+
 	model := &interactiveModel{
 		itemType:    "change",
 		projectPath: "/tmp/test",
 		table:       tbl,
+		changesData: changesData,
 	}
 
 	// Call handlePR
@@ -2152,6 +2214,7 @@ func TestCalculateChangesColumns_FullWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 4 {
@@ -2228,6 +2291,7 @@ func TestCalculateChangesColumns_MediumWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 4 {
@@ -2282,6 +2346,7 @@ func TestCalculateChangesColumns_NarrowTitleWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 4 {
@@ -2344,6 +2409,7 @@ func TestCalculateChangesColumns_NarrowWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 3 {
@@ -2389,6 +2455,7 @@ func TestCalculateChangesColumns_MinimalWidth(
 			func(t *testing.T) {
 				cols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 
 				if len(cols) != 2 {
@@ -3307,6 +3374,7 @@ func TestColumnCountsByBreakpoint(t *testing.T) {
 			case itemTypeChange:
 				cols = calculateChangesColumns(
 					tt.width,
+					LineNumberOff,
 				)
 			case itemTypeSpec:
 				cols = calculateSpecsColumns(
@@ -3373,6 +3441,8 @@ func TestBuildChangesRows_ResponsiveColumns(
 				changes,
 				30,
 				tt.numColumns,
+				LineNumberOff,
+				0,
 			)
 
 			if len(rows) != len(changes) {
@@ -3460,7 +3530,7 @@ func TestBuildUnifiedRows_ResponsiveColumns(
 	t *testing.T,
 ) {
 	items := ItemList{
-		NewChangeItem(ChangeInfo{
+		NewChangeItem(&ChangeInfo{
 			ID:         interactiveTestChangeID,
 			Title:      "Test Change",
 			DeltaCount: 2,
@@ -3672,7 +3742,7 @@ func TestWindowSizeMsg_TriggersRebuild(
 
 	// At width 75, changes view should have 2 columns (narrow breakpoint)
 	expectedColCount := len(
-		calculateChangesColumns(75),
+		calculateChangesColumns(75, LineNumberOff),
 	)
 	actualColCount := len(m.table.Columns())
 
@@ -3842,6 +3912,7 @@ func TestTitleWidthMinimums(t *testing.T) {
 				// So we check Tasks column width instead
 				changesCols := calculateChangesColumns(
 					width,
+					LineNumberOff,
 				)
 				// At minimal widths, changes only has ID and Tasks (no Title)
 				// Verify Tasks column (index 1) has reasonable width
@@ -4373,4 +4444,703 @@ func TestInteractiveModel_CountPrefixSearchModeSwitch(t *testing.T) {
 	// Navigation should work - count prefix functionality is back
 	tm.Send(tea.KeyMsg{Type: tea.KeyCtrlC})
 	tm.WaitFinished(t, teatest.WithFinalTimeout(time.Second*2))
+}
+
+func TestCycleLineNumberMode(t *testing.T) {
+	model := &interactiveModel{
+		lineNumberMode: LineNumberOff,
+	}
+
+	tests := []struct {
+		name     string
+		expected LineNumberMode
+	}{
+		{"off to relative", LineNumberRelative},
+		{"relative to hybrid", LineNumberHybrid},
+		{"hybrid to off", LineNumberOff},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model.cycleLineNumberMode()
+			if model.lineNumberMode != tt.expected {
+				t.Errorf(
+					"Expected lineNumberMode to be %v, got %v",
+					tt.expected,
+					model.lineNumberMode,
+				)
+			}
+		})
+	}
+}
+
+func TestCycleLineNumberMode_KeyHandler(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"change-1", "Change 1", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	model := &interactiveModel{
+		itemType:       "change",
+		projectPath:    "/tmp/test",
+		table:          tbl,
+		lineNumberMode: LineNumberOff,
+	}
+
+	updatedModel, _ := model.Update(
+		tea.KeyMsg{
+			Type:  tea.KeyRunes,
+			Runes: []rune{'#'},
+		},
+	)
+	m, ok := updatedModel.(*interactiveModel)
+	if !ok {
+		t.Fatal("Expected interactiveModel type")
+	}
+	if m.lineNumberMode != LineNumberRelative {
+		t.Errorf(
+			"Expected lineNumberMode to be LineNumberRelative, got %v",
+			m.lineNumberMode,
+		)
+	}
+}
+
+func TestCalculateLineNumber(t *testing.T) {
+	tests := []struct {
+		name        string
+		mode        LineNumberMode
+		rowIdx      int
+		cursorIdx   int
+		expectedNum int
+	}{
+		{"relative - cursor row", LineNumberRelative, 5, 5, 0},
+		{"relative - above cursor", LineNumberRelative, 3, 5, 2},
+		{"relative - below cursor", LineNumberRelative, 7, 5, 2},
+		{"hybrid - cursor row", LineNumberHybrid, 5, 5, 6},
+		{"hybrid - above cursor", LineNumberHybrid, 3, 5, 2},
+		{"hybrid - below cursor", LineNumberHybrid, 7, 5, 2},
+		{"off mode", LineNumberOff, 5, 5, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := calculateLineNumberValue(tt.rowIdx, tt.cursorIdx, tt.mode)
+			if result != tt.expectedNum {
+				t.Errorf(
+					"calculateLineNumberValue(%d, %d, %v) = %d, want %d",
+					tt.rowIdx,
+					tt.cursorIdx,
+					tt.mode,
+					result,
+					tt.expectedNum,
+				)
+			}
+		})
+	}
+}
+
+func TestLineNumberFooterIndicator(t *testing.T) {
+	columns := []table.Column{
+		{Title: "ID", Width: changeIDWidth},
+		{Title: "Title", Width: changeTitleWidth},
+		{Title: "Deltas", Width: changeDeltaWidth},
+		{Title: "Tasks", Width: changeTasksWidth},
+	}
+	rows := []table.Row{
+		{"change-1", "Change 1", "2", "3/5"},
+	}
+	tbl := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(10),
+	)
+
+	tests := []struct {
+		name          string
+		mode          LineNumberMode
+		wantSubstr    string
+		notWantSubstr string
+	}{
+		{
+			name:          "off mode - no indicator",
+			mode:          LineNumberOff,
+			wantSubstr:    "showing: 1",
+			notWantSubstr: "ln:",
+		},
+		{
+			name:          "relative mode - shows ln: rel",
+			mode:          LineNumberRelative,
+			wantSubstr:    "ln: rel",
+			notWantSubstr: "",
+		},
+		{
+			name:          "hybrid mode - shows ln: hyb",
+			mode:          LineNumberHybrid,
+			wantSubstr:    "ln: hyb",
+			notWantSubstr: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := &interactiveModel{
+				itemType:       "change",
+				projectPath:    "/tmp/test",
+				table:          tbl,
+				lineNumberMode: tt.mode,
+				minimalFooter:  "showing: 1 | project: /tmp/test | ?: help",
+			}
+			view := model.View()
+			if !strings.Contains(view, tt.wantSubstr) {
+				t.Errorf(
+					"Expected view to contain '%s', got: %s",
+					tt.wantSubstr,
+					view,
+				)
+			}
+			if tt.notWantSubstr != "" && strings.Contains(view, tt.notWantSubstr) {
+				t.Errorf(
+					"Expected view to NOT contain '%s', got: %s",
+					tt.notWantSubstr,
+					view,
+				)
+			}
+		})
+	}
+}
+
+func TestAbs(t *testing.T) {
+	tests := []struct {
+		input    int
+		expected int
+	}{
+		{0, 0},
+		{5, 5},
+		{-5, 5},
+		{100, 100},
+		{-100, 100},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("abs(%d)", tt.input), func(t *testing.T) {
+			result := abs(tt.input)
+			if result != tt.expected {
+				t.Errorf(
+					"abs(%d) = %d, want %d",
+					tt.input,
+					result,
+					tt.expected,
+				)
+			}
+		})
+	}
+}
+
+// TestHandleEnter_WithLineNumbers tests that when line numbers are enabled,
+// the correct ID is extracted from the row (not the line number).
+func TestHandleEnter_WithLineNumbers(t *testing.T) {
+	tests := []struct {
+		name           string
+		lineNumberMode LineNumberMode
+		rows           [][]string
+		columns        []table.Column
+		expectedID     string
+	}{
+		{
+			name:           "line numbers off - ID in first column",
+			lineNumberMode: LineNumberOff,
+			rows: [][]string{
+				{"my-change-id", "My Title", "2"},
+			},
+			columns: []table.Column{
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+			},
+			expectedID: "my-change-id",
+		},
+		{
+			name:           "relative mode - line num in first column, ID in second",
+			lineNumberMode: LineNumberRelative,
+			rows: [][]string{
+				{"0", "my-change-id", "My Title", "2"},
+			},
+			columns: []table.Column{
+				{Title: "Ln", Width: 3},
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+			},
+			expectedID: "my-change-id",
+		},
+		{
+			name:           "hybrid mode - line num in first column, ID in second",
+			lineNumberMode: LineNumberHybrid,
+			rows: [][]string{
+				{"1", "my-change-id", "My Title", "2"},
+			},
+			columns: []table.Column{
+				{Title: "Ln", Width: 3},
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+			},
+			expectedID: "my-change-id",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tableRows := make([]table.Row, len(tt.rows))
+			for i, row := range tt.rows {
+				tableRows[i] = row
+			}
+
+			model := &interactiveModel{
+				stdoutMode:     true,
+				lineNumberMode: tt.lineNumberMode,
+				table: table.New(
+					table.WithColumns(tt.columns),
+					table.WithRows(tableRows),
+					table.WithFocused(true),
+					table.WithHeight(10),
+				),
+			}
+
+			model.handleEnter()
+
+			if model.selectedID != tt.expectedID {
+				t.Errorf(
+					"selectedID = %q, want %q",
+					model.selectedID,
+					tt.expectedID,
+				)
+			}
+		})
+	}
+}
+
+// TestBuildCopyPath_NestedProject tests that nested projects with RootPath
+// correctly build paths that include the nested path.
+// Note: itemID should be the formatted ID as it would appear in the table row
+// (e.g., "[nested/project] my-change" in multi-root mode).
+func TestBuildCopyPath_NestedProject(t *testing.T) {
+	tests := []struct {
+		name         string
+		itemType     string
+		itemID       string // The displayed/formatted ID (what appears in table row)
+		changesData  []ChangeInfo
+		specsData    []SpecInfo
+		expectedPath string
+	}{
+		{
+			name:     "change in root project",
+			itemType: itemTypeChange,
+			itemID:   "my-change",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: ""},
+			},
+			expectedPath: "spectr/changes/my-change",
+		},
+		{
+			name:     "change in nested project",
+			itemType: itemTypeChange,
+			// In multi-root mode, displayed ID has project prefix
+			itemID: "[nested/project] my-change",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: "nested/project"},
+			},
+			expectedPath: "nested/project/spectr/changes/my-change",
+		},
+		{
+			name:     "spec in root project",
+			itemType: itemTypeSpec,
+			itemID:   "my-spec",
+			specsData: []SpecInfo{
+				{ID: "my-spec", RootPath: ""},
+			},
+			expectedPath: "spectr/specs/my-spec",
+		},
+		{
+			name:     "spec in nested project",
+			itemType: itemTypeSpec,
+			// In multi-root mode, displayed ID has project prefix
+			itemID: "[apps/frontend] my-spec",
+			specsData: []SpecInfo{
+				{ID: "my-spec", RootPath: "apps/frontend"},
+			},
+			expectedPath: "apps/frontend/spectr/specs/my-spec",
+		},
+		{
+			name:     "change with dot rootPath treated as root",
+			itemType: itemTypeChange,
+			itemID:   "my-change",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: "."},
+			},
+			expectedPath: "spectr/changes/my-change",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := &interactiveModel{
+				itemType:    tt.itemType,
+				changesData: tt.changesData,
+				specsData:   tt.specsData,
+			}
+
+			row := table.Row{tt.itemID}
+			result := model.buildCopyPath(tt.itemID, row)
+
+			if result != tt.expectedPath {
+				t.Errorf(
+					"buildCopyPath() = %q, want %q",
+					result,
+					tt.expectedPath,
+				)
+			}
+		})
+	}
+}
+
+// TestHandleArchive_WithLineNumbers tests that handleArchive correctly
+// extracts the ID when line numbers are enabled.
+func TestHandleArchive_WithLineNumbers(t *testing.T) {
+	tests := []struct {
+		name              string
+		lineNumberMode    LineNumberMode
+		rows              [][]string
+		columns           []table.Column
+		itemType          string
+		changesData       []ChangeInfo
+		expectedID        string
+		expectArchiveFlag bool
+	}{
+		{
+			name:           "change mode - line numbers off",
+			lineNumberMode: LineNumberOff,
+			rows: [][]string{
+				{"my-change-id", "My Title", "2", "3/5"},
+			},
+			columns: []table.Column{
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+				{Title: "Tasks", Width: 10},
+			},
+			itemType: itemTypeChange,
+			changesData: []ChangeInfo{
+				{ID: "my-change-id", Title: "My Title", DeltaCount: 2, RootAbsPath: "/tmp/test"},
+			},
+			expectedID:        "my-change-id",
+			expectArchiveFlag: true,
+		},
+		{
+			name:           "change mode - relative line numbers",
+			lineNumberMode: LineNumberRelative,
+			rows: [][]string{
+				{"0", "my-change-id", "My Title", "2", "3/5"},
+			},
+			columns: []table.Column{
+				{Title: "Ln", Width: 3},
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+				{Title: "Tasks", Width: 10},
+			},
+			itemType: itemTypeChange,
+			changesData: []ChangeInfo{
+				{ID: "my-change-id", Title: "My Title", DeltaCount: 2, RootAbsPath: "/tmp/test"},
+			},
+			expectedID:        "my-change-id",
+			expectArchiveFlag: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tableRows := make([]table.Row, len(tt.rows))
+			for i, row := range tt.rows {
+				tableRows[i] = row
+			}
+
+			model := &interactiveModel{
+				lineNumberMode: tt.lineNumberMode,
+				itemType:       tt.itemType,
+				changesData:    tt.changesData,
+				table: table.New(
+					table.WithColumns(tt.columns),
+					table.WithRows(tableRows),
+					table.WithFocused(true),
+					table.WithHeight(10),
+				),
+			}
+
+			model.handleArchive()
+
+			if model.selectedID != tt.expectedID {
+				t.Errorf(
+					"selectedID = %q, want %q",
+					model.selectedID,
+					tt.expectedID,
+				)
+			}
+
+			if model.archiveRequested != tt.expectArchiveFlag {
+				t.Errorf(
+					"archiveRequested = %v, want %v",
+					model.archiveRequested,
+					tt.expectArchiveFlag,
+				)
+			}
+		})
+	}
+}
+
+// TestHandlePR_WithLineNumbers tests that handlePR correctly
+// extracts the ID when line numbers are enabled.
+func TestHandlePR_WithLineNumbers(t *testing.T) {
+	tests := []struct {
+		name           string
+		lineNumberMode LineNumberMode
+		rows           [][]string
+		columns        []table.Column
+		changesData    []ChangeInfo
+		expectedID     string
+		expectPRFlag   bool
+	}{
+		{
+			name:           "line numbers off",
+			lineNumberMode: LineNumberOff,
+			rows: [][]string{
+				{"my-change-id", "My Title", "2", "3/5"},
+			},
+			columns: []table.Column{
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+				{Title: "Tasks", Width: 10},
+			},
+			changesData: []ChangeInfo{
+				{ID: "my-change-id", Title: "My Title", DeltaCount: 2, RootAbsPath: "/tmp/test"},
+			},
+			expectedID:   "my-change-id",
+			expectPRFlag: true,
+		},
+		{
+			name:           "relative line numbers",
+			lineNumberMode: LineNumberRelative,
+			rows: [][]string{
+				{"0", "my-change-id", "My Title", "2", "3/5"},
+			},
+			columns: []table.Column{
+				{Title: "Ln", Width: 3},
+				{Title: "ID", Width: 35},
+				{Title: "Title", Width: 45},
+				{Title: "Deltas", Width: 10},
+				{Title: "Tasks", Width: 10},
+			},
+			changesData: []ChangeInfo{
+				{ID: "my-change-id", Title: "My Title", DeltaCount: 2, RootAbsPath: "/tmp/test"},
+			},
+			expectedID:   "my-change-id",
+			expectPRFlag: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tableRows := make([]table.Row, len(tt.rows))
+			for i, row := range tt.rows {
+				tableRows[i] = row
+			}
+
+			model := &interactiveModel{
+				lineNumberMode: tt.lineNumberMode,
+				itemType:       itemTypeChange, // PR only works in change mode
+				changesData:    tt.changesData,
+				table: table.New(
+					table.WithColumns(tt.columns),
+					table.WithRows(tableRows),
+					table.WithFocused(true),
+					table.WithHeight(10),
+				),
+			}
+
+			model.handlePR()
+
+			if model.selectedID != tt.expectedID {
+				t.Errorf(
+					"selectedID = %q, want %q",
+					model.selectedID,
+					tt.expectedID,
+				)
+			}
+
+			if model.prRequested != tt.expectPRFlag {
+				t.Errorf(
+					"prRequested = %v, want %v",
+					model.prRequested,
+					tt.expectPRFlag,
+				)
+			}
+		})
+	}
+}
+
+// TestGetEditFilePath_NestedProject tests that getEditFilePath correctly
+// builds paths for items in nested projects with RootPath.
+func TestGetEditFilePath_NestedProject(t *testing.T) {
+	// Helper to create a change Item
+	makeChangeItem := func(id, rootPath string) Item {
+		return Item{
+			Type:   ItemTypeChange,
+			Change: &ChangeInfo{ID: id, RootPath: rootPath},
+		}
+	}
+
+	// Helper to create a spec Item
+	makeSpecItem := func(id, rootPath string) Item {
+		return Item{
+			Type: ItemTypeSpec,
+			Spec: &SpecInfo{ID: id, RootPath: rootPath},
+		}
+	}
+
+	tests := []struct {
+		name         string
+		itemType     string
+		editItemType string // The type passed to getEditFilePath (may differ in unified mode)
+		itemID       string
+		projectPath  string
+		changesData  []ChangeInfo
+		specsData    []SpecInfo
+		allItems     ItemList
+		expectedPath string
+	}{
+		{
+			name:         "change in root project",
+			itemType:     itemTypeChange,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: ""},
+			},
+			expectedPath: "/mono-repo/spectr/changes/my-change/proposal.md",
+		},
+		{
+			name:         "change in nested project",
+			itemType:     itemTypeChange,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: "packages/auth"},
+			},
+			expectedPath: "/mono-repo/packages/auth/spectr/changes/my-change/proposal.md",
+		},
+		{
+			name:         "spec in root project",
+			itemType:     itemTypeSpec,
+			editItemType: itemTypeSpec,
+			itemID:       "my-spec",
+			projectPath:  "/mono-repo",
+			specsData: []SpecInfo{
+				{ID: "my-spec", RootPath: ""},
+			},
+			expectedPath: "/mono-repo/spectr/specs/my-spec/spec.md",
+		},
+		{
+			name:         "spec in nested project",
+			itemType:     itemTypeSpec,
+			editItemType: itemTypeSpec,
+			itemID:       "my-spec",
+			projectPath:  "/mono-repo",
+			specsData: []SpecInfo{
+				{ID: "my-spec", RootPath: "apps/frontend"},
+			},
+			expectedPath: "/mono-repo/apps/frontend/spectr/specs/my-spec/spec.md",
+		},
+		{
+			name:         "change with dot rootPath treated as root",
+			itemType:     itemTypeChange,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			changesData: []ChangeInfo{
+				{ID: "my-change", RootPath: "."},
+			},
+			expectedPath: "/mono-repo/spectr/changes/my-change/proposal.md",
+		},
+		// Unified mode (itemTypeAll) tests - uses allItems instead of changesData/specsData
+		{
+			name:         "unified mode - change in nested project",
+			itemType:     itemTypeAll,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			allItems: ItemList{
+				makeChangeItem("my-change", "packages/api"),
+			},
+			expectedPath: "/mono-repo/packages/api/spectr/changes/my-change/proposal.md",
+		},
+		{
+			name:         "unified mode - spec in nested project",
+			itemType:     itemTypeAll,
+			editItemType: itemTypeSpec,
+			itemID:       "my-spec",
+			projectPath:  "/mono-repo",
+			allItems: ItemList{
+				makeSpecItem("my-spec", "apps/web"),
+			},
+			expectedPath: "/mono-repo/apps/web/spectr/specs/my-spec/spec.md",
+		},
+		{
+			name:         "unified mode - change in root",
+			itemType:     itemTypeAll,
+			editItemType: itemTypeChange,
+			itemID:       "my-change",
+			projectPath:  "/mono-repo",
+			allItems: ItemList{
+				makeChangeItem("my-change", ""),
+			},
+			expectedPath: "/mono-repo/spectr/changes/my-change/proposal.md",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			model := &interactiveModel{
+				itemType:    tt.itemType,
+				projectPath: tt.projectPath,
+				changesData: tt.changesData,
+				specsData:   tt.specsData,
+				allItems:    tt.allItems,
+			}
+
+			result := model.getEditFilePath(tt.itemID, tt.editItemType)
+
+			if result != tt.expectedPath {
+				t.Errorf(
+					"getEditFilePath() = %q, want %q",
+					result,
+					tt.expectedPath,
+				)
+			}
+		})
+	}
 }

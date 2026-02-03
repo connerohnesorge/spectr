@@ -74,11 +74,12 @@ func ToRelativePath(absPath string) string {
 
 // BulkResult represents the result of validating a single item
 type BulkResult struct {
-	Name   string            `json:"name"`
-	Type   string            `json:"type"`
-	Valid  bool              `json:"valid"`
-	Report *ValidationReport `json:"report,omitempty"`
-	Error  string            `json:"error,omitempty"`
+	Name     string            `json:"name"`
+	Type     string            `json:"type"`
+	Valid    bool              `json:"valid"`
+	Report   *ValidationReport `json:"report,omitempty"`
+	Error    string            `json:"error,omitempty"`
+	RootPath string            `json:"rootPath,omitempty"` // Relative path to root (multi-root)
 }
 
 // PrintJSONReport prints a single validation report as JSON
@@ -292,4 +293,76 @@ func printSummary(p summaryParams) {
 			p.total,
 		)
 	}
+}
+
+// PrintBulkHumanResultsMulti prints bulk validation results with optional root prefix.
+//
+//nolint:revive // flag-parameter: hasMultipleRoots intentionally controls formatting
+func PrintBulkHumanResultsMulti(results []BulkResult, hasMultipleRoots bool) {
+	if !hasMultipleRoots {
+		PrintBulkHumanResults(results)
+
+		return
+	}
+
+	passCount := 0
+	failCount := 0
+	errorCount := 0
+	warningCount := 0
+	isFirstFailed := true
+
+	for _, result := range results {
+		// Format name with root prefix
+		displayName := result.Name
+		if result.RootPath != "" && result.RootPath != "." {
+			displayName = fmt.Sprintf("[%s] %s", result.RootPath, result.Name)
+		}
+
+		if result.Valid {
+			fmt.Printf(
+				"✓ %s (%s)\n",
+				displayName,
+				result.Type,
+			)
+			passCount++
+		} else {
+			// Add blank line before each failed item (except the first)
+			if !isFirstFailed {
+				fmt.Println()
+			}
+			isFirstFailed = false
+
+			if result.Error != "" {
+				fmt.Printf(
+					"✗ %s (%s): %s\n",
+					displayName,
+					result.Type,
+					result.Error,
+				)
+				errorCount++
+			} else {
+				issueCount := len(result.Report.Issues)
+				fmt.Printf(
+					"✗ %s (%s) has %d issue(s):\n",
+					displayName,
+					result.Type,
+					issueCount,
+				)
+				// Count and print issues grouped by file
+				printGroupedIssues(
+					result.Report.Issues, &errorCount, &warningCount,
+				)
+			}
+			failCount++
+		}
+	}
+
+	// Print enhanced summary
+	printSummary(summaryParams{
+		passCount:    passCount,
+		failCount:    failCount,
+		errorCount:   errorCount,
+		warningCount: warningCount,
+		total:        len(results),
+	})
 }

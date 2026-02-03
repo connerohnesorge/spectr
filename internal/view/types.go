@@ -10,6 +10,7 @@ type DashboardData struct {
 	ActiveChanges    []ChangeProgress  `json:"activeChanges"`
 	CompletedChanges []CompletedChange `json:"completedChanges"`
 	Specs            []SpecInfo        `json:"specs"`
+	HasMultipleRoots bool              `json:"hasMultipleRoots,omitempty"`
 }
 
 // SummaryMetrics represents aggregate metrics across the project
@@ -30,9 +31,10 @@ type SummaryMetrics struct {
 
 // ChangeProgress represents an active change with task completion progress
 type ChangeProgress struct {
-	ID       string          `json:"id"`       // Change ID (directory name)
-	Title    string          `json:"title"`    // Change title from proposal.md
-	Progress ProgressMetrics `json:"progress"` // Task completion metrics
+	ID       string          `json:"id"`                 // Change ID (directory name)
+	Title    string          `json:"title"`              // Change title from proposal.md
+	Progress ProgressMetrics `json:"progress"`           // Task completion metrics
+	RootPath string          `json:"rootPath,omitempty"` // Relative path to root (multi-root only)
 }
 
 // ProgressMetrics represents task completion statistics for a change
@@ -44,8 +46,9 @@ type ProgressMetrics struct {
 
 // CompletedChange represents a change that has all tasks completed
 type CompletedChange struct {
-	ID    string `json:"id"`    // Change ID (directory name)
-	Title string `json:"title"` // Change title from proposal.md
+	ID       string `json:"id"`                 // Change ID (directory name)
+	Title    string `json:"title"`              // Change title from proposal.md
+	RootPath string `json:"rootPath,omitempty"` // Relative path to root (multi-root only)
 }
 
 // SpecInfo represents a specification with metadata
@@ -56,4 +59,6 @@ type SpecInfo struct {
 	Title string `json:"title"`
 	// Number of requirements in spec
 	RequirementCount int `json:"requirementCount"`
+	// RootPath is the relative path to the root (multi-root only)
+	RootPath string `json:"rootPath,omitempty"`
 }

@@ -8,6 +8,10 @@ type ChangeInfo struct {
 	Title      string             `json:"title"`
 	DeltaCount int                `json:"deltaCount"`
 	TaskStatus parsers.TaskStatus `json:"taskStatus"`
+	// RootPath is the relative path to the spectr root from cwd (empty for single root)
+	RootPath string `json:"rootPath,omitempty"`
+	// RootAbsPath is the absolute path to the spectr root (for internal use)
+	RootAbsPath string `json:"-"`
 }
 
 // SpecInfo represents information about a spec
@@ -15,6 +19,10 @@ type SpecInfo struct {
 	ID               string `json:"id"`
 	Title            string `json:"title"`
 	RequirementCount int    `json:"requirementCount"`
+	// RootPath is the relative path to the spectr root from cwd (empty for single root)
+	RootPath string `json:"rootPath,omitempty"`
+	// RootAbsPath is the absolute path to the spectr root (for internal use)
+	RootAbsPath string `json:"-"`
 }
 
 // ItemType represents the type of an item (change or spec)
@@ -48,6 +56,38 @@ type Item struct {
 	Change *ChangeInfo `json:"change,omitempty"`
 	// Spec contains the spec information if Type == ItemTypeSpec
 	Spec *SpecInfo `json:"spec,omitempty"`
+}
+
+// RootPath returns the root path for this item
+func (i *Item) RootPath() string {
+	switch i.Type {
+	case ItemTypeChange:
+		if i.Change != nil {
+			return i.Change.RootPath
+		}
+	case ItemTypeSpec:
+		if i.Spec != nil {
+			return i.Spec.RootPath
+		}
+	}
+
+	return ""
+}
+
+// RootAbsPath returns the absolute root path for this item
+func (i *Item) RootAbsPath() string {
+	switch i.Type {
+	case ItemTypeChange:
+		if i.Change != nil {
+			return i.Change.RootAbsPath
+		}
+	case ItemTypeSpec:
+		if i.Spec != nil {
+			return i.Spec.RootAbsPath
+		}
+	}
+
+	return ""
 }
 
 // ID returns the identifier for this item (change ID or spec ID)
@@ -86,10 +126,10 @@ func (i *Item) Title() string {
 type ItemList []Item
 
 // NewChangeItem creates a new Item wrapping a ChangeInfo
-func NewChangeItem(change ChangeInfo) Item {
+func NewChangeItem(change *ChangeInfo) Item {
 	return Item{
 		Type:   ItemTypeChange,
-		Change: &change,
+		Change: change,
 	}
 }
 

@@ -50,6 +50,7 @@ Version](https://img.shields.io/badge/Go-1.25%2B-00ADD8?logo=go)](https://go.dev
   - [Commit Conventions](#commit-conventions)
   - [Testing Requirements](#testing-requirements)
 - [Advanced Topics](#advanced-topics)
+  - [Multi-Repo Discovery](#multi-repo-discovery)
   - [Spec-Driven Development](#spec-driven-development)
   - [Delta Specifications](#delta-specifications)
   - [Validation Rules](#validation-rules)
@@ -1027,6 +1028,79 @@ go fmt ./...
 ---
 
 ## Advanced Topics
+
+### Multi-Repo Discovery
+
+Spectr supports mono-repo setups with nested git repositories, each with their
+own `spectr/` directory.
+
+#### Discovery Behavior
+
+When you run any Spectr command, it automatically walks up from your current
+working directory to find all `spectr/` directories:
+
+- **Git isolation**: Discovery stops at `.git` boundaries - each git repository
+  is isolated
+- **Aggregated results**: Commands like `list`, `validate`, `view` aggregate
+  results from all discovered roots
+- **Root prefix**: In multi-root scenarios, items are prefixed with their
+  relative path: `[../project] add-feature`
+- **Single-root compatibility**: When only one root is found, output is
+  identical to previous behavior (no prefixes)
+
+**Example directory structure:**
+
+```text
+mono-repo/
+├── .git/
+├── spectr/           # Root repo's spectr
+│   └── changes/
+├── packages/
+│   └── auth/
+│       ├── .git/     # Nested git repo
+│       └── spectr/   # Auth package's spectr
+│           └── changes/
+└── services/
+    └── api/
+        ├── .git/     # Another nested git repo
+        └── spectr/   # API service's spectr
+            └── changes/
+```text
+
+Running `spectr list` from `mono-repo/` shows changes from all three roots.
+
+#### SPECTR_ROOT Environment Variable
+
+Override automatic discovery by setting `SPECTR_ROOT`:
+
+```bash
+# Use explicit spectr root
+SPECTR_ROOT=/path/to/project spectr list
+
+# Relative paths work too
+SPECTR_ROOT=../other-project spectr validate --all
+
+# Useful in scripts/CI for explicit control
+export SPECTR_ROOT=/workspace/my-project
+spectr list
+spectr validate my-change
+```text
+
+**Behavior:**
+
+- When set, uses ONLY the specified root (skips automatic discovery)
+- Errors if the path doesn't contain a `spectr/` directory
+- Useful for CI/CD pipelines or scripts that need deterministic behavior
+
+#### TUI Path Copying
+
+When selecting items in interactive mode (Enter key), Spectr copies the full
+path relative to your cwd:
+
+- Single root: `spectr/changes/add-feature/proposal.md`
+- Nested root: `../project/spectr/changes/add-feature/proposal.md`
+
+This enables direct navigation with `@` file references in AI coding assistants.
 
 ### Spec-Driven Development
 

@@ -1179,7 +1179,7 @@ func TestFindSpectrRoots_MonorepoWithSubprojects(t *testing.T) {
 	})
 }
 
-// TestFindSpectrRoots_DepthLimit verifies that the 10-level depth limit is enforced
+// TestFindSpectrRoots_DepthLimit verifies that the 5-level depth limit is enforced
 // during downward discovery, preventing excessive directory traversal.
 func TestFindSpectrRoots_DepthLimit(t *testing.T) {
 	// Note: This test directly tests findSpectrRootsDownward since FindSpectrRoots
@@ -1189,23 +1189,23 @@ func TestFindSpectrRoots_DepthLimit(t *testing.T) {
 	// Due to how WalkDir and calculateDepth work together, the effective depths are:
 	// - tmpDir (start path): depth 0 in depthMap initialization, but calculated as depth 1
 	// - tmpDir/a: depth 2
-	// - tmpDir/a/b/c/d/e/f/g/h/i: depth 10 (at limit)
-	// - tmpDir/a/b/c/d/e/f/g/h/i/j: depth 11 (exceeds limit)
+	// - tmpDir/a/b/c/d: depth 5 (at limit)
+	// - tmpDir/a/b/c/d/e: depth 6 (exceeds limit)
 	tmpDir := t.TempDir()
 
 	// Create shallow spectr with .git (depth 2 with current implementation)
 	mustMkdirAll(t, filepath.Join(tmpDir, "shallow", ".git"))
 	mustMkdirAll(t, filepath.Join(tmpDir, "shallow", "spectr"))
 
-	// Create at-limit spectr with .git (depth 10)
-	// Using 9 path segments: a/b/c/d/e/f/g/h/i
-	atLimitPath := filepath.Join(tmpDir, "a", "b", "c", "d", "e", "f", "g", "h", "i")
+	// Create at-limit spectr with .git (depth 5)
+	// Using 4 path segments: a/b/c/d
+	atLimitPath := filepath.Join(tmpDir, "a", "b", "c", "d")
 	mustMkdirAll(t, filepath.Join(atLimitPath, ".git"))
 	mustMkdirAll(t, filepath.Join(atLimitPath, "spectr"))
 
-	// Create too-deep spectr with .git (depth 11, should not be found due to depth limit)
-	// Using 10 path segments: a/b/c/d/e/f/g/h/i/j
-	tooDeepPath := filepath.Join(tmpDir, "a", "b", "c", "d", "e", "f", "g", "h", "i", "j")
+	// Create too-deep spectr with .git (depth 6, should not be found due to depth limit)
+	// Using 5 path segments: a/b/c/d/e
+	tooDeepPath := filepath.Join(tmpDir, "a", "b", "c", "d", "e")
 	mustMkdirAll(t, filepath.Join(tooDeepPath, ".git"))
 	mustMkdirAll(t, filepath.Join(tooDeepPath, "spectr"))
 

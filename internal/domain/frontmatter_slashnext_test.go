@@ -9,7 +9,7 @@ func TestSlashNextFrontmatter(t *testing.T) {
 	// Get the base frontmatter for SlashNext
 	fm := GetBaseFrontmatter(SlashNext)
 
-	// Verify expected field values
+	// Verify expected scalar field values
 	expectedValues := map[string]any{
 		"description":   "Spectr: Next Task Execution",
 		"allowed-tools": "Read, Glob, Grep, Write, Edit, Bash(spectr:*)",
@@ -37,12 +37,25 @@ func TestSlashNextFrontmatter(t *testing.T) {
 		}
 	}
 
-	// Verify no unexpected fields
-	if len(fm) != len(expectedValues) {
+	// Verify hooks field exists and is a map
+	hooksVal, hasHooks := fm["hooks"]
+	if !hasHooks {
+		t.Error("SlashNext frontmatter missing field \"hooks\"")
+	} else if hooksMap, ok := hooksVal.(map[string]any); !ok {
+		t.Error("SlashNext frontmatter \"hooks\" is not map[string]any")
+	} else if len(hooksMap) != len(AllHookTypes()) {
 		t.Errorf(
-			"SlashNext frontmatter has %d fields, want %d",
+			"SlashNext frontmatter hooks has %d entries, want %d",
+			len(hooksMap),
+			len(AllHookTypes()),
+		)
+	}
+
+	// Verify total field count (3 scalar + 1 hooks = 4)
+	if len(fm) != 4 {
+		t.Errorf(
+			"SlashNext frontmatter has %d fields, want 4",
 			len(fm),
-			len(expectedValues),
 		)
 	}
 }
@@ -67,6 +80,7 @@ func TestSlashNextRenderedFrontmatter(t *testing.T) {
 		"---",
 		"allowed-tools: Read, Glob, Grep, Write, Edit, Bash(spectr:*)",
 		"description: 'Spectr: Next Task Execution'",
+		"hooks:",
 		"subtask: false",
 		"# Spectr: Next Task Execution",
 	}

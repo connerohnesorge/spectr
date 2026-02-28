@@ -115,6 +115,40 @@ func TestHandlePreToolUse(t *testing.T) {
 			wantBlock: true,
 			wantMsg:   "empty file path",
 		},
+		{
+			name:    "blocks Bash writing to changes path",
+			command: "apply",
+			input: HookInput{
+				ToolName: "Bash",
+				ToolInput: json.RawMessage(
+					`{"command": "echo 'test' > spectr/changes/foo/proposal.md"}`,
+				),
+			},
+			wantBlock: true,
+			wantMsg:   "Bash command references",
+		},
+		{
+			name:    "allows Bash not targeting changes",
+			command: "apply",
+			input: HookInput{
+				ToolName: "Bash",
+				ToolInput: json.RawMessage(
+					`{"command": "go test ./..."}`,
+				),
+			},
+			wantBlock: false,
+		},
+		{
+			name:    "allows Bash during non-apply",
+			command: "proposal",
+			input: HookInput{
+				ToolName: "Bash",
+				ToolInput: json.RawMessage(
+					`{"command": "echo 'test' > spectr/changes/foo/proposal.md"}`,
+				),
+			},
+			wantBlock: false,
+		},
 	}
 
 	for _, tt := range tests {

@@ -21,4 +21,5 @@ type HookOutput struct {
 // toolInput represents parsed tool_input fields relevant to file operations.
 type toolInput struct {
 	FilePath string `json:"file_path"`
+	Command  string `json:"command"`
 }

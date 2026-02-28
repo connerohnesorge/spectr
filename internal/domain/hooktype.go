@@ -10,7 +10,8 @@ type hookEntry struct {
 }
 
 const (
-	HookPreToolUse HookType = iota
+	HookUnknown HookType = iota
+	HookPreToolUse
 	HookPostToolUse
 	HookUserPromptSubmit
 	HookStop
@@ -71,5 +72,5 @@ func ParseHookType(s string) (HookType, bool) {
 		}
 	}
 
-	return 0, false
+	return HookUnknown, false
 }

@@ -54,6 +54,8 @@ func dispatch(
 		domain.HookNotification,
 		domain.HookPermissionRequest:
 		return &HookOutput{}, nil
+	case domain.HookUnknown:
+		return nil, fmt.Errorf("unknown hook type: %s", hookType)
 	default:
 		return nil, fmt.Errorf("unknown hook type: %s", hookType)
 	}

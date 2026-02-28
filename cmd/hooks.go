@@ -10,8 +10,8 @@ import (
 
 // HooksCmd represents the hooks command for processing Claude Code hook events.
 type HooksCmd struct {
-	HookType string `arg:""           help:"Hook event type (PreToolUse, Stop, etc.)"`  //nolint:lll,revive // Kong struct tag
-	Command  string `name:"command" short:"c" help:"Slash command context" required:""` //nolint:lll,revive // Kong struct tag
+	HookType string `arg:""           help:"Hook event type (PreToolUse, Stop, etc.)"` //nolint:lll,revive // Kong struct tag
+	Command  string `name:"command" short:"c" help:"Slash command context"`            //nolint:lll,revive // Kong struct tag
 }
 
 // Run executes the hooks command by parsing the hook type and delegating

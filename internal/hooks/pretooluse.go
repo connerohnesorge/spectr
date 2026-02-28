@@ -6,9 +6,12 @@ import (
 	"strings"
 )
 
-// spectrChangesPattern matches file paths under spectr/changes/<id>/.
+// spectrChangesPattern matches references to spectr/changes/<id>/ in both file
+// paths and shell command strings. It accepts spectr/changes/ when preceded by
+// start-of-string or any non-alphanumeric/underscore character (e.g. /, space,
+// >, &) so it catches redirect targets in Bash commands as well as plain paths.
 var spectrChangesPattern = regexp.MustCompile(
-	`(?:^|/)spectr/changes/[^/]+/`,
+	`(?:^|[^a-zA-Z0-9_])spectr/changes/[^/]+/`,
 )
 
 // fileToolNames lists the tool names that perform file write operations.
@@ -16,6 +19,11 @@ var fileToolNames = map[string]bool{
 	"Edit":  true,
 	"Write": true,
 }
+
+// TODO: Currently only the "apply" command has pre-tool-use guards.
+// Future commands may need their own guards (e.g., "proposal" preventing
+// writes to spectr/specs/, "next" restricting edits to task-related files).
+// Consider a command→rules registry when adding more commands.
 
 // handlePreToolUse checks if a file write operation targets protected
 // files under spectr/changes/. For the "apply" command, only tasks.jsonc
@@ -26,6 +34,24 @@ func handlePreToolUse(
 ) *HookOutput {
 	// Only guard file writes during apply
 	if command != "apply" {
+		return &HookOutput{}
+	}
+
+	// Best-effort guard for Bash commands that may write to protected paths.
+	// Shell commands are inherently hard to analyze statically; this catches
+	// common patterns like redirects and explicit paths in command strings.
+	if input.ToolName == "Bash" {
+		var ti toolInput
+		if err := json.Unmarshal(input.ToolInput, &ti); err != nil {
+			return &HookOutput{} // Can't parse Bash input; allow it
+		}
+		if ti.Command != "" && spectrChangesPattern.MatchString(ti.Command) {
+			msg := "Blocked: Bash command references spectr/changes/ path during apply. " +
+				"Use spectr CLI tools to modify change proposals."
+
+			return &HookOutput{Blocked: true, Message: &msg}
+		}
+
 		return &HookOutput{}
 	}
 

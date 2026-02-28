@@ -36,6 +36,14 @@ func TestHookTypeString(t *testing.T) {
 }
 
 func TestHookTypeString_Unknown(t *testing.T) {
+	if got := HookUnknown.String(); got != unknownHookType {
+		t.Errorf(
+			"HookUnknown.String() = %q, want %q",
+			got,
+			unknownHookType,
+		)
+	}
+
 	unknown := HookType(999)
 	if got := unknown.String(); got != unknownHookType {
 		t.Errorf(
@@ -73,9 +81,9 @@ func TestParseHookType(t *testing.T) {
 		{"SessionEnd", HookSessionEnd, true},
 		{"Notification", HookNotification, true},
 		{"PermissionRequest", HookPermissionRequest, true},
-		{"invalid", 0, false},
-		{"pretooluse", 0, false},
-		{"", 0, false},
+		{"invalid", HookUnknown, false},
+		{"pretooluse", HookUnknown, false},
+		{"", HookUnknown, false},
 	}
 
 	for _, tt := range tests {

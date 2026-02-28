@@ -51,11 +51,13 @@ func TestSlashNextFrontmatter(t *testing.T) {
 		)
 	}
 
-	// Verify total field count (3 scalar + 1 hooks = 4)
-	if len(fm) != 4 {
+	// Verify total field count (scalar fields + hooks map)
+	wantFields := len(expectedValues) + 1
+	if len(fm) != wantFields {
 		t.Errorf(
-			"SlashNext frontmatter has %d fields, want 4",
+			"SlashNext frontmatter has %d fields, want %d",
 			len(fm),
+			wantFields,
 		)
 	}
 }

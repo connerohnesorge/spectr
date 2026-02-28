@@ -37,11 +37,17 @@ func handlePreToolUse(
 	// Parse tool_input to get file_path
 	var ti toolInput
 	if err := json.Unmarshal(input.ToolInput, &ti); err != nil {
-		return &HookOutput{}
+		msg := "Blocked: could not parse tool input for " + input.ToolName +
+			" during apply"
+
+		return &HookOutput{Blocked: true, Message: &msg}
 	}
 
 	if ti.FilePath == "" {
-		return &HookOutput{}
+		msg := "Blocked: empty file path for " + input.ToolName +
+			" during apply"
+
+		return &HookOutput{Blocked: true, Message: &msg}
 	}
 
 	// Check if the file is under spectr/changes/<id>/

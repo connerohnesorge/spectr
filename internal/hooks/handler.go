@@ -21,7 +21,10 @@ func Handle(
 		return fmt.Errorf("failed to decode hook input: %w", err)
 	}
 
-	output := dispatch(hookType, command, &input)
+	output, err := dispatch(hookType, command, &input)
+	if err != nil {
+		return err
+	}
 
 	if err := json.NewEncoder(stdout).Encode(output); err != nil {
 		return fmt.Errorf("failed to encode hook output: %w", err)
@@ -36,10 +39,10 @@ func dispatch(
 	hookType domain.HookType,
 	command string,
 	input *HookInput,
-) *HookOutput {
+) (*HookOutput, error) {
 	switch hookType {
 	case domain.HookPreToolUse:
-		return handlePreToolUse(command, input)
+		return handlePreToolUse(command, input), nil
 	case domain.HookPostToolUse,
 		domain.HookUserPromptSubmit,
 		domain.HookStop,
@@ -50,8 +53,8 @@ func dispatch(
 		domain.HookSessionEnd,
 		domain.HookNotification,
 		domain.HookPermissionRequest:
-		return &HookOutput{}
+		return &HookOutput{}, nil
+	default:
+		return nil, fmt.Errorf("unknown hook type: %s", hookType)
 	}
-
-	return &HookOutput{}
 }

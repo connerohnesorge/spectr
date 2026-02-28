@@ -9,145 +9,141 @@ import (
 	"github.com/connerohnesorge/spectr/internal/domain"
 )
 
-func TestHandlePreToolUse_BlocksProposalModification(
-	t *testing.T,
-) {
-	input := HookInput{
-		SessionID:     "test-session",
-		HookEventName: "PreToolUse",
-		ToolName:      "Edit",
-		ToolInput: json.RawMessage(
-			`{"file_path": "spectr/changes/foo/proposal.md", "old_string": "a", "new_string": "b"}`,
-		),
+func TestHandlePreToolUse(t *testing.T) {
+	tests := []struct {
+		name      string
+		command   string
+		input     HookInput
+		wantBlock bool
+		wantMsg   string // substring expected in message; empty = no check
+	}{
+		{
+			name:    "blocks proposal modification",
+			command: "apply",
+			input: HookInput{
+				ToolName: "Edit",
+				ToolInput: json.RawMessage(
+					`{"file_path": "spectr/changes/foo/proposal.md", "old_string": "a", "new_string": "b"}`,
+				),
+			},
+			wantBlock: true,
+			wantMsg:   "proposal.md",
+		},
+		{
+			name:    "allows tasks.jsonc",
+			command: "apply",
+			input: HookInput{
+				ToolName: "Write",
+				ToolInput: json.RawMessage(
+					`{"file_path": "spectr/changes/foo/tasks.jsonc", "content": "{}"}`,
+				),
+			},
+			wantBlock: false,
+		},
+		{
+			name:    "allows non-apply command",
+			command: "proposal",
+			input: HookInput{
+				ToolName: "Edit",
+				ToolInput: json.RawMessage(
+					`{"file_path": "spectr/changes/foo/proposal.md", "old_string": "a", "new_string": "b"}`,
+				),
+			},
+			wantBlock: false,
+		},
+		{
+			name:    "allows non-file tools",
+			command: "apply",
+			input: HookInput{
+				ToolName: "Read",
+				ToolInput: json.RawMessage(
+					`{"file_path": "spectr/changes/foo/proposal.md"}`,
+				),
+			},
+			wantBlock: false,
+		},
+		{
+			name:    "allows files outside changes",
+			command: "apply",
+			input: HookInput{
+				ToolName: "Edit",
+				ToolInput: json.RawMessage(
+					`{"file_path": "src/main.go", "old_string": "a", "new_string": "b"}`,
+				),
+			},
+			wantBlock: false,
+		},
+		{
+			name:    "blocks Write on spec under changes",
+			command: "apply",
+			input: HookInput{
+				ToolName: "Write",
+				ToolInput: json.RawMessage(
+					`{"file_path": "spectr/changes/bar/specs/auth/spec.md", "content": "new content"}`,
+				),
+			},
+			wantBlock: true,
+		},
+		{
+			name:    "blocks absolute path under changes",
+			command: "apply",
+			input: HookInput{
+				ToolName: "Edit",
+				ToolInput: json.RawMessage(
+					`{"file_path": "/home/user/project/spectr/changes/foo/proposal.md", "old_string": "a", "new_string": "b"}`,
+				),
+			},
+			wantBlock: true,
+		},
+		{
+			name:    "blocks malformed tool input JSON",
+			command: "apply",
+			input: HookInput{
+				ToolName:  "Edit",
+				ToolInput: json.RawMessage(`{bad json`),
+			},
+			wantBlock: true,
+			wantMsg:   "could not parse",
+		},
+		{
+			name:    "blocks empty file path",
+			command: "apply",
+			input: HookInput{
+				ToolName:  "Write",
+				ToolInput: json.RawMessage(`{"file_path": ""}`),
+			},
+			wantBlock: true,
+			wantMsg:   "empty file path",
+		},
 	}
 
-	output := handlePreToolUse("apply", &input)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output := handlePreToolUse(tt.command, &tt.input)
 
-	if !output.Blocked {
-		t.Error("expected Edit on proposal.md to be blocked")
-	}
-	if output.Message == nil {
-		t.Fatal("expected message when blocked")
-	}
-	if !strings.Contains(*output.Message, "proposal.md") {
-		t.Errorf(
-			"message should mention the file, got: %s",
-			*output.Message,
-		)
-	}
-}
+			if output.Blocked != tt.wantBlock {
+				t.Errorf(
+					"Blocked = %v, want %v",
+					output.Blocked,
+					tt.wantBlock,
+				)
+			}
 
-func TestHandlePreToolUse_AllowsTasksJsonc(
-	t *testing.T,
-) {
-	input := HookInput{
-		SessionID:     "test-session",
-		HookEventName: "PreToolUse",
-		ToolName:      "Write",
-		ToolInput: json.RawMessage(
-			`{"file_path": "spectr/changes/foo/tasks.jsonc", "content": "{}"}`,
-		),
-	}
+			if tt.wantMsg == "" {
+				return
+			}
 
-	output := handlePreToolUse("apply", &input)
-
-	if output.Blocked {
-		t.Error("expected Write on tasks.jsonc to be allowed")
-	}
-}
-
-func TestHandlePreToolUse_AllowsNonApplyCommand(
-	t *testing.T,
-) {
-	input := HookInput{
-		SessionID:     "test-session",
-		HookEventName: "PreToolUse",
-		ToolName:      "Edit",
-		ToolInput: json.RawMessage(
-			`{"file_path": "spectr/changes/foo/proposal.md", "old_string": "a", "new_string": "b"}`,
-		),
-	}
-
-	output := handlePreToolUse("proposal", &input)
-
-	if output.Blocked {
-		t.Error("expected non-apply command to not block")
-	}
-}
-
-func TestHandlePreToolUse_AllowsNonFileTools(
-	t *testing.T,
-) {
-	input := HookInput{
-		SessionID:     "test-session",
-		HookEventName: "PreToolUse",
-		ToolName:      "Read",
-		ToolInput: json.RawMessage(
-			`{"file_path": "spectr/changes/foo/proposal.md"}`,
-		),
-	}
-
-	output := handlePreToolUse("apply", &input)
-
-	if output.Blocked {
-		t.Error("expected Read tool to not be blocked")
-	}
-}
-
-func TestHandlePreToolUse_AllowsFilesOutsideChanges(
-	t *testing.T,
-) {
-	input := HookInput{
-		SessionID:     "test-session",
-		HookEventName: "PreToolUse",
-		ToolName:      "Edit",
-		ToolInput: json.RawMessage(
-			`{"file_path": "src/main.go", "old_string": "a", "new_string": "b"}`,
-		),
-	}
-
-	output := handlePreToolUse("apply", &input)
-
-	if output.Blocked {
-		t.Error("expected files outside spectr/changes/ to not be blocked")
-	}
-}
-
-func TestHandlePreToolUse_BlocksWriteTool(
-	t *testing.T,
-) {
-	input := HookInput{
-		SessionID:     "test-session",
-		HookEventName: "PreToolUse",
-		ToolName:      "Write",
-		ToolInput: json.RawMessage(
-			`{"file_path": "spectr/changes/bar/specs/auth/spec.md", "content": "new content"}`,
-		),
-	}
-
-	output := handlePreToolUse("apply", &input)
-
-	if !output.Blocked {
-		t.Error("expected Write on spec.md under changes to be blocked")
-	}
-}
-
-func TestHandlePreToolUse_AbsolutePath(
-	t *testing.T,
-) {
-	input := HookInput{
-		SessionID:     "test-session",
-		HookEventName: "PreToolUse",
-		ToolName:      "Edit",
-		ToolInput: json.RawMessage(
-			`{"file_path": "/home/user/project/spectr/changes/foo/proposal.md", "old_string": "a", "new_string": "b"}`,
-		),
-	}
-
-	output := handlePreToolUse("apply", &input)
-
-	if !output.Blocked {
-		t.Error("expected absolute path under spectr/changes/ to be blocked")
+			if output.Message == nil {
+				t.Fatal("expected message when blocked")
+			}
+			if !strings.Contains(*output.Message, tt.wantMsg) {
+				t.Errorf(
+					"message %q should contain %q",
+					*output.Message,
+					tt.wantMsg,
+				)
+			}
+		})
 	}
 }
 

@@ -30,6 +30,7 @@ var ValidFrontmatterKeys = map[string]bool{
 	"description":   true,
 	"allowed-tools": true,
 	"subtask":       true,
+	"hooks":         true,  // Hook definitions for Claude Code slash commands
 	"context":       false, // Claude Code: "fork" runs in forked sub-agent context
 	"agent":         true,  // Agent routing (e.g., "plan" for planning subagent)
 }
@@ -79,16 +80,19 @@ var BaseSlashCommandFrontmatter = map[SlashCommand]map[string]any{
 		"description":   "Proposal Creation Guide (project)",
 		"allowed-tools": "Read, Glob, Grep, Write, Edit, Bash(spectr:*)",
 		"subtask":       false,
+		"hooks":         BuildHooksFrontmatter(SlashProposal),
 	},
 	SlashApply: {
 		"description":   "Change Proposal Application/Acceptance Process (project)",
 		"allowed-tools": "Read, Glob, Grep, Write, Edit, Bash(spectr:*)",
 		"subtask":       false,
+		"hooks":         BuildHooksFrontmatter(SlashApply),
 	},
 	SlashNext: {
 		"description":   "Spectr: Next Task Execution",
 		"allowed-tools": "Read, Glob, Grep, Write, Edit, Bash(spectr:*)",
 		"subtask":       false,
+		"hooks":         BuildHooksFrontmatter(SlashNext),
 	},
 }
 

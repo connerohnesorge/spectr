@@ -18,6 +18,7 @@ func TestGetBaseFrontmatter(t *testing.T) {
 				"description",
 				"allowed-tools",
 				"subtask",
+				"hooks",
 			},
 		},
 		{
@@ -27,6 +28,7 @@ func TestGetBaseFrontmatter(t *testing.T) {
 				"description",
 				"allowed-tools",
 				"subtask",
+				"hooks",
 			},
 		},
 		{
@@ -36,6 +38,7 @@ func TestGetBaseFrontmatter(t *testing.T) {
 				"description",
 				"allowed-tools",
 				"subtask",
+				"hooks",
 			},
 		},
 	}

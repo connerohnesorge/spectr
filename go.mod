@@ -12,7 +12,7 @@ require (
 	github.com/charmbracelet/x/exp/teatest v0.0.0-20251117171329-74ce264f24fc
 	github.com/jotaen/kong-completion v0.0.7
 	github.com/lucasb-eyer/go-colorful v1.2.0
-	github.com/mattn/go-isatty v0.0.20
+	github.com/mattn/go-isatty v0.0.21
 	github.com/posener/complete v1.2.3
 	github.com/spf13/afero v1.15.0
 	gopkg.in/yaml.v3 v3.0.1

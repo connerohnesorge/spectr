@@ -39,7 +39,7 @@ jobs:
         uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
 
       - name: Run golangci-lint
         run: nix develop .#ci -c golangci-lint run
@@ -57,7 +57,7 @@ jobs:
         uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
 
       - name: Run tests with race detection
         run: nix develop .#ci -c gotestsum --format testname -- -race ./... -timeout=2m
@@ -75,7 +75,7 @@ jobs:
         uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
 
       - name: Check Go formatting (gofmt)
         run: |
@@ -111,7 +111,7 @@ jobs:
         uses: DeterminateSystems/determinate-nix-action@v3
 
       - name: Setup Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
+        uses: DeterminateSystems/magic-nix-cache-action@v14
 
       - name: Build with Nix
         run: nix build .#
